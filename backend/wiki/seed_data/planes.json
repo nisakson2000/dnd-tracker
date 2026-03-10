@@ -1,0 +1,634 @@
+[
+  {
+    "slug": "material-plane",
+    "title": "Material Plane",
+    "category": "plane",
+    "subcategory": "inner-planes",
+    "ruleset": "universal",
+    "summary": "The Material Plane is the nexus where all other planes meet, the world where mortals live and adventure.",
+    "content": "## Material Plane\n\nThe Material Plane is the default plane of existence in most D&D cosmologies and the setting for the vast majority of adventures. It is the nexus where the philosophical and elemental forces that define the other planes collide in the jumbled existence of mortal life and matter.\n\n### Nature and Traits\n\nThe Material Plane has normal gravity, normal time flow, and is infinite in extent though finite in scope for most mortal civilizations. Magic functions normally here, and all alignments and elemental forces coexist in a balanced state. The plane is shaped by the beliefs, actions, and conflicts of its mortal inhabitants.\n\n### Notable Inhabitants\n\nThe Material Plane is home to the widest variety of life of any plane. Humans, elves, dwarves, halflings, gnomes, orcs, dragons, and countless other creatures dwell here. It is the birthplace of most mortal souls and the stage upon which gods vie for worshippers.\n\n### Travel\n\nAs the default plane of existence, most creatures begin here. Travel to other planes requires powerful magic such as the *plane shift* or *gate* spells, naturally occurring portals, or artifacts of great power. The Material Plane overlaps with the Ethereal Plane and has echo planes in the Feywild and Shadowfell.\n\n### Cosmological Significance\n\nThe Material Plane sits at the center of the Great Wheel cosmology. It is bordered by the Ethereal Plane, echoed by the Feywild and Shadowfell, and connected to all Outer Planes through the Astral Plane. It is the fulcrum upon which the cosmic balance rests.",
+    "metadata_json": {
+      "plane_type": "Inner Plane",
+      "traits": ["Normal gravity", "Normal time", "Infinite extent", "All alignments"],
+      "inhabitants": ["Humans", "Elves", "Dwarves", "Halflings", "Gnomes", "Dragons", "Most mortal races"],
+      "connections": ["Ethereal Plane", "Feywild", "Shadowfell", "Astral Plane"]
+    },
+    "tags": "plane,inner,material,mortal,prime,nexus",
+    "source": "SRD 5.1",
+    "sort_order": 1
+  },
+  {
+    "slug": "feywild",
+    "title": "Feywild",
+    "category": "plane",
+    "subcategory": "inner-planes",
+    "ruleset": "universal",
+    "summary": "The Feywild is an echo plane of the Material Plane suffused with wild magic and untamed natural beauty, home to fey creatures and ruled by archfey courts.",
+    "content": "## Feywild\n\nThe Feywild, also called the Plane of Faerie, is an echo of the Material Plane where nature runs wild and emotions burn brighter. It is a place of wonder, danger, and enchantment, where time flows unpredictably and the landscape shifts with the moods of its powerful inhabitants.\n\n### Nature and Traits\n\nThe Feywild mirrors the geography of the Material Plane but in an exaggerated, idealized, or twisted form. A gentle hill might become a towering spire of crystal, and a quiet pond might be a vast glittering lake. Colors are more vivid, sounds more musical, and emotions more intense. Time flows erratically — a visitor might spend what feels like an hour in the Feywild only to return and find a century has passed, or vice versa.\n\n### Notable Inhabitants\n\nThe Feywild is home to fey creatures of all kinds: pixies, sprites, satyrs, dryads, treants, and eladrin. It is ruled by powerful archfey organized into the Seelie Court (Summer Court) and the Unseelie Court (Winter Court). The Queen of Air and Darkness and Titania are among the most prominent archfey. Hags, blights, and darker fey also lurk in the plane's shadows.\n\n### Travel\n\nFey crossings — thin points between the Material Plane and the Feywild — appear in places of natural beauty, ancient forests, and sites of powerful nature magic. The *plane shift* spell can transport travelers directly. Certain rituals performed at twilight, during solstices, or under specific lunar conditions can open temporary portals.\n\n### Cosmological Significance\n\nThe Feywild is one of two echo planes of the Material Plane, representing the bright mirror of nature's splendor and raw magical potential. It is the origin of much arcane magic and the ancestral home of elves in many cosmologies.",
+    "metadata_json": {
+      "plane_type": "Inner Plane (Echo)",
+      "traits": ["Normal gravity", "Erratic time", "Wild magic", "Heightened emotions", "Mirrors Material Plane"],
+      "inhabitants": ["Pixies", "Sprites", "Satyrs", "Dryads", "Eladrin", "Archfey", "Hags"],
+      "connections": ["Material Plane", "Shadowfell"],
+      "courts": ["Seelie Court (Summer)", "Unseelie Court (Winter)"]
+    },
+    "tags": "plane,inner,feywild,fey,faerie,echo,nature,magic",
+    "source": "SRD 5.1",
+    "sort_order": 2
+  },
+  {
+    "slug": "shadowfell",
+    "title": "Shadowfell",
+    "category": "plane",
+    "subcategory": "inner-planes",
+    "ruleset": "universal",
+    "summary": "The Shadowfell is a dark echo of the Material Plane, a place of gloom, despair, and undeath that drains color and emotion from all who enter.",
+    "content": "## Shadowfell\n\nThe Shadowfell, also known as the Plane of Shadow, is the dark mirror of the Material Plane. It is a bleak, desolate dimension of decay and death where shadows have substance, despair is a tangible force, and the land itself seems to drain the life and hope from visitors.\n\n### Nature and Traits\n\nThe Shadowfell echoes the Material Plane's geography but in a twisted, decayed form. Buildings crumble, forests are dead or dying, and the sky is perpetually overcast with a dim, sourceless light. Colors are muted to shades of gray, and sounds are dampened. The plane exerts a psychological pull toward apathy and despair — prolonged exposure can cause shadow-induced madness or despair.\n\n### Notable Inhabitants\n\nUndead creatures thrive in the Shadowfell: shadows, wraiths, specters, and vampires are common. The Raven Queen, goddess of death and memory, holds her fortress Letherna here. Shadar-kai serve as her devoted followers. The Domains of Dread — demiplanes ruled by Darklords such as Strahd von Zarovich — exist as pockets within the Shadowfell, sealed by the mysterious Dark Powers.\n\n### Travel\n\nShadow crossings form in places of death, sorrow, or darkness — graveyards, ruins, battlefields, and deep caves. The *plane shift* spell works, as does the *shadow walk* spell specifically designed for this plane. Strong negative emotions or necromantic rituals can thin the barrier between planes.\n\n### Cosmological Significance\n\nThe Shadowfell is the dark counterpart to the Feywild, representing entropy, loss, and the inevitability of death. It is a conduit through which souls sometimes pass on their way to the Outer Planes and a source of shadow magic and necromantic energy.",
+    "metadata_json": {
+      "plane_type": "Inner Plane (Echo)",
+      "traits": ["Normal gravity", "Normal time", "Muted colors", "Despair effect", "Enhanced necromancy", "Mirrors Material Plane"],
+      "inhabitants": ["Shadar-kai", "Shadows", "Wraiths", "Vampires", "The Raven Queen", "Darklords"],
+      "connections": ["Material Plane", "Feywild", "Domains of Dread"],
+      "domains_of_dread": ["Barovia", "Darkon", "Lamordia"]
+    },
+    "tags": "plane,inner,shadowfell,shadow,echo,undead,darkness,despair",
+    "source": "SRD 5.1",
+    "sort_order": 3
+  },
+  {
+    "slug": "ethereal-plane",
+    "title": "Ethereal Plane",
+    "category": "plane",
+    "subcategory": "inner-planes",
+    "ruleset": "universal",
+    "summary": "The Ethereal Plane is a misty, fog-bound dimension that overlaps the Material Plane, allowing ethereal travelers to observe the material world without being seen.",
+    "content": "## Ethereal Plane\n\nThe Ethereal Plane is a misty, fog-bound dimension that exists alongside the Material Plane and the Inner Planes. It serves as both a border between planes and a plane in its own right, divided into the Border Ethereal and the Deep Ethereal.\n\n### Nature and Traits\n\nThe Border Ethereal mirrors the Material Plane but everything appears as ghostly, translucent shapes shrouded in gray mist. Travelers in the Border Ethereal can see the Material Plane but appear invisible to those on it, and they can pass through solid objects. The Deep Ethereal is an endless expanse of swirling mist with no fixed geography, where curtains of vaporous color lead to other planes.\n\n### Notable Inhabitants\n\nGhosts are the most iconic denizens of the Ethereal Plane, trapped between life and death. Phase spiders hunt prey by shifting between the Ethereal and Material Planes. Ethereal filchers, night hags traveling to torment dreamers, and the rare ethereal marauder also dwell here. Demiplanes — small, self-contained pocket dimensions — float within the Deep Ethereal.\n\n### Travel\n\nThe *etherealness* spell is the most direct route to the Ethereal Plane. The *blink* spell allows brief, uncontrolled jaunts. Some creatures like phase spiders and night hags can shift between planes at will. Certain magic items, such as the *oil of etherealness*, also grant access.\n\n### Cosmological Significance\n\nThe Ethereal Plane serves as the border and buffer between the Material Plane and the Inner Planes. It is the medium through which souls travel after death and the substrate in which demiplanes form. It does not extend to the Outer Planes — the Astral Plane fills that role.",
+    "metadata_json": {
+      "plane_type": "Inner Plane / Transitive",
+      "traits": ["No gravity", "Normal time", "Fog-filled", "Overlaps Material Plane", "Two regions: Border and Deep"],
+      "inhabitants": ["Ghosts", "Phase spiders", "Night hags", "Ethereal filchers", "Ethereal marauders"],
+      "connections": ["Material Plane", "Inner Planes", "Demiplanes"]
+    },
+    "tags": "plane,inner,transitive,ethereal,border,ghost,mist",
+    "source": "SRD 5.1",
+    "sort_order": 4
+  },
+  {
+    "slug": "plane-of-air",
+    "title": "Plane of Air",
+    "category": "plane",
+    "subcategory": "elemental-planes",
+    "ruleset": "universal",
+    "summary": "The Plane of Air is an endless expanse of open sky, gentle breezes, and howling storms, home to djinn and air elementals.",
+    "content": "## Plane of Air\n\nThe Plane of Air is the most hospitable of the Elemental Planes — an infinite sky of clear blue stretching in every direction, broken by clouds, floating earthmotes, and occasional storms of devastating power.\n\n### Nature and Traits\n\nThere is no ground on the Plane of Air. Gravity is subjective — creatures can choose which direction is \"down\" for them. The air is breathable and comfortable at the plane's heart but grows increasingly turbulent toward its borders. Enormous clouds serve as landmarks and dwelling places. The temperature varies from pleasantly warm near the Plane of Fire border to bitterly cold near the Plane of Water border.\n\n### Notable Inhabitants\n\nDjinn are the noble genies of the Plane of Air, building magnificent palaces on clouds and floating earthmotes. Air elementals swirl through the skies in all sizes. Aarakocra maintain communities here, and air mephits frolic in the breezes. The Great Caliph of the Djinn rules from the Citadel of Ice and Steel, the grandest structure on the plane.\n\n### Travel\n\nThe *plane shift* spell can bring travelers here, though arriving without the ability to fly is immediately dangerous. Elemental vortices — natural portals — form during powerful windstorms on the Material Plane. Conjuration spells that summon air elementals briefly open conduits to this plane.\n\n### Cosmological Significance\n\nThe Plane of Air borders the Planes of Fire and Water in the elemental arrangement and connects to the Elemental Chaos. It is the source of all air and wind magic and the origin of the element of air on the Material Plane.",
+    "metadata_json": {
+      "plane_type": "Elemental Plane",
+      "traits": ["Subjective gravity", "Normal time", "Infinite sky", "Breathable air", "No ground"],
+      "inhabitants": ["Djinn", "Air elementals", "Aarakocra", "Air mephits"],
+      "connections": ["Plane of Fire", "Plane of Water", "Elemental Chaos", "Material Plane"],
+      "element": "Air"
+    },
+    "tags": "plane,elemental,air,djinn,sky,wind",
+    "source": "SRD 5.1",
+    "sort_order": 5
+  },
+  {
+    "slug": "plane-of-earth",
+    "title": "Plane of Earth",
+    "category": "plane",
+    "subcategory": "elemental-planes",
+    "ruleset": "universal",
+    "summary": "The Plane of Earth is an infinite expanse of solid rock, minerals, and crushing pressure, home to dao and earth elementals.",
+    "content": "## Plane of Earth\n\nThe Plane of Earth is an endless, solid mass of stone, soil, and mineral. It is among the most inhospitable of the Elemental Planes to mortal visitors, who find themselves encased in rock with no air to breathe unless they come prepared.\n\n### Nature and Traits\n\nThe entire plane is composed of solid earth and stone, riddled with caverns, tunnels, and vast underground vaults carved by its inhabitants. Pockets of breathable air exist in these caverns, and veins of precious metals and gemstones run through the rock in quantities that would make any dwarf weep with joy. Gravity pulls toward the plane's center, and the pressure increases with depth.\n\n### Notable Inhabitants\n\nDao are the noble genies of earth, cruel and avaricious slavers who build labyrinthine strongholds and mine the plane's riches. Earth elementals grind through the stone, and xorn phase through rock in search of minerals to devour. Galeb duhr and earth mephits also dwell here. The Great Khan of the Dao rules from the Sevenfold Mazework, a palace of impossible geometric complexity.\n\n### Travel\n\nThe *plane shift* spell is the most common means of arrival, ideally targeting a known cavern. Elemental vortices form during earthquakes and volcanic eruptions on the Material Plane. Without *passwall*, *earth glide*, or similar abilities, travelers can quickly become trapped in solid stone.\n\n### Cosmological Significance\n\nThe Plane of Earth borders the Planes of Fire and Water and connects to the Elemental Chaos. It is the source of all earth and stone on the Material Plane and the origin of minerals, gems, and metals.",
+    "metadata_json": {
+      "plane_type": "Elemental Plane",
+      "traits": ["Normal gravity", "Normal time", "Solid matter", "No natural light", "Extreme pressure"],
+      "inhabitants": ["Dao", "Earth elementals", "Xorn", "Galeb duhr", "Earth mephits"],
+      "connections": ["Plane of Fire", "Plane of Water", "Elemental Chaos", "Material Plane"],
+      "element": "Earth"
+    },
+    "tags": "plane,elemental,earth,dao,stone,mineral,underground",
+    "source": "SRD 5.1",
+    "sort_order": 6
+  },
+  {
+    "slug": "plane-of-fire",
+    "title": "Plane of Fire",
+    "category": "plane",
+    "subcategory": "elemental-planes",
+    "ruleset": "universal",
+    "summary": "The Plane of Fire is an inferno of blazing flames, rivers of magma, and searing heat, home to efreeti and fire elementals.",
+    "content": "## Plane of Fire\n\nThe Plane of Fire is a landscape of perpetual flames, rivers and seas of magma, and air superheated beyond what any unprotected mortal can survive. Yet despite its hostility, it hosts a thriving civilization of fire-adapted creatures.\n\n### Nature and Traits\n\nEverything on the Plane of Fire burns. The ground is composed of cooled lava, ash, and obsidian. Rivers and oceans of liquid magma flow across the landscape. The air is breathable but scorching hot, and unprotected creatures take fire damage each round. Despite the flames, the plane has geography: mountains of compressed flame, forests of fire-resistant crystal, and vast plains of smoldering ash.\n\n### Notable Inhabitants\n\nEfreeti are the noble genies of fire, proud and tyrannical rulers who build magnificent brass cities. The City of Brass, ruled by the Grand Sultan of the Efreeti, is the largest and most famous settlement on any Elemental Plane — a metropolis of gleaming metal hovering above a sea of fire. Fire elementals, salamanders, azers, and fire mephits are common. Fire giants and red dragons sometimes establish lairs here.\n\n### Travel\n\nThe *plane shift* spell can bring travelers, preferably to the City of Brass where fire resistance is less critical in protected areas. Elemental vortices form in the hearts of volcanoes and great conflagrations. Visitors absolutely require magical protection from fire to survive.\n\n### Cosmological Significance\n\nThe Plane of Fire borders the Planes of Air and Earth and connects to the Elemental Chaos. It is the source of all fire and heat on the Material Plane. The City of Brass serves as a major planar trading hub.",
+    "metadata_json": {
+      "plane_type": "Elemental Plane",
+      "traits": ["Normal gravity", "Normal time", "Extreme heat", "Pervasive fire damage", "Breathable but scorching air"],
+      "inhabitants": ["Efreeti", "Fire elementals", "Salamanders", "Azers", "Fire mephits"],
+      "connections": ["Plane of Air", "Plane of Earth", "Elemental Chaos", "Material Plane"],
+      "element": "Fire",
+      "notable_locations": ["City of Brass"]
+    },
+    "tags": "plane,elemental,fire,efreeti,flame,magma,city-of-brass",
+    "source": "SRD 5.1",
+    "sort_order": 7
+  },
+  {
+    "slug": "plane-of-water",
+    "title": "Plane of Water",
+    "category": "plane",
+    "subcategory": "elemental-planes",
+    "ruleset": "universal",
+    "summary": "The Plane of Water is a boundless ocean without surface or floor, home to marids and water elementals.",
+    "content": "## Plane of Water\n\nThe Plane of Water is an infinite ocean with no surface, no floor, and no horizon. It is a world of endless water in every direction, ranging from warm shallows near the Plane of Fire border to frigid depths near the Plane of Air border where chunks of ice float in the darkness.\n\n### Nature and Traits\n\nThe entire plane is water — an endless, three-dimensional ocean. There is no air to breathe without magic, and light fades quickly with depth. Currents of varying temperature and salinity create distinct regions. Pockets of breathable air occasionally form around coral reefs and sunken structures, and some areas host bioluminescent life that provides eerie illumination.\n\n### Notable Inhabitants\n\nMarids are the noble genies of water, the most powerful and capricious of the genie races. They build coral palaces and rule with whimsical authority. Water elementals flow through the plane in great currents. Merfolk, sea elves, water weirds, and water mephits are common inhabitants. Krakens and dragon turtles lurk in the deeper regions. The Citadel of Ten Thousand Pearls is the marid court.\n\n### Travel\n\nThe *plane shift* spell can bring travelers, but arriving without *water breathing* is immediately fatal. Elemental vortices form in deep ocean trenches and powerful whirlpools on the Material Plane. The plane connects to the Material Plane's oceans through rare underwater portals.\n\n### Cosmological Significance\n\nThe Plane of Water borders the Planes of Air and Earth and connects to the Elemental Chaos. It is the source of all water and liquid on the Material Plane and sustains the oceans of the mortal world.",
+    "metadata_json": {
+      "plane_type": "Elemental Plane",
+      "traits": ["Subjective gravity", "Normal time", "Entirely aquatic", "No air", "Infinite depth"],
+      "inhabitants": ["Marids", "Water elementals", "Merfolk", "Sea elves", "Krakens", "Water mephits"],
+      "connections": ["Plane of Air", "Plane of Earth", "Elemental Chaos", "Material Plane"],
+      "element": "Water",
+      "notable_locations": ["Citadel of Ten Thousand Pearls"]
+    },
+    "tags": "plane,elemental,water,marid,ocean,aquatic",
+    "source": "SRD 5.1",
+    "sort_order": 8
+  },
+  {
+    "slug": "elemental-chaos",
+    "title": "Elemental Chaos",
+    "category": "plane",
+    "subcategory": "elemental-planes",
+    "ruleset": "universal",
+    "summary": "The Elemental Chaos is the roiling, unstable boundary where the four Elemental Planes collide and intermingle in a maelstrom of raw creation.",
+    "content": "## Elemental Chaos\n\nThe Elemental Chaos is the turbulent region where the four Elemental Planes bleed into one another. It is a maelstrom of clashing elements — fire meeting water in explosive steam, earth crumbling into air, and stranger combinations that defy mortal understanding.\n\n### Nature and Traits\n\nThe Elemental Chaos has no stable geography. Pockets of one element crash into another in an ever-shifting landscape of creation and destruction. Gravity, temperature, and the very substance of reality change unpredictably. Islands of relative stability exist but can be torn apart without warning. The chaos is the raw stuff of creation, the primal matter from which all elements emerge.\n\n### Notable Inhabitants\n\nElemental beings of mixed or unusual nature dwell here — magma, ice, ooze, and smoke mephits thrive at elemental borders. Slaadi, creatures of pure chaos, are sometimes found here. Primordials — ancient beings of elemental power who predate the gods — are said to be imprisoned in the deepest reaches. Cults devoted to elemental evil sometimes establish footholds here.\n\n### Travel\n\nReaching the Elemental Chaos typically requires traveling through one of the Elemental Planes to its borders, where the chaos begins. Powerful magic can open direct portals. The plane is extraordinarily dangerous to traverse without significant magical protection against multiple elements simultaneously.\n\n### Cosmological Significance\n\nThe Elemental Chaos represents the primordial state of creation before the elements were separated. In some cosmologies, it underlies all the Elemental Planes and connects them. It is the source of paraelemental and quasi-elemental energies.",
+    "metadata_json": {
+      "plane_type": "Elemental Plane",
+      "traits": ["Variable gravity", "Erratic time", "Unstable matter", "Mixed elements", "Constantly shifting"],
+      "inhabitants": ["Mixed elementals", "Mephits", "Slaadi", "Primordials"],
+      "connections": ["Plane of Air", "Plane of Earth", "Plane of Fire", "Plane of Water"]
+    },
+    "tags": "plane,elemental,chaos,primordial,maelstrom,creation",
+    "source": "SRD 5.1",
+    "sort_order": 9
+  },
+  {
+    "slug": "mount-celestia",
+    "title": "Mount Celestia",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "Mount Celestia is the plane of lawful good, a great mountain rising from a Silver Sea whose seven layers represent ascending ideals of law, order, and goodness.",
+    "content": "## Mount Celestia\n\nMount Celestia, also called the Seven Heavens, is the plane of ultimate law and good. It manifests as an impossibly tall mountain rising from a shining Silver Sea, with seven ascending layers that represent progressively purer ideals of righteousness, justice, and mercy.\n\n### Nature and Traits\n\nEach of the seven layers — Lunia (the Silver Heaven), Mercuria (the Golden Heaven), Venya (the Pearly Heaven), Solania (the Crystal Heaven), Mertion (the Platinum Heaven), Jovar (the Glittering Heaven), and Chronias (the Illuminated Heaven) — grows more radiant and peaceful as one ascends. The plane radiates an aura of calm and goodness. Evil creatures feel uncomfortable and weakened, while lawful good creatures are empowered.\n\n### Notable Inhabitants\n\nSolar angels, planetars, and devas serve the gods of good who make their homes here. Bahamut, the Platinum Dragon god of justice, dwells on Mertion. Archons — celestial embodiments of law and good — guard each layer. Mordenkainen and other legendary figures have been known to visit. The souls of the lawful good faithful ascend through the layers in their afterlife.\n\n### Travel\n\nThe *plane shift* spell typically deposits travelers on Lunia's shores. One must ascend the mountain through spiritual trials — each layer tests the traveler's virtue. Portals from Bytopia and Arcadia connect to neighboring layers. The gate-town of Excelsior on the Outlands leads here.\n\n### Cosmological Significance\n\nMount Celestia represents the ideal union of law and goodness. It sits between Bytopia and Arcadia on the Great Wheel and is the ultimate destination for lawful good souls. Its uppermost layer, Chronias, is said to be a place of such perfect good that no mortal has ever seen it and returned unchanged.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Lawful Good",
+      "layers": ["Lunia", "Mercuria", "Venya", "Solania", "Mertion", "Jovar", "Chronias"],
+      "traits": ["Normal gravity", "Normal time", "Mildly good-aligned", "Mildly law-aligned"],
+      "inhabitants": ["Angels", "Archons", "Bahamut", "Lawful good petitioners"],
+      "connections": ["Bytopia", "Arcadia", "Astral Plane", "Outlands"]
+    },
+    "tags": "plane,outer,celestia,lawful-good,heaven,mountain,angels,bahamut",
+    "source": "SRD 5.1",
+    "sort_order": 10
+  },
+  {
+    "slug": "bytopia",
+    "title": "Bytopia",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "Bytopia is the plane of lawful good and neutral good, consisting of two layers facing each other like the pages of an open book — one of honest industry and one of untamed wilderness.",
+    "content": "## Bytopia\n\nBytopia, the Twin Paradises, is a plane of productive good where hard work, honest dealing, and self-reliance are the highest virtues. It consists of two layers that face each other, their surfaces stretching toward one another across a shared sky.\n\n### Nature and Traits\n\nDothion, the upper layer, is a pastoral realm of farms, workshops, and industrious communities where gnomes and other goodly folk live by the fruits of their labor. Shurrock, the lower layer, is a rugged wilderness of mountains and forests that tests self-reliance and survival. The two layers face each other — looking up from one, you see the landscape of the other above you. The plane rewards hard work and punishes laziness.\n\n### Notable Inhabitants\n\nGnomish gods including Garl Glittergold make their homes here. Industrious petitioners farm, craft, and build in Dothion. Rangers and druids of good alignment find Shurrock a paradise. The plane is populated by celestial animals, hardworking gnomish spirits, and the occasional visiting archon.\n\n### Travel\n\nThe *plane shift* spell brings travelers to Dothion typically. Portals connect to Mount Celestia and Elysium. The gate-town of Golden Hills on the Outlands leads here. Natural portals sometimes open in gnomish communities on the Material Plane.\n\n### Cosmological Significance\n\nBytopia sits between Mount Celestia and Elysium on the Great Wheel, embodying the overlap of lawful good and neutral good — goodness expressed through productive effort rather than celestial perfection or pure bliss.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Neutral Good / Lawful Good",
+      "layers": ["Dothion", "Shurrock"],
+      "traits": ["Normal gravity", "Normal time", "Mildly good-aligned", "Rewards industry"],
+      "inhabitants": ["Gnomish gods", "Celestial animals", "Good petitioners", "Garl Glittergold"],
+      "connections": ["Mount Celestia", "Elysium", "Astral Plane", "Outlands"]
+    },
+    "tags": "plane,outer,bytopia,good,twin-paradises,gnome,industry",
+    "source": "SRD 5.1",
+    "sort_order": 11
+  },
+  {
+    "slug": "elysium",
+    "title": "Elysium",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "Elysium is the plane of pure neutral good, a realm of overwhelming joy and contentment where the River Oceanus flows through idyllic landscapes.",
+    "content": "## Elysium\n\nElysium is the plane of pure, unbridled goodness — not bound by law or chaos, but embodying compassion, mercy, and joy in their purest forms. It is a place of such overwhelming contentment that visitors may never wish to leave.\n\n### Nature and Traits\n\nElysium has four layers: Amoria (the most welcoming, with rolling hills and gentle rivers), Eronia (rugged mountains and waterfalls), Belierin (a vast marsh and swampland, beautiful in its wildness), and Thalasia (a great ocean dotted with islands). The River Oceanus, which connects several upper planes, flows through all four layers. The plane's joy is so pervasive that visitors must resist its pull or become blissfully trapped, unwilling to leave.\n\n### Notable Inhabitants\n\nMany good-aligned deities dwell here, including gods of healing, mercy, and nature. Guardinals — celestial beings with animal features — serve as Elysium's protectors. Leonal guardinals lead their kind from the fortress of Rubicon. Petitioners live in a state of peaceful contentment, and the plane attracts pilgrims seeking spiritual renewal.\n\n### Travel\n\nThe *plane shift* spell typically arrives in Amoria. The River Oceanus connects Elysium to Bytopia and the Beastlands, allowing travel by boat. The gate-town of Release from Care on the Outlands leads here. Visitors should be warned about the plane's captivating joy.\n\n### Cosmological Significance\n\nElysium sits at the apex of pure goodness on the Great Wheel, between Bytopia and the Beastlands. It represents good for its own sake, untempered by law or chaos. The River Oceanus originates here in some tellings and connects the upper planes.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Neutral Good",
+      "layers": ["Amoria", "Eronia", "Belierin", "Thalasia"],
+      "traits": ["Normal gravity", "Normal time", "Strongly good-aligned", "Joy effect (may trap visitors)"],
+      "inhabitants": ["Guardinals", "Good deities", "Peaceful petitioners"],
+      "connections": ["Bytopia", "Beastlands", "Astral Plane", "Outlands"],
+      "planar_features": ["River Oceanus"]
+    },
+    "tags": "plane,outer,elysium,neutral-good,joy,oceanus,guardinals",
+    "source": "SRD 5.1",
+    "sort_order": 12
+  },
+  {
+    "slug": "beastlands",
+    "title": "Beastlands",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "The Beastlands is the plane of neutral good and chaotic good, an eternal wilderness where every animal that ever lived roams free under perpetual skies of noon, twilight, and midnight.",
+    "content": "## Beastlands\n\nThe Beastlands, also called the Happy Hunting Grounds, is a plane of unspoiled wilderness where animals reign supreme. It is nature at its most vibrant and untamed, a paradise for beasts and those who revere the natural world.\n\n### Nature and Traits\n\nThe Beastlands has three layers, each with a different eternal sky: Krigala (perpetual noon, bright savannas and forests), Brux (perpetual twilight, misty woodlands), and Karasuthra (perpetual midnight, moonlit jungles). The landscape is pristine wilderness — no cities, no roads, only untamed forests, plains, mountains, and rivers. Animals here possess heightened intelligence and can speak.\n\n### Notable Inhabitants\n\nEvery species of animal that has ever existed on the Material Plane has a celestial counterpart here. Intelligent, talking beasts are the primary inhabitants. Nature deities and gods of the hunt dwell here. Rangers, druids, and animal spirits find this plane a paradise. Some petitioners take animal forms. The plane is also home to celestial versions of dire animals and prehistoric beasts.\n\n### Travel\n\nThe *plane shift* spell brings travelers to Krigala typically. The River Oceanus flows through from Elysium, connecting to Arborea. The gate-town of Faunel on the Outlands leads here. Natural portals sometimes open in deep, untouched wilderness on the Material Plane.\n\n### Cosmological Significance\n\nThe Beastlands sits between Elysium and Arborea on the Great Wheel, representing goodness expressed through nature and primal freedom. It embodies the sanctity of animal life and the natural world.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Neutral Good / Chaotic Good",
+      "layers": ["Krigala", "Brux", "Karasuthra"],
+      "traits": ["Normal gravity", "Three eternal times of day", "Mildly good-aligned", "Talking animals"],
+      "inhabitants": ["Celestial animals", "Nature deities", "Animal petitioners", "Talking beasts"],
+      "connections": ["Elysium", "Arborea", "Astral Plane", "Outlands"],
+      "planar_features": ["River Oceanus"]
+    },
+    "tags": "plane,outer,beastlands,good,chaotic-good,nature,animals,hunting",
+    "source": "SRD 5.1",
+    "sort_order": 13
+  },
+  {
+    "slug": "arborea",
+    "title": "Arborea",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "Arborea is the plane of chaotic good, a place of wild beauty, passionate emotions, and endless celebration, home to the elven pantheon and Olympian gods.",
+    "content": "## Arborea\n\nArborea, also known as Olympus or Arvandor, is the plane of chaotic good — a place where emotions run high, beauty is overwhelming, and life is lived with fierce passion. It is a plane of extremes: tremendous joy, deep sorrow, burning fury, and boundless love.\n\n### Nature and Traits\n\nArborea has three layers: Arvandor (a realm of towering forests, snow-capped mountains, and wild rivers, home to the elven gods), Aquallor (an endless ocean of storms and calm, dotted with islands), and Mithardir (a vast white desert, largely empty and forgotten). The plane amplifies emotions — celebrations are wilder, sorrows deeper, and battles fiercer. It is a place of extraordinary natural beauty.\n\n### Notable Inhabitants\n\nThe elven pantheon, led by Corellon Larethian, makes its home in Arvandor. The Olympian gods (in settings that include them) dwell on the mountain peaks. Eladrin — celestial embodiments of chaotic good — are the plane's champions. Lillends (celestial creatures of art and music) frequent the forests. Petitioners live lives of passionate freedom.\n\n### Travel\n\nThe *plane shift* spell brings travelers to Arvandor. The River Oceanus flows through from the Beastlands. The gate-town of Sylvania on the Outlands leads here. Elven high magic sometimes opens portals, and wild celebrations on the Material Plane can thin the barriers.\n\n### Cosmological Significance\n\nArborea sits between the Beastlands and Ysgard on the Great Wheel, representing chaotic good — freedom in service of joy and beauty. It is the ancestral home of elves and a realm where art, passion, and individuality are celebrated above all.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Chaotic Good",
+      "layers": ["Arvandor", "Aquallor", "Mithardir"],
+      "traits": ["Normal gravity", "Normal time", "Mildly chaos-aligned", "Mildly good-aligned", "Heightened emotions"],
+      "inhabitants": ["Corellon Larethian", "Elven gods", "Eladrin", "Lillends", "Olympian gods"],
+      "connections": ["Beastlands", "Ysgard", "Astral Plane", "Outlands"],
+      "planar_features": ["River Oceanus"]
+    },
+    "tags": "plane,outer,arborea,chaotic-good,olympus,arvandor,elven,passion",
+    "source": "SRD 5.1",
+    "sort_order": 14
+  },
+  {
+    "slug": "ysgard",
+    "title": "Ysgard",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "Ysgard is the plane of chaotic good and chaotic neutral, a realm of eternal battle, heroic deeds, and Viking-inspired glory where the slain rise to fight again each dawn.",
+    "content": "## Ysgard\n\nYsgard, also called the Heroic Domains of Ysgard or Gladsheim, is the plane of heroic valor and eternal conflict. It is inspired by Norse mythology — a realm where mighty warriors battle by day, feast by night, and rise from death each morning to fight again.\n\n### Nature and Traits\n\nYsgard has three layers: Ysgard (the topmost, a realm of immense earthbergs — continent-sized chunks of rock floating in an endless sky, their undersides burning with rivers of fire), Muspelheim (a land of fire and smoke), and Nidavellir (dark caverns and tunnels). Those who die in battle on Ysgard rise the next morning fully healed, making it a plane of endless, consequence-free combat for those who embrace its nature.\n\n### Notable Inhabitants\n\nThe Norse pantheon makes its home here — Odin in Valhalla, Thor in Thrudheim, and others in their own halls. Einherjar — the glorious dead chosen by valkyries — fight and feast eternally. Bariaur (centaur-like celestials) roam the earthbergs. Giants of all types inhabit the more remote regions. The duergar and svirfneblin have communities in Nidavellir.\n\n### Travel\n\nThe *plane shift* spell brings travelers to the topmost layer. The River Yondalla connects some regions. The gate-town of Glorium on the Outlands leads here. Dying heroically in battle sometimes draws a soul here, chosen by valkyries.\n\n### Cosmological Significance\n\nYsgard sits between Arborea and Limbo on the Great Wheel, at the boundary of good and chaos. It represents the chaotic ideal of personal glory, heroic sacrifice, and the joy of battle.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Chaotic Good / Chaotic Neutral",
+      "layers": ["Ysgard", "Muspelheim", "Nidavellir"],
+      "traits": ["Normal gravity", "Normal time", "Mildly chaos-aligned", "Resurrection in battle"],
+      "inhabitants": ["Norse gods", "Einherjar", "Valkyries", "Bariaur", "Giants"],
+      "connections": ["Arborea", "Limbo", "Astral Plane", "Outlands"]
+    },
+    "tags": "plane,outer,ysgard,chaotic,norse,battle,heroes,valhalla",
+    "source": "SRD 5.1",
+    "sort_order": 15
+  },
+  {
+    "slug": "limbo",
+    "title": "Limbo",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "Limbo is the plane of pure chaotic neutral, an ever-changing maelstrom of raw chaos where matter and energy shift randomly unless shaped by conscious will.",
+    "content": "## Limbo\n\nLimbo, the Ever-Changing Chaos, is the plane of pure chaos and neutrality. It is a roiling soup of the four elements and raw energy, where nothing remains stable unless a conscious mind forces it into shape through sheer willpower.\n\n### Nature and Traits\n\nLimbo has no fixed geography. Matter, energy, and even the laws of physics shift constantly and randomly. Chunks of earth form and dissolve, pockets of fire flare and die, water appears and evaporates. Gravity changes direction unpredictably. Only through an act of will — using Intelligence checks — can a creature impose stability on its surroundings, creating a bubble of ordered reality. Without this effort, the chaos quickly reclaims everything.\n\n### Notable Inhabitants\n\nThe githzerai have mastered the art of shaping Limbo through mental discipline, building entire monasteries and cities from raw chaos. Slaadi — frog-like embodiments of chaos — are the native creatures of Limbo, spawning endlessly from the Spawning Stone. The god Tempus and other chaotic neutral deities dwell in pockets they maintain through divine will.\n\n### Travel\n\nThe *plane shift* spell brings travelers to a random point in the chaos. Without the ability to shape reality through willpower, survival is extremely difficult. The gate-town of Xaos (where even the name is spelled differently each time) on the Outlands leads here.\n\n### Cosmological Significance\n\nLimbo sits at the apex of pure chaos on the Great Wheel, between Ysgard and Pandemonium. It represents chaos in its purest form — not evil or good, simply the absence of order and the raw potential of unformed creation.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Chaotic Neutral",
+      "layers": ["None (formless)"],
+      "traits": ["Variable gravity", "Erratic time", "Morphic (shaped by will)", "Strongly chaos-aligned"],
+      "inhabitants": ["Githzerai", "Slaadi", "Chaotic neutral deities"],
+      "connections": ["Ysgard", "Pandemonium", "Astral Plane", "Outlands"]
+    },
+    "tags": "plane,outer,limbo,chaotic-neutral,chaos,githzerai,slaadi,morphic",
+    "source": "SRD 5.1",
+    "sort_order": 16
+  },
+  {
+    "slug": "pandemonium",
+    "title": "Pandemonium",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "Pandemonium is the plane of chaotic neutral and chaotic evil, a network of infinite tunnels scoured by maddening, shrieking winds that drive all who enter toward insanity.",
+    "content": "## Pandemonium\n\nPandemonium is a plane of madness, darkness, and howling wind. It consists of infinite tunnels bored through solid rock, through which an eternal, shrieking gale blows — a wind so loud and relentless that it drives creatures mad.\n\n### Nature and Traits\n\nPandemonium has four layers: Pandesmos (the largest tunnels, some miles wide), Cocytus (narrower, more oppressive tunnels where the wind screams louder), Phlegethon (tunnels dripping with dark, acidic water where the stone itself seems to weep), and Agathion (sealed vaults of utter silence, which is somehow worse). Normal conversation is impossible over the wind; only shouting works, and prolonged exposure causes madness. There is no natural light.\n\n### Notable Inhabitants\n\nFew creatures choose to live here. The mad, the exiled, and the lost make up most of Pandemonium's population. Some chaotic evil deities maintain realms in the quieter caverns. Loki is said to have a realm here. Creatures adapted to the wind — howlers, wind walkers — are native. Occasionally, powerful beings use the sealed vaults of Agathion as prisons.\n\n### Travel\n\nThe *plane shift* spell brings travelers to Pandesmos. Wind-battered portals exist in deep cave systems on the Material Plane. The gate-town of Bedlam on the Outlands leads here. Few seek this plane willingly.\n\n### Cosmological Significance\n\nPandemonium sits between Limbo and the Abyss on the Great Wheel, representing the point where chaos begins to shade into evil. It embodies madness and the destructive potential of chaos without purpose.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Chaotic Neutral / Chaotic Evil",
+      "layers": ["Pandesmos", "Cocytus", "Phlegethon", "Agathion"],
+      "traits": ["Normal gravity", "Normal time", "Mildly chaos-aligned", "Mildly evil-aligned", "Constant wind", "Madness effect"],
+      "inhabitants": ["Howlers", "Exiled creatures", "Mad petitioners", "Loki"],
+      "connections": ["Limbo", "The Abyss", "Astral Plane", "Outlands"]
+    },
+    "tags": "plane,outer,pandemonium,chaotic,evil,wind,madness,tunnels",
+    "source": "SRD 5.1",
+    "sort_order": 17
+  },
+  {
+    "slug": "the-abyss",
+    "title": "The Abyss",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "The Abyss is the plane of pure chaotic evil, an infinite stack of nightmarish layers ruled by demon lords, each a unique hellscape of destruction and corruption.",
+    "content": "## The Abyss\n\nThe Abyss is the embodiment of chaotic evil — an infinite (or near-infinite) stack of layers, each a uniquely horrifying realm of destruction, corruption, and demonic malice. It is the home of demons and one of the most dangerous planes in existence.\n\n### Nature and Traits\n\nThe Abyss has an unknown number of layers — possibly infinite, with at least 666 catalogued. Each layer is a distinct environment shaped by its demon lord ruler: the Demonweb Pits (Lolth's web-choked realm), the Gaping Maw (Demogorgon's jungle and ocean realm), Thanatos (Orcus's undead wasteland), the Endless Maze (Baphomet's labyrinth), and countless others. The first layer, Pazunia or the Plain of Infinite Portals, is a barren wasteland dotted with portals leading to deeper layers.\n\n### Notable Inhabitants\n\nDemon lords rule individual layers: Demogorgon, Orcus, Graz'zt, Lolth, Baphomet, Yeenoghu, Zuggtmoy, Juiblex, and many others. Lesser demons — balors, mariliths, glabrezus, vrocks, hezrous, and the teeming masses of dretches and manes — fill the layers. The Blood War between demons and devils is the defining conflict of the Lower Planes.\n\n### Travel\n\nThe *plane shift* spell can reach the Abyss, but targeting a specific layer is difficult. The River Styx flows through many layers, connecting them to other Lower Planes. The gate-town of Plague-Mort on the Outlands leads to the first layer. Demon summoning spells create temporary conduits.\n\n### Cosmological Significance\n\nThe Abyss sits at the nadir of chaotic evil on the Great Wheel, between Pandemonium and Carceri. It is the origin of all demons and a constant threat to every other plane. The Blood War — the eternal conflict between demons and devils — prevents either side from conquering the rest of the multiverse.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Chaotic Evil",
+      "layers": ["Pazunia (Plain of Infinite Portals)", "Demonweb Pits", "The Gaping Maw", "Thanatos", "The Endless Maze", "Hundreds more"],
+      "traits": ["Variable gravity", "Erratic time", "Strongly chaos-aligned", "Strongly evil-aligned", "Corrupting"],
+      "inhabitants": ["Demogorgon", "Orcus", "Lolth", "Graz'zt", "Baphomet", "Yeenoghu", "Balors", "Mariliths", "Dretches"],
+      "connections": ["Pandemonium", "Carceri", "Astral Plane", "Outlands"],
+      "planar_features": ["River Styx", "Blood War"]
+    },
+    "tags": "plane,outer,abyss,chaotic-evil,demons,demon-lords,blood-war",
+    "source": "SRD 5.1",
+    "sort_order": 18
+  },
+  {
+    "slug": "carceri",
+    "title": "Carceri",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "Carceri is the plane of neutral evil and chaotic evil, a prison plane of nested spheres from which escape is nearly impossible, trapping the treacherous and the condemned.",
+    "content": "## Carceri\n\nCarceri, the Tarterian Depths, is a plane of imprisonment and betrayal. It is a prison from which few escape — a place where traitors, oath-breakers, and the condemned are trapped by the plane itself, which resists all attempts at departure.\n\n### Nature and Traits\n\nCarceri has six layers, each consisting of nested spheres (orbs within orbs): Orthrys (bogs and swamps), Cathrys (acidic jungles), Minethys (windswept sand and grit), Colothys (narrow mountain crevasses), Porphatys (freezing, shallow oceans), and Agathys (a sphere of pure black ice). The defining trait of Carceri is that it traps visitors — those who enter find it extraordinarily difficult to leave. *Plane shift* and similar spells are impeded.\n\n### Notable Inhabitants\n\nThe titans of Greek mythology — enemies of the Olympian gods — are imprisoned here, giving the plane its alternate name. Deposed deities, imprisoned fiends, and treacherous petitioners populate the layers. Gehreleths (demodands) — ugly, frog-like fiends — are the native creatures and serve as the plane's wardens. The petitioners are trapped souls who betrayed others in life.\n\n### Travel\n\nGetting into Carceri is easy — getting out is the challenge. The *plane shift* spell can bring travelers in, but leaving requires overcoming the plane's resistance. The River Styx flows through some layers. The gate-town of Curst on the Outlands leads here — a town so wretched it periodically slides into Carceri entirely.\n\n### Cosmological Significance\n\nCarceri sits between the Abyss and Hades on the Great Wheel. It serves as the multiverse's prison, trapping those too dangerous or treacherous to remain free. Its nature as an inescapable prison reflects the ultimate consequence of betrayal.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Neutral Evil / Chaotic Evil",
+      "layers": ["Orthrys", "Cathrys", "Minethys", "Colothys", "Porphatys", "Agathys"],
+      "traits": ["Normal gravity", "Normal time", "Mildly evil-aligned", "Trapping (impedes departure)"],
+      "inhabitants": ["Titans", "Gehreleths (Demodands)", "Imprisoned fiends", "Treacherous petitioners"],
+      "connections": ["The Abyss", "Hades", "Astral Plane", "Outlands"],
+      "planar_features": ["River Styx"]
+    },
+    "tags": "plane,outer,carceri,evil,prison,tartarus,titans,betrayal",
+    "source": "SRD 5.1",
+    "sort_order": 19
+  },
+  {
+    "slug": "hades",
+    "title": "Hades",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "Hades is the plane of pure neutral evil, a bleak gray wasteland that drains color, emotion, and hope from all who enter, trapping souls in eternal apathy.",
+    "content": "## Hades\n\nHades, the Gray Waste, is the plane of pure, absolute evil — not the cruelty of law or the fury of chaos, but a grinding, soul-crushing despair that drains all color, emotion, and hope. It is the ultimate destination for selfish, uncaring evil.\n\n### Nature and Traits\n\nHades has three layers, collectively called the Three Glooms: Oinos (a gray, disease-ridden battlefield), Niflheim (a land of frozen mist and gray snow), and Pluton (gray, barren hills and withered trees). Everything is gray — the sky, the ground, the water, even the inhabitants gradually lose their color. The plane saps emotions and willpower; visitors slowly become apathetic and listless. Prolonged exposure traps souls permanently, stripping them of identity.\n\n### Notable Inhabitants\n\nNight hags are the definitive natives of Hades, trading in captured souls called larva. Yugoloths (daemons) — the mercenary fiends — make their headquarters here, playing both sides in the Blood War. The Oinoloth rules from the Wasting Tower of Khin-Oin. Hades is the mustering ground and neutral territory in the Blood War between demons and devils.\n\n### Travel\n\nThe *plane shift* spell brings travelers to Oinos typically. The River Styx flows through all three layers, connecting Hades to the other Lower Planes. The gate-town of Hopeless on the Outlands leads here — and the name is well earned.\n\n### Cosmological Significance\n\nHades sits at the nadir of pure evil on the Great Wheel, between Carceri and Gehenna. It is the center of the Lower Planes and the neutral ground in the Blood War. The River Styx has its strongest presence here, and souls that go unclaimed by any deity often end up as larva on the Gray Waste.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Neutral Evil",
+      "layers": ["Oinos", "Niflheim", "Pluton"],
+      "traits": ["Normal gravity", "Normal time", "Strongly evil-aligned", "Color-draining", "Apathy effect"],
+      "inhabitants": ["Night hags", "Yugoloths", "Larva", "Oinoloth"],
+      "connections": ["Carceri", "Gehenna", "Astral Plane", "Outlands"],
+      "planar_features": ["River Styx", "Blood War neutral ground"]
+    },
+    "tags": "plane,outer,hades,neutral-evil,gray-waste,despair,yugoloths,night-hags",
+    "source": "SRD 5.1",
+    "sort_order": 20
+  },
+  {
+    "slug": "gehenna",
+    "title": "Gehenna",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "Gehenna is the plane of neutral evil and lawful evil, consisting of four volcanic mountains of infinite slope where nothing is given freely and cruelty is a way of life.",
+    "content": "## Gehenna\n\nGehenna, the Bleak Eternity, is a plane of suspicion, greed, and cruelty. It consists of four infinite volcanic mountains floating in a void, their slopes so steep that flat ground simply does not exist. Everything here must be fought for, and nothing comes without a price.\n\n### Nature and Traits\n\nGehenna has four layers, each a volcanic mountain: Khalas (the most active, with lava rivers illuminating the slopes), Chamada (even steeper, with geysers of magma), Mungoth (dead volcano, covered in acidic snow and ash), and Krangath (a dead, frozen cinder providing no light or warmth). There is no flat ground anywhere — every surface is a steep slope. Creatures must constantly climb, cling, or risk falling. Volcanic eruptions and landslides are constant hazards.\n\n### Notable Inhabitants\n\nYugoloths maintain strongholds here, using Gehenna as a secondary base alongside Hades. The yugoloth general staff plans Blood War strategies from volcanic fortresses. Petitioners are selfish, scheming souls who trust no one. Some lawful evil deities choose this realm over the Nine Hells. Barghests — goblinoid fiends — are native to this plane.\n\n### Travel\n\nThe *plane shift* spell can reach Gehenna. The River Styx flows through Khalas. The gate-town of Torch on the Outlands leads here, a town illuminated by an enormous pillar of fire.\n\n### Cosmological Significance\n\nGehenna sits between Hades and the Nine Hells on the Great Wheel, representing the transition from pure evil to lawful evil. It embodies evil motivated by selfishness and greed — the cruelty of those who see others only as tools to be exploited.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Neutral Evil / Lawful Evil",
+      "layers": ["Khalas", "Chamada", "Mungoth", "Krangath"],
+      "traits": ["Normal gravity (on slope)", "Normal time", "Mildly evil-aligned", "No flat ground", "Volcanic"],
+      "inhabitants": ["Yugoloths", "Barghests", "Selfish petitioners"],
+      "connections": ["Hades", "The Nine Hells", "Astral Plane", "Outlands"],
+      "planar_features": ["River Styx"]
+    },
+    "tags": "plane,outer,gehenna,evil,volcanic,greed,slopes,yugoloths",
+    "source": "SRD 5.1",
+    "sort_order": 21
+  },
+  {
+    "slug": "nine-hells",
+    "title": "The Nine Hells",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "The Nine Hells of Baator is the plane of pure lawful evil, a rigidly hierarchical realm of nine descending layers ruled by archdevils, with Asmodeus at its dark heart.",
+    "content": "## The Nine Hells\n\nThe Nine Hells of Baator is the plane of ultimate lawful evil — a tyrannical hierarchy of nine layers, each ruled by an archdevil who answers only to the one above, with Asmodeus reigning supreme at the bottom. It is a place of infernal contracts, soul trading, and merciless order.\n\n### Nature and Traits\n\nThe Nine Hells descends through nine layers: Avernus (a blasted, war-torn wasteland and the front line of the Blood War), Dis (a vast iron city), Minauros (an endless, fetid swamp), Phlegethos (seas of fire and magma), Stygia (a frozen ocean beneath a dark sky), Malbolge (a steep, rocky slope reformed by its ruler), Maladomini (ruined cities and crumbling monuments), Cania (a glacier of unimaginable cold), and Nessus (the deepest layer, where Asmodeus rules from his Citadel). Infernal law governs everything — contracts are absolute and binding.\n\n### Notable Inhabitants\n\nEach layer has its archdevil: Zariel (Avernus), Dispater (Dis), Mammon (Minauros), Fierna and Belial (Phlegethos), Levistus (Stygia), Glasya (Malbolge), Baalzebul (Maladomini), Mephistopheles (Cania), and Asmodeus (Nessus). Lesser devils — pit fiends, ice devils, bone devils, chain devils, bearded devils, imps, and lemures — form the infernal hierarchy. Tiamat guards the entrance to Dis.\n\n### Travel\n\nThe *plane shift* spell typically reaches Avernus. The River Styx flows through several layers. The gate-town of Ribcage on the Outlands leads to Avernus. Infernal contracts and devil summoning create connections. Descending through the layers requires passing each archdevil's domain.\n\n### Cosmological Significance\n\nThe Nine Hells sits at the nadir of lawful evil on the Great Wheel, between Gehenna and Acheron. It is the origin of all devils and one side of the Blood War against the Abyss. The infernal hierarchy is the ultimate expression of tyrannical order — evil organized into a ruthlessly efficient machine.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Lawful Evil",
+      "layers": ["Avernus", "Dis", "Minauros", "Phlegethos", "Stygia", "Malbolge", "Maladomini", "Cania", "Nessus"],
+      "traits": ["Normal gravity", "Normal time", "Strongly law-aligned", "Strongly evil-aligned", "Binding contracts"],
+      "inhabitants": ["Asmodeus", "Zariel", "Dispater", "Tiamat", "Pit fiends", "Ice devils", "Imps", "Lemures"],
+      "connections": ["Gehenna", "Acheron", "Astral Plane", "Outlands"],
+      "planar_features": ["River Styx", "Blood War"]
+    },
+    "tags": "plane,outer,nine-hells,baator,lawful-evil,devils,asmodeus,hierarchy,contracts",
+    "source": "SRD 5.1",
+    "sort_order": 22
+  },
+  {
+    "slug": "acheron",
+    "title": "Acheron",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "Acheron is the plane of lawful neutral and lawful evil, a realm of endless conflict where massive iron cubes float in a void, crashing into each other as armies clash eternally.",
+    "content": "## Acheron\n\nAcheron, the Infinite Battlefield, is a plane of pointless, endless war. It is law perverted into meaningless conflict — order without purpose, discipline without cause, and battle without end or reason.\n\n### Nature and Traits\n\nAcheron has four layers: Avalas (enormous iron cubes, miles across, tumbling through a void and crashing into one another while armies battle on their surfaces), Thuldanin (cubes covered in the petrified remains of past wars — weapons, war machines, even soldiers turned to stone), Tintibulus (smaller, more irregular shapes with hollow interiors), and Ocanthus (razor-thin blades of black ice flying through absolute darkness). The cubes of Avalas constantly collide with thunderous crashes, and the armies fighting on them never stop.\n\n### Notable Inhabitants\n\nGoblinoid gods, particularly Maglubiyet, make their realms here, driving goblin, hobgoblin, and bugbear petitioners into eternal battle. Armies of lawful evil petitioners fight ceaselessly without remembering why. The Harmonium — a faction dedicated to imposed peace — has a strong presence. Some orc deities clash here as well. Modrons that have gone rogue sometimes end up on Thuldanin.\n\n### Travel\n\nThe *plane shift* spell brings travelers to Avalas, typically onto the surface of one of the great cubes. The gate-town of Rigus on the Outlands leads here — a militaristic town always preparing for war. Portals sometimes open at the sites of great, pointless battles on the Material Plane.\n\n### Cosmological Significance\n\nAcheron sits between the Nine Hells and Mechanus on the Great Wheel, representing law corrupted by evil — order for its own sake, devoid of justice or purpose. It is the ultimate expression of militarism and the tragedy of endless, meaningless conflict.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Lawful Neutral / Lawful Evil",
+      "layers": ["Avalas", "Thuldanin", "Tintibulus", "Ocanthus"],
+      "traits": ["Normal gravity (on cube surfaces)", "Normal time", "Mildly law-aligned", "Mildly evil-aligned", "Constant warfare"],
+      "inhabitants": ["Maglubiyet", "Goblinoid armies", "Endless petitioner armies", "Harmonium"],
+      "connections": ["The Nine Hells", "Mechanus", "Astral Plane", "Outlands"]
+    },
+    "tags": "plane,outer,acheron,lawful,evil,war,cubes,battlefield,goblinoid",
+    "source": "SRD 5.1",
+    "sort_order": 23
+  },
+  {
+    "slug": "mechanus",
+    "title": "Mechanus",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "Mechanus is the plane of pure lawful neutral, an infinite realm of interlocking gears and clockwork perfection where law, order, and logic reign absolute.",
+    "content": "## Mechanus\n\nMechanus, also called Nirvana or the Clockwork Nirvana, is the plane of absolute, pure law. It is an infinite space filled with enormous interlocking gears, cogs, and clockwork mechanisms that turn in perfect, eternal precision — the machinery of the multiverse made manifest.\n\n### Nature and Traits\n\nMechanus consists of a single layer: an infinite void filled with enormous gears (some the size of continents) that interlock and turn in precise patterns. Each gear is a flat disk with gravity pulling toward its surface. The plane enforces order — chaos magic is impeded, random chance is eliminated, and everything operates according to predictable, logical rules. There is no night or day, only the steady, rhythmic turning of the gears.\n\n### Notable Inhabitants\n\nModrons — geometric, hierarchical beings of pure law — are the iconic inhabitants, ruled by Primus from the gear of Regulus. Each modron type reports to the one above it in perfect bureaucratic order. Inevitables — construct-like beings that enforce cosmic laws (contracts, natural death, the passage of time) — originate here. Some lawful neutral deities make their realms on the larger gears.\n\n### Travel\n\nThe *plane shift* spell brings travelers to one of the larger gears. The gate-town of Automata on the Outlands leads here — a town so orderly that even conversations follow strict rules. Modron portals are precisely scheduled and reliable.\n\n### Cosmological Significance\n\nMechanus sits at the apex of pure law on the Great Wheel, between Acheron and Arcadia. It represents law in its purest form — without good or evil, only perfect order. The Great Modron March, occurring every 289 years, sees modron armies march through all the Outer Planes in a circuit.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Lawful Neutral",
+      "layers": ["Mechanus (single layer of gears)"],
+      "traits": ["Normal gravity (on gear surfaces)", "Normal time", "Strongly law-aligned", "Impedes chaos magic", "Perfect order"],
+      "inhabitants": ["Modrons", "Primus", "Inevitables", "Lawful neutral deities"],
+      "connections": ["Acheron", "Arcadia", "Astral Plane", "Outlands"]
+    },
+    "tags": "plane,outer,mechanus,lawful-neutral,clockwork,gears,modrons,order,logic",
+    "source": "SRD 5.1",
+    "sort_order": 24
+  },
+  {
+    "slug": "arcadia",
+    "title": "Arcadia",
+    "category": "plane",
+    "subcategory": "outer-planes",
+    "ruleset": "universal",
+    "summary": "Arcadia is the plane of lawful neutral and lawful good, a realm of perfect order harmonized with goodness, where orchards grow in geometric patterns and communities thrive in peaceful structure.",
+    "content": "## Arcadia\n\nArcadia, the Peaceable Kingdoms, is a plane where law and good exist in near-perfect harmony. It is a realm of ordered beauty — orchards planted in precise geometric patterns, towns laid out in perfect grids, and communities that function like well-tuned clockwork yet are genuinely happy.\n\n### Nature and Traits\n\nArcadia has two layers: Abellio (a realm of perfectly ordered farms, orchards, and towns where every citizen contributes to the common good) and Buxenus (mountainous terrain with fortified communities). The plane once had a third layer, but it was absorbed by Mechanus when its inhabitants became too focused on law at the expense of good. Day and night follow a perfect, predictable cycle. Storms come on schedule. Nature and civilization exist in ideal balance.\n\n### Notable Inhabitants\n\nSome lawful good and lawful neutral deities dwell here. The Harmonium faction maintains a strong presence, promoting their vision of peace through order. Storm giants find the plane congenial. Petitioners live productive, orderly, and contented lives in well-organized communities. Archons sometimes patrol from neighboring Mount Celestia.\n\n### Travel\n\nThe *plane shift* spell brings travelers to Abellio. The gate-town of Fortitude on the Outlands leads here — a town of disciplined, civic-minded folk. Portals to Mount Celestia and Mechanus allow planar travelers to move between the lawful planes.\n\n### Cosmological Significance\n\nArcadia sits between Mechanus and Mount Celestia on the Great Wheel, completing the circuit. It represents the ideal balance of law and good — order in service of the common welfare. The loss of its third layer to Mechanus serves as a cautionary tale about the danger of prioritizing law over goodness.",
+    "metadata_json": {
+      "plane_type": "Outer Plane",
+      "alignment": "Lawful Neutral / Lawful Good",
+      "layers": ["Abellio", "Buxenus"],
+      "traits": ["Normal gravity", "Predictable time", "Mildly law-aligned", "Mildly good-aligned", "Perfect order and nature"],
+      "inhabitants": ["Harmonium", "Storm giants", "Lawful good petitioners", "Some archons"],
+      "connections": ["Mechanus", "Mount Celestia", "Astral Plane", "Outlands"]
+    },
+    "tags": "plane,outer,arcadia,lawful,good,peaceable,order,harmony",
+    "source": "SRD 5.1",
+    "sort_order": 25
+  },
+  {
+    "slug": "astral-plane",
+    "title": "Astral Plane",
+    "category": "plane",
+    "subcategory": "transitive-planes",
+    "ruleset": "universal",
+    "summary": "The Astral Plane is a silvery void between the Material Plane and the Outer Planes, where thought becomes movement and the petrified bodies of dead gods drift in silence.",
+    "content": "## Astral Plane\n\nThe Astral Plane is the realm of thought, memory, and psychic energy — a vast, silvery void that connects the Material Plane to the Outer Planes. It is the medium through which souls travel after death and the domain of beings that exist between the physical and the divine.\n\n### Nature and Traits\n\nThe Astral Plane appears as an infinite, silvery-gray void with no gravity, no weather, and no ground. Travelers move by thinking — Intelligence determines speed rather than physical ability. Time passes differently here: creatures do not age, do not need to eat or drink, and do not need to sleep (though they still need rest for spells). Color pools — swirling vortices of color — serve as portals to the Outer Planes, each color corresponding to a different destination.\n\n### Notable Inhabitants\n\nGithyanki have built their civilization in the Astral Plane, establishing cities on the petrified corpses of dead gods. Their lich-queen Vlaakith rules from the fortress of Tu'narath built atop a dead god's body. Astral dreadnoughts — enormous, terrifying creatures — patrol the void, consuming anything they find. Astral travelers from many worlds pass through on their way to the Outer Planes. Psionics users are particularly drawn to this plane.\n\n### Travel\n\nThe *astral projection* spell sends the caster's astral form into this plane while their body remains on the Material Plane. The *plane shift* spell physically transports travelers. Silver cords connect astral projections to their physical bodies — if severed, the traveler dies. Color pools provide onward travel to the Outer Planes.\n\n### Cosmological Significance\n\nThe Astral Plane is the great highway of the multiverse, connecting the Material Plane to all Outer Planes. Souls travel through it on their way to their final resting place. The bodies of dead gods float here as proof that even divinity is not eternal.",
+    "metadata_json": {
+      "plane_type": "Transitive Plane",
+      "traits": ["No gravity (movement by thought)", "Timeless (no aging)", "Silvery void", "No need for food/water/air"],
+      "inhabitants": ["Githyanki", "Vlaakith", "Astral dreadnoughts", "Astral travelers", "Dead gods"],
+      "connections": ["Material Plane", "All Outer Planes (via color pools)"],
+      "notable_locations": ["Tu'narath", "Color pools", "Dead god corpses"]
+    },
+    "tags": "plane,transitive,astral,thought,githyanki,silver,void,dead-gods",
+    "source": "SRD 5.1",
+    "sort_order": 26
+  },
+  {
+    "slug": "deep-ethereal",
+    "title": "Deep Ethereal",
+    "category": "plane",
+    "subcategory": "transitive-planes",
+    "ruleset": "universal",
+    "summary": "The Deep Ethereal is the vast, misty expanse beyond the Border Ethereal, a fogbound realm of swirling curtains that connect to the Inner Planes and harbor hidden demiplanes.",
+    "content": "## Deep Ethereal\n\nThe Deep Ethereal is the deeper region of the Ethereal Plane, beyond the Border Ethereal that mirrors the Material Plane. It is an endless expanse of swirling, colorful mist where travelers can become hopelessly lost and where hidden demiplanes drift like islands in a fog-bound sea.\n\n### Nature and Traits\n\nThe Deep Ethereal has no fixed landmarks — only roiling curtains of vaporous color that serve as portals to the Border Ethereal regions of different planes. Navigation requires experience or magic, as the mist plays tricks on perception. Ether cyclones — massive storms of ethereal energy — can hurl travelers to random destinations. Demiplanes form spontaneously or are created deliberately by powerful spellcasters.\n\n### Notable Inhabitants\n\nThe Deep Ethereal is sparsely populated. Ethereal marauders hunt in packs through the mists. Phase spiders build webs between curtains. Dhour, ephemeral creatures of raw ethereal energy, drift through the void. Most intelligent inhabitants are travelers passing through or spellcasters who have created personal demiplanes. The most famous demiplane — the Demiplane of Dread (Ravenloft) — exists within the Deep Ethereal.\n\n### Travel\n\nReaching the Deep Ethereal requires passing through the Border Ethereal using the *etherealness* spell and continuing deeper into the mists. The *demiplane* spell creates or accesses small pocket dimensions here. Navigation between curtains requires Intelligence checks or guidance magic.\n\n### Cosmological Significance\n\nThe Deep Ethereal serves as the connective tissue between the Inner Planes, linking their Border Ethereal regions through the mists. It is the substrate in which demiplanes form — pocket dimensions that exist outside the normal planar structure. Some sages believe the Deep Ethereal is the \"space between spaces\" of the multiverse.",
+    "metadata_json": {
+      "plane_type": "Transitive Plane",
+      "traits": ["No gravity", "Normal time (with variation)", "Fog-filled", "Curtains as portals", "Demiplane formation"],
+      "inhabitants": ["Ethereal marauders", "Phase spiders", "Demiplane creators"],
+      "connections": ["Border Ethereal", "Inner Planes", "Demiplanes"],
+      "notable_locations": ["Demiplane of Dread (Ravenloft)", "Various created demiplanes"]
+    },
+    "tags": "plane,transitive,ethereal,deep,mist,demiplanes,curtains",
+    "source": "SRD 5.1",
+    "sort_order": 27
+  },
+  {
+    "slug": "sigil",
+    "title": "Sigil, City of Doors",
+    "category": "plane",
+    "subcategory": "other-planes",
+    "ruleset": "universal",
+    "summary": "Sigil is the City of Doors, a torus-shaped city floating atop the Spire in the Outlands, containing portals to every plane in existence and ruled by the enigmatic Lady of Pain.",
+    "content": "## Sigil, City of Doors\n\nSigil is the most extraordinary city in the multiverse — a torus-shaped metropolis that floats atop the infinitely tall Spire at the center of the Outlands. It contains portals to every plane, every world, and every reality, making it the ultimate crossroads of the multiverse.\n\n### Nature and Traits\n\nSigil exists on the inside of a giant ring (torus). Looking up, you see the buildings and streets on the opposite side of the ring above you. There is no sky — only more city. The city is divided into wards: The Lady's Ward (wealthy and governmental), the Market Ward (commerce), the Guildhall Ward (craft and industry), the Clerk's Ward (bureaucracy), the Lower Ward (foundries and portals to the Lower Planes), and the Hive Ward (the slums). Portals — called \"doors\" — can be found anywhere: in doorframes, archways, under bridges, even inside wardrobes. Each requires a specific key to activate, which can be anything from a bent fork to a specific thought.\n\n### Notable Inhabitants\n\nThe Lady of Pain rules Sigil absolutely but silently — she never speaks, never explains, and never negotiates. Those who worship her or threaten the city are flayed by her shadow or mazed (trapped in a personal pocket dimension). The factions — philosophical groups like the Harmonium, the Fraternity of Order, the Xaositects, and the Bleak Cabal — vie for political influence. Every species from every plane can be found in Sigil.\n\n### Travel\n\nSigil can only be reached through its portals — there is no other way in or out. No deity can enter Sigil; the Lady of Pain bars them all. The portals lead everywhere, but finding the right door and the right key is the challenge. Tout guides make a living helping travelers navigate the city's labyrinthine portal network.\n\n### Cosmological Significance\n\nSigil is unique in the multiverse — a neutral ground where no god holds power, where fiends and celestials might share a tavern, and where every plane is just a doorway away. It is the hub of planar travel and the setting of the classic Planescape campaign setting.",
+    "metadata_json": {
+      "plane_type": "Unique (atop the Outlands Spire)",
+      "traits": ["Normal gravity", "Normal time", "No deity access", "Portal-rich", "Torus-shaped"],
+      "inhabitants": ["Lady of Pain", "Planar factions", "Every species in existence"],
+      "connections": ["Every plane (via portals)"],
+      "wards": ["Lady's Ward", "Market Ward", "Guildhall Ward", "Clerk's Ward", "Lower Ward", "Hive Ward"],
+      "ruler": "The Lady of Pain"
+    },
+    "tags": "plane,other,sigil,city-of-doors,lady-of-pain,planescape,portals,hub",
+    "source": "SRD 5.1",
+    "sort_order": 28
+  },
+  {
+    "slug": "outlands",
+    "title": "Outlands",
+    "category": "plane",
+    "subcategory": "other-planes",
+    "ruleset": "universal",
+    "summary": "The Outlands is the plane of true neutrality at the center of the Outer Planes, a vast disk with gate-towns leading to every Outer Plane and the infinitely tall Spire at its center.",
+    "content": "## Outlands\n\nThe Outlands, also called the Concordant Domain, is the plane of true neutrality — the hub around which all the Outer Planes revolve. It is a vast, disk-shaped plane with the infinitely tall Spire at its center, atop which floats Sigil.\n\n### Nature and Traits\n\nThe Outlands is shaped like a great disk. At its edge, the plane borders and bleeds into all sixteen Outer Planes. Moving toward the center, magic becomes progressively weaker — near the Spire, even divine magic fails. The landscape varies enormously depending on direction, reflecting the nature of the nearest Outer Plane. The plane is truly neutral; no alignment holds special power here.\n\n### Notable Inhabitants\n\nThe gate-towns are the most important settlements, each reflecting the character of the plane its gate leads to: Excelsior (Mount Celestia), Tradegate (Bytopia), Ecstasy (Elysium), Faunel (Beastlands), Sylvania (Arborea), Glorium (Ysgard), Xaos (Limbo), Bedlam (Pandemonium), Plague-Mort (Abyss), Curst (Carceri), Hopeless (Hades), Torch (Gehenna), Ribcage (Nine Hells), Rigus (Acheron), Automata (Mechanus), and Fortitude (Arcadia). Rilmani — native outsiders of true neutrality — work to maintain the cosmic balance.\n\n### Travel\n\nThe *plane shift* spell can reach the Outlands. The gate-towns provide access to every Outer Plane. Walking toward the Spire from any direction eventually leads to the center. If a gate-town becomes too aligned with its neighboring plane, it can be absorbed entirely, and a new gate-town forms to replace it.\n\n### Cosmological Significance\n\nThe Outlands is the central hub of the Outer Planes and the embodiment of true neutrality. The Spire represents the ultimate balance point of the multiverse. The gate-towns serve as the primary means of travel between the Outer Planes for those who cannot cast *plane shift*.",
+    "metadata_json": {
+      "plane_type": "Outer Plane (Central)",
+      "alignment": "True Neutral",
+      "traits": ["Normal gravity", "Normal time", "True neutral", "Magic weakens near Spire", "Disk-shaped"],
+      "inhabitants": ["Rilmani", "Gate-town residents", "Planar travelers"],
+      "connections": ["All Outer Planes (via gate-towns)", "Sigil (atop the Spire)"],
+      "gate_towns": ["Excelsior", "Tradegate", "Ecstasy", "Faunel", "Sylvania", "Glorium", "Xaos", "Bedlam", "Plague-Mort", "Curst", "Hopeless", "Torch", "Ribcage", "Rigus", "Automata", "Fortitude"]
+    },
+    "tags": "plane,other,outlands,neutral,spire,gate-towns,concordant,hub",
+    "source": "SRD 5.1",
+    "sort_order": 29
+  },
+  {
+    "slug": "far-realm",
+    "title": "Far Realm",
+    "category": "plane",
+    "subcategory": "other-planes",
+    "ruleset": "universal",
+    "summary": "The Far Realm is an alien dimension beyond the known multiverse, a place of incomprehensible geometry and maddening entities that exists outside the Great Wheel entirely.",
+    "content": "## Far Realm\n\nThe Far Realm is not truly a plane in the conventional sense — it exists outside the known multiverse entirely. It is a dimension of alien geometry, incomprehensible physics, and entities so foreign to mortal understanding that merely perceiving them causes madness. It is the origin of aberrations.\n\n### Nature and Traits\n\nThe Far Realm defies description using mortal concepts. Space, time, and matter do not function as they do in the known planes. The realm appears as layers of infinite, translucent membranes stacked upon each other, each containing alien realities visible through the others. Colors that don't exist, sounds that can't be heard, and geometries that can't be drawn fill the space. Prolonged exposure causes insanity, mutation, and transformation in mortal visitors.\n\n### Notable Inhabitants\n\nThe Far Realm is the origin of aberrations — mind flayers, beholders, aboleths, and other creatures that seem fundamentally wrong in the context of the normal multiverse. Elder evils and entities of cosmic horror dwell here — beings so vast and alien that they regard mortal worlds the way mortals regard ant colonies. Some sages believe the Great Old Ones (warlock patrons) hail from here.\n\n### Travel\n\nThe Far Realm is extraordinarily difficult to reach. No normal planar magic can access it. Ancient elven gates, built in ages past to study the realm, sometimes still function. Tears in reality caused by powerful aberrant magic can open brief rifts. The most common way mortals encounter the Far Realm is through its intrusions into the Material Plane — places where reality has been thinned by aberrant influence.\n\n### Cosmological Significance\n\nThe Far Realm exists entirely outside the Great Wheel and all known cosmological models. It is the source of aberrations and alien madness, representing everything that does not belong in the ordered multiverse. Its influence is considered a corruption or infection of normal reality.",
+    "metadata_json": {
+      "plane_type": "Beyond the Multiverse",
+      "traits": ["Alien geometry", "Non-Euclidean", "Madness-inducing", "Outside known cosmology", "Membrane layers"],
+      "inhabitants": ["Mind flayers (origin)", "Beholders", "Aboleths", "Elder evils", "Great Old Ones"],
+      "connections": ["Rare rifts to Material Plane", "Ancient elven gates"]
+    },
+    "tags": "plane,other,far-realm,aberration,madness,alien,cosmic-horror,lovecraftian",
+    "source": "SRD 5.1",
+    "sort_order": 30
+  },
+  {
+    "slug": "positive-energy-plane",
+    "title": "Positive Energy Plane",
+    "category": "plane",
+    "subcategory": "other-planes",
+    "ruleset": "universal",
+    "summary": "The Positive Energy Plane is a blinding realm of pure life energy so intense that it can heal — or overwhelm and destroy — living creatures with an excess of vitality.",
+    "content": "## Positive Energy Plane\n\nThe Positive Energy Plane is the source of all life energy in the multiverse — a realm of blinding, radiant light and overwhelming vitality. It is the origin of healing magic and the animating force of living things, but its energy is so intense that it is paradoxically deadly to mortal visitors.\n\n### Nature and Traits\n\nThe Positive Energy Plane is an infinite expanse of radiant white light with no solid surfaces, no landmarks, and no shadows. The plane suffuses visitors with life energy — healing wounds and curing diseases. However, the energy doesn't stop at full health. Without protection, a creature continues to absorb energy until it is overwhelmed, burning with radiant power until it explodes in a burst of light. Even undead, which are harmed by positive energy, are quickly destroyed here.\n\n### Notable Inhabitants\n\nFew creatures can survive here permanently. Positive energy elementals (radiant beings of pure life force) are native. Xag-ya — exotic energy creatures — drift through the brilliance. Some powerful celestials visit briefly. Healers and clerics sometimes meditate here in protected enclaves, drawing on the plane's restorative power.\n\n### Travel\n\nThe *plane shift* spell can reach here, but arriving without magical protection from the plane's energy is quickly fatal (ironically, from too much life). Vortices sometimes form at sites of powerful healing or resurrection magic on the Material Plane. Most visitors use protective magic and stay only briefly.\n\n### Cosmological Significance\n\nThe Positive Energy Plane is one of the two Energy Planes that fuel the multiverse, opposing the Negative Energy Plane. It is the source of all healing magic, resurrection, and the life force that animates living creatures. The tension between positive and negative energy is one of the fundamental forces of the multiverse.",
+    "metadata_json": {
+      "plane_type": "Energy Plane",
+      "traits": ["No gravity", "Normal time", "Blinding light", "Overwhelming healing (then destruction)", "No solid surfaces"],
+      "inhabitants": ["Positive energy elementals", "Xag-ya"],
+      "connections": ["Material Plane", "Inner Planes"],
+      "energy_type": "Positive (Life)"
+    },
+    "tags": "plane,other,positive-energy,life,healing,radiant,light",
+    "source": "SRD 5.1",
+    "sort_order": 31
+  },
+  {
+    "slug": "negative-energy-plane",
+    "title": "Negative Energy Plane",
+    "category": "plane",
+    "subcategory": "other-planes",
+    "ruleset": "universal",
+    "summary": "The Negative Energy Plane is a void of utter darkness and entropy that drains life from all living things, the source of necromantic energy and the power that animates undead.",
+    "content": "## Negative Energy Plane\n\nThe Negative Energy Plane is the antithesis of life — a void of absolute darkness and entropy that hungers for the warmth and vitality of living things. It is the source of necromantic energy and the force that animates undead creatures.\n\n### Nature and Traits\n\nThe Negative Energy Plane is an infinite void of utter, absolute darkness — not merely the absence of light, but a darkness that actively devours illumination. The plane drains life force from living creatures, dealing necrotic damage each round. Without magical protection, a living creature is quickly drained to a lifeless husk. The plane has no solid surfaces, no air, and no warmth. It is entropy made manifest.\n\n### Notable Inhabitants\n\nUndead of all kinds are empowered here, though few choose to dwell permanently in the void. Nightshades — among the most powerful undead in existence — are native to this plane. Negative energy elementals (beings of pure entropy) drift through the darkness. The occasional lich or powerful necromancer maintains a fortress here, drawing on the plane's energy. Xeg-yi energy creatures are native.\n\n### Travel\n\nThe *plane shift* spell can reach here, but without protection from negative energy and magical sources of light, air, and warmth, death comes within rounds. Vortices form at sites of mass death, powerful necromancy, or undead infestations on the Material Plane. Only the most prepared (or foolish) travelers come here deliberately.\n\n### Cosmological Significance\n\nThe Negative Energy Plane opposes the Positive Energy Plane as the second fundamental Energy Plane. It is the source of all necromantic magic, the power behind undead animation, and the force of entropy that eventually claims all things. The balance between positive and negative energy is essential to the cycle of life and death in the multiverse.",
+    "metadata_json": {
+      "plane_type": "Energy Plane",
+      "traits": ["No gravity", "Normal time", "Absolute darkness", "Life-draining", "No air", "No solid surfaces"],
+      "inhabitants": ["Nightshades", "Negative energy elementals", "Xeg-yi", "Powerful undead"],
+      "connections": ["Material Plane", "Inner Planes", "Shadowfell"],
+      "energy_type": "Negative (Death/Entropy)"
+    },
+    "tags": "plane,other,negative-energy,death,entropy,necrotic,darkness,undead",
+    "source": "SRD 5.1",
+    "sort_order": 32
+  }
+]

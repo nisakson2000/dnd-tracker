@@ -1,0 +1,200 @@
+[
+  {
+    "slug": "ability-checks",
+    "title": "Ability Checks",
+    "category": "rule",
+    "subcategory": "core-mechanics",
+    "ruleset": "universal",
+    "summary": "When outcome is uncertain, the DM calls for an ability check: roll d20 + ability modifier (+ proficiency if applicable).",
+    "content": "## Ability Checks\n\nAn ability check tests a character's or monster's innate talent and training in an effort to overcome a challenge.\n\n### How It Works\n1. The DM determines which of the six abilities is relevant.\n2. The DM sets a **Difficulty Class (DC)** based on how hard the task is.\n3. You roll a **d20** and add the relevant **ability modifier** (and **proficiency bonus** if you're proficient in a relevant skill).\n4. If the total **equals or exceeds** the DC, the check succeeds.\n\n### Difficulty Classes\n| DC | Difficulty |\n|---|---|\n| 5 | Very Easy |\n| 10 | Easy |\n| 15 | Medium |\n| 20 | Hard |\n| 25 | Very Hard |\n| 30 | Nearly Impossible |\n\n### Skills\nEach ability has associated skills:\n- **Strength**: Athletics\n- **Dexterity**: Acrobatics, Sleight of Hand, Stealth\n- **Constitution**: (no skills, but used for concentration checks)\n- **Intelligence**: Arcana, History, Investigation, Nature, Religion\n- **Wisdom**: Animal Handling, Insight, Medicine, Perception, Survival\n- **Charisma**: Deception, Intimidation, Performance, Persuasion\n\n### Contests\nWhen two creatures are competing directly, they make opposing ability checks. The higher result wins, with ties going to the defender or the status quo.\n\n### Passive Checks\nA passive check is 10 + all modifiers that normally apply. Used when the DM doesn't want to call for a roll (e.g., Passive Perception to notice hidden creatures).",
+    "tags": "ability check,skill check,d20,DC,difficulty class,proficiency,passive,contest",
+    "sort_order": 1
+  },
+  {
+    "slug": "saving-throws",
+    "title": "Saving Throws",
+    "category": "rule",
+    "subcategory": "core-mechanics",
+    "ruleset": "universal",
+    "summary": "A saving throw represents an attempt to resist a spell, trap, poison, disease, or similar threat. Roll d20 + ability modifier + proficiency (if proficient).",
+    "content": "## Saving Throws\n\nA saving throw — also called a save — represents an attempt to resist a spell, a trap, a poison, a disease, or a similar threat.\n\n### How It Works\n1. Something forces you to make a save (a spell, trap, monster ability, etc.).\n2. The effect specifies which ability to use (STR, DEX, CON, INT, WIS, or CHA).\n3. Roll **d20 + ability modifier** (+ **proficiency bonus** if proficient in that save).\n4. Meet or beat the **DC** to resist or reduce the effect.\n\n### Class Save Proficiencies\nEach class grants proficiency in two saving throws:\n- **Barbarian**: Strength, Constitution\n- **Bard**: Dexterity, Charisma\n- **Cleric**: Wisdom, Charisma\n- **Druid**: Intelligence, Wisdom\n- **Fighter**: Strength, Constitution\n- **Monk**: Strength, Dexterity\n- **Paladin**: Wisdom, Charisma\n- **Ranger**: Strength, Dexterity\n- **Rogue**: Dexterity, Intelligence\n- **Sorcerer**: Constitution, Charisma\n- **Warlock**: Wisdom, Charisma\n- **Wizard**: Intelligence, Wisdom\n\n### Common Save Types\n- **DEX saves**: Dodging area effects (Fireball, Lightning Bolt, traps)\n- **CON saves**: Resisting poison, disease, maintaining concentration\n- **WIS saves**: Resisting charm, fear, and mind-affecting effects\n- **STR saves**: Resisting being pushed, restrained, or knocked prone\n- **INT saves**: Rare; resisting psionic attacks, some illusions\n- **CHA saves**: Resisting banishment, some possession effects",
+    "tags": "saving throw,save,d20,proficiency,resist,spell,trap",
+    "sort_order": 2
+  },
+  {
+    "slug": "advantage-disadvantage",
+    "title": "Advantage and Disadvantage",
+    "category": "rule",
+    "subcategory": "core-mechanics",
+    "ruleset": "universal",
+    "summary": "Advantage means rolling two d20s and taking the higher. Disadvantage means taking the lower. They cancel each other out.",
+    "content": "## Advantage and Disadvantage\n\nThe most common ways the d20 roll is modified.\n\n### Advantage\n- Roll **two d20s** and use the **higher** result.\n- Represents a favorable circumstance.\n\n### Disadvantage\n- Roll **two d20s** and use the **lower** result.\n- Represents an unfavorable circumstance.\n\n### Key Rules\n- If you have **both** advantage and disadvantage, they **cancel out** — roll normally (one d20). This is true regardless of how many sources of each you have.\n- Multiple sources of advantage don't stack — you still only roll two dice.\n- You can't benefit from advantage on a roll if something in the situation gives you disadvantage, and vice versa.\n\n### Common Sources of Advantage\n- Attacking a prone target in melee\n- Attacking while invisible\n- Attacking a restrained, stunned, paralyzed, or unconscious target\n- Help action (ally assists you)\n- Using Inspiration\n- Reckless Attack (Barbarian)\n- Flanking (optional rule)\n\n### Common Sources of Disadvantage\n- Attacking a prone target at range\n- Attacking while blinded, frightened, or poisoned\n- Attacking at long range\n- Attacking in heavy obscurement\n- Wearing armor you're not proficient with (on all STR/DEX checks and saves)",
+    "tags": "advantage,disadvantage,d20,roll twice,cancel,higher,lower",
+    "sort_order": 3
+  },
+  {
+    "slug": "combat-turn",
+    "title": "Combat: Your Turn",
+    "category": "rule",
+    "subcategory": "combat",
+    "ruleset": "universal",
+    "summary": "On your turn, you can move up to your speed, take one action, and possibly a bonus action. You also get one reaction per round.",
+    "content": "## Combat: Your Turn\n\nCombat is organized into rounds and turns. On your turn, you can do the following in any order:\n\n### Movement\n- Move up to your **speed** in feet.\n- You can break up movement before and after your action.\n- Moving through difficult terrain costs 2 feet per 1 foot moved.\n- You can move through a friendly creature's space, but not an enemy's (unless they're two sizes larger/smaller).\n\n### Action\nYou get **one action** per turn. Common actions:\n- **Attack**: Make one melee or ranged attack (more with Extra Attack).\n- **Cast a Spell**: Cast a spell with a casting time of 1 action.\n- **Dash**: Double your movement for the turn.\n- **Disengage**: Your movement doesn't provoke opportunity attacks this turn.\n- **Dodge**: Attacks against you have disadvantage; you have advantage on DEX saves.\n- **Help**: Give an ally advantage on their next check or attack against a target within 5 ft.\n- **Hide**: Make a Stealth check to become hidden.\n- **Ready**: Prepare an action to trigger on a specific condition (uses your reaction).\n- **Search**: Make a Perception or Investigation check.\n- **Use an Object**: Interact with a second object or use a complex item.\n\n### Bonus Action\n- You only get a bonus action if a feature or spell specifically grants one.\n- You can only take **one** bonus action per turn.\n- Examples: offhand attack (two-weapon fighting), *Healing Word*, Cunning Action (Rogue).\n\n### Free Object Interaction\n- One free interaction per turn: draw/sheathe a weapon, open a door, pick up an item.\n\n### Reaction\n- **One reaction per round** (recharges at the start of your next turn).\n- Triggered by a specific event.\n- Most common: **Opportunity Attack** (enemy leaves your reach without Disengaging).",
+    "tags": "combat,turn,action,bonus action,reaction,movement,attack,dash,disengage,dodge",
+    "sort_order": 4
+  },
+  {
+    "slug": "combat-attacking",
+    "title": "Combat: Making an Attack",
+    "category": "rule",
+    "subcategory": "combat",
+    "ruleset": "universal",
+    "summary": "Roll d20 + ability modifier + proficiency bonus. If the total meets or exceeds the target's AC, the attack hits.",
+    "content": "## Making an Attack\n\n### Attack Roll\n1. Roll a **d20**.\n2. Add your **ability modifier** (STR for melee, DEX for ranged, or DEX for finesse weapons).\n3. Add your **proficiency bonus** if you're proficient with the weapon.\n4. Compare to the target's **Armor Class (AC)**.\n5. If the total **equals or exceeds** the AC, you **hit**.\n\n### Damage Roll\nOn a hit, roll the weapon's **damage dice** and add the relevant **ability modifier** (same one used for the attack).\n\n### Critical Hits\n- A **natural 20** (rolling 20 on the d20) always hits, regardless of AC.\n- Roll all damage dice **twice** (then add modifiers once).\n\n### Critical Misses\n- A **natural 1** (rolling 1 on the d20) always misses, regardless of modifiers.\n\n### Melee vs. Ranged\n- **Melee attacks**: Use STR modifier (or DEX with finesse weapons). Standard reach is 5 feet.\n- **Ranged attacks**: Use DEX modifier. Has a normal range and a long range (disadvantage). Disadvantage if an enemy is within 5 feet of you.\n\n### Two-Weapon Fighting\n- When you Attack with a **light** melee weapon, you can use a **bonus action** to attack with a different light melee weapon in the other hand.\n- You don't add your ability modifier to the damage of the bonus attack (unless it's negative), unless you have the Two-Weapon Fighting fighting style.\n\n### Spellcasting Attacks\n- Some spells require attack rolls (e.g., *Fire Bolt*, *Guiding Bolt*).\n- Roll d20 + spellcasting ability modifier + proficiency bonus.\n- Compare to target's AC.",
+    "tags": "combat,attack,d20,AC,armor class,damage,critical hit,melee,ranged,proficiency",
+    "sort_order": 5
+  },
+  {
+    "slug": "combat-damage-healing",
+    "title": "Combat: Damage and Healing",
+    "category": "rule",
+    "subcategory": "combat",
+    "ruleset": "universal",
+    "summary": "Damage reduces HP. At 0 HP, you fall unconscious and start making death saves. Healing restores HP.",
+    "content": "## Damage and Healing\n\n### Taking Damage\n- Damage reduces your **current hit points**.\n- If you have **temporary hit points**, damage reduces those first.\n- Damage types (fire, slashing, etc.) matter for resistances and vulnerabilities.\n\n### Damage Resistance and Vulnerability\n- **Resistance**: Take **half damage** (rounded down) from that type.\n- **Vulnerability**: Take **double damage** from that type.\n- **Immunity**: Take **no damage** from that type.\n\n### Dropping to 0 Hit Points\n- If damage reduces you to 0 HP, you either die outright or fall **unconscious** and start making **death saving throws**.\n- **Instant Death**: If remaining damage after hitting 0 equals or exceeds your HP maximum, you die instantly. (e.g., if you have 12 max HP and take 24 damage while at 5 HP, the remaining 19 exceeds 12 — instant death.)\n\n### Death Saving Throws\n- At the start of each turn while at 0 HP, roll a **d20** (no modifiers).\n- **10 or higher**: Success. **9 or lower**: Failure.\n- **Three successes**: You stabilize (unconscious but not dying).\n- **Three failures**: You **die**.\n- **Natural 20**: Regain 1 HP and wake up.\n- **Natural 1**: Counts as **two failures**.\n- Taking damage while at 0 HP = one automatic failure (two if critical).\n\n### Healing\n- Healing restores hit points. You can't exceed your maximum.\n- Any healing on a creature at 0 HP brings them back to consciousness.\n- *Healing Word* (bonus action, ranged) is popular for reviving unconscious allies.\n\n### Temporary Hit Points\n- A buffer that absorbs damage first.\n- Don't stack — take the higher value if you gain more.\n- Disappear after a long rest.",
+    "tags": "combat,damage,healing,hit points,HP,death,death saves,resistance,vulnerability,temporary HP",
+    "sort_order": 6
+  },
+  {
+    "slug": "resting",
+    "title": "Resting: Short and Long Rests",
+    "category": "rule",
+    "subcategory": "core-mechanics",
+    "ruleset": "universal",
+    "summary": "Short rests (1 hour) let you spend hit dice. Long rests (8 hours) restore all HP, spell slots, and most resources.",
+    "content": "## Resting\n\n### Short Rest\n- At least **1 hour** of downtime (eating, reading, tending wounds).\n- You can spend **hit dice** to recover HP: roll each die + CON modifier.\n- Some class features recover:\n  - **Warlock**: All spell slots\n  - **Fighter**: Second Wind, Action Surge\n  - **Monk**: All Ki points\n  - **Bard**: Bardic Inspiration (at 5th level)\n  - **Cleric (some domains)**: Channel Divinity\n  - **Druid**: Wild Shape uses\n\n### Long Rest\n- At least **8 hours**, with no more than 2 hours of light activity (keeping watch, reading).\n- You can only benefit from **one long rest per 24 hours**.\n- Restores:\n  - **All hit points**\n  - **All spell slots**\n  - **Most class features** (Action Surge, Ki, Rage, Wild Shape, Channel Divinity, etc.)\n  - **Half your total hit dice** (minimum 1), rounded up\n  - **Reduces exhaustion** by 1 level (with food and water)\n\n### Hit Dice Recovery\n- You regain spent hit dice equal to **half your total** (minimum 1) after a long rest.\n- Example: A level 6 character regains 3 hit dice on a long rest.",
+    "tags": "rest,short rest,long rest,hit dice,recovery,spell slots,healing",
+    "sort_order": 7
+  },
+  {
+    "slug": "spellcasting-rules",
+    "title": "Spellcasting Rules",
+    "category": "rule",
+    "subcategory": "spellcasting",
+    "ruleset": "universal",
+    "summary": "Spells cost spell slots to cast, have components (V/S/M), and may require concentration. Cantrips are free and unlimited.",
+    "content": "## Spellcasting\n\n### Spell Slots\n- Casting a spell of 1st level or higher uses a **spell slot** of that level or higher.\n- **Upcasting**: You can cast a spell using a higher-level slot for increased effect (if the spell says so).\n- Slots are restored on a **long rest** (or short rest for Warlocks).\n\n### Cantrips\n- Level 0 spells that can be cast **at will** — no spell slot required.\n- Many scale with character level (e.g., *Fire Bolt* deals more damage at levels 5, 11, 17).\n\n### Spell Components\n- **V (Verbal)**: You must speak. Can't cast if silenced.\n- **S (Somatic)**: You must gesture with a free hand.\n- **M (Material)**: You need specific materials. A component pouch or spellcasting focus can substitute for materials without a gold cost.\n\n### Concentration\n- Some spells require **concentration** to maintain.\n- You can only concentrate on **one spell at a time**.\n- Casting another concentration spell ends the first.\n- Taking damage forces a **Constitution saving throw** (DC = 10 or half the damage, whichever is higher). Fail = spell ends.\n- Being incapacitated or killed ends concentration.\n\n### Spell Save DC\nFormula: **8 + proficiency bonus + spellcasting ability modifier**\n\n### Spell Attack Bonus\nFormula: **proficiency bonus + spellcasting ability modifier**\n\n### Spellcasting Ability by Class\n| Class | Ability |\n|---|---|\n| Wizard | Intelligence |\n| Cleric, Druid, Ranger | Wisdom |\n| Bard, Paladin, Sorcerer, Warlock | Charisma |\n\n### Ritual Casting\n- Spells with the **ritual** tag can be cast in 10 extra minutes without using a spell slot.\n- Not all classes can ritual cast (Wizards, Clerics, Druids, Bards can).\n\n### Preparing Spells\n- Some classes (Cleric, Druid, Paladin, Wizard) must **prepare** a list of spells after each long rest.\n- Number prepared = ability modifier + class level (varies by class).\n- Known casters (Bard, Ranger, Sorcerer, Warlock) always have their spells available.",
+    "tags": "spellcasting,spell slots,cantrip,concentration,components,ritual,prepared,spell save DC,spell attack",
+    "sort_order": 8
+  },
+  {
+    "slug": "cover",
+    "title": "Cover",
+    "category": "rule",
+    "subcategory": "combat",
+    "ruleset": "universal",
+    "summary": "Walls, trees, and creatures can provide cover, granting +2 or +5 to AC and DEX saves, or total protection.",
+    "content": "## Cover\n\nBarriers between you and an attacker can provide protection.\n\n### Half Cover (+2)\n- A target has **half cover** if an obstacle blocks at least half of its body.\n- Grants **+2 to AC** and **+2 to Dexterity saving throws**.\n- Examples: low wall, furniture, another creature.\n\n### Three-Quarters Cover (+5)\n- A target has **three-quarters cover** if about three-quarters of it is covered.\n- Grants **+5 to AC** and **+5 to Dexterity saving throws**.\n- Examples: arrow slit, thick tree trunk.\n\n### Total Cover\n- A target has **total cover** if it is completely concealed.\n- **Can't be targeted directly** by an attack or spell (unless the effect goes around corners).\n- Examples: behind a solid wall, inside a closed room.",
+    "tags": "cover,AC,defense,half cover,three-quarters cover,total cover,dexterity",
+    "sort_order": 9
+  },
+  {
+    "slug": "opportunity-attacks",
+    "title": "Opportunity Attacks",
+    "category": "rule",
+    "subcategory": "combat",
+    "ruleset": "universal",
+    "summary": "When a creature you can see moves out of your reach, you can use your reaction to make one melee attack against it.",
+    "content": "## Opportunity Attacks\n\nWhen a hostile creature that you can see moves out of your reach, you can use your **reaction** to make **one melee attack** against that creature.\n\n### Key Rules\n- Uses your **reaction** (one per round).\n- Must be a **melee** attack (not ranged, not a spell unless you have War Caster).\n- Triggered by **leaving** your reach, not entering it.\n- The attack interrupts the movement — if it kills the creature, it drops before leaving.\n\n### Avoiding Opportunity Attacks\n- **Disengage action**: Your movement doesn't provoke OAs for the rest of the turn.\n- **Teleportation**: Doesn't provoke (e.g., *Misty Step*).\n- **Forced movement**: Being pushed, pulled, or knocked away doesn't provoke.\n- **War Caster feat**: Lets you cast a spell (single target, 1 action casting time) instead of making a melee attack.\n\n### Common Mistakes\n- Moving *within* an enemy's reach does NOT provoke — only *leaving* it.\n- You CAN make opportunity attacks while grappling an enemy (if they somehow escape).\n- Rogues can use Sneak Attack on opportunity attacks (since it's once per turn, not once per round).",
+    "tags": "opportunity attack,reaction,melee,movement,disengage,reach",
+    "sort_order": 10
+  },
+  {
+    "slug": "movement-and-position",
+    "title": "Movement and Position",
+    "category": "rule",
+    "subcategory": "combat",
+    "ruleset": "universal",
+    "summary": "On your turn, you can move a distance up to your speed. Movement can be broken up before and after actions.",
+    "content": "## Movement and Position\n\n### Speed\n- Your speed is how many feet you can move on your turn.\n- Most races have **30 feet**. Dwarves and Halflings have **25 feet**.\n\n### Breaking Up Movement\n- You can move before and after your action.\n- Example: Move 15 feet → Attack → Move 15 feet.\n\n### Difficult Terrain\n- Each foot of movement in difficult terrain costs **2 feet**.\n- Examples: rubble, undergrowth, shallow water, ice, stairs.\n\n### Climbing, Swimming, Crawling\n- Each foot costs **2 feet** of movement (3 in difficult terrain).\n- The DM may require ability checks for climbing or swimming in dangerous conditions.\n\n### Jumping\n- **Long Jump**: Running = STR score in feet. Standing = half.\n- **High Jump**: Running = 3 + STR modifier in feet. Standing = half.\n\n### Falling\n- Take **1d6 bludgeoning damage per 10 feet** fallen, to a maximum of 20d6.\n- You land prone.\n\n### Squeezing\n- A creature can squeeze through a space one size smaller.\n- Costs 2 feet per foot moved. Disadvantage on attacks and DEX saves. Attacks against have advantage.",
+    "tags": "movement,speed,difficult terrain,climbing,swimming,jumping,falling,position",
+    "sort_order": 11
+  },
+  {
+    "slug": "actions-in-combat",
+    "title": "Actions in Combat",
+    "category": "rule",
+    "subcategory": "combat",
+    "ruleset": "universal",
+    "summary": "A quick reference for all standard actions available to every character in combat.",
+    "content": "## Actions in Combat\n\n### Attack\nMake one melee or ranged attack. At higher levels, some classes get **Extra Attack** (2 or more attacks per Attack action).\n\n### Cast a Spell\nCast any spell with a casting time of **1 action**. Some spells use bonus actions or reactions instead.\n\n### Dash\nGain extra movement equal to your speed for the turn. Effectively doubles your movement.\n\n### Disengage\nYour movement doesn't provoke **opportunity attacks** for the rest of the turn.\n\n### Dodge\n- Attacks against you have **disadvantage** (if you can see the attacker).\n- You have **advantage** on DEX saving throws.\n- Lost if you're incapacitated or your speed drops to 0.\n\n### Help\n- Help an ally with a task: they get **advantage** on their next ability check.\n- Help in combat: choose an ally and a target within 5 feet of you. The ally gets advantage on their next attack against that target.\n\n### Hide\nMake a **Dexterity (Stealth)** check. On success, you're hidden (unseen and unheard). Benefits of being hidden:\n- Attacks against you can't target you directly.\n- Your attacks have advantage.\n\n### Ready\nPrepare an action to trigger later. Specify the trigger and the action. Uses your **reaction** when triggered. If readying a spell, you must **concentrate** on it until the trigger.\n\n### Search\nMake a **Wisdom (Perception)** or **Intelligence (Investigation)** check to find something.\n\n### Use an Object\nInteract with an object that requires your action (using a healer's kit, drinking a potion in some rules interpretations).",
+    "tags": "action,attack,cast,dash,disengage,dodge,help,hide,ready,search,combat",
+    "sort_order": 12
+  },
+  {
+    "slug": "initiative",
+    "title": "Initiative and Turn Order",
+    "category": "rule",
+    "subcategory": "combat",
+    "ruleset": "universal",
+    "summary": "At the start of combat, everyone rolls d20 + DEX modifier to determine turn order. Highest goes first.",
+    "content": "## Initiative\n\nInitiative determines the order of turns during combat.\n\n### Rolling Initiative\n1. When combat starts, every participant rolls a **d20 + Dexterity modifier**.\n2. The DM ranks everyone from highest to lowest — this is the **initiative order**.\n3. Ties are broken by comparing DEX scores (higher goes first). If still tied, the DM decides.\n\n### Key Rules\n- Initiative order stays the **same for the entire combat** (unless someone uses a special ability to change it).\n- You can choose to **delay** by simply not doing anything on your turn (though there's no official 'delay' action in 5e — you'd use the **Ready** action instead).\n- **Surprised** creatures can't move or take actions on their first turn, and can't take reactions until the end of that turn.\n\n### Surprise\n- If one side catches the other off guard, the surprised creatures are **surprised** for the first round.\n- A surprised creature still rolls initiative and takes a turn — they just can't do anything on it.\n- After the first round, surprise ends. Even if a surprised creature hasn't acted yet, it can now take reactions.",
+    "tags": "initiative,turn order,dexterity,surprise,combat,round",
+    "sort_order": 13
+  },
+  {
+    "slug": "ability-scores-overview",
+    "title": "The Six Ability Scores",
+    "category": "rule",
+    "subcategory": "character",
+    "ruleset": "universal",
+    "summary": "Every character has six abilities: Strength, Dexterity, Constitution, Intelligence, Wisdom, and Charisma.",
+    "content": "## The Six Ability Scores\n\nEvery creature in D&D has six abilities that describe their physical and mental characteristics.\n\n### Strength (STR)\n- Physical power and athleticism\n- Used for: melee attack/damage, Athletics checks, carrying capacity, STR saves\n- Important for: Fighter, Barbarian, Paladin\n\n### Dexterity (DEX)\n- Agility, reflexes, and balance\n- Used for: ranged attacks, AC (unarmored/light armor), initiative, Acrobatics, Sleight of Hand, Stealth, DEX saves\n- Important for: Rogue, Ranger, Monk\n\n### Constitution (CON)\n- Endurance, stamina, and health\n- Used for: hit point maximum, concentration checks, CON saves\n- Important for: **Everyone** — more HP is always good\n\n### Intelligence (INT)\n- Reasoning, memory, and analytical skill\n- Used for: Arcana, History, Investigation, Nature, Religion, INT saves, Wizard spellcasting\n- Important for: Wizard, Artificer\n\n### Wisdom (WIS)\n- Perception, intuition, and common sense\n- Used for: Animal Handling, Insight, Medicine, Perception, Survival, WIS saves, Cleric/Druid/Ranger spellcasting\n- Important for: Cleric, Druid, Ranger, Monk\n\n### Charisma (CHA)\n- Force of personality, persuasiveness, and presence\n- Used for: Deception, Intimidation, Performance, Persuasion, CHA saves, Bard/Paladin/Sorcerer/Warlock spellcasting\n- Important for: Bard, Paladin, Sorcerer, Warlock\n\n### Modifiers\nThe modifier is derived from the score:\n\n| Score | Modifier |\n|---|---|\n| 1 | -5 |\n| 2-3 | -4 |\n| 4-5 | -3 |\n| 6-7 | -2 |\n| 8-9 | -1 |\n| 10-11 | 0 |\n| 12-13 | +1 |\n| 14-15 | +2 |\n| 16-17 | +3 |\n| 18-19 | +4 |\n| 20 | +5 |\n\nFormula: **(score - 10) ÷ 2**, rounded down.",
+    "tags": "ability score,strength,dexterity,constitution,intelligence,wisdom,charisma,modifier",
+    "sort_order": 14
+  },
+  {
+    "slug": "proficiency-bonus",
+    "title": "Proficiency Bonus",
+    "category": "rule",
+    "subcategory": "character",
+    "ruleset": "universal",
+    "summary": "A bonus added to d20 rolls you're trained in. Starts at +2 and scales to +6 by level 17.",
+    "content": "## Proficiency Bonus\n\nYour proficiency bonus is added to rolls for things your character is trained in.\n\n### Scaling by Level\n| Character Level | Proficiency Bonus |\n|---|---|\n| 1–4 | +2 |\n| 5–8 | +3 |\n| 9–12 | +4 |\n| 13–16 | +5 |\n| 17–20 | +6 |\n\n### Where It Applies\n- **Attack rolls** with weapons you're proficient in\n- **Saving throws** you're proficient in\n- **Skill checks** for skills you're proficient in\n- **Spell attack rolls** and **spell save DC**\n- **Tool checks** with tools you're proficient in\n\n### Expertise (Double Proficiency)\nSome features grant **expertise**, which means you add your proficiency bonus **twice** (e.g., a level 5 Rogue with Expertise in Stealth adds +6 instead of +3).\n\n### You Never Add It Twice\n- If a feature says to add your proficiency bonus and you already add it, you don't add it again (unless the feature says \"double\" / expertise).\n- If multiple features would add your proficiency bonus to the same roll, you still only add it once.",
+    "tags": "proficiency,bonus,level,expertise,double proficiency,attack,save,skill",
+    "sort_order": 15
+  },
+  {
+    "slug": "armor-class",
+    "title": "Armor Class (AC)",
+    "category": "rule",
+    "subcategory": "combat",
+    "ruleset": "universal",
+    "summary": "AC determines how hard you are to hit. Unarmored AC = 10 + DEX modifier. Armor, shields, and spells can increase it.",
+    "content": "## Armor Class (AC)\n\nArmor Class represents how hard a creature is to hit with an attack.\n\n### Calculating AC\n\n**Unarmored**: 10 + DEX modifier\n\n| Armor Type | AC Formula | Stealth |\n|---|---|---|\n| **Light Armor** | | |\n| Padded | 11 + DEX mod | Disadvantage |\n| Leather | 11 + DEX mod | — |\n| Studded Leather | 12 + DEX mod | — |\n| **Medium Armor** | | |\n| Hide | 12 + DEX mod (max 2) | — |\n| Chain Shirt | 13 + DEX mod (max 2) | — |\n| Scale Mail | 14 + DEX mod (max 2) | Disadvantage |\n| Breastplate | 14 + DEX mod (max 2) | — |\n| Half Plate | 15 + DEX mod (max 2) | Disadvantage |\n| **Heavy Armor** | | |\n| Ring Mail | 14 | Disadvantage |\n| Chain Mail | 16 | Disadvantage |\n| Splint | 17 | Disadvantage |\n| Plate | 18 | Disadvantage |\n\n**Shield**: +2 AC (requires one free hand)\n\n### Special AC Calculations\n- **Barbarian (Unarmored Defense)**: 10 + DEX mod + CON mod\n- **Monk (Unarmored Defense)**: 10 + DEX mod + WIS mod\n- **Draconic Sorcerer**: 13 + DEX mod (when unarmored)\n- ***Mage Armor* spell**: 13 + DEX mod\n- ***Shield* spell**: +5 AC until start of next turn (reaction)\n\n### Important Notes\n- AC formulas **don't stack** — you use one calculation only.\n- You must be **proficient** with armor to wear it effectively. Without proficiency: disadvantage on attacks, saves, and checks using STR or DEX, and you can't cast spells.",
+    "tags": "armor class,AC,armor,shield,defense,light armor,medium armor,heavy armor,unarmored",
+    "sort_order": 16
+  },
+  {
+    "slug": "grappling-and-shoving",
+    "title": "Grappling and Shoving",
+    "category": "rule",
+    "subcategory": "combat",
+    "ruleset": "universal",
+    "summary": "You can use the Attack action to grapple (grab) or shove (knock prone or push) a creature using contested Athletics checks.",
+    "content": "## Grappling and Shoving\n\n### Grappling\nWhen you want to grab a creature:\n1. Use the **Attack action** (replaces one of your attacks if you have Extra Attack).\n2. The target must be **no more than one size larger** than you and within reach.\n3. Make a **Strength (Athletics)** check contested by the target's **Strength (Athletics)** or **Dexterity (Acrobatics)** check (target's choice).\n4. If you succeed, the target is **grappled** (speed = 0).\n\n**While Grappling:**\n- You can **drag** the grappled creature, but your speed is halved.\n- You can release as a free action.\n- The grapple ends if you're **incapacitated** or the target is moved out of reach.\n\n**Escaping:**\n- The grappled creature uses its **action** to make a STR (Athletics) or DEX (Acrobatics) check vs your STR (Athletics).\n\n### Shoving\nWhen you want to knock a creature prone or push it away:\n1. Use the **Attack action** (replaces one attack).\n2. Target must be no more than one size larger and within reach.\n3. Make a **Strength (Athletics)** check contested by the target's **Strength (Athletics)** or **Dexterity (Acrobatics)**.\n4. If you succeed, choose: **knock prone** or **push 5 feet** away.\n\n### Tactical Combos\n- **Grapple + Shove Prone**: Grapple first (they can't stand up because speed = 0), then shove prone. Now all melee attacks against them have advantage and they can't escape by standing.",
+    "tags": "grapple,shove,athletics,acrobatics,prone,contested check,combat",
+    "sort_order": 17
+  },
+  {
+    "slug": "damage-types",
+    "title": "Damage Types",
+    "category": "rule",
+    "subcategory": "combat",
+    "ruleset": "universal",
+    "summary": "D&D has 13 damage types. Each type has no special rules on its own, but creatures may resist, be vulnerable, or be immune to specific types.",
+    "content": "## Damage Types\n\nDamage types have no rules of their own, but other rules (like resistance) reference them.\n\n### Physical Damage\n- **Bludgeoning**: Blunt force — maces, hammers, falling, constriction.\n- **Piercing**: Puncturing — arrows, rapiers, bite attacks.\n- **Slashing**: Cutting — swords, axes, claws.\n\n### Elemental Damage\n- **Acid**: Corrosive substances — *Acid Splash*, black dragon breath.\n- **Cold**: Freezing — *Ray of Frost*, white dragon breath, ice storms.\n- **Fire**: Flames and heat — *Fireball*, *Burning Hands*, red dragon breath.\n- **Lightning**: Electrical — *Lightning Bolt*, *Call Lightning*, blue dragon breath.\n- **Thunder**: Sonic booms — *Thunderwave*, *Shatter*.\n\n### Other Damage\n- **Force**: Pure magical energy — *Magic Missile*, *Eldritch Blast*. Very few creatures resist it.\n- **Necrotic**: Life-draining energy — *Blight*, *Inflict Wounds*, undead attacks.\n- **Poison**: Toxic substances — *Poison Spray*, venomous bites, poisoned weapons.\n- **Psychic**: Mental harm — *Vicious Mockery*, mind flayer attacks.\n- **Radiant**: Divine/holy light — *Guiding Bolt*, *Sacred Flame*, angelic attacks.\n\n### Resistance Notes\n- Many undead resist or are immune to **necrotic** and **poison**.\n- **Force** damage is the hardest type to resist — almost nothing is immune.\n- **Magical** weapons bypass the resistance many monsters have to nonmagical bludgeoning/piercing/slashing.",
+    "tags": "damage type,bludgeoning,piercing,slashing,fire,cold,lightning,thunder,force,necrotic,poison,psychic,radiant,acid,resistance,vulnerability",
+    "sort_order": 18
+  }
+]

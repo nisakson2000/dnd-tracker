@@ -1,0 +1,1009 @@
+[
+  {
+    "slug": "auril",
+    "title": "Auril",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "Goddess of winter, cold, and ice. A cruel and fickle deity who demands worship through fear and sacrifice.",
+    "content": "## Auril\n\n**Title:** The Frostmaiden\n**Alignment:** Neutral Evil\n**Domains:** Nature, Tempest\n**Symbol:** Six-pointed snowflake\n**Pantheon:** Forgotten Realms\n\nAuril is the merciless goddess of winter and cold. She delights in the suffering caused by harsh winters and blizzards, and her followers pray to her to spare them from the killing cold. The Frostmaiden is a vain and capricious deity who is largely indifferent to the plight of mortals, expecting tribute and worship simply to avoid her wrath.\n\nHer clergy, known as Icepriestesses and Icepriests, perform rituals of endurance in freezing conditions and maintain shrines in the coldest regions. They believe that winter's harshness purifies the weak. Worship of Auril spikes during the coldest months, when common folk make offerings to stave off the worst of the season's fury.\n\n**Allies and Enemies:** Auril is loosely allied with Talos, Umberlee, and Malar, forming a loose coalition of destructive nature deities. She opposes Chauntea, Lathander, and Sune, whose warmth and growth stand against her icy dominion.",
+    "metadata_json": {
+      "alignment": "Neutral Evil",
+      "domains": ["Nature", "Tempest"],
+      "symbol": "Six-pointed snowflake",
+      "pantheon": "Forgotten Realms",
+      "rank": "Lesser deity"
+    },
+    "tags": "deity,god,forgotten-realms,nature,tempest,evil,winter,cold,ice",
+    "source": "PHB",
+    "sort_order": 1
+  },
+  {
+    "slug": "azuth",
+    "title": "Azuth",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "God of wizards and mages. The patron of spellcasters who seek to master the arcane arts through study and discipline.",
+    "content": "## Azuth\n\n**Title:** The High One, Lord of Spells\n**Alignment:** Lawful Neutral\n**Domains:** Arcana, Knowledge\n**Symbol:** Left hand pointing upward, outlined in fire\n**Pantheon:** Forgotten Realms\n\nAzuth is the deity of wizards, mages, and practitioners of the arcane arts. He serves as the patron of those who pursue magical knowledge through rigorous study, discipline, and intellectual pursuit rather than raw talent alone. Azuth promotes the responsible and measured use of magic, standing as a symbol of magical mastery achieved through hard work.\n\nHis clergy are scholars and teachers of the Art, maintaining magical academies and libraries throughout the Realms. They catalogue spells, preserve arcane lore, and mediate disputes between rival mages. Temples of Azuth often double as centers of magical learning.\n\n**Allies and Enemies:** Azuth serves Mystra faithfully as her chief assistant in managing the Weave. He is allied with Savras and Velsharoon. He opposes Cyric for the god's role in the death of previous incarnations of Mystra.",
+    "metadata_json": {
+      "alignment": "Lawful Neutral",
+      "domains": ["Arcana", "Knowledge"],
+      "symbol": "Left hand pointing upward, outlined in fire",
+      "pantheon": "Forgotten Realms",
+      "rank": "Lesser deity"
+    },
+    "tags": "deity,god,forgotten-realms,arcana,knowledge,neutral,magic,wizards",
+    "source": "PHB",
+    "sort_order": 2
+  },
+  {
+    "slug": "bane",
+    "title": "Bane",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "God of tyranny and fear. One of the most powerful evil deities, ruling through terror and iron-fisted control.",
+    "content": "## Bane\n\n**Title:** The Black Lord\n**Alignment:** Lawful Evil\n**Domains:** War\n**Symbol:** Upright black fist\n**Pantheon:** Forgotten Realms\n\nBane is the god of tyranny, fear, and oppression. He is one of the most feared deities in the Forgotten Realms, commanding absolute obedience from his followers and seeking to extend his dominion over all of Faerun. Bane believes that the strong have the right -- indeed, the duty -- to rule over the weak through fear and force.\n\nThe Church of Bane is a rigidly hierarchical organization where every member knows their exact rank and is expected to follow the orders of their superiors without question. The Banites seek to infiltrate positions of power in governments, military organizations, and merchant guilds. They work to undermine existing power structures and replace them with tyrannical regimes loyal to the Black Lord.\n\n**Allies and Enemies:** Bane allies with Loviatar and Bhaal to further his schemes of domination. He is the bitter rival of Torm, Tyr, and Helm, whose ideals of justice and protection directly oppose his tyranny. Cyric is a hated enemy, having briefly usurped Bane's portfolio after the Time of Troubles.",
+    "metadata_json": {
+      "alignment": "Lawful Evil",
+      "domains": ["War"],
+      "symbol": "Upright black fist",
+      "pantheon": "Forgotten Realms",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,forgotten-realms,war,evil,tyranny,fear",
+    "source": "PHB",
+    "sort_order": 3
+  },
+  {
+    "slug": "chauntea",
+    "title": "Chauntea",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "Goddess of agriculture and the harvest. A nurturing deity who embodies the life-giving power of the earth.",
+    "content": "## Chauntea\n\n**Title:** The Great Mother, the Grain Goddess\n**Alignment:** Neutral Good\n**Domains:** Life\n**Symbol:** Sheaf of grain or a blooming rose over grain\n**Pantheon:** Forgotten Realms\n\nChauntea is the goddess of agriculture, farmers, gardeners, and the summer. She is one of the oldest deities in the Realms, embodying the eternal cycle of planting and harvest. The Great Mother nurtures the land and its people, ensuring that crops grow and communities thrive through her blessings.\n\nHer clergy are deeply connected to rural communities, serving as advisors on planting seasons, mediating land disputes, and blessing harvests. Temples of Chauntea are often surrounded by lush gardens and farmland. Her priests perform rituals tied to the agricultural calendar, celebrating planting in spring and giving thanks at harvest time.\n\n**Allies and Enemies:** Chauntea is closely allied with Lathander, Silvanus, and Mielikki, sharing a bond over the growth and preservation of the natural world. She opposes Auril, whose winters threaten her crops, and Talona, whose pestilence blights the land.",
+    "metadata_json": {
+      "alignment": "Neutral Good",
+      "domains": ["Life"],
+      "symbol": "Sheaf of grain or a blooming rose over grain",
+      "pantheon": "Forgotten Realms",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,forgotten-realms,life,good,agriculture,harvest,nature",
+    "source": "PHB",
+    "sort_order": 4
+  },
+  {
+    "slug": "cyric",
+    "title": "Cyric",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "God of lies, murder, and deception. A mad deity who delights in spreading strife and falsehood throughout the Realms.",
+    "content": "## Cyric\n\n**Title:** The Prince of Lies, the Dark Sun\n**Alignment:** Chaotic Evil\n**Domains:** Trickery\n**Symbol:** White jawless skull on black or purple sunburst\n**Pantheon:** Forgotten Realms\n\nCyric is the god of lies, murder, intrigue, and deception. A mortal who ascended to godhood during the Time of Troubles, Cyric is driven by boundless ambition and megalomania. He is considered mad even by other evil deities, believing himself to be the most powerful god in existence and scheming endlessly to prove it.\n\nThe church of Cyric is a fractious organization riven by internal betrayal and backstabbing -- fitting for a god of lies. His followers include assassins, con artists, power-hungry schemers, and those who worship chaos for its own sake. They sow discord wherever they go, undermining trust between allies and spreading misinformation.\n\n**Allies and Enemies:** Cyric has few true allies, as his treacherous nature makes him an unreliable partner. He is the enemy of nearly every other deity, but particularly despises Mystra, Kelemvor, and Bane. Cyric and Kelemvor were once mortal companions, making their divine enmity all the more bitter.",
+    "metadata_json": {
+      "alignment": "Chaotic Evil",
+      "domains": ["Trickery"],
+      "symbol": "White jawless skull on black or purple sunburst",
+      "pantheon": "Forgotten Realms",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,forgotten-realms,trickery,evil,lies,murder,deception",
+    "source": "PHB",
+    "sort_order": 5
+  },
+  {
+    "slug": "helm",
+    "title": "Helm",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "God of protection and guardians. The eternal watchman who embodies vigilance, duty, and the defense of the innocent.",
+    "content": "## Helm\n\n**Title:** The Watcher, He of the Unsleeping Eyes\n**Alignment:** Lawful Neutral\n**Domains:** Life, Light\n**Symbol:** Staring eye on upright left gauntlet\n**Pantheon:** Forgotten Realms\n\nHelm is the god of guardians, protectors, and protection. He is the epitome of the watchful sentinel, the guardian who never sleeps, and the protector who sacrifices all for duty. Helm is a stern and humorless deity who takes his responsibilities with the utmost seriousness and expects the same from his followers.\n\nThe Church of Helm attracts bodyguards, city watchmen, paladins, and anyone whose calling involves the protection of others. His temples serve as fortified sanctuaries and training grounds for protectors. Clergy of Helm are expected to maintain constant vigilance and never abandon their posts, regardless of personal cost.\n\n**Allies and Enemies:** Helm is allied with Torm and Tyr, forming a triad of protective and righteous deities. He opposes the forces of chaos and evil, particularly Bane, Cyric, and Mask. Helm's relationship with other deities was strained after the Time of Troubles, when his strict obedience to duty led to the death of the goddess Mystra at his post.",
+    "metadata_json": {
+      "alignment": "Lawful Neutral",
+      "domains": ["Life", "Light"],
+      "symbol": "Staring eye on upright left gauntlet",
+      "pantheon": "Forgotten Realms",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,forgotten-realms,life,light,neutral,protection,guardians,vigilance",
+    "source": "PHB",
+    "sort_order": 6
+  },
+  {
+    "slug": "ilmater",
+    "title": "Ilmater",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "God of endurance and suffering. The Crying God who takes on the pain of others and offers solace to the downtrodden.",
+    "content": "## Ilmater\n\n**Title:** The Crying God, the Broken God\n**Alignment:** Lawful Good\n**Domains:** Life\n**Symbol:** Pair of white hands bound at the wrist with red cord\n**Pantheon:** Forgotten Realms\n\nIlmater is the god of endurance, suffering, martyrdom, and perseverance. He is the patron of the oppressed and those who suffer for others. The Crying God willingly takes on the burdens of pain and suffering so that others need not bear them alone, embodying the ultimate spirit of self-sacrifice.\n\nHis clergy are healers, counselors, and caregivers who minister to the sick, wounded, and persecuted. Temples of Ilmater serve as hospices, shelters, and places of refuge. His priests are expected to endure hardship without complaint and to place the needs of others before their own. Many of his followers take vows of poverty and devote their lives to alleviating suffering in the world.\n\n**Allies and Enemies:** Ilmater is closely allied with Tyr, serving as the god of justice's conscience and moral compass. He is also allied with Torm and Lathander. He opposes Loviatar, the goddess of pain, and Bane, whose tyranny creates the suffering Ilmater seeks to ease.",
+    "metadata_json": {
+      "alignment": "Lawful Good",
+      "domains": ["Life"],
+      "symbol": "Pair of white hands bound at the wrist with red cord",
+      "pantheon": "Forgotten Realms",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,forgotten-realms,life,good,endurance,suffering,healing",
+    "source": "PHB",
+    "sort_order": 7
+  },
+  {
+    "slug": "kelemvor",
+    "title": "Kelemvor",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "God of the dead. A just and compassionate steward of souls who ensures the dead receive fair judgment.",
+    "content": "## Kelemvor\n\n**Title:** Lord of the Dead, Judge of the Damned\n**Alignment:** Lawful Neutral\n**Domains:** Death\n**Symbol:** Upright skeletal arm holding balanced scales\n**Pantheon:** Forgotten Realms\n\nKelemvor is the god of death and the dead, serving as the final judge of souls in the Fugue Plane. Unlike his predecessors in the role -- the cruel Myrkul and the mad Cyric -- Kelemvor is a fair and compassionate deity who views death not as something to be feared, but as a natural part of life's cycle. He ensures that the dead are judged fairly and that their souls reach their proper destinations.\n\nHis clergy, known as the Doomguides, perform funeral rites, comfort the bereaved, and hunt undead -- which Kelemvor considers an abomination against the natural order. Temples of Kelemvor maintain graveyards and crypts, ensuring the dead rest peacefully. His priests teach that death should not be feared and that undeath is a perversion to be destroyed.\n\n**Allies and Enemies:** Kelemvor works alongside Jergal, his seneschal, and is allied with Lathander and other gods of balance. He fiercely opposes Cyric, his former mortal companion, and despises all deities and beings who promote undeath, particularly Velsharoon and the archlich Szass Tam.",
+    "metadata_json": {
+      "alignment": "Lawful Neutral",
+      "domains": ["Death"],
+      "symbol": "Upright skeletal arm holding balanced scales",
+      "pantheon": "Forgotten Realms",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,forgotten-realms,death,neutral,dead,judgment,souls",
+    "source": "PHB",
+    "sort_order": 8
+  },
+  {
+    "slug": "lathander",
+    "title": "Lathander",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "God of dawn, renewal, and creativity. A vibrant deity of new beginnings, youth, and the promise of each new day.",
+    "content": "## Lathander\n\n**Title:** The Morninglord\n**Alignment:** Neutral Good\n**Domains:** Life, Light\n**Symbol:** Road traveling into a sunrise\n**Pantheon:** Forgotten Realms\n\nLathander is the god of dawn, spring, birth, renewal, creativity, and youth. He represents the eternal promise of a new day, a fresh start, and the boundless potential that comes with every sunrise. The Morninglord is an optimistic and enthusiastic deity who encourages his followers to embrace new ideas, pursue creative endeavors, and strive to make the world a better place.\n\nHis church is one of the most popular and influential in the Realms. Temples of Lathander are bright, airy places filled with art and music. His clergy rise before dawn to greet the sun and perform their morning rituals. They are patrons of the arts, sponsors of civic improvement, and champions of new ventures. Many communities mark the start of important endeavors with a blessing from a priest of Lathander.\n\n**Allies and Enemies:** Lathander is allied with Chauntea, Selune, Tymora, and most good-aligned deities. He opposes Shar, whose darkness threatens the dawn, and Cyric, whose lies corrupt the promise of new beginnings. His relationship with Helm has been complicated since the Time of Troubles.",
+    "metadata_json": {
+      "alignment": "Neutral Good",
+      "domains": ["Life", "Light"],
+      "symbol": "Road traveling into a sunrise",
+      "pantheon": "Forgotten Realms",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,forgotten-realms,life,light,good,dawn,renewal,creativity",
+    "source": "PHB",
+    "sort_order": 9
+  },
+  {
+    "slug": "lolth-fr",
+    "title": "Lolth",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "Goddess of the drow and spiders. The Queen of the Demonweb Pits who rules through treachery, cruelty, and fear.",
+    "content": "## Lolth\n\n**Title:** The Queen of Spiders, Queen of the Demonweb Pits\n**Alignment:** Chaotic Evil\n**Domains:** Trickery, War\n**Symbol:** Spider\n**Pantheon:** Forgotten Realms\n\nLolth is the chief goddess of the drow (dark elves), holding her people in an iron grip of fear, treachery, and fanaticism. She demands absolute obedience and pits her followers against one another in a never-ending web of intrigue, believing that only the strongest and most cunning are worthy of her favor. Lolth is a capricious and cruel deity who delights in chaos and suffering.\n\nDrow society is built around the worship of Lolth, with priestesses serving as the ruling class. The Spider Queen's temples are the centers of power in drow cities, and her clergy enforce a rigid matriarchal hierarchy. Rituals to Lolth often involve sacrifice and tests of loyalty, and failure is punished with transformation into a drider -- a horrific spider-drow hybrid.\n\n**Allies and Enemies:** Lolth has few true allies, as her treacherous nature makes lasting alliances impossible. She opposes Corellon Larethian and the Seldarine (elven pantheon) above all others, and her enmity with Eilistraee, the drow goddess of redemption, is deeply personal. Among the Faerunian gods, she clashes with any who shelter or aid surface-dwelling drow.\n\nSee also: [Lolth (Nonhuman Deities)](#lolth) for her role in the broader nonhuman pantheon.",
+    "metadata_json": {
+      "alignment": "Chaotic Evil",
+      "domains": ["Trickery", "War"],
+      "symbol": "Spider",
+      "pantheon": "Forgotten Realms",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,forgotten-realms,trickery,war,evil,drow,spiders,underdark",
+    "source": "PHB",
+    "sort_order": 10
+  },
+  {
+    "slug": "mask",
+    "title": "Mask",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "God of thieves and shadows. The patron of those who operate in darkness, from common pickpockets to master spies.",
+    "content": "## Mask\n\n**Title:** The Lord of Shadows\n**Alignment:** Chaotic Neutral\n**Domains:** Trickery\n**Symbol:** Black mask\n**Pantheon:** Forgotten Realms\n\nMask is the god of thieves, shadows, and intrigue. He is the patron of rogues, spies, and anyone who relies on stealth and subtlety to achieve their goals. The Lord of Shadows is an enigmatic deity who values cunning over brute force and rewards those who can accomplish their objectives without being detected.\n\nHis church operates in secrecy, with cells of worshippers embedded in thieves' guilds and spy networks throughout the Realms. Temples to Mask are hidden in shadowy basements and abandoned buildings, accessible only to those who know the signs. His clergy teach the arts of stealth, disguise, and misdirection, and many serve as fences, informants, or master thieves.\n\n**Allies and Enemies:** Mask has a complicated relationship with most deities, as his nature makes him untrustworthy. He is loosely allied with other trickster gods and opposes Helm and Tyr, whose watchfulness and justice threaten his followers' activities. Cyric is both a rival and occasional ally in schemes of deception.",
+    "metadata_json": {
+      "alignment": "Chaotic Neutral",
+      "domains": ["Trickery"],
+      "symbol": "Black mask",
+      "pantheon": "Forgotten Realms",
+      "rank": "Lesser deity"
+    },
+    "tags": "deity,god,forgotten-realms,trickery,neutral,thieves,shadows,stealth",
+    "source": "PHB",
+    "sort_order": 11
+  },
+  {
+    "slug": "mielikki",
+    "title": "Mielikki",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "Goddess of forests and rangers. A gentle but fierce protector of woodlands and the creatures that dwell within them.",
+    "content": "## Mielikki\n\n**Title:** The Forest Queen, Our Lady of the Forest\n**Alignment:** Neutral Good\n**Domains:** Nature\n**Symbol:** Unicorn's head\n**Pantheon:** Forgotten Realms\n\nMielikki is the goddess of forests, forest creatures, rangers, dryads, and autumn. She is a gentle deity who fiercely protects the woodlands and their inhabitants. The Forest Queen embodies the balance between civilization and wilderness, teaching that forests can be used responsibly without being destroyed.\n\nHer clergy are predominantly rangers and druids who patrol the great forests of Faerun. They serve as wardens and protectors, guiding lost travelers, combating those who would defile the wilderness, and maintaining the delicate ecological balance. Temples to Mielikki are rarely buildings; instead, her sacred sites are ancient groves, forest clearings, and pristine natural settings.\n\n**Allies and Enemies:** Mielikki serves Silvanus, the greater nature god, and is closely allied with Chauntea, Lathander, and Selune. She is the companion of Lurue the Unicorn. She opposes Malar the Beastlord, Talos, and any who seek to destroy or corrupt the forests.",
+    "metadata_json": {
+      "alignment": "Neutral Good",
+      "domains": ["Nature"],
+      "symbol": "Unicorn's head",
+      "pantheon": "Forgotten Realms",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,forgotten-realms,nature,good,forests,rangers,wilderness",
+    "source": "PHB",
+    "sort_order": 12
+  },
+  {
+    "slug": "mystra",
+    "title": "Mystra",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "Goddess of magic and the Weave. The keeper of the fundamental force that makes all arcane magic possible in the Realms.",
+    "content": "## Mystra\n\n**Title:** The Lady of Mysteries, Our Lady of Spells\n**Alignment:** Neutral Good\n**Domains:** Arcana, Knowledge\n**Symbol:** Circle of seven stars, or nine stars encircling a flowing red mist, or a single star\n**Pantheon:** Forgotten Realms\n\nMystra is the goddess of magic, spells, and the Weave -- the fundamental magical force that permeates the Forgotten Realms and makes arcane spellcasting possible. She is one of the most important deities in the Realms, for without her stewardship of the Weave, all magic would fail. Mystra promotes the responsible use and spread of magic, believing that the Art should be available to all who have the talent and dedication to learn it.\n\nHer church includes wizards, sorcerers, and anyone who uses arcane magic. Clergy of Mystra maintain magical libraries, teach spellcraft, and work to preserve magical knowledge. They also serve as mediators in disputes involving magic and investigate misuse of the Art. The Weave connects all of Mystra's faithful, and her priests can sense disturbances in its fabric.\n\n**Allies and Enemies:** Mystra is served by Azuth and allied with Selune, from whose essence she was originally born. She opposes Shar, who controls the Shadow Weave, and Cyric, who has killed previous incarnations of the goddess of magic. The death of Mystra has historically caused magical catastrophes of world-shaking proportions.",
+    "metadata_json": {
+      "alignment": "Neutral Good",
+      "domains": ["Arcana", "Knowledge"],
+      "symbol": "Circle of seven stars, or nine stars encircling a flowing red mist, or a single star",
+      "pantheon": "Forgotten Realms",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,forgotten-realms,arcana,knowledge,good,magic,weave,spells",
+    "source": "PHB",
+    "sort_order": 13
+  },
+  {
+    "slug": "oghma",
+    "title": "Oghma",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "God of knowledge and invention. The Binder of What Is Known, patron of bards, scholars, and all who seek wisdom.",
+    "content": "## Oghma\n\n**Title:** The Binder of What Is Known, the Lord of Knowledge\n**Alignment:** True Neutral\n**Domains:** Knowledge\n**Symbol:** Blank scroll\n**Pantheon:** Forgotten Realms\n\nOghma is the god of knowledge, inspiration, invention, and bards. He is the keeper of all knowledge, both mundane and magical, and the patron of those who seek to learn, discover, and share information. The Binder believes that knowledge is the most sacred thing in existence and should be preserved and disseminated freely.\n\nHis clergy maintain great libraries and centers of learning throughout the Realms. Priests of Oghma are scholars, teachers, inventors, and bards who dedicate their lives to the pursuit and sharing of knowledge. They copy books, fund expeditions to recover lost lore, and settle disputes through research and reason. The church sponsors bardic colleges and supports any endeavor that advances understanding.\n\n**Allies and Enemies:** Oghma is allied with Mystra, Deneir, Milil, and Gond -- deities who share his passion for knowledge, art, and creation. He opposes Cyric, whose lies corrupt knowledge, and Mask, whose secrecy hoards it. Oghma maintains a neutral stance in most divine conflicts, intervening only when knowledge itself is threatened.",
+    "metadata_json": {
+      "alignment": "True Neutral",
+      "domains": ["Knowledge"],
+      "symbol": "Blank scroll",
+      "pantheon": "Forgotten Realms",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,forgotten-realms,knowledge,neutral,bards,scholars,invention",
+    "source": "PHB",
+    "sort_order": 14
+  },
+  {
+    "slug": "selune",
+    "title": "Sel\u00fbne",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "Goddess of the moon, stars, and navigation. A gentle and maternal deity who guides travelers and battles darkness.",
+    "content": "## Sel\u00fbne\n\n**Title:** Our Lady of Silver, the Moonmaiden\n**Alignment:** Chaotic Good\n**Domains:** Knowledge, Life\n**Symbol:** Pair of eyes surrounded by seven stars\n**Pantheon:** Forgotten Realms\n\nSel\u00fbne is the goddess of the moon, stars, navigation, navigators, wanderers, questers, and good-aligned lycanthropes. She is one of the oldest deities in the Realms, born from the primordial essence of the universe alongside her twin sister Shar. The Moonmaiden is a caring and nurturing deity who provides light in the darkness and guidance to those who are lost.\n\nHer clergy are diverse, including mystics, astronomers, navigators, and those who work by moonlight. Temples of Sel\u00fbne are open-air affairs with skylights and moon-viewing platforms. Her priestesses perform ceremonies tied to the lunar cycle, and the church provides shelter and guidance to travelers, wanderers, and those fleeing the darkness. Lycanthropes of good alignment often seek her blessing.\n\n**Allies and Enemies:** Sel\u00fbne's eternal enemy is her twin sister Shar, and the two have been locked in a cosmic struggle since the dawn of time. She is allied with Mystra (born from their conflict), Lathander, Sune, Tymora, and most good-aligned deities. She actively opposes the forces of darkness and evil wherever they threaten the innocent.",
+    "metadata_json": {
+      "alignment": "Chaotic Good",
+      "domains": ["Knowledge", "Life"],
+      "symbol": "Pair of eyes surrounded by seven stars",
+      "pantheon": "Forgotten Realms",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,forgotten-realms,knowledge,life,good,moon,stars,navigation",
+    "source": "PHB",
+    "sort_order": 15
+  },
+  {
+    "slug": "shar",
+    "title": "Shar",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "Goddess of darkness, loss, and secrets. The Mistress of the Night who embodies the void and all that is hidden.",
+    "content": "## Shar\n\n**Title:** The Mistress of the Night, the Lady of Loss\n**Alignment:** Neutral Evil\n**Domains:** Death, Trickery\n**Symbol:** Black disk encircled with a purple border\n**Pantheon:** Forgotten Realms\n\nShar is the goddess of darkness, caverns, dungeons, forgetfulness, loss, night, secrets, and the Underdark. She is one of the most ancient deities, born alongside her twin sister Sel\u00fbne from the primordial void. The Mistress of the Night embodies entropy, oblivion, and the ultimate darkness that existed before creation. She seeks to return all things to the darkness from which they came.\n\nHer church operates in absolute secrecy, with hidden cells of worshippers embedded throughout Faerunian society. Shar's clergy prey on those suffering from loss, grief, and despair, offering them the comfort of forgetting their pain -- at the cost of their devotion. The church also controls the Shadow Weave, an alternative magical force that rivals Mystra's Weave.\n\n**Allies and Enemies:** Shar's eternal enemy is her twin sister Sel\u00fbne, and this conflict defines much of both goddesses' actions. She opposes Mystra over control of magical forces and Lathander, whose dawn banishes her darkness. Shar is allied with Talona and maintains an uneasy relationship with other evil deities.",
+    "metadata_json": {
+      "alignment": "Neutral Evil",
+      "domains": ["Death", "Trickery"],
+      "symbol": "Black disk encircled with a purple border",
+      "pantheon": "Forgotten Realms",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,forgotten-realms,death,trickery,evil,darkness,secrets,night",
+    "source": "PHB",
+    "sort_order": 16
+  },
+  {
+    "slug": "silvanus",
+    "title": "Silvanus",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "God of wild nature and druids. The Oak Father who represents the untamed wilderness and the primal power of nature.",
+    "content": "## Silvanus\n\n**Title:** The Oak Father, the Forest Father\n**Alignment:** True Neutral\n**Domains:** Nature\n**Symbol:** Oak leaf\n**Pantheon:** Forgotten Realms\n\nSilvanus is the god of wild nature, druids, and the balance between civilization and wilderness. The Oak Father is one of the oldest and most powerful nature deities, representing the raw, untamed power of the natural world. Unlike gentler nature gods, Silvanus embodies nature in all its aspects -- beautiful and terrible, nurturing and destructive.\n\nHis clergy are predominantly druids who maintain the balance of nature. They oppose the unchecked expansion of civilization into the wilderness but also prevent nature from overwhelming settled lands. Temples of Silvanus are ancient groves, primeval forests, and places where nature remains untouched. His druids perform rituals tied to the seasons and work to preserve endangered natural areas.\n\n**Allies and Enemies:** Silvanus is served by Mielikki and allied with Chauntea and Eldath. He opposes Malar, whose predatory excess threatens the natural balance, and Talos, whose destructive storms devastate ecosystems. Silvanus maintains a strict neutrality in divine politics, intervening only when nature itself is threatened.",
+    "metadata_json": {
+      "alignment": "True Neutral",
+      "domains": ["Nature"],
+      "symbol": "Oak leaf",
+      "pantheon": "Forgotten Realms",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,forgotten-realms,nature,neutral,wild,druids,forest",
+    "source": "PHB",
+    "sort_order": 17
+  },
+  {
+    "slug": "sune",
+    "title": "Sune",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "Goddess of love and beauty. The Firehair whose passion and warmth inspire art, romance, and the pursuit of beauty.",
+    "content": "## Sune\n\n**Title:** Firehair, Lady Firehair\n**Alignment:** Chaotic Good\n**Domains:** Life, Light\n**Symbol:** Face of a beautiful red-haired woman\n**Pantheon:** Forgotten Realms\n\nSune is the goddess of beauty, love, and passion. She is the embodiment of all that is beautiful and loving in the Realms, from the grandeur of a sunset to the intimacy of a whispered confession of love. Firehair encourages her followers to seek out beauty, create art, fall in love, and celebrate the passions that make life worth living.\n\nHer church is one of the most open and welcoming in the Realms. Temples of Sune are gorgeous edifices filled with art, music, and beautiful people. Her clergy are matchmakers, artists, beauticians, and counselors who help others find love and appreciate beauty. They sponsor festivals, art exhibitions, and romantic events. The church teaches that beauty comes in many forms and that love is the greatest force in the world.\n\n**Allies and Enemies:** Sune is allied with Lathander, Selune, Tymora, and most good-aligned deities who celebrate life. She opposes Shar, whose darkness snuffs out beauty, and Talos, whose destruction ruins beautiful things. She particularly despises Auril, whose cold winters strip the land of its beauty.",
+    "metadata_json": {
+      "alignment": "Chaotic Good",
+      "domains": ["Life", "Light"],
+      "symbol": "Face of a beautiful red-haired woman",
+      "pantheon": "Forgotten Realms",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,forgotten-realms,life,light,good,love,beauty,passion",
+    "source": "PHB",
+    "sort_order": 18
+  },
+  {
+    "slug": "tempus",
+    "title": "Tempus",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "God of war and battle. The Lord of Battles who presides over all forms of combat and honors valor in warfare.",
+    "content": "## Tempus\n\n**Title:** The Lord of Battles, the Foehammer\n**Alignment:** True Neutral\n**Domains:** War\n**Symbol:** Upright flaming sword\n**Pantheon:** Forgotten Realms\n\nTempus is the god of war, battle, and warriors. He is not a god of wanton slaughter or conquest, but rather a deity who presides over the art and necessity of warfare. The Lord of Battles honors courage, martial skill, and valor in combat, regardless of which side a warrior fights for. He teaches that war is a natural and necessary force that tests the strong and weeds out the weak.\n\nHis church is one of the most widely followed in the Realms, as soldiers, mercenaries, and warriors of all stripes pray to Tempus before battle. Temples of Tempus are spartan fortresses and training grounds. His clergy serve as military chaplains, combat instructors, and battlefield medics. They bless warriors before combat and ensure that the honored dead receive proper rites.\n\n**Allies and Enemies:** Tempus maintains a strict neutrality among the other gods, as war serves all sides equally. He tolerates the Red Knight and Valkur as subordinate war deities. He opposes Sune, believing that love weakens warriors, though this enmity is more philosophical than hostile. He holds a grudging respect for Torm and Helm.",
+    "metadata_json": {
+      "alignment": "True Neutral",
+      "domains": ["War"],
+      "symbol": "Upright flaming sword",
+      "pantheon": "Forgotten Realms",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,forgotten-realms,war,neutral,battle,warriors,combat",
+    "source": "PHB",
+    "sort_order": 19
+  },
+  {
+    "slug": "torm",
+    "title": "Torm",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "God of courage and self-sacrifice. The loyal fury who champions duty, loyalty, and righteous action.",
+    "content": "## Torm\n\n**Title:** The True, the Loyal Fury\n**Alignment:** Lawful Good\n**Domains:** War\n**Symbol:** White right gauntlet\n**Pantheon:** Forgotten Realms\n\nTorm is the god of courage, self-sacrifice, duty, and loyalty. He was once a mortal paladin who ascended to godhood through his unwavering devotion to duty and his selfless sacrifice during the Time of Troubles, when he gave his life to destroy the evil god Bane. Torm embodies the ideal of the righteous warrior who fights not for glory or gain, but out of duty and to protect the innocent.\n\nHis church attracts paladins, knights, and warriors who dedicate themselves to righteous causes. Temples of Torm serve as barracks, training grounds, and courts of honor. His clergy are expected to uphold the highest standards of conduct, keeping their word at all costs and placing duty above personal desire. They serve as judges, champions of the oppressed, and sworn enemies of corruption.\n\n**Allies and Enemies:** Torm is closely allied with Tyr and Helm, forming the Triad of protective deities. He is also allied with Ilmater and Lathander. He is the sworn enemy of Bane, whom he destroyed and who later returned, and opposes Cyric and all deities of tyranny and oppression.",
+    "metadata_json": {
+      "alignment": "Lawful Good",
+      "domains": ["War"],
+      "symbol": "White right gauntlet",
+      "pantheon": "Forgotten Realms",
+      "rank": "Lesser deity"
+    },
+    "tags": "deity,god,forgotten-realms,war,good,courage,sacrifice,duty,paladin",
+    "source": "PHB",
+    "sort_order": 20
+  },
+  {
+    "slug": "tymora",
+    "title": "Tymora",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "Goddess of good fortune and luck. Lady Luck herself, the favorite deity of adventurers and risk-takers everywhere.",
+    "content": "## Tymora\n\n**Title:** Lady Luck, the Lady Who Smiles\n**Alignment:** Chaotic Good\n**Domains:** Trickery\n**Symbol:** Face-up coin\n**Pantheon:** Forgotten Realms\n\nTymora is the goddess of good fortune, skill, victory, and adventurers. She is perhaps the most popular deity among adventurers, who rely on her favor to survive the countless dangers they face. Lady Luck rewards boldness and daring, favoring those who take risks and trust in their skills and fortune rather than those who play it safe.\n\nHer church is widespread and popular, with shrines in almost every settlement and temple in every major city. Priests of Tymora encourage their flock to take chances, explore the unknown, and trust that fortune favors the bold. The church sponsors adventuring companies, gambling halls (which double as temples), and festivals celebrating luck and chance. A common expression of faith is the coin flip -- heads means Tymora smiles on you.\n\n**Allies and Enemies:** Tymora's sworn enemy is her twin sister Beshaba, the goddess of misfortune, with whom she was split from the original goddess Tyche. She is allied with Selune, Sune, Lathander, and most good-aligned deities. Many adventurers worship both Tymora and their patron deity simultaneously.",
+    "metadata_json": {
+      "alignment": "Chaotic Good",
+      "domains": ["Trickery"],
+      "symbol": "Face-up coin",
+      "pantheon": "Forgotten Realms",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,forgotten-realms,trickery,good,luck,fortune,adventurers",
+    "source": "PHB",
+    "sort_order": 21
+  },
+  {
+    "slug": "tyr",
+    "title": "Tyr",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "God of justice and law. The Maimed God whose blindfold and missing hand symbolize the impartiality and cost of true justice.",
+    "content": "## Tyr\n\n**Title:** The Maimed God, the Even-Handed\n**Alignment:** Lawful Good\n**Domains:** War\n**Symbol:** Balanced scales resting on a warhammer\n**Pantheon:** Forgotten Realms\n\nTyr is the god of justice, law, and righteousness. He is the stern and unyielding champion of the law, punishing the guilty and protecting the innocent with equal determination. The Maimed God lost his right hand to the jaws of the beast Kezef in an act of self-sacrifice to bind the creature, and his eyes are covered by a blindfold -- symbolizing that true justice is blind and impartial.\n\nHis church is deeply involved in the legal systems of many Faerunian nations. Temples of Tyr serve as courts of law, and his clergy act as judges, magistrates, and legal advocates. Priests of Tyr are expected to uphold the law strictly and fairly, showing no favoritism or mercy that would undermine justice. They investigate crimes, mediate disputes, and ensure that punishments fit the offenses.\n\n**Allies and Enemies:** Tyr leads the Triad alongside Torm and Helm, and is closely allied with Ilmater, who serves as his conscience. He opposes Bane, Cyric, Mask, and all deities of tyranny, chaos, and injustice. His relationship with Tempus is one of philosophical tension -- Tyr sees war as a last resort, while Tempus sees it as inevitable.",
+    "metadata_json": {
+      "alignment": "Lawful Good",
+      "domains": ["War"],
+      "symbol": "Balanced scales resting on a warhammer",
+      "pantheon": "Forgotten Realms",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,forgotten-realms,war,good,justice,law,order",
+    "source": "PHB",
+    "sort_order": 22
+  },
+  {
+    "slug": "umberlee",
+    "title": "Umberlee",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "Goddess of the sea and storms. The Bitch Queen whose wrath can swallow entire fleets, worshipped more out of fear than love.",
+    "content": "## Umberlee\n\n**Title:** The Bitch Queen, Queen of the Depths\n**Alignment:** Chaotic Evil\n**Domains:** Tempest\n**Symbol:** Wave curling left and right\n**Pantheon:** Forgotten Realms\n\nUmberlee is the goddess of the sea, ocean currents, waves, and sea winds. She is a cruel, petulant, and vain deity who demands worship and tribute from anyone who would dare to sail her waters. The Bitch Queen is worshipped less out of love than out of sheer terror -- sailors offer prayers and sacrifices to her not because they admire her, but because they fear the alternative.\n\nHer temples are found in every port city, maintained by clergy who collect offerings from sailors and fishermen. Before any voyage, captains pay tribute to Umberlee's priests to ensure safe passage. Her clergy also serve as weather forecasters and navigators. Rituals to Umberlee often involve casting valuables into the sea, and the annual Drowning is a grim ceremony where offerings are made to appease the goddess for the coming year.\n\n**Allies and Enemies:** Umberlee is loosely allied with Auril, Talos, and Malar as part of the destructive nature deities. She opposes Selune, who guides navigators to safety, and Valkur, the god of sailors who protects those at sea from Umberlee's wrath. She clashes with Sune over matters of vanity.",
+    "metadata_json": {
+      "alignment": "Chaotic Evil",
+      "domains": ["Tempest"],
+      "symbol": "Wave curling left and right",
+      "pantheon": "Forgotten Realms",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,forgotten-realms,tempest,evil,sea,storms,ocean",
+    "source": "PHB",
+    "sort_order": 23
+  },
+  {
+    "slug": "waukeen",
+    "title": "Waukeen",
+    "category": "deity",
+    "subcategory": "forgotten-realms",
+    "ruleset": "universal",
+    "summary": "Goddess of trade and commerce. The Merchant's Friend who blesses fair dealing, entrepreneurship, and prosperity.",
+    "content": "## Waukeen\n\n**Title:** The Merchant's Friend\n**Alignment:** True Neutral\n**Domains:** Knowledge, Trickery\n**Symbol:** Upright coin with Waukeen's profile facing left\n**Pantheon:** Forgotten Realms\n\nWaukeen is the goddess of trade, money, commerce, and wealth. She is the patron of merchants, traders, shopkeepers, and anyone who makes their living through commerce. The Merchant's Friend encourages fair dealing, entrepreneurship, and the accumulation of wealth through honest business practices. She believes that trade and commerce are the engines that drive civilization forward.\n\nHer church is structured like a merchant guild, with clergy holding ranks based on their business acumen as well as their piety. Temples of Waukeen serve as banks, exchanges, and commercial arbitration centers. Her priests broker deals, appraise goods, and ensure fair weights and measures. The church also provides loans to promising entrepreneurs and sponsors trade caravans.\n\n**Allies and Enemies:** Waukeen is allied with Lliira, who held her portfolio during her absence, and maintains friendly relations with most neutral and good deities. She opposes Mask, whose thieves disrupt commerce, and Bane, whose tyranny stifles free trade. She has a complicated relationship with Tymora, as luck plays a major role in commerce.",
+    "metadata_json": {
+      "alignment": "True Neutral",
+      "domains": ["Knowledge", "Trickery"],
+      "symbol": "Upright coin with Waukeen's profile facing left",
+      "pantheon": "Forgotten Realms",
+      "rank": "Lesser deity"
+    },
+    "tags": "deity,god,forgotten-realms,knowledge,trickery,neutral,trade,commerce,wealth",
+    "source": "PHB",
+    "sort_order": 24
+  },
+  {
+    "slug": "beory",
+    "title": "Beory",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "Goddess of the Oerth, nature, and rain. The personification of the world itself, distant and primal.",
+    "content": "## Beory\n\n**Title:** The Oerth Mother\n**Alignment:** True Neutral\n**Domains:** Nature\n**Symbol:** Green disk\n**Pantheon:** Greyhawk\n\nBeory is the goddess of the Oerth (the world of Greyhawk), nature, and rain. She is the personification of the planet itself -- distant, primal, and largely unconcerned with the affairs of mortals or even other gods. The Oerth Mother embodies the living world in all its aspects, from the deepest ocean trenches to the highest mountain peaks.\n\nHer worship is primarily conducted by druids and those who revere nature in its most fundamental form. There are few formal temples to Beory; instead, the entire natural world serves as her shrine. Her clergy focus on maintaining the health of the planet, performing rituals tied to the seasons and natural cycles. They rarely involve themselves in politics or wars unless the world itself is threatened.\n\n**Allies and Enemies:** Beory is allied with Obad-Hai and other nature deities of the Greyhawk pantheon. She is too distant and primal to have true enemies, though she opposes any force that would fundamentally damage the Oerth. Tharizdun, whose madness threatens all of existence, is perhaps her greatest foe.",
+    "metadata_json": {
+      "alignment": "True Neutral",
+      "domains": ["Nature"],
+      "symbol": "Green disk",
+      "pantheon": "Greyhawk",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,greyhawk,nature,neutral,earth,world,primal",
+    "source": "PHB",
+    "sort_order": 25
+  },
+  {
+    "slug": "boccob",
+    "title": "Boccob",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of magic, arcane knowledge, and foresight. The Uncaring, a distant deity devoted purely to the study of magic.",
+    "content": "## Boccob\n\n**Title:** The Uncaring, the Lord of All Magics\n**Alignment:** True Neutral\n**Domains:** Arcana, Knowledge\n**Symbol:** Eye within a pentagram\n**Pantheon:** Greyhawk\n\nBoccob is the god of magic, arcane knowledge, balance, and foresight. Known as the Uncaring for his complete indifference to anything not directly related to magic, Boccob is the most distant and aloof of the Greyhawk deities. He concerns himself solely with the preservation and advancement of magical knowledge, viewing all other matters as irrelevant distractions.\n\nHis clergy are wizards and scholars who devote themselves entirely to magical research. Temples of Boccob are vast libraries and laboratories where magical experiments are conducted and arcane knowledge is catalogued. His priests rarely involve themselves in worldly affairs, preferring to spend their time in study and contemplation. They maintain a strict neutrality in all conflicts, intervening only when magic itself is threatened.\n\n**Allies and Enemies:** Boccob is too detached to maintain close alliances, though he is loosely associated with other knowledge-seeking deities. He opposes Tharizdun, whose release would destroy the magical order, and views Vecna's hoarding of secret knowledge with disapproval. Boccob tolerates most other deities as long as they do not interfere with the practice of magic.",
+    "metadata_json": {
+      "alignment": "True Neutral",
+      "domains": ["Arcana", "Knowledge"],
+      "symbol": "Eye within a pentagram",
+      "pantheon": "Greyhawk",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,greyhawk,arcana,knowledge,neutral,magic,foresight",
+    "source": "PHB",
+    "sort_order": 26
+  },
+  {
+    "slug": "celestian",
+    "title": "Celestian",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of stars, space, and wanderers. The Far Wanderer who watches over travelers between the stars and planes.",
+    "content": "## Celestian\n\n**Title:** The Far Wanderer\n**Alignment:** True Neutral\n**Domains:** Knowledge\n**Symbol:** Arc of seven stars inside a circle\n**Pantheon:** Greyhawk\n\nCelestian is the god of stars, space, and wanderers. He is the brother of Fharlanghn, and while Fharlanghn watches over those who travel the roads of the world, Celestian watches over those who journey among the stars and between the planes. The Far Wanderer is a contemplative and introspective deity who finds truth in the vast emptiness between the stars.\n\nHis clergy are astronomers, astrologers, planar travelers, and navigators who use the stars to guide their way. Temples of Celestian are observatories built on hilltops and towers, designed to provide the best possible views of the night sky. His priests study the movements of the stars, map the planes, and aid travelers who journey to other worlds or dimensions.\n\n**Allies and Enemies:** Celestian is closely allied with his brother Fharlanghn. He maintains friendly relations with most neutral deities and is loosely associated with Boccob through their shared love of knowledge. He opposes forces of darkness that would blot out the stars, and views Tharizdun's imprisonment as essential to the cosmic order.",
+    "metadata_json": {
+      "alignment": "True Neutral",
+      "domains": ["Knowledge"],
+      "symbol": "Arc of seven stars inside a circle",
+      "pantheon": "Greyhawk",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,greyhawk,knowledge,neutral,stars,space,wanderers,travel",
+    "source": "PHB",
+    "sort_order": 27
+  },
+  {
+    "slug": "ehlonna",
+    "title": "Ehlonna",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "Goddess of woodlands, flora, and fauna. A benevolent protector of the forests and all creatures who dwell within them.",
+    "content": "## Ehlonna\n\n**Title:** Ehlonna of the Forests\n**Alignment:** Neutral Good\n**Domains:** Life, Nature\n**Symbol:** Unicorn horn\n**Pantheon:** Greyhawk\n\nEhlonna is the goddess of forests, woodlands, flora, fauna, and fertility. She is a benevolent deity who protects the forests and all creatures that dwell within them, from the mightiest treant to the smallest woodland mouse. Ehlonna teaches that the forests are a precious gift that must be respected and protected, but that they can also provide for mortal needs when treated with care.\n\nHer clergy are rangers, druids, and woodsmen who patrol the forests and protect them from those who would exploit or destroy them. Temples of Ehlonna are woodland shrines and sacred groves where nature is honored. Her priests teach sustainable harvesting, guide hunters to take only what they need, and maintain the health of forest ecosystems.\n\n**Allies and Enemies:** Ehlonna is allied with Obad-Hai, though the two disagree on the relationship between civilization and nature -- Ehlonna is more tolerant of mortal settlement. She is friendly with Celestian and Fharlanghn. She opposes Erythnul, whose followers slaughter animals for sport, and Nerull, whose death magic corrupts the living forest.",
+    "metadata_json": {
+      "alignment": "Neutral Good",
+      "domains": ["Life", "Nature"],
+      "symbol": "Unicorn horn",
+      "pantheon": "Greyhawk",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,greyhawk,life,nature,good,forests,woodlands,animals",
+    "source": "PHB",
+    "sort_order": 28
+  },
+  {
+    "slug": "erythnul",
+    "title": "Erythnul",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of slaughter and panic. The Many, a brutal deity who revels in carnage, violence, and senseless destruction.",
+    "content": "## Erythnul\n\n**Title:** The Many\n**Alignment:** Chaotic Evil\n**Domains:** War\n**Symbol:** Blood drop\n**Pantheon:** Greyhawk\n\nErythnul is the god of hate, envy, malice, panic, ugliness, and slaughter. He is one of the most savage deities in the Greyhawk pantheon, delighting in carnage, mayhem, and senseless violence. The Many teaches that the strong should take what they want through brute force, and that mercy and compassion are weaknesses to be exploited.\n\nHis followers are berserkers, marauders, and those who have given themselves over to bloodlust. There are few formal temples to Erythnul; instead, his worship takes place on battlefields, in blood-soaked arenas, and in the aftermath of massacres. His clergy lead warbands on raids, whipping their followers into a frenzy of violence. Rituals to Erythnul involve blood sacrifice and acts of wanton cruelty.\n\n**Allies and Enemies:** Erythnul is allied with few deities, as even other evil gods find his mindless violence distasteful. He opposes Heironeous, the champion of valor and justice, and Hextor, surprisingly, as the two compete for dominance over warfare -- Erythnul representing chaotic slaughter versus Hextor's disciplined tyranny. He also clashes with Ehlonna, whose forests his followers despoil.",
+    "metadata_json": {
+      "alignment": "Chaotic Evil",
+      "domains": ["War"],
+      "symbol": "Blood drop",
+      "pantheon": "Greyhawk",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,greyhawk,war,evil,slaughter,chaos,violence",
+    "source": "PHB",
+    "sort_order": 29
+  },
+  {
+    "slug": "fharlanghn",
+    "title": "Fharlanghn",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of horizons, distance, and travel. The Dweller on the Horizon who blesses all who walk the roads of the world.",
+    "content": "## Fharlanghn\n\n**Title:** The Dweller on the Horizon\n**Alignment:** True Neutral\n**Domains:** Knowledge, Trickery\n**Symbol:** Circle crossed by a curved horizon line\n**Pantheon:** Greyhawk\n\nFharlanghn is the god of horizons, distance, travel, and roads. He is the patron of travelers, merchants, and anyone who undertakes a journey, whether physical or spiritual. The Dweller on the Horizon teaches that the journey is more important than the destination, and that wisdom can be found on every road.\n\nHis clergy are itinerant priests who spend their lives on the road, never staying in one place for long. There are no permanent temples to Fharlanghn; instead, his shrines are roadside markers, wayside inns, and crossroads. His priests offer blessings to travelers, maintain roads and bridges, and share news and stories gathered from their wanderings. They carry the Disc of Concordance, a holy symbol that also serves as a compass.\n\n**Allies and Enemies:** Fharlanghn is closely allied with his brother Celestian, who watches over celestial travelers. He is friendly with most neutral deities and is particularly well-liked among mortals for his practical blessings. He opposes forces that impede travel, such as tyrannical rulers who close borders and monsters that prey on travelers.",
+    "metadata_json": {
+      "alignment": "True Neutral",
+      "domains": ["Knowledge", "Trickery"],
+      "symbol": "Circle crossed by a curved horizon line",
+      "pantheon": "Greyhawk",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,greyhawk,knowledge,trickery,neutral,travel,roads,horizons",
+    "source": "SRD 5.1",
+    "sort_order": 30
+  },
+  {
+    "slug": "heironeous",
+    "title": "Heironeous",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of chivalry, justice, and valor. The Invincible, the champion of righteous warfare and honorable combat.",
+    "content": "## Heironeous\n\n**Title:** The Invincible\n**Alignment:** Lawful Good\n**Domains:** War\n**Symbol:** Lightning bolt\n**Pantheon:** Greyhawk\n\nHeironeous is the god of chivalry, justice, honor, war, daring, and valor. He is the champion of righteous warfare, teaching that combat should be waged with honor, discipline, and a commitment to protecting the innocent. The Invincible leads by example, and his mythology is filled with tales of heroic battles against overwhelming evil.\n\nHis church attracts paladins, knights, and warriors who fight for just causes. Temples of Heironeous are fortified churches that also serve as military training academies. His clergy teach the arts of war alongside the virtues of honor, courage, and sacrifice. They serve as military advisors, combat instructors, and champions who ride forth to battle evil wherever it arises.\n\n**Allies and Enemies:** Heironeous is the eternal enemy of his half-brother Hextor, the god of tyranny. Their conflict is one of the defining rivalries of the Greyhawk pantheon. He is allied with Rao, St. Cuthbert, and other good-aligned deities. He opposes Erythnul, whose chaotic violence mocks the honorable practice of warfare.",
+    "metadata_json": {
+      "alignment": "Lawful Good",
+      "domains": ["War"],
+      "symbol": "Lightning bolt",
+      "pantheon": "Greyhawk",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,greyhawk,war,good,chivalry,justice,valor,honor",
+    "source": "PHB",
+    "sort_order": 31
+  },
+  {
+    "slug": "hextor",
+    "title": "Hextor",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of war, tyranny, and conflict. The Champion of Evil, a six-armed warrior who rules through fear and military might.",
+    "content": "## Hextor\n\n**Title:** The Champion of Evil, the Herald of Hell\n**Alignment:** Lawful Evil\n**Domains:** War\n**Symbol:** Six arrows facing downward in a fan\n**Pantheon:** Greyhawk\n\nHextor is the god of war, discord, massacres, conflict, fitness, and tyranny. He is the dark counterpart to his half-brother Heironeous, representing the use of military power for conquest, oppression, and domination. Hextor teaches that the strong have the right to rule and that order is best maintained through fear and force. He is often depicted as a six-armed warrior clad in gray armor.\n\nHis church is a militaristic organization that seeks to establish tyrannical rule wherever it gains a foothold. Temples of Hextor are grim fortresses where martial discipline is enforced with an iron fist. His clergy are warlords, military commanders, and enforcers who believe in establishing order through strength. They train armies, fortify positions, and plot the conquest of neighboring lands.\n\n**Allies and Enemies:** Hextor's eternal enemy is his half-brother Heironeous, and their war defines both faiths. He is loosely allied with other evil deities who share his taste for domination. He opposes Rao, whose peaceful ways he views as weakness, and clashes with Erythnul, whose chaotic violence undermines Hextor's disciplined approach to warfare.",
+    "metadata_json": {
+      "alignment": "Lawful Evil",
+      "domains": ["War"],
+      "symbol": "Six arrows facing downward in a fan",
+      "pantheon": "Greyhawk",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,greyhawk,war,evil,tyranny,conflict,conquest",
+    "source": "PHB",
+    "sort_order": 32
+  },
+  {
+    "slug": "kord",
+    "title": "Kord",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of athletics, sport, and strength. The Brawler who celebrates physical prowess, competition, and the joy of battle.",
+    "content": "## Kord\n\n**Title:** The Brawler\n**Alignment:** Chaotic Good\n**Domains:** Tempest, War\n**Symbol:** Four spears and four maces radiating outward from a central point\n**Pantheon:** Greyhawk\n\nKord is the god of athletics, sport, brawling, strength, and courage. He is a boisterous and competitive deity who delights in physical challenges and feats of strength. The Brawler encourages his followers to test themselves against worthy opponents, push their physical limits, and revel in the thrill of competition. He teaches that strength is a gift to be celebrated, not feared.\n\nHis worship is popular among athletes, gladiators, barbarians, and anyone who values physical prowess. Temples of Kord often include gymnasiums, fighting pits, and athletic fields. His clergy organize tournaments, wrestling matches, and games of strength. They serve as coaches, trainers, and referees, and they believe that physical fitness is a form of worship. Cowardice and laziness are the gravest sins in Kord's eyes.\n\n**Allies and Enemies:** Kord is allied with other good-aligned deities, particularly those who value courage and action. He has a friendly rivalry with many war gods and is on good terms with Heironeous, though their approaches differ. He opposes the forces of tyranny and cowardice, and views Hextor's use of strength for oppression as a perversion of martial power.",
+    "metadata_json": {
+      "alignment": "Chaotic Good",
+      "domains": ["Tempest", "War"],
+      "symbol": "Four spears and four maces radiating outward from a central point",
+      "pantheon": "Greyhawk",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,greyhawk,tempest,war,good,strength,athletics,competition",
+    "source": "SRD 5.1",
+    "sort_order": 33
+  },
+  {
+    "slug": "nerull",
+    "title": "Nerull",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of death, darkness, and the underworld. The Reaper, a hateful deity who delights in death and suffering.",
+    "content": "## Nerull\n\n**Title:** The Reaper, the Foe of All Good, the Hater of Life\n**Alignment:** Neutral Evil\n**Domains:** Death\n**Symbol:** Skull and scythe\n**Pantheon:** Greyhawk\n\nNerull is the god of death, darkness, murder, and the underworld. He is the most feared deity in the Greyhawk pantheon, a hateful entity who despises all living things and delights in their destruction. The Reaper does not merely preside over death as a natural process -- he actively seeks to extinguish life and add to his collection of souls in the underworld.\n\nHis clergy are secretive and feared, operating from hidden temples in graveyards, crypts, and underground caverns. Priests of Nerull are assassins, necromancers, and death cultists who perform dark rituals to honor their patron. They spread fear and death wherever they go, offering the souls of their victims to the Reaper. Worship of Nerull is banned in most civilized lands, forcing his followers underground.\n\n**Allies and Enemies:** Nerull has few allies, as his hatred extends to nearly everything. He is loosely associated with other evil deities but trusts none of them. He is the bitter enemy of Pelor, whose life-giving light opposes his darkness, and clashes with Heironeous and Rao. He views Wee Jas with suspicion, as her domain over death and magic overlaps with his own.",
+    "metadata_json": {
+      "alignment": "Neutral Evil",
+      "domains": ["Death"],
+      "symbol": "Skull and scythe",
+      "pantheon": "Greyhawk",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,greyhawk,death,evil,darkness,murder,underworld",
+    "source": "PHB",
+    "sort_order": 34
+  },
+  {
+    "slug": "obad-hai",
+    "title": "Obad-Hai",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of nature, freedom, and the wilderness. The Shalm who embodies the raw and untamed power of the natural world.",
+    "content": "## Obad-Hai\n\n**Title:** The Shalm\n**Alignment:** True Neutral\n**Domains:** Nature\n**Symbol:** Oak leaf and acorn\n**Pantheon:** Greyhawk\n\nObad-Hai is the god of nature, woodlands, freedom, hunting, and beasts. He embodies the raw, untamed power of the natural world in all its beauty and savagery. The Shalm teaches that nature should be left wild and free, uncontrolled by civilization's attempts to tame it. He is a stern deity who brooks no compromise when it comes to the sanctity of the wilderness.\n\nHis clergy are druids and rangers who live in the wilderness, far from civilization. They maintain sacred groves and natural sanctuaries, protect endangered species, and oppose any who would exploit the natural world. Temples to Obad-Hai are ancient forests, untouched meadows, and wild places where nature reigns supreme. His priests perform rituals tied to the cycles of nature and the movements of wild animals.\n\n**Allies and Enemies:** Obad-Hai is allied with Beory and other nature deities. He has a complicated relationship with Ehlonna -- both protect nature, but Obad-Hai is more extreme in his opposition to civilization. He fiercely opposes Nerull, whose undead corrupt the natural order, and Erythnul, whose followers destroy the wilderness for sport.",
+    "metadata_json": {
+      "alignment": "True Neutral",
+      "domains": ["Nature"],
+      "symbol": "Oak leaf and acorn",
+      "pantheon": "Greyhawk",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,greyhawk,nature,neutral,wilderness,freedom,druids",
+    "source": "PHB",
+    "sort_order": 35
+  },
+  {
+    "slug": "olidammara",
+    "title": "Olidammara",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of revelry, wine, and trickery. The Laughing Rogue, a merry prankster who celebrates joy, music, and cunning.",
+    "content": "## Olidammara\n\n**Title:** The Laughing Rogue\n**Alignment:** Chaotic Neutral\n**Domains:** Trickery\n**Symbol:** Laughing mask\n**Pantheon:** Greyhawk\n\nOlidammara is the god of music, revels, wine, rogues, humor, and tricks. He is the most lighthearted of the Greyhawk deities, a merry prankster who loves a good joke, a fine wine, and a clever scheme. The Laughing Rogue teaches that life should be enjoyed to the fullest and that laughter is the best weapon against the darkness of the world.\n\nHis worship is informal and widespread, particularly among bards, rogues, vintners, and anyone who appreciates a good time. There are few formal temples to Olidammara; instead, his shrines are found in taverns, theaters, and festival grounds. His clergy are entertainers, brewers, and tricksters who spread joy and laughter wherever they go. Rituals to Olidammara involve music, drinking, storytelling, and elaborate practical jokes.\n\n**Allies and Enemies:** Olidammara gets along with most deities, as his good humor and pranks are difficult to take seriously. He is friendly with other trickster gods and chaotic-aligned deities. He opposes Hextor and other humorless tyrants, and delights in playing tricks on pompous and self-important deities like St. Cuthbert, though their rivalry is more mischievous than malicious.",
+    "metadata_json": {
+      "alignment": "Chaotic Neutral",
+      "domains": ["Trickery"],
+      "symbol": "Laughing mask",
+      "pantheon": "Greyhawk",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,greyhawk,trickery,neutral,revelry,wine,music,rogues",
+    "source": "PHB",
+    "sort_order": 36
+  },
+  {
+    "slug": "pelor",
+    "title": "Pelor",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of the sun, light, strength, and healing. One of the most widely worshipped deities in the Greyhawk setting.",
+    "content": "## Pelor\n\n**Title:** The Sun Father, the Shining One\n**Alignment:** Neutral Good\n**Domains:** Life, Light\n**Symbol:** Sun face\n**Pantheon:** Greyhawk\n\nPelor is the god of the sun, light, strength, and healing. He is one of the most popular and widely worshipped deities in the Greyhawk setting, representing the warmth and life-giving power of the sun. The Sun Father is a benevolent deity who encourages his followers to be strong, compassionate, and vigilant against the forces of darkness and evil.\n\nHis church is one of the largest and most influential in Oerth. Temples of Pelor are bright, sun-drenched buildings that serve as hospitals, shelters, and community centers. His clergy are healers, teachers, and champions who combat undead and the forces of darkness. They rise with the sun to perform morning devotions and spend their days serving the community through healing, charity, and education. Pelor's holy days coincide with solstices and equinoxes.\n\n**Allies and Enemies:** Pelor is the sworn enemy of Nerull, the god of death, and Tharizdun, the mad god of eternal darkness. He is allied with Heironeous, Rao, St. Cuthbert, and most good-aligned deities. His light is anathema to undead and the forces of darkness, making him a natural foe of vampires, liches, and necromancers.",
+    "metadata_json": {
+      "alignment": "Neutral Good",
+      "domains": ["Life", "Light"],
+      "symbol": "Sun face",
+      "pantheon": "Greyhawk",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,greyhawk,life,light,good,sun,healing,strength",
+    "source": "SRD 5.1",
+    "sort_order": 37
+  },
+  {
+    "slug": "rao",
+    "title": "Rao",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of peace, reason, and serenity. The Mediator who seeks to resolve conflicts through wisdom and diplomacy.",
+    "content": "## Rao\n\n**Title:** The Mediator\n**Alignment:** Lawful Good\n**Domains:** Knowledge\n**Symbol:** White heart\n**Pantheon:** Greyhawk\n\nRao is the god of peace, reason, and serenity. He is the divine voice of calm and wisdom, seeking to resolve conflicts through diplomacy, understanding, and compassion rather than violence. The Mediator teaches that true strength lies not in the ability to wage war, but in the courage to seek peace even when war seems inevitable.\n\nHis clergy are diplomats, counselors, scholars, and peacemakers who work to prevent and end conflicts throughout Oerth. Temples of Rao are serene sanctuaries designed for contemplation, meditation, and negotiation. His priests serve as mediators in disputes between nations, communities, and individuals. They teach conflict resolution, maintain libraries of philosophical texts, and provide counsel to rulers and common folk alike.\n\n**Allies and Enemies:** Rao is allied with Pelor, Heironeous, and other good-aligned deities who value order and compassion. He opposes Hextor, Erythnul, and Nerull -- deities who promote war, violence, and death. His relationship with Heironeous is one of mutual respect; both serve the cause of good, though they differ on the role of warfare.",
+    "metadata_json": {
+      "alignment": "Lawful Good",
+      "domains": ["Knowledge"],
+      "symbol": "White heart",
+      "pantheon": "Greyhawk",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,greyhawk,knowledge,good,peace,reason,diplomacy",
+    "source": "PHB",
+    "sort_order": 38
+  },
+  {
+    "slug": "st-cuthbert",
+    "title": "St. Cuthbert",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of common sense, truth, and zeal. A no-nonsense deity who demands wisdom, forthrightness, and firm action against evil.",
+    "content": "## St. Cuthbert\n\n**Title:** St. Cuthbert of the Cudgel\n**Alignment:** Lawful Neutral\n**Domains:** Knowledge\n**Symbol:** Circle at the center of a starburst of lines\n**Pantheon:** Greyhawk\n\nSt. Cuthbert is the god of common sense, wisdom, zeal, honesty, truth, and discipline. He is a practical, no-nonsense deity who values simple wisdom over esoteric knowledge and forthrightness over cunning. St. Cuthbert teaches that the world would be a better place if people simply used common sense, told the truth, and dealt firmly with evildoers.\n\nHis church is large and popular, particularly among the common folk who appreciate his straightforward approach. Temples of St. Cuthbert are plain but sturdy buildings where practical wisdom is taught. His clergy are crusaders, judges, and community leaders who enforce common decency and punish wrongdoers. They are known for their zeal, which sometimes borders on the fanatical -- St. Cuthbert's followers are not known for their subtlety.\n\n**Allies and Enemies:** St. Cuthbert is allied with Heironeous, Rao, and Pelor. He opposes all evil deities, but reserves particular ire for Vecna, Iuz, and the forces of chaos that undermine social order. His rivalry with Olidammara is legendary -- the Laughing Rogue's pranks and irreverence drive St. Cuthbert to distraction.",
+    "metadata_json": {
+      "alignment": "Lawful Neutral",
+      "domains": ["Knowledge"],
+      "symbol": "Circle at the center of a starburst of lines",
+      "pantheon": "Greyhawk",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,greyhawk,knowledge,neutral,truth,wisdom,zeal,discipline",
+    "source": "PHB",
+    "sort_order": 39
+  },
+  {
+    "slug": "tharizdun",
+    "title": "Tharizdun",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of eternal darkness and madness. The Chained God, an imprisoned cosmic horror who seeks to unmake all of creation.",
+    "content": "## Tharizdun\n\n**Title:** The Chained God, the Elder Elemental Eye\n**Alignment:** Chaotic Evil\n**Domains:** Trickery\n**Symbol:** Dark spiral or inverted ziggurat\n**Pantheon:** Greyhawk\n\nTharizdun is the god of eternal darkness, decay, entropy, malign knowledge, insanity, and cold. He is perhaps the most dangerous entity in the Greyhawk cosmology -- a mad god of unimaginable power who was imprisoned eons ago by the combined might of all the other gods, both good and evil, because his desire to unmake all of creation threatened everything that exists.\n\nWorship of Tharizdun is extremely rare and almost universally forbidden. His few remaining cults operate in the deepest secrecy, composed of madmen, nihilists, and those who have been driven insane by contact with the Chained God's influence. They seek to free their imprisoned patron, an event that would spell the end of all things. Many of his cultists do not even know the true name of the entity they worship, knowing him only as the Elder Elemental Eye.\n\n**Allies and Enemies:** Tharizdun has no true allies. Every other deity in the pantheon, good and evil alike, recognizes the existential threat he poses and maintains the magical bonds that keep him imprisoned. He is the enemy of all creation, and his release is the one thing that unites gods who otherwise despise each other.",
+    "metadata_json": {
+      "alignment": "Chaotic Evil",
+      "domains": ["Trickery"],
+      "symbol": "Dark spiral or inverted ziggurat",
+      "pantheon": "Greyhawk",
+      "rank": "Greater deity (imprisoned)"
+    },
+    "tags": "deity,god,greyhawk,trickery,evil,darkness,madness,entropy,imprisoned",
+    "source": "PHB",
+    "sort_order": 40
+  },
+  {
+    "slug": "trithereon",
+    "title": "Trithereon",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of individuality, liberty, and self-defense. The Summoner who champions personal freedom and resistance to tyranny.",
+    "content": "## Trithereon\n\n**Title:** The Summoner\n**Alignment:** Chaotic Good\n**Domains:** War\n**Symbol:** Triskelion\n**Pantheon:** Greyhawk\n\nTrithereon is the god of individuality, liberty, retribution, and self-defense. He is a fierce champion of personal freedom who teaches that every individual has the right to determine their own destiny and to resist those who would take that freedom away. The Summoner despises tyranny in all its forms and encourages active resistance against oppressors.\n\nHis clergy are freedom fighters, revolutionaries, and champions of the oppressed. Temples of Trithereon are often hidden meeting places for resistance movements and underground organizations fighting against tyrannical rulers. His priests teach self-defense, organize resistance cells, and provide sanctuary to those fleeing oppression. They believe that retribution against tyrants is not only justified but morally required.\n\n**Allies and Enemies:** Trithereon is allied with other good-aligned deities, particularly those who value freedom and justice. He works alongside Heironeous against the forces of evil, though their methods differ -- Trithereon favors guerrilla tactics while Heironeous prefers open battle. He fiercely opposes Hextor, whose tyranny is everything Trithereon fights against, and is also an enemy of Nerull and Erythnul.",
+    "metadata_json": {
+      "alignment": "Chaotic Good",
+      "domains": ["War"],
+      "symbol": "Triskelion",
+      "pantheon": "Greyhawk",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,greyhawk,war,good,liberty,freedom,individuality,resistance",
+    "source": "PHB",
+    "sort_order": 41
+  },
+  {
+    "slug": "ulaa",
+    "title": "Ulaa",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "Goddess of hills, mountains, and mining. The Stonewife who watches over those who work beneath and upon the earth.",
+    "content": "## Ulaa\n\n**Title:** The Stonewife\n**Alignment:** Lawful Good\n**Domains:** Life, War\n**Symbol:** Mountain with a circle at its heart\n**Pantheon:** Greyhawk\n\nUlaa is the goddess of hills, mountains, and gemstones. She is the patron of miners, stonecutters, and all who work with the treasures of the earth. The Stonewife is a practical and stalwart deity who values hard work, honest labor, and the beauty found in stone and gem. She teaches that the earth's bounty is a gift to be used wisely, not plundered recklessly.\n\nHer clergy are found in mining communities and mountain settlements throughout Oerth. Temples of Ulaa are carved from living rock, often built into hillsides or mountain faces. Her priests bless mines, evaluate gems, and protect mining communities from the monsters that lurk in the deep places of the earth. They teach safe mining practices and mediate disputes over mineral rights.\n\n**Allies and Enemies:** Ulaa is married to the dwarven god Moradin in some traditions, reflecting the close connection between her worship and dwarven culture. She is allied with other earth and mountain deities and opposes creatures that threaten mining communities, such as dragons, giants, and the monsters of the Underdark.",
+    "metadata_json": {
+      "alignment": "Lawful Good",
+      "domains": ["Life", "War"],
+      "symbol": "Mountain with a circle at its heart",
+      "pantheon": "Greyhawk",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,greyhawk,life,war,good,mountains,mining,earth",
+    "source": "PHB",
+    "sort_order": 42
+  },
+  {
+    "slug": "vecna",
+    "title": "Vecna",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "God of evil secrets, undeath, and forbidden knowledge. The Whispered One, a lich who ascended to godhood through dark power.",
+    "content": "## Vecna\n\n**Title:** The Whispered One, the Maimed Lord\n**Alignment:** Neutral Evil\n**Domains:** Arcana, Knowledge\n**Symbol:** Hand with eye in the palm\n**Pantheon:** Greyhawk\n\nVecna is the god of evil secrets, undeath, necromancy, and forbidden knowledge. He is one of the most infamous figures in D&D lore -- a mortal wizard who became a lich, was betrayed and dismembered by his lieutenant Kas, and ultimately ascended to godhood. The Whispered One hoards dark secrets and forbidden knowledge, sharing them only with his most devoted followers as tools of power.\n\nHis cult operates in absolute secrecy, with cells of followers hidden throughout civilized lands. Vecna's worshippers are necromancers, power-hungry wizards, and those who seek forbidden knowledge regardless of the cost. They collect secrets, create undead, and work toward their patron's goal of universal domination. The legendary artifacts known as the Eye of Vecna and the Hand of Vecna are potent and corrupting relics of his mortal form.\n\n**Allies and Enemies:** Vecna has no true allies, as he trusts no one -- a lesson learned from Kas the Betrayer, who now exists as a vampire lord and Vecna's most personal enemy. He opposes the forces of good, particularly St. Cuthbert and Pelor. He also clashes with Boccob, who disapproves of hoarding knowledge, and Nerull, whose domain over death overlaps with Vecna's necromantic ambitions.",
+    "metadata_json": {
+      "alignment": "Neutral Evil",
+      "domains": ["Arcana", "Knowledge"],
+      "symbol": "Hand with eye in the palm",
+      "pantheon": "Greyhawk",
+      "rank": "Lesser deity"
+    },
+    "tags": "deity,god,greyhawk,arcana,knowledge,evil,secrets,undeath,necromancy,lich",
+    "source": "PHB",
+    "sort_order": 43
+  },
+  {
+    "slug": "wee-jas",
+    "title": "Wee Jas",
+    "category": "deity",
+    "subcategory": "greyhawk",
+    "ruleset": "universal",
+    "summary": "Goddess of magic and death. The Witch Goddess who governs the transition between life and death with stern authority.",
+    "content": "## Wee Jas\n\n**Title:** The Witch Goddess, the Ruby Sorceress, the Stern Lady\n**Alignment:** Lawful Neutral\n**Domains:** Death, Knowledge\n**Symbol:** Red skull in front of a fireball\n**Pantheon:** Greyhawk\n\nWee Jas is the goddess of magic, death, vanity, and law. She governs the transition between life and death, overseeing both the proper practice of magic and the respectful treatment of the dead. The Witch Goddess is a stern, exacting deity who demands precision and discipline from her followers, whether they are casting spells or performing funeral rites.\n\nHer clergy include wizards, necromancers (of the lawful variety), morticians, and judges. Temples of Wee Jas serve dual purposes as magical academies and funerary houses. Her priests ensure that the dead are properly interred, that necromantic magic is used responsibly, and that magical knowledge is preserved and practiced according to proper laws and traditions. They view unauthorized necromancy as a grave offense against their goddess.\n\n**Allies and Enemies:** Wee Jas is too aloof for close alliances but maintains working relationships with other lawful deities. She clashes with Nerull over the domain of death -- Wee Jas views death as a transition to be managed, while Nerull sees it as an end to be celebrated. She views Vecna's undead creations and secret-hoarding as offenses against her ordered approach to magic and death.",
+    "metadata_json": {
+      "alignment": "Lawful Neutral",
+      "domains": ["Death", "Knowledge"],
+      "symbol": "Red skull in front of a fireball",
+      "pantheon": "Greyhawk",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,greyhawk,death,knowledge,neutral,magic,funeral,law",
+    "source": "PHB",
+    "sort_order": 44
+  },
+  {
+    "slug": "bahamut",
+    "title": "Bahamut",
+    "category": "deity",
+    "subcategory": "nonhuman",
+    "ruleset": "universal",
+    "summary": "God of good dragons and dragonborn honor. The Platinum Dragon, the most revered deity of metallic dragons and just dragonborn.",
+    "content": "## Bahamut\n\n**Title:** The Platinum Dragon, King of the Good Dragons\n**Alignment:** Lawful Good\n**Domains:** Life, War\n**Symbol:** Dragon's head in profile\n**Pantheon:** Nonhuman (Draconic)\n\nBahamut is the god of justice, protection, nobility, and good-aligned dragons. He is the eternal champion of good dragonkind, revered by metallic dragons, dragonborn, and all who fight for justice and honor. The Platinum Dragon appears as an enormous dragon with scales that gleam like polished platinum, or sometimes as an old man accompanied by seven golden canaries -- actually ancient gold dragons in disguise.\n\nBahamut's worship is central to metallic dragon culture, and many dragonborn clans honor him as their patron deity. His clergy include dragonborn paladins, knights, and priests who dedicate themselves to fighting evil and protecting the innocent. Temples of Bahamut are grand halls adorned with draconic imagery, and his holy sites often include lairs where metallic dragons dwell. Followers are expected to be honorable, courageous, and relentless in their opposition to evil.\n\n**Allies and Enemies:** Bahamut's eternal enemy is Tiamat, the Queen of Evil Dragons. Their conflict is one of the most fundamental struggles in D&D cosmology. He is allied with good-aligned deities across all pantheons, and metallic dragons serve as his agents in the mortal world. He has a particular affinity with Moradin and Corellon Larethian among the nonhuman deities.",
+    "metadata_json": {
+      "alignment": "Lawful Good",
+      "domains": ["Life", "War"],
+      "symbol": "Dragon's head in profile",
+      "pantheon": "Nonhuman (Draconic)",
+      "rank": "Lesser deity"
+    },
+    "tags": "deity,god,nonhuman,life,war,good,dragons,dragonborn,platinum,justice",
+    "source": "SRD 5.1",
+    "sort_order": 45
+  },
+  {
+    "slug": "corellon-larethian",
+    "title": "Corellon Larethian",
+    "category": "deity",
+    "subcategory": "nonhuman",
+    "ruleset": "universal",
+    "summary": "God of the elves, art, and magic. The Creator of the Elves, the greatest deity of the Seldarine (elven pantheon).",
+    "content": "## Corellon Larethian\n\n**Title:** The Creator of the Elves, First of the Seldarine\n**Alignment:** Chaotic Good\n**Domains:** Arcana, Light\n**Symbol:** Crescent moon\n**Pantheon:** Nonhuman (Elven / Seldarine)\n\nCorellon Larethian is the chief deity of the elven pantheon (the Seldarine), the god of magic, music, arts, crafts, war, and the elven race itself. He is credited with creating the elves and shaping them into the graceful, long-lived people they are today. Corellon embodies the elven ideals of beauty, artistry, and magical mastery, encouraging his people to pursue excellence in all creative and magical endeavors.\n\nHis worship is central to elven culture across all D&D settings. Temples of Corellon are works of art themselves -- soaring structures of crystal and living wood filled with music and magical light. His clergy are artists, musicians, wizards, and warriors who defend elven lands and preserve elven culture. They maintain the ancient traditions, teach the young, and guard the boundaries between the elven realms and the outside world.\n\n**Allies and Enemies:** Corellon leads the Seldarine and is allied with good-aligned deities across multiple pantheons. His greatest enemy is Lolth, who was once his consort before her betrayal and fall from grace. He also opposes Gruumsh, with whom he has fought since the dawn of creation -- Corellon is credited with putting out Gruumsh's eye in their legendary battle.",
+    "metadata_json": {
+      "alignment": "Chaotic Good",
+      "domains": ["Arcana", "Light"],
+      "symbol": "Crescent moon",
+      "pantheon": "Nonhuman (Elven / Seldarine)",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,nonhuman,arcana,light,good,elves,seldarine,magic,art",
+    "source": "PHB",
+    "sort_order": 46
+  },
+  {
+    "slug": "garl-glittergold",
+    "title": "Garl Glittergold",
+    "category": "deity",
+    "subcategory": "nonhuman",
+    "ruleset": "universal",
+    "summary": "God of gnomes, humor, and gemcutting. The Joker, a merry trickster who protects his people with wit and cunning.",
+    "content": "## Garl Glittergold\n\n**Title:** The Joker, the Watchful Protector\n**Alignment:** Lawful Good\n**Domains:** Trickery\n**Symbol:** Gold nugget\n**Pantheon:** Nonhuman (Gnomish)\n\nGarl Glittergold is the chief deity of the gnomish pantheon, the god of gnomes, humor, trickery, gemcutting, and protection. He is a clever, good-natured trickster who protects his people through wit, cunning, and the occasional well-placed illusion rather than through brute force. The Joker teaches that laughter and cleverness are the best tools for overcoming adversity.\n\nHis worship is at the heart of gnomish culture. Temples of Garl Glittergold are lively places filled with laughter, illusions, and the sparkle of cut gems. His clergy are pranksters, jewelers, inventors, and protectors who use their wits to defend gnomish communities. They celebrate festivals with elaborate pranks, gem exhibitions, and contests of cleverness. Garl's priests believe that a good joke can defuse tension better than any weapon.\n\n**Allies and Enemies:** Garl Glittergold is allied with the other gnomish deities and maintains friendly relations with Corellon Larethian, Moradin, and Yondalla. He is the particular enemy of Kurtulmak, the kobold god, against whom he played his most famous prank -- collapsing the kobold god's cavern home. He also opposes Gaerdal Ironhand's more militant approach, preferring trickery to warfare.",
+    "metadata_json": {
+      "alignment": "Lawful Good",
+      "domains": ["Trickery"],
+      "symbol": "Gold nugget",
+      "pantheon": "Nonhuman (Gnomish)",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,nonhuman,trickery,good,gnomes,humor,gemcutting,protection",
+    "source": "PHB",
+    "sort_order": 47
+  },
+  {
+    "slug": "gruumsh",
+    "title": "Gruumsh",
+    "category": "deity",
+    "subcategory": "nonhuman",
+    "ruleset": "universal",
+    "summary": "God of orcs, storms, and war. He Who Never Sleeps, the one-eyed conqueror who drives his people to unending warfare.",
+    "content": "## Gruumsh\n\n**Title:** He Who Never Sleeps, One-Eye\n**Alignment:** Chaotic Evil\n**Domains:** Tempest, War\n**Symbol:** Unblinking eye\n**Pantheon:** Nonhuman (Orcish)\n\nGruumsh is the chief deity of the orcish pantheon, the god of orcs, storms, war, and territory. He is a savage and relentless deity who drives his people to conquer, destroy, and claim dominion over all the lands that he believes were stolen from the orcs by the other races. Gruumsh lost an eye in his legendary battle with Corellon Larethian, and this wound has fueled his eternal rage ever since.\n\nOrcish culture revolves around the worship of Gruumsh. His war chiefs serve as both military and spiritual leaders, driving orc hordes to raid, conquer, and pillage. Worship of Gruumsh involves blood sacrifice, war chants, and brutal rituals of scarification. His priests, known as Eyes of Gruumsh, often ritually blind one eye in emulation of their god. The orcs believe that Gruumsh watches over every battle, rewarding the strong and punishing the weak.\n\n**Allies and Enemies:** Gruumsh commands the other orcish deities as subordinates rather than allies. He is the eternal enemy of Corellon Larethian, who took his eye, and opposes the entire elven pantheon. He also despises the dwarven and gnomish gods and views all non-orcish deities with contempt. Among the evil gods, he maintains an uneasy rivalry with Lolth for dominance over the Underdark's inhabitants.",
+    "metadata_json": {
+      "alignment": "Chaotic Evil",
+      "domains": ["Tempest", "War"],
+      "symbol": "Unblinking eye",
+      "pantheon": "Nonhuman (Orcish)",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,nonhuman,tempest,war,evil,orcs,conquest,destruction",
+    "source": "PHB",
+    "sort_order": 48
+  },
+  {
+    "slug": "lolth",
+    "title": "Lolth",
+    "category": "deity",
+    "subcategory": "nonhuman",
+    "ruleset": "universal",
+    "summary": "Goddess of the drow, spiders, and darkness. The Demon Queen of Spiders who rules the dark elves through fear and treachery.",
+    "content": "## Lolth\n\n**Title:** The Demon Queen of Spiders, Queen of the Demonweb Pits\n**Alignment:** Chaotic Evil\n**Domains:** Trickery, War\n**Symbol:** Spider\n**Pantheon:** Nonhuman (Drow / Dark Seldarine)\n\nLolth is the chief goddess of the drow, the deity of spiders, darkness, chaos, and evil. Once known as Araushnee and a member of the Seldarine (the elven pantheon), she was cast out after betraying Corellon Larethian and attempting to seize control of the elven gods. Her fall led to the sundering of the elven people and the creation of the drow, who followed her into the Underdark.\n\nLolth rules drow society with an iron web of intrigue, treachery, and religious fanaticism. Drow priestesses form the ruling class, and drow cities are theocracies devoted entirely to the Spider Queen's worship. Her religion demands constant competition and betrayal among the faithful, as Lolth believes that only the strongest and most cunning deserve to survive. Spiders are sacred to her worship, and driders -- those who fail her tests -- serve as warnings to the faithless.\n\n**Allies and Enemies:** Lolth's greatest enemy is Corellon Larethian and the entire Seldarine. She particularly opposes Eilistraee, a drow goddess who seeks to redeem the dark elves. Among the broader pantheons, she clashes with any deity whose followers oppose the drow. She maintains tenuous alliances with demon lords and other evil powers when it suits her schemes.\n\nSee also: [Lolth (Forgotten Realms)](#lolth-fr) for her role in the Faerunian pantheon.",
+    "metadata_json": {
+      "alignment": "Chaotic Evil",
+      "domains": ["Trickery", "War"],
+      "symbol": "Spider",
+      "pantheon": "Nonhuman (Drow / Dark Seldarine)",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,nonhuman,trickery,war,evil,drow,spiders,underdark,dark-elves",
+    "source": "PHB",
+    "sort_order": 49
+  },
+  {
+    "slug": "moradin",
+    "title": "Moradin",
+    "category": "deity",
+    "subcategory": "nonhuman",
+    "ruleset": "universal",
+    "summary": "God of dwarves, creation, and smithing. The All-Father who forged the dwarven race on his great anvil.",
+    "content": "## Moradin\n\n**Title:** The All-Father, the Soul Forger\n**Alignment:** Lawful Good\n**Domains:** Forge, Knowledge, War\n**Symbol:** Hammer and anvil\n**Pantheon:** Nonhuman (Dwarven / Mordinsamman)\n\nMoradin is the chief deity of the dwarven pantheon (the Mordinsamman), the god of dwarves, creation, smithing, and protection. He is credited with forging the first dwarves from metals and gems in the heart of the world, shaping them on his great anvil and breathing life into them with the bellows of his forge. The All-Father embodies the dwarven virtues of craftsmanship, hard work, and unwavering loyalty to kin and clan.\n\nMoradin's worship is the foundation of dwarven culture. Every dwarven settlement has a forge-temple dedicated to the All-Father, where his priests serve as smiths, judges, and community leaders. Clergy of Moradin are master craftsmen who view the act of creation as the highest form of worship. They maintain the traditions of their people, settle disputes within clans, and defend dwarven holds against their ancient enemies.\n\n**Allies and Enemies:** Moradin leads the Mordinsamman and is allied with Corellon Larethian, Garl Glittergold, and Yondalla as part of the greater alliance of nonhuman deities. He is the sworn enemy of Gruumsh and the orcish pantheon, and opposes the goblinoid gods and the duergar deity Laduguer. Some traditions link him romantically with the Greyhawk goddess Ulaa.",
+    "metadata_json": {
+      "alignment": "Lawful Good",
+      "domains": ["Forge", "Knowledge", "War"],
+      "symbol": "Hammer and anvil",
+      "pantheon": "Nonhuman (Dwarven / Mordinsamman)",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,nonhuman,forge,knowledge,war,good,dwarves,smithing,creation",
+    "source": "PHB",
+    "sort_order": 50
+  },
+  {
+    "slug": "sehanine-moonbow",
+    "title": "Sehanine Moonbow",
+    "category": "deity",
+    "subcategory": "nonhuman",
+    "ruleset": "universal",
+    "summary": "Goddess of the moon, dreams, and elven afterlife. The Luminous Cloud who guides elven souls on their final journey.",
+    "content": "## Sehanine Moonbow\n\n**Title:** The Luminous Cloud, the Moonlit Mystery, Daughter of the Night Skies\n**Alignment:** Chaotic Good\n**Domains:** Knowledge, Light\n**Symbol:** Full moon under a moonbow (lunar rainbow)\n**Pantheon:** Nonhuman (Elven / Seldarine)\n\nSehanine Moonbow is an elven goddess of the moon, dreams, travel, death, and the elven afterlife. She is a member of the Seldarine and one of the most beloved elven deities, serving as the guide who leads elven souls to their final rest in Arvandor, the elven paradise. The Luminous Cloud embodies the mysteries of the night, the power of dreams, and the gentle transition from life to whatever lies beyond.\n\nHer clergy are mystics, dreamers, and guides who help elves navigate the mysteries of life, death, and the spaces between. Temples of Sehanine are moonlit sanctuaries and dream-gardens where followers meditate, interpret dreams, and commune with the spirits of departed elves. Her priests perform funeral rites, tend to the dying, and use divination to guide their communities. She is also the patron of elven travelers and those who journey under moonlight.\n\n**Allies and Enemies:** Sehanine is a consort of Corellon Larethian and a core member of the Seldarine. She is allied with Sel\u00fbne of the Forgotten Realms pantheon, with whom she shares lunar associations. She opposes Lolth and the Dark Seldarine, and works to protect elven souls from the predations of evil gods and necromancers.",
+    "metadata_json": {
+      "alignment": "Chaotic Good",
+      "domains": ["Knowledge", "Light"],
+      "symbol": "Full moon under a moonbow (lunar rainbow)",
+      "pantheon": "Nonhuman (Elven / Seldarine)",
+      "rank": "Intermediate deity"
+    },
+    "tags": "deity,god,nonhuman,knowledge,light,good,elves,seldarine,moon,dreams,afterlife",
+    "source": "PHB",
+    "sort_order": 51
+  },
+  {
+    "slug": "tiamat",
+    "title": "Tiamat",
+    "category": "deity",
+    "subcategory": "nonhuman",
+    "ruleset": "universal",
+    "summary": "Goddess of evil dragons, greed, and conquest. The Dragon Queen, a five-headed terror who seeks dominion over all.",
+    "content": "## Tiamat\n\n**Title:** The Dragon Queen, the Chromatic Dragon, the Avaricious\n**Alignment:** Lawful Evil\n**Domains:** Trickery, War\n**Symbol:** Dragon claw with five talons\n**Pantheon:** Nonhuman (Draconic)\n\nTiamat is the goddess of evil dragons, greed, and conquest. She is the counterpart and eternal enemy of Bahamut, embodying everything that makes chromatic dragons feared and hated -- avarice, cruelty, and an insatiable hunger for power. The Dragon Queen appears as an enormous dragon with five heads, each one a different chromatic color (black, blue, green, red, and white), representing the five types of evil dragon.\n\nTiamat's worship is practiced by chromatic dragons, dragon cultists, and those who seek power through draconic might. Her cult among humanoids, the Cult of the Dragon, is one of the most dangerous organizations in the Realms. They seek to free Tiamat from her prison in Avernus, the first layer of the Nine Hells, and bring her physically into the mortal world. Worship involves hoarding treasure, performing draconic rituals, and making blood sacrifices.\n\n**Allies and Enemies:** Tiamat's eternal enemy is Bahamut, the Platinum Dragon. Their conflict mirrors the broader struggle between metallic and chromatic dragons. She is imprisoned in Avernus and maintains a complex relationship with Asmodeus, the ruler of the Nine Hells. She opposes all good-aligned deities and views the nonhuman pantheons as obstacles to her dominion.",
+    "metadata_json": {
+      "alignment": "Lawful Evil",
+      "domains": ["Trickery", "War"],
+      "symbol": "Dragon claw with five talons",
+      "pantheon": "Nonhuman (Draconic)",
+      "rank": "Lesser deity"
+    },
+    "tags": "deity,god,nonhuman,trickery,war,evil,dragons,chromatic,greed,conquest",
+    "source": "SRD 5.1",
+    "sort_order": 52
+  },
+  {
+    "slug": "yondalla",
+    "title": "Yondalla",
+    "category": "deity",
+    "subcategory": "nonhuman",
+    "ruleset": "universal",
+    "summary": "Goddess of halflings, protection, and plenty. The Protector and Provider who watches over her small but resilient people.",
+    "content": "## Yondalla\n\n**Title:** The Protector and Provider, the Nurturing Matriarch\n**Alignment:** Lawful Good\n**Domains:** Life\n**Symbol:** Cornucopia on a shield\n**Pantheon:** Nonhuman (Halfling)\n\nYondalla is the chief deity of the halfling pantheon, the goddess of halflings, protection, fertility, and plenty. She is the creator and guardian of the halfling race, a warm and nurturing deity who provides for her people and protects them from harm. The Protector and Provider embodies the halfling values of community, generosity, comfort, and quiet courage in the face of adversity.\n\nHer worship is woven into the fabric of halfling daily life. Rather than grand temples, Yondalla is honored in comfortable communal gathering places, family homes, and well-tended gardens. Her clergy are community leaders, healers, and protectors who ensure that no halfling goes hungry or unprotected. They organize festivals, maintain food stores, and defend their communities with surprising ferocity when threatened. Yondalla teaches that even the smallest person can make a difference.\n\n**Allies and Enemies:** Yondalla is allied with Corellon Larethian, Garl Glittergold, and Moradin as part of the alliance of nonhuman racial deities. She opposes the goblinoid and orcish deities who threaten halfling communities, and is particularly hostile to Gruumsh. Despite her gentle nature, Yondalla is fiercely protective, and those who threaten her people discover that the Protector has a formidable temper.",
+    "metadata_json": {
+      "alignment": "Lawful Good",
+      "domains": ["Life"],
+      "symbol": "Cornucopia on a shield",
+      "pantheon": "Nonhuman (Halfling)",
+      "rank": "Greater deity"
+    },
+    "tags": "deity,god,nonhuman,life,good,halflings,protection,plenty,community",
+    "source": "PHB",
+    "sort_order": 53
+  }
+]

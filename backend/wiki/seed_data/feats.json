@@ -1,0 +1,482 @@
+[
+  {
+    "slug": "alert",
+    "title": "Alert",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Always on the lookout for danger, you gain bonuses to initiative and can't be surprised.",
+    "content": "## Alert\n\nAlways on the lookout for danger, you gain the following benefits:\n\n- You gain a +5 bonus to initiative.\n- You can't be surprised while you are conscious.\n- Other creatures don't gain advantage on attack rolls against you as a result of being unseen by you.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["+5 bonus to initiative", "Can't be surprised while conscious", "Hidden creatures don't gain advantage on attack rolls against you"]
+    },
+    "tags": "feat,alert,initiative,surprise,awareness",
+    "source": "PHB",
+    "sort_order": 1
+  },
+  {
+    "slug": "athlete",
+    "title": "Athlete",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You have undergone extensive physical training, gaining climbing speed, improved jumping, and the ability to stand from prone more easily.",
+    "content": "## Athlete\n\nYou have undergone extensive physical training to gain the following benefits:\n\n- Increase your Strength or Dexterity score by 1, to a maximum of 20.\n- When you are prone, standing up uses only 5 feet of your movement.\n- Climbing doesn't cost you extra movement.\n- You can make a running long jump or a running high jump after moving only 5 feet on foot, rather than 10 feet.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["+1 Strength or Dexterity", "Standing from prone costs only 5 feet", "Climbing doesn't cost extra movement", "Running jump after only 5 feet of movement"]
+    },
+    "tags": "feat,athlete,strength,dexterity,movement,climbing,jumping",
+    "source": "PHB",
+    "sort_order": 2
+  },
+  {
+    "slug": "charger",
+    "title": "Charger",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "When you use your action to Dash, you can make a bonus action melee attack or shove with extra force.",
+    "content": "## Charger\n\nWhen you use your action to Dash, you can use a bonus action to make one melee weapon attack or to shove a creature. If you move at least 10 feet in a straight line immediately before taking this bonus action, you either gain a +5 bonus to the attack's damage roll (if you chose to make a melee attack and hit) or push the target up to 10 feet away from you (if you chose to shove and you succeed).",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["Bonus action melee attack or shove after Dash", "+5 damage or 10-foot push after 10 feet of straight-line movement"]
+    },
+    "tags": "feat,charger,melee,dash,movement,bonus action",
+    "source": "PHB",
+    "sort_order": 3
+  },
+  {
+    "slug": "crossbow-expert",
+    "title": "Crossbow Expert",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Extensive practice with crossbows grants faster loading, close-range shooting without disadvantage, and bonus action hand crossbow attacks.",
+    "content": "## Crossbow Expert\n\nThanks to extensive practice with the crossbow, you gain the following benefits:\n\n- You ignore the loading quality of crossbows with which you are proficient.\n- Being within 5 feet of a hostile creature doesn't impose disadvantage on your ranged attack rolls.\n- When you use the Attack action and attack with a one-handed weapon, you can use a bonus action to attack with a hand crossbow you are holding.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["Ignore loading quality of crossbows", "No disadvantage on ranged attacks within 5 feet", "Bonus action hand crossbow attack after one-handed weapon attack"]
+    },
+    "tags": "feat,crossbow expert,ranged,crossbow,loading,bonus action",
+    "source": "PHB",
+    "sort_order": 4
+  },
+  {
+    "slug": "defensive-duelist",
+    "title": "Defensive Duelist",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "When wielding a finesse weapon, you can use your reaction to add your proficiency bonus to AC against one melee attack.",
+    "content": "## Defensive Duelist\n\n**Prerequisite:** Dexterity 13 or higher\n\nWhen you are wielding a finesse weapon with which you are proficient and another creature hits you with a melee attack, you can use your reaction to add your proficiency bonus to your AC for that attack, potentially causing the attack to miss you.",
+    "metadata_json": {
+      "prerequisite": "Dexterity 13 or higher",
+      "benefits": ["Reaction to add proficiency bonus to AC against one melee attack while wielding a finesse weapon"]
+    },
+    "tags": "feat,defensive duelist,dexterity,finesse,reaction,ac",
+    "source": "PHB",
+    "sort_order": 5
+  },
+  {
+    "slug": "dual-wielder",
+    "title": "Dual Wielder",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You master fighting with two weapons, gaining +1 AC, the ability to dual wield non-light weapons, and faster drawing/stowing.",
+    "content": "## Dual Wielder\n\nYou master fighting with two weapons, gaining the following benefits:\n\n- You gain a +1 bonus to AC while you are wielding a separate melee weapon in each hand.\n- You can use two-weapon fighting even when the one-handed melee weapons you are wielding aren't light.\n- You can draw or stow two one-handed weapons when you would normally be able to draw or stow only one.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["+1 AC while dual wielding", "Two-weapon fighting with non-light one-handed weapons", "Draw or stow two weapons at once"]
+    },
+    "tags": "feat,dual wielder,two-weapon fighting,melee,ac",
+    "source": "PHB",
+    "sort_order": 6
+  },
+  {
+    "slug": "dungeon-delver",
+    "title": "Dungeon Delver",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Alert to hidden traps and secret doors, you gain advantages when searching for and resisting dungeon hazards.",
+    "content": "## Dungeon Delver\n\nAlert to the hidden traps and secret doors found in many dungeons, you gain the following benefits:\n\n- You have advantage on Wisdom (Perception) and Intelligence (Investigation) checks made to detect the presence of secret doors.\n- You have advantage on saving throws made to avoid or resist traps.\n- You have resistance to the damage dealt by traps.\n- Traveling at a fast pace doesn't impose the normal -5 penalty to your passive Wisdom (Perception) score.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["Advantage on checks to detect secret doors", "Advantage on saves against traps", "Resistance to trap damage", "No passive Perception penalty at fast pace"]
+    },
+    "tags": "feat,dungeon delver,traps,secret doors,perception,investigation",
+    "source": "PHB",
+    "sort_order": 7
+  },
+  {
+    "slug": "durable",
+    "title": "Durable",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Hardy and resilient, you increase your Constitution and gain a minimum on Hit Dice healing rolls.",
+    "content": "## Durable\n\nHardy and resilient, you gain the following benefits:\n\n- Increase your Constitution score by 1, to a maximum of 20.\n- When you roll a Hit Die to regain hit points, the minimum number of hit points you regain from the roll equals twice your Constitution modifier (minimum of 2).",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["+1 Constitution", "Minimum HP regained from Hit Dice equals twice Constitution modifier"]
+    },
+    "tags": "feat,durable,constitution,healing,hit dice,resilience",
+    "source": "PHB",
+    "sort_order": 8
+  },
+  {
+    "slug": "grappler",
+    "title": "Grappler",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You've developed the skills necessary to hold your own in close-quarters grappling, gaining advantage on attacks and the ability to pin creatures.",
+    "content": "## Grappler\n\n**Prerequisite:** Strength 13 or higher\n\nYou've developed the skills necessary to hold your own in close-quarters grappling. You gain the following benefits:\n\n- You have advantage on attack rolls against a creature you are grappling.\n- You can use your action to try to pin a creature grappled by you. To do so, make another grapple check. If you succeed, you and the creature are both restrained until the grapple ends.",
+    "metadata_json": {
+      "prerequisite": "Strength 13 or higher",
+      "benefits": ["Advantage on attack rolls against grappled creatures", "Pin a grappled creature (both restrained)"]
+    },
+    "tags": "feat,grappler,grappling,melee,strength,restrained",
+    "source": "SRD 5.1",
+    "sort_order": 9
+  },
+  {
+    "slug": "great-weapon-master",
+    "title": "Great Weapon Master",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You've learned to put the weight of a weapon to your advantage, gaining bonus action attacks on crits/kills and a power attack option.",
+    "content": "## Great Weapon Master\n\nYou've learned to put the weight of a weapon to your advantage, letting its momentum empower your strikes. You gain the following benefits:\n\n- On your turn, when you score a critical hit with a melee weapon or reduce a creature to 0 hit points with one, you can make one melee weapon attack as a bonus action.\n- Before you make a melee attack with a heavy weapon that you are proficient with, you can choose to take a -5 penalty to the attack roll. If the attack hits, you add +10 to the attack's damage.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["Bonus action melee attack on critical hit or kill", "-5 to hit for +10 damage with heavy weapons"]
+    },
+    "tags": "feat,great weapon master,gwm,melee,heavy weapon,damage,power attack",
+    "source": "PHB",
+    "sort_order": 10
+  },
+  {
+    "slug": "healer",
+    "title": "Healer",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You are an able physician, allowing you to stabilize and heal creatures using a healer's kit.",
+    "content": "## Healer\n\nYou are an able physician, allowing you to mend wounds quickly and get your allies back in the fight. You gain the following benefits:\n\n- When you use a healer's kit to stabilize a dying creature, that creature also regains 1 hit point.\n- As an action, you can spend one use of a healer's kit to tend to a creature and restore 1d6 + 4 hit points to it, plus additional hit points equal to the creature's maximum number of Hit Dice. The creature can't regain hit points from this feat again until it finishes a short or long rest.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["Stabilize and restore 1 HP with healer's kit", "Heal 1d6 + 4 + creature's max Hit Dice with healer's kit"]
+    },
+    "tags": "feat,healer,healing,healer's kit,support,medicine",
+    "source": "PHB",
+    "sort_order": 11
+  },
+  {
+    "slug": "heavily-armored",
+    "title": "Heavily Armored",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You have trained to master the use of heavy armor, gaining proficiency and a Strength increase.",
+    "content": "## Heavily Armored\n\n**Prerequisite:** Proficiency with medium armor\n\nYou have trained to master the use of heavy armor, gaining the following benefits:\n\n- Increase your Strength score by 1, to a maximum of 20.\n- You gain proficiency with heavy armor.",
+    "metadata_json": {
+      "prerequisite": "Proficiency with medium armor",
+      "benefits": ["+1 Strength", "Proficiency with heavy armor"]
+    },
+    "tags": "feat,heavily armored,heavy armor,strength,proficiency",
+    "source": "PHB",
+    "sort_order": 12
+  },
+  {
+    "slug": "heavy-armor-master",
+    "title": "Heavy Armor Master",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You can use your armor to deflect strikes that would kill others, reducing nonmagical bludgeoning, piercing, and slashing damage.",
+    "content": "## Heavy Armor Master\n\n**Prerequisite:** Proficiency with heavy armor\n\nYou can use your armor to deflect strikes that would kill others. You gain the following benefits:\n\n- Increase your Strength score by 1, to a maximum of 20.\n- While you are wearing heavy armor, bludgeoning, piercing, and slashing damage that you take from nonmagical weapons is reduced by 3.",
+    "metadata_json": {
+      "prerequisite": "Proficiency with heavy armor",
+      "benefits": ["+1 Strength", "Reduce nonmagical bludgeoning/piercing/slashing damage by 3 while in heavy armor"]
+    },
+    "tags": "feat,heavy armor master,heavy armor,damage reduction,strength,tank",
+    "source": "PHB",
+    "sort_order": 13
+  },
+  {
+    "slug": "inspiring-leader",
+    "title": "Inspiring Leader",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You can spend 10 minutes inspiring your companions, granting them temporary hit points.",
+    "content": "## Inspiring Leader\n\n**Prerequisite:** Charisma 13 or higher\n\nYou can spend 10 minutes inspiring your companions, shoring up their resolve to fight. When you do so, choose up to six friendly creatures (which can include yourself) within 30 feet of you who can see or hear you and who can understand you. Each creature gains temporary hit points equal to your level + your Charisma modifier. A creature can't gain temporary hit points from this feat again until it has finished a short or long rest.",
+    "metadata_json": {
+      "prerequisite": "Charisma 13 or higher",
+      "benefits": ["Grant up to 6 creatures temporary HP equal to your level + Charisma modifier after a 10-minute speech"]
+    },
+    "tags": "feat,inspiring leader,charisma,temporary hp,support,leadership",
+    "source": "PHB",
+    "sort_order": 14
+  },
+  {
+    "slug": "lucky",
+    "title": "Lucky",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You have inexplicable luck that can kick in at just the right moment, granting 3 luck points per long rest to reroll dice.",
+    "content": "## Lucky\n\nYou have inexplicable luck that seems to kick in at just the right moment. You have 3 luck points. Whenever you make an attack roll, an ability check, or a saving throw, you can spend one luck point to roll an additional d20. You can choose to spend one of your luck points after you roll the die, but before the outcome is determined. You choose which of the d20s is used for the attack roll, ability check, or saving throw.\n\nYou can also spend one luck point when an attack roll is made against you. Roll a d20, and then choose whether the attack uses the attacker's roll or yours. If more than one creature spends a luck point to influence the outcome of a roll, the points cancel each other out; no additional dice are rolled.\n\nYou regain your expended luck points when you finish a long rest.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["3 luck points per long rest", "Spend a point to roll extra d20 on attacks, checks, or saves", "Spend a point to force reroll on attacks against you"]
+    },
+    "tags": "feat,lucky,luck,reroll,versatile,d20",
+    "source": "PHB",
+    "sort_order": 15
+  },
+  {
+    "slug": "mage-slayer",
+    "title": "Mage Slayer",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You have practiced techniques useful in melee combat against spellcasters, gaining reactions against nearby casters and concentration disruption.",
+    "content": "## Mage Slayer\n\nYou have practiced techniques useful in melee combat against spellcasters, gaining the following benefits:\n\n- When a creature within 5 feet of you casts a spell, you can use your reaction to make a melee weapon attack against that creature.\n- When you damage a creature that is concentrating on a spell, that creature has disadvantage on the saving throw it makes to maintain its concentration.\n- You have advantage on saving throws against spells cast by creatures within 5 feet of you.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["Reaction melee attack when adjacent creature casts a spell", "Impose disadvantage on concentration saves from your damage", "Advantage on saves against spells from adjacent casters"]
+    },
+    "tags": "feat,mage slayer,anti-caster,melee,reaction,concentration",
+    "source": "PHB",
+    "sort_order": 16
+  },
+  {
+    "slug": "magic-initiate",
+    "title": "Magic Initiate",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Choose a spellcasting class and learn two cantrips and one 1st-level spell from that class's spell list.",
+    "content": "## Magic Initiate\n\nChoose a class: bard, cleric, druid, sorcerer, warlock, or wizard. You learn two cantrips of your choice from that class's spell list. In addition, choose one 1st-level spell from that same list. You learn that spell and can cast it at its lowest level. Once you cast it, you must finish a long rest before you can cast it again using this feat. Your spellcasting ability for these spells depends on the class you chose: Charisma for bard, sorcerer, or warlock; Wisdom for cleric or druid; or Intelligence for wizard.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["Learn 2 cantrips from a chosen class", "Learn 1 first-level spell from same class (cast once per long rest)"]
+    },
+    "tags": "feat,magic initiate,cantrip,spellcasting,multiclass,versatile",
+    "source": "PHB",
+    "sort_order": 17
+  },
+  {
+    "slug": "mobile",
+    "title": "Mobile",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You are exceptionally speedy and agile, gaining extra movement speed and the ability to avoid opportunity attacks after melee attacks.",
+    "content": "## Mobile\n\nYou are exceptionally speedy and agile. You gain the following benefits:\n\n- Your speed increases by 10 feet.\n- When you use the Dash action, difficult terrain doesn't cost you extra movement on that turn.\n- When you make a melee attack against a creature, you don't provoke opportunity attacks from that creature for the rest of the turn, whether you hit or not.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["+10 feet speed", "Dash ignores difficult terrain", "No opportunity attacks from creatures you melee attack"]
+    },
+    "tags": "feat,mobile,speed,movement,opportunity attack,dash",
+    "source": "PHB",
+    "sort_order": 18
+  },
+  {
+    "slug": "observant",
+    "title": "Observant",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Quick to notice details of your environment, you gain an ability score increase, lip reading, and a +5 to passive Perception and Investigation.",
+    "content": "## Observant\n\nQuick to notice details of your environment, you gain the following benefits:\n\n- Increase your Intelligence or Wisdom score by 1, to a maximum of 20.\n- If you can see a creature's mouth while it is speaking a language you understand, you can interpret what it's saying by reading its lips.\n- You have a +5 bonus to your passive Wisdom (Perception) and passive Intelligence (Investigation) scores.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["+1 Intelligence or Wisdom", "Lip reading", "+5 passive Perception and passive Investigation"]
+    },
+    "tags": "feat,observant,perception,investigation,passive,wisdom,intelligence",
+    "source": "PHB",
+    "sort_order": 19
+  },
+  {
+    "slug": "polearm-master",
+    "title": "Polearm Master",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You can keep enemies at bay with reach weapons, gaining a bonus action butt-end attack and opportunity attacks when creatures enter your reach.",
+    "content": "## Polearm Master\n\nYou can keep your enemies at bay with reach weapons. You gain the following benefits:\n\n- When you take the Attack action and attack with only a glaive, halberd, quarterstaff, or spear, you can use a bonus action to make a melee attack with the opposite end of the weapon. This attack uses the same ability modifier as the primary attack. The weapon's damage die for this attack is a d4, and the attack deals bludgeoning damage.\n- While you are wielding a glaive, halberd, pike, quarterstaff, or spear, other creatures provoke an opportunity attack from you when they enter your reach.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["Bonus action butt-end attack (d4) with polearms", "Opportunity attack when creatures enter your reach"]
+    },
+    "tags": "feat,polearm master,pam,reach,melee,opportunity attack,bonus action",
+    "source": "PHB",
+    "sort_order": 20
+  },
+  {
+    "slug": "resilient",
+    "title": "Resilient",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Choose one ability score. You increase it by 1 and gain proficiency in saving throws using that ability.",
+    "content": "## Resilient\n\nChoose one ability score. You gain the following benefits:\n\n- Increase the chosen ability score by 1, to a maximum of 20.\n- You gain proficiency in saving throws using the chosen ability.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["+1 to chosen ability score", "Proficiency in saving throws for chosen ability"]
+    },
+    "tags": "feat,resilient,saving throw,ability score,proficiency",
+    "source": "PHB",
+    "sort_order": 21
+  },
+  {
+    "slug": "sentinel",
+    "title": "Sentinel",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You have mastered techniques to take advantage of every drop in any enemy's guard, punishing creatures that attack allies or try to disengage.",
+    "content": "## Sentinel\n\nYou have mastered techniques to take advantage of every drop in any enemy's guard, gaining the following benefits:\n\n- When you hit a creature with an opportunity attack, the creature's speed becomes 0 for the rest of the turn.\n- Creatures provoke opportunity attacks from you even if they take the Disengage action before leaving your reach.\n- When a creature within 5 feet of you makes an attack against a target other than you (and that target doesn't have this feat), you can use your reaction to make a melee weapon attack against the attacking creature.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["Opportunity attacks reduce target speed to 0", "Disengage doesn't prevent your opportunity attacks", "Reaction attack when adjacent creature attacks someone else"]
+    },
+    "tags": "feat,sentinel,opportunity attack,reaction,melee,tank,defender",
+    "source": "PHB",
+    "sort_order": 22
+  },
+  {
+    "slug": "sharpshooter",
+    "title": "Sharpshooter",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You have mastered ranged weapons and can make shots that others find impossible, ignoring cover and trading accuracy for damage.",
+    "content": "## Sharpshooter\n\nYou have mastered ranged weapons and can make shots that others find impossible. You gain the following benefits:\n\n- Attacking at long range doesn't impose disadvantage on your ranged weapon attack rolls.\n- Your ranged weapon attacks ignore half cover and three-quarters cover.\n- Before you make an attack with a ranged weapon that you are proficient with, you can choose to take a -5 penalty to the attack roll. If the attack hits, you add +10 to the attack's damage.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["No disadvantage at long range", "Ignore half and three-quarters cover", "-5 to hit for +10 damage with ranged weapons"]
+    },
+    "tags": "feat,sharpshooter,ranged,damage,cover,long range,power attack",
+    "source": "PHB",
+    "sort_order": 23
+  },
+  {
+    "slug": "shield-master",
+    "title": "Shield Master",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You use shields not just for protection but also for offense, gaining shove abilities, Dexterity save bonuses, and evasion-like effects.",
+    "content": "## Shield Master\n\nYou use shields not just for protection but also for offense. You gain the following benefits while you are wielding a shield:\n\n- If you take the Attack action on your turn, you can use a bonus action to try to shove a creature within 5 feet of you with your shield.\n- If you aren't incapacitated, you can add your shield's AC bonus to any Dexterity saving throw you make against a spell or other harmful effect that targets only you.\n- If you are subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you can use your reaction to take no damage if you succeed on the saving throw, interposing your shield between yourself and the source of the effect.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["Bonus action shove after Attack action", "Add shield AC bonus to Dexterity saves vs single-target effects", "Reaction to take no damage on successful Dex save (evasion with shield)"]
+    },
+    "tags": "feat,shield master,shield,shove,dexterity,tank,defense",
+    "source": "PHB",
+    "sort_order": 24
+  },
+  {
+    "slug": "skilled",
+    "title": "Skilled",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You gain proficiency in any combination of three skills or tools of your choice.",
+    "content": "## Skilled\n\nYou gain proficiency in any combination of three skills or tools of your choice.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["Gain proficiency in 3 skills or tools"]
+    },
+    "tags": "feat,skilled,proficiency,skills,tools,versatile",
+    "source": "PHB",
+    "sort_order": 25
+  },
+  {
+    "slug": "skulker",
+    "title": "Skulker",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You are an expert at slinking through shadows, gaining benefits to hiding and remaining hidden after missed ranged attacks.",
+    "content": "## Skulker\n\n**Prerequisite:** Dexterity 13 or higher\n\nYou are expert at slinking through shadows. You gain the following benefits:\n\n- You can try to hide when you are lightly obscured from the creature from which you are hiding.\n- When you are hidden from a creature and miss it with a ranged weapon attack, making the attack doesn't reveal your position.\n- Dim light doesn't impose disadvantage on your Wisdom (Perception) checks relying on sight.",
+    "metadata_json": {
+      "prerequisite": "Dexterity 13 or higher",
+      "benefits": ["Hide when lightly obscured", "Missed ranged attacks don't reveal your position", "No disadvantage on Perception in dim light"]
+    },
+    "tags": "feat,skulker,stealth,hiding,ranged,dexterity,perception",
+    "source": "PHB",
+    "sort_order": 26
+  },
+  {
+    "slug": "spell-sniper",
+    "title": "Spell Sniper",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You have learned techniques to enhance your attacks with certain kinds of spells, doubling range and ignoring cover.",
+    "content": "## Spell Sniper\n\n**Prerequisite:** The ability to cast at least one spell\n\nYou have learned techniques to enhance your attacks with certain kinds of spells, gaining the following benefits:\n\n- When you cast a spell that requires you to make an attack roll, the spell's range is doubled.\n- Your ranged spell attacks ignore half cover and three-quarters cover.\n- You learn one cantrip that requires an attack roll. Choose the cantrip from the bard, cleric, druid, sorcerer, warlock, or wizard spell list. Your spellcasting ability for this cantrip depends on the spell list you chose from.",
+    "metadata_json": {
+      "prerequisite": "The ability to cast at least one spell",
+      "benefits": ["Double range on spell attack rolls", "Ignore half and three-quarters cover for spell attacks", "Learn one attack roll cantrip from any class"]
+    },
+    "tags": "feat,spell sniper,ranged,spellcasting,cantrip,cover",
+    "source": "PHB",
+    "sort_order": 27
+  },
+  {
+    "slug": "tavern-brawler",
+    "title": "Tavern Brawler",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Accustomed to rough-and-tumble fighting, you gain proficiency with improvised weapons and can grapple as a bonus action after unarmed/improvised attacks.",
+    "content": "## Tavern Brawler\n\nAccustomed to rough-and-tumble fighting using whatever weapons happen to be at hand, you gain the following benefits:\n\n- Increase your Strength or Constitution score by 1, to a maximum of 20.\n- You are proficient with improvised weapons.\n- Your unarmed strike uses a d4 for damage.\n- When you hit a creature with an unarmed strike or an improvised weapon on your turn, you can use a bonus action to attempt to grapple the target.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["+1 Strength or Constitution", "Proficiency with improvised weapons", "Unarmed strike deals d4 damage", "Bonus action grapple after unarmed/improvised hit"]
+    },
+    "tags": "feat,tavern brawler,unarmed,improvised,grapple,strength,constitution",
+    "source": "PHB",
+    "sort_order": 28
+  },
+  {
+    "slug": "tough",
+    "title": "Tough",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Your hit point maximum increases by an amount equal to twice your level when you gain this feat, and by 2 for each level thereafter.",
+    "content": "## Tough\n\nYour hit point maximum increases by an amount equal to twice your level when you gain this feat. Whenever you gain a level thereafter, your hit point maximum increases by an additional 2 hit points.",
+    "metadata_json": {
+      "prerequisite": "None",
+      "benefits": ["HP maximum increases by 2 per level (retroactive)"]
+    },
+    "tags": "feat,tough,hit points,hp,durability,tank",
+    "source": "PHB",
+    "sort_order": 29
+  },
+  {
+    "slug": "war-caster",
+    "title": "War Caster",
+    "category": "feat",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You have practiced casting spells in the midst of combat, gaining advantage on concentration saves, somatic components with full hands, and spell opportunity attacks.",
+    "content": "## War Caster\n\n**Prerequisite:** The ability to cast at least one spell\n\nYou have practiced casting spells in the midst of combat, learning techniques that grant you the following benefits:\n\n- You have advantage on Constitution saving throws that you make to maintain your concentration on a spell when you take damage.\n- You can perform the somatic components of spells even when you have weapons or a shield in one or both hands.\n- When a hostile creature's movement provokes an opportunity attack from you, you can use your reaction to cast a spell at the creature, rather than making an opportunity attack. The spell must have a casting time of 1 action and must target only that creature.",
+    "metadata_json": {
+      "prerequisite": "The ability to cast at least one spell",
+      "benefits": ["Advantage on concentration saves", "Somatic components with hands full", "Cast a spell as an opportunity attack"]
+    },
+    "tags": "feat,war caster,concentration,spellcasting,opportunity attack,somatic",
+    "source": "PHB",
+    "sort_order": 30
+  }
+]

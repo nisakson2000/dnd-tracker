@@ -1,0 +1,249 @@
+[
+  {
+    "slug": "acolyte",
+    "title": "Acolyte",
+    "category": "background",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You have spent your life in the service of a temple to a specific god or pantheon of gods, performing sacred rites and providing sacrifices.",
+    "content": "## Acolyte\n\nYou have spent your life in the service of a temple to a specific god or pantheon of gods. You act as an intermediary between the realm of the holy and the mortal world, performing sacred rites and offering sacrifices in order to conduct worshipers into the presence of the divine.\n\n**Skill Proficiencies:** Insight, Religion\n\n**Languages:** Two of your choice\n\n**Equipment:** A holy symbol (a gift to you when you entered the priesthood), a prayer book or prayer wheel, 5 sticks of incense, vestments, a set of common clothes, and a belt pouch containing 15 gp\n\n### Feature: Shelter of the Faithful\n\nAs an acolyte, you command the respect of those who share your faith, and you can perform the religious ceremonies of your deity. You and your adventuring companions can expect to receive free healing and care at a temple, shrine, or other established presence of your faith, though you must provide any material components needed for spells. Those who share your religion will support you (but only you) at a modest lifestyle.\n\nYou might also have ties to a specific temple dedicated to your chosen deity or pantheon, and you have a residence there. This could be the temple where you used to serve, if you remain on good terms with it, or a temple where you have found a new home. While near your temple, you can call upon the priests for assistance, provided the assistance you ask for is not hazardous and you remain in good standing with your temple.",
+    "metadata_json": {
+      "skill_proficiencies": ["Insight", "Religion"],
+      "languages": 2,
+      "tool_proficiencies": [],
+      "equipment": "A holy symbol, a prayer book or prayer wheel, 5 sticks of incense, vestments, a set of common clothes, and a belt pouch containing 15 gp",
+      "feature": "Shelter of the Faithful"
+    },
+    "tags": "background,acolyte,religion,insight,temple,faith",
+    "source": "SRD 5.1",
+    "sort_order": 1
+  },
+  {
+    "slug": "charlatan",
+    "title": "Charlatan",
+    "category": "background",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You have always had a way with people, using charm and wit to get what you want through deception and disguise.",
+    "content": "## Charlatan\n\nYou have always had a way with people. You know what makes them tick, you can tease out their hearts' desires after a few minutes of conversation, and with a few leading questions you can read them like they were children's books. It's a useful talent, and one that you're perfectly willing to use for your advantage.\n\n**Skill Proficiencies:** Deception, Sleight of Hand\n\n**Tool Proficiencies:** Disguise kit, forgery kit\n\n**Equipment:** A set of fine clothes, a disguise kit, tools of the con of your choice (ten stoppered bottles filled with colored liquid, a set of weighted dice, a deck of marked cards, or a signet ring of an imaginary duke), and a belt pouch containing 15 gp\n\n### Feature: False Identity\n\nYou have created a second identity that includes documentation, established acquaintances, and disguises that allow you to assume that persona. Additionally, you can forge documents including official papers and personal letters, as long as you have seen an example of the kind of document or the handwriting you are trying to copy.",
+    "metadata_json": {
+      "skill_proficiencies": ["Deception", "Sleight of Hand"],
+      "languages": 0,
+      "tool_proficiencies": ["Disguise kit", "Forgery kit"],
+      "equipment": "A set of fine clothes, a disguise kit, tools of the con of your choice, and a belt pouch containing 15 gp",
+      "feature": "False Identity"
+    },
+    "tags": "background,charlatan,deception,sleight of hand,disguise,forgery",
+    "source": "PHB",
+    "sort_order": 2
+  },
+  {
+    "slug": "criminal",
+    "title": "Criminal",
+    "category": "background",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You are an experienced criminal with a history of breaking the law, maintaining a reliable contact within a network of other criminals.",
+    "content": "## Criminal\n\nYou are an experienced criminal with a history of breaking the law. You have spent a lot of time among other criminals and still have contacts within the criminal underworld.\n\n**Skill Proficiencies:** Deception, Stealth\n\n**Tool Proficiencies:** One type of gaming set, thieves' tools\n\n**Equipment:** A crowbar, a set of dark common clothes including a hood, and a belt pouch containing 15 gp\n\n### Feature: Criminal Contact\n\nYou have a reliable and trustworthy contact who acts as your liaison to a network of other criminals. You know how to get messages to and from your contact, even over great distances; specifically, you know the local messengers, corrupt caravan masters, and seedy sailors who can deliver messages for you.",
+    "metadata_json": {
+      "skill_proficiencies": ["Deception", "Stealth"],
+      "languages": 0,
+      "tool_proficiencies": ["One type of gaming set", "Thieves' tools"],
+      "equipment": "A crowbar, a set of dark common clothes including a hood, and a belt pouch containing 15 gp",
+      "feature": "Criminal Contact"
+    },
+    "tags": "background,criminal,deception,stealth,thieves tools,underworld",
+    "source": "PHB",
+    "sort_order": 3
+  },
+  {
+    "slug": "entertainer",
+    "title": "Entertainer",
+    "category": "background",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You thrive in front of an audience, performing music, dance, acting, storytelling, or other entertainment to captivate crowds.",
+    "content": "## Entertainer\n\nYou thrive in front of an audience. You know how to entrance them, entertain them, and even inspire them. Your poetics can stir the hearts of those who hear you, awakening grief or joy, laughter or anger.\n\n**Skill Proficiencies:** Acrobatics, Performance\n\n**Tool Proficiencies:** Disguise kit, one type of musical instrument\n\n**Equipment:** A musical instrument (one of your choice), the favor of an admirer (love letter, lock of hair, or trinket), a costume, and a belt pouch containing 15 gp\n\n### Feature: By Popular Demand\n\nYou can always find a place to perform, usually in an inn or tavern but possibly with a circus, at a theater, or even in a noble's court. At such a place, you receive free lodging and food of a modest or comfortable standard (depending on the quality of the establishment), as long as you perform each night. In addition, your performance makes you something of a local figure. When strangers recognize you in a town where you have performed, they typically take a liking to you.",
+    "metadata_json": {
+      "skill_proficiencies": ["Acrobatics", "Performance"],
+      "languages": 0,
+      "tool_proficiencies": ["Disguise kit", "One type of musical instrument"],
+      "equipment": "A musical instrument, the favor of an admirer, a costume, and a belt pouch containing 15 gp",
+      "feature": "By Popular Demand"
+    },
+    "tags": "background,entertainer,acrobatics,performance,music,disguise",
+    "source": "PHB",
+    "sort_order": 4
+  },
+  {
+    "slug": "folk-hero",
+    "title": "Folk Hero",
+    "category": "background",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You come from a humble social rank, but you are destined for so much more. The common people regard you as their champion.",
+    "content": "## Folk Hero\n\nYou come from a humble social rank, but you are destined for so much more. Already the people of your home village regard you as their champion, and your destiny calls you to stand against the tyrants and monsters that threaten the common folk everywhere.\n\n**Skill Proficiencies:** Animal Handling, Survival\n\n**Tool Proficiencies:** One type of artisan's tools, vehicles (land)\n\n**Equipment:** A set of artisan's tools (one of your choice), a shovel, an iron pot, a set of common clothes, and a belt pouch containing 10 gp\n\n### Feature: Rustic Hospitality\n\nSince you come from the ranks of the common folk, you fit in among them with ease. You can find a place to hide, rest, or recuperate among other commoners, unless you have shown yourself to be a danger to them. They will shield you from the law or anyone else searching for you, though they will not risk their lives for you.",
+    "metadata_json": {
+      "skill_proficiencies": ["Animal Handling", "Survival"],
+      "languages": 0,
+      "tool_proficiencies": ["One type of artisan's tools", "Vehicles (land)"],
+      "equipment": "A set of artisan's tools, a shovel, an iron pot, a set of common clothes, and a belt pouch containing 10 gp",
+      "feature": "Rustic Hospitality"
+    },
+    "tags": "background,folk hero,animal handling,survival,common folk,rustic",
+    "source": "PHB",
+    "sort_order": 5
+  },
+  {
+    "slug": "guild-artisan",
+    "title": "Guild Artisan",
+    "category": "background",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You are a member of an artisan's guild, skilled in a particular field and closely associated with other artisans and merchants.",
+    "content": "## Guild Artisan\n\nYou are a member of an artisan's guild, skilled in a particular field and closely associated with other artisans. You are a well-established part of the mercantile world, freed by talent and wealth from the constraints of a feudal social order.\n\n**Skill Proficiencies:** Insight, Persuasion\n\n**Tool Proficiencies:** One type of artisan's tools\n\n**Languages:** One of your choice\n\n**Equipment:** A set of artisan's tools (one of your choice), a letter of introduction from your guild, a set of traveler's clothes, and a belt pouch containing 15 gp\n\n### Feature: Guild Membership\n\nAs an established and respected member of a guild, you can rely on certain benefits that membership provides. Your fellow guild members will provide you with lodging and food if necessary, and pay for your funeral if needed. In some cities and towns, a guildhall offers a central place to meet other members of your profession, which can be a good place to meet potential patrons, allies, or hirelings.\n\nGuilds often wield tremendous political power. If you are accused of a crime, your guild will support you if a good case can be made for your innocence or the crime is justifiable. You must pay dues of 5 gp per month to the guild. If you miss payments, you must make up back dues to remain in the guild's good graces.",
+    "metadata_json": {
+      "skill_proficiencies": ["Insight", "Persuasion"],
+      "languages": 1,
+      "tool_proficiencies": ["One type of artisan's tools"],
+      "equipment": "A set of artisan's tools, a letter of introduction from your guild, a set of traveler's clothes, and a belt pouch containing 15 gp",
+      "feature": "Guild Membership"
+    },
+    "tags": "background,guild artisan,insight,persuasion,artisan,merchant,guild",
+    "source": "PHB",
+    "sort_order": 6
+  },
+  {
+    "slug": "hermit",
+    "title": "Hermit",
+    "category": "background",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You lived in seclusion for a formative part of your life, finding quiet and solitude for study, prayer, or contemplation.",
+    "content": "## Hermit\n\nYou lived in seclusion — either in a sheltered community such as a monastery, or entirely alone — for a formative part of your life. In your time apart from the clamor of society, you found quiet, solitude, and perhaps some of the answers you were looking for.\n\n**Skill Proficiencies:** Medicine, Religion\n\n**Tool Proficiencies:** Herbalism kit\n\n**Languages:** One of your choice\n\n**Equipment:** A scroll case stuffed full of notes from your studies or prayers, a winter blanket, a set of common clothes, an herbalism kit, and 5 gp\n\n### Feature: Discovery\n\nThe quiet seclusion of your extended hermitage gave you access to a unique and powerful discovery. The exact nature of this revelation depends on the nature of your seclusion. It might be a great truth about the cosmos, the deities, the powerful beings of the outer planes, or the forces of nature. It could be a site that no one else has ever seen. You might have uncovered a fact that has long been forgotten, or unearthed some relic of the past that could rewrite history.",
+    "metadata_json": {
+      "skill_proficiencies": ["Medicine", "Religion"],
+      "languages": 1,
+      "tool_proficiencies": ["Herbalism kit"],
+      "equipment": "A scroll case stuffed full of notes, a winter blanket, a set of common clothes, an herbalism kit, and 5 gp",
+      "feature": "Discovery"
+    },
+    "tags": "background,hermit,medicine,religion,seclusion,herbalism",
+    "source": "PHB",
+    "sort_order": 7
+  },
+  {
+    "slug": "noble",
+    "title": "Noble",
+    "category": "background",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You understand wealth, power, and privilege. You carry a noble title and your family owns land and collects taxes.",
+    "content": "## Noble\n\nYou understand wealth, power, and privilege. You carry a noble title, and your family owns land, collects taxes, and wields significant political influence.\n\n**Skill Proficiencies:** History, Persuasion\n\n**Tool Proficiencies:** One type of gaming set\n\n**Languages:** One of your choice\n\n**Equipment:** A set of fine clothes, a signet ring, a scroll of pedigree, and a purse containing 25 gp\n\n### Feature: Position of Privilege\n\nThanks to your noble birth, people are inclined to think the best of you. You are welcome in high society, and people assume you have the right to be wherever you are. The common folk make every effort to accommodate you and avoid your displeasure, and other people of high birth treat you as a member of the same social sphere. You can secure an audience with a local noble if you need to.",
+    "metadata_json": {
+      "skill_proficiencies": ["History", "Persuasion"],
+      "languages": 1,
+      "tool_proficiencies": ["One type of gaming set"],
+      "equipment": "A set of fine clothes, a signet ring, a scroll of pedigree, and a purse containing 25 gp",
+      "feature": "Position of Privilege"
+    },
+    "tags": "background,noble,history,persuasion,nobility,privilege,politics",
+    "source": "PHB",
+    "sort_order": 8
+  },
+  {
+    "slug": "outlander",
+    "title": "Outlander",
+    "category": "background",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You grew up in the wilds, far from civilization and the comforts of town and technology, with an excellent memory for maps and geography.",
+    "content": "## Outlander\n\nYou grew up in the wilds, far from civilization and the comforts of town and technology. You've witnessed the migration of herds larger than forests, survived weather more extreme than any city-dweller could comprehend, and enjoyed the solitude of being the only thinking creature for miles in any direction.\n\n**Skill Proficiencies:** Athletics, Survival\n\n**Tool Proficiencies:** One type of musical instrument\n\n**Languages:** One of your choice\n\n**Equipment:** A staff, a hunting trap, a trophy from an animal you killed, a set of traveler's clothes, and a belt pouch containing 10 gp\n\n### Feature: Wanderer\n\nYou have an excellent memory for maps and geography, and you can always recall the general layout of terrain, settlements, and other features around you. In addition, you can find food and fresh water for yourself and up to five other people each day, provided that the land offers berries, small game, water, and so forth.",
+    "metadata_json": {
+      "skill_proficiencies": ["Athletics", "Survival"],
+      "languages": 1,
+      "tool_proficiencies": ["One type of musical instrument"],
+      "equipment": "A staff, a hunting trap, a trophy from an animal you killed, a set of traveler's clothes, and a belt pouch containing 10 gp",
+      "feature": "Wanderer"
+    },
+    "tags": "background,outlander,athletics,survival,wilderness,wanderer,nature",
+    "source": "PHB",
+    "sort_order": 9
+  },
+  {
+    "slug": "sage",
+    "title": "Sage",
+    "category": "background",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You spent years learning the lore of the multiverse, poring through manuscripts and studying the theories of great thinkers.",
+    "content": "## Sage\n\nYou spent years learning the lore of the multiverse. You scoured manuscripts, studied scrolls, and listened to the greatest experts on the subjects that interest you. Your efforts have made you a master in your fields of study.\n\n**Skill Proficiencies:** Arcana, History\n\n**Languages:** Two of your choice\n\n**Equipment:** A bottle of black ink, a quill, a small knife, a letter from a dead colleague posing a question you have not yet been able to answer, a set of common clothes, and a belt pouch containing 10 gp\n\n### Feature: Researcher\n\nWhen you attempt to learn or recall a piece of lore, if you do not know that information, you often know where and from whom you can obtain it. Usually, this information comes from a library, scriptorium, university, or a sage or other learned person or creature. Your DM might rule that the knowledge you seek is secreted away in an almost inaccessible place, or that it simply cannot be found.",
+    "metadata_json": {
+      "skill_proficiencies": ["Arcana", "History"],
+      "languages": 2,
+      "tool_proficiencies": [],
+      "equipment": "A bottle of black ink, a quill, a small knife, a letter from a dead colleague, a set of common clothes, and a belt pouch containing 10 gp",
+      "feature": "Researcher"
+    },
+    "tags": "background,sage,arcana,history,knowledge,lore,researcher",
+    "source": "PHB",
+    "sort_order": 10
+  },
+  {
+    "slug": "sailor",
+    "title": "Sailor",
+    "category": "background",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You sailed on a seagoing vessel for years, facing mighty storms, sea monsters, and those who wanted to sink your ship.",
+    "content": "## Sailor\n\nYou sailed on a seagoing vessel for years, braving mighty storms, monsters of the deep, and those who wanted to sink your craft to the bottomless depths. Your first love is the distant line of the horizon, but the time has come to try your hand at something new.\n\n**Skill Proficiencies:** Athletics, Perception\n\n**Tool Proficiencies:** Navigator's tools, vehicles (water)\n\n**Equipment:** A belaying pin (club), 50 feet of silk rope, a lucky charm such as a rabbit foot or a small stone with a hole in the center (or you may roll for a random trinket on the Trinkets table in chapter 5), a set of common clothes, and a belt pouch containing 10 gp\n\n### Feature: Ship's Passage\n\nWhen you need to, you can secure free passage on a sailing ship for yourself and your adventuring companions. You might sail on the ship you served on, or another ship you have good relations with (perhaps one captained by a former crewmate). Because you're calling in a favor, you can't be certain of a schedule or route that will meet your every need. Your DM will determine how long it takes to get where you need to go. In return for your free passage, you and your companions are expected to assist the crew during the voyage.",
+    "metadata_json": {
+      "skill_proficiencies": ["Athletics", "Perception"],
+      "languages": 0,
+      "tool_proficiencies": ["Navigator's tools", "Vehicles (water)"],
+      "equipment": "A belaying pin (club), 50 feet of silk rope, a lucky charm, a set of common clothes, and a belt pouch containing 10 gp",
+      "feature": "Ship's Passage"
+    },
+    "tags": "background,sailor,athletics,perception,navigator,sailing,water",
+    "source": "PHB",
+    "sort_order": 11
+  },
+  {
+    "slug": "soldier",
+    "title": "Soldier",
+    "category": "background",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "War has been your life for as long as you care to remember. You trained as a youth and studied the use of weapons and armor.",
+    "content": "## Soldier\n\nWar has been your life for as long as you care to remember. You trained as a youth, studied the use of weapons and armor, learned basic survival techniques, including how to stay alive on the battlefield.\n\n**Skill Proficiencies:** Athletics, Intimidation\n\n**Tool Proficiencies:** One type of gaming set, vehicles (land)\n\n**Equipment:** An insignia of rank, a trophy taken from a fallen enemy (a dagger, broken blade, or piece of a banner), a set of bone dice or deck of cards, a set of common clothes, and a belt pouch containing 10 gp\n\n### Feature: Military Rank\n\nYou have a military rank from your career as a soldier. Soldiers loyal to your former military organization still recognize your authority and influence, and they defer to you if they are of a lower rank. You can invoke your rank to exert influence over other soldiers and requisition simple equipment or horses for temporary use. You can also usually gain access to friendly military encampments and fortresses where your rank is recognized.",
+    "metadata_json": {
+      "skill_proficiencies": ["Athletics", "Intimidation"],
+      "languages": 0,
+      "tool_proficiencies": ["One type of gaming set", "Vehicles (land)"],
+      "equipment": "An insignia of rank, a trophy taken from a fallen enemy, a set of bone dice or deck of cards, a set of common clothes, and a belt pouch containing 10 gp",
+      "feature": "Military Rank"
+    },
+    "tags": "background,soldier,athletics,intimidation,military,combat,rank",
+    "source": "PHB",
+    "sort_order": 12
+  },
+  {
+    "slug": "urchin",
+    "title": "Urchin",
+    "category": "background",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "You grew up on the streets alone, orphaned, and poor. You had no one to watch over you or to provide for you, so you learned to provide for yourself.",
+    "content": "## Urchin\n\nYou grew up on the streets alone, orphaned, and poor. You had no one to watch over you or to provide for you, so you learned to provide for yourself. You fought fiercely over food and kept a constant watch out for other desperate souls who might steal from you.\n\n**Skill Proficiencies:** Sleight of Hand, Stealth\n\n**Tool Proficiencies:** Disguise kit, thieves' tools\n\n**Equipment:** A small knife, a map of the city you grew up in, a pet mouse, a token to remember your parents by, a set of common clothes, and a belt pouch containing 10 gp\n\n### Feature: City Secrets\n\nYou know the secret patterns and flow to cities and can find passages through the urban sprawl that others would miss. When you are not in combat, you (and companions you lead) can travel between any two locations in the city twice as fast as your speed would normally allow.",
+    "metadata_json": {
+      "skill_proficiencies": ["Sleight of Hand", "Stealth"],
+      "languages": 0,
+      "tool_proficiencies": ["Disguise kit", "Thieves' tools"],
+      "equipment": "A small knife, a map of the city you grew up in, a pet mouse, a token to remember your parents by, a set of common clothes, and a belt pouch containing 10 gp",
+      "feature": "City Secrets"
+    },
+    "tags": "background,urchin,sleight of hand,stealth,street,thieves tools,urban",
+    "source": "PHB",
+    "sort_order": 13
+  }
+]

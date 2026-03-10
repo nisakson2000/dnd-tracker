@@ -1,0 +1,286 @@
+[
+  {
+    "slug": "dwarf",
+    "title": "Dwarf",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Bold and hardy, dwarves are known as skilled warriors, miners, and workers of stone and metal. They stand between 4 and 5 feet tall and live for centuries.",
+    "content": "## Dwarf\n\nKingdoms rich in ancient grandeur, halls carved into the roots of mountains, the echoing of picks and hammers in deep mines and blazing forges, a commitment to clan and tradition, and a burning hatred of goblins and orcs — these common threads unite all dwarves.\n\n### Ability Score Increase\n- **Constitution** +2\n\n### Age\nDwarves mature at the same rate as humans, but are considered young until they reach the age of 50. On average, they live about 350 years.\n\n### Size\nDwarves stand between 4 and 5 feet tall and average about 150 pounds. Your size is **Medium**.\n\n### Speed\nYour base walking speed is **25 feet**. Your speed is not reduced by wearing heavy armor.\n\n### Darkvision\nAccustomed to life underground, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray.\n\n### Dwarven Resilience\nYou have advantage on saving throws against poison, and you have resistance against poison damage.\n\n### Dwarven Combat Training\nYou have proficiency with the battleaxe, handaxe, light hammer, and warhammer.\n\n### Tool Proficiency\nYou gain proficiency with the artisan's tools of your choice: smith's tools, brewer's supplies, or mason's tools.\n\n### Stonecunning\nWhenever you make an Intelligence (History) check related to the origin of stonework, you are considered proficient in the History skill and add double your proficiency bonus to the check, instead of your normal proficiency bonus.\n\n### Languages\nYou can speak, read, and write **Common** and **Dwarvish**. Dwarvish is full of hard consonants and guttural sounds, and those characteristics spill over into whatever other language a dwarf might speak.",
+    "metadata_json": {
+      "ability_bonuses": {"con": 2},
+      "speed": 25,
+      "size": "Medium",
+      "languages": ["Common", "Dwarvish"],
+      "traits": ["Darkvision", "Dwarven Resilience", "Dwarven Combat Training", "Tool Proficiency", "Stonecunning"],
+      "weapon_proficiencies": ["battleaxe", "handaxe", "light hammer", "warhammer"],
+      "has_subraces": true
+    },
+    "tags": "dwarf,race,constitution,darkvision,poison resistance,stonecunning,medium",
+    "source": "SRD 5.1",
+    "sort_order": 1
+  },
+  {
+    "slug": "dwarf-hill",
+    "title": "Hill Dwarf",
+    "category": "race",
+    "subcategory": "dwarf",
+    "ruleset": "5e-2014",
+    "summary": "Hill dwarves have keen senses, deep intuition, and remarkable resilience. They gain extra hit points and a bonus to Wisdom.",
+    "content": "## Hill Dwarf\n\nAs a hill dwarf, you have keen senses, deep intuition, and remarkable resilience. The gold dwarves of Faerûn in their mighty southern kingdom are hill dwarves, as are the exiled Neidar and the debased Klar of Krynn in Dragonlance.\n\n### Ability Score Increase\n- **Constitution** +2 (from Dwarf)\n- **Wisdom** +1\n\n### Dwarven Toughness\nYour hit point maximum increases by 1, and it increases by 1 every time you gain a level.\n\n### Inherited Traits (from Dwarf)\n- **Speed**: 25 feet (not reduced by heavy armor)\n- **Size**: Medium\n- **Darkvision**: 60 feet\n- **Dwarven Resilience**: Advantage on saves vs. poison; resistance to poison damage\n- **Dwarven Combat Training**: Proficiency with battleaxe, handaxe, light hammer, warhammer\n- **Tool Proficiency**: One artisan's tool of your choice\n- **Stonecunning**: Double proficiency on History checks related to stonework\n- **Languages**: Common, Dwarvish",
+    "metadata_json": {
+      "ability_bonuses": {"con": 2, "wis": 1},
+      "speed": 25,
+      "size": "Medium",
+      "languages": ["Common", "Dwarvish"],
+      "traits": ["Darkvision", "Dwarven Resilience", "Dwarven Combat Training", "Tool Proficiency", "Stonecunning", "Dwarven Toughness"],
+      "parent_race": "dwarf",
+      "subrace_traits": ["Dwarven Toughness"],
+      "hp_bonus_per_level": 1
+    },
+    "tags": "dwarf,hill dwarf,subrace,constitution,wisdom,darkvision,dwarven toughness,medium",
+    "source": "SRD 5.1",
+    "sort_order": 2
+  },
+  {
+    "slug": "elf",
+    "title": "Elf",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Elves are a magical people of otherworldly grace, living in places of ethereal beauty. They love nature, magic, art, and music, and can live for over 700 years.",
+    "content": "## Elf\n\nElves are a magical people of otherworldly grace, living in the world but not entirely part of it. They live in places of ethereal beauty, in the midst of ancient forests or in silvery spires glittering with faerie light, where soft music drifts through the air and gentle fragrances waft on the breeze.\n\n### Ability Score Increase\n- **Dexterity** +2\n\n### Age\nAlthough elves reach physical maturity at about the same age as humans, the elven understanding of adulthood goes beyond physical growth to encompass worldly experience. An elf typically claims adulthood and an adult name around the age of 100 and can live to be 750 years old.\n\n### Size\nElves range from under 5 to over 6 feet tall and have slender builds. Your size is **Medium**.\n\n### Speed\nYour base walking speed is **30 feet**.\n\n### Darkvision\nAccustomed to twilit forests and the night sky, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray.\n\n### Keen Senses\nYou have proficiency in the Perception skill.\n\n### Fey Ancestry\nYou have advantage on saving throws against being charmed, and magic can't put you to sleep.\n\n### Trance\nElves don't need to sleep. Instead, they meditate deeply, remaining semiconscious, for 4 hours a day. (The Common word for such meditation is \"trance.\") While meditating, you can dream after a fashion; such dreams are actually mental exercises that have become reflexive through years of practice. After resting in this way, you gain the same benefit that a human does from 8 hours of sleep.\n\n### Languages\nYou can speak, read, and write **Common** and **Elvish**. Elvish is fluid, with subtle intonations and intricate grammar.",
+    "metadata_json": {
+      "ability_bonuses": {"dex": 2},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Elvish"],
+      "traits": ["Darkvision", "Keen Senses", "Fey Ancestry", "Trance"],
+      "skill_proficiencies": ["Perception"],
+      "has_subraces": true
+    },
+    "tags": "elf,race,dexterity,darkvision,fey ancestry,trance,keen senses,medium",
+    "source": "SRD 5.1",
+    "sort_order": 3
+  },
+  {
+    "slug": "elf-high",
+    "title": "High Elf",
+    "category": "race",
+    "subcategory": "elf",
+    "ruleset": "5e-2014",
+    "summary": "High elves have a keen mind and mastery of basic magic. They gain a bonus to Intelligence and know one wizard cantrip of their choice.",
+    "content": "## High Elf\n\nAs a high elf, you have a keen mind and a mastery of at least the basics of magic. In many of the worlds of D&D, there are two kinds of high elves. One type is haughty and reclusive, believing themselves to be superior to non-elves. The other type is more common and more friendly, and often encountered among humans and other races.\n\n### Ability Score Increase\n- **Dexterity** +2 (from Elf)\n- **Intelligence** +1\n\n### Elf Weapon Training\nYou have proficiency with the longsword, shortsword, shortbow, and longbow.\n\n### Cantrip\nYou know one cantrip of your choice from the wizard spell list. Intelligence is your spellcasting ability for it.\n\n### Extra Language\nYou can speak, read, and write one extra language of your choice.\n\n### Inherited Traits (from Elf)\n- **Speed**: 30 feet\n- **Size**: Medium\n- **Darkvision**: 60 feet\n- **Keen Senses**: Proficiency in Perception\n- **Fey Ancestry**: Advantage on saves vs. charm; immune to magical sleep\n- **Trance**: 4 hours of meditation instead of 8 hours sleep\n- **Languages**: Common, Elvish, plus one extra language",
+    "metadata_json": {
+      "ability_bonuses": {"dex": 2, "int": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Elvish", "One extra language"],
+      "traits": ["Darkvision", "Keen Senses", "Fey Ancestry", "Trance", "Elf Weapon Training", "Cantrip", "Extra Language"],
+      "parent_race": "elf",
+      "subrace_traits": ["Elf Weapon Training", "Cantrip", "Extra Language"],
+      "weapon_proficiencies": ["longsword", "shortsword", "shortbow", "longbow"],
+      "cantrips": 1,
+      "cantrip_source": "wizard"
+    },
+    "tags": "elf,high elf,subrace,dexterity,intelligence,darkvision,cantrip,elf weapon training,medium",
+    "source": "SRD 5.1",
+    "sort_order": 4
+  },
+  {
+    "slug": "halfling",
+    "title": "Halfling",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "The comforts of home are the goals of most halflings' lives. Small but brave, halflings are resourceful survivors who can reroll natural 1s on attack rolls, ability checks, and saving throws.",
+    "content": "## Halfling\n\nThe comforts of home are the goals of most halflings' lives: a place to settle in peace and quiet, far from marauding monsters and clashing armies; a blazing fire and a generous meal; fine drink and fine conversation. Though some halflings live out their days in remote agricultural communities, others form nomadic bands that travel constantly, lured by the open road and the wide horizon to discover the wonders of new lands and peoples.\n\n### Ability Score Increase\n- **Dexterity** +2\n\n### Age\nA halfling reaches adulthood at the age of 20 and generally lives into the middle of their second century.\n\n### Size\nHalflings average about 3 feet tall and weigh about 40 pounds. Your size is **Small**.\n\n### Speed\nYour base walking speed is **25 feet**.\n\n### Lucky\nWhen you roll a 1 on the d20 for an attack roll, ability check, or saving throw, you can reroll the die and must use the new roll.\n\n### Brave\nYou have advantage on saving throws against being frightened.\n\n### Halfling Nimbleness\nYou can move through the space of any creature that is of a size larger than yours.\n\n### Languages\nYou can speak, read, and write **Common** and **Halfling**. The Halfling language isn't secret, but halflings are loath to share it with others.",
+    "metadata_json": {
+      "ability_bonuses": {"dex": 2},
+      "speed": 25,
+      "size": "Small",
+      "languages": ["Common", "Halfling"],
+      "traits": ["Lucky", "Brave", "Halfling Nimbleness"],
+      "has_subraces": true
+    },
+    "tags": "halfling,race,dexterity,lucky,brave,halfling nimbleness,small",
+    "source": "SRD 5.1",
+    "sort_order": 5
+  },
+  {
+    "slug": "halfling-lightfoot",
+    "title": "Lightfoot Halfling",
+    "category": "race",
+    "subcategory": "halfling",
+    "ruleset": "5e-2014",
+    "summary": "Lightfoot halflings are naturally stealthy and sociable. They gain a bonus to Charisma and can hide behind creatures larger than themselves.",
+    "content": "## Lightfoot Halfling\n\nAs a lightfoot halfling, you can easily hide from notice, even using other people as cover. You're inclined to be affable and get along well with others. Lightfoots are more prone to wanderlust than other halflings, and often dwell alongside other races or take up a nomadic life.\n\n### Ability Score Increase\n- **Dexterity** +2 (from Halfling)\n- **Charisma** +1\n\n### Naturally Stealthy\nYou can attempt to hide even when you are obscured only by a creature that is at least one size larger than you.\n\n### Inherited Traits (from Halfling)\n- **Speed**: 25 feet\n- **Size**: Small\n- **Lucky**: Reroll natural 1s on attack rolls, ability checks, and saving throws\n- **Brave**: Advantage on saves vs. being frightened\n- **Halfling Nimbleness**: Move through the space of any larger creature\n- **Languages**: Common, Halfling",
+    "metadata_json": {
+      "ability_bonuses": {"dex": 2, "cha": 1},
+      "speed": 25,
+      "size": "Small",
+      "languages": ["Common", "Halfling"],
+      "traits": ["Lucky", "Brave", "Halfling Nimbleness", "Naturally Stealthy"],
+      "parent_race": "halfling",
+      "subrace_traits": ["Naturally Stealthy"]
+    },
+    "tags": "halfling,lightfoot halfling,subrace,dexterity,charisma,lucky,naturally stealthy,small",
+    "source": "SRD 5.1",
+    "sort_order": 6
+  },
+  {
+    "slug": "human",
+    "title": "Human",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Humans are the most adaptable and ambitious of the common races. They gain +1 to all ability scores and speak one extra language of their choice.",
+    "content": "## Human\n\nIn the reckonings of most worlds, humans are the youngest of the common races, late to arrive on the world scene and short-lived in comparison to dwarves, elves, and dragons. Perhaps it is because of their shorter lives that they strive to achieve as much as they can in the years they are given. Or maybe they feel they have something to prove to the elder races, and that's why they build their great empires on the foundation of conquest and trade.\n\n### Ability Score Increase\n- **All ability scores** +1 (Strength, Dexterity, Constitution, Intelligence, Wisdom, and Charisma)\n\n### Age\nHumans reach adulthood in their late teens and live less than a century.\n\n### Size\nHumans vary widely in height and build, from barely 5 feet to well over 6 feet tall. Regardless of your position in that range, your size is **Medium**.\n\n### Speed\nYour base walking speed is **30 feet**.\n\n### Languages\nYou can speak, read, and write **Common** and **one extra language** of your choice. Humans typically learn the languages of other peoples they deal with, including obscure dialects. They are fond of sprinkling their speech with words borrowed from other tongues: Orc curses, Elvish musical expressions, Dwarvish military phrases, and so on.",
+    "metadata_json": {
+      "ability_bonuses": {"str": 1, "dex": 1, "con": 1, "int": 1, "wis": 1, "cha": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "One extra language"],
+      "traits": [],
+      "has_subraces": false
+    },
+    "tags": "human,race,versatile,all ability scores,medium",
+    "source": "SRD 5.1",
+    "sort_order": 7
+  },
+  {
+    "slug": "dragonborn",
+    "title": "Dragonborn",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Born of dragons, dragonborn walk proudly through a world that greets them with fearful incomprehension. They gain Strength and Charisma bonuses, a breath weapon, and damage resistance based on draconic ancestry.",
+    "content": "## Dragonborn\n\nBorn of dragons, as their name proclaims, the dragonborn walk proudly through a world that greets them with fearful incomprehension. Shaped by draconic gods or the dragons themselves, dragonborn originally hatched from dragon eggs as a unique race, combining the best attributes of dragons and humanoids.\n\n### Ability Score Increase\n- **Strength** +2\n- **Charisma** +1\n\n### Age\nYoung dragonborn grow quickly. They walk hours after hatching, attain the size and development of a 10-year-old human child by the age of 3, and reach adulthood by 15. They live to be around 80.\n\n### Size\nDragonborn are taller and heavier than humans, standing well over 6 feet tall and averaging almost 250 pounds. Your size is **Medium**.\n\n### Speed\nYour base walking speed is **30 feet**.\n\n### Draconic Ancestry\nYou have draconic ancestry. Choose one type of dragon from the Draconic Ancestry table. Your breath weapon and damage resistance are determined by the dragon type.\n\n| Dragon | Damage Type | Breath Weapon |\n|--------|------------|---------------|\n| Black | Acid | 5 by 30 ft. line (DEX save) |\n| Blue | Lightning | 5 by 30 ft. line (DEX save) |\n| Brass | Fire | 5 by 30 ft. line (DEX save) |\n| Bronze | Lightning | 5 by 30 ft. line (DEX save) |\n| Copper | Acid | 5 by 30 ft. line (DEX save) |\n| Gold | Fire | 15 ft. cone (DEX save) |\n| Green | Poison | 15 ft. cone (CON save) |\n| Red | Fire | 15 ft. cone (DEX save) |\n| Silver | Cold | 15 ft. cone (CON save) |\n| White | Cold | 15 ft. cone (CON save) |\n\n### Breath Weapon\nYou can use your action to exhale destructive energy. Your draconic ancestry determines the size, shape, and damage type of the exhalation.\n\nWhen you use your breath weapon, each creature in the area of the exhalation must make a saving throw, the type of which is determined by your draconic ancestry. The DC for this saving throw equals **8 + your Constitution modifier + your proficiency bonus**.\n\nA creature takes **2d6 damage** on a failed save, and half as much on a successful one. The damage increases to **3d6 at 6th level**, **4d6 at 11th level**, and **5d6 at 16th level**.\n\nAfter you use your breath weapon, you can't use it again until you complete a short or long rest.\n\n### Damage Resistance\nYou have resistance to the damage type associated with your draconic ancestry.\n\n### Languages\nYou can speak, read, and write **Common** and **Draconic**. Draconic is thought to be one of the oldest languages and is often used in the study of magic. The language sounds harsh to most other creatures and includes numerous hard consonants and sibilants.",
+    "metadata_json": {
+      "ability_bonuses": {"str": 2, "cha": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Draconic"],
+      "traits": ["Draconic Ancestry", "Breath Weapon", "Damage Resistance"],
+      "has_subraces": false,
+      "breath_weapon_damage": ["2d6", "3d6", "4d6", "5d6"],
+      "breath_weapon_levels": [1, 6, 11, 16],
+      "draconic_ancestry_options": ["Black", "Blue", "Brass", "Bronze", "Copper", "Gold", "Green", "Red", "Silver", "White"]
+    },
+    "tags": "dragonborn,race,strength,charisma,breath weapon,damage resistance,draconic ancestry,medium",
+    "source": "SRD 5.1",
+    "sort_order": 8
+  },
+  {
+    "slug": "gnome",
+    "title": "Gnome",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "A gnome's energy and enthusiasm for living shines through every inch of their tiny body. Gnomes are small, clever, and have an innate resistance to magic.",
+    "content": "## Gnome\n\nA gnome's energy and enthusiasm for living shines through every inch of his or her tiny body. Gnomes average slightly over 3 feet tall and weigh 40 to 45 pounds. Their tan or brown faces are usually adorned with broad smiles (beneath their prodigious noses), and their bright eyes shine with excitement.\n\n### Ability Score Increase\n- **Intelligence** +2\n\n### Age\nGnomes mature at the same rate humans do, and most are expected to settle down into an adult life by around age 40. They can live 350 to almost 500 years.\n\n### Size\nGnomes are between 3 and 4 feet tall and average about 40 pounds. Your size is **Small**.\n\n### Speed\nYour base walking speed is **25 feet**.\n\n### Darkvision\nAccustomed to life underground, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray.\n\n### Gnome Cunning\nYou have advantage on all Intelligence, Wisdom, and Charisma saving throws against magic.\n\n### Languages\nYou can speak, read, and write **Common** and **Gnomish**. The Gnomish language, which uses the Dwarvish script, is renowned for its technical treatises and catalogs of knowledge about the natural world.",
+    "metadata_json": {
+      "ability_bonuses": {"int": 2},
+      "speed": 25,
+      "size": "Small",
+      "languages": ["Common", "Gnomish"],
+      "traits": ["Darkvision", "Gnome Cunning"],
+      "has_subraces": true
+    },
+    "tags": "gnome,race,intelligence,darkvision,gnome cunning,magic resistance,small",
+    "source": "SRD 5.1",
+    "sort_order": 9
+  },
+  {
+    "slug": "gnome-rock",
+    "title": "Rock Gnome",
+    "category": "race",
+    "subcategory": "gnome",
+    "ruleset": "5e-2014",
+    "summary": "Rock gnomes are natural inventors and tinkerers. They gain a bonus to Constitution, knowledge of clockwork devices, and the ability to create tiny mechanical devices.",
+    "content": "## Rock Gnome\n\nAs a rock gnome, you have a natural inventiveness and hardiness beyond that of other gnomes. Most gnomes in the worlds of D&D are rock gnomes.\n\n### Ability Score Increase\n- **Intelligence** +2 (from Gnome)\n- **Constitution** +1\n\n### Artificer's Lore\nWhenever you make an Intelligence (History) check related to magic items, alchemical objects, or technological devices, you can add twice your proficiency bonus, instead of any proficiency bonus you normally apply.\n\n### Tinker\nYou have proficiency with artisan's tools (tinker's tools). Using those tools, you can spend 1 hour and 10 gp worth of materials to construct a Tiny clockwork device (AC 5, 1 hp). The device ceases to function after 24 hours (unless you spend 1 hour repairing it), or when you use your action to dismantle it; at that point, you can reclaim the materials used to create it. You can have up to three such devices active at a time.\n\nWhen you create a device, choose one of the following options:\n\n- **Clockwork Toy**: This toy is a clockwork animal, monster, or person, such as a frog, mouse, bird, dragon, or soldier. When placed on the ground, the toy moves 5 feet across the ground on each of your turns in a random direction. It makes noises as appropriate to the creature it represents.\n- **Fire Starter**: The device produces a miniature flame, which you can use to light a candle, torch, or campfire. Using the device requires your action.\n- **Music Box**: When opened, this music box plays a single song at a moderate volume. The box stops playing when it reaches the song's end or when it is closed.\n\n### Inherited Traits (from Gnome)\n- **Speed**: 25 feet\n- **Size**: Small\n- **Darkvision**: 60 feet\n- **Gnome Cunning**: Advantage on INT, WIS, and CHA saves against magic\n- **Languages**: Common, Gnomish",
+    "metadata_json": {
+      "ability_bonuses": {"int": 2, "con": 1},
+      "speed": 25,
+      "size": "Small",
+      "languages": ["Common", "Gnomish"],
+      "traits": ["Darkvision", "Gnome Cunning", "Artificer's Lore", "Tinker"],
+      "parent_race": "gnome",
+      "subrace_traits": ["Artificer's Lore", "Tinker"],
+      "tool_proficiencies": ["tinker's tools"]
+    },
+    "tags": "gnome,rock gnome,subrace,intelligence,constitution,darkvision,tinker,artificer's lore,small",
+    "source": "SRD 5.1",
+    "sort_order": 10
+  },
+  {
+    "slug": "half-elf",
+    "title": "Half-Elf",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Half-elves combine the best qualities of humans and elves. They gain Charisma +2, two other ability scores +1, two skill proficiencies, darkvision, and Fey Ancestry.",
+    "content": "## Half-Elf\n\nWalking in two worlds but truly belonging to neither, half-elves combine what some say are the best qualities of their elf and human parents: human curiosity, inventiveness, and ambition tempered by the refined senses, love of nature, and artistic tastes of the elves.\n\n### Ability Score Increase\n- **Charisma** +2\n- **Two other ability scores** of your choice +1 each\n\n### Age\nHalf-elves mature at the same rate humans do and reach adulthood around the age of 20. They live much longer than humans, however, often exceeding 180 years.\n\n### Size\nHalf-elves are about the same size as humans, ranging from 5 to 6 feet tall. Your size is **Medium**.\n\n### Speed\nYour base walking speed is **30 feet**.\n\n### Darkvision\nThanks to your elf blood, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray.\n\n### Fey Ancestry\nYou have advantage on saving throws against being charmed, and magic can't put you to sleep.\n\n### Skill Versatility\nYou gain proficiency in two skills of your choice.\n\n### Languages\nYou can speak, read, and write **Common**, **Elvish**, and **one extra language** of your choice.",
+    "metadata_json": {
+      "ability_bonuses": {"cha": 2, "choice_2": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Elvish", "One extra language"],
+      "traits": ["Darkvision", "Fey Ancestry", "Skill Versatility"],
+      "has_subraces": false,
+      "bonus_skill_proficiencies": 2,
+      "flexible_ability_bonuses": 2
+    },
+    "tags": "half-elf,race,charisma,darkvision,fey ancestry,skill versatility,versatile,medium",
+    "source": "SRD 5.1",
+    "sort_order": 11
+  },
+  {
+    "slug": "half-orc",
+    "title": "Half-Orc",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Half-orcs combine human versatility with orcish fury. They gain Strength and Constitution bonuses, darkvision, proficiency in Intimidation, and the ability to avoid being knocked to 0 HP once per long rest.",
+    "content": "## Half-Orc\n\nWhether united under the leadership of a mighty warlock or having fought to a standstill after years of conflict, orc and human tribes sometimes form alliances, joining forces into a larger horde to the terror of civilized lands nearby. When these alliances are sealed by marriages, half-orcs are born.\n\n### Ability Score Increase\n- **Strength** +2\n- **Constitution** +1\n\n### Age\nHalf-orcs mature a little faster than humans, reaching adulthood around age 14. They age noticeably faster and rarely live longer than 75 years.\n\n### Size\nHalf-orcs are somewhat larger and bulkier than humans, and they range from 5 to well over 6 feet tall. Your size is **Medium**.\n\n### Speed\nYour base walking speed is **30 feet**.\n\n### Darkvision\nThanks to your orc blood, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray.\n\n### Menacing\nYou gain proficiency in the Intimidation skill.\n\n### Relentless Endurance\nWhen you are reduced to 0 hit points but not killed outright, you can drop to 1 hit point instead. You can't use this feature again until you finish a long rest.\n\n### Savage Attacks\nWhen you score a critical hit with a melee weapon attack, you can roll one of the weapon's damage dice one additional time and add it to the extra damage of the critical hit.\n\n### Languages\nYou can speak, read, and write **Common** and **Orc**. Orc is a harsh, grating language with hard consonants. It has no script of its own but is written in the Dwarvish script.",
+    "metadata_json": {
+      "ability_bonuses": {"str": 2, "con": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Orc"],
+      "traits": ["Darkvision", "Menacing", "Relentless Endurance", "Savage Attacks"],
+      "has_subraces": false,
+      "skill_proficiencies": ["Intimidation"]
+    },
+    "tags": "half-orc,race,strength,constitution,darkvision,relentless endurance,savage attacks,menacing,medium",
+    "source": "SRD 5.1",
+    "sort_order": 12
+  },
+  {
+    "slug": "tiefling",
+    "title": "Tiefling",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "5e-2014",
+    "summary": "Tieflings are derived from human bloodlines with infernal heritage. They gain Intelligence and Charisma bonuses, darkvision, fire resistance, and innate spellcasting that grows with level.",
+    "content": "## Tiefling\n\nTo be greeted with stares and whispers, to suffer violence and insult on the street, to see mistrust and fear in every eye: this is the lot of the tiefling. And to twist the knife, tieflings know that this is because a pact struck generations ago infused the essence of Asmodeus — overlord of the Nine Hells — into their bloodline.\n\n### Ability Score Increase\n- **Intelligence** +1\n- **Charisma** +2\n\n### Age\nTieflings mature at the same rate as humans but live a few years longer.\n\n### Size\nTieflings are about the same size and build as humans. Your size is **Medium**.\n\n### Speed\nYour base walking speed is **30 feet**.\n\n### Darkvision\nThanks to your infernal heritage, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray.\n\n### Hellish Resistance\nYou have resistance to fire damage.\n\n### Infernal Legacy\nYou know the **thaumaturgy** cantrip. When you reach 3rd level, you can cast the **hellish rebuke** spell as a 2nd-level spell once with this trait and regain the ability to do so when you finish a long rest. When you reach 5th level, you can cast the **darkness** spell once with this trait and regain the ability to do so when you finish a long rest. Charisma is your spellcasting ability for these spells.\n\n### Languages\nYou can speak, read, and write **Common** and **Infernal**.",
+    "metadata_json": {
+      "ability_bonuses": {"int": 1, "cha": 2},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Infernal"],
+      "traits": ["Darkvision", "Hellish Resistance", "Infernal Legacy"],
+      "has_subraces": false,
+      "damage_resistances": ["fire"],
+      "innate_spellcasting": {
+        "cantrips": ["thaumaturgy"],
+        "level_3": {"spell": "hellish rebuke", "cast_level": 2, "uses": 1},
+        "level_5": {"spell": "darkness", "uses": 1}
+      },
+      "spellcasting_ability": "cha"
+    },
+    "tags": "tiefling,race,charisma,intelligence,darkvision,fire resistance,infernal legacy,thaumaturgy,hellish rebuke,darkness,medium",
+    "source": "SRD 5.1",
+    "sort_order": 13
+  }
+]

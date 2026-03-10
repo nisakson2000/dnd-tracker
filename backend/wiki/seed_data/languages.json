@@ -1,0 +1,329 @@
+[
+  {
+    "slug": "common",
+    "title": "Common",
+    "category": "language",
+    "subcategory": "standard",
+    "ruleset": "universal",
+    "summary": "The trade language of most civilized races, spoken throughout the known world as a lingua franca.",
+    "content": "## Common\n\n**Type:** Standard Language\n**Typical Speakers:** Humans\n**Script:** Common\n\nCommon is the most widely spoken language in the known world, serving as the trade tongue and lingua franca of civilized societies. Nearly every sentient creature knows at least a smattering of Common, making it the default language of communication between races.\n\n### Usage and Prevalence\n\nCommon is the native language of humans, who spread it through trade, conquest, and colonization. Its simplicity and adaptability have made it the standard language of commerce, diplomacy, and everyday interaction in most settled regions. Adventuring parties almost always communicate in Common, as it is the one language most likely to be shared by all members.\n\n### Script\n\nCommon uses its own alphabet, also called the Common script. It is a practical, unadorned writing system designed for clarity rather than beauty. Most legal documents, trade agreements, and general correspondence are written in Common.\n\n### Who Speaks It\n\nAll player character races typically know Common. Most NPCs in civilized areas speak it. Even many monsters in regions near civilization pick up enough Common to communicate basic ideas. It is the default language granted to all player characters regardless of race.",
+    "metadata_json": {
+      "type": "Standard",
+      "script": "Common",
+      "typical_speakers": ["Humans"],
+      "commonly_heard": ["Cities", "Trade routes", "Civilized regions", "Everywhere"]
+    },
+    "tags": "language,standard,common,human,trade",
+    "source": "SRD 5.1",
+    "sort_order": 1
+  },
+  {
+    "slug": "dwarvish",
+    "title": "Dwarvish",
+    "category": "language",
+    "subcategory": "standard",
+    "ruleset": "universal",
+    "summary": "The language of dwarves, a harsh and consonant-heavy tongue full of hard sounds, also used for many engineering and mining texts.",
+    "content": "## Dwarvish\n\n**Type:** Standard Language\n**Typical Speakers:** Dwarves\n**Script:** Dwarvish\n\nDwarvish is the language of the dwarven people, a guttural tongue rich in hard consonants and clipped vowels that echoes impressively through underground halls. It is one of the oldest languages still in active use.\n\n### Usage and Prevalence\n\nDwarvish is spoken in dwarven strongholds, mining communities, and wherever dwarves gather. It is also the language of many technical texts on engineering, stonework, metallurgy, and gemcutting. Non-dwarves who work in mining or smithing often learn at least some Dwarvish terminology.\n\n### Script\n\nThe Dwarvish script is angular and geometric, designed to be carved into stone and metal rather than written with ink. Its runes are precise and durable, befitting a people who build things to last. Giant uses the Dwarvish script as well.\n\n### Who Speaks It\n\nAll dwarves (hill dwarves and mountain dwarves) speak Dwarvish as a native language. Many gnomes learn it due to shared underground communities. Characters who grow up near dwarven settlements or who work in mining and smithing may know it. It is available as a standard language choice during character creation.",
+    "metadata_json": {
+      "type": "Standard",
+      "script": "Dwarvish",
+      "typical_speakers": ["Dwarves"],
+      "commonly_heard": ["Dwarven strongholds", "Mines", "Forges", "Underground settlements"]
+    },
+    "tags": "language,standard,dwarvish,dwarf,runes,mining",
+    "source": "SRD 5.1",
+    "sort_order": 2
+  },
+  {
+    "slug": "elvish",
+    "title": "Elvish",
+    "category": "language",
+    "subcategory": "standard",
+    "ruleset": "universal",
+    "summary": "The language of the elves, a fluid and musical tongue considered the most beautiful of mortal languages, widely used in magical and poetic texts.",
+    "content": "## Elvish\n\n**Type:** Standard Language\n**Typical Speakers:** Elves\n**Script:** Elvish\n\nElvish is the language of the elven people, renowned for its flowing syllables, musical cadence, and lyrical beauty. It is considered by many scholars to be the most aesthetically pleasing of all languages.\n\n### Usage and Prevalence\n\nElvish is spoken in elven communities, ancient forests, and centers of arcane learning. It is the traditional language of arcane magic — many spellbooks, scrolls, and magical texts are written in Elvish. Bards, wizards, and scholars often learn Elvish for access to ancient lore. High elves, wood elves, and other elven subraces all share the language, though regional dialects exist.\n\n### Script\n\nThe Elvish script is flowing and elegant, with curved letterforms designed to be written with a fine pen or brush. It is the basis for several other scripts, as Sylvan and Undercommon also use the Elvish alphabet. Ancient Elvish texts are prized by collectors and scholars.\n\n### Who Speaks It\n\nAll elves and half-elves speak Elvish as a native language. Wizards, bards, and scholars commonly learn it. Characters with ties to fey creatures or arcane traditions may know it. It is available as a standard language choice during character creation.",
+    "metadata_json": {
+      "type": "Standard",
+      "script": "Elvish",
+      "typical_speakers": ["Elves"],
+      "commonly_heard": ["Elven forests", "Arcane academies", "Libraries", "Fey-touched regions"]
+    },
+    "tags": "language,standard,elvish,elf,arcane,musical,poetry",
+    "source": "SRD 5.1",
+    "sort_order": 3
+  },
+  {
+    "slug": "giant",
+    "title": "Giant",
+    "category": "language",
+    "subcategory": "standard",
+    "ruleset": "universal",
+    "summary": "The language of giants and their kin, a booming and powerful tongue that carries far across mountains and valleys.",
+    "content": "## Giant\n\n**Type:** Standard Language\n**Typical Speakers:** Giants, Ogres\n**Script:** Dwarvish\n\nGiant is the language spoken by all true giants — from the lowliest hill giant to the mightiest storm giant. It is a booming, resonant language that carries well across great distances, suited to creatures of enormous size.\n\n### Usage and Prevalence\n\nGiant is spoken in giant strongholds, mountain peaks, and wherever giantkind dwells. Each type of giant has its own dialect, but all are mutually intelligible. Ogres, ettins, and other giant-kin speak crude versions of Giant. The language is also used for ancient runic inscriptions found in mountain ruins and giant-built structures throughout the world.\n\n### Script\n\nGiant uses the Dwarvish script, a historical artifact of ancient interactions between the two races. Giant inscriptions tend to be carved in large, bold strokes suited to enormous hands, often found on cliff faces, standing stones, and the walls of giant-built fortresses.\n\n### Who Speaks It\n\nAll true giants (hill, stone, frost, fire, cloud, and storm giants) speak Giant. Ogres, ettins, trolls, and other giant-kin use simplified versions. Goliaths often know Giant due to their ancestral connections. Characters from mountainous regions or who have dealt with giantkind may learn it.",
+    "metadata_json": {
+      "type": "Standard",
+      "script": "Dwarvish",
+      "typical_speakers": ["Giants", "Ogres"],
+      "commonly_heard": ["Mountain peaks", "Giant strongholds", "Ruins", "Remote highlands"]
+    },
+    "tags": "language,standard,giant,ogre,mountain,runic",
+    "source": "SRD 5.1",
+    "sort_order": 4
+  },
+  {
+    "slug": "gnomish",
+    "title": "Gnomish",
+    "category": "language",
+    "subcategory": "standard",
+    "ruleset": "universal",
+    "summary": "The language of gnomes, a rapid and technical tongue full of invented words, onomatopoeia, and terms for intricate mechanical and magical concepts.",
+    "content": "## Gnomish\n\n**Type:** Standard Language\n**Typical Speakers:** Gnomes\n**Script:** Dwarvish\n\nGnomish is the language of the gnomish people, a rapid-fire tongue characterized by its technical vocabulary, creative wordplay, and tendency to invent new terms on the fly. Conversations in Gnomish can be dizzying for non-native speakers.\n\n### Usage and Prevalence\n\nGnomish is spoken in gnomish communities, tinker workshops, and illusionist academies. It has an extraordinarily rich technical vocabulary for describing mechanical devices, alchemical processes, and illusion magic. Many gnomish texts read more like engineering specifications than literature. Forest gnomes and rock gnomes share the language but emphasize different vocabularies.\n\n### Script\n\nGnomish uses the Dwarvish script, adapted with additional characters and diacritical marks to handle the language's rapid pace and technical nuances. Gnomish writing tends to be small, dense, and packed with abbreviations.\n\n### Who Speaks It\n\nAll gnomes speak Gnomish as a native language. Dwarves in communities near gnomish settlements sometimes learn it. Artificers, tinkerers, and illusionists may study Gnomish for access to technical texts. It is available as a standard language choice during character creation.",
+    "metadata_json": {
+      "type": "Standard",
+      "script": "Dwarvish",
+      "typical_speakers": ["Gnomes"],
+      "commonly_heard": ["Gnomish villages", "Tinker workshops", "Illusionist academies", "Underground settlements"]
+    },
+    "tags": "language,standard,gnomish,gnome,tinker,illusion,technical",
+    "source": "SRD 5.1",
+    "sort_order": 5
+  },
+  {
+    "slug": "goblin",
+    "title": "Goblin",
+    "category": "language",
+    "subcategory": "standard",
+    "ruleset": "universal",
+    "summary": "The language of goblins and their kin, a harsh and guttural tongue used by goblinoid tribes throughout the world.",
+    "content": "## Goblin\n\n**Type:** Standard Language\n**Typical Speakers:** Goblins, Hobgoblins, Bugbears\n**Script:** Dwarvish\n\nGoblin is the language of the goblinoid races — goblins, hobgoblins, and bugbears. It is a harsh, clipped tongue with a limited vocabulary but effective communication, particularly suited to commands, threats, and descriptions of violence.\n\n### Usage and Prevalence\n\nGoblin is spoken in goblinoid lairs, raiding camps, and anywhere goblinoid tribes gather. Hobgoblins have a more sophisticated dialect with military terminology, while bugbears use a simpler, more brutish version. The language is widespread due to the sheer number of goblinoid tribes found across the world. Many rangers and soldiers who patrol frontier regions learn Goblin out of practical necessity.\n\n### Script\n\nGoblin uses the Dwarvish script, though goblin literacy is uncommon among rank-and-file goblins. Hobgoblins are more likely to maintain written records, particularly military orders and battle plans. Written Goblin tends to be crude and functional.\n\n### Who Speaks It\n\nAll goblinoids — goblins, hobgoblins, and bugbears — speak Goblin natively. Rangers, soldiers, and adventurers who frequently encounter goblinoid enemies often learn it. Characters from regions plagued by goblinoid raids may know it. It is available as a standard language choice during character creation.",
+    "metadata_json": {
+      "type": "Standard",
+      "script": "Dwarvish",
+      "typical_speakers": ["Goblins", "Hobgoblins", "Bugbears"],
+      "commonly_heard": ["Goblinoid lairs", "Frontier regions", "Underground warrens", "Raiding camps"]
+    },
+    "tags": "language,standard,goblin,hobgoblin,bugbear,goblinoid",
+    "source": "SRD 5.1",
+    "sort_order": 6
+  },
+  {
+    "slug": "halfling",
+    "title": "Halfling",
+    "category": "language",
+    "subcategory": "standard",
+    "ruleset": "universal",
+    "summary": "The language of halflings, a warm and conversational tongue that halflings use among themselves but rarely teach to outsiders.",
+    "content": "## Halfling\n\n**Type:** Standard Language\n**Typical Speakers:** Halflings\n**Script:** Common\n\nHalfling is the native language of the halfling people, a warm, homey tongue that reflects their values of comfort, community, and good cheer. Halflings are notably protective of their language, rarely teaching it to non-halflings.\n\n### Usage and Prevalence\n\nHalfling is spoken in halfling communities, shires, and wherever halfling families have settled. It is primarily an oral language used for everyday conversation among halflings — stories, recipes, family histories, and gossip make up most Halfling discourse. Halflings typically speak Common with outsiders and reserve their own language for private communication.\n\n### Script\n\nHalfling uses the Common script. Written Halfling is relatively rare, as halflings favor oral tradition. When they do write, it is usually for personal correspondence, recipe collections, or family genealogies rather than scholarly works.\n\n### Who Speaks It\n\nAll halflings (lightfoot and stout) speak Halfling as a native language. Non-halflings who speak it are unusual and typically have been adopted into or raised by halfling communities. Halflings appreciate outsiders who make the effort to learn their language but do not actively teach it. It is available as a standard language choice during character creation.",
+    "metadata_json": {
+      "type": "Standard",
+      "script": "Common",
+      "typical_speakers": ["Halflings"],
+      "commonly_heard": ["Halfling shires", "Farming communities", "Inns and taverns", "Caravan routes"]
+    },
+    "tags": "language,standard,halfling,shire,oral-tradition",
+    "source": "SRD 5.1",
+    "sort_order": 7
+  },
+  {
+    "slug": "orc",
+    "title": "Orc",
+    "category": "language",
+    "subcategory": "standard",
+    "ruleset": "universal",
+    "summary": "The language of orcs, a brutal and aggressive tongue filled with harsh sounds and war cries, also used by half-orcs and orc-allied tribes.",
+    "content": "## Orc\n\n**Type:** Standard Language\n**Typical Speakers:** Orcs\n**Script:** Dwarvish\n\nOrc is the language of the orcish people, a harsh and guttural tongue that sounds like a series of barks, growls, and snarls to non-speakers. It is a language designed for shouting commands across battlefields and intimidating enemies.\n\n### Usage and Prevalence\n\nOrc is spoken in orcish strongholds, war camps, and tribal lands. It has a rich vocabulary for warfare, hunting, and displays of strength, but is relatively impoverished when it comes to abstract concepts or diplomacy. Regional dialects vary between tribes, but all are mutually intelligible. Half-orcs often grow up speaking both Orc and Common.\n\n### Script\n\nOrc uses the Dwarvish script, adopted through ancient conflicts and cultural exchange. Orcish literacy is uncommon among common warriors but valued by war chiefs, shamans, and priests of Gruumsh. Written Orc is typically used for tribal markers, war banners, and religious texts.\n\n### Who Speaks It\n\nAll orcs speak Orc as a native language. Half-orcs typically know Orc from their orcish heritage. Rangers, soldiers, and adventurers operating in regions with significant orc populations often learn it. Some barbarian tribes allied with orcs also adopt the language. It is available as a standard language choice during character creation.",
+    "metadata_json": {
+      "type": "Standard",
+      "script": "Dwarvish",
+      "typical_speakers": ["Orcs", "Half-orcs"],
+      "commonly_heard": ["Orcish strongholds", "War camps", "Frontier wilderness", "Tribal lands"]
+    },
+    "tags": "language,standard,orc,half-orc,tribal,warfare",
+    "source": "SRD 5.1",
+    "sort_order": 8
+  },
+  {
+    "slug": "abyssal",
+    "title": "Abyssal",
+    "category": "language",
+    "subcategory": "exotic",
+    "ruleset": "universal",
+    "summary": "The language of demons, a grating and chaotic tongue that shifts and changes like the Abyss itself, painful to mortal ears.",
+    "content": "## Abyssal\n\n**Type:** Exotic Language\n**Typical Speakers:** Demons\n**Script:** Infernal\n\nAbyssal is the language of demons and the chaotic evil denizens of the Abyss. It is a harsh, discordant tongue that seems to change and shift unpredictably, reflecting the chaotic nature of its speakers. Hearing Abyssal spoken can cause unease and even physical discomfort in mortals.\n\n### Usage and Prevalence\n\nAbyssal is spoken throughout the Abyss and wherever demons gather. Cultists devoted to demon lords learn Abyssal for rituals, prayers, and communication with their fiendish patrons. The language is inherently chaotic — grammar rules are inconsistent, and the same word may have different meanings depending on context, tone, and the speaker's mood.\n\n### Script\n\nAbyssal uses the Infernal script, though demonic writings tend to be more chaotic and disorganized than the precise infernal texts of devils. Abyssal texts often appear scrawled, scratched, or written in blood.\n\n### Who Speaks It\n\nDemons of all kinds speak Abyssal. Tieflings with abyssal heritage may know it. Warlocks with fiend patrons (particularly demon lords) often learn it. Cultists and scholars of demonology study Abyssal. Characters with the sage or acolyte background who specialize in fiendish lore may know it.",
+    "metadata_json": {
+      "type": "Exotic",
+      "script": "Infernal",
+      "typical_speakers": ["Demons"],
+      "commonly_heard": ["The Abyss", "Demonic cults", "Places of great evil", "Summoning circles"]
+    },
+    "tags": "language,exotic,abyssal,demon,fiend,chaotic,evil",
+    "source": "SRD 5.1",
+    "sort_order": 9
+  },
+  {
+    "slug": "celestial",
+    "title": "Celestial",
+    "category": "language",
+    "subcategory": "exotic",
+    "ruleset": "universal",
+    "summary": "The language of celestials, a beautiful and resonant tongue that fills listeners with a sense of peace and inspires good in those who hear it.",
+    "content": "## Celestial\n\n**Type:** Exotic Language\n**Typical Speakers:** Celestials\n**Script:** Celestial\n\nCelestial is the language of angels, archons, and other celestial beings of the Upper Planes. It is a melodious, resonant language that seems to carry inherent meaning — even those who don't understand the words often feel a sense of peace, hope, or righteous purpose when they hear Celestial spoken.\n\n### Usage and Prevalence\n\nCelestial is spoken on the Upper Planes and in temples, sanctuaries, and holy places throughout the multiverse. Sacred texts, divine prophecies, and holy scripture are often written in Celestial. Clerics and paladins may learn it as part of their religious training. The language is used in many divine spells and sacred rituals.\n\n### Script\n\nThe Celestial script is elegant and luminous, said to glow faintly when written on consecrated surfaces. It is the script used by celestial beings and some divine casters for holy texts and sacred inscriptions.\n\n### Who Speaks It\n\nAngels, archons, and other celestial beings speak Celestial natively. Aasimar often know Celestial from their celestial heritage. Clerics, paladins, and other divine casters commonly learn it. Warlocks with celestial patrons may know it. Scholars of religious texts and divine lore study Celestial.",
+    "metadata_json": {
+      "type": "Exotic",
+      "script": "Celestial",
+      "typical_speakers": ["Celestials", "Angels", "Archons"],
+      "commonly_heard": ["Upper Planes", "Temples", "Holy sites", "Divine ceremonies"]
+    },
+    "tags": "language,exotic,celestial,angel,divine,holy,upper-planes",
+    "source": "SRD 5.1",
+    "sort_order": 10
+  },
+  {
+    "slug": "draconic",
+    "title": "Draconic",
+    "category": "language",
+    "subcategory": "exotic",
+    "ruleset": "universal",
+    "summary": "The language of dragons, one of the oldest tongues in existence, widely used in arcane magic and spoken by dragonborn, kobolds, and lizardfolk.",
+    "content": "## Draconic\n\n**Type:** Exotic Language\n**Typical Speakers:** Dragons, Dragonborn\n**Script:** Draconic\n\nDraconic is one of the oldest languages in existence, spoken by dragons since the dawn of the world. It is a powerful, sibilant tongue full of long vowels and sharp consonants that resonates with arcane energy. Many believe it was the first language of magic.\n\n### Usage and Prevalence\n\nDraconic is spoken by all true dragons, dragonborn, kobolds, lizardfolk, and other draconic creatures. It is also the foundational language of arcane magic — many spells, magical formulas, and arcane texts are written in Draconic. Wizards and sorcerers commonly study Draconic to access ancient magical knowledge. The language has remained remarkably stable over millennia due to the long lives of its primary speakers.\n\n### Script\n\nThe Draconic script is angular and precise, with characters that resemble claw marks. It is one of the oldest writing systems still in use. Many ancient ruins bear Draconic inscriptions, and the script is used for a wide variety of magical and scholarly texts.\n\n### Who Speaks It\n\nAll true dragons speak Draconic natively. Dragonborn speak it as a heritage language. Kobolds and lizardfolk use simplified dialects. Sorcerers (especially draconic bloodline) and wizards commonly learn it. Characters seeking ancient magical knowledge or dealing with dragons will benefit from knowing Draconic.",
+    "metadata_json": {
+      "type": "Exotic",
+      "script": "Draconic",
+      "typical_speakers": ["Dragons", "Dragonborn", "Kobolds", "Lizardfolk"],
+      "commonly_heard": ["Dragon lairs", "Arcane academies", "Ancient ruins", "Dragonborn settlements"]
+    },
+    "tags": "language,exotic,draconic,dragon,dragonborn,kobold,arcane,ancient",
+    "source": "SRD 5.1",
+    "sort_order": 11
+  },
+  {
+    "slug": "deep-speech",
+    "title": "Deep Speech",
+    "category": "language",
+    "subcategory": "exotic",
+    "ruleset": "universal",
+    "summary": "The language of aberrations, a disturbing tongue from the Far Realm that defies normal linguistic rules and unnerves those who hear it.",
+    "content": "## Deep Speech\n\n**Type:** Exotic Language\n**Typical Speakers:** Aberrations\n**Script:** None (or Espruar in some settings)\n\nDeep Speech is the language of aberrations — creatures whose origins lie in the Far Realm, beyond the known multiverse. It is an alien, unsettling tongue that sounds wrong to mortal ears, as if the sounds were never meant to be produced by humanoid vocal cords.\n\n### Usage and Prevalence\n\nDeep Speech is spoken by mind flayers, beholders, aboleths, and other aberrant creatures. It is heard in the Underdark where these creatures dwell, in the Far Realm, and in places where aberrant influence has corrupted reality. Cultists of Great Old Ones and warlocks with aberrant patrons may learn Deep Speech as part of their dark pacts.\n\n### Script\n\nDeep Speech has no standardized written form in most settings. When it is written, it uses alien symbols that may shift and change when not being directly observed. Some settings use Espruar (an elvish-derived script) as a transliteration system. Written Deep Speech is rare and often appears in the form of psychic impressions rather than physical writing.\n\n### Who Speaks It\n\nMind flayers, beholders, aboleths, and other aberrations speak Deep Speech. Warlocks with Great Old One patrons commonly learn it. Scholars studying aberrant lore or Far Realm phenomena may know it. Characters who have survived contact with aberrations or madness-inducing events sometimes develop an understanding of Deep Speech.",
+    "metadata_json": {
+      "type": "Exotic",
+      "script": "None",
+      "typical_speakers": ["Mind flayers", "Beholders", "Aboleths", "Aberrations"],
+      "commonly_heard": ["Underdark", "Far Realm", "Aberrant lairs", "Sites of madness"]
+    },
+    "tags": "language,exotic,deep-speech,aberration,far-realm,mind-flayer,beholder,alien",
+    "source": "SRD 5.1",
+    "sort_order": 12
+  },
+  {
+    "slug": "infernal",
+    "title": "Infernal",
+    "category": "language",
+    "subcategory": "exotic",
+    "ruleset": "universal",
+    "summary": "The language of devils, a precise and legalistic tongue perfectly suited to binding contracts and infernal bargains.",
+    "content": "## Infernal\n\n**Type:** Exotic Language\n**Typical Speakers:** Devils\n**Script:** Infernal\n\nInfernal is the language of devils and the lawful evil denizens of the Nine Hells. It is a precise, formal, and legalistic tongue where every word has an exact meaning — a language designed for contracts, oaths, and binding agreements where a single misplaced syllable can mean the difference between freedom and eternal damnation.\n\n### Usage and Prevalence\n\nInfernal is spoken throughout the Nine Hells and wherever devils operate. It is the language of infernal contracts — magically binding agreements that form the basis of devil-mortal interactions. Legal scholars, contract lawyers of the multiverse, and anyone dealing with devils must understand Infernal. The language is also used by tieflings and in many dark magical texts.\n\n### Script\n\nThe Infernal script is angular, precise, and ornate — every character is exactly defined with no ambiguity. It is designed for legal documents and contracts where precision is paramount. The script is also used for writing Abyssal, though demonic texts are far less orderly.\n\n### Who Speaks It\n\nDevils of all ranks speak Infernal natively. Tieflings often know Infernal from their heritage. Warlocks with fiend patrons (particularly archdevils) commonly learn it. Lawyers, contract specialists, and scholars of infernal lore study the language. Characters negotiating with devils need Infernal to understand what they are agreeing to.",
+    "metadata_json": {
+      "type": "Exotic",
+      "script": "Infernal",
+      "typical_speakers": ["Devils"],
+      "commonly_heard": ["Nine Hells", "Infernal contracts", "Devil cults", "Tiefling communities"]
+    },
+    "tags": "language,exotic,infernal,devil,fiend,lawful,contracts,nine-hells",
+    "source": "SRD 5.1",
+    "sort_order": 13
+  },
+  {
+    "slug": "primordial",
+    "title": "Primordial",
+    "category": "language",
+    "subcategory": "exotic",
+    "ruleset": "universal",
+    "summary": "The language of elementals, encompassing the dialects of Aquan, Auran, Ignan, and Terran used by creatures of the Elemental Planes.",
+    "content": "## Primordial\n\n**Type:** Exotic Language\n**Typical Speakers:** Elementals\n**Script:** Dwarvish\n\nPrimordial is the language of the Elemental Planes and the tongue spoken by elementals, genies, and other creatures of elemental origin. It encompasses four dialects — Aquan (water), Auran (air), Ignan (fire), and Terran (earth) — which are distinct enough to have their own character but mutually intelligible.\n\n### Usage and Prevalence\n\nPrimordial and its dialects are spoken on the Elemental Planes and wherever elemental creatures are found. Genies prefer their specific dialect (djinn speak Auran, efreeti speak Ignan, dao speak Terran, marids speak Aquan). Druids and rangers sometimes learn Primordial to communicate with elemental spirits. The language resonates with the raw power of the elements.\n\n### Script\n\nPrimordial uses the Dwarvish script, a connection that traces back to the earliest interactions between dwarves and earth elementals in the deep places of the world.\n\n### Who Speaks It\n\nAll elementals understand Primordial and its dialects. Genasi (elemental-touched mortals) often know Primordial. Druids, rangers, and characters associated with elemental magic may learn it. Knowing Primordial allows communication with speakers of all four dialects: Aquan, Auran, Ignan, and Terran.",
+    "metadata_json": {
+      "type": "Exotic",
+      "script": "Dwarvish",
+      "typical_speakers": ["Elementals", "Genies"],
+      "commonly_heard": ["Elemental Planes", "Volcanic regions", "Deep oceans", "High mountains", "Underground caverns"],
+      "dialects": ["Aquan", "Auran", "Ignan", "Terran"]
+    },
+    "tags": "language,exotic,primordial,elemental,aquan,auran,ignan,terran,genie",
+    "source": "SRD 5.1",
+    "sort_order": 14
+  },
+  {
+    "slug": "sylvan",
+    "title": "Sylvan",
+    "category": "language",
+    "subcategory": "exotic",
+    "ruleset": "universal",
+    "summary": "The language of fey creatures, a lilting and enchanting tongue closely related to Elvish that carries the magic of the Feywild in its very sounds.",
+    "content": "## Sylvan\n\n**Type:** Exotic Language\n**Typical Speakers:** Fey creatures\n**Script:** Elvish\n\nSylvan is the language of the fey — the native tongue of the Feywild and its inhabitants. It is a lilting, enchanting language that seems to carry traces of wild magic in its very pronunciation. Closely related to Elvish (some scholars consider Elvish to be a descendant of Sylvan), it has an otherworldly quality that sets it apart.\n\n### Usage and Prevalence\n\nSylvan is spoken throughout the Feywild and in places on the Material Plane where fey influence is strong — ancient forests, fairy rings, and sites of natural magic. Dryads, satyrs, pixies, sprites, and archfey all speak Sylvan. It is used in fey bargains, enchantments, and the songs and stories that fey creatures use to shape their reality.\n\n### Script\n\nSylvan uses the Elvish script, reflecting the deep ancestral connection between elves and the fey. Sylvan texts tend to be more ornate and decorative than standard Elvish writing, often incorporating natural imagery and flowing designs.\n\n### Who Speaks It\n\nFey creatures of all kinds speak Sylvan natively. Druids and rangers with ties to the natural world commonly learn it. Warlocks with archfey patrons typically know Sylvan. Elves sometimes learn it to connect with their fey heritage. Characters who have spent time in the Feywild or deal regularly with fey creatures benefit from knowing it.",
+    "metadata_json": {
+      "type": "Exotic",
+      "script": "Elvish",
+      "typical_speakers": ["Fey creatures", "Dryads", "Satyrs", "Pixies"],
+      "commonly_heard": ["Feywild", "Ancient forests", "Fairy rings", "Fey crossings"]
+    },
+    "tags": "language,exotic,sylvan,fey,feywild,nature,enchantment",
+    "source": "SRD 5.1",
+    "sort_order": 15
+  },
+  {
+    "slug": "undercommon",
+    "title": "Undercommon",
+    "category": "language",
+    "subcategory": "exotic",
+    "ruleset": "universal",
+    "summary": "The trade language of the Underdark, a creole tongue blending Elvish, Dwarvish, and other languages that allows communication between the diverse races beneath the surface.",
+    "content": "## Undercommon\n\n**Type:** Exotic Language\n**Typical Speakers:** Underdark traders\n**Script:** Elvish\n\nUndercommon is the trade language of the Underdark — a lingua franca that allows communication between the diverse and often hostile races that inhabit the vast cavern systems beneath the surface world. It is a creole language that blends elements of Elvish, Dwarvish, and several other tongues into a practical means of communication.\n\n### Usage and Prevalence\n\nUndercommon is spoken throughout the Underdark by drow, duergar, svirfneblin, mind flayers, and other Underdark-dwelling races. It serves the same function below ground that Common serves above — a shared language for trade, negotiation, and basic communication between races that otherwise have nothing in common. It is not the native language of any race but is learned as a second language by nearly all Underdark inhabitants.\n\n### Script\n\nUndercommon uses the Elvish script, reflecting the significant drow influence on the language's development. Written Undercommon is commonly found on Underdark signposts, trade agreements, and boundary markers.\n\n### Who Speaks It\n\nDrow, duergar, deep gnomes (svirfneblin), and most intelligent Underdark dwellers know Undercommon. Rangers and adventurers who venture into the Underdark learn it out of necessity. Characters with Underdark backgrounds or connections typically speak it.",
+    "metadata_json": {
+      "type": "Exotic",
+      "script": "Elvish",
+      "typical_speakers": ["Underdark traders", "Drow", "Duergar", "Svirfneblin"],
+      "commonly_heard": ["Underdark", "Underground trade routes", "Drow cities", "Deep caverns"]
+    },
+    "tags": "language,exotic,undercommon,underdark,drow,duergar,deep-gnome,trade",
+    "source": "SRD 5.1",
+    "sort_order": 16
+  },
+  {
+    "slug": "druidic",
+    "title": "Druidic",
+    "category": "language",
+    "subcategory": "other",
+    "ruleset": "universal",
+    "summary": "The secret language of druids, a closely guarded tongue forbidden to be taught to non-druids, used for communication and to leave hidden messages in natural settings.",
+    "content": "## Druidic\n\n**Type:** Secret Language\n**Typical Speakers:** Druids\n**Script:** Druidic (Ogham-like symbols)\n\nDruidic is the secret language of the druid class — a sacred tongue passed down through the druidic tradition that druids are forbidden from teaching to non-druids. It is both a spoken language and a system of secret symbols used to leave messages in natural environments.\n\n### Usage and Prevalence\n\nDruidic is used exclusively among druids for private communication, ritual purposes, and leaving hidden messages. Druidic symbols can be carved into trees, scratched into rocks, or woven into natural formations — invisible to non-druids but immediately recognizable to any druid. The language is used in druidic ceremonies, the passing of seasonal knowledge, and communication between druids of different circles.\n\n### Script\n\nThe Druidic script resembles Ogham — a system of notches, lines, and symbols often carved into wood or stone. These symbols can convey complex messages about local dangers, sacred sites, seasonal changes, and other information relevant to those who serve nature. Non-druids who encounter these symbols typically mistake them for natural markings.\n\n### Who Speaks It\n\nOnly druids know Druidic — it is granted automatically to all characters who take the druid class and cannot be learned through normal means. Teaching Druidic to a non-druid is considered a serious violation of druidic tradition. It is not available as a language choice during character creation; only the druid class feature grants it.",
+    "metadata_json": {
+      "type": "Secret",
+      "script": "Druidic (Ogham-like)",
+      "typical_speakers": ["Druids"],
+      "commonly_heard": ["Druid circles", "Sacred groves", "Wild places", "Nature temples"],
+      "restriction": "Druid class only"
+    },
+    "tags": "language,other,druidic,druid,secret,nature,ogham,sacred",
+    "source": "SRD 5.1",
+    "sort_order": 17
+  },
+  {
+    "slug": "thieves-cant",
+    "title": "Thieves' Cant",
+    "category": "language",
+    "subcategory": "other",
+    "ruleset": "universal",
+    "summary": "A secret mix of dialect, jargon, and coded language used by rogues and criminals to hide messages in ordinary conversation and leave symbols marking safe houses and dangers.",
+    "content": "## Thieves' Cant\n\n**Type:** Secret Language (Coded)\n**Typical Speakers:** Rogues, Criminals\n**Script:** None (symbols and signs)\n\nThieves' Cant is not a language in the traditional sense — it is a secret system of coded speech, hand signals, and hidden symbols used by rogues, thieves, and the criminal underworld. It allows illicit communication to take place in plain sight, hidden within ordinary-sounding conversation.\n\n### Usage and Prevalence\n\nThieves' Cant is used in criminal networks, thieves' guilds, and among rogues throughout the world. A conversation in Thieves' Cant sounds like ordinary speech to outsiders — it uses double meanings, coded phrases, and subtle inflections to convey hidden messages. \"The weather's turning cold\" might mean \"the guards are increasing patrols,\" while \"I'm looking for a good tailor\" could mean \"I need forged documents.\" The specific codes vary by region and guild.\n\n### Script\n\nThieves' Cant uses a system of symbols and signs rather than a true alphabet. These marks are left on buildings, doors, and street corners to indicate safe houses, dangerous areas, easy marks, guard patrol routes, and other useful information. The symbols are small and inconspicuous, easily overlooked by those who don't know to look for them.\n\n### Who Speaks It\n\nAll rogues learn Thieves' Cant as a class feature. Members of thieves' guilds, criminal organizations, and the broader underworld learn their local variant. It is not available as a language choice during character creation; only the rogue class feature (or DM-granted criminal background experience) provides it. Regional variants exist, but a rogue from one region can generally understand the basics of another region's cant.",
+    "metadata_json": {
+      "type": "Secret (Coded)",
+      "script": "Symbols and signs",
+      "typical_speakers": ["Rogues", "Criminals", "Thieves' guilds"],
+      "commonly_heard": ["Criminal underworld", "Black markets", "Thieves' guilds", "Urban alleyways"],
+      "restriction": "Rogue class or criminal background"
+    },
+    "tags": "language,other,thieves-cant,rogue,criminal,secret,coded,underworld",
+    "source": "SRD 5.1",
+    "sort_order": 18
+  }
+]

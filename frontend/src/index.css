@@ -1,0 +1,578 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+@import "tailwindcss";
+
+/* ============================================
+   THE CODEX — Dark Fantasy Grimoire Theme
+   ============================================ */
+
+/* --- CSS Custom Properties --- */
+:root {
+  /* Core palette */
+  --bg-deep: #0d0d12;
+  --bg-panel: rgba(20, 18, 28, 0.9);
+  --bg-panel-hover: rgba(30, 27, 42, 0.95);
+  --bg-input: rgba(15, 13, 22, 0.8);
+
+  /* Text */
+  --text-parchment: #d4c5a0;
+  --text-parchment-dim: #a89870;
+  --text-parchment-bright: #efe0c0;
+
+  /* Accents */
+  --accent-gold: #c9a84c;
+  --accent-gold-dim: rgba(201, 168, 76, 0.3);
+  --accent-gold-glow: rgba(201, 168, 76, 0.15);
+  --accent-crimson: #8b2232;
+  --accent-crimson-bright: #c0392b;
+  --accent-purple: #4a3d7a;
+  --accent-purple-bright: #6b5bae;
+
+  /* Borders */
+  --border-gold: rgba(201, 168, 76, 0.3);
+  --border-gold-strong: rgba(201, 168, 76, 0.6);
+
+  /* Fonts */
+  --font-heading: 'Cinzel Decorative', 'Georgia', serif;
+  --font-body: 'Crimson Text', 'Georgia', serif;
+
+  /* Sizing */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+/* --- Global Styles --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body, 19px);
+  line-height: 1.6;
+  color: var(--text-parchment);
+  background-color: var(--bg-deep);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle noise/grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* --- Typography --- */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--accent-gold);
+  letter-spacing: 0.05em;
+  line-height: 1.3;
+  margin-top: 0;
+}
+
+h1 { font-size: 2rem; font-weight: 900; }
+h2 { font-size: 1.6rem; font-weight: 700; }
+h3 { font-size: 1.3rem; font-weight: 700; }
+h4 { font-size: 1.1rem; font-weight: 400; }
+
+a {
+  color: var(--accent-gold);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--text-parchment-bright);
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-gold-dim);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-gold);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-gold-dim) var(--bg-deep);
+}
+
+/* --- Utility Classes --- */
+
+/* Gold-bordered card */
+.card-grimoire {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-grimoire:hover {
+  border-color: var(--border-gold-strong);
+  box-shadow: 0 0 20px var(--accent-gold-glow);
+}
+
+/* Parchment panel */
+.panel-parchment {
+  background: linear-gradient(
+    135deg,
+    rgba(20, 18, 28, 0.92),
+    rgba(30, 25, 18, 0.88)
+  );
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel-parchment::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent-gold),
+    transparent
+  );
+}
+
+/* Gold border utilities */
+.border-gold {
+  border: 1px solid var(--border-gold);
+}
+
+.border-gold-strong {
+  border: 1px solid var(--border-gold-strong);
+}
+
+/* Gold divider */
+.divider-gold {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent-gold-dim),
+    transparent
+  );
+  border: none;
+  margin: 1rem 0;
+}
+
+/* Glow text */
+.text-glow-gold {
+  text-shadow: 0 0 10px var(--accent-gold-glow);
+}
+
+/* --- Form Elements --- */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+select,
+textarea {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--text-parchment);
+  background: var(--bg-input);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  cursor: text;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 8px var(--accent-gold-glow);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-parchment-dim);
+  opacity: 0.6;
+}
+
+select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c9a84c' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2rem;
+}
+
+select option {
+  background: #14121c;
+  color: var(--text-parchment);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Buttons — only apply default styling to .btn class, not all <button> elements */
+.btn {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1.25rem;
+  color: var(--text-parchment);
+  background: var(--bg-panel);
+  transition: all 0.25s ease;
+}
+
+.btn:hover {
+  border-color: var(--accent-gold);
+  background: var(--bg-panel-hover);
+  box-shadow: 0 0 12px var(--accent-gold-glow);
+  color: var(--text-parchment-bright);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* Base reset for all <button> elements so Tailwind classes work properly */
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, var(--accent-gold), #a8892e);
+  color: var(--bg-deep);
+  border: 1px solid var(--accent-gold);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1.25rem;
+  font-weight: 700;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #d4b85c, var(--accent-gold));
+  color: var(--bg-deep);
+  box-shadow: 0 0 16px rgba(201, 168, 76, 0.4);
+}
+
+.btn-danger {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--accent-crimson);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1.25rem;
+  color: var(--accent-crimson-bright);
+  background: var(--bg-panel);
+}
+
+.btn-danger:hover {
+  background: rgba(139, 34, 50, 0.3);
+  border-color: var(--accent-crimson-bright);
+  box-shadow: 0 0 12px rgba(139, 34, 50, 0.3);
+}
+
+.btn-magic {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--accent-purple);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1.25rem;
+  color: var(--accent-purple-bright);
+  background: var(--bg-panel);
+}
+
+.btn-magic:hover {
+  background: rgba(74, 61, 122, 0.3);
+  border-color: var(--accent-purple-bright);
+  box-shadow: 0 0 12px rgba(74, 61, 122, 0.3);
+}
+
+/* --- HP Bar Styles --- */
+.hp-bar-container {
+  width: 100%;
+  height: 12px;
+  background: rgba(10, 10, 15, 0.8);
+  border: 1px solid var(--border-gold);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.hp-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.5s ease, background 0.5s ease;
+  position: relative;
+}
+
+/* HP color thresholds */
+.hp-bar-fill.hp-high {
+  background: linear-gradient(90deg, #2d8a4e, #3dbd5c);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.hp-bar-fill.hp-mid {
+  background: linear-gradient(90deg, #b8a030, #d4c040);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.hp-bar-fill.hp-low {
+  background: linear-gradient(90deg, #8b2232, #c0392b);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  animation: glow-pulse 1.5s ease-in-out infinite;
+}
+
+.hp-bar-fill.hp-critical {
+  background: linear-gradient(90deg, #6b0f1a, #8b2232);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: glow-pulse 0.8s ease-in-out infinite;
+}
+
+/* --- Animation Keyframes --- */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 4px rgba(139, 34, 50, 0.3);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 12px rgba(139, 34, 50, 0.6);
+  }
+}
+
+/* Animation utility classes */
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out forwards;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 30%,
+    var(--accent-gold-glow) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* --- Component Classes (used by React components) --- */
+
+.card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 0 12px var(--accent-gold-glow);
+}
+
+.input {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text-parchment);
+  background: var(--bg-input);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.8rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  cursor: text;
+}
+
+.input:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 8px var(--accent-gold-glow);
+}
+
+.input::placeholder {
+  color: var(--text-parchment-dim);
+  opacity: 0.5;
+}
+
+/* Select elements with .input class get the caret */
+select.input {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c9a84c' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2rem;
+}
+
+.label {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-parchment-dim);
+  margin-bottom: 0.25rem;
+}
+
+.btn-secondary {
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 1rem;
+  color: var(--text-parchment);
+  background: transparent;
+  transition: all 0.25s ease;
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent-gold);
+  background: var(--bg-panel-hover);
+  box-shadow: 0 0 8px var(--accent-gold-glow);
+}
+
+/* Legacy hp-bar-bg class - use hp-bar-container instead */
+.hp-bar-bg {
+  width: 100%;
+  height: 10px;
+  background: rgba(10, 10, 15, 0.8);
+  border: 1px solid var(--border-gold);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+/* Tailwind custom utilities */
+.font-display {
+  font-family: var(--font-heading);
+}
+
+.text-gold {
+  color: var(--accent-gold);
+}
+
+/* --- #root container --- */
+#root {
+  min-height: 100vh;
+}
+
+/* input type=date styling */
+input[type="date"] {
+  font-family: var(--font-body);
+  color: var(--text-parchment);
+  background: var(--bg-input);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.7rem;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7) sepia(0.5) hue-rotate(10deg);
+}
+
+/* Checkbox styling */
+input[type="checkbox"] {
+  accent-color: var(--accent-gold);
+}

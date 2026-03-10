@@ -1,0 +1,267 @@
+[
+  {
+    "slug": "path-of-the-berserker",
+    "title": "Path of the Berserker",
+    "category": "subclass",
+    "subcategory": "barbarian",
+    "ruleset": "5e-2014",
+    "summary": "A primal path fueled by unbridled fury, granting frenzied attacks and fearsome presence.",
+    "content": "## Path of the Berserker\n\nFor some barbarians, rage is a means to an end — that end being violence. The Path of the Berserker is a path of untrammeled fury, slick with blood. As you enter the berserker's rage, you thrill in the chaos of battle, heedless of your own health or well-being.\n\n### Frenzy (3rd Level)\n\nStarting when you choose this path at 3rd level, you can go into a frenzy when you rage. If you do so, for the duration of your rage you can make a single melee weapon attack as a bonus action on each of your turns after this one. When your rage ends, you suffer one level of exhaustion.\n\n### Mindless Rage (6th Level)\n\nBeginning at 6th level, you can't be charmed or frightened while raging. If you are charmed or frightened when you enter your rage, the effect is suspended for the duration of the rage.\n\n### Intimidating Presence (10th Level)\n\nBeginning at 10th level, you can use your action to frighten someone with your menacing presence. When you do so, choose one creature that you can see within 30 feet of you. If the creature can see or hear you, it must succeed on a Wisdom saving throw (DC equal to 8 + your proficiency bonus + your Charisma modifier) or be frightened of you until the end of your next turn. On subsequent turns, you can use your action to extend the duration of this effect on the frightened creature until the end of your next turn. This effect ends if the creature ends its turn out of line of sight or more than 60 feet away from you. If the creature succeeds on its saving throw, you can't use this feature on that creature again for 24 hours.\n\n### Retaliation (14th Level)\n\nStarting at 14th level, when you take damage from a creature that is within 5 feet of you, you can use your reaction to make a melee weapon attack against that creature.",
+    "metadata_json": {
+      "parent_class": "barbarian",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Frenzy"],
+        "6": ["Mindless Rage"],
+        "10": ["Intimidating Presence"],
+        "14": ["Retaliation"]
+      }
+    },
+    "tags": "subclass,barbarian,berserker,path of the berserker,melee,rage,frenzy",
+    "source": "SRD 5.1",
+    "sort_order": 1
+  },
+  {
+    "slug": "college-of-lore",
+    "title": "College of Lore",
+    "category": "subclass",
+    "subcategory": "bard",
+    "ruleset": "5e-2014",
+    "summary": "A bardic college devoted to knowledge, collecting bits of lore from every source and using cutting words to disrupt foes.",
+    "content": "## College of Lore\n\nBards of the College of Lore know something about most things, collecting bits of knowledge from sources as diverse as scholarly tomes and peasant tales. Whether singing folk ballads in taverns or elaborate compositions in royal courts, these bards use their gifts to hold audiences spellbound.\n\n### Bonus Proficiencies (3rd Level)\n\nWhen you join the College of Lore at 3rd level, you gain proficiency with three skills of your choice.\n\n### Cutting Words (3rd Level)\n\nAlso at 3rd level, you learn how to use your wit to distract, confuse, and otherwise sap the confidence and competence of others. When a creature that you can see within 60 feet of you makes an attack roll, an ability check, or a damage roll, you can use your reaction to expend one of your uses of Bardic Inspiration, rolling a Bardic Inspiration die and subtracting the number rolled from the creature's roll. You can choose to use this feature after the creature makes its roll, but before the DM determines whether the attack roll or ability check succeeds or fails, or before the creature deals its damage. The creature is immune if it can't hear you or if it's immune to being charmed.\n\n### Additional Magical Secrets (6th Level)\n\nAt 6th level, you learn two spells of your choice from any class. A spell you choose must be of a level you can cast, as shown on the Bard table, or a cantrip. The chosen spells count as bard spells for you but don't count against the number of bard spells you know.\n\n### Peerless Skill (14th Level)\n\nStarting at 14th level, when you make an ability check, you can expend one use of Bardic Inspiration. Roll a Bardic Inspiration die and add the number rolled to your ability check. You can choose to do so after you roll the die for the ability check, but before the DM tells you whether you succeed or fail.",
+    "metadata_json": {
+      "parent_class": "bard",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Bonus Proficiencies", "Cutting Words"],
+        "6": ["Additional Magical Secrets"],
+        "14": ["Peerless Skill"]
+      }
+    },
+    "tags": "subclass,bard,college of lore,lore,cutting words,magical secrets,support",
+    "source": "SRD 5.1",
+    "sort_order": 2
+  },
+  {
+    "slug": "life-domain",
+    "title": "Life Domain",
+    "category": "subclass",
+    "subcategory": "cleric",
+    "ruleset": "5e-2014",
+    "summary": "A divine domain focused on the positive energy that sustains all life, granting potent healing abilities.",
+    "content": "## Life Domain\n\nThe Life domain focuses on the vibrant positive energy — one of the fundamental forces of the universe — that sustains all life. The gods of life promote vitality and health through healing the sick and wounded, caring for those in need, and driving away the forces of death and undeath.\n\n### Life Domain Spells\n\n| Cleric Level | Spells |\n|---|---|\n| 1st | Bless, Cure Wounds |\n| 3rd | Lesser Restoration, Spiritual Weapon |\n| 5th | Beacon of Hope, Revivify |\n| 7th | Death Ward, Guardian of Faith |\n| 9th | Mass Cure Wounds, Raise Dead |\n\n### Bonus Proficiency (1st Level)\n\nWhen you choose this domain at 1st level, you gain proficiency with heavy armor.\n\n### Disciple of Life (1st Level)\n\nAlso starting at 1st level, your healing spells are more effective. Whenever you use a spell of 1st level or higher to restore hit points to a creature, the creature regains additional hit points equal to 2 + the spell's level.\n\n### Channel Divinity: Preserve Life (2nd Level)\n\nStarting at 2nd level, you can use your Channel Divinity to heal the badly injured. As an action, you present your holy symbol and evoke healing energy that can restore a number of hit points equal to five times your cleric level. Choose any creatures within 30 feet of you, and divide those hit points among them. This feature can restore a creature to no more than half of its hit point maximum. You can't use this feature on an undead or a construct.\n\n### Blessed Healer (6th Level)\n\nBeginning at 6th level, the healing spells you cast on others heal you as well. When you cast a spell of 1st level or higher that restores hit points to a creature other than you, you regain hit points equal to 2 + the spell's level.\n\n### Divine Strike (8th Level)\n\nAt 8th level, you gain the ability to infuse your weapon strikes with divine energy. Once on each of your turns when you hit a creature with a weapon attack, you can cause the attack to deal an extra 1d8 radiant damage to the target. When you reach 14th level, the extra damage increases to 2d8.\n\n### Supreme Healing (17th Level)\n\nStarting at 17th level, when you would normally roll one or more dice to restore hit points with a spell, you instead use the highest number possible for each die. For example, instead of restoring 2d6 hit points to a creature, you restore 12.",
+    "metadata_json": {
+      "parent_class": "cleric",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Bonus Proficiency", "Disciple of Life", "Life Domain Spells"],
+        "2": ["Channel Divinity: Preserve Life"],
+        "6": ["Blessed Healer"],
+        "8": ["Divine Strike"],
+        "17": ["Supreme Healing"]
+      }
+    },
+    "tags": "subclass,cleric,life domain,healing,divine,support,heavy armor",
+    "source": "SRD 5.1",
+    "sort_order": 3
+  },
+  {
+    "slug": "circle-of-the-land",
+    "title": "Circle of the Land",
+    "category": "subclass",
+    "subcategory": "druid",
+    "ruleset": "5e-2014",
+    "summary": "A druidic circle connected to the land itself, granting additional spells based on chosen terrain and enhanced spellcasting recovery.",
+    "content": "## Circle of the Land\n\nThe Circle of the Land is made up of mystics and sages who safeguard ancient knowledge and rites through a vast oral tradition. These druids meet within sacred circles of trees or standing stones to whisper primal secrets in Druidic. The circle's wisest members preside as the chief priests of communities that hold to the Old Faith and serve as advisors to the rulers of those folk.\n\n### Bonus Cantrip (2nd Level)\n\nWhen you choose this circle at 2nd level, you learn one additional druid cantrip of your choice.\n\n### Natural Recovery (2nd Level)\n\nStarting at 2nd level, you can regain some of your magical energy by sitting in meditation and communing with nature. During a short rest, you choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your druid level (rounded up), and none of the slots can be 6th level or higher. You can't use this feature again until you finish a long rest.\n\n### Circle Spells (2nd Level)\n\nYour mystical connection to the land infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Choose that land — arctic, coast, desert, forest, grassland, mountain, swamp, or Underdark — and consult the associated list of spells. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.\n\n### Land's Stride (6th Level)\n\nStarting at 6th level, moving through nonmagical difficult terrain costs you no extra movement. You can also pass through nonmagical plants without being slowed by them and without taking damage from them if they have thorns, spines, or a similar hazard. In addition, you have advantage on saving throws against plants that are magically created or manipulated to impede movement, such as those created by the Entangle spell.\n\n### Nature's Ward (10th Level)\n\nStarting at 10th level, you can't be charmed or frightened by elementals or fey, and you are immune to poison and disease.\n\n### Nature's Sanctuary (14th Level)\n\nWhen you reach 14th level, creatures of the natural world sense your connection to nature and become hesitant to attack you. When a beast or plant creature attacks you, that creature must make a Wisdom saving throw against your druid spell save DC. On a failed save, the creature must choose a different target, or the attack automatically misses. On a successful save, the creature is immune to this effect for 24 hours. The creature is aware of this effect before it makes its attack against you.",
+    "metadata_json": {
+      "parent_class": "druid",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Bonus Cantrip", "Natural Recovery", "Circle Spells"],
+        "6": ["Land's Stride"],
+        "10": ["Nature's Ward"],
+        "14": ["Nature's Sanctuary"]
+      }
+    },
+    "tags": "subclass,druid,circle of the land,spellcasting,nature,terrain",
+    "source": "SRD 5.1",
+    "sort_order": 4
+  },
+  {
+    "slug": "champion",
+    "title": "Champion",
+    "category": "subclass",
+    "subcategory": "fighter",
+    "ruleset": "5e-2014",
+    "summary": "A martial archetype that focuses on raw physical power and honing natural fighting ability to deadly perfection.",
+    "content": "## Champion\n\nThe archetypal Champion focuses on the development of raw physical power honed to deadly perfection. Those who model themselves on this archetype combine rigorous training with physical excellence to deal devastating blows.\n\n### Improved Critical (3rd Level)\n\nBeginning when you choose this archetype at 3rd level, your weapon attacks score a critical hit on a roll of 19 or 20.\n\n### Remarkable Athlete (7th Level)\n\nStarting at 7th level, you can add half your proficiency bonus (round up) to any Strength, Dexterity, or Constitution check you make that doesn't already use your proficiency bonus. In addition, when you make a running long jump, the distance you can cover increases by a number of feet equal to your Strength modifier.\n\n### Additional Fighting Style (10th Level)\n\nAt 10th level, you can choose a second option from the Fighting Style class feature.\n\n### Superior Critical (15th Level)\n\nStarting at 15th level, your weapon attacks score a critical hit on a roll of 18-20.\n\n### Survivor (18th Level)\n\nAt 18th level, you attain the pinnacle of resilience in battle. At the start of each of your turns, you regain hit points equal to 5 + your Constitution modifier if you have no more than half of your hit points left. You don't gain this benefit if you have 0 hit points.",
+    "metadata_json": {
+      "parent_class": "fighter",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Improved Critical"],
+        "7": ["Remarkable Athlete"],
+        "10": ["Additional Fighting Style"],
+        "15": ["Superior Critical"],
+        "18": ["Survivor"]
+      }
+    },
+    "tags": "subclass,fighter,champion,martial,critical,fighting style",
+    "source": "SRD 5.1",
+    "sort_order": 5
+  },
+  {
+    "slug": "way-of-the-open-hand",
+    "title": "Way of the Open Hand",
+    "category": "subclass",
+    "subcategory": "monk",
+    "ruleset": "5e-2014",
+    "summary": "A monastic tradition that masters the art of unarmed combat, manipulating ki to heal and deliver devastating strikes.",
+    "content": "## Way of the Open Hand\n\nMonks of the Way of the Open Hand are the ultimate masters of martial arts combat, whether armed or unarmed. They learn techniques to push and trip their opponents, manipulate ki to heal damage to their bodies, and practice advanced meditation that can protect them from harm.\n\n### Open Hand Technique (3rd Level)\n\nStarting when you choose this tradition at 3rd level, you can manipulate your enemy's ki when you harness your own. Whenever you hit a creature with one of the attacks granted by your Flurry of Blows, you can impose one of the following effects on that target:\n\n- It must succeed on a Dexterity saving throw or be knocked prone.\n- It must make a Strength saving throw. If it fails, you can push it up to 15 feet away from you.\n- It can't take reactions until the end of your next turn.\n\n### Wholeness of Body (6th Level)\n\nAt 6th level, you gain the ability to heal yourself. As an action, you can regain hit points equal to three times your monk level. You must finish a long rest before you can use this feature again.\n\n### Tranquility (11th Level)\n\nBeginning at 11th level, you can enter a special meditation that surrounds you with an aura of peace. At the end of a long rest, you gain the effect of a Sanctuary spell that lasts until the start of your next long rest (the spell can end early as normal). The saving throw DC for the spell equals 8 + your Wisdom modifier + your proficiency bonus.\n\n### Quivering Palm (17th Level)\n\nAt 17th level, you gain the ability to set up lethal vibrations in someone's body. When you hit a creature with an unarmed strike, you can spend 3 ki points to start these imperceptible vibrations, which last for a number of days equal to your monk level. The vibrations are harmless unless you use your action to end them. To do so, you and the target must be on the same plane of existence. When you use this action, the creature must make a Constitution saving throw. If it fails, it is reduced to 0 hit points. If it succeeds, it takes 10d10 necrotic damage. You can have only one creature under the effect of this feature at a time. You can choose to end the vibrations harmlessly without using an action.",
+    "metadata_json": {
+      "parent_class": "monk",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Open Hand Technique"],
+        "6": ["Wholeness of Body"],
+        "11": ["Tranquility"],
+        "17": ["Quivering Palm"]
+      }
+    },
+    "tags": "subclass,monk,way of the open hand,unarmed,ki,martial arts,melee",
+    "source": "SRD 5.1",
+    "sort_order": 6
+  },
+  {
+    "slug": "oath-of-devotion",
+    "title": "Oath of Devotion",
+    "category": "subclass",
+    "subcategory": "paladin",
+    "ruleset": "5e-2014",
+    "summary": "A sacred oath bound to the loftiest ideals of justice, virtue, and order, wielding holy power against the forces of evil.",
+    "content": "## Oath of Devotion\n\nThe Oath of Devotion binds a paladin to the loftiest ideals of justice, virtue, and order. Sometimes called cavaliers, white knights, or holy warriors, these paladins meet the ideal of the knight in shining armor, acting with honor in pursuit of justice and the greater good.\n\n### Tenets of Devotion\n\n- **Honesty.** Don't lie or cheat. Let your word be your promise.\n- **Courage.** Never fear to act, though caution is wise.\n- **Compassion.** Aid others, protect the weak, and punish those who threaten them.\n- **Honor.** Treat others with fairness, and let your honorable deeds be an example to them.\n- **Duty.** Be responsible for your actions and their consequences, protect those entrusted to your care, and obey those who have just authority over you.\n\n### Oath Spells\n\n| Paladin Level | Spells |\n|---|---|\n| 3rd | Protection from Evil and Good, Sanctuary |\n| 5th | Lesser Restoration, Zone of Truth |\n| 9th | Beacon of Hope, Dispel Magic |\n| 13th | Freedom of Movement, Guardian of Faith |\n| 17th | Commune, Flame Strike |\n\n### Channel Divinity (3rd Level)\n\nWhen you take this oath at 3rd level, you gain the following two Channel Divinity options.\n\n**Sacred Weapon.** As an action, you can imbue one weapon that you are holding with positive energy, using your Channel Divinity. For 1 minute, you add your Charisma modifier to attack rolls made with that weapon (with a minimum bonus of +1). The weapon also emits bright light in a 20-foot radius and dim light 20 feet beyond that. If the weapon is not already magical, it becomes magical for the duration. You can end this effect on your turn as part of any other action. If you are no longer holding or carrying this weapon, or if you fall unconscious, this effect ends.\n\n**Turn the Unholy.** As an action, you present your holy symbol and speak a prayer censuring fiends and undead, using your Channel Divinity. Each fiend or undead that can see or hear you within 30 feet of you must make a Wisdom saving throw. If the creature fails its saving throw, it is turned for 1 minute or until it takes damage.\n\n### Aura of Devotion (7th Level)\n\nStarting at 7th level, you and friendly creatures within 10 feet of you can't be charmed while you are conscious. At 18th level, the range of this aura increases to 30 feet.\n\n### Purity of Spirit (15th Level)\n\nBeginning at 15th level, you are always under the effects of a Protection from Evil and Good spell.\n\n### Holy Nimbus (20th Level)\n\nAt 20th level, as an action, you can emanate an aura of sunlight. For 1 minute, bright light shines from you in a 30-foot radius, and dim light shines 30 feet beyond that. Whenever an enemy creature starts its turn in the bright light, the creature takes 10 radiant damage. In addition, for the duration, you have advantage on saving throws against spells cast by fiends or undead. Once you use this feature, you can't use it again until you finish a long rest.",
+    "metadata_json": {
+      "parent_class": "paladin",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Oath Spells", "Channel Divinity: Sacred Weapon", "Channel Divinity: Turn the Unholy"],
+        "7": ["Aura of Devotion"],
+        "15": ["Purity of Spirit"],
+        "20": ["Holy Nimbus"]
+      }
+    },
+    "tags": "subclass,paladin,oath of devotion,holy,radiant,aura,channel divinity",
+    "source": "SRD 5.1",
+    "sort_order": 7
+  },
+  {
+    "slug": "hunter",
+    "title": "Hunter",
+    "category": "subclass",
+    "subcategory": "ranger",
+    "ruleset": "5e-2014",
+    "summary": "A ranger archetype that accepts the challenge of defending the wilderness from terrible threats, specializing in combat tactics against specific foes.",
+    "content": "## Hunter\n\nEmulating the Hunter archetype means accepting your place as a bulwark between civilization and the terrors of the wilderness. As you walk the Hunter's path, you learn specialized techniques for fighting the threats you face, from rampaging ogres and hordes of orcs to towering giants and terrifying dragons.\n\n### Hunter's Prey (3rd Level)\n\nAt 3rd level, you gain one of the following features of your choice.\n\n**Colossus Slayer.** Your tenacity can wear down the most potent foes. When you hit a creature with a weapon attack, the creature takes an extra 1d8 damage if it's below its hit point maximum. You can deal this extra damage only once per turn.\n\n**Giant Killer.** When a Large or larger creature within 5 feet of you hits or misses you with an attack, you can use your reaction to attack that creature immediately after its attack, provided that you can see the creature.\n\n**Horde Breaker.** Once on each of your turns when you make a weapon attack, you can make another attack with the same weapon against a different creature that is within 5 feet of the original target and within range of your weapon.\n\n### Defensive Tactics (7th Level)\n\nAt 7th level, you gain one of the following features of your choice.\n\n**Escape the Horde.** Opportunity attacks against you are made with disadvantage.\n\n**Multiattack Defense.** When a creature hits you with an attack, you gain a +4 bonus to AC against all subsequent attacks made by that creature for the rest of the turn.\n\n**Steel Will.** You have advantage on saving throws against being frightened.\n\n### Multiattack (11th Level)\n\nAt 11th level, you gain one of the following features of your choice.\n\n**Volley.** You can use your action to make a ranged attack against any number of creatures within 10 feet of a point you can see within your weapon's normal range. You must have ammunition for each target, as normal, and you make a separate attack roll for each target.\n\n**Whirlwind Attack.** You can use your action to make a melee attack against any number of creatures within 5 feet of you, with a separate attack roll for each target.\n\n### Superior Hunter's Defense (15th Level)\n\nAt 15th level, you gain one of the following features of your choice.\n\n**Evasion.** When you are subjected to an effect, such as a red dragon's fiery breath or a Lightning Bolt spell, that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw, and only half damage if you fail.\n\n**Stand Against the Tide.** When a hostile creature misses you with a melee attack, you can use your reaction to force that creature to repeat the same attack against another creature (other than itself) of your choice.\n\n**Uncanny Dodge.** When an attacker that you can see hits you with an attack, you can use your reaction to halve the attack's damage against you.",
+    "metadata_json": {
+      "parent_class": "ranger",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Hunter's Prey"],
+        "7": ["Defensive Tactics"],
+        "11": ["Multiattack"],
+        "15": ["Superior Hunter's Defense"]
+      }
+    },
+    "tags": "subclass,ranger,hunter,martial,versatile,wilderness,combat",
+    "source": "SRD 5.1",
+    "sort_order": 8
+  },
+  {
+    "slug": "thief",
+    "title": "Thief",
+    "category": "subclass",
+    "subcategory": "rogue",
+    "ruleset": "5e-2014",
+    "summary": "A roguish archetype that hones skills of stealth and agility, excelling at burglary, dungeoneering, and quick reflexes.",
+    "content": "## Thief\n\nYou hone your skills in the larcenous arts. Burglars, bandits, cutpurses, and other criminals typically follow this archetype, but so do rogues who prefer to think of themselves as professional treasure seekers, explorers, delvers, and investigators.\n\n### Fast Hands (3rd Level)\n\nStarting at 3rd level, you can use the bonus action granted by your Cunning Action to make a Dexterity (Sleight of Hand) check, use your thieves' tools to disarm a trap or open a lock, or take the Use an Object action.\n\n### Second-Story Work (3rd Level)\n\nWhen you choose this archetype at 3rd level, you gain the ability to climb faster than normal; climbing no longer costs you extra movement. In addition, when you make a running jump, the distance you cover increases by a number of feet equal to your Dexterity modifier.\n\n### Supreme Stealth (9th Level)\n\nStarting at 9th level, you have advantage on a Dexterity (Stealth) check if you move no more than half your speed on the same turn.\n\n### Use Magic Device (13th Level)\n\nBy 13th level, you have learned enough about the workings of magic that you can improvise the use of items even when they are not intended for you. You ignore all class, race, and level requirements on the use of magic items.\n\n### Thief's Reflexes (17th Level)\n\nWhen you reach 17th level, you have become adept at laying ambushes and quickly escaping danger. You can take two turns during the first round of any combat. You take your first turn at your normal initiative and your second turn at your initiative minus 10. You can't use this feature when you are surprised.",
+    "metadata_json": {
+      "parent_class": "rogue",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Fast Hands", "Second-Story Work"],
+        "9": ["Supreme Stealth"],
+        "13": ["Use Magic Device"],
+        "17": ["Thief's Reflexes"]
+      }
+    },
+    "tags": "subclass,rogue,thief,stealth,dexterity,cunning,agility",
+    "source": "SRD 5.1",
+    "sort_order": 9
+  },
+  {
+    "slug": "draconic-bloodline",
+    "title": "Draconic Bloodline",
+    "category": "subclass",
+    "subcategory": "sorcerer",
+    "ruleset": "5e-2014",
+    "summary": "A sorcerous origin tracing magic back to a draconic ancestor, granting resilience, elemental affinity, and eventually wings.",
+    "content": "## Draconic Bloodline\n\nYour innate magic comes from draconic magic that was mingled with your blood or that of your ancestors. Most often, sorcerers with this origin trace their descent back to a mighty sorcerer of ancient times who made a bargain with a dragon or who might even have claimed a dragon parent. Some of these bloodlines are well established in the world, but most are obscure.\n\n### Dragon Ancestor (1st Level)\n\nAt 1st level, you choose one type of dragon as your ancestor. The damage type associated with each dragon is used by features you gain later.\n\n| Dragon | Damage Type |\n|---|---|\n| Black | Acid |\n| Blue | Lightning |\n| Brass | Fire |\n| Bronze | Lightning |\n| Copper | Acid |\n| Gold | Fire |\n| Green | Poison |\n| Red | Fire |\n| Silver | Cold |\n| White | Cold |\n\nYou can speak, read, and write Draconic. Additionally, whenever you make a Charisma check when interacting with dragons, your proficiency bonus is doubled if it applies to the check.\n\n### Draconic Resilience (1st Level)\n\nAs magic flows through your body, it causes physical traits of your dragon ancestors to emerge. At 1st level, your hit point maximum increases by 1 and increases by 1 again whenever you gain a level in this class. Additionally, parts of your skin are covered by a thin sheen of dragon-like scales. When you aren't wearing armor, your AC equals 13 + your Dexterity modifier.\n\n### Elemental Affinity (6th Level)\n\nStarting at 6th level, when you cast a spell that deals damage of the type associated with your draconic ancestry, you can add your Charisma modifier to one damage roll of that spell. At the same time, you can spend 1 sorcery point to gain resistance to that damage type for 1 hour.\n\n### Dragon Wings (14th Level)\n\nAt 14th level, you gain the ability to sprout a pair of dragon wings from your back, gaining a flying speed equal to your current speed. You can create these wings as a bonus action on your turn. They last until you dismiss them as a bonus action on your turn. You can't manifest your wings while wearing armor unless the armor is made to accommodate them, and clothing not made to accommodate your wings might be destroyed when you manifest them.\n\n### Draconic Presence (18th Level)\n\nBeginning at 18th level, you can channel the dread presence of your dragon ancestor, causing those around you to become awestruck or frightened. As an action, you can spend 5 sorcery points to draw on this power and exude an aura of awe or fear (your choice) to a distance of 60 feet. For 1 minute or until you lose your concentration (as if you were casting a concentration spell), each hostile creature that starts its turn in this aura must succeed on a Wisdom saving throw or be charmed (if you chose awe) or frightened (if you chose fear) until the aura ends. A creature that succeeds on this saving throw is immune to your aura for 24 hours.",
+    "metadata_json": {
+      "parent_class": "sorcerer",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Dragon Ancestor", "Draconic Resilience"],
+        "6": ["Elemental Affinity"],
+        "14": ["Dragon Wings"],
+        "18": ["Draconic Presence"]
+      }
+    },
+    "tags": "subclass,sorcerer,draconic bloodline,dragon,elemental,arcane,wings",
+    "source": "SRD 5.1",
+    "sort_order": 10
+  },
+  {
+    "slug": "the-fiend",
+    "title": "The Fiend",
+    "category": "subclass",
+    "subcategory": "warlock",
+    "ruleset": "5e-2014",
+    "summary": "An otherworldly patron pact with a fiend of the lower planes, granting dark resilience and fiery power.",
+    "content": "## The Fiend\n\nYou have made a pact with a fiend from the lower planes of existence, a being whose aims are evil, even if you strive against those aims. Such beings desire the corruption or destruction of all things, ultimately including you.\n\n### Expanded Spell List\n\nThe Fiend lets you choose from an expanded list of spells when you learn a warlock spell. The following spells are added to the warlock spell list for you.\n\n| Spell Level | Spells |\n|---|---|\n| 1st | Burning Hands, Command |\n| 2nd | Blindness/Deafness, Scorching Ray |\n| 3rd | Fireball, Stinking Cloud |\n| 4th | Fire Shield, Wall of Fire |\n| 5th | Flame Strike, Hallow |\n\n### Dark One's Blessing (1st Level)\n\nStarting at 1st level, when you reduce a hostile creature to 0 hit points, you gain temporary hit points equal to your Charisma modifier + your warlock level (minimum of 1).\n\n### Dark One's Own Luck (6th Level)\n\nStarting at 6th level, you can call on your patron to alter fate in your favor. When you make an ability check or a saving throw, you can use this feature to add a d10 to your roll. You can do so after seeing the initial roll but before any of the roll's effects occur. Once you use this feature, you can't use it again until you finish a short or long rest.\n\n### Fiendish Resilience (10th Level)\n\nStarting at 10th level, you can choose one damage type when you finish a short or long rest. You gain resistance to that damage type until you choose a different one with this feature. Damage from magical weapons or silver weapons ignores this resistance.\n\n### Hurl Through Hell (14th Level)\n\nStarting at 14th level, when you hit a creature with an attack, you can use this feature to instantly transport the target through the lower planes. The creature disappears and hurtles through a nightmare landscape. At the end of your next turn, the target returns to the space it previously occupied, or the nearest unoccupied space. If the target is not a fiend, it takes 10d10 psychic damage as it reels from its horrific experience. Once you use this feature, you can't use it again until you finish a long rest.",
+    "metadata_json": {
+      "parent_class": "warlock",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Expanded Spell List", "Dark One's Blessing"],
+        "6": ["Dark One's Own Luck"],
+        "10": ["Fiendish Resilience"],
+        "14": ["Hurl Through Hell"]
+      }
+    },
+    "tags": "subclass,warlock,the fiend,fire,temporary hp,resilience,lower planes",
+    "source": "SRD 5.1",
+    "sort_order": 11
+  },
+  {
+    "slug": "school-of-evocation",
+    "title": "School of Evocation",
+    "category": "subclass",
+    "subcategory": "wizard",
+    "ruleset": "5e-2014",
+    "summary": "An arcane tradition focused on spells that create powerful elemental effects such as blasts of fire, bolts of lightning, and walls of ice.",
+    "content": "## School of Evocation\n\nYou focus your study on magic that creates powerful elemental effects such as bitter cold, searing flame, rolling thunder, crackling lightning, and burning acid. Some evokers find employment in military forces, serving as artillery to blast enemy armies from afar. Others use their spectacular power to protect the weak, while some seek their own gain as bandits, adventurers, or aspiring tyrants.\n\n### Evocation Savant (2nd Level)\n\nBeginning when you select this school at 2nd level, the gold and time you must spend to copy an evocation spell into your spellbook is halved.\n\n### Sculpt Spells (2nd Level)\n\nBeginning at 2nd level, you can create pockets of relative safety within the effects of your evocation spells. When you cast an evocation spell that affects other creatures that you can see, you can choose a number of them equal to 1 + the spell's level. The chosen creatures automatically succeed on their saving throws against the spell, and they take no damage if they would normally take half damage on a successful save.\n\n### Potent Cantrip (6th Level)\n\nStarting at 6th level, your damaging cantrips affect even creatures that avoid the brunt of the effect. When a creature succeeds on a saving throw against your cantrip, the creature takes half the cantrip's damage (if any) but suffers no additional effect from the cantrip.\n\n### Empowered Evocation (10th Level)\n\nBeginning at 10th level, you can add your Intelligence modifier to one damage roll of any wizard evocation spell you cast.\n\n### Overchannel (14th Level)\n\nStarting at 14th level, you can increase the power of your simpler spells. When you cast a wizard spell of 1st through 5th level that deals damage, you can deal maximum damage with that spell. The first time you do so, you suffer no adverse effect. If you use this feature again before you finish a long rest, you take 2d12 necrotic damage for each level of the spell, immediately after you cast it. Each time you use this feature again before finishing a long rest, the necrotic damage per spell level increases by 1d12.",
+    "metadata_json": {
+      "parent_class": "wizard",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Evocation Savant", "Sculpt Spells"],
+        "6": ["Potent Cantrip"],
+        "10": ["Empowered Evocation"],
+        "14": ["Overchannel"]
+      }
+    },
+    "tags": "subclass,wizard,school of evocation,evocation,elemental,damage,arcane",
+    "source": "SRD 5.1",
+    "sort_order": 12
+  }
+]

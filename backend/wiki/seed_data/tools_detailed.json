@@ -1,0 +1,704 @@
+[
+  {
+    "slug": "alchemists-supplies",
+    "title": "Alchemist's Supplies",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for creating alchemical substances such as acid, alchemist's fire, antitoxin, and potions.",
+    "content": "## Alchemist's Supplies\n\n**Cost:** 50 gp\n**Weight:** 8 lb.\n\nAlchemist's supplies include two glass beakers, a metal frame to hold a beaker in place over an open flame, a glass stirring rod, a small mortar and pestle, and a pouch of common alchemical ingredients including salt, powdered iron, and purified water.\n\n### Proficiency\nProficiency with alchemist's supplies allows you to unlock more information on Arcana checks involving potions and similar materials. In addition, proficiency lets you add your proficiency bonus to any ability checks you make to create alchemical items.\n\n### Activities\n- **Create Alchemical Item:** Intelligence check\n- **Identify Substance:** Intelligence check\n- **Start a Fire:** Dexterity check (DC 15)\n- **Neutralize Acid:** Intelligence check (DC 10)\n\n### Who Gets Proficiency\n- Guild Artisan background (if alchemist guild)\n- Artificer class\n- Some subclasses and feats\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Acid (vial) | 15 | 12 gp 5 sp | 1 day |\n| Alchemist's Fire | 15 | 25 gp | 2 days |\n| Antitoxin | 15 | 25 gp | 1 day |\n| Perfume | 10 | 2 gp 5 sp | 4 hours |\n| Soap | 10 | 1 sp | 4 hours |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Identify a common alchemical substance |\n| 15 | Create a standard alchemical item |\n| 20 | Identify a rare or magical substance |\n| 25 | Create an advanced alchemical concoction |",
+    "metadata_json": {
+      "cost": "50 gp",
+      "weight": 8,
+      "ability": "Intelligence",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,alchemy,potions,acid,alchemists-fire,antitoxin,intelligence",
+    "source": "SRD 5.1",
+    "sort_order": 1
+  },
+  {
+    "slug": "brewers-supplies",
+    "title": "Brewer's Supplies",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for brewing beer, ale, mead, and other alcoholic beverages.",
+    "content": "## Brewer's Supplies\n\n**Cost:** 20 gp\n**Weight:** 9 lb.\n\nBrewing supplies include a large glass jug, a quantity of hops, a siphon, and several feet of tubing. A small still or fermenting barrel may also be included for longer brewing projects.\n\n### Proficiency\nProficiency with brewer's supplies gives you additional insight on Intelligence (History) checks concerning events that involve alcohol as a significant element. You can also identify the quality, origin, and approximate age of a beverage.\n\n### Activities\n- **Brew Ale or Beer:** Intelligence check\n- **Detect Poison in Drink:** Wisdom (Perception) check\n- **Identify Alcohol:** Intelligence check\n- **Purify Water:** Intelligence check (DC 10)\n\n### Who Gets Proficiency\n- Guild Artisan background (if brewer's guild)\n- Dwarf culture (common thematic choice)\n- Clan Crafter background\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Basic ale (gallon) | 10 | 2 sp | 1 week |\n| Fine beer (gallon) | 15 | 5 sp | 2 weeks |\n| Mead (gallon) | 15 | 1 gp | 4 weeks |\n| Spirits (gallon) | 20 | 2 gp | 6 weeks |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Brew a simple ale, purify water |\n| 15 | Identify the origin of a beverage |\n| 20 | Detect subtle poison in a drink |\n| 25 | Brew a legendary vintage |",
+    "metadata_json": {
+      "cost": "20 gp",
+      "weight": 9,
+      "ability": "Intelligence",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,brewing,ale,beer,mead,intelligence,dwarf",
+    "source": "SRD 5.1",
+    "sort_order": 2
+  },
+  {
+    "slug": "calligraphers-supplies",
+    "title": "Calligrapher's Supplies",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for beautiful handwriting, document creation, and map embellishment.",
+    "content": "## Calligrapher's Supplies\n\n**Cost:** 10 gp\n**Weight:** 5 lb.\n\nCalligrapher's supplies include ink, a dozen sheets of parchment, and three quills. They also include a small knife for sharpening quills, a ruler, and a magnifying lens.\n\n### Proficiency\nProficiency with calligrapher's supplies allows you to identify the writer of nonmagical script, determine the age and origin of a document, and create beautiful written works. You also gain additional insight on Investigation checks involving written documents.\n\n### Activities\n- **Identify Handwriting:** Intelligence check\n- **Determine Document Age:** Intelligence check\n- **Detect Forgery:** Intelligence (Investigation) check\n- **Create Illuminated Manuscript:** Dexterity check\n\n### Who Gets Proficiency\n- Guild Artisan background (if scribe's guild)\n- Sage background (common choice)\n- Cloistered Scholar background\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Copy a document (page) | 10 | 1 sp | 1 hour |\n| Illuminated manuscript page | 15 | 5 gp | 1 day |\n| Forged document | 15-25 | varies | varies |\n| Spell scroll (with spellcasting) | 15+ | varies | varies |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Copy a simple document |\n| 15 | Identify origin of handwriting |\n| 20 | Create a convincing forgery |\n| 25 | Perfectly replicate a complex seal or sigil |",
+    "metadata_json": {
+      "cost": "10 gp",
+      "weight": 5,
+      "ability": "Intelligence",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,calligraphy,writing,documents,forgery,intelligence,sage",
+    "source": "SRD 5.1",
+    "sort_order": 3
+  },
+  {
+    "slug": "carpenters-tools",
+    "title": "Carpenter's Tools",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for woodworking, building structures, and crafting wooden objects.",
+    "content": "## Carpenter's Tools\n\n**Cost:** 8 gp\n**Weight:** 6 lb.\n\nCarpenter's tools include a saw, a hammer, nails, a hatchet, a square, a ruler, an adze, a plane, and a chisel.\n\n### Proficiency\nProficiency with carpenter's tools allows you to build wooden structures, craft furniture and wooden objects, and identify structural weaknesses in wooden buildings. You gain additional insight on Investigation checks related to wooden structures and mechanisms.\n\n### Activities\n- **Build Shelter:** Strength check\n- **Build Furniture:** Dexterity check\n- **Identify Structural Weakness:** Intelligence check\n- **Repair Wooden Structure:** Strength check\n- **Fortify a Door:** Strength check (DC 15)\n- **Build a Ladder:** Dexterity check (DC 10)\n\n### Who Gets Proficiency\n- Guild Artisan background (if carpenter's guild)\n- Folk Hero background\n- Artificer class\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Simple furniture (stool) | 10 | 5 sp | 4 hours |\n| Wooden shield | 10 | 5 gp | 1 day |\n| Ladder (10 ft.) | 10 | 5 sp | 2 hours |\n| Chest | 12 | 2 gp 5 sp | 8 hours |\n| Ram (portable) | 15 | 2 gp | 1 day |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Build basic shelter, craft simple item |\n| 15 | Build sturdy furniture, fortify a door |\n| 20 | Identify hidden compartments in woodwork |\n| 25 | Build a complex mechanism (drawbridge, etc.) |",
+    "metadata_json": {
+      "cost": "8 gp",
+      "weight": 6,
+      "ability": "Strength",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,carpentry,woodworking,building,construction,strength",
+    "source": "SRD 5.1",
+    "sort_order": 4
+  },
+  {
+    "slug": "cartographers-tools",
+    "title": "Cartographer's Tools",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for creating maps, charting terrain, and navigation.",
+    "content": "## Cartographer's Tools\n\n**Cost:** 15 gp\n**Weight:** 6 lb.\n\nCartographer's tools consist of a quill, ink, parchment, a pair of compasses, calipers, and a ruler. Proficiency with these tools lets you draft and read maps with great accuracy.\n\n### Proficiency\nProficiency with cartographer's tools allows you to draw accurate maps, determine your position on a map, estimate distances, and gain additional insight on Survival checks to avoid getting lost.\n\n### Activities\n- **Draw a Map:** Intelligence check\n- **Determine Position:** Wisdom (Survival) check\n- **Estimate Distance:** Intelligence check\n- **Survey an Area:** Intelligence check\n- **Identify Map Errors:** Intelligence check\n\n### Who Gets Proficiency\n- Guild Artisan background (if cartographer's guild)\n- Outlander background (common thematic choice)\n- Ranger class (thematic)\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Simple area map | 10 | 2 sp | 4 hours |\n| Detailed regional map | 15 | 5 gp | 1 week |\n| Nautical chart | 15 | 10 gp | 2 weeks |\n| Dungeon map (from memory) | 20 | 1 gp | 8 hours |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Draw a rough sketch map of a small area |\n| 15 | Create an accurate map, estimate travel time |\n| 20 | Identify a forged or deliberately inaccurate map |\n| 25 | Map a region from vague descriptions |",
+    "metadata_json": {
+      "cost": "15 gp",
+      "weight": 6,
+      "ability": "Intelligence",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,cartography,maps,navigation,intelligence,survival",
+    "source": "SRD 5.1",
+    "sort_order": 5
+  },
+  {
+    "slug": "cobblers-tools",
+    "title": "Cobbler's Tools",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for making and repairing shoes, boots, and other footwear.",
+    "content": "## Cobbler's Tools\n\n**Cost:** 5 gp\n**Weight:** 5 lb.\n\nCobbler's tools consist of a hammer, an awl, a knife, a shoe stand, a cutter, spare leather, and thread. These tools allow you to create and repair footwear.\n\n### Proficiency\nProficiency with cobbler's tools allows you to craft comfortable, durable footwear and to maintain and repair shoes and boots. You gain additional insight on Investigation checks involving tracks and footprints.\n\n### Activities\n- **Craft Footwear:** Dexterity check\n- **Repair Shoes:** Dexterity check\n- **Analyze Footprints:** Intelligence (Investigation) check\n- **Create Hidden Compartment in Boot:** Dexterity check (DC 20)\n\n### Who Gets Proficiency\n- Guild Artisan background (if cobbler's guild)\n- Urchin background (thematic)\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Simple shoes | 10 | 5 sp | 4 hours |\n| Sturdy boots | 12 | 1 gp | 8 hours |\n| Fine leather boots | 15 | 5 gp | 2 days |\n| Boots with hidden compartment | 20 | 10 gp | 3 days |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Repair worn shoes, craft simple footwear |\n| 15 | Analyze footprints for size and weight |\n| 20 | Create hidden compartment, identify exotic leather |\n| 25 | Craft masterwork boots (advantage on travel checks) |",
+    "metadata_json": {
+      "cost": "5 gp",
+      "weight": 5,
+      "ability": "Dexterity",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,cobbler,shoes,boots,footwear,dexterity,tracks",
+    "source": "SRD 5.1",
+    "sort_order": 6
+  },
+  {
+    "slug": "cooks-utensils",
+    "title": "Cook's Utensils",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Utensils used for preparing meals, preserving food, and creating culinary delights.",
+    "content": "## Cook's Utensils\n\n**Cost:** 1 gp\n**Weight:** 8 lb.\n\nCook's utensils include a metal pot, knives, forks, a stirring spoon, and a ladle. They also include herbs, spices, and basic seasonings.\n\n### Proficiency\nProficiency with cook's utensils allows you to prepare meals that provide additional benefits during short rests. You can also detect spoiled or poisoned food with greater accuracy.\n\n### Activities\n- **Prepare a Meal:** Wisdom check\n- **Detect Poison in Food:** Wisdom (Perception) check\n- **Identify Ingredients:** Intelligence check\n- **Prepare a Feast:** Wisdom check (DC 15)\n- **Preserve Food:** Wisdom check (DC 12)\n\n### Who Gets Proficiency\n- Guild Artisan background (if cook's guild)\n- Sailor background (ship's cook variant)\n- Halfling culture (common thematic choice)\n\n### Special Benefit\nDuring a short rest, if you have proficiency with cook's utensils and have access to ingredients, you can prepare a nourishing meal for up to 6 creatures. Each creature that eats the meal regains 1 extra hit point per Hit Die spent during the short rest.\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Prepare a basic but satisfying meal |\n| 13 | Detect spoiled or poisoned food |\n| 15 | Prepare a feast, improvise with unusual ingredients |\n| 20 | Create a meal that provides a temporary bonus |",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": 8,
+      "ability": "Wisdom",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,cooking,food,meals,short-rest,healing,wisdom",
+    "source": "SRD 5.1",
+    "sort_order": 7
+  },
+  {
+    "slug": "glassblowers-tools",
+    "title": "Glassblower's Tools",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for shaping glass into vials, bottles, ornaments, and other glass objects.",
+    "content": "## Glassblower's Tools\n\n**Cost:** 30 gp\n**Weight:** 5 lb.\n\nGlassblower's tools include a blowpipe, a marver (flat surface), tweezers, jacks (shaping tool), and blocks. A small furnace or access to a forge is also required for working glass.\n\n### Proficiency\nProficiency with glassblower's tools allows you to create glass objects including vials, bottles, windows, lenses, and decorative items. You gain additional insight on Investigation checks related to glass objects and can identify the quality and origin of glass.\n\n### Activities\n- **Create Glass Object:** Dexterity check\n- **Identify Glass Quality:** Intelligence check\n- **Repair Glass Object:** Dexterity check\n- **Create Magnifying Lens:** Dexterity check (DC 20)\n\n### Who Gets Proficiency\n- Guild Artisan background (if glassblower's guild)\n- Artificer class (thematic)\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Glass vial | 10 | 5 sp | 1 hour |\n| Glass bottle | 10 | 1 gp | 2 hours |\n| Hourglass | 15 | 12 gp 5 sp | 1 day |\n| Magnifying glass | 20 | 50 gp | 2 days |\n| Spyglass lens | 20 | 500 gp | 1 week |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Create a simple glass container |\n| 15 | Create decorative glassware |\n| 20 | Create a precision lens |\n| 25 | Create an intricate glass sculpture |",
+    "metadata_json": {
+      "cost": "30 gp",
+      "weight": 5,
+      "ability": "Dexterity",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,glassblowing,glass,vials,bottles,lenses,dexterity",
+    "source": "SRD 5.1",
+    "sort_order": 8
+  },
+  {
+    "slug": "jewelers-tools",
+    "title": "Jeweler's Tools",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for cutting gems, appraising jewelry, and crafting fine adornments.",
+    "content": "## Jeweler's Tools\n\n**Cost:** 25 gp\n**Weight:** 2 lb.\n\nJeweler's tools consist of a small saw and hammer, files, pliers, tweezers, and a small magnifying glass. They allow you to work with precious metals and gemstones.\n\n### Proficiency\nProficiency with jeweler's tools allows you to identify gems, determine the value of jewelry, and craft fine adornments. You gain additional insight on Investigation checks involving gems or jewelry.\n\n### Activities\n- **Appraise Gems:** Intelligence check\n- **Cut Gems:** Dexterity check\n- **Identify Gemstone:** Intelligence check\n- **Craft Jewelry:** Dexterity check\n- **Detect Counterfeit Gems:** Intelligence (Investigation) check\n\n### Who Gets Proficiency\n- Guild Artisan background (if jeweler's guild)\n- Rock Gnome (natural affinity for gemwork)\n- Artificer class (common choice)\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Simple ring | 10 | 5 gp | 4 hours |\n| Gem setting | 15 | varies | 8 hours |\n| Fine necklace | 15 | 25 gp | 2 days |\n| Ornate crown | 20 | 250 gp | 1 week |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Identify a common gemstone |\n| 15 | Accurately appraise jewelry value |\n| 20 | Detect a counterfeit gem, cut a precision facet |\n| 25 | Identify a rare magical gem's properties |",
+    "metadata_json": {
+      "cost": "25 gp",
+      "weight": 2,
+      "ability": "Intelligence",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,jeweler,gems,gemstones,jewelry,appraisal,intelligence",
+    "source": "SRD 5.1",
+    "sort_order": 9
+  },
+  {
+    "slug": "leatherworkers-tools",
+    "title": "Leatherworker's Tools",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for working leather into armor, clothing, bags, and other goods.",
+    "content": "## Leatherworker's Tools\n\n**Cost:** 5 gp\n**Weight:** 5 lb.\n\nLeatherworker's tools include a knife, a small mallet, an edge shaper, a hole punch, thread, and leather scraps. They allow you to create and repair leather goods.\n\n### Proficiency\nProficiency with leatherworker's tools allows you to add your proficiency bonus to any ability checks you make to craft or repair leather goods. You gain additional insight on Investigation checks involving leather items.\n\n### Activities\n- **Craft Leather Goods:** Dexterity check\n- **Repair Leather Armor:** Dexterity check\n- **Tan Hides:** Constitution check\n- **Identify Leather Type:** Intelligence check\n- **Create Hidden Pocket:** Dexterity check (DC 15)\n\n### Who Gets Proficiency\n- Guild Artisan background (if leatherworker's guild)\n- Outlander background (thematic)\n- Folk Hero background (thematic)\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Leather pouch | 10 | 2 sp | 2 hours |\n| Waterskin | 10 | 1 sp | 4 hours |\n| Leather armor | 12 | 5 gp | 2 days |\n| Studded leather armor | 15 | 22 gp 5 sp | 5 days |\n| Saddle | 15 | 12 gp 5 sp | 3 days |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Craft basic leather goods, repair minor damage |\n| 15 | Craft leather armor, create hidden pocket |\n| 20 | Identify exotic leather (dragon, displacer beast) |\n| 25 | Craft masterwork leather armor |",
+    "metadata_json": {
+      "cost": "5 gp",
+      "weight": 5,
+      "ability": "Dexterity",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,leatherworking,leather,armor,bags,dexterity",
+    "source": "SRD 5.1",
+    "sort_order": 10
+  },
+  {
+    "slug": "masons-tools",
+    "title": "Mason's Tools",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for working with stone, building walls, and crafting stone structures.",
+    "content": "## Mason's Tools\n\n**Cost:** 10 gp\n**Weight:** 8 lb.\n\nMason's tools consist of a trowel, a hammer, a chisel, brushes, and a square. They allow you to work with stone, build walls, and craft stone objects.\n\n### Proficiency\nProficiency with mason's tools allows you to identify structural weaknesses in stone buildings and walls, determine the age and origin of stonework, and craft stone structures. You gain additional insight on Investigation checks involving stone structures.\n\n### Activities\n- **Build Stone Wall:** Strength check\n- **Identify Structural Weakness:** Intelligence check\n- **Determine Stonework Age:** Intelligence check\n- **Chisel Inscription:** Dexterity check\n- **Demolish Structure:** Strength check\n\n### Who Gets Proficiency\n- Guild Artisan background (if mason's guild)\n- Dwarf culture (common thematic choice)\n- Clan Crafter background\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Stone block | 10 | 1 sp | 2 hours |\n| Simple stone wall (5 ft) | 12 | 1 gp | 8 hours |\n| Stone statue (small) | 15 | 10 gp | 1 week |\n| Reinforced wall section | 20 | 25 gp | 3 days |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Shape a stone block, basic wall repair |\n| 15 | Find weak points in a wall, carve an inscription |\n| 20 | Identify hidden passages in stonework |\n| 25 | Determine exact age and origin of ancient stonework |",
+    "metadata_json": {
+      "cost": "10 gp",
+      "weight": 8,
+      "ability": "Strength",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,masonry,stone,building,construction,strength,dwarf",
+    "source": "SRD 5.1",
+    "sort_order": 11
+  },
+  {
+    "slug": "painters-supplies",
+    "title": "Painter's Supplies",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Supplies used for creating paintings, illustrations, and artistic works.",
+    "content": "## Painter's Supplies\n\n**Cost:** 10 gp\n**Weight:** 5 lb.\n\nPainter's supplies include an easel, canvas, paints, brushes, charcoal sticks, and a palette. They allow you to create paintings, illustrations, and other visual art.\n\n### Proficiency\nProficiency with painter's supplies allows you to create works of art, paint portraits and landscapes, and add visual details to maps or documents. You gain additional insight on Investigation checks involving paintings and visual art.\n\n### Activities\n- **Paint a Portrait:** Dexterity check\n- **Create a Landscape:** Wisdom (Perception) check\n- **Forge a Painting:** Dexterity check\n- **Paint a Sign or Banner:** Dexterity check\n- **Identify Artistic Style:** Intelligence check\n\n### Who Gets Proficiency\n- Guild Artisan background (if painter's guild)\n- Entertainer background (thematic)\n- Noble background (cultured upbringing)\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Simple sign or banner | 10 | 5 sp | 2 hours |\n| Portrait | 15 | 5 gp | 1 day |\n| Landscape painting | 15 | 5 gp | 2 days |\n| Masterwork painting | 20 | 25 gp | 1 week |\n| Forged painting | 20+ | varies | varies |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Paint a simple sign, basic sketch |\n| 15 | Create a recognizable portrait |\n| 20 | Create a convincing forgery of a painting |\n| 25 | Paint a masterwork that evokes strong emotion |",
+    "metadata_json": {
+      "cost": "10 gp",
+      "weight": 5,
+      "ability": "Dexterity",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,painting,art,portraits,illustration,dexterity",
+    "source": "SRD 5.1",
+    "sort_order": 12
+  },
+  {
+    "slug": "potters-tools",
+    "title": "Potter's Tools",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for creating pottery, ceramics, and clay objects.",
+    "content": "## Potter's Tools\n\n**Cost:** 10 gp\n**Weight:** 3 lb.\n\nPotter's tools include potter's needles, ribs, scrapers, a knife, and calipers. A potter's wheel and kiln (or access to them) are also needed for complete work.\n\n### Proficiency\nProficiency with potter's tools allows you to create pottery and ceramic objects, identify the origin and age of ceramics, and reconstruct broken pottery. You gain additional insight on Investigation checks involving ceramic objects.\n\n### Activities\n- **Create Pottery:** Dexterity check\n- **Identify Ceramic Origin:** Intelligence check\n- **Reconstruct Broken Pottery:** Intelligence (Investigation) check\n- **Create Watertight Vessel:** Dexterity check (DC 15)\n\n### Who Gets Proficiency\n- Guild Artisan background (if potter's guild)\n- Hermit background (thematic)\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Simple pot or bowl | 10 | 2 cp | 4 hours |\n| Jug or pitcher | 10 | 2 cp | 4 hours |\n| Decorative vase | 15 | 5 sp | 1 day |\n| Watertight vessel | 15 | 1 gp | 8 hours |\n| Ornate ceramic sculpture | 20 | 5 gp | 3 days |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Create basic functional pottery |\n| 15 | Create decorative ceramics, watertight seals |\n| 20 | Reconstruct shattered pottery, identify ancient origin |\n| 25 | Create pottery that could pass as ancient or magical |",
+    "metadata_json": {
+      "cost": "10 gp",
+      "weight": 3,
+      "ability": "Dexterity",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,pottery,ceramics,clay,dexterity",
+    "source": "SRD 5.1",
+    "sort_order": 13
+  },
+  {
+    "slug": "smiths-tools",
+    "title": "Smith's Tools",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for forging metal weapons, armor, and other metal objects.",
+    "content": "## Smith's Tools\n\n**Cost:** 20 gp\n**Weight:** 8 lb.\n\nSmith's tools include hammers, tongs, charcoal, rags, and a whetstone. Access to a forge is required for most smithing work.\n\n### Proficiency\nProficiency with smith's tools allows you to forge metal weapons and armor, repair metal equipment, and identify the quality and origin of metalwork. You gain additional insight on History checks related to weapons and armor, and on Investigation checks involving metalwork.\n\n### Activities\n- **Forge Weapon or Armor:** Strength check\n- **Repair Metal Equipment:** Strength check\n- **Sharpen Weapon:** Dexterity check\n- **Identify Metal Quality:** Intelligence check\n- **Sunder Metal Object:** Strength check\n\n### Who Gets Proficiency\n- Guild Artisan background (if smith's guild)\n- Clan Crafter background\n- Artificer class\n- Forge Domain Cleric\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Iron nails (20) | 10 | 1 sp | 2 hours |\n| Metal weapon (simple) | 12 | half market | 1 day per 5 gp |\n| Metal weapon (martial) | 15 | half market | 1 day per 5 gp |\n| Chain mail | 18 | 37 gp 5 sp | 15 days |\n| Plate armor | 20 | 750 gp | 300 days |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Repair a cracked blade, forge nails |\n| 15 | Forge a functional weapon, identify steel quality |\n| 20 | Forge a masterwork weapon, repair magical weapon |\n| 25 | Forge an adamantine or mithral alloy item |",
+    "metadata_json": {
+      "cost": "20 gp",
+      "weight": 8,
+      "ability": "Strength",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,smithing,forge,weapons,armor,metal,strength,dwarf",
+    "source": "SRD 5.1",
+    "sort_order": 14
+  },
+  {
+    "slug": "tinkers-tools",
+    "title": "Tinker's Tools",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for repairing and creating small mechanical devices and clockwork mechanisms.",
+    "content": "## Tinker's Tools\n\n**Cost:** 50 gp\n**Weight:** 10 lb.\n\nTinker's tools include a variety of hand tools, thread, needles, a whetstone, scraps of cloth and leather, and a small pot of glue. They are used for making repairs and creating small devices.\n\n### Proficiency\nProficiency with tinker's tools allows you to repair mundane objects, create small clockwork devices, and understand mechanical contraptions. You gain additional insight on Investigation checks involving traps and mechanical devices.\n\n### Activities\n- **Repair Object:** Intelligence check\n- **Create Clockwork Device:** Intelligence check\n- **Understand Mechanism:** Intelligence check\n- **Improvise Temporary Repair:** Intelligence check (DC 10)\n- **Disable Mechanical Trap:** Intelligence check\n\n### Who Gets Proficiency\n- Rock Gnome (racial trait: Tinker)\n- Guild Artisan background (if tinker's guild)\n- Artificer class\n\n### Rock Gnome Tinker Devices\nRock Gnomes with tinker's tools proficiency can spend 1 hour and 10 gp to create a Tiny clockwork device (AC 5, 1 hp). Options include:\n- **Clockwork Toy:** Moves 5 ft. in random direction each turn for 1 minute\n- **Fire Starter:** Produces miniature flame (as a lighter)\n- **Music Box:** Plays a single song at moderate volume when opened\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Temporary repair, identify simple mechanism |\n| 15 | Create a clockwork device, repair complex item |\n| 20 | Disable a complex mechanical trap |\n| 25 | Create an intricate clockwork automaton |",
+    "metadata_json": {
+      "cost": "50 gp",
+      "weight": 10,
+      "ability": "Intelligence",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,tinker,clockwork,mechanical,repair,intelligence,gnome,artificer",
+    "source": "SRD 5.1",
+    "sort_order": 15
+  },
+  {
+    "slug": "weavers-tools",
+    "title": "Weaver's Tools",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for weaving cloth, creating textiles, and crafting fabric goods.",
+    "content": "## Weaver's Tools\n\n**Cost:** 1 gp\n**Weight:** 5 lb.\n\nWeaver's tools include thread, needles, and scraps of cloth. They also include a small hand loom for creating cloth while traveling.\n\n### Proficiency\nProficiency with weaver's tools allows you to create cloth, weave tapestries, repair clothing, and identify the quality and origin of textiles. You gain additional insight on Investigation checks involving fabrics and textiles.\n\n### Activities\n- **Weave Cloth:** Dexterity check\n- **Repair Clothing:** Dexterity check\n- **Create Tapestry:** Dexterity check\n- **Identify Fabric Origin:** Intelligence check\n- **Create Rope from Fibers:** Dexterity check (DC 12)\n\n### Who Gets Proficiency\n- Guild Artisan background (if weaver's guild)\n- Folk Hero background (thematic)\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Cloth (1 sq. yard) | 10 | 5 cp | 4 hours |\n| Common clothing | 10 | 2 sp 5 cp | 8 hours |\n| Fine clothing | 15 | 7 gp 5 sp | 3 days |\n| Rope (50 ft. from fibers) | 12 | 5 sp | 1 day |\n| Tapestry | 15 | 25 gp | 2 weeks |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Weave basic cloth, repair torn clothing |\n| 15 | Create fine garments, identify fabric origin |\n| 20 | Create a detailed tapestry |\n| 25 | Weave a cloth that mimics silk from common fibers |",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": 5,
+      "ability": "Dexterity",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,weaving,cloth,textiles,clothing,dexterity",
+    "source": "SRD 5.1",
+    "sort_order": 16
+  },
+  {
+    "slug": "woodcarvers-tools",
+    "title": "Woodcarver's Tools",
+    "category": "tool",
+    "subcategory": "artisans-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for carving wood into decorative objects, arrows, and small wooden items.",
+    "content": "## Woodcarver's Tools\n\n**Cost:** 1 gp\n**Weight:** 5 lb.\n\nWoodcarver's tools consist of a knife, a gouge, and a small saw. They are used for detailed woodwork on a smaller scale than carpenter's tools.\n\n### Proficiency\nProficiency with woodcarver's tools allows you to carve intricate wooden objects, craft arrows and bolts, and create decorative woodwork. You gain additional insight on Nature checks concerning trees and wood.\n\n### Activities\n- **Carve Wooden Object:** Dexterity check\n- **Craft Arrows/Bolts:** Dexterity check\n- **Create Wooden Figurine:** Dexterity check\n- **Repair Wooden Weapon Handle:** Dexterity check\n- **Identify Wood Type:** Intelligence (Nature) check\n\n### Who Gets Proficiency\n- Guild Artisan background (if woodcarver's guild)\n- Outlander background (thematic)\n- Folk Hero background (thematic)\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Arrows (20) | 10 | 5 sp | 4 hours |\n| Crossbow bolts (20) | 10 | 5 sp | 4 hours |\n| Wooden figurine | 12 | 1 sp | 2 hours |\n| Club or quarterstaff | 10 | 5 cp | 2 hours |\n| Decorative carving | 15 | 1 gp | 1 day |\n| Wooden holy symbol | 12 | 5 sp | 4 hours |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Carve arrows, whittle a simple figurine |\n| 15 | Create detailed decorative carving |\n| 20 | Carve an intricate scene or relief |\n| 25 | Create a wooden carving of lifelike quality |",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": 5,
+      "ability": "Dexterity",
+      "type": "artisan"
+    },
+    "tags": "tool,artisan,woodcarving,wood,arrows,bolts,dexterity,nature",
+    "source": "SRD 5.1",
+    "sort_order": 17
+  },
+  {
+    "slug": "dice-set",
+    "title": "Dice Set",
+    "category": "tool",
+    "subcategory": "gaming-sets",
+    "ruleset": "universal",
+    "summary": "A set of dice used for gambling games, often found in taverns and common rooms.",
+    "content": "## Dice Set\n\n**Cost:** 1 sp\n**Weight:** —\n\nA complete set of polyhedral dice used for various gambling games popular in taverns and common rooms across the realms.\n\n### Proficiency\nProficiency with a dice set allows you to add your proficiency bonus to ability checks you make to play games using dice. It also gives you insight into cheating at dice games.\n\n### Activities\n- **Play a Dice Game:** Wisdom check\n- **Spot Cheating:** Wisdom (Insight) check\n- **Cheat at Dice:** Dexterity (Sleight of Hand) check\n- **Hustle for Money:** Charisma (Deception) check\n\n### Who Gets Proficiency\n- Criminal background (common choice)\n- Sailor background (common choice)\n- Soldier background (common choice)\n\n### Gambling Mechanics\nDuring downtime, a character proficient with dice can gamble to earn or lose money:\n1. Stake a wager (1 gp to 100 gp)\n2. Make three checks: Wisdom (Insight), Charisma (Deception), and Charisma (Intimidation)\n3. Results determine net gain or loss\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Win against casual players |\n| 15 | Win against experienced gamblers |\n| 15 | Spot loaded or weighted dice |\n| 20 | Successfully cheat without being detected |",
+    "metadata_json": {
+      "cost": "1 sp",
+      "weight": 0,
+      "ability": "Wisdom",
+      "type": "gaming"
+    },
+    "tags": "tool,gaming,dice,gambling,tavern,wisdom,deception",
+    "source": "SRD 5.1",
+    "sort_order": 18
+  },
+  {
+    "slug": "dragonchess-set",
+    "title": "Dragonchess Set",
+    "category": "tool",
+    "subcategory": "gaming-sets",
+    "ruleset": "universal",
+    "summary": "A strategic board game played on three stacked boards, popular among nobles and scholars.",
+    "content": "## Dragonchess Set\n\n**Cost:** 1 gp\n**Weight:** 1/2 lb.\n\nDragonchess is a complex strategy game played on three stacked boards representing the sky, the ground, and the underground. It uses different pieces including dragons, griffons, sylphs, warriors, oliphants, and basilisks.\n\n### Proficiency\nProficiency with dragonchess allows you to add your proficiency bonus to ability checks you make to play the game. It also demonstrates strategic thinking and may help with tactical planning.\n\n### Activities\n- **Play Dragonchess:** Intelligence check\n- **Analyze Strategy:** Intelligence check\n- **Teach the Game:** Charisma check\n- **Win a Tournament:** Intelligence check (contested)\n\n### Who Gets Proficiency\n- Noble background (common choice)\n- Sage background (common choice)\n- Some military backgrounds\n\n### Social Uses\nDragonchess is a popular pastime among the nobility and intelligentsia. Proficiency can:\n- Help establish rapport with nobles and scholars\n- Demonstrate tactical acumen to military leaders\n- Serve as a cover for secret meetings or dead drops\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Beat a casual player |\n| 15 | Beat an experienced player |\n| 20 | Win a tournament |\n| 25 | Beat a grand master |",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": 0.5,
+      "ability": "Intelligence",
+      "type": "gaming"
+    },
+    "tags": "tool,gaming,dragonchess,strategy,board-game,intelligence,noble",
+    "source": "SRD 5.1",
+    "sort_order": 19
+  },
+  {
+    "slug": "playing-card-set",
+    "title": "Playing Card Set",
+    "category": "tool",
+    "subcategory": "gaming-sets",
+    "ruleset": "universal",
+    "summary": "A deck of cards used for various games of chance and skill, popular in taverns.",
+    "content": "## Playing Card Set\n\n**Cost:** 5 sp\n**Weight:** —\n\nA standard deck of playing cards used for a variety of games of chance and skill. Card games are among the most common forms of gambling in taverns and inns.\n\n### Proficiency\nProficiency with a playing card set allows you to add your proficiency bonus to ability checks you make to play card games. It also gives you insight into reading other players and detecting cheating.\n\n### Activities\n- **Play Card Game:** Wisdom check\n- **Read an Opponent:** Wisdom (Insight) check\n- **Bluff:** Charisma (Deception) check\n- **Cheat at Cards:** Dexterity (Sleight of Hand) check\n- **Perform Card Tricks:** Dexterity check\n\n### Who Gets Proficiency\n- Criminal background (common choice)\n- Charlatan background (thematic)\n- Entertainer background (card tricks)\n\n### Gambling Mechanics\nSimilar to dice gambling, during downtime a character can gamble with cards:\n1. Stake a wager\n2. Make three checks: Wisdom (Insight), Charisma (Deception), and Charisma (Intimidation)\n3. Results determine net gain or loss\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Win against casual players |\n| 15 | Read an opponent's tells, win against experienced players |\n| 20 | Successfully palm or swap a card |\n| 25 | Run a complex card scheme undetected |",
+    "metadata_json": {
+      "cost": "5 sp",
+      "weight": 0,
+      "ability": "Wisdom",
+      "type": "gaming"
+    },
+    "tags": "tool,gaming,cards,gambling,bluff,tavern,wisdom,deception",
+    "source": "SRD 5.1",
+    "sort_order": 20
+  },
+  {
+    "slug": "three-dragon-ante-set",
+    "title": "Three-Dragon Ante Set",
+    "category": "tool",
+    "subcategory": "gaming-sets",
+    "ruleset": "universal",
+    "summary": "A card game featuring dragon-themed cards, popular as a tavern game across the realms.",
+    "content": "## Three-Dragon Ante Set\n\n**Cost:** 1 gp\n**Weight:** —\n\nThree-Dragon Ante is a popular card game played throughout the Forgotten Realms and other D&D settings. The deck features cards depicting various types of dragons and other creatures, each with different power values.\n\n### Proficiency\nProficiency with Three-Dragon Ante allows you to add your proficiency bonus to ability checks you make to play the game. The game involves elements of both strategy and luck.\n\n### Activities\n- **Play Three-Dragon Ante:** Intelligence check\n- **Read Opponents:** Wisdom (Insight) check\n- **Bluff and Misdirect:** Charisma (Deception) check\n- **Count Cards:** Intelligence check\n\n### Who Gets Proficiency\n- Backgrounds with gambling connections\n- Common among adventurers and mercenaries\n- Popular in taverns across all settings\n\n### How the Game Works\nPlayers ante into a central hoard, then play dragon cards from their hands in rounds called \"gambits.\" The highest card wins the gambit. Special card abilities can steal from the hoard, force opponents to ante more, or manipulate the play order. The player who collects the most gold from the hoard wins.\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Play competently against casual opponents |\n| 15 | Win against experienced players |\n| 20 | Successfully count cards and track probabilities |\n| 25 | Dominate a high-stakes tournament |",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": 0,
+      "ability": "Intelligence",
+      "type": "gaming"
+    },
+    "tags": "tool,gaming,three-dragon-ante,cards,dragons,gambling,intelligence",
+    "source": "SRD 5.1",
+    "sort_order": 21
+  },
+  {
+    "slug": "bagpipes",
+    "title": "Bagpipes",
+    "category": "tool",
+    "subcategory": "musical-instruments",
+    "ruleset": "universal",
+    "summary": "A wind instrument consisting of a bag and several pipes, producing a distinctive droning sound.",
+    "content": "## Bagpipes\n\n**Cost:** 30 gp\n**Weight:** 6 lb.\n\nBagpipes consist of an airtight bag (traditionally made from animal skin) with several pipes attached. The player inflates the bag and squeezes it under their arm to force air through the pipes, producing a continuous, distinctive droning sound with a melodic pipe for playing tunes.\n\n### Proficiency\nProficiency with bagpipes allows you to add your proficiency bonus to any ability checks you make to play music with the instrument. Bards can use musical instruments as spellcasting focuses.\n\n### Activities\n- **Perform Music:** Charisma (Performance) check\n- **Earn Money Performing:** Charisma (Performance) check\n- **Inspire Troops:** Charisma check\n- **Create a Distraction:** Charisma (Performance) check\n\n### Who Gets Proficiency\n- Bard class (choice of any instrument)\n- Entertainer background (choice of any instrument)\n- Folk Hero background (thematic)\n\n### Bard Spellcasting Focus\nA bard can use a musical instrument as a spellcasting focus for bard spells. The instrument replaces any material component that does not list a cost.\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Play a simple tune |\n| 15 | Perform well enough to earn coin |\n| 15 | Create a rousing battle anthem |\n| 20 | Give a virtuoso performance |",
+    "metadata_json": {
+      "cost": "30 gp",
+      "weight": 6,
+      "ability": "Charisma",
+      "type": "instrument"
+    },
+    "tags": "tool,instrument,bagpipes,music,performance,bard,charisma",
+    "source": "SRD 5.1",
+    "sort_order": 22
+  },
+  {
+    "slug": "drum",
+    "title": "Drum",
+    "category": "tool",
+    "subcategory": "musical-instruments",
+    "ruleset": "universal",
+    "summary": "A percussion instrument consisting of a hollow body covered with a stretched membrane.",
+    "content": "## Drum\n\n**Cost:** 6 gp\n**Weight:** 3 lb.\n\nA drum consists of a hollow cylindrical body with a stretched membrane (usually animal hide) across one or both ends. It is played by striking the membrane with hands or drumsticks.\n\n### Proficiency\nProficiency with a drum allows you to add your proficiency bonus to any ability checks you make to play music with the instrument. Bards can use musical instruments as spellcasting focuses.\n\n### Activities\n- **Perform Music:** Charisma (Performance) check\n- **Send Coded Messages:** Intelligence check (drum signals)\n- **Keep Rowing Cadence:** Charisma check\n- **Intimidate with War Drums:** Charisma (Intimidation) check\n\n### Who Gets Proficiency\n- Bard class (choice of any instrument)\n- Entertainer background (choice of any instrument)\n- Various tribal and military backgrounds\n\n### Special Uses\n- **War Drums:** Can be used to intimidate enemies before battle or to coordinate troop movements\n- **Coded Signals:** Drum patterns can send messages over long distances (up to several miles in favorable conditions)\n- **Rowing Cadence:** Used on galleys and longships to synchronize rowers\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Keep a steady beat |\n| 15 | Play complex rhythms, send coded drum signals |\n| 15 | Perform well enough to earn coin |\n| 20 | Give a virtuoso percussion performance |",
+    "metadata_json": {
+      "cost": "6 gp",
+      "weight": 3,
+      "ability": "Charisma",
+      "type": "instrument"
+    },
+    "tags": "tool,instrument,drum,percussion,music,performance,bard,charisma,war",
+    "source": "SRD 5.1",
+    "sort_order": 23
+  },
+  {
+    "slug": "dulcimer",
+    "title": "Dulcimer",
+    "category": "tool",
+    "subcategory": "musical-instruments",
+    "ruleset": "universal",
+    "summary": "A stringed instrument played by striking the strings with small hammers.",
+    "content": "## Dulcimer\n\n**Cost:** 25 gp\n**Weight:** 10 lb.\n\nA dulcimer is a stringed instrument with a trapezoidal soundboard and metal strings that are struck with small hammers or mallets. It produces a bright, ringing tone and is popular in folk music traditions.\n\n### Proficiency\nProficiency with a dulcimer allows you to add your proficiency bonus to any ability checks you make to play music with the instrument. Bards can use musical instruments as spellcasting focuses.\n\n### Activities\n- **Perform Music:** Charisma (Performance) check\n- **Earn Money Performing:** Charisma (Performance) check\n- **Accompany a Singer:** Charisma check\n- **Soothe or Calm:** Charisma (Persuasion) check\n\n### Who Gets Proficiency\n- Bard class (choice of any instrument)\n- Entertainer background (choice of any instrument)\n- Folk Hero background (thematic)\n\n### Bard Spellcasting Focus\nA bard can use a musical instrument as a spellcasting focus for bard spells. The instrument replaces any material component that does not list a cost.\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Play a simple melody |\n| 15 | Perform well enough to earn coin |\n| 15 | Soothe a frightened creature |\n| 20 | Give a virtuoso performance |",
+    "metadata_json": {
+      "cost": "25 gp",
+      "weight": 10,
+      "ability": "Charisma",
+      "type": "instrument"
+    },
+    "tags": "tool,instrument,dulcimer,strings,music,performance,bard,charisma,folk",
+    "source": "SRD 5.1",
+    "sort_order": 24
+  },
+  {
+    "slug": "flute",
+    "title": "Flute",
+    "category": "tool",
+    "subcategory": "musical-instruments",
+    "ruleset": "universal",
+    "summary": "A woodwind instrument played by blowing across an embouchure hole.",
+    "content": "## Flute\n\n**Cost:** 2 gp\n**Weight:** 1 lb.\n\nA flute is a slender, tubular woodwind instrument typically made of wood or metal. It is played by blowing across an embouchure hole while covering and uncovering finger holes to produce different notes.\n\n### Proficiency\nProficiency with a flute allows you to add your proficiency bonus to any ability checks you make to play music with the instrument. Bards can use musical instruments as spellcasting focuses.\n\n### Activities\n- **Perform Music:** Charisma (Performance) check\n- **Earn Money Performing:** Charisma (Performance) check\n- **Charm Animals:** Charisma (Animal Handling) check (with music)\n- **Play Softly (Stealth-Compatible):** Dexterity check\n\n### Who Gets Proficiency\n- Bard class (choice of any instrument)\n- Entertainer background (choice of any instrument)\n- Elf culture (common thematic choice)\n\n### Notable Magical Flutes\n- **Pipes of Haunting:** Wondrous item that can frighten creatures\n- **Pipes of the Sewers:** Wondrous item that can summon and control rats\n- **Instrument of the Bards (various):** Legendary instruments with magical properties\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Play a simple tune |\n| 15 | Perform well enough to earn coin |\n| 15 | Play softly enough to not alert nearby guards |\n| 20 | Give a virtuoso performance |",
+    "metadata_json": {
+      "cost": "2 gp",
+      "weight": 1,
+      "ability": "Charisma",
+      "type": "instrument"
+    },
+    "tags": "tool,instrument,flute,woodwind,music,performance,bard,charisma,elf",
+    "source": "SRD 5.1",
+    "sort_order": 25
+  },
+  {
+    "slug": "lute",
+    "title": "Lute",
+    "category": "tool",
+    "subcategory": "musical-instruments",
+    "ruleset": "universal",
+    "summary": "A plucked stringed instrument with a deep, rounded body, the quintessential bard instrument.",
+    "content": "## Lute\n\n**Cost:** 35 gp\n**Weight:** 2 lb.\n\nA lute is a stringed instrument with a deep, rounded body and a fretted neck. It is played by plucking or strumming the strings and is perhaps the most iconic instrument associated with bards.\n\n### Proficiency\nProficiency with a lute allows you to add your proficiency bonus to any ability checks you make to play music with the instrument. Bards can use musical instruments as spellcasting focuses.\n\n### Activities\n- **Perform Music:** Charisma (Performance) check\n- **Earn Money Performing:** Charisma (Performance) check\n- **Accompany a Story or Song:** Charisma check\n- **Serenade:** Charisma (Persuasion) check\n- **Play While Singing:** Charisma (Performance) check (DC 15)\n\n### Who Gets Proficiency\n- Bard class (most iconic choice)\n- Entertainer background (choice of any instrument)\n- College of Lore Bard (thematic)\n\n### Notable Magical Lutes\n- **Instrument of the Bards (various):** Legendary instruments including the Doss Lute, Canaith Mandolin, Cli Lyre, and others\n- A bard playing a magical instrument gains additional spellcasting abilities\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Strum a simple tune |\n| 15 | Perform well enough to earn coin, play while singing |\n| 15 | Win over a hostile crowd |\n| 20 | Give a virtuoso performance that moves people to tears |",
+    "metadata_json": {
+      "cost": "35 gp",
+      "weight": 2,
+      "ability": "Charisma",
+      "type": "instrument"
+    },
+    "tags": "tool,instrument,lute,strings,music,performance,bard,charisma,iconic",
+    "source": "SRD 5.1",
+    "sort_order": 26
+  },
+  {
+    "slug": "lyre",
+    "title": "Lyre",
+    "category": "tool",
+    "subcategory": "musical-instruments",
+    "ruleset": "universal",
+    "summary": "An ancient stringed instrument with a U-shaped frame, associated with poetry and classical music.",
+    "content": "## Lyre\n\n**Cost:** 30 gp\n**Weight:** 2 lb.\n\nA lyre is a stringed instrument with a U-shaped frame and strings stretched between the two arms of the frame. It is one of the oldest instruments and is closely associated with poetry, classical music, and divine worship.\n\n### Proficiency\nProficiency with a lyre allows you to add your proficiency bonus to any ability checks you make to play music with the instrument. Bards can use musical instruments as spellcasting focuses.\n\n### Activities\n- **Perform Music:** Charisma (Performance) check\n- **Earn Money Performing:** Charisma (Performance) check\n- **Accompany Poetry:** Charisma check\n- **Religious Ceremony:** Charisma check\n\n### Who Gets Proficiency\n- Bard class (choice of any instrument)\n- Entertainer background (choice of any instrument)\n- Acolyte background (thematic for some deities)\n\n### Cultural Significance\nThe lyre is associated with:\n- Classical education and the arts\n- Religious ceremonies (especially for deities of music and art)\n- Elven and celestial traditions\n- Poetry and oratory\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Play a simple melody |\n| 15 | Perform well enough to earn coin |\n| 15 | Accompany poetry or an oration |\n| 20 | Give a virtuoso performance |",
+    "metadata_json": {
+      "cost": "30 gp",
+      "weight": 2,
+      "ability": "Charisma",
+      "type": "instrument"
+    },
+    "tags": "tool,instrument,lyre,strings,music,performance,bard,charisma,classical,poetry",
+    "source": "SRD 5.1",
+    "sort_order": 27
+  },
+  {
+    "slug": "horn",
+    "title": "Horn",
+    "category": "tool",
+    "subcategory": "musical-instruments",
+    "ruleset": "universal",
+    "summary": "A brass instrument made from animal horn or metal, used for music and signaling.",
+    "content": "## Horn\n\n**Cost:** 3 gp\n**Weight:** 2 lb.\n\nA horn is a simple brass instrument, originally crafted from animal horns but also made in metal. It produces a bold, brassy tone and is used for both music and signaling.\n\n### Proficiency\nProficiency with a horn allows you to add your proficiency bonus to any ability checks you make to play music with the instrument. Bards can use musical instruments as spellcasting focuses.\n\n### Activities\n- **Perform Music:** Charisma (Performance) check\n- **Sound an Alarm:** No check required (heard up to 600 ft.)\n- **Military Signals:** Intelligence check\n- **Hunting Call:** Wisdom (Animal Handling) check\n\n### Who Gets Proficiency\n- Bard class (choice of any instrument)\n- Entertainer background (choice of any instrument)\n- Soldier background (military signals)\n- Knight background (thematic)\n\n### Special Uses\n- **Military Signals:** Horn calls are used to coordinate troop movements, signal retreats, or announce charges\n- **Hunting Calls:** Specific horn patterns are used in mounted hunts to coordinate riders and dogs\n- **Alarm:** A horn blast can alert a camp or settlement to danger\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Sound a clear note, play a simple fanfare |\n| 15 | Perform well enough to earn coin |\n| 15 | Replicate a specific military signal |\n| 20 | Give a virtuoso performance |",
+    "metadata_json": {
+      "cost": "3 gp",
+      "weight": 2,
+      "ability": "Charisma",
+      "type": "instrument"
+    },
+    "tags": "tool,instrument,horn,brass,music,performance,bard,charisma,military,signal",
+    "source": "SRD 5.1",
+    "sort_order": 28
+  },
+  {
+    "slug": "pan-flute",
+    "title": "Pan Flute",
+    "category": "tool",
+    "subcategory": "musical-instruments",
+    "ruleset": "universal",
+    "summary": "A wind instrument made of multiple pipes of varying lengths bound together.",
+    "content": "## Pan Flute\n\n**Cost:** 12 gp\n**Weight:** 2 lb.\n\nA pan flute (also called panpipes or syrinx) consists of multiple pipes of gradually increasing length bound together. Each pipe produces a different note when the player blows across its top. The instrument produces a hauntingly beautiful, airy sound.\n\n### Proficiency\nProficiency with a pan flute allows you to add your proficiency bonus to any ability checks you make to play music with the instrument. Bards can use musical instruments as spellcasting focuses.\n\n### Activities\n- **Perform Music:** Charisma (Performance) check\n- **Earn Money Performing:** Charisma (Performance) check\n- **Charm Animals:** Charisma (Animal Handling) check\n- **Create an Ethereal Atmosphere:** Charisma check\n\n### Who Gets Proficiency\n- Bard class (choice of any instrument)\n- Entertainer background (choice of any instrument)\n- Outlander background (thematic)\n- Shepherd or pastoral backgrounds\n\n### Cultural Significance\nThe pan flute is associated with:\n- Pastoral and rural settings\n- Nature deities and fey creatures\n- Satyrs and other woodland beings\n- Peaceful meditation and reflection\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Play a simple pastoral melody |\n| 15 | Perform well enough to earn coin |\n| 15 | Attract the attention of fey or woodland creatures |\n| 20 | Give a virtuoso performance |",
+    "metadata_json": {
+      "cost": "12 gp",
+      "weight": 2,
+      "ability": "Charisma",
+      "type": "instrument"
+    },
+    "tags": "tool,instrument,pan-flute,woodwind,music,performance,bard,charisma,nature,fey",
+    "source": "SRD 5.1",
+    "sort_order": 29
+  },
+  {
+    "slug": "shawm",
+    "title": "Shawm",
+    "category": "tool",
+    "subcategory": "musical-instruments",
+    "ruleset": "universal",
+    "summary": "A double-reed woodwind instrument producing a loud, penetrating sound.",
+    "content": "## Shawm\n\n**Cost:** 2 gp\n**Weight:** 1 lb.\n\nA shawm is a double-reed woodwind instrument with a conical bore and a flared bell. It produces a loud, penetrating, and somewhat nasal sound that carries well outdoors, making it popular for outdoor performances, processions, and military bands.\n\n### Proficiency\nProficiency with a shawm allows you to add your proficiency bonus to any ability checks you make to play music with the instrument. Bards can use musical instruments as spellcasting focuses.\n\n### Activities\n- **Perform Music:** Charisma (Performance) check\n- **Earn Money Performing:** Charisma (Performance) check\n- **Lead a Procession:** Charisma check\n- **Create a Loud Distraction:** Charisma (Performance) check\n\n### Who Gets Proficiency\n- Bard class (choice of any instrument)\n- Entertainer background (choice of any instrument)\n- Soldier background (military bands)\n\n### Special Characteristics\n- The shawm is one of the loudest acoustic instruments\n- Sound carries well outdoors (audible up to 300 ft. or more)\n- Popular for festivals, outdoor celebrations, and military use\n- Often played in ensemble with drums and other shawms\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Play a simple tune |\n| 15 | Perform well enough to earn coin |\n| 15 | Create a distraction audible at great distance |\n| 20 | Give a virtuoso performance |",
+    "metadata_json": {
+      "cost": "2 gp",
+      "weight": 1,
+      "ability": "Charisma",
+      "type": "instrument"
+    },
+    "tags": "tool,instrument,shawm,woodwind,music,performance,bard,charisma,loud,outdoor",
+    "source": "SRD 5.1",
+    "sort_order": 30
+  },
+  {
+    "slug": "viol",
+    "title": "Viol",
+    "category": "tool",
+    "subcategory": "musical-instruments",
+    "ruleset": "universal",
+    "summary": "A bowed stringed instrument held between the knees, producing rich, mellow tones.",
+    "content": "## Viol\n\n**Cost:** 30 gp\n**Weight:** 1 lb.\n\nA viol (also called a viola da gamba) is a bowed stringed instrument held upright between the knees. It has a deeper, more mellow tone than a violin and is popular in both courtly and tavern settings.\n\n### Proficiency\nProficiency with a viol allows you to add your proficiency bonus to any ability checks you make to play music with the instrument. Bards can use musical instruments as spellcasting focuses.\n\n### Activities\n- **Perform Music:** Charisma (Performance) check\n- **Earn Money Performing:** Charisma (Performance) check\n- **Play at Court:** Charisma check\n- **Soothe and Calm:** Charisma (Persuasion) check\n\n### Who Gets Proficiency\n- Bard class (choice of any instrument)\n- Entertainer background (choice of any instrument)\n- Noble background (cultured upbringing)\n- Courtier background (thematic)\n\n### Cultural Significance\nThe viol is associated with:\n- Courtly and noble settings\n- Formal performances and chamber music\n- Sophisticated tavern entertainment\n- Elven musical traditions\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Play a simple melody |\n| 15 | Perform well enough to earn coin |\n| 15 | Impress at a noble court |\n| 20 | Give a virtuoso performance |",
+    "metadata_json": {
+      "cost": "30 gp",
+      "weight": 1,
+      "ability": "Charisma",
+      "type": "instrument"
+    },
+    "tags": "tool,instrument,viol,strings,bowed,music,performance,bard,charisma,court,noble",
+    "source": "SRD 5.1",
+    "sort_order": 31
+  },
+  {
+    "slug": "disguise-kit",
+    "title": "Disguise Kit",
+    "category": "tool",
+    "subcategory": "other-tools",
+    "ruleset": "universal",
+    "summary": "A kit of cosmetics, hair dye, small props, and clothing used to alter your physical appearance.",
+    "content": "## Disguise Kit\n\n**Cost:** 25 gp\n**Weight:** 3 lb.\n\nA disguise kit includes cosmetics, hair dye, small props, and several pieces of clothing. It has everything you need to create a convincing physical disguise.\n\n### Proficiency\nProficiency with a disguise kit lets you add your proficiency bonus to any ability checks you make to create a visual disguise. It takes 1 minute to don a simple disguise and up to 10 minutes for a complex one.\n\n### Activities\n- **Create Disguise:** Charisma check\n- **Disguise as Specific Person:** Charisma check (DC 15+)\n- **Disguise as Different Race:** Charisma check (DC 20)\n- **Disguise as Different Gender:** Charisma check (DC 15)\n- **Quick Disguise (1 minute):** Charisma check (disadvantage)\n\n### Who Gets Proficiency\n- Charlatan background\n- Criminal/Spy background (spy variant)\n- Assassin Rogue (3rd level)\n- Actor feat (grants advantage on Charisma checks to pass as another person)\n\n### Detection\nCreatures can see through a disguise by making a Wisdom (Insight) check contested by your Charisma check (with proficiency bonus if proficient with the disguise kit). A creature that is familiar with the person you're impersonating has advantage on this check.\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Minor appearance changes (different hair, aging) |\n| 15 | Disguise as a different but similar person |\n| 20 | Disguise as a different race or dramatically different build |\n| 25 | Perfect impersonation of a specific individual |",
+    "metadata_json": {
+      "cost": "25 gp",
+      "weight": 3,
+      "ability": "Charisma",
+      "type": "other"
+    },
+    "tags": "tool,disguise,deception,cosmetics,impersonation,charisma,rogue,charlatan",
+    "source": "SRD 5.1",
+    "sort_order": 32
+  },
+  {
+    "slug": "forgery-kit",
+    "title": "Forgery Kit",
+    "category": "tool",
+    "subcategory": "other-tools",
+    "ruleset": "universal",
+    "summary": "A kit containing papers, inks, seals, and wax used to create forged documents.",
+    "content": "## Forgery Kit\n\n**Cost:** 15 gp\n**Weight:** 5 lb.\n\nA forgery kit includes several different types of ink, a variety of parchments and papers, several quills, seals and sealing wax, gold and silver leaf, and small tools to sculpt melted wax to mimic a seal.\n\n### Proficiency\nProficiency with a forgery kit lets you add your proficiency bonus to any ability checks you make to create forged documents. It also helps you detect forged documents created by others.\n\n### Activities\n- **Forge a Document:** Dexterity check\n- **Copy Handwriting:** Dexterity check\n- **Create Fake Seal:** Dexterity check\n- **Detect Forgery:** Intelligence (Investigation) check\n- **Age a Document:** Intelligence check (DC 15)\n\n### Who Gets Proficiency\n- Charlatan background\n- Criminal background (common choice)\n- Spy background variant\n\n### Detection\nA creature examining a forged document can make an Intelligence (Investigation) check contested by your Dexterity check (with proficiency bonus). Creatures familiar with the type of document or the original have advantage on this check.\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Forge a simple letter or note |\n| 15 | Copy a specific person's handwriting |\n| 15 | Create a convincing official document |\n| 20 | Forge a complex legal document with proper seals |\n| 25 | Create a perfect replica of a known document |",
+    "metadata_json": {
+      "cost": "15 gp",
+      "weight": 5,
+      "ability": "Dexterity",
+      "type": "other"
+    },
+    "tags": "tool,forgery,documents,deception,ink,seals,dexterity,criminal,charlatan",
+    "source": "SRD 5.1",
+    "sort_order": 33
+  },
+  {
+    "slug": "herbalism-kit",
+    "title": "Herbalism Kit",
+    "category": "tool",
+    "subcategory": "other-tools",
+    "ruleset": "universal",
+    "summary": "A kit containing clippers, mortar and pestle, pouches, and vials used for identifying and preparing herbs and creating potions.",
+    "content": "## Herbalism Kit\n\n**Cost:** 5 gp\n**Weight:** 3 lb.\n\nAn herbalism kit includes pouches to store herbs, clippers and leather gloves for collecting plants, a mortar and pestle, and several glass jars and vials.\n\n### Proficiency\nProficiency with an herbalism kit lets you add your proficiency bonus to any ability checks you make to identify or apply herbs. It also allows you to create potions of healing and antitoxin during downtime.\n\n### Activities\n- **Identify Plants:** Intelligence (Nature) check\n- **Create Potion of Healing:** Intelligence check (DC 15)\n- **Create Antitoxin:** Intelligence check (DC 15)\n- **Find Medicinal Herbs:** Wisdom (Survival) check\n- **Create Herbal Remedy:** Wisdom (Medicine) check\n\n### Who Gets Proficiency\n- Druid class (common choice)\n- Ranger class (thematic)\n- Hermit background\n- Outlander background (thematic)\n\n### Craftable Items\n| Item | DC | Cost | Time |\n|---|---|---|---|\n| Antitoxin | 15 | 25 gp | 1 day |\n| Potion of Healing | 15 | 25 gp | 1 day |\n| Herbal poultice (1d4 HP) | 10 | 1 gp | 1 hour |\n| Healer's salve | 12 | 5 gp | 4 hours |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Identify common medicinal herbs |\n| 15 | Create a potion of healing, identify uncommon plants |\n| 20 | Identify rare or magical herbs |\n| 25 | Create an experimental herbal remedy |",
+    "metadata_json": {
+      "cost": "5 gp",
+      "weight": 3,
+      "ability": "Wisdom",
+      "type": "other"
+    },
+    "tags": "tool,herbalism,herbs,potions,healing,antitoxin,nature,wisdom,druid,ranger",
+    "source": "SRD 5.1",
+    "sort_order": 34
+  },
+  {
+    "slug": "navigators-tools",
+    "title": "Navigator's Tools",
+    "category": "tool",
+    "subcategory": "other-tools",
+    "ruleset": "universal",
+    "summary": "Tools used for determining position and plotting courses, essential for sea travel.",
+    "content": "## Navigator's Tools\n\n**Cost:** 25 gp\n**Weight:** 2 lb.\n\nNavigator's tools include a sextant, a compass, calipers, a ruler, parchment, ink, and quills. These instruments are used for plotting courses on sea or land and determining your current position.\n\n### Proficiency\nProficiency with navigator's tools lets you chart a ship's course and follow navigation charts. You can also determine your position by studying the stars or landmarks. In addition, you gain additional insight on Survival checks to avoid getting lost.\n\n### Activities\n- **Plot a Course:** Intelligence check\n- **Determine Position:** Intelligence (Survival) check\n- **Navigate by Stars:** Wisdom (Survival) check\n- **Estimate Distance to Shore:** Intelligence check\n- **Predict Weather:** Wisdom (Survival) check (DC 15)\n\n### Who Gets Proficiency\n- Sailor background\n- Pirate background variant\n- Some ranger subclasses (thematic)\n- Outlander background (thematic)\n\n### Navigation Mechanics\nWhile traveling by sea, a character proficient with navigator's tools can:\n- Avoid getting lost at sea (DC varies by conditions)\n- Reduce travel time by finding optimal routes\n- Identify dangerous waters (reefs, currents)\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Navigate familiar waters, determine position on clear day |\n| 15 | Navigate unfamiliar waters, navigate by stars |\n| 20 | Navigate in a storm, find position without stars |\n| 25 | Navigate magically obscured waters |",
+    "metadata_json": {
+      "cost": "25 gp",
+      "weight": 2,
+      "ability": "Intelligence",
+      "type": "other"
+    },
+    "tags": "tool,navigation,compass,sextant,sailing,sea,travel,intelligence,sailor",
+    "source": "SRD 5.1",
+    "sort_order": 35
+  },
+  {
+    "slug": "poisoners-kit",
+    "title": "Poisoner's Kit",
+    "category": "tool",
+    "subcategory": "other-tools",
+    "ruleset": "universal",
+    "summary": "A kit containing vials, chemicals, and tools used to create and apply poisons.",
+    "content": "## Poisoner's Kit\n\n**Cost:** 50 gp\n**Weight:** 2 lb.\n\nA poisoner's kit includes glass vials, a mortar and pestle, chemicals, and a glass stirring rod. It contains everything needed to create poisons and apply them to weapons or food.\n\n### Proficiency\nProficiency with a poisoner's kit lets you add your proficiency bonus to any ability checks you make to craft or identify poisons. You can also apply poison to a weapon or piece of ammunition as an action rather than a bonus action.\n\n### Activities\n- **Create Poison:** Intelligence check\n- **Identify Poison:** Intelligence check\n- **Apply Poison to Weapon:** No check required (1 action if proficient)\n- **Detect Poison in Food/Drink:** Intelligence (Investigation) check\n- **Neutralize Poison:** Intelligence check\n\n### Who Gets Proficiency\n- Assassin Rogue (3rd level)\n- Guild Artisan background (if appropriate guild)\n- Criminal background (thematic)\n- Drow culture (thematic)\n\n### Poison Crafting\n| Poison | DC | Cost | Time |\n|---|---|---|---|\n| Basic Poison (vial) | 10 | 50 gp | 1 day |\n| Assassin's Blood | 15 | 75 gp | 3 days |\n| Serpent Venom | 15 | 100 gp | 3 days |\n| Wyvern Poison | 20 | 600 gp | 1 week |\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Create basic poison, identify common poison |\n| 15 | Create a moderate poison, detect poison in food |\n| 20 | Create a potent poison, identify a rare poison |\n| 25 | Create a legendary poison, neutralize magical poison |",
+    "metadata_json": {
+      "cost": "50 gp",
+      "weight": 2,
+      "ability": "Intelligence",
+      "type": "other"
+    },
+    "tags": "tool,poison,poisoner,venom,toxin,intelligence,rogue,assassin",
+    "source": "SRD 5.1",
+    "sort_order": 36
+  },
+  {
+    "slug": "thieves-tools",
+    "title": "Thieves' Tools",
+    "category": "tool",
+    "subcategory": "other-tools",
+    "ruleset": "universal",
+    "summary": "A set of tools used for picking locks and disabling traps.",
+    "content": "## Thieves' Tools\n\n**Cost:** 25 gp\n**Weight:** 1 lb.\n\nThis set of tools includes a small file, a set of lock picks, a small mirror mounted on a metal handle, a set of narrow-bladed scissors, and a pair of pliers.\n\n### Proficiency\nProficiency with thieves' tools lets you add your proficiency bonus to any ability checks you make to disarm traps or open locks.\n\n### Activities\n- **Pick a Lock:** Dexterity check\n- **Disarm a Trap:** Dexterity check\n- **Set a Trap:** Dexterity check\n- **Find a Trap Mechanism:** Intelligence (Investigation) check\n- **Open Shackles/Manacles:** Dexterity check\n\n### Who Gets Proficiency\n- Rogue class (all rogues)\n- Criminal background\n- Urchin background\n- Artificer class\n\n### Lock and Trap DCs\n| DC | Lock/Trap |\n|---|---|\n| 10 | Simple lock, basic tripwire |\n| 15 | Average lock, standard trap |\n| 20 | Complex lock, elaborate trap |\n| 25 | Master-crafted lock, magical trap |\n| 30 | Legendary lock (Arcane Lock adds +10 to DC) |\n\n### Important Rules\n- You must have thieves' tools to attempt to pick a lock or disarm most traps\n- Without proficiency, you make a straight Dexterity check (no proficiency bonus)\n- Some locks and traps cannot be opened/disarmed without proficiency\n- The Knock spell can open locks without tools (but makes a loud sound)\n- Expertise (Rogue feature) can double your proficiency bonus with thieves' tools\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Simple padlock, basic tripwire |\n| 15 | Average door lock, pit trap latch |\n| 20 | Superior lock, poison needle trap |\n| 25 | Master-crafted vault lock, magical glyph trap |",
+    "metadata_json": {
+      "cost": "25 gp",
+      "weight": 1,
+      "ability": "Dexterity",
+      "type": "other"
+    },
+    "tags": "tool,thieves,lock picking,traps,rogue,dexterity,criminal,urchin",
+    "source": "SRD 5.1",
+    "sort_order": 37
+  },
+  {
+    "slug": "vehicles-land",
+    "title": "Vehicles (Land)",
+    "category": "tool",
+    "subcategory": "other-tools",
+    "ruleset": "universal",
+    "summary": "Proficiency with land vehicles covers driving wagons, carts, chariots, and other land-based conveyances.",
+    "content": "## Vehicles (Land)\n\n**Cost:** Varies by vehicle\n**Weight:** N/A\n\nProficiency with land vehicles covers a broad range of ground-based conveyances, from simple carts to elaborate war chariots.\n\n### Proficiency\nProficiency with land vehicles allows you to add your proficiency bonus to any ability checks you make to control or navigate a land vehicle in difficult circumstances. Under normal conditions, no check is needed to drive a vehicle.\n\n### Vehicle Types\n| Vehicle | Cost | Speed |\n|---|---|---|\n| Cart | 15 gp | Depends on draft animal |\n| Wagon | 35 gp | Depends on draft animal |\n| Carriage | 100 gp | Depends on draft animal |\n| Chariot | 250 gp | Depends on draft animal |\n| Sled | 20 gp | Depends on draft animal |\n\n### Activities\n- **Drive a Vehicle:** Dexterity check (only in difficult conditions)\n- **Control Panicked Animals:** Wisdom (Animal Handling) check\n- **Navigate Rough Terrain:** Dexterity check\n- **Execute a Sharp Turn:** Dexterity check (DC 15)\n- **Ram Another Vehicle:** Strength check\n\n### Who Gets Proficiency\n- Outlander background (thematic)\n- Soldier background\n- Noble background (carriages)\n- Folk Hero background (carts and wagons)\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Navigate a bumpy road |\n| 15 | Sharp turn at speed, drive through a crowd |\n| 20 | Control a vehicle during combat, jump a gap |\n| 25 | Maintain control in extreme conditions (avalanche, earthquake) |",
+    "metadata_json": {
+      "cost": "varies",
+      "weight": 0,
+      "ability": "Dexterity",
+      "type": "other"
+    },
+    "tags": "tool,vehicle,land,wagon,cart,chariot,carriage,dexterity,travel",
+    "source": "SRD 5.1",
+    "sort_order": 38
+  },
+  {
+    "slug": "vehicles-water",
+    "title": "Vehicles (Water)",
+    "category": "tool",
+    "subcategory": "other-tools",
+    "ruleset": "universal",
+    "summary": "Proficiency with water vehicles covers operating ships, boats, and other watercraft.",
+    "content": "## Vehicles (Water)\n\n**Cost:** Varies by vessel\n**Weight:** N/A\n\nProficiency with water vehicles covers a range of watercraft from small rowboats to large sailing ships and galleys.\n\n### Proficiency\nProficiency with water vehicles allows you to add your proficiency bonus to any ability checks you make to control or navigate a watercraft. Under calm conditions on familiar waters, no check is typically needed.\n\n### Vessel Types\n| Vessel | Cost | Speed | Crew |\n|---|---|---|---|\n| Rowboat | 50 gp | 1.5 mph | 1 |\n| Canoe/Kayak | 30 gp | 1 mph | 1 |\n| Keelboat | 3,000 gp | 1 mph | 3 |\n| Sailing Ship | 10,000 gp | 2 mph | 20 |\n| Longship | 10,000 gp | 3 mph | 40 |\n| Galley | 30,000 gp | 4 mph | 80 |\n| Warship | 25,000 gp | 2.5 mph | 60 |\n\n### Activities\n- **Sail a Ship:** Intelligence check\n- **Navigate a Storm:** Strength or Dexterity check\n- **Dock or Anchor:** Dexterity check\n- **Ram Another Vessel:** Strength check\n- **Execute a Naval Maneuver:** Intelligence check\n\n### Who Gets Proficiency\n- Sailor background\n- Pirate background variant\n- Marine background\n- Outlander background (thematic for coastal/river)\n\n### Example DCs\n| DC | Task |\n|---|---|\n| 10 | Navigate calm waters, dock at a pier |\n| 15 | Navigate choppy waters, navigate at night |\n| 20 | Navigate a storm, execute combat maneuvers |\n| 25 | Navigate a maelstrom, thread through a reef in a storm |",
+    "metadata_json": {
+      "cost": "varies",
+      "weight": 0,
+      "ability": "Intelligence",
+      "type": "other"
+    },
+    "tags": "tool,vehicle,water,ship,boat,sailing,navigation,intelligence,sailor",
+    "source": "SRD 5.1",
+    "sort_order": 39
+  }
+]

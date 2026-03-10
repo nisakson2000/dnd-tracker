@@ -1,0 +1,11 @@
+characters/
+node_modules/
+__pycache__/
+*.pyc
+.env
+*.db-wal
+*.db-shm
+dist/
+.vite/
+wiki.db
+target/

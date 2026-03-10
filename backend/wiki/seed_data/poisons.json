@@ -1,0 +1,317 @@
+[
+  {
+    "slug": "poison-overview",
+    "title": "Poisons Overview",
+    "category": "poison",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "An overview of the four types of poisons in D&D 5e: Contact, Ingested, Inhaled, and Injury.",
+    "content": "## Poisons Overview\n\nGiven their insidious and deadly nature, poisons are illegal in most societies but are a favorite tool of assassins, drow, and other evil creatures.\n\n### Poison Types\n\nPoisons come in four categories:\n\n**Contact.** Contact poison can be smeared on an object and remains potent until it is touched or washed off. A creature that touches contact poison with exposed skin suffers its effects.\n\n**Ingested.** A creature must swallow an entire dose of ingested poison to suffer its effects. The dose can be delivered in food or a liquid. You may decide that a partial dose has a reduced effect, such as allowing advantage on the saving throw or dealing only half damage on a failed save.\n\n**Inhaled.** These poisons are powders or gases that take effect when inhaled. Blowing the powder or releasing the gas subjects creatures in a 5-foot cube to its effect. The resulting cloud dissipates immediately afterward. Holding one's breath is ineffective against inhaled poisons, as they affect nasal membranes, tear ducts, and other parts of the body.\n\n**Injury.** Injury poison can be applied to weapons, ammunition, trap components, and other objects that deal piercing or slashing damage. The poison remains potent until delivered through a wound or washed off. A creature that takes piercing or slashing damage from an object coated with the poison is exposed to its effects.\n\n### Applying Poison\nYou can use an action to apply poison to a weapon or up to three pieces of ammunition. The poison retains its potency for 1 minute before drying. A creature proficient with a poisoner's kit can apply poison as part of an action.\n\n### Crafting Poisons\nDuring downtime, a character can use the poisoner's kit to create poisons. The cost is half the market price, and the character must be proficient with the poisoner's kit.\n\n### Poison Immunity and Resistance\nSome creatures are immune to the poisoned condition and/or poison damage:\n- Constructs\n- Undead\n- Fiends (many)\n- Dwarves have advantage on saves against poison and resistance to poison damage\n- Yuan-ti are immune to poison damage",
+    "metadata_json": {
+      "type": "overview",
+      "categories": ["contact", "ingested", "inhaled", "injury"]
+    },
+    "tags": "poison,overview,contact,ingested,inhaled,injury,rules",
+    "source": "SRD 5.1",
+    "sort_order": 0
+  },
+  {
+    "slug": "basic-poison",
+    "title": "Basic Poison",
+    "category": "poison",
+    "subcategory": "injury",
+    "ruleset": "universal",
+    "summary": "A simple poison available from alchemists and shady dealers, coating weapons to deal extra damage.",
+    "content": "## Basic Poison (vial)\n\n**Type:** Injury\n**Price:** 100 gp\n\nYou can use the poison in this vial to coat one slashing or piercing weapon or up to three pieces of ammunition. Applying the poison takes an action. A creature hit by the poisoned weapon or ammunition must make a DC 10 Constitution saving throw or take 1d4 poison damage. Once applied, the poison retains potency for 1 minute before drying.\n\n### Availability\nBasic poison is the only poison commonly available for purchase in the Player's Handbook equipment section. Other poisons require access to a poisoner's kit and specialized knowledge, or must be harvested from creatures.\n\n### Key Rules\n- Applying takes 1 action\n- Lasts 1 minute (10 rounds) on a weapon\n- Deals 1d4 poison damage on a failed DC 10 Constitution save\n- No additional effects beyond damage\n- One vial coats one weapon OR up to three pieces of ammunition",
+    "metadata_json": {
+      "type": "Injury",
+      "price": "100 gp",
+      "save_dc": 10,
+      "save_ability": "Constitution",
+      "damage": "1d4 poison"
+    },
+    "tags": "poison,injury,basic,constitution,damage,weapon coating",
+    "source": "SRD 5.1",
+    "sort_order": 1
+  },
+  {
+    "slug": "assassins-blood",
+    "title": "Assassin's Blood",
+    "category": "poison",
+    "subcategory": "ingested",
+    "ruleset": "universal",
+    "summary": "An ingested poison that deals poison damage and inflicts the poisoned condition for 24 hours.",
+    "content": "## Assassin's Blood\n\n**Type:** Ingested\n**Price:** 150 gp\n\nA creature subjected to this poison must make a DC 10 Constitution saving throw. On a failed save, it takes 6 (1d12) poison damage and is poisoned for 24 hours. On a successful save, the creature takes half damage and isn't poisoned.\n\n### Characteristics\n- Virtually undetectable by taste or smell in food and drink\n- Slow-acting enough that the victim may not connect symptoms to a meal\n- The poisoned condition imposes disadvantage on attack rolls and ability checks\n- Favored by assassins for eliminating targets without direct confrontation\n\n### Detection\n- DC 15 Wisdom (Perception) check to notice it in food or drink\n- DC 10 Intelligence check with a poisoner's kit to identify it\n- Detect Poison and Disease spell automatically detects it",
+    "metadata_json": {
+      "type": "Ingested",
+      "price": "150 gp",
+      "save_dc": 10,
+      "save_ability": "Constitution",
+      "damage": "1d12 poison",
+      "condition": "poisoned (24 hours)"
+    },
+    "tags": "poison,ingested,constitution,damage,poisoned,assassin",
+    "source": "SRD 5.1",
+    "sort_order": 2
+  },
+  {
+    "slug": "burnt-othur-fumes",
+    "title": "Burnt Othur Fumes",
+    "category": "poison",
+    "subcategory": "inhaled",
+    "ruleset": "universal",
+    "summary": "An inhaled poison that deals ongoing poison damage until the creature succeeds on saving throws or receives magical healing.",
+    "content": "## Burnt Othur Fumes\n\n**Type:** Inhaled\n**Price:** 500 gp\n\nA creature subjected to this poison must succeed on a DC 13 Constitution saving throw or take 10 (3d6) poison damage, and must repeat the saving throw at the start of each of its turns. On each successive failed save, the character takes 3 (1d6) poison damage. After three successful saves, the poison ends.\n\n### Characteristics\n- One of the most dangerous inhaled poisons due to its recurring damage\n- Creates a visible but quickly dissipating cloud of yellowish fumes\n- The recurring saves mean it can potentially deal massive total damage\n- Magical healing of any amount ends the poison immediately\n\n### Total Potential Damage\n- Minimum (fail initial, pass next 3): 10 (3d6) damage\n- Maximum (fail all saves): Theoretically unlimited, averaging 3 (1d6) per failed save\n- Average expected: 10 + 6-12 additional damage\n\n### Detection\n- DC 15 Wisdom (Perception) check to notice the cloud before inhaling\n- DC 15 Intelligence check with a poisoner's kit to identify the substance",
+    "metadata_json": {
+      "type": "Inhaled",
+      "price": "500 gp",
+      "save_dc": 13,
+      "save_ability": "Constitution",
+      "damage": "3d6 poison (initial), 1d6 poison (recurring)",
+      "condition": "recurring damage"
+    },
+    "tags": "poison,inhaled,constitution,damage,recurring,dangerous",
+    "source": "SRD 5.1",
+    "sort_order": 3
+  },
+  {
+    "slug": "crawler-mucus",
+    "title": "Crawler Mucus",
+    "category": "poison",
+    "subcategory": "contact",
+    "ruleset": "universal",
+    "summary": "A contact poison harvested from carrion crawlers that can paralyze its victims.",
+    "content": "## Crawler Mucus\n\n**Type:** Contact\n**Price:** 200 gp\n\nThis poison must be harvested from a dead or incapacitated carrion crawler. A creature subjected to this poison must succeed on a DC 13 Constitution saving throw or be poisoned for 1 minute. The poisoned creature is paralyzed. The creature can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success.\n\n### Characteristics\n- Harvested from carrion crawlers, which produce it naturally\n- Causes both the poisoned and paralyzed conditions\n- Paralysis makes this extremely dangerous in combat\n- A paralyzed creature automatically fails Strength and Dexterity saves\n- Attack rolls against a paralyzed creature have advantage\n- Melee attacks against a paralyzed creature within 5 feet are automatic critical hits\n\n### Harvesting\n- Requires a poisoner's kit and a dead or incapacitated carrion crawler\n- DC 15 Intelligence (Nature) or poisoner's kit check to harvest\n- One carrion crawler yields 1d4 doses\n\n### Detection\n- DC 15 Wisdom (Perception) check to notice on a surface\n- Thick, translucent mucus with a slightly acrid smell",
+    "metadata_json": {
+      "type": "Contact",
+      "price": "200 gp",
+      "save_dc": 13,
+      "save_ability": "Constitution",
+      "damage": "none",
+      "condition": "poisoned, paralyzed (1 minute)"
+    },
+    "tags": "poison,contact,constitution,paralyzed,poisoned,carrion crawler",
+    "source": "SRD 5.1",
+    "sort_order": 4
+  },
+  {
+    "slug": "drow-poison",
+    "title": "Drow Poison",
+    "category": "poison",
+    "subcategory": "injury",
+    "ruleset": "universal",
+    "summary": "A poison favored by the drow that renders victims unconscious.",
+    "content": "## Drow Poison\n\n**Type:** Injury\n**Price:** 200 gp\n\nThis poison is typically made only by the drow, and only in a place far removed from sunlight. A creature subjected to this poison must succeed on a DC 13 Constitution saving throw or be poisoned for 1 hour. If the saving throw fails by 5 or more, the creature is also unconscious while poisoned in this way. The creature wakes up if it takes damage or if another creature takes an action to shake it awake.\n\n### Characteristics\n- The signature poison of drow raiders and slavers\n- Unconsciousness makes it ideal for capturing prisoners alive\n- Must be crafted in darkness; exposure to sunlight destroys the poison\n- Typically applied to crossbow bolts (hand crossbow is the iconic drow weapon)\n- Failing by 5+ means a save result of 8 or lower causes unconsciousness\n\n### Crafting Restrictions\n- Must be brewed in complete darkness\n- Sunlight degrades the poison, rendering it inert within 1 hour\n- Requires exotic Underdark ingredients\n- Drow crafters have advantage on checks to create this poison\n\n### Detection\n- DC 15 Wisdom (Perception) check to notice on a weapon\n- Faint purple-black tint visible under close inspection",
+    "metadata_json": {
+      "type": "Injury",
+      "price": "200 gp",
+      "save_dc": 13,
+      "save_ability": "Constitution",
+      "damage": "none",
+      "condition": "poisoned (1 hour), unconscious (if fail by 5+)"
+    },
+    "tags": "poison,injury,constitution,unconscious,poisoned,drow,underdark",
+    "source": "SRD 5.1",
+    "sort_order": 5
+  },
+  {
+    "slug": "essence-of-ether",
+    "title": "Essence of Ether",
+    "category": "poison",
+    "subcategory": "inhaled",
+    "ruleset": "universal",
+    "summary": "An inhaled poison that renders victims unconscious for up to 8 hours.",
+    "content": "## Essence of Ether\n\n**Type:** Inhaled\n**Price:** 300 gp\n\nA creature subjected to this poison must succeed on a DC 15 Constitution saving throw or become poisoned for 8 hours. The poisoned creature is unconscious. The creature wakes up if it takes damage or if another creature takes an action to shake it awake.\n\n### Characteristics\n- One of the most effective knockout agents available\n- 8-hour duration makes it ideal for kidnapping or infiltration\n- Higher DC (15) than many other poisons\n- The victim appears to be in a deep, natural sleep\n- Taking any damage immediately wakes the victim\n\n### Tactical Uses\n- Kidnappers use it to subdue targets for transport\n- Thieves use it to ensure guards remain asleep\n- Can be released in an enclosed space for maximum effect\n- Pairs well with a rag or cloth for application on a single target\n\n### Detection\n- DC 15 Wisdom (Perception) check to notice the sweet, chemical odor\n- DC 15 Intelligence check with a poisoner's kit to identify\n- The cloud is nearly invisible but has a faint sweet smell",
+    "metadata_json": {
+      "type": "Inhaled",
+      "price": "300 gp",
+      "save_dc": 15,
+      "save_ability": "Constitution",
+      "damage": "none",
+      "condition": "poisoned, unconscious (8 hours)"
+    },
+    "tags": "poison,inhaled,constitution,unconscious,poisoned,knockout,kidnapping",
+    "source": "SRD 5.1",
+    "sort_order": 6
+  },
+  {
+    "slug": "malice",
+    "title": "Malice",
+    "category": "poison",
+    "subcategory": "inhaled",
+    "ruleset": "universal",
+    "summary": "An inhaled poison that blinds its victims.",
+    "content": "## Malice\n\n**Type:** Inhaled\n**Price:** 250 gp\n\nA creature subjected to this poison must succeed on a DC 15 Constitution saving throw or become poisoned for 1 hour. The poisoned creature is blinded.\n\n### Characteristics\n- Causes blindness in addition to the poisoned condition\n- Blinded creatures can't see and automatically fail ability checks that require sight\n- Attack rolls against a blinded creature have advantage\n- The blinded creature's attack rolls have disadvantage\n- Duration of 1 hour makes it a significant combat impairment\n\n### Tactical Uses\n- Extremely effective in combat due to the blinded condition\n- Can be used to incapacitate guards or sentries\n- Blinding a spellcaster prevents them from targeting creatures they can't see\n- Many spells require the caster to see the target\n\n### Detection\n- DC 15 Wisdom (Perception) check to notice before inhaling\n- The powder is dark gray and nearly invisible in dim light\n- DC 12 Intelligence check with a poisoner's kit to identify",
+    "metadata_json": {
+      "type": "Inhaled",
+      "price": "250 gp",
+      "save_dc": 15,
+      "save_ability": "Constitution",
+      "damage": "none",
+      "condition": "poisoned, blinded (1 hour)"
+    },
+    "tags": "poison,inhaled,constitution,blinded,poisoned,combat",
+    "source": "SRD 5.1",
+    "sort_order": 7
+  },
+  {
+    "slug": "midnight-tears",
+    "title": "Midnight Tears",
+    "category": "poison",
+    "subcategory": "ingested",
+    "ruleset": "universal",
+    "summary": "A deadly ingested poison with a delayed effect, dealing massive damage at midnight.",
+    "content": "## Midnight Tears\n\n**Type:** Ingested\n**Price:** 1,500 gp\n\nA creature that ingests this poison suffers no effect until the stroke of midnight. If the poison has not been neutralized before then, the creature must succeed on a DC 17 Constitution saving throw, taking 31 (9d6) poison damage on a failed save, or half as much damage on a successful one.\n\n### Characteristics\n- One of the most expensive and deadly poisons\n- Delayed effect makes it nearly impossible to trace back to the poisoner\n- No symptoms until midnight, when the damage hits all at once\n- DC 17 is one of the highest save DCs among standard poisons\n- 9d6 damage (average 31) can kill many NPCs outright\n- The delay is always until the next midnight, regardless of when ingested\n\n### Tactical Uses\n- The assassin's premier poison for untraceable kills\n- Can be administered hours before the effect, allowing the poisoner to establish an alibi\n- The victim feels perfectly fine until midnight\n- Only magical detection or a skilled poisoner can identify it before it takes effect\n\n### Detection\n- DC 20 Wisdom (Perception) check to detect in food or drink\n- DC 20 Intelligence check with a poisoner's kit to identify\n- Detect Poison and Disease spell reveals it\n- Completely tasteless and odorless",
+    "metadata_json": {
+      "type": "Ingested",
+      "price": "1,500 gp",
+      "save_dc": 17,
+      "save_ability": "Constitution",
+      "damage": "9d6 poison",
+      "condition": "delayed until midnight"
+    },
+    "tags": "poison,ingested,constitution,damage,delayed,deadly,assassin,expensive",
+    "source": "SRD 5.1",
+    "sort_order": 8
+  },
+  {
+    "slug": "oil-of-taggit",
+    "title": "Oil of Taggit",
+    "category": "poison",
+    "subcategory": "contact",
+    "ruleset": "universal",
+    "summary": "A contact poison that renders victims unconscious for up to 24 hours.",
+    "content": "## Oil of Taggit\n\n**Type:** Contact\n**Price:** 400 gp\n\nA creature subjected to this poison must succeed on a DC 13 Constitution saving throw or become poisoned for 24 hours. The poisoned creature is unconscious. The creature wakes up if it takes damage.\n\n### Characteristics\n- Contact poison, requiring only skin contact to take effect\n- 24-hour duration is the longest unconsciousness among standard poisons\n- Can be applied to surfaces, door handles, objects, or coins\n- The victim wakes only from taking damage (shaking does NOT wake them, unlike some other poisons)\n- Clear, oily substance that can be hard to detect on surfaces\n\n### Tactical Uses\n- Applied to objects the target is known to handle\n- Spread on door handles, book covers, or coins\n- Used by kidnappers for extended transport of victims\n- Can coat the inside of gloves or clothing\n\n### Detection\n- DC 15 Wisdom (Perception) check to notice the oily residue\n- DC 15 Intelligence check with a poisoner's kit to identify\n- Slightly greasy to the touch\n- Detect Poison and Disease spell reveals it",
+    "metadata_json": {
+      "type": "Contact",
+      "price": "400 gp",
+      "save_dc": 13,
+      "save_ability": "Constitution",
+      "damage": "none",
+      "condition": "poisoned, unconscious (24 hours)"
+    },
+    "tags": "poison,contact,constitution,unconscious,poisoned,surface,kidnapping",
+    "source": "SRD 5.1",
+    "sort_order": 9
+  },
+  {
+    "slug": "pale-tincture",
+    "title": "Pale Tincture",
+    "category": "poison",
+    "subcategory": "ingested",
+    "ruleset": "universal",
+    "summary": "An ingested poison that deals recurring poison damage until the creature makes successful saves.",
+    "content": "## Pale Tincture\n\n**Type:** Ingested\n**Price:** 250 gp\n\nA creature subjected to this poison must succeed on a DC 16 Constitution saving throw or take 3 (1d6) poison damage and become poisoned. The poisoned creature must repeat the saving throw every 24 hours, taking 3 (1d6) poison damage on a failed save. Until this poison ends, the damage the poison deals can't be healed by any means. After seven successful saving throws, the effect ends and the creature can heal normally.\n\n### Characteristics\n- One of the most insidious poisons due to its long-term nature\n- Damage cannot be healed while the poison persists\n- Requires SEVEN successful saves to overcome (not consecutive)\n- Each failed save deals additional unrecoverable damage\n- DC 16 is relatively high, making it hard to shake off\n- Can slowly whittle down even powerful creatures over days\n\n### Tactical Uses\n- Used for slow, agonizing assassination\n- The inability to heal the damage makes it terrifying\n- Victims grow weaker day by day\n- Can force the target to seek out rare cures\n\n### Curing\n- Seven successful DC 16 Constitution saves (over at least 7 days)\n- Lesser Restoration or similar magic ends the poison\n- Protection from Poison ends the effect\n- Neutralize Poison ends the effect",
+    "metadata_json": {
+      "type": "Ingested",
+      "price": "250 gp",
+      "save_dc": 16,
+      "save_ability": "Constitution",
+      "damage": "1d6 poison (recurring, unhealable)",
+      "condition": "poisoned, unhealable damage"
+    },
+    "tags": "poison,ingested,constitution,damage,recurring,unhealable,long-term",
+    "source": "SRD 5.1",
+    "sort_order": 10
+  },
+  {
+    "slug": "purple-worm-poison",
+    "title": "Purple Worm Poison",
+    "category": "poison",
+    "subcategory": "injury",
+    "ruleset": "universal",
+    "summary": "An extremely potent injury poison harvested from purple worms, dealing devastating damage.",
+    "content": "## Purple Worm Poison\n\n**Type:** Injury\n**Price:** 2,000 gp\n\nThis poison must be harvested from a dead or incapacitated purple worm. A creature subjected to this poison must make a DC 19 Constitution saving throw, taking 42 (12d6) poison damage on a failed save, or half as much damage on a successful one.\n\n### Characteristics\n- The most expensive and deadliest standard poison in the game\n- DC 19 is the highest save DC among standard poisons\n- 12d6 damage (average 42) can kill most creatures outright\n- Even a successful save still deals 21 average damage\n- Harvested from one of the most dangerous creatures in the Underdark\n\n### Harvesting\n- Requires a dead or incapacitated purple worm\n- DC 20 Intelligence (Nature) or poisoner's kit check to harvest\n- A single purple worm yields enough venom for 1d4+1 doses\n- Harvesting takes approximately 1 hour per dose\n- Extreme danger involved in obtaining the source creature\n\n### Market\n- Extremely rare and expensive (2,000 gp per dose)\n- Illegal in virtually all civilized areas\n- Primarily traded in Underdark markets and black market circles\n- Some adventurers harvest and sell it as a valuable treasure",
+    "metadata_json": {
+      "type": "Injury",
+      "price": "2,000 gp",
+      "save_dc": 19,
+      "save_ability": "Constitution",
+      "damage": "12d6 poison",
+      "condition": "none"
+    },
+    "tags": "poison,injury,constitution,damage,deadly,purple worm,expensive,underdark",
+    "source": "SRD 5.1",
+    "sort_order": 11
+  },
+  {
+    "slug": "serpent-venom",
+    "title": "Serpent Venom",
+    "category": "poison",
+    "subcategory": "injury",
+    "ruleset": "universal",
+    "summary": "An injury poison harvested from venomous snakes, dealing poison damage.",
+    "content": "## Serpent Venom\n\n**Type:** Injury\n**Price:** 200 gp\n\nThis poison must be harvested from a dead or incapacitated giant poisonous snake. A creature subjected to this poison must succeed on a DC 11 Constitution saving throw, taking 10 (3d6) poison damage on a failed save, or half as much damage on a successful one.\n\n### Characteristics\n- One of the more accessible harvested poisons\n- Moderate damage with a relatively low DC\n- Giant poisonous snakes are commonly encountered in many environments\n- Good entry-level poison for characters interested in using poisons\n\n### Harvesting\n- Requires a dead or incapacitated giant poisonous snake\n- DC 15 Intelligence (Nature) or poisoner's kit check to harvest\n- A single snake yields 1d2 doses\n- Must be harvested within 1 hour of the creature's death\n- Venom spoils after 24 hours unless properly stored\n\n### Storage\n- Must be kept in a sealed glass or ceramic vial\n- Spoils in 24 hours if not properly stored\n- Properly stored, retains potency for up to 1 year\n- Exposure to extreme heat accelerates degradation",
+    "metadata_json": {
+      "type": "Injury",
+      "price": "200 gp",
+      "save_dc": 11,
+      "save_ability": "Constitution",
+      "damage": "3d6 poison",
+      "condition": "none"
+    },
+    "tags": "poison,injury,constitution,damage,snake,venom,harvested",
+    "source": "SRD 5.1",
+    "sort_order": 12
+  },
+  {
+    "slug": "torpor",
+    "title": "Torpor",
+    "category": "poison",
+    "subcategory": "ingested",
+    "ruleset": "universal",
+    "summary": "An ingested poison that incapacitates and reduces the victim's speed to 0 for several hours.",
+    "content": "## Torpor\n\n**Type:** Ingested\n**Price:** 600 gp\n\nA creature subjected to this poison must succeed on a DC 15 Constitution saving throw or become poisoned for 4d6 hours. The poisoned creature is incapacitated and has a speed of 0.\n\n### Characteristics\n- Causes incapacitation rather than unconsciousness\n- The victim is aware but unable to act or move\n- Speed of 0 means the creature cannot move at all\n- Duration is random: 4d6 hours (average 14 hours, range 4-24)\n- The victim can still perceive their surroundings\n- Incapacitated creatures can't take actions or reactions\n\n### Tactical Uses\n- Ideal for interrogation (victim is conscious but helpless)\n- Long duration allows extended questioning or transport\n- The victim can hear and see everything happening around them\n- Used by slavers and captors who want conscious but compliant prisoners\n\n### Detection\n- DC 15 Wisdom (Perception) check to detect in food or drink\n- DC 15 Intelligence check with a poisoner's kit to identify\n- Has a slightly bitter taste that can be masked with strong flavors",
+    "metadata_json": {
+      "type": "Ingested",
+      "price": "600 gp",
+      "save_dc": 15,
+      "save_ability": "Constitution",
+      "damage": "none",
+      "condition": "poisoned, incapacitated, speed 0 (4d6 hours)"
+    },
+    "tags": "poison,ingested,constitution,incapacitated,poisoned,interrogation",
+    "source": "SRD 5.1",
+    "sort_order": 13
+  },
+  {
+    "slug": "truth-serum",
+    "title": "Truth Serum",
+    "category": "poison",
+    "subcategory": "ingested",
+    "ruleset": "universal",
+    "summary": "An ingested poison that compels the victim to speak truthfully.",
+    "content": "## Truth Serum\n\n**Type:** Ingested\n**Price:** 150 gp\n\nA creature subjected to this poison must succeed on a DC 11 Constitution saving throw or become poisoned for 1 hour. The poisoned creature can't knowingly speak a lie, as if under the effect of a Zone of Truth spell.\n\n### Characteristics\n- Forces truthful speech rather than dealing damage\n- Functions similarly to the Zone of Truth spell\n- The victim cannot knowingly lie but can choose to remain silent\n- Does not compel the victim to answer questions\n- The victim is aware they are poisoned and compelled to truth\n- Duration of 1 hour gives ample time for questioning\n\n### Important Limitations\n- The creature can still refuse to answer\n- The creature can give evasive or misleading (but technically true) answers\n- The creature knows it's being forced to tell the truth\n- Does not grant insight into the creature's thoughts\n- Only prevents deliberate lies, not honest mistakes\n\n### Tactical Uses\n- Interrogation of prisoners\n- Verifying deals and contracts\n- Political intrigue and espionage\n- Court proceedings (in settings where it's legal)\n\n### Detection\n- DC 12 Wisdom (Perception) check to detect in food or drink\n- DC 10 Intelligence check with a poisoner's kit to identify\n- Tasteless and odorless",
+    "metadata_json": {
+      "type": "Ingested",
+      "price": "150 gp",
+      "save_dc": 11,
+      "save_ability": "Constitution",
+      "damage": "none",
+      "condition": "poisoned, can't knowingly lie (1 hour)"
+    },
+    "tags": "poison,ingested,constitution,truth,interrogation,zone of truth",
+    "source": "SRD 5.1",
+    "sort_order": 14
+  },
+  {
+    "slug": "wyvern-poison",
+    "title": "Wyvern Poison",
+    "category": "poison",
+    "subcategory": "injury",
+    "ruleset": "universal",
+    "summary": "A potent injury poison harvested from wyverns, dealing heavy poison damage.",
+    "content": "## Wyvern Poison\n\n**Type:** Injury\n**Price:** 1,200 gp\n\nThis poison must be harvested from a dead or incapacitated wyvern. A creature subjected to this poison must make a DC 15 Constitution saving throw, taking 24 (7d6) poison damage on a failed save, or half as much damage on a successful one.\n\n### Characteristics\n- Second most damaging standard poison (after Purple Worm Poison)\n- DC 15 makes it moderately difficult to resist\n- 7d6 damage (average 24) is substantial\n- Even half damage on a successful save (average 12) is significant\n- Harvested from wyverns, which are dangerous but more accessible than purple worms\n\n### Harvesting\n- Requires a dead or incapacitated wyvern\n- DC 17 Intelligence (Nature) or poisoner's kit check to harvest\n- A single wyvern yields 1d6 doses from its stinger\n- Must be harvested within 1 hour of death\n- Wyvern venom sacs are located at the base of the tail stinger\n\n### Market\n- Expensive but more available than purple worm poison\n- Traded in black markets and among assassin guilds\n- Wyvern hunters sometimes earn a living harvesting and selling the venom\n- Illegal in most civilized areas",
+    "metadata_json": {
+      "type": "Injury",
+      "price": "1,200 gp",
+      "save_dc": 15,
+      "save_ability": "Constitution",
+      "damage": "7d6 poison",
+      "condition": "none"
+    },
+    "tags": "poison,injury,constitution,damage,wyvern,venom,harvested,expensive",
+    "source": "SRD 5.1",
+    "sort_order": 15
+  }
+]
