@@ -2,32 +2,153 @@
 
 **Current Version: V0.1.5**
 
-A local desktop application for tracking D&D characters across multiple rulesets, with built-in rules reference, spellbook management, inventory tracking, campaign journaling, real-time party sync, and more. Built with React + Tauri 2 (Rust).
+A native desktop application for managing D&D 5e characters with full ruleset support, a 964-article encyclopedia, real-time party sync, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
 ## Features
 
-- **Multi-Ruleset Support** — Per-character ruleset selection (5e 2014 PHB, 5e 2024 PHB)
-- **Full Character Sheet** — Ability scores, saving throws, skills, HP, death saves, inspiration, exhaustion
-- **Spellbook** — Spell slot tracking, prepared spells, spellcasting stats (DC, attack bonus), third-caster subclass support
-- **Inventory** — 40+ preloaded weapons/armor catalog, currency tracking (GP/SP/CP/EP), encumbrance, attunement slots
-- **Combat Tracker** — Attacks/weapons, 15 trackable conditions with icons, action economy reference, per-action combat notes
-- **Features & Traits** — Class features, racial traits, and feats with filtering (ruleset-aware)
-- **Campaign Journal** — Session-by-session notes with markdown editor, full-text search, and tags
-- **Quests** — Track objectives with completion checkboxes
-- **NPCs** — Record allies, enemies, and neutral characters you encounter
-- **Lore & World Notes** — Freeform world-building notes with categories
-- **Backstory** — Personality traits, physical description, goals, allies, bonds, flaws, and ideals
-- **Dice Roller** — All standard dice (d4–d100), custom expressions (e.g. `3d6+2`), advantage/disadvantage, natural 20/1 detection, roll history
-- **Rules Reference** — Searchable glossary of D&D mechanics
-- **Export & Import** — JSON export/import for character portability, printable ASCII text export
-- **Arcane Encyclopedia** — 964-article wiki covering spells, monsters, classes, races, gods, items, rules, and more with FTS5 full-text search and cross-references
-- **Party Connect** — LAN-based real-time party sync via WebSockets; host generates a 4-character room code, players join on the same WiFi to share HP, AC, class, level, and death status live
-- **Rest Mechanics** — Long rest (full HP restore, spell slot reset, exhaustion reduction, hit dice recovery) and short rest (spend hit dice, Warlock pact magic recovery)
-- **Level-Up System** — Dramatic fullscreen overlay with particle effects, class-specific gains (hit dice, spell slots, ASI, features), and Victory Fanfare audio
-- **Autosave** — Debounced auto-save with visual save indicator across all sections
-- **Themes & Settings** — 5 UI themes (Dungeon Dark, Aged Parchment, Frost Mage, Forest Druid, Infernal), adjustable UI scale (80–125%), font size options, collapsible sidebar
-- **Beginner-Friendly** — Interactive tutorial wizard covering dice, ability scores, HP, proficiency, spells, and conditions; contextual help tooltips throughout the app
-- **Tauri Desktop App** — Native desktop wrapper (1280x800 window), local SQLite storage, no account required
+### Character Sheet
+- **Ability Scores & Modifiers** — All six abilities with auto-calculated modifiers
+- **Saving Throws** — Per-ability proficiency toggles with calculated bonuses
+- **Skills** — All 18 skills with proficiency and expertise (double proficiency) support
+- **Hit Points** — Current HP, max HP, temporary HP tracking
+- **Death Saves** — Track successes and failures separately, auto-reset on long rest
+- **Inspiration** — Toggle inspiration on/off
+- **Exhaustion** — Ruleset-aware (6 levels in 2014, 10 levels in 2024)
+- **Character Info** — Name, race/subrace, class/subclass, background, alignment, campaign name, level, XP
+- **Proficiencies** — Separate tracking for armor, weapons, tools, and languages
+- **Movement & Senses** — Speed and special senses (e.g. Darkvision 60 ft)
+- **Multiclass Support** — Store and manage multiclass data
+
+### Spellbook
+- **Spell Slot Tracking** — Visual slot usage per spell level, reset on long rest
+- **Prepared Spells** — Mark spells as prepared for the day
+- **Spellcasting Stats** — Auto-calculated spell save DC (8 + proficiency + ability mod) and spell attack bonus
+- **Spellcasting Ability** — Auto-determined from class (INT for Wizards, WIS for Clerics, CHA for Sorcerers, etc.)
+- **Third-Caster Support** — Eldritch Knight and Arcane Trickster with INT-based casting
+- **Warlock Pact Magic** — Separate pact slots that recover on short rest
+- **Spell Details** — School, components (V/S/M), material descriptions, ritual casting, concentration, upcasting notes
+- **Spell Source** — Track which book each spell comes from (PHB, XGtE, etc.)
+
+### Inventory
+- **Item Catalog** — 40+ preloaded weapons (simple/martial, melee/ranged) and armor with full stats
+- **Weapon Properties** — Light, Heavy, Finesse, Versatile, Reach, Thrown, Two-Handed, etc.
+- **Armor & AC Formulas** — Shows how AC is calculated per armor type (e.g. "11 + DEX" for leather)
+- **Currency** — Gold (GP), Silver (SP), Copper (CP), Electrum (EP) with conversion rates
+- **Encumbrance** — Weight tracking with carry capacity based on STR
+- **Attunement** — Track attuned magic items (max 3)
+- **Custom Items** — Add homebrew items beyond the catalog
+
+### Combat Tracker
+- **Attacks & Weapons** — Add custom attacks with damage dice, damage type, range, and properties
+- **Conditions** — 15 D&D conditions with emoji icons and detailed info panels (Blinded, Charmed, Deafened, Frightened, Grappled, Incapacitated, Invisible, Paralyzed, Petrified, Poisoned, Prone, Restrained, Stunned, Unconscious, Exhaustion)
+- **Action Economy Reference** — Quick reference for Actions, Bonus Actions, Reactions
+- **Combat Notes** — Separate editable sections for Actions, Bonus Actions, Reactions, and Legendary Actions
+- **Auto-save** — Changes persist immediately with visual save indicator
+
+### Features & Traits
+- **Class Features** — All features for your class with descriptions, tracked by source level
+- **Racial Traits** — Race/species-specific abilities
+- **Feats** — Searchable/filterable feat list
+- **Ruleset-Aware** — Features update automatically when switching between 2014 and 2024 rulesets
+- **Feature Source** — Track where each feature comes from and at what level it was gained
+
+### Campaign Journal
+- **Session Notes** — Create entries per session with markdown formatting
+- **Full-Text Search** — Search across title, body, and tags
+- **Tag System** — Categorize entries with tags for easy filtering
+- **Markdown Editor** — Rich text editing with @uiw/react-md-editor
+
+### Quests
+- **Quest Tracking** — Create quests with title, description, and quest giver
+- **Objectives** — Individual checkable objectives per quest with progress bars
+- **Status** — Mark quests as active or completed
+
+### NPCs
+- **Role Classification** — Categorize as ally, enemy, neutral, or party member
+- **Status Tracking** — Mark NPCs as alive, dead, or unknown
+- **Descriptions** — Record appearance, personality, and notes
+
+### Lore & World Notes
+- **Categories** — Organize notes by category (locations, factions, history, etc.)
+- **Search** — Filter notes by category and content
+- **Freeform** — Write anything about your campaign world
+
+### Backstory
+- **Personality Traits, Bonds, Flaws, Ideals** — Structured fields for character personality
+- **Physical Description** — Appearance details
+- **Goals & Aspirations** — Character motivation
+- **Allies & Enemies** — Key relationships
+
+### Dice Roller
+- **Standard Dice** — Quick-roll buttons for d4, d6, d8, d10, d12, d20, d100
+- **Custom Expressions** — Parse and roll complex expressions like `3d6+2`, `2d8-1`
+- **Advantage/Disadvantage** — Roll 2d20 and take the higher or lower result
+- **Natural 20/1 Detection** — Visual feedback for crits and fumbles
+- **Roll History** — Review past rolls with results and labels
+- **Die Tips** — Contextual hints (e.g. "d4 — Dagger damage, Magic Missile")
+
+### Rules Reference
+- **Searchable Glossary** — D&D mechanics and terms
+- **Action Economy Card** — Quick reference for action types
+
+### Export & Import
+- **JSON Export** — Full character data backup (stats, skills, spells, inventory, journal, quests, NPCs, lore, backstory)
+- **JSON Import** — Restore characters from backup files
+- **ASCII Text Export** — Printable formatted character sheet summary with detailed stats, proficiencies, attacks, spells, and inventory
+
+### Arcane Encyclopedia
+- **964 Articles** — Spells, monsters, classes, races, gods, items, rules, backgrounds, feats, conditions, planes, and more
+- **FTS5 Full-Text Search** — Fast search across title, summary, and content using SQLite's FTS5 engine
+- **Cross-References** — Articles link to related articles with relationship types
+- **Metadata** — Articles store extensible JSON metadata
+- **Auto-Seeded** — Wiki database bundles with the app and copies on first launch
+- **Categories** — Browse by category (spells by level, monsters by CR, etc.)
+
+### Party Connect
+- **LAN Sync** — Real-time party sync over local WiFi, no internet required
+- **Room Codes** — Host generates a 4-character code; players join by entering it
+- **Live Data** — Syncs character name, race, class, level, HP, max HP, AC, and death status
+- **HP Color Bars** — Color-coded health indicators (green 51%+, yellow 26–50%, red 1–25%, skull at 0)
+- **Class Icons** — Thematic emoji icons per class (swords for melee, wands for casters)
+- **Connection Status** — Visual indicators for Connected/Connecting/Disconnected
+- **Auto-Sync** — Optionally auto-sync when HP or AC changes
+- **WebSocket Heartbeat** — 25-second ping interval to maintain connections
+
+### Rest Mechanics
+- **Long Rest** — Restores full HP, removes temporary HP, resets death saves, reduces exhaustion by 1, recovers half hit dice (rounded up), resets all spell slots
+- **Short Rest** — Spend hit dice to recover HP, Warlock pact magic slots recover (other casters' slots do not)
+- **Detailed Summary** — Shows exactly what was restored after each rest
+
+### Level-Up System
+- **Animated Overlay** — Fullscreen "LEVEL UP!" with gold shimmer gradient and 30 rising particle effects
+- **Class-Specific Gains** — Hit die increase, proficiency bonus changes, new spell slots, ASI notifications, and class features with descriptions
+- **Victory Fanfare** — Plays audio on level up (auto-dismisses when audio ends, 5-second fallback)
+- **ASI Detection** — Alerts when you reach an Ability Score Improvement level (choose +2/+1 to abilities or take a Feat)
+
+### Themes & Settings
+- **5 UI Themes** — Dungeon Dark (default), Aged Parchment, Frost Mage, Forest Druid, Infernal — each with color palette preview
+- **UI Scale** — Slider from 80–125% with labeled presets (Compact, Normal, Comfortable, Large, Huge)
+- **Font Size** — 4 options: Small (16px), Normal (18px), Large (20px), XL (22px)
+- **Sidebar** — Option to start with sidebar collapsed (persisted)
+- **Reset to Defaults** — One-click reset button
+- **Settings Persistence** — All settings saved to localStorage
+
+### Beginner-Friendly
+- **8-Step Tutorial Wizard** — Interactive walkthrough covering: Welcome to D&D, Dice Notation, Ability Scores, HP & Combat, Spellcasting, Skills & Saves, Resting & Recovery, Getting Started
+- **Contextual Help Tooltips** — Hover tooltips explaining every major field and mechanic throughout the app
+- **Dice Explainer** — Visual guide to dice types and their uses
+
+### Keyboard Shortcuts
+- **Ctrl+1–9** — Quick-switch between character sheet sections
+- **Ctrl+S** — Prevented (auto-save handles everything)
+
+### UI & UX
+- **Toast Notifications** — Success, error, and info toasts via react-hot-toast
+- **Framer Motion Animations** — Smooth transitions, particle effects, animated overlays
+- **Sidebar Status Badges** — Quick-glance indicators for Low HP, Down, Inspired, Exhaustion level, active Conditions
+- **Confirm Dialogs** — Type-to-confirm for destructive actions (e.g. "DELETE CHARACTER")
+- **Noise/Grain Overlay** — Subtle background texture for atmosphere
+- **Native Desktop Window** — 1280x800 resizable window, no browser required
 
 ## Rulesets
 
@@ -94,23 +215,25 @@ Creates a distributable installer/executable in `src-tauri/target/release/bundle
 
 ## Architecture
 
-- Each character gets its own SQLite `.db` file in `characters/`
+- Each character gets its own SQLite `.db` file in the app data directory
 - A shared `wiki.db` stores the encyclopedia (964 articles, FTS5 full-text search, auto-seeded on first startup)
-- Frontend communicates with the Rust backend via Tauri commands (IPC)
-- All data persists immediately to the database (debounced autosave)
+- Frontend communicates with the Rust backend via Tauri IPC commands
+- All data persists immediately to the database (debounced 800ms autosave)
 - Ruleset data lives in pluggable frontend modules (`frontend/src/data/rulesets/`)
 - A React Context (`RulesetContext`) provides the active ruleset to all components
 - Existing character databases auto-migrate when new columns are added
+- Connection pooling via mutex-locked map for efficient multi-character DB access
 - Data stored in the OS app data directory (e.g. `AppData/` on Windows, `~/Library/` on macOS)
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | React (Vite), TailwindCSS, Framer Motion, Lucide Icons |
+| Frontend | React 19, Vite, TailwindCSS v4, Framer Motion, Lucide Icons, React Router v7 |
 | Backend | Tauri 2 (Rust), rusqlite |
 | Database | SQLite (one DB per character, shared wiki DB with FTS5) |
 | Markdown | @uiw/react-md-editor |
+| Notifications | react-hot-toast |
 | Audio | HTML5 Audio API |
 
 ---
@@ -138,25 +261,26 @@ The original web-based version of The Codex, built with React + FastAPI.
 
 **Features:**
 - Multi-ruleset support (D&D 5e 2014 PHB & 2024 PHB)
-- Full character sheet (ability scores, saving throws, skills, HP, death saves, inspiration, exhaustion)
-- Spellbook with spell slot tracking, prepared spells, spellcasting stats, third-caster subclass support
-- Inventory with 40+ preloaded weapons/armor, currency tracking, encumbrance, attunement
-- Combat tracker with 15 conditions, action economy reference, per-action combat notes
-- Features & traits with class features, racial traits, feats (ruleset-aware filtering)
-- Campaign journal with markdown editor, full-text search, and tags
-- Quest tracker with objectives and completion checkboxes
-- NPC tracker for allies, enemies, and neutral characters
-- Lore & world notes with categories
-- Backstory editor (personality traits, physical description, goals, allies, bonds, flaws, ideals)
+- Full character sheet (ability scores, saving throws, skills with expertise, HP, temp HP, death saves, inspiration, exhaustion)
+- Spellbook with spell slot tracking, prepared spells, spellcasting stats, third-caster support, Warlock pact magic
+- Inventory with 40+ preloaded weapons/armor, weapon properties, AC formulas, currency tracking, encumbrance, attunement
+- Combat tracker with 15 conditions (with emoji icons), action economy reference, per-action combat notes, legendary actions
+- Features & traits with class features, racial traits, feats (ruleset-aware filtering, source tracking)
+- Campaign journal with markdown editor, full-text search across title/body/tags
+- Quest tracker with objectives, progress bars, quest givers, and status management
+- NPC tracker with role classification (ally/enemy/neutral/party) and status (alive/dead/unknown)
+- Lore & world notes with categories and search
+- Backstory editor (personality traits, bonds, flaws, ideals, physical description, goals, allies)
 - Dice roller with all standard dice, custom expressions, advantage/disadvantage, nat 20/1 detection
-- Searchable rules reference glossary
-- JSON export/import and printable ASCII text export
-- Arcane Encyclopedia — 964-article wiki with FTS5 full-text search and cross-references
-- Party Connect — LAN-based real-time party sync via WebSockets with room codes
-- Rest mechanics (long rest and short rest with proper D&D rules)
-- Level-up system with animated overlay, class-specific gains, and Victory Fanfare audio
+- Searchable rules reference glossary with action economy card
+- JSON export/import and detailed ASCII text export
+- Arcane Encyclopedia — 964-article wiki with FTS5 full-text search, cross-references, and metadata
+- Party Connect — LAN-based real-time party sync via WebSockets with room codes, color-coded HP bars, class icons
+- Rest mechanics (long rest and short rest with proper D&D rules, Warlock pact magic recovery)
+- Level-up system with animated overlay, particle effects, class-specific gains, ASI detection, Victory Fanfare audio
 - Debounced autosave with visual save indicator
-- 5 UI themes (Dungeon Dark, Aged Parchment, Frost Mage, Forest Druid, Infernal)
-- Adjustable UI scale (80–125%) and font size options
-- Interactive beginner tutorial wizard and contextual help tooltips
-- Per-character SQLite databases with auto-migration
+- 5 UI themes, adjustable UI scale (80–125%), 4 font sizes, collapsible sidebar
+- 8-step interactive beginner tutorial wizard and contextual help tooltips throughout
+- Keyboard shortcuts (Ctrl+1–9 section switching)
+- Toast notifications, Framer Motion animations, sidebar status badges, type-to-confirm dialogs
+- Per-character SQLite databases with auto-migration and connection pooling
