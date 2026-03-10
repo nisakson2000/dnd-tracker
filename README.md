@@ -40,26 +40,22 @@ Switching rulesets updates races/species, classes, spell slots, conditions, exha
 
 ## Prerequisites
 
-- Python 3.11+
-- Node.js 18+
-- Rust toolchain (for Tauri desktop builds)
+- [Node.js](https://nodejs.org/) 18+
+- [Rust toolchain](https://rustup.rs/) (includes `cargo`)
+- [Tauri CLI](https://v2.tauri.app/start/prerequisites/) prerequisites for your OS
 
 ## Setup
 
-### Backend
-
 ```bash
-pip install -r backend/requirements.txt
-```
+# Install Tauri CLI and root dependencies
+npm install
 
-### Frontend
-
-```bash
+# Install frontend dependencies
 cd frontend
 npm install
 ```
 
-### Level-Up Audio
+### Level-Up Audio (optional)
 
 Place the level-up audio file:
 
@@ -70,41 +66,25 @@ cp "/path/to/Victory Fanfare.flac" frontend/public/audio/levelup.flac
 
 ## Running
 
-### Quick Start (tmux)
+### Development
 
 ```bash
-bash run_servers.sh
+npm run tauri dev
 ```
 
-### Manual Start
+This starts the Vite dev server (with hot reload) and opens the Tauri desktop window automatically.
 
-Terminal 1 — Backend:
-```bash
-python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Terminal 2 — Frontend:
-```bash
-cd frontend
-npm run dev
-```
-
-### Tauri Desktop App
+### Production Build
 
 ```bash
-cd src-tauri
-cargo tauri dev
+npm run tauri build
 ```
 
-### Access
-
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
+Creates a distributable installer/executable in `src-tauri/target/release/bundle/`.
 
 ## Creating Your First Character
 
-1. Open http://localhost:5173
+1. Launch the app with `npm run tauri dev`
 2. Click "New Character"
 3. Choose a name and ruleset (5e 2014 or 5e 2024)
 4. Click Create
@@ -114,20 +94,19 @@ cargo tauri dev
 
 - Each character gets its own SQLite `.db` file in `characters/`
 - A shared `wiki.db` stores the encyclopedia (964 articles, FTS5 full-text search, auto-seeded on first startup)
-- Frontend communicates with the backend via REST API
+- Frontend communicates with the Rust backend via Tauri commands (IPC)
 - All data persists immediately to the database (debounced autosave)
 - Ruleset data lives in pluggable frontend modules (`frontend/src/data/rulesets/`)
 - A React Context (`RulesetContext`) provides the active ruleset to all components
 - Existing character databases auto-migrate when new columns are added
-- Tauri wraps the frontend + backend into a native desktop app with local data storage
+- Data stored in the OS app data directory (e.g. `AppData/` on Windows, `~/Library/` on macOS)
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
 | Frontend | React (Vite), TailwindCSS, Framer Motion, Lucide Icons |
-| Backend | FastAPI (Python), WebSockets (Party Connect) |
-| Desktop | Tauri 2 (Rust) |
-| Database | SQLite via SQLAlchemy (one DB per character, shared wiki DB with FTS5) |
+| Backend | Tauri 2 (Rust), rusqlite |
+| Database | SQLite (one DB per character, shared wiki DB with FTS5) |
 | Markdown | @uiw/react-md-editor |
 | Audio | HTML5 Audio API |
