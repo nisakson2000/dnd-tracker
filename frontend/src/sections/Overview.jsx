@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { TrendingUp, Heart, Shield, Zap, Eye, Footprints, Moon, Coffee, Check, Star } from 'lucide-react';
+import { TrendingUp, TrendingDown, Heart, Shield, Zap, Eye, Footprints, Moon, Coffee, Check, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOverview, updateOverview, updateAbilityScores, updateSavingThrows, updateSkills } from '../api/overview';
 import { longRest, shortRest } from '../api/rest';
@@ -32,6 +32,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const [loading, setLoading] = useState(true);
   const [localAbilities, setLocalAbilities] = useState({});
   const [showSubclassModal, setShowSubclassModal] = useState(false);
+  const [showLevelConfirm, setShowLevelConfirm] = useState(null);
   const prevLevelRef = useRef(null);
   const subclassTimeoutRef = useRef(null);
 
@@ -265,18 +266,67 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             <Moon size={12} /> Long Rest
           </button>
           <button
-            onClick={() => {
-              if (overview.level < 20) {
-                updateField('level', overview.level + 1);
-              }
-            }}
+            onClick={() => setShowLevelConfirm('down')}
+            className="btn-secondary text-xs flex items-center gap-1"
+            disabled={overview.level <= 1}
+            title="Reduce level by 1"
+          >
+            <TrendingDown size={12} /> Level Down
+          </button>
+          <button
+            onClick={() => setShowLevelConfirm('up')}
             className="btn-secondary text-xs flex items-center gap-1"
             disabled={overview.level >= 20}
+            title="Increase level by 1"
           >
             <TrendingUp size={12} /> Level Up!
           </button>
         </div>
       </div>
+
+      {/* Level change confirmation */}
+      {showLevelConfirm && (() => {
+        const isUp = showLevelConfirm === 'up';
+        const newLevel = isUp ? overview.level + 1 : overview.level - 1;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={e => e.target === e.currentTarget && setShowLevelConfirm(null)}>
+            <div className="bg-[#14121c] border rounded-lg p-6 max-w-sm w-full mx-4 shadow-2xl" style={{ borderColor: isUp ? 'rgba(201,168,76,0.3)' : 'rgba(251,191,36,0.2)' }}>
+              <h3 className="font-display text-lg text-amber-100 mb-2">
+                {isUp ? 'Level Up?' : 'Level Down?'}
+              </h3>
+              <p className="text-sm text-amber-200/60 mb-1">
+                {isUp
+                  ? `Advance ${overview.name || 'your character'} from level ${overview.level} to level ${newLevel}?`
+                  : `Reduce ${overview.name || 'your character'} from level ${overview.level} to level ${newLevel}?`}
+              </p>
+              {!isUp && (
+                <p className="text-xs text-amber-200/40 mb-4">This won't automatically remove features or change stats gained at the current level.</p>
+              )}
+              {isUp && (
+                <p className="text-xs text-amber-200/40 mb-4">You'll gain your proficiency bonus, class features, and any ASI for level {newLevel}.</p>
+              )}
+              <div className="flex gap-3 justify-end">
+                <button onClick={() => setShowLevelConfirm(null)} className="btn-secondary text-sm">Cancel</button>
+                <button
+                  onClick={() => {
+                    updateField('level', newLevel);
+                    setShowLevelConfirm(null);
+                    toast.success(isUp ? `Leveled up to ${newLevel}!` : `Reduced to level ${newLevel}`);
+                  }}
+                  className="text-sm px-4 py-2 rounded font-medium transition-colors"
+                  style={{
+                    background: isUp ? 'rgba(201,168,76,0.2)' : 'rgba(251,191,36,0.1)',
+                    color: isUp ? '#c9a84c' : '#fbbf24',
+                    border: `1px solid ${isUp ? 'rgba(201,168,76,0.4)' : 'rgba(251,191,36,0.2)'}`,
+                  }}
+                >
+                  {isUp ? 'Level Up!' : 'Level Down'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Condition Effects Banner */}
       {activeConditions.length > 0 && (
