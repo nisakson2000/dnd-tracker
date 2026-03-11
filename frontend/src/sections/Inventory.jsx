@@ -220,13 +220,21 @@ export default function Inventory({ characterId, character }) {
               if (!searchQuery) return true;
               const q = searchQuery.toLowerCase();
               return (item.name || '').toLowerCase().includes(q) || (item.item_type || '').toLowerCase().includes(q) || (item.description || '').toLowerCase().includes(q);
-            }).map(item => (
-              <div key={item.id} className="bg-[#0d0d12] rounded p-3 border border-gold/10 flex items-start gap-3">
-                <div className="flex-1">
+            }).map(item => {
+              const typeColor = { weapon: 'border-l-red-500/70', armor: 'border-l-blue-400/70', wondrous: 'border-l-purple-400/70', consumable: 'border-l-emerald-400/70', misc: 'border-l-amber-200/20' };
+              const rarityColor = { common: 'border-l-gray-400/60', uncommon: 'border-l-emerald-400/70', rare: 'border-l-blue-400/70', 'very rare': 'border-l-purple-400/70', legendary: 'border-l-orange-400/70' };
+              const leftBorder = item.rarity ? (rarityColor[item.rarity.toLowerCase()] || typeColor[item.item_type] || 'border-l-amber-200/20') : (typeColor[item.item_type] || 'border-l-amber-200/20');
+              return (
+              <div key={item.id} className={`bg-[#0d0d12] rounded p-3 border border-gold/10 border-l-[3px] ${leftBorder} flex items-start gap-3`} title={item.description || undefined}>
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-amber-100 font-medium">{item.name}</span>
                     {item.quantity > 1 && <span className="text-xs text-amber-200/40">x{item.quantity}</span>}
+                    {item.quantity > 0 && item.quantity <= 5 && (item.item_type === 'consumable') && (
+                      <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" title={`Low stock: ${item.quantity} remaining`} />
+                    )}
                     <span className="text-xs text-amber-200/30 capitalize">{item.item_type}</span>
+                    {item.rarity && <span className="text-xs text-amber-200/30 capitalize">{item.rarity}</span>}
                     {item.equipped && <span className="text-xs bg-emerald-800/40 text-emerald-300 px-1.5 py-0.5 rounded">Equipped</span>}
                     {item.attuned && <span className="text-xs bg-purple-800/40 text-purple-300 px-1.5 py-0.5 rounded">Attuned</span>}
                   </div>
@@ -242,7 +250,9 @@ export default function Inventory({ characterId, character }) {
                       </span>
                     )}
                   </div>
-                  {item.description && <p className="text-xs text-amber-200/40 mt-1">{item.description}</p>}
+                  {item.description && (
+                    <p className="text-xs text-amber-200/30 italic mt-1 truncate">{item.description}</p>
+                  )}
                 </div>
                 <div className="flex gap-1">
                   <button onClick={() => handleToggle(item, 'equipped')} className="btn-secondary text-xs px-2 py-1">
@@ -258,7 +268,8 @@ export default function Inventory({ characterId, character }) {
                   </button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

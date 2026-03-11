@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { Dice5 } from 'lucide-react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { Dice5, Copy, ChevronDown, ChevronUp, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import HelpTooltip from '../components/HelpTooltip';
@@ -37,6 +37,18 @@ function parseRoll(expr) {
   return { count, sides, modifier };
 }
 
+function rollStatBlock() {
+  const stats = [];
+  for (let i = 0; i < 6; i++) {
+    const dice = Array.from({ length: 4 }, () => rollDie(6));
+    const minVal = Math.min(...dice);
+    const minIdx = dice.indexOf(minVal);
+    const total = dice.reduce((s, v) => s + v, 0) - minVal;
+    stats.push({ dice, droppedIdx: minIdx, total });
+  }
+  return stats;
+}
+
 export default function DiceRoller({ activeConditions = [], diceHistory, onDiceHistoryChange }) {
   // Use lifted state if provided, else local state (fallback)
   const [localHistory, setLocalHistory] = useState([]);
@@ -48,7 +60,38 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
   const [lastRoll, setLastRoll] = useState(null);
   const [rolling, setRolling] = useState(false);
   const [rollMode, setRollMode] = useState('normal');
+  const [statBlockResult, setStatBlockResult] = useState(null);
+  const [showStatBlock, setShowStatBlock] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const condEffects = computeConditionEffects(activeConditions);
+
+  // #208 — Compute roll statistics per die type
+  const rollStats = useMemo(() => {
+    const byType = {};
+    for (const entry of history) {
+      // Only count single-die quick rolls (e.g. 1d20, 1d6) for meaningful stats
+      const match = entry.expr.match(/^1?d(\d+)/i);
+      if (!match) continue;
+      const dieType = `d${match[1]}`;
+      if (!byType[dieType]) byType[dieType] = { rolls: [], total: 0 };
+      const val = entry.rolls[0];
+      if (val == null) continue;
+      byType[dieType].rolls.push(val);
+      byType[dieType].total += val;
+    }
+    const stats = {};
+    for (const [dieType, data] of Object.entries(byType)) {
+      if (data.rolls.length >= 5) {
+        stats[dieType] = {
+          count: data.rolls.length,
+          average: (data.total / data.rolls.length).toFixed(1),
+          highest: Math.max(...data.rolls),
+          lowest: Math.min(...data.rolls),
+        };
+      }
+    }
+    return stats;
+  }, [history]);
 
   // Auto-set roll mode based on active conditions
   useEffect(() => {
@@ -108,6 +151,44 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
       setCustomExpr('');
     } else if (customExpr.trim()) {
       toast.error('Invalid roll — try "3d6+5" or "1d20"');
+    }
+  };
+
+  const handleRollStats = () => {
+    const result = rollStatBlock();
+    setStatBlockResult(result);
+    setShowStatBlock(true);
+    // Also add to history
+    const grandTotal = result.reduce((s, r) => s + r.total, 0);
+    const entry = {
+      id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+      expr: '4d6kh3 x6',
+      label: 'Stat Block Roll',
+      rolls: result.map(r => r.total),
+      modifier: 0,
+      total: grandTotal,
+      isNat20: false,
+      isNat1: false,
+      advInfo: null,
+    };
+    setHistory(prev => [entry, ...prev].slice(0, 50));
+  };
+
+  const handleCopyHistory = async () => {
+    if (history.length === 0) {
+      toast.error('No rolls to copy');
+      return;
+    }
+    const lines = history.slice().reverse().map(entry => {
+      const time = new Date(parseInt(entry.id)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const label = entry.label ? ` (${entry.label})` : '';
+      return `[${time}] ${entry.expr}: ${entry.total}${label}`;
+    });
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+      toast.success('Roll history copied to clipboard');
+    } catch {
+      toast.error('Failed to copy — clipboard access denied');
     }
   };
 
@@ -183,8 +264,57 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
               <span className="text-[9px] text-amber-200/30 group-hover:text-amber-200/50">{DIE_LABELS[sides]}</span>
             </button>
           ))}
+          <button onClick={handleRollStats}
+            className="w-16 h-16 rounded-lg bg-[#0d0d12] border-2 border-purple-500/30 hover:border-purple-400/60 transition-all flex flex-col items-center justify-center group hover:shadow-[0_0_15px_rgba(168,85,247,0.2)]"
+            aria-label="Roll ability scores (4d6 drop lowest x6)"
+            title="Roll 4d6-drop-lowest six times for ability scores"
+          >
+            <span className="text-xs font-display text-purple-300 group-hover:text-purple-200 transition-colors">Stats</span>
+            <span className="text-[9px] text-purple-300/40 group-hover:text-purple-300/60">4d6kh3</span>
+          </button>
         </div>
       </div>
+
+      {/* #202 — Stat Block Result */}
+      <AnimatePresence>
+        {showStatBlock && statBlockResult && (
+          <motion.div
+            className="card"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-display text-purple-200">Ability Score Rolls <span className="text-xs text-amber-200/30 font-normal">(4d6 drop lowest)</span></h3>
+              <button onClick={() => setShowStatBlock(false)} className="text-xs text-amber-200/30 hover:text-amber-200/60 transition-colors">Hide</button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {statBlockResult.map((stat, i) => (
+                <div key={i} className="bg-[#0d0d12] rounded-lg border border-purple-500/20 p-3 text-center">
+                  <div className="text-3xl font-display text-amber-100 mb-1">{stat.total}</div>
+                  <div className="flex items-center justify-center gap-1.5 text-sm">
+                    {stat.dice.map((val, j) => (
+                      <span
+                        key={j}
+                        className={j === stat.droppedIdx
+                          ? 'text-red-400/40 line-through text-xs'
+                          : 'text-amber-200/60'}
+                      >
+                        {val}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 text-center text-sm text-amber-200/40">
+              Total: <span className="text-amber-100 font-bold">{statBlockResult.reduce((s, r) => s + r.total, 0)}</span>
+              <span className="ml-3">Avg: <span className="text-amber-100">{(statBlockResult.reduce((s, r) => s + r.total, 0) / 6).toFixed(1)}</span></span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Custom Expression */}
       <div className="card">
@@ -256,9 +386,14 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-display text-amber-100">Roll History{history.length > 0 && <span className="text-amber-200/30 text-sm font-normal ml-2">({history.length} {history.length === 1 ? 'roll' : 'rolls'})</span>}</h3>
           {history.length > 0 && (
-            <button onClick={() => setHistory([])} className="text-xs text-amber-200/30 hover:text-amber-200/60 transition-colors">
-              Clear
-            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={handleCopyHistory} className="text-xs text-amber-200/30 hover:text-amber-200/60 transition-colors flex items-center gap-1" title="Copy roll history to clipboard">
+                <Copy size={12} /> Copy
+              </button>
+              <button onClick={() => setHistory([])} className="text-xs text-amber-200/30 hover:text-amber-200/60 transition-colors">
+                Clear
+              </button>
+            </div>
           )}
         </div>
         {history.length === 0 ? (
@@ -285,6 +420,48 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
           </div>
         )}
       </div>
+
+      {/* #208 — Roll Statistics Panel */}
+      {Object.keys(rollStats).length > 0 && (
+        <div className="card">
+          <button
+            onClick={() => setShowStats(s => !s)}
+            className="w-full flex items-center justify-between"
+          >
+            <h3 className="font-display text-amber-100 flex items-center gap-2">
+              <BarChart3 size={16} className="text-gold/60" />
+              Roll Statistics
+            </h3>
+            {showStats ? <ChevronUp size={16} className="text-amber-200/40" /> : <ChevronDown size={16} className="text-amber-200/40" />}
+          </button>
+          <AnimatePresence>
+            {showStats && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-3 space-y-2">
+                  {Object.entries(rollStats).sort((a, b) => {
+                    const order = ['d4','d6','d8','d10','d12','d20','d100'];
+                    return order.indexOf(a[0]) - order.indexOf(b[0]);
+                  }).map(([dieType, data]) => (
+                    <div key={dieType} className="flex items-center gap-4 py-2 px-3 rounded bg-[#0d0d12] border border-amber-200/5 text-sm">
+                      <span className="font-display text-gold w-10">{dieType}</span>
+                      <span className="text-amber-200/50">{data.count} rolls</span>
+                      <span className="text-amber-200/50">Avg: <span className="text-amber-100">{data.average}</span></span>
+                      <span className="text-amber-200/50">Hi: <span className="text-emerald-300">{data.highest}</span></span>
+                      <span className="text-amber-200/50">Lo: <span className="text-red-300">{data.lowest}</span></span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }

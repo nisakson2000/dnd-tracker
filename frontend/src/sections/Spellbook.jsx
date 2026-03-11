@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronRight, Sparkles, RotateCcw, Search } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, ChevronUp, Sparkles, RotateCcw, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getSpells, addSpell, updateSpell, deleteSpell, getSpellSlots, updateSpellSlots, resetSpellSlots } from '../api/spells';
 import { getOverview } from '../api/overview';
@@ -26,10 +26,13 @@ export default function Spellbook({ characterId }) {
   const [showAdd, setShowAdd] = useState(false);
   const [editingSpell, setEditingSpell] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [levelFilter, setLevelFilter] = useState('all');
+  const [levelFilter, setLevelFilter] = useState(() => {
+    try { return sessionStorage.getItem(`codex_spellfilter_${characterId}`) || 'all'; } catch { return 'all'; }
+  });
   const [preparedFilter, setPreparedFilter] = useState('all');
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [concentratingOn, setConcentratingOn] = useState(null); // spell id
+  const [expandedSpell, setExpandedSpell] = useState(null);
 
   const load = async () => {
     try {
@@ -49,6 +52,11 @@ export default function Spellbook({ characterId }) {
   };
 
   useEffect(() => { load(); }, [characterId]);
+
+  // Persist spell level filter to sessionStorage
+  useEffect(() => {
+    try { sessionStorage.setItem(`codex_spellfilter_${characterId}`, levelFilter); } catch {}
+  }, [levelFilter, characterId]);
 
   const filteredSpells = useMemo(() => spells.filter(s => {
     if (searchQuery) {
@@ -290,7 +298,30 @@ export default function Spellbook({ characterId }) {
           <p className="text-xs text-amber-200/20">Use the "Add Spell" button to build your spellbook</p>
         </div>
       )}
-      {[0,1,2,3,4,5,6,7,8,9].map(level => {
+
+      {/* Cantrips — pinned at top */}
+      {(spellsByLevel[0] || []).length > 0 && (
+        <div className="card border-purple-500/20">
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="font-display text-amber-100">Cantrips</h3>
+            <span className="text-xs text-purple-300/60 font-normal">— At Will</span>
+            <span className="text-amber-200/40 text-sm ml-auto">({spellsByLevel[0].length})</span>
+          </div>
+          <div className="space-y-2">
+            {spellsByLevel[0].map(spell => (
+              <SpellRow key={spell.id} spell={spell} level={0} spells={spells} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Divider between cantrips and leveled spells */}
+      {(spellsByLevel[0] || []).length > 0 && [1,2,3,4,5,6,7,8,9].some(l => (spellsByLevel[l] || []).length > 0) && (
+        <div className="border-t border-amber-200/10" />
+      )}
+
+      {/* Leveled spells (1-9) */}
+      {[1,2,3,4,5,6,7,8,9].map(level => {
         const levelSpells = spellsByLevel[level] || [];
         if (levelSpells.length === 0) return null;
         const isExpanded = expandedLevel === level;
@@ -307,60 +338,8 @@ export default function Spellbook({ characterId }) {
             </button>
             {isExpanded && (
               <div className="mt-3 space-y-2">
-                {levelSpells.length === 0 && <p className="text-sm text-amber-200/30">No spells at this level.</p>}
                 {levelSpells.map(spell => (
-                  <div key={spell.id} className="bg-[#0d0d12] rounded p-3 border border-gold/10">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-amber-100 font-medium">{spell.name}</span>
-                        {spell.concentration && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (concentratingOn === spell.id) {
-                                setConcentratingOn(null);
-                              } else {
-                                if (concentratingOn) {
-                                  const prev = spells.find(s => s.id === concentratingOn);
-                                  toast(`Dropped concentration on ${prev?.name || 'previous spell'}`, { icon: '\u26A0\uFE0F', duration: 3000 });
-                                }
-                                setConcentratingOn(spell.id);
-                                toast.success(`Concentrating on ${spell.name}`);
-                              }
-                            }}
-                            className={`text-xs px-1.5 py-0.5 rounded transition-all ${
-                              concentratingOn === spell.id
-                                ? 'bg-purple-600/60 text-purple-100 border border-purple-400/50 shadow-[0_0_8px_rgba(124,77,189,0.3)]'
-                                : 'bg-purple-800/40 text-purple-300 hover:bg-purple-700/50'
-                            }`}
-                            title={concentratingOn === spell.id ? 'Click to drop concentration' : 'Click to concentrate on this spell'}
-                          >
-                            C
-                          </button>
-                        )}
-                        {spell.ritual && <span className="text-xs bg-blue-800/40 text-blue-300 px-1.5 py-0.5 rounded" title="Ritual: Can be cast in 10 extra minutes without using a spell slot.">R</span>}
-                        {level > 0 && (
-                          <button
-                            onClick={() => handleUpdateSpell(spell.id, { ...spell, prepared: !spell.prepared })}
-                            className={`text-xs px-1.5 py-0.5 rounded ${spell.prepared ? 'bg-emerald-800/40 text-emerald-300' : 'bg-gray-800/40 text-gray-400'}`}
-                          >
-                            {spell.prepared ? 'Prepared' : 'Unprepared'}
-                          </button>
-                        )}
-                      </div>
-                      <button onClick={() => setConfirmDelete(spell)} className="text-red-400/50 hover:text-red-400" aria-label={`Delete spell ${spell.name}`}>
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                    <div className="text-xs text-amber-200/40 space-x-3">
-                      {spell.school && <span>{spell.school}</span>}
-                      {spell.casting_time && <span>{spell.casting_time}</span>}
-                      {spell.spell_range && <span>{spell.spell_range}</span>}
-                      {spell.duration && <span>{spell.duration}</span>}
-                    </div>
-                    {spell.components && <div className="text-xs text-amber-200/30 mt-1">Components: {spell.components} {spell.material && `(${spell.material})`}</div>}
-                    {spell.description && <p className="text-sm text-amber-200/60 mt-2">{spell.description}</p>}
-                  </div>
+                  <SpellRow key={spell.id} spell={spell} level={level} spells={spells} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} />
                 ))}
               </div>
             )}
@@ -378,6 +357,90 @@ export default function Spellbook({ characterId }) {
         onConfirm={() => handleDeleteSpell(confirmDelete.id)}
         onCancel={() => setConfirmDelete(null)}
       />
+    </div>
+  );
+}
+
+function SpellRow({ spell, level, spells, concentratingOn, setConcentratingOn, handleUpdateSpell, setConfirmDelete, expandedSpell, setExpandedSpell }) {
+  return (
+    <div className="bg-[#0d0d12] rounded p-3 border border-gold/10">
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-2">
+          <span className="text-amber-100 font-medium">{spell.name}</span>
+          {spell.concentration && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (concentratingOn === spell.id) {
+                  setConcentratingOn(null);
+                } else {
+                  if (concentratingOn) {
+                    const prev = spells.find(s => s.id === concentratingOn);
+                    toast(`Dropped concentration on ${prev?.name || 'previous spell'}`, { icon: '\u26A0\uFE0F', duration: 3000 });
+                  }
+                  setConcentratingOn(spell.id);
+                  toast.success(`Concentrating on ${spell.name}`);
+                }
+              }}
+              className={`text-xs px-1.5 py-0.5 rounded transition-all ${
+                concentratingOn === spell.id
+                  ? 'bg-purple-600/60 text-purple-100 border border-purple-400/50 shadow-[0_0_8px_rgba(124,77,189,0.3)]'
+                  : 'bg-purple-800/40 text-purple-300 hover:bg-purple-700/50'
+              }`}
+              title={concentratingOn === spell.id ? 'Click to drop concentration' : 'Click to concentrate on this spell'}
+            >
+              C
+            </button>
+          )}
+          {spell.ritual && <span className="text-xs bg-blue-800/40 text-blue-300 px-1.5 py-0.5 rounded" title="Ritual: Can be cast in 10 extra minutes without using a spell slot.">R</span>}
+          {level > 0 && (
+            <button
+              onClick={() => handleUpdateSpell(spell.id, { ...spell, prepared: !spell.prepared })}
+              className={`text-xs px-1.5 py-0.5 rounded ${spell.prepared ? 'bg-emerald-800/40 text-emerald-300' : 'bg-gray-800/40 text-gray-400'}`}
+            >
+              {spell.prepared ? 'Prepared' : 'Unprepared'}
+            </button>
+          )}
+        </div>
+        <button onClick={() => setConfirmDelete(spell)} className="text-red-400/50 hover:text-red-400" aria-label={`Delete spell ${spell.name}`}>
+          <Trash2 size={14} />
+        </button>
+      </div>
+      <div className="text-xs text-amber-200/40 space-x-3">
+        {spell.school && <span>{spell.school}</span>}
+        {spell.casting_time && <span>{spell.casting_time}</span>}
+        {spell.spell_range && <span>Range: {spell.spell_range}</span>}
+        {spell.duration && <span>Duration: {spell.duration}</span>}
+      </div>
+      {spell.components && (
+        <div className="flex items-center gap-1 mt-1">
+          {spell.components.split(',').map(c => c.trim()).filter(Boolean).map(comp => {
+            const letter = comp.charAt(0).toUpperCase();
+            const isM = letter === 'M';
+            return (
+              <span
+                key={comp}
+                className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-800/30 text-amber-300/80"
+                title={isM && spell.material ? spell.material : `${comp === 'V' ? 'Verbal' : comp === 'S' ? 'Somatic' : comp === 'M' ? 'Material' : comp}`}
+              >
+                {letter}
+              </span>
+            );
+          })}
+        </div>
+      )}
+      {spell.description && (
+        <button
+          onClick={() => setExpandedSpell(expandedSpell === spell.id ? null : spell.id)}
+          className="flex items-center gap-1 text-xs text-amber-200/30 hover:text-amber-200/50 mt-1.5 transition-colors"
+        >
+          {expandedSpell === spell.id ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          {expandedSpell === spell.id ? 'Hide description' : 'Show description'}
+        </button>
+      )}
+      {expandedSpell === spell.id && spell.description && (
+        <p className="text-sm text-amber-200/60 mt-2">{spell.description}</p>
+      )}
     </div>
   );
 }

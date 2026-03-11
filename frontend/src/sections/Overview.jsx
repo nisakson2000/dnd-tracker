@@ -211,6 +211,16 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     };
   }, [abilityMap, skills, profBonus, condEffects, overview?.speed]);
 
+  // Spell Save DC: 8 + proficiency bonus + spellcasting ability modifier
+  const spellSaveDC = useMemo(() => {
+    if (!overview?.primary_class) return null;
+    const classData = CLASSES.find(c => c.name === overview.primary_class);
+    if (!classData?.spellcasting) return null;
+    const spellAbility = classData.spellcasting.ability;
+    const abilityMod = calcMod(abilityMap[spellAbility] || 10);
+    return { dc: 8 + profBonus + abilityMod, ability: spellAbility };
+  }, [overview?.primary_class, CLASSES, abilityMap, profBonus]);
+
   const sortedSkillEntries = useMemo(() => Object.entries(SKILLS).sort(([a], [b]) => a.localeCompare(b)), [SKILLS]);
 
   if (loading || !overview) {
@@ -546,7 +556,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         {/* Right column: HP, Core Stats, Hit Dice, Death Saves, Conditions */}
         <div className="space-y-6">
           {/* Proficiency + Core Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className={`grid grid-cols-2 ${spellSaveDC ? 'md:grid-cols-6' : 'md:grid-cols-5'} gap-4`}>
             <div className="card text-center" title={`Proficiency bonus: +${profBonus} (levels ${profBonus === 2 ? '1-4' : profBonus === 3 ? '5-8' : profBonus === 4 ? '9-12' : profBonus === 5 ? '13-16' : '17-20'})`}>
               <div className="text-xs text-amber-200/50 mb-1">Proficiency<HelpTooltip text={HELP.proficiencyBonus} /></div>
               <div className="text-2xl font-display text-gold">{modStr(profBonus)}</div>
@@ -575,6 +585,13 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
               <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Eye size={12} /> Passive Perc.<HelpTooltip text={HELP.passivePerception} /></div>
               <div className="text-2xl font-display text-amber-100">{passivePerc}</div>
             </div>
+            {spellSaveDC && (
+              <div className="card text-center" title={`Spell Save DC = 8 + ${profBonus} (prof) + ${modStr(calcMod(abilityMap[spellSaveDC.ability] || 10))} (${spellSaveDC.ability})`}>
+                <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Star size={12} /> Spell DC</div>
+                <div className="text-2xl font-display text-purple-300">{spellSaveDC.dc}</div>
+                <div className="text-[10px] text-amber-200/30 mt-0.5">{spellSaveDC.ability}</div>
+              </div>
+            )}
           </div>
 
           {/* HP Section */}

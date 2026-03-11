@@ -127,14 +127,25 @@ export default function Lore({ characterId }) {
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <h4 className="text-amber-100 font-display">{note.title}</h4>
-                  {note.category && <span className="text-xs bg-purple-800/30 text-purple-300 px-2 py-0.5 rounded">{note.category}</span>}
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {note.category && <span className="text-xs bg-purple-800/30 text-purple-300 px-2 py-0.5 rounded">{note.category}</span>}
+                    {note.body && (() => {
+                      const words = note.body.trim().split(/\s+/).length;
+                      const mins = Math.ceil(words / 200);
+                      return <span className="text-[10px] text-amber-200/25">{words} words ~ {mins} min read</span>;
+                    })()}
+                  </div>
                 </div>
                 <div className="flex gap-1">
                   <button onClick={() => { setEditing(note); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200" aria-label={`Edit ${note.title || 'note'}`}><Edit2 size={14} /></button>
                   <button onClick={() => setConfirmDelete(note)} className="text-red-400/50 hover:text-red-400" aria-label={`Delete ${note.title || 'note'}`}><Trash2 size={14} /></button>
                 </div>
               </div>
-              <p className="text-sm text-amber-200/50 whitespace-pre-wrap line-clamp-4">{note.body}</p>
+              {note.body && (
+                <div className="text-sm text-amber-200/50 line-clamp-4 [&_.wmde-markdown]:!bg-transparent [&_.wmde-markdown]:!text-amber-200/50 [&_.wmde-markdown]:!font-sans [&_.wmde-markdown]:!text-sm" data-color-mode="dark">
+                  <MDEditor.Markdown source={note.body} />
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Plus, Trash2, Swords, Dice5, Timer, MinusCircle, X, Search } from 'lucide-react';
+import { Plus, Trash2, Swords, Dice5, Timer, MinusCircle, X, Search, Minus, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAttacks, addAttack, deleteAttack, getConditions, updateConditions, getCombatNotes, updateCombatNotes } from '../api/combat';
 import { useAutosave } from '../hooks/useAutosave';
@@ -33,7 +33,7 @@ function parseDamage(expr) {
   return { count: parseInt(match[1]) || 1, sides: parseInt(match[2]), mod: parseInt(match[3]) || 0 };
 }
 
-export default function Combat({ characterId, onConditionsChange }) {
+export default function Combat({ characterId, character, onConditionsChange }) {
   const { CONDITIONS } = useRuleset();
   const [attacks, setAttacks] = useState([]);
   const [conditions, setConditions] = useState([]);
@@ -43,7 +43,81 @@ export default function Combat({ characterId, onConditionsChange }) {
   const [showConditionInfo, setShowConditionInfo] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [rollResults, setRollResults] = useState({});
+  const [dmgModifiers, setDmgModifiers] = useState({}); // #111 — 'resist' | 'vuln' | null per attack id
   const rollTimeoutRefs = useRef({});
+
+  // #113 — Initiative/combatant tracker persisted to sessionStorage
+  const initiativeKey = `codex_initiative_${characterId}`;
+  const [combatants, setCombatants] = useState(() => {
+    try {
+      const stored = sessionStorage.getItem(initiativeKey);
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
+  const [newCombatantName, setNewCombatantName] = useState('');
+  const [newCombatantInit, setNewCombatantInit] = useState('');
+
+  useEffect(() => {
+    sessionStorage.setItem(initiativeKey, JSON.stringify(combatants));
+  }, [combatants, initiativeKey]);
+
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(`codex_initiative_${characterId}`);
+      setCombatants(stored ? JSON.parse(stored) : []);
+    } catch { setCombatants([]); }
+  }, [characterId]);
+
+  const addCombatant = () => {
+    const name = newCombatantName.trim();
+    if (!name) return;
+    const init = parseInt(newCombatantInit) || 0;
+    setCombatants(prev => [...prev, { id: Date.now(), name, initiative: init }].sort((a, b) => b.initiative - a.initiative));
+    setNewCombatantName('');
+    setNewCombatantInit('');
+  };
+
+  const removeCombatant = (id) => {
+    setCombatants(prev => prev.filter(c => c.id !== id));
+  };
+
+  const clearCombatants = () => {
+    setCombatants([]);
+  };
+
+  // #115 — Legendary action counter persisted to sessionStorage
+  const legendaryKey = `codex_legendary_${characterId}`;
+  const [legendaryActions, setLegendaryActions] = useState(() => {
+    try {
+      const stored = sessionStorage.getItem(legendaryKey);
+      return stored ? JSON.parse(stored) : { used: 0, max: 3 };
+    } catch { return { used: 0, max: 3 }; }
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem(legendaryKey, JSON.stringify(legendaryActions));
+  }, [legendaryActions, legendaryKey]);
+
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(`codex_legendary_${characterId}`);
+      setLegendaryActions(stored ? JSON.parse(stored) : { used: 0, max: 3 });
+    } catch { setLegendaryActions({ used: 0, max: 3 }); }
+  }, [characterId]);
+
+  // #116 — Reaction tracker
+  const reactionKey = `codex_reaction_${characterId}`;
+  const [reactionUsed, setReactionUsed] = useState(() => sessionStorage.getItem(reactionKey) === 'used');
+  const toggleReaction = () => {
+    setReactionUsed(prev => {
+      const next = !prev;
+      sessionStorage.setItem(reactionKey, next ? 'used' : 'available');
+      return next;
+    });
+  };
+  useEffect(() => {
+    setReactionUsed(sessionStorage.getItem(reactionKey) === 'used');
+  }, [characterId]);
 
   // Clean up pending roll timeouts on unmount
   useEffect(() => {
@@ -212,9 +286,169 @@ export default function Combat({ characterId, onConditionsChange }) {
             <p className="text-xs text-amber-200/40 font-normal mt-0.5">Track your weapons, active conditions, and combat notes. Use the action economy reference below to know what you can do on your turn.</p>
           </div>
         </h2>
-        <button onClick={() => setShowAdd(true)} className="btn-primary text-xs flex items-center gap-1">
-          <Plus size={12} /> Add Attack
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleReaction}
+            className={`px-3 py-1.5 rounded text-xs font-medium transition-all select-none ${
+              reactionUsed
+                ? 'bg-red-900/60 text-red-200 border border-red-500/40'
+                : 'bg-emerald-900/50 text-emerald-200 border border-emerald-500/40'
+            }`}
+            title={reactionUsed ? 'Reaction used — click to reset' : 'Reaction available — click to mark used'}
+          >
+            Reaction: {reactionUsed ? 'Used' : 'Ready'}
+          </button>
+          <button onClick={() => setShowAdd(true)} className="btn-primary text-xs flex items-center gap-1">
+            <Plus size={12} /> Add Attack
+          </button>
+        </div>
+      </div>
+
+      {/* #112 — Temp HP bar */}
+      {character?.max_hp > 0 && (
+        <div className="card">
+          <h3 className="font-display text-amber-100 mb-2">Hit Points</h3>
+          <div className="relative h-6 bg-[#0a0a10] rounded-lg border border-gold/10 overflow-hidden">
+            {/* Normal HP bar */}
+            <div
+              className="absolute inset-y-0 left-0 rounded-lg transition-all duration-300"
+              style={{
+                width: `${Math.min(100, Math.max(0, (character.current_hp / character.max_hp) * 100))}%`,
+                background: character.current_hp / character.max_hp > 0.5
+                  ? 'linear-gradient(90deg, rgba(34,197,94,0.7), rgba(34,197,94,0.5))'
+                  : character.current_hp / character.max_hp > 0.25
+                  ? 'linear-gradient(90deg, rgba(234,179,8,0.7), rgba(234,179,8,0.5))'
+                  : 'linear-gradient(90deg, rgba(239,68,68,0.7), rgba(239,68,68,0.5))',
+              }}
+            />
+            {/* Temp HP overflow bar */}
+            {character.temp_hp > 0 && (
+              <div
+                className="absolute inset-y-0 rounded-r-lg transition-all duration-300"
+                style={{
+                  left: `${Math.min(100, Math.max(0, (character.current_hp / character.max_hp) * 100))}%`,
+                  width: `${Math.min(100 - (character.current_hp / character.max_hp) * 100, (character.temp_hp / character.max_hp) * 100)}%`,
+                  background: 'linear-gradient(90deg, rgba(234,179,8,0.8), rgba(201,168,76,0.6))',
+                  borderLeft: '2px solid rgba(234,179,8,0.9)',
+                }}
+              />
+            )}
+            {/* Labels */}
+            <div className="absolute inset-0 flex items-center justify-center gap-2 text-xs font-medium">
+              <span className="text-amber-100 drop-shadow-md">
+                {character.current_hp} / {character.max_hp} HP
+              </span>
+              {character.temp_hp > 0 && (
+                <span className="text-yellow-300 bg-yellow-900/60 px-1.5 py-0.5 rounded text-[10px] font-bold border border-yellow-500/40">
+                  +{character.temp_hp} TEMP
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* #113 — Initiative / Combatant Tracker */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-display text-amber-100">Initiative Tracker</h3>
+          {combatants.length > 0 && (
+            <button onClick={clearCombatants} className="text-xs text-red-400/70 hover:text-red-400 transition-colors">
+              Clear All
+            </button>
+          )}
+        </div>
+        <p className="text-xs text-amber-200/30 mb-3">Track turn order. Entries persist across tab switches.</p>
+        <div className="flex gap-2 mb-3">
+          <input
+            className="input flex-1"
+            placeholder="Name"
+            value={newCombatantName}
+            onChange={e => setNewCombatantName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addCombatant()}
+          />
+          <input
+            type="number"
+            className="input w-20"
+            placeholder="Init"
+            value={newCombatantInit}
+            onChange={e => setNewCombatantInit(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addCombatant()}
+          />
+          <button onClick={addCombatant} className="btn-primary text-xs flex items-center gap-1">
+            <Plus size={12} /> Add
+          </button>
+        </div>
+        {combatants.length > 0 && (
+          <div className="space-y-1">
+            {combatants.map((c, idx) => (
+              <div key={c.id} className={`flex items-center gap-3 px-3 py-1.5 rounded-lg border transition-all ${
+                idx === 0 ? 'bg-gold/5 border-gold/20' : 'bg-[#0a0a10] border-gold/10'
+              }`}>
+                <span className="text-gold font-bold text-sm w-8 text-center">{c.initiative}</span>
+                <span className="text-amber-100 text-sm flex-1">{c.name}</span>
+                <button onClick={() => removeCombatant(c.id)} className="text-red-400/50 hover:text-red-400 transition-colors">
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* #115 — Legendary Action Counter */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-display text-amber-100">Legendary Actions</h3>
+          <button
+            onClick={() => setLegendaryActions(prev => ({ ...prev, used: 0 }))}
+            className="text-xs text-amber-200/50 hover:text-amber-200/80 transition-colors flex items-center gap-1"
+            title="Reset legendary actions"
+          >
+            <RotateCcw size={11} /> Reset
+          </button>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setLegendaryActions(prev => ({ ...prev, used: Math.max(0, prev.used - 1) }))}
+            disabled={legendaryActions.used <= 0}
+            className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/30 hover:bg-gold/20 hover:border-gold/50 transition-all flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Decrease used legendary actions"
+          >
+            <Minus size={14} className="text-gold" />
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-amber-100 font-bold text-lg">{legendaryActions.used}</span>
+            <span className="text-amber-200/40 text-sm">/</span>
+            <span className="text-amber-200/60 font-bold text-lg">{legendaryActions.max}</span>
+          </div>
+          <button
+            onClick={() => setLegendaryActions(prev => ({ ...prev, used: Math.min(prev.max, prev.used + 1) }))}
+            disabled={legendaryActions.used >= legendaryActions.max}
+            className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/30 hover:bg-gold/20 hover:border-gold/50 transition-all flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Increase used legendary actions"
+          >
+            <Plus size={14} className="text-gold" />
+          </button>
+          <span className="text-xs text-amber-200/30 ml-2">used</span>
+          {/* Max stepper */}
+          <div className="ml-auto flex items-center gap-1.5">
+            <span className="text-xs text-amber-200/30">Max:</span>
+            <button
+              onClick={() => setLegendaryActions(prev => ({ ...prev, max: Math.max(1, prev.max - 1), used: Math.min(prev.used, Math.max(1, prev.max - 1)) }))}
+              className="w-6 h-6 rounded bg-white/5 border border-amber-200/10 hover:border-amber-200/20 text-amber-200/40 hover:text-amber-200/60 transition-all flex items-center justify-center text-xs"
+            >
+              -
+            </button>
+            <span className="text-amber-200/60 text-sm font-medium w-4 text-center">{legendaryActions.max}</span>
+            <button
+              onClick={() => setLegendaryActions(prev => ({ ...prev, max: Math.min(10, prev.max + 1) }))}
+              className="w-6 h-6 rounded bg-white/5 border border-amber-200/10 hover:border-amber-200/20 text-amber-200/40 hover:text-amber-200/60 transition-all flex items-center justify-center text-xs"
+            >
+              +
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Attacks with Roll Buttons */}
@@ -276,24 +510,49 @@ export default function Combat({ characterId, onConditionsChange }) {
                         {result.isNat20 && <span className="text-gold text-xs font-bold">NAT 20!</span>}
                         {result.isNat1 && <span className="text-red-400 text-xs font-bold">NAT 1!</span>}
                       </div>
-                      {result.damage && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-amber-200/30">|</span>
-                          <span className="text-amber-200/50 text-xs">DMG:</span>
-                          <button
-                            onClick={() => rollDamageOnly(atk)}
-                            className="flex items-center gap-1.5 hover:text-amber-100 transition-colors"
-                            title="Roll damage only"
-                            aria-label={`Re-roll damage for ${atk.name || 'attack'}`}
-                          >
-                            <span className="text-xs text-amber-200/30">[{result.damage.rolls.join(',')}]</span>
-                            <span className={`font-bold ${result.damage.crit ? 'text-gold' : 'text-amber-100'}`}>
-                              {result.damage.total}
-                            </span>
-                            {result.damage.crit && <span className="text-gold text-xs">CRIT!</span>}
-                          </button>
-                        </div>
-                      )}
+                      {result.damage && (() => {
+                        const mod = dmgModifiers[atk.id];
+                        const displayTotal = mod === 'resist' ? Math.floor(result.damage.total / 2)
+                          : mod === 'vuln' ? result.damage.total * 2
+                          : result.damage.total;
+                        const dmgColor = mod === 'resist' ? 'text-blue-300' : mod === 'vuln' ? 'text-red-400' : (result.damage.crit ? 'text-gold' : 'text-amber-100');
+                        return (
+                          <div className="flex items-center gap-2">
+                            <span className="text-amber-200/30">|</span>
+                            <span className="text-amber-200/50 text-xs">DMG:</span>
+                            <button
+                              onClick={() => { setDmgModifiers(prev => ({ ...prev, [atk.id]: null })); rollDamageOnly(atk); }}
+                              className="flex items-center gap-1.5 hover:text-amber-100 transition-colors"
+                              title="Roll damage only"
+                              aria-label={`Re-roll damage for ${atk.name || 'attack'}`}
+                            >
+                              <span className="text-xs text-amber-200/30">[{result.damage.rolls.join(',')}]</span>
+                              <span className={`font-bold ${dmgColor}`}>
+                                {displayTotal}
+                              </span>
+                              {result.damage.crit && !mod && <span className="text-gold text-xs">CRIT!</span>}
+                            </button>
+                            <button
+                              onClick={() => setDmgModifiers(prev => ({ ...prev, [atk.id]: prev[atk.id] === 'resist' ? null : 'resist' }))}
+                              className={`text-[10px] px-1.5 py-0.5 rounded border transition-all ${
+                                mod === 'resist' ? 'bg-blue-900/60 text-blue-200 border-blue-500/40' : 'bg-white/5 text-amber-200/40 border-amber-200/10 hover:text-amber-200/60'
+                              }`}
+                              title="Half damage (resistance)"
+                            >
+                              ½ Resist
+                            </button>
+                            <button
+                              onClick={() => setDmgModifiers(prev => ({ ...prev, [atk.id]: prev[atk.id] === 'vuln' ? null : 'vuln' }))}
+                              className={`text-[10px] px-1.5 py-0.5 rounded border transition-all ${
+                                mod === 'vuln' ? 'bg-red-900/60 text-red-200 border-red-500/40' : 'bg-white/5 text-amber-200/40 border-amber-200/10 hover:text-amber-200/60'
+                              }`}
+                              title="Double damage (vulnerability)"
+                            >
+                              ×2 Vuln
+                            </button>
+                          </div>
+                        );
+                      })()}
                       <button
                         onClick={() => setRollResults(prev => { const next = { ...prev }; delete next[atk.id]; return next; })}
                         className="ml-auto text-amber-200/30 hover:text-amber-200/60 transition-colors flex-shrink-0"
@@ -467,9 +726,19 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDur
           </button>
         )}
       </div>
-      <p className="text-xs text-amber-200/30 mb-3">
-        Left-click to toggle on/off. Right-click for rule description. Set duration in rounds for auto-expiry.
-      </p>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs text-amber-200/30">
+          Left-click to toggle on/off. Right-click for rule description. Set duration in rounds for auto-expiry.
+        </p>
+        {activeNames.length >= 3 && (
+          <button
+            onClick={() => activeNames.forEach(name => onToggle(name))}
+            className="text-xs text-red-400/70 hover:text-red-400 transition-colors ml-3 whitespace-nowrap"
+          >
+            Clear All
+          </button>
+        )}
+      </div>
       {conditions.length > 6 && (
         <div className="relative mb-3">
           <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-200/30 pointer-events-none" />

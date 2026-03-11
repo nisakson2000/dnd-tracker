@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, ScrollText, RotateCcw } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Plus, Trash2, ScrollText, RotateCcw, RefreshCw, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
+import MDEditor from '@uiw/react-md-editor';
 import { getFeatures, addFeature, updateFeature, deleteFeature } from '../api/features';
 import HelpTooltip from '../components/HelpTooltip';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -14,6 +15,7 @@ export default function Features({ characterId }) {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [confirmDelete, setConfirmDelete] = useState(null);
 
@@ -75,7 +77,36 @@ export default function Features({ characterId }) {
     } catch (err) { toast.error(err.message); load(); }
   };
 
-  const filtered = useMemo(() => filter === 'all' ? features : features.filter(f => f.feature_type === filter), [features, filter]);
+  const restoreAllFeatures = async () => {
+    const targets = features.filter(f => (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0));
+    if (targets.length === 0) return;
+    setFeatures(prev => prev.map(f => (f.uses_total ?? 0) > 0 ? { ...f, uses_remaining: f.uses_total } : f));
+    try {
+      await Promise.all(targets.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total })));
+      toast.success('All uses restored');
+    } catch (err) { toast.error(err.message); load(); }
+  };
+
+  const useAllFeatures = async () => {
+    const targets = features.filter(f => (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) > 0);
+    if (targets.length === 0) return;
+    setFeatures(prev => prev.map(f => (f.uses_total ?? 0) > 0 ? { ...f, uses_remaining: 0 } : f));
+    try {
+      await Promise.all(targets.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: 0 })));
+      toast.success('All uses spent');
+    } catch (err) { toast.error(err.message); load(); }
+  };
+
+  const hasChargeFeatures = features.some(f => (f.uses_total ?? 0) > 0);
+
+  const filtered = useMemo(() => {
+    let result = filter === 'all' ? features : features.filter(f => f.feature_type === filter);
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      result = result.filter(f => (f.name || '').toLowerCase().includes(q) || (f.description || '').toLowerCase().includes(q));
+    }
+    return result;
+  }, [features, filter, search]);
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
     if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
@@ -99,13 +130,35 @@ export default function Features({ characterId }) {
             <p className="text-xs text-amber-200/40 font-normal mt-0.5">Your class features, racial traits, and feats. Track limited-use abilities with the charge system.</p>
           </div>
         </h2>
-        <button onClick={() => setShowAdd(true)} className="btn-primary text-xs flex items-center gap-1">
-          <Plus size={12} /> Add Feature
-        </button>
+        <div className="flex items-center gap-2">
+          {hasChargeFeatures && (
+            <>
+              <button onClick={restoreAllFeatures} className="btn-secondary text-xs flex items-center gap-1">
+                <RotateCcw size={11} /> Restore All
+              </button>
+              <button onClick={useAllFeatures} className="btn-secondary text-xs flex items-center gap-1">
+                Use All
+              </button>
+            </>
+          )}
+          <button onClick={() => setShowAdd(true)} className="btn-primary text-xs flex items-center gap-1">
+            <Plus size={12} /> Add Feature
+          </button>
+        </div>
       </div>
 
-      {/* Filter + Sort */}
+      {/* Search + Filter + Sort */}
       <div className="flex items-center gap-4 flex-wrap">
+        <div className="relative">
+          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-amber-200/30" />
+          <input
+            type="text"
+            placeholder="Search features..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="input text-xs pl-7 pr-3 py-1 w-44"
+          />
+        </div>
         <div className="flex gap-2">
           {['all', 'class', 'racial', 'feat'].map(f => (
             <button key={f} onClick={() => setFilter(f)}
@@ -140,16 +193,37 @@ export default function Features({ characterId }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="text-amber-100 font-medium">{f.name || 'Unnamed Feature'}</h4>
+                    {f.source_level > 0 && (
+                      <span className="text-[10px] font-medium text-amber-200/50 bg-amber-200/8 px-1.5 py-0.5 rounded border border-amber-200/10">
+                        Lv {f.source_level}
+                      </span>
+                    )}
                     {f.recharge && (
-                      <span className="text-[10px] text-amber-200/40 bg-amber-200/5 px-1.5 py-0.5 rounded border border-amber-200/10">
+                      <span className="text-[10px] text-amber-200/40 bg-amber-200/5 px-1.5 py-0.5 rounded border border-amber-200/10 flex items-center gap-1">
+                        <RefreshCw size={8} />
                         {RECHARGE_LABELS[f.recharge] || f.recharge}
                       </span>
                     )}
+                    {(f.uses_total ?? 0) > 0 && (
+                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                        (f.uses_remaining ?? 0) === 0
+                          ? 'bg-red-500/15 text-red-400 border border-red-400/20'
+                          : (f.uses_remaining ?? 0) === 1
+                            ? 'bg-amber-500/15 text-amber-400 border border-amber-400/20'
+                            : 'bg-gold/10 text-gold/70 border border-gold/20'
+                      }`}>
+                        {f.uses_remaining ?? 0}/{f.uses_total}
+                      </span>
+                    )}
                   </div>
-                  <div className="text-xs text-amber-200/40 mt-1">
+                  <div className="text-xs text-amber-200/40 mt-1 flex items-center gap-2">
                     {f.source && <span>{f.source}</span>}
-                    {f.source_level > 0 && <span className="ml-2">Level {f.source_level}</span>}
-                    <span className="ml-2 capitalize text-purple-300/50">{f.feature_type}</span>
+                    <span className={`inline-flex items-center capitalize text-[10px] font-medium px-1.5 py-0.5 rounded border ${
+                      f.feature_type === 'class' ? 'bg-blue-500/15 text-blue-300 border-blue-400/20' :
+                      f.feature_type === 'racial' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-400/20' :
+                      f.feature_type === 'feat' ? 'bg-purple-500/15 text-purple-300 border-purple-400/20' :
+                      'bg-amber-200/5 text-amber-200/40 border-amber-200/10'
+                    }`}>{f.feature_type}</span>
                   </div>
                 </div>
                 <button onClick={() => setConfirmDelete(f)} className="text-red-400/50 hover:text-red-400 flex-shrink-0" aria-label={`Delete ${f.name || 'feature'}`}>
@@ -157,7 +231,7 @@ export default function Features({ characterId }) {
                 </button>
               </div>
 
-              {f.description && <p className="text-sm text-amber-200/60 mt-2 whitespace-pre-wrap">{f.description}</p>}
+              {f.description && <FeatureDescription text={f.description} />}
 
               {/* Uses/Charges Tracker */}
               {(f.uses_total ?? 0) > 0 && (
@@ -206,6 +280,44 @@ export default function Features({ characterId }) {
         onConfirm={() => handleDelete(confirmDelete.id)}
         onCancel={() => setConfirmDelete(null)}
       />
+    </div>
+  );
+}
+
+function FeatureDescription({ text }) {
+  const contentRef = useRef(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const checkOverflow = useCallback(() => {
+    if (contentRef.current) {
+      // ~3 lines at text-sm is roughly 60px
+      setIsOverflowing(contentRef.current.scrollHeight > 64);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkOverflow();
+  }, [text, checkOverflow]);
+
+  return (
+    <div className="mt-2">
+      <div
+        ref={contentRef}
+        className={`text-sm text-amber-200/60 overflow-hidden transition-all [&_.wmde-markdown]:!bg-transparent [&_.wmde-markdown]:!text-amber-200/60 [&_.wmde-markdown]:!font-sans [&_.wmde-markdown]:!text-sm`}
+        style={{ maxHeight: expanded || !isOverflowing ? 'none' : '4.5em' }}
+        data-color-mode="dark"
+      >
+        <MDEditor.Markdown source={text} />
+      </div>
+      {isOverflowing && (
+        <button
+          onClick={() => setExpanded(prev => !prev)}
+          className="text-xs text-gold/60 hover:text-gold mt-1 flex items-center gap-1 transition-colors"
+        >
+          {expanded ? <><ChevronUp size={10} /> Show less</> : <><ChevronDown size={10} /> Show more</>}
+        </button>
+      )}
     </div>
   );
 }

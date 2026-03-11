@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Users, Search } from 'lucide-react';
+import { Plus, Trash2, Edit2, Users, Search, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
+import MDEditor from '@uiw/react-md-editor';
 import { getNPCs, addNPC, updateNPC, deleteNPC } from '../api/npcs';
 import ConfirmDialog from '../components/ConfirmDialog';
 
@@ -8,10 +9,10 @@ const ROLES = ['ally', 'enemy', 'neutral', 'party'];
 const STATUSES = ['alive', 'dead', 'unknown'];
 
 const ROLE_COLORS = {
-  ally: { bg: 'bg-emerald-600', border: 'border-emerald-400', text: 'text-emerald-400', cardBorder: 'border-emerald-500/25', cardBg: 'bg-emerald-950/10' },
-  enemy: { bg: 'bg-red-600', border: 'border-red-400', text: 'text-red-400', cardBorder: 'border-red-500/25', cardBg: 'bg-red-950/10' },
-  neutral: { bg: 'bg-amber-600', border: 'border-amber-400', text: 'text-amber-200/60', cardBorder: 'border-gold/20', cardBg: '' },
-  party: { bg: 'bg-blue-600', border: 'border-blue-400', text: 'text-blue-400', cardBorder: 'border-blue-500/25', cardBg: 'bg-blue-950/10' },
+  ally: { bg: 'bg-emerald-600', border: 'border-emerald-400', text: 'text-emerald-400', cardBorder: 'border-emerald-500/25', cardBg: 'bg-emerald-950/10', leftBorder: 'border-l-emerald-500' },
+  enemy: { bg: 'bg-red-600', border: 'border-red-400', text: 'text-red-400', cardBorder: 'border-red-500/25', cardBg: 'bg-red-950/10', leftBorder: 'border-l-red-500' },
+  neutral: { bg: 'bg-amber-600', border: 'border-amber-400', text: 'text-amber-200/60', cardBorder: 'border-gold/20', cardBg: '', leftBorder: 'border-l-amber-500' },
+  party: { bg: 'bg-blue-600', border: 'border-blue-400', text: 'text-blue-400', cardBorder: 'border-blue-500/25', cardBg: 'bg-blue-950/10', leftBorder: 'border-l-blue-500' },
 };
 
 function getInitials(name) {
@@ -56,6 +57,15 @@ export default function NPCs({ characterId }) {
       await deleteNPC(characterId, id);
       toast.success('NPC removed');
       setConfirmDelete(null);
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
+  const handleDuplicate = async (npc) => {
+    try {
+      const { id, ...rest } = npc;
+      await addNPC(characterId, { ...rest, name: `${npc.name} (Copy)` });
+      toast.success('NPC duplicated');
       load();
     } catch (err) { toast.error(err.message); }
   };
@@ -143,7 +153,7 @@ export default function NPCs({ characterId }) {
           {sorted.map(npc => {
             const colors = ROLE_COLORS[npc.role] || ROLE_COLORS.neutral;
             return (
-              <div key={npc.id} className={`card ${colors.cardBg} border ${colors.cardBorder}`}>
+              <div key={npc.id} className={`card ${colors.cardBg} border ${colors.cardBorder} border-l-3 ${colors.leftBorder}`}>
                 <div className="flex items-start gap-3">
                   {/* Avatar */}
                   <div className={`w-11 h-11 rounded-full ${colors.bg} border-2 ${colors.border} flex items-center justify-center flex-shrink-0 shadow-lg`}>
@@ -165,6 +175,7 @@ export default function NPCs({ characterId }) {
                         </div>
                       </div>
                       <div className="flex gap-1 flex-shrink-0">
+                        <button onClick={() => handleDuplicate(npc)} className="text-amber-200/40 hover:text-amber-200" aria-label={`Duplicate ${npc.name || 'NPC'}`} title="Duplicate"><Copy size={14} /></button>
                         <button onClick={() => { setEditing(npc); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200" aria-label={`Edit ${npc.name || 'NPC'}`}><Edit2 size={14} /></button>
                         <button onClick={() => setConfirmDelete(npc)} className="text-red-400/50 hover:text-red-400" aria-label={`Delete ${npc.name || 'NPC'}`}><Trash2 size={14} /></button>
                       </div>
@@ -172,7 +183,11 @@ export default function NPCs({ characterId }) {
                     {npc.race && <p className="text-xs text-amber-200/40 mt-1">{[npc.race, npc.npc_class].filter(Boolean).join(' · ')}</p>}
                     {npc.location && <p className="text-xs text-amber-200/40 mt-0.5">Location: {npc.location}</p>}
                     {npc.description && <p className="text-sm text-amber-200/50 mt-2">{npc.description}</p>}
-                    {npc.notes && <p className="text-xs text-amber-200/40 mt-1 italic">{npc.notes}</p>}
+                    {npc.notes && (
+                      <div className="mt-1 text-xs text-amber-200/40 [&_.wmde-markdown]:!bg-transparent [&_.wmde-markdown]:!text-amber-200/40 [&_.wmde-markdown]:!font-sans [&_.wmde-markdown]:!text-xs" data-color-mode="dark">
+                        <MDEditor.Markdown source={npc.notes} />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -239,7 +254,9 @@ function NPCForm({ npc, onSubmit, onCancel }) {
           </div>
           <input className="input w-full" placeholder="e.g. Waterdeep, The Rusty Anchor..." value={form.location} onChange={e => update('location', e.target.value)} />
           <textarea className="input w-full h-20 resize-none" placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} />
-          <textarea className="input w-full h-16 resize-none" placeholder="Notes" value={form.notes} onChange={e => update('notes', e.target.value)} />
+          <div data-color-mode="dark">
+            <MDEditor value={form.notes} onChange={v => update('notes', v || '')} height={120} preview="edit" />
+          </div>
         </div>
         <div className="flex gap-3 justify-end mt-4">
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>

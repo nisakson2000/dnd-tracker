@@ -22,11 +22,13 @@ export function useAutosave(saveFn, delay = 800) {
     } finally {
       setSaving(false);
       pendingRef.current = null;
+      window.__codex_unsaved = false;
     }
   }, []);
 
   const trigger = useCallback((data) => {
     pendingRef.current = data;
+    window.__codex_unsaved = true;
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => doSave(data), delay);
   }, [doSave, delay]);

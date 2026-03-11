@@ -3,6 +3,25 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.2.5',
+    date: '03/11/2026 6:00 PM',
+    title: 'Batch 5 — Combat, Spellbook, Journal & Section Upgrades',
+    changes: [
+      'Combat — resistance/vulnerability toggles, reaction tracker (sessionStorage), clear all conditions button, temp HP bar, legendary action counter, initiative persistence',
+      'Spellbook — V/S/M component badges, range & duration display, inline description expand/collapse, cantrip separation, filter persistence across tabs',
+      'Journal — export entries to text file, mood/tone tagging, fullscreen reading mode',
+      'Features — recharge condition display, source level badges, search includes description, compact usage pills, Restore All / Use All buttons',
+      'NPCs — role-based colored left borders, markdown notes with MDEditor, duplicate NPC button',
+      'Quests — difficulty rating badges, markdown notes, failed quest status with separate section',
+      'Lore — word count and reading time estimate, MDEditor markdown rendering',
+      'Inventory — item rarity color coding, low stock warning on consumables',
+      'DiceRoller — 4d6 drop lowest stat roller, copy history to clipboard, roll statistics panel',
+      'Dashboard — last played date with "X days ago", sort by name/level/recent, avatar ring by HP%',
+      'CharacterView — breadcrumb navigation, session timer, unsaved changes warning on close',
+      'Overview — spell save DC display, character traits chips',
+    ],
+  },
+  {
     version: 'V0.2.4',
     date: '03/11/2026 4:00 AM',
     title: 'QOL Overhaul — Performance, Accessibility & Bug Reporter V3',

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Heart } from 'lucide-react';
+import { Heart, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOverview } from '../api/overview';
 import { getConditions } from '../api/combat';
@@ -53,6 +53,25 @@ const SECTIONS = {
   updates: Updates,
 };
 
+const SECTION_LABELS = {
+  overview: 'Character Sheet',
+  backstory: 'Backstory',
+  spellbook: 'Spellbook',
+  inventory: 'Inventory',
+  features: 'Features & Traits',
+  combat: 'Combat',
+  journal: 'Campaign Journal',
+  npcs: 'NPCs',
+  quests: 'Quests',
+  lore: 'Lore & World',
+  dice: 'Dice Roller',
+  rules: 'Rules Reference',
+  settings: 'Settings',
+  export: 'Export & Import',
+  bugreport: 'Bug Report',
+  updates: 'Updates',
+};
+
 const SHORTCUT_SECTIONS = ['overview','backstory','spellbook','inventory','features','combat','journal','npcs','quests'];
 
 export default function CharacterView() {
@@ -66,11 +85,42 @@ export default function CharacterView() {
   const [activeConditions, setActiveConditions] = useState([]);
   const [portrait, setPortrait] = useState('');
   const [diceHistory, setDiceHistory] = useState([]);
+  const [sessionElapsed, setSessionElapsed] = useState('0m');
   const { showOverlay, levelUpInfo, triggerLevelUp, dismiss } = useLevelUp();
   useCrashRecovery();
   useAutoBackup(characterId, character?.name);
   const { updateAvailable, checkResult, latestVersion, currentVersion } = useUpdateCheck();
   const { errors, pushError, clearErrors } = useErrorLog();
+
+  /* ── #218  Session timer ── */
+  useEffect(() => {
+    const key = `session_start_${characterId}`;
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, Date.now().toString());
+    }
+    const tick = () => {
+      const start = parseInt(sessionStorage.getItem(key) || Date.now(), 10);
+      const mins = Math.floor((Date.now() - start) / 60000);
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      setSessionElapsed(h > 0 ? `${h}h ${m}m` : `${m}m`);
+    };
+    tick();
+    const id = setInterval(tick, 60000);
+    return () => clearInterval(id);
+  }, [characterId]);
+
+  /* ── #219  Unsaved changes warning ── */
+  useEffect(() => {
+    const handler = (e) => {
+      if (window.__codex_unsaved) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, []);
 
   // Keep error context in sync with active section
   useEffect(() => {
@@ -218,6 +268,15 @@ export default function CharacterView() {
         {/* Right side: topbar + content */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
+          {/* Breadcrumb */}
+          <div className="text-xs text-amber-200/30 px-[18px] pt-1.5 pb-0" style={{ background: 'rgba(4,4,11,0.85)', flexShrink: 0 }}>
+            <span className="hover:text-amber-200/50 cursor-pointer transition-colors" onClick={() => navigate('/')}>The Codex</span>
+            <span className="mx-1.5">/</span>
+            <span className="hover:text-amber-200/50 cursor-pointer transition-colors" onClick={() => setActiveSection('overview')}>{character?.name || 'Character'}</span>
+            <span className="mx-1.5">/</span>
+            <span className="text-amber-200/40">{SECTION_LABELS[activeSection] || activeSection}</span>
+          </div>
+
           {/* Topbar */}
           <div style={{ height: 'var(--top-h, 52px)', background: 'rgba(4,4,11,0.85)', backdropFilter: 'blur(24px) saturate(1.5)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0', padding: '0 18px', flexShrink: 0 }}>
             {/* Portrait mini */}
@@ -259,6 +318,12 @@ export default function CharacterView() {
             </div>
 
             <div style={{ flex: 1 }} />
+
+            {/* Session timer */}
+            <div className="flex items-center gap-1.5 text-[11px] text-amber-200/25 font-mono select-none">
+              <Clock size={11} className="text-amber-200/20" />
+              Session: {sessionElapsed}
+            </div>
           </div>
 
           {/* Main content */}

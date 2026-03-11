@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, LogIn, BookOpen, Heart, Shield, Library, Bell } from 'lucide-react';
+import { Plus, Trash2, LogIn, BookOpen, Heart, Shield, Library, Bell, ArrowUpDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { listCharacters, createCharacter, deleteCharacter } from '../api/characters';
 import { RULESET_OPTIONS, getRuleset } from '../data/rulesets';
@@ -9,6 +9,36 @@ import { APP_VERSION } from '../version';
 import ConfirmDialog from '../components/ConfirmDialog';
 import UpdateScreen from './UpdateScreen';
 import { useUpdateCheck } from '../hooks/useUpdateCheck';
+
+/* ── helpers ── */
+function daysAgo(dateStr) {
+  if (!dateStr) return null;
+  const diff = Date.now() - new Date(dateStr).getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+function lastPlayedLabel(dateStr) {
+  const d = daysAgo(dateStr);
+  if (d === null) return null;
+  if (d === 0) return 'Last played: today';
+  if (d === 1) return 'Last played: 1 day ago';
+  return `Last played: ${d} days ago`;
+}
+
+function hpRingColor(current, max) {
+  if (!max || max <= 0) return 'border-gold/30';            // no HP data
+  const pct = (current ?? 0) / max;
+  if (pct <= 0)    return 'border-gray-500/60';              // 0 HP
+  if (pct <= 0.25) return 'border-red-500/70';               // <25%
+  if (pct <= 0.5)  return 'border-amber-400/70';             // 25-50%
+  return 'border-emerald-400/60';                            // >50%
+}
+
+const SORT_OPTIONS = [
+  { id: 'name',  label: 'Name' },
+  { id: 'level', label: 'Level' },
+  { id: 'recent', label: 'Recent' },
+];
 
 export default function Dashboard() {
   const [characters, setCharacters] = useState([]);
@@ -20,8 +50,17 @@ export default function Dashboard() {
   const [newClass, setNewClass] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [showUpdates, setShowUpdates] = useState(false);
+  const [sortBy, setSortBy] = useState('recent');
   const navigate = useNavigate();
   const { updateAvailable } = useUpdateCheck();
+
+  const sortedCharacters = useMemo(() => {
+    const list = [...characters];
+    if (sortBy === 'name')   list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    if (sortBy === 'level')  list.sort((a, b) => (b.level || 0) - (a.level || 0));
+    if (sortBy === 'recent') list.sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
+    return list;
+  }, [characters, sortBy]);
 
   const load = async () => {
     try {
@@ -131,11 +170,31 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Character Count */}
+      {/* Character Count + Sort */}
       {!loading && (
-        <p className="text-sm text-amber-200/30 mb-6">
-          {characters.length === 0 ? 'No characters yet' : `${characters.length} Character${characters.length !== 1 ? 's' : ''}`}
-        </p>
+        <div className="flex items-center gap-4 mb-6">
+          <p className="text-sm text-amber-200/30">
+            {characters.length === 0 ? 'No characters yet' : `${characters.length} Character${characters.length !== 1 ? 's' : ''}`}
+          </p>
+          {characters.length > 1 && (
+            <div className="flex items-center gap-1.5">
+              <ArrowUpDown size={12} className="text-amber-200/25" />
+              {SORT_OPTIONS.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => setSortBy(opt.id)}
+                  className={`px-2.5 py-0.5 rounded-full text-[11px] transition-colors ${
+                    sortBy === opt.id
+                      ? 'bg-gold/20 text-amber-200/80 border border-gold/40'
+                      : 'bg-transparent text-amber-200/30 border border-amber-200/10 hover:border-amber-200/25 hover:text-amber-200/50'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Character Grid */}
@@ -158,17 +217,26 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
-          {characters.filter(Boolean).map((char, i) => (
+          {sortedCharacters.filter(Boolean).map((char, i) => {
+            const days = daysAgo(char.updated_at);
+            const isDusty = days !== null && days >= 30;
+            const ringColor = hpRingColor(char.current_hp, char.max_hp);
+            return (
             <motion.div
               key={char.id}
-              className="card group"
+              className="card group relative"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
             >
+              {isDusty && (
+                <span className="absolute top-2 right-2 text-[10px] text-amber-200/20" title="Not played in 30+ days">
+                  cobweb
+                </span>
+              )}
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-[#1a1825] border-2 border-gold/30 flex items-center justify-center text-lg text-amber-200/50 flex-shrink-0">
+                  <div className={`w-10 h-10 rounded-full bg-[#1a1825] border-2 ${ringColor} flex items-center justify-center text-lg text-amber-200/50 flex-shrink-0`}>
                     {char.name?.[0] || '?'}
                   </div>
                   <h3 className="font-display text-xl text-amber-100 truncate">
@@ -205,8 +273,8 @@ export default function Dashboard() {
                 </span>
               )}
               {char.updated_at && (
-                <p className="text-xs text-amber-200/30 mb-4">
-                  Last modified: {new Date(char.updated_at).toLocaleDateString()}
+                <p className="text-[11px] text-amber-200/25 mb-4">
+                  {lastPlayedLabel(char.updated_at)}
                 </p>
               )}
               <div className="flex gap-2 mt-auto">
@@ -224,7 +292,8 @@ export default function Dashboard() {
                 </button>
               </div>
             </motion.div>
-          ))}
+            );
+          })}
 
           {/* New Character Card */}
           <motion.div

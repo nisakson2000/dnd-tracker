@@ -4,6 +4,78 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.2.5 — Batch 5: Combat, Spellbook, Journal & Section Upgrades
+**Released:** March 11, 2026
+
+### Combat
+- Resistance/vulnerability toggles per damage type
+- Reaction tracker with sessionStorage persistence across tabs
+- Clear all conditions button (appears when 3+ conditions active)
+- Temp HP bar shown separately from main HP
+- Legendary action counter with configurable max
+- Initiative persistence via sessionStorage
+
+### Spellbook
+- V/S/M component badges on spell cards
+- Range and duration display on each spell
+- Inline description expand/collapse
+- Cantrip section separated from leveled spells
+- Spell level filter persists between tab switches
+
+### Journal
+- Export entries to text file download
+- Mood/tone tagging stored in tags field
+- Fullscreen reading mode modal
+
+### Features
+- Recharge condition display (short rest / long rest / dawn)
+- Source level badge on each feature
+- Search now includes feature description text
+- Compact usage pill (e.g., "2/3 uses")
+- Restore All / Use All bulk action buttons
+
+### NPCs
+- Role-based colored left borders (green=ally, red=enemy, amber=neutral)
+- Markdown notes rendering with MDEditor
+- Duplicate NPC button for quick cloning
+
+### Quests
+- Difficulty rating badges (Easy/Medium/Hard/Deadly)
+- Markdown notes rendering
+- Failed quest status with separate collapsed section
+
+### Lore
+- Word count and reading time estimate on entries
+- MDEditor.Markdown rendering for note display
+
+### Inventory
+- Item rarity color coding on card borders (common→legendary)
+- Low stock warning indicator on consumables (≤5 remaining)
+
+### Dice Roller
+- 4d6 drop lowest stat roller for character creation
+- Copy roll history to clipboard
+- Roll statistics panel (total rolls, average, nat 20/1 counts)
+
+### Dashboard
+- Last played date with "X days ago" relative display
+- Sort characters by name, level, or recently played
+- Avatar ring color by HP percentage (green→yellow→red)
+
+### Character View
+- Breadcrumb navigation showing section path
+- Session timer tracking play time
+- Unsaved changes warning on window close
+
+### Overview
+- Spell save DC display
+- Character traits quick-reference chips
+
+### Bug Fixes
+- Fixed bug_reporter.py version mismatch (was 0.2.3, now 0.2.5)
+
+---
+
 ## V0.2.4 — QOL Overhaul: Performance, Accessibility & Bug Reporter V3
 **Released:** March 11, 2026
 

@@ -1,8 +1,18 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Map, CheckSquare, Square } from 'lucide-react';
+import { Plus, Trash2, Edit2, Map, CheckSquare, Square, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import MDEditor from '@uiw/react-md-editor';
 import { getQuests, addQuest, updateQuest, deleteQuest } from '../api/quests';
 import ConfirmDialog from '../components/ConfirmDialog';
+
+const DIFFICULTIES = ['trivial', 'easy', 'medium', 'hard', 'deadly'];
+const DIFFICULTY_COLORS = {
+  trivial: 'bg-emerald-800/30 text-emerald-300',
+  easy: 'bg-emerald-800/30 text-emerald-300',
+  medium: 'bg-amber-800/30 text-amber-300',
+  hard: 'bg-red-800/30 text-red-300',
+  deadly: 'bg-red-950/40 text-red-400',
+};
 
 export default function Quests({ characterId }) {
   const [quests, setQuests] = useState([]);
@@ -77,15 +87,19 @@ export default function Quests({ characterId }) {
   }), [quests, sortBy]);
 
   const active = useMemo(() => sortedQuests.filter(q => q.status === 'active'), [sortedQuests]);
-  const completed = useMemo(() => sortedQuests.filter(q => q.status !== 'active'), [sortedQuests]);
+  const completed = useMemo(() => sortedQuests.filter(q => q.status === 'completed'), [sortedQuests]);
+  const failed = useMemo(() => sortedQuests.filter(q => q.status === 'failed'), [sortedQuests]);
 
   if (loading) return <div className="text-amber-200/40">Loading quests...</div>;
 
   const QuestCard = ({ quest }) => (
-    <div className="card">
+    <div className={`card ${quest.status === 'failed' ? 'border-l-3 border-l-red-500' : ''}`}>
       <div className="flex items-start justify-between mb-2">
         <div>
-          <h4 className="text-amber-100 font-display">{quest.title || 'Untitled Quest'}</h4>
+          <div className="flex items-center gap-2">
+            {quest.status === 'failed' && <XCircle size={16} className="text-red-400 flex-shrink-0" />}
+            <h4 className={`text-amber-100 font-display ${quest.status === 'failed' ? 'line-through text-amber-100/50' : ''}`}>{quest.title || 'Untitled Quest'}</h4>
+          </div>
           {quest.giver && <p className="text-xs text-amber-200/40">Given by: {quest.giver}</p>}
         </div>
         <div className="flex gap-1">
@@ -120,13 +134,20 @@ export default function Quests({ characterId }) {
           </div>
         );
       })()}
-      {quest.notes && <p className="text-xs text-amber-200/30 mt-2 italic">{quest.notes}</p>}
-      <div className="mt-2">
+      {quest.notes && (
+        <div className="mt-2 text-xs text-amber-200/30 [&_.wmde-markdown]:!bg-transparent [&_.wmde-markdown]:!text-amber-200/30 [&_.wmde-markdown]:!font-sans [&_.wmde-markdown]:!text-xs" data-color-mode="dark">
+          <MDEditor.Markdown source={quest.notes} />
+        </div>
+      )}
+      <div className="mt-2 flex items-center gap-2">
         <span className={`text-xs px-2 py-0.5 rounded ${
           quest.status === 'active' ? 'bg-emerald-800/30 text-emerald-300' :
           quest.status === 'completed' ? 'bg-blue-800/30 text-blue-300' :
           'bg-red-800/30 text-red-300'
         }`}>{quest.status}</span>
+        {quest.difficulty && DIFFICULTY_COLORS[quest.difficulty] && (
+          <span className={`text-xs px-2 py-0.5 rounded capitalize ${DIFFICULTY_COLORS[quest.difficulty]}`}>{quest.difficulty}</span>
+        )}
       </div>
     </div>
   );
@@ -168,9 +189,18 @@ export default function Quests({ characterId }) {
 
       {completed.length > 0 && (
         <div>
-          <h3 className="font-display text-amber-100/40 mb-3">Completed / Failed</h3>
+          <h3 className="font-display text-amber-100/40 mb-3">Completed</h3>
           <div className="space-y-3 opacity-60">
             {completed.map(q => <QuestCard key={q.id} quest={q} />)}
+          </div>
+        </div>
+      )}
+
+      {failed.length > 0 && (
+        <div>
+          <h3 className="font-display text-red-400/60 mb-3">Failed</h3>
+          <div className="space-y-3 opacity-50">
+            {failed.map(q => <QuestCard key={q.id} quest={q} />)}
           </div>
         </div>
       )}
@@ -200,7 +230,7 @@ export default function Quests({ characterId }) {
 
 function QuestForm({ quest, onSubmit, onCancel }) {
   const [form, setForm] = useState(() => {
-    const base = quest || { title: '', giver: '', description: '', status: 'active', notes: '', objectives: [] };
+    const base = quest || { title: '', giver: '', description: '', status: 'active', difficulty: '', notes: '', objectives: [] };
     return { ...base, objectives: base.objectives || [] };
   });
   const [newObj, setNewObj] = useState('');
@@ -241,11 +271,17 @@ function QuestForm({ quest, onSubmit, onCancel }) {
           </div>
           <input className="input w-full" placeholder="Quest giver" value={form.giver} onChange={e => update('giver', e.target.value)} />
           <textarea className="input w-full h-20 resize-none" placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} />
-          <select className="input w-full" value={form.status} onChange={e => update('status', e.target.value)}>
-            <option value="active">Active</option>
-            <option value="completed">Completed</option>
-            <option value="failed">Failed</option>
-          </select>
+          <div className="grid grid-cols-2 gap-3">
+            <select className="input w-full" value={form.status} onChange={e => update('status', e.target.value)}>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+              <option value="failed">Failed</option>
+            </select>
+            <select className="input w-full" value={form.difficulty || ''} onChange={e => update('difficulty', e.target.value)}>
+              <option value="">No difficulty</option>
+              {DIFFICULTIES.map(d => <option key={d} value={d} className="capitalize">{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
+            </select>
+          </div>
 
           <div>
             <label className="label">Objectives</label>
@@ -262,7 +298,9 @@ function QuestForm({ quest, onSubmit, onCancel }) {
             </div>
           </div>
 
-          <textarea className="input w-full h-16 resize-none" placeholder="Notes" value={form.notes} onChange={e => update('notes', e.target.value)} />
+          <div data-color-mode="dark">
+            <MDEditor value={form.notes} onChange={v => update('notes', v || '')} height={120} preview="edit" />
+          </div>
         </div>
         <div className="flex gap-3 justify-end mt-4">
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
