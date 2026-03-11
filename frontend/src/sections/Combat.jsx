@@ -314,10 +314,10 @@ export default function Combat({ characterId, character, onConditionsChange }) {
             <div
               className="absolute inset-y-0 left-0 rounded-lg transition-all duration-300"
               style={{
-                width: `${Math.min(100, Math.max(0, (character.current_hp / character.max_hp) * 100))}%`,
-                background: character.current_hp / character.max_hp > 0.5
+                width: `${character.max_hp > 0 ? Math.min(100, Math.max(0, (character.current_hp / character.max_hp) * 100)) : 0}%`,
+                background: character.max_hp > 0 && character.current_hp / character.max_hp > 0.5
                   ? 'linear-gradient(90deg, rgba(34,197,94,0.7), rgba(34,197,94,0.5))'
-                  : character.current_hp / character.max_hp > 0.25
+                  : character.max_hp > 0 && character.current_hp / character.max_hp > 0.25
                   ? 'linear-gradient(90deg, rgba(234,179,8,0.7), rgba(234,179,8,0.5))'
                   : 'linear-gradient(90deg, rgba(239,68,68,0.7), rgba(239,68,68,0.5))',
               }}
@@ -327,8 +327,8 @@ export default function Combat({ characterId, character, onConditionsChange }) {
               <div
                 className="absolute inset-y-0 rounded-r-lg transition-all duration-300"
                 style={{
-                  left: `${Math.min(100, Math.max(0, (character.current_hp / character.max_hp) * 100))}%`,
-                  width: `${Math.min(100 - (character.current_hp / character.max_hp) * 100, (character.temp_hp / character.max_hp) * 100)}%`,
+                  left: `${character.max_hp > 0 ? Math.min(100, Math.max(0, (character.current_hp / character.max_hp) * 100)) : 0}%`,
+                  width: `${character.max_hp > 0 ? Math.min(100 - (character.current_hp / character.max_hp) * 100, (character.temp_hp / character.max_hp) * 100) : 0}%`,
                   background: 'linear-gradient(90deg, rgba(234,179,8,0.8), rgba(201,168,76,0.6))',
                   borderLeft: '2px solid rgba(234,179,8,0.9)',
                 }}

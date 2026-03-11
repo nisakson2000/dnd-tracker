@@ -180,7 +180,7 @@ pub fn update_overview(
     payload.temp_hp = payload.temp_hp.max(0);
     payload.armor_class = payload.armor_class.max(0);
     payload.speed = payload.speed.max(0);
-    payload.exhaustion_level = payload.exhaustion_level.clamp(0, 6);
+    payload.exhaustion_level = payload.exhaustion_level.clamp(0, 10);
     payload.death_save_successes = payload.death_save_successes.clamp(0, 3);
     payload.death_save_failures = payload.death_save_failures.clamp(0, 3);
     payload.hit_dice_used = payload.hit_dice_used.clamp(0, payload.level);

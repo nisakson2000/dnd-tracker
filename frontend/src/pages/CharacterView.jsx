@@ -112,11 +112,16 @@ export default function CharacterView() {
   /* ── #218  Session timer ── */
   useEffect(() => {
     const key = `session_start_${characterId}`;
-    if (!sessionStorage.getItem(key)) {
-      sessionStorage.setItem(key, Date.now().toString());
-    }
+    let fallbackStart = Date.now();
+    try {
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, Date.now().toString());
+      }
+      fallbackStart = parseInt(sessionStorage.getItem(key) || Date.now(), 10);
+    } catch { /* storage unavailable — use fallback */ }
     const tick = () => {
-      const start = parseInt(sessionStorage.getItem(key) || Date.now(), 10);
+      let start = fallbackStart;
+      try { start = parseInt(sessionStorage.getItem(key) || fallbackStart, 10); } catch {}
       const mins = Math.floor((Date.now() - start) / 60000);
       const h = Math.floor(mins / 60);
       const m = mins % 60;

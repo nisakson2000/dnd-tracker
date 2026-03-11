@@ -239,7 +239,7 @@ export default function Features({ characterId }) {
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-amber-200/50">Uses:</span>
                     <div className="flex gap-1.5">
-                      {Array.from({ length: f.uses_total ?? 0 }).map((_, i) => (
+                      {Array.from({ length: Math.max(0, f.uses_total ?? 0) }).map((_, i) => (
                         <button
                           key={i}
                           onClick={() => i < (f.uses_remaining ?? 0) ? useCharge(f) : restoreCharge(f)}

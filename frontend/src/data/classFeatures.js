@@ -4,7 +4,7 @@
 export const ASI_LEVELS = {
   default: [4, 8, 12, 16, 19],
   Fighter: [4, 6, 8, 12, 14, 16, 19],
-  Rogue: [4, 8, 10, 12, 16, 19],
+  Rogue: [4, 8, 12, 16, 19],
 };
 
 export const CLASS_FEATURES = {

@@ -226,7 +226,7 @@ export default function BugReport({ characterId, character, errors = [], onClear
   }
 
   function handleStepKeyDown(index, e) {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.repeat) {
       e.preventDefault();
       if (index === steps.length - 1) {
         setSteps(prev => [...prev, '']);

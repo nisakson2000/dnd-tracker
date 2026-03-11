@@ -71,7 +71,10 @@ export default function UpdateScreen({ onDone, asModal = false }) {
     let notes = '';
     let dlUrl = '';
     try {
-      const res = await fetch(VERSION_MANIFEST_URL, { signal: AbortSignal.timeout(6000) });
+      const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout
+        ? AbortSignal.timeout(6000)
+        : (() => { const c = new AbortController(); setTimeout(() => c.abort(), 6000); return c.signal; })();
+      const res = await fetch(VERSION_MANIFEST_URL, { signal });
       if (res.ok) {
         const data = await res.json();
         latest = data.version?.replace(/^[vV]/, '') || null;

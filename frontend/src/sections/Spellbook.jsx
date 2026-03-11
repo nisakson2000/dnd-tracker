@@ -270,7 +270,7 @@ export default function Spellbook({ characterId }) {
               <div key={level} className="text-center pb-1">
                 <div className="text-xs text-amber-200/50 mb-2">{levelNames[level]}</div>
                 <div className="flex gap-1.5 justify-center flex-wrap">
-                  {Array.from({ length: maxSlots }).map((_, i) => (
+                  {Array.from({ length: Math.max(0, maxSlots) }).map((_, i) => (
                     <button
                       key={i}
                       onClick={() => handleSlotToggle(level, i)}

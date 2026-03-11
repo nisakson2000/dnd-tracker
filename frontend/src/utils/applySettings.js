@@ -50,7 +50,9 @@ export function loadSettings() {
 }
 
 export function saveSettings(settings) {
-  localStorage.setItem('codex-settings', JSON.stringify(settings));
+  try {
+    localStorage.setItem('codex-settings', JSON.stringify(settings));
+  } catch { /* quota exceeded or access denied — ignore */ }
 }
 
 export function applySettings(settings) {
