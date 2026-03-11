@@ -1,19 +1,37 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
+import { ImagePlus, Trash2 } from 'lucide-react';
 import { getBackstory, updateBackstory } from '../api/backstory';
 import { useAutosave } from '../hooks/useAutosave';
 import SaveIndicator from '../components/SaveIndicator';
 import HelpTooltip from '../components/HelpTooltip';
 import { HELP } from '../data/helpText';
 
-export default function Backstory({ characterId }) {
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+export default function Backstory({ characterId, onPortraitChange }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     getBackstory(characterId)
-      .then(setData)
+      .then((d) => {
+        setData(d);
+        if (d.portrait_data) onPortraitChange?.(d.portrait_data);
+      })
       .catch(err => toast.error(err.message))
       .finally(() => setLoading(false));
   }, [characterId]);
@@ -28,6 +46,42 @@ export default function Backstory({ characterId }) {
     const updated = { ...data, [field]: value };
     setData(updated);
     trigger(updated);
+    if (field === 'portrait_data') onPortraitChange?.(value);
+  };
+
+  const handleImageFile = async (file) => {
+    if (!file) return;
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      toast.error('Please upload a PNG, JPEG, WebP, or GIF image');
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast.error('Image must be under 2 MB');
+      return;
+    }
+    try {
+      const dataUrl = await readFileAsDataURL(file);
+      update('portrait_data', dataUrl);
+      toast.success('Portrait updated');
+    } catch {
+      toast.error('Failed to read image');
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) handleImageFile(file);
+  };
+
+  const handleDragOver = (e) => { e.preventDefault(); e.stopPropagation(); setDragOver(true); };
+  const handleDragLeave = (e) => { e.preventDefault(); e.stopPropagation(); setDragOver(false); };
+
+  const removePortrait = () => {
+    update('portrait_data', '');
+    toast.success('Portrait removed');
   };
 
   if (loading || !data) return <div className="text-amber-200/40">Loading backstory...</div>;
@@ -40,6 +94,57 @@ export default function Backstory({ characterId }) {
           <p className="text-xs text-amber-200/40 mt-1">Your character's history, personality, and physical description. This is the roleplaying side — who they are beyond the numbers.</p>
         </div>
         <SaveIndicator saving={saving} lastSaved={lastSaved} />
+      </div>
+
+      {/* Character Portrait */}
+      <div className="card">
+        <h3 className="font-display text-amber-100 mb-3">Character Portrait</h3>
+        <div className="flex items-start gap-6">
+          {/* Portrait preview */}
+          {data.portrait_data ? (
+            <div className="relative group shrink-0">
+              <img
+                src={data.portrait_data}
+                alt="Character portrait"
+                className="w-40 h-40 rounded-lg object-cover border-2 border-gold/30"
+              />
+              <button
+                onClick={removePortrait}
+                className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-900/80 border border-red-500/50 text-red-300 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-800"
+                title="Remove portrait"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ) : null}
+
+          {/* Upload zone */}
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragOver}
+            onDragLeave={handleDragLeave}
+            className={`flex-1 min-h-[160px] rounded-lg border-2 border-dashed cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
+              dragOver
+                ? 'border-gold bg-gold/10'
+                : 'border-amber-200/15 hover:border-gold/40 hover:bg-white/[0.02]'
+            }`}
+          >
+            <ImagePlus size={32} className="text-amber-200/30" />
+            <p className="text-sm text-amber-200/40">
+              {data.portrait_data ? 'Click or drag to replace' : 'Click or drag an image here'}
+            </p>
+            <p className="text-xs text-amber-200/20">PNG, JPEG, WebP, or GIF — max 2 MB</p>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            className="hidden"
+            onChange={(e) => handleImageFile(e.target.files[0])}
+          />
+        </div>
       </div>
 
       {/* Backstory */}

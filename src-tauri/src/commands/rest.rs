@@ -100,10 +100,27 @@ pub fn short_rest(
             )
             .map_err(|_| "Character not found".to_string())?;
 
+        // Reset death saves (RAW: short rest resets death saves)
+        let (death_s, death_f): (i64, i64) = conn
+            .query_row(
+                "SELECT death_save_successes, death_save_failures FROM character_overview LIMIT 1",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap_or((0, 0));
+        if death_s > 0 || death_f > 0 {
+            conn.execute(
+                "UPDATE character_overview SET death_save_successes=0, death_save_failures=0 WHERE id=1",
+                [],
+            )
+            .map_err(|e| e.to_string())?;
+            restored.push("Death saves reset".to_string());
+        }
+
         // Spend hit dice
         if hit_dice_to_spend > 0 {
-            let available = level - hit_dice_used;
-            let actual_spend = hit_dice_to_spend.min(available);
+            let available = (level - hit_dice_used).max(0);
+            let actual_spend = hit_dice_to_spend.max(0).min(available);
             if actual_spend > 0 {
                 conn.execute(
                     "UPDATE character_overview SET hit_dice_used = hit_dice_used + ?1 WHERE id=1",
@@ -114,8 +131,13 @@ pub fn short_rest(
             }
         }
 
-        // Warlock pact magic
-        if primary_class == "Warlock" {
+        // Warlock pact magic — check primary class and multiclass data
+        let multiclass_data: String = conn
+            .query_row("SELECT multiclass_data FROM character_overview LIMIT 1", [], |row| row.get(0))
+            .unwrap_or_else(|_| "[]".to_string());
+        let has_warlock = primary_class == "Warlock"
+            || multiclass_data.to_lowercase().contains("warlock");
+        if has_warlock {
             let slots_updated = conn
                 .execute("UPDATE spell_slots SET used_slots=0 WHERE used_slots > 0", [])
                 .map_err(|e| e.to_string())?;

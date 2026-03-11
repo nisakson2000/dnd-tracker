@@ -172,6 +172,19 @@ pub fn update_overview(
     character_id: String,
     payload: OverviewData,
 ) -> Result<serde_json::Value, String> {
+    // Validate and clamp values
+    let mut payload = payload;
+    payload.level = payload.level.clamp(1, 20);
+    payload.max_hp = payload.max_hp.max(0);
+    payload.current_hp = payload.current_hp.clamp(0, payload.max_hp.max(1));
+    payload.temp_hp = payload.temp_hp.max(0);
+    payload.armor_class = payload.armor_class.max(0);
+    payload.speed = payload.speed.max(0);
+    payload.exhaustion_level = payload.exhaustion_level.clamp(0, 6);
+    payload.death_save_successes = payload.death_save_successes.clamp(0, 3);
+    payload.death_save_failures = payload.death_save_failures.clamp(0, 3);
+    payload.hit_dice_used = payload.hit_dice_used.clamp(0, payload.level);
+
     state.with_char_conn(&character_id, |conn| {
         let now = chrono::Utc::now().to_rfc3339();
         conn.execute(
@@ -210,16 +223,17 @@ pub fn update_ability_scores(
 ) -> Result<serde_json::Value, String> {
     state.with_char_conn(&character_id, |conn| {
         for item in &payload {
+            let score = item.score.clamp(1, 30);
             let updated = conn
                 .execute(
                     "UPDATE ability_scores SET score=?1 WHERE ability=?2",
-                    rusqlite::params![item.score, item.ability],
+                    rusqlite::params![score, item.ability],
                 )
                 .map_err(|e| e.to_string())?;
             if updated == 0 {
                 conn.execute(
                     "INSERT INTO ability_scores (ability, score) VALUES (?1, ?2)",
-                    rusqlite::params![item.ability, item.score],
+                    rusqlite::params![item.ability, score],
                 )
                 .map_err(|e| e.to_string())?;
             }

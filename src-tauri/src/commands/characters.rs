@@ -11,6 +11,9 @@ pub struct CharacterSummary {
     pub race: String,
     pub primary_class: String,
     pub level: i64,
+    pub max_hp: i64,
+    pub current_hp: i64,
+    pub armor_class: i64,
     pub campaign_name: String,
     pub ruleset: String,
     pub updated_at: Option<String>,
@@ -20,6 +23,9 @@ pub struct CharacterSummary {
 pub struct CharacterCreate {
     pub name: Option<String>,
     pub ruleset: Option<String>,
+    pub race: Option<String>,
+    pub primary_class: Option<String>,
+    pub primary_subclass: Option<String>,
 }
 
 #[tauri::command]
@@ -33,7 +39,7 @@ pub fn list_characters(state: State<'_, AppState>) -> Result<Vec<CharacterSummar
         let summary = state.with_char_conn(&char_id, |conn| {
             db::migrate_character_db(conn).map_err(|e| e.to_string())?;
             let mut stmt = conn
-                .prepare("SELECT name, race, primary_class, level, campaign_name, ruleset, updated_at FROM character_overview LIMIT 1")
+                .prepare("SELECT name, race, primary_class, level, campaign_name, ruleset, updated_at, max_hp, current_hp, armor_class FROM character_overview LIMIT 1")
                 .map_err(|e| e.to_string())?;
             let result = stmt.query_row([], |row| {
                 Ok(CharacterSummary {
@@ -45,6 +51,9 @@ pub fn list_characters(state: State<'_, AppState>) -> Result<Vec<CharacterSummar
                     campaign_name: row.get::<_, String>(4).unwrap_or_default(),
                     ruleset: row.get::<_, String>(5).unwrap_or_else(|_| "5e-2014".to_string()),
                     updated_at: row.get::<_, Option<String>>(6).unwrap_or(None),
+                    max_hp: row.get::<_, i64>(7).unwrap_or(0),
+                    current_hp: row.get::<_, i64>(8).unwrap_or(0),
+                    armor_class: row.get::<_, i64>(9).unwrap_or(0),
                 })
             });
             match result {
@@ -55,6 +64,9 @@ pub fn list_characters(state: State<'_, AppState>) -> Result<Vec<CharacterSummar
                     race: String::new(),
                     primary_class: String::new(),
                     level: 1,
+                    max_hp: 0,
+                    current_hp: 0,
+                    armor_class: 0,
                     campaign_name: String::new(),
                     ruleset: "5e-2014".to_string(),
                     updated_at: None,
@@ -75,6 +87,9 @@ pub fn create_character(
     let char_id = Uuid::new_v4().to_string()[..8].to_string();
     let name = payload.name.unwrap_or_else(|| "New Character".to_string());
     let ruleset = payload.ruleset.unwrap_or_else(|| "5e-2014".to_string());
+    let race = payload.race.unwrap_or_default();
+    let primary_class = payload.primary_class.unwrap_or_default();
+    let primary_subclass = payload.primary_subclass.unwrap_or_default();
 
     // Ensure characters directory exists
     let chars_dir = state.characters_dir();
@@ -85,11 +100,11 @@ pub fn create_character(
     let conn = db::open_connection(&db_path).map_err(|e| e.to_string())?;
     db::init_character_tables(&conn).map_err(|e| e.to_string())?;
 
-    // Insert overview
+    // Insert overview with race, class, subclass
     let now = chrono::Utc::now().to_rfc3339();
     conn.execute(
-        "INSERT INTO character_overview (id, name, ruleset, updated_at) VALUES (1, ?1, ?2, ?3)",
-        rusqlite::params![name, ruleset, now],
+        "INSERT INTO character_overview (id, name, ruleset, race, primary_class, primary_subclass, updated_at) VALUES (1, ?1, ?2, ?3, ?4, ?5, ?6)",
+        rusqlite::params![name, ruleset, race, primary_class, primary_subclass, now],
     )
     .map_err(|e| e.to_string())?;
 
@@ -105,9 +120,12 @@ pub fn create_character(
     Ok(CharacterSummary {
         id: char_id,
         name,
-        race: String::new(),
-        primary_class: String::new(),
+        race,
+        primary_class,
         level: 1,
+        max_hp: 0,
+        current_hp: 0,
+        armor_class: 0,
         campaign_name: String::new(),
         ruleset,
         updated_at: Some(now),

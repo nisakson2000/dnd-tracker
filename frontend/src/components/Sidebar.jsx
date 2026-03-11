@@ -1,142 +1,174 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ScrollText, Sword, BookOpen, Shield, Sparkles, Swords,
+  ScrollText, BookOpen, Shield, Sparkles, Swords,
   BookMarked, Users, Map, Globe, Dice5, ArrowLeft, User, Download,
-  Library, Settings2, ChevronLeft, ChevronRight, Wifi,
+  Library, Settings2, Heart,
 } from 'lucide-react';
-import { loadSettings, saveSettings } from '../utils/applySettings';
 
-const sections = [
-  { id: 'overview', label: 'Character Sheet', icon: User },
-  { id: 'backstory', label: 'Backstory', icon: BookOpen },
-  { id: 'spellbook', label: 'Spellbook', icon: Sparkles },
-  { id: 'inventory', label: 'Inventory', icon: Shield },
-  { id: 'features', label: 'Features & Traits', icon: ScrollText },
-  { id: 'combat', label: 'Combat', icon: Swords },
-  { id: 'journal', label: 'Campaign Journal', icon: BookMarked },
-  { id: 'npcs', label: 'NPCs', icon: Users },
-  { id: 'quests', label: 'Quests', icon: Map },
-  { id: 'lore', label: 'Lore & World', icon: Globe },
-  { id: 'party', label: 'Party Connect', icon: Wifi },
-  { id: 'dice', label: 'Dice Roller', icon: Dice5 },
-  { id: 'rules', label: 'Rules Reference', icon: Library },
-  { id: 'settings', label: 'Settings', icon: Settings2 },
-  { id: 'export', label: 'Export & Import', icon: Download },
+const SECTION_GROUPS = [
+  {
+    label: 'Character',
+    items: [
+      { id: 'overview',   label: 'Character Sheet',   icon: User },
+      { id: 'backstory',  label: 'Backstory',          icon: BookOpen },
+      { id: 'features',   label: 'Features & Traits',  icon: ScrollText },
+      { id: 'combat',     label: 'Combat',             icon: Swords },
+      { id: 'spellbook',  label: 'Spellbook',          icon: Sparkles },
+      { id: 'inventory',  label: 'Inventory',          icon: Shield },
+    ],
+  },
+  {
+    label: 'Campaign',
+    items: [
+      { id: 'journal',    label: 'Campaign Journal',   icon: BookMarked },
+      { id: 'npcs',       label: 'NPCs',               icon: Users },
+      { id: 'quests',     label: 'Quests',             icon: Map },
+      { id: 'lore',       label: 'Lore & World',       icon: Globe },
+    ],
+  },
+  {
+    label: 'Tools',
+    items: [
+      { id: 'dice',       label: 'Dice Roller',        icon: Dice5 },
+      { id: 'rules',      label: 'Rules Reference',    icon: Library },
+      { id: 'settings',   label: 'Settings',           icon: Settings2 },
+      { id: 'export',     label: 'Export & Import',    icon: Download },
+    ],
+  },
 ];
 
-export default function Sidebar({ character, activeSection, onSelect, onBack, activeConditionCount = 0 }) {
-  const [collapsed, setCollapsed] = useState(() => loadSettings().sidebarCollapsed || false);
+function hpColor(hp, maxHp) {
+  if (!maxHp) return '#4ade80';
+  const pct = hp / maxHp;
+  if (pct <= 0.1) return '#ef4444';
+  if (pct <= 0.25) return '#f97316';
+  if (pct <= 0.5) return '#eab308';
+  return '#4ade80';
+}
 
-  const toggleCollapse = () => {
-    const next = !collapsed;
-    setCollapsed(next);
-    saveSettings({ ...loadSettings(), sidebarCollapsed: next });
-  };
+export default function Sidebar({ character, activeSection, onSelect, onBack, activeConditionCount = 0, portrait = '' }) {
+  const hp = character?.current_hp ?? 0;
+  const maxHp = character?.max_hp ?? 0;
+  const hpPct = maxHp > 0 ? Math.min(100, Math.max(0, (hp / maxHp) * 100)) : 0;
+  const fillColor = hpColor(hp, maxHp);
 
   return (
-    <aside className={`${collapsed ? 'w-16' : 'w-72'} min-h-screen bg-[#0a0a10] border-r border-gold/20 flex flex-col transition-all duration-200`}>
+    <aside style={{ width: '240px', minHeight: '100vh', background: '#0a0a10', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column' }}>
       {/* Back button */}
       <button
         onClick={onBack}
-        className="flex items-center gap-2 px-4 py-3 text-sm text-amber-200/60 hover:text-amber-200 transition-colors border-b border-gold/10"
-        title={collapsed ? 'Dashboard' : undefined}
+        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '12px', color: 'rgba(255,255,255,0.35)', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'color 0.15s', fontFamily: 'Outfit, sans-serif', fontWeight: 500 }}
+        onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}
+        onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
       >
-        <ArrowLeft size={16} />
-        {!collapsed && 'Dashboard'}
+        <ArrowLeft size={14} /> Dashboard
       </button>
 
       {/* Character header */}
-      {!collapsed ? (
-        <div className="px-4 py-4 border-b border-gold/10">
-          <div className="w-20 h-20 mx-auto rounded-full bg-[#1a1825] border-2 border-gold/30 flex items-center justify-center text-3xl text-amber-200/50 mb-3">
+      <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        {/* Avatar — portrait or initial */}
+        {portrait ? (
+          <img src={portrait} alt="Portrait" style={{ width: '44px', height: '44px', borderRadius: '10px', objectFit: 'cover', border: '1px solid rgba(201,168,76,0.3)', marginBottom: '10px' }} />
+        ) : (
+          <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, color: '#c9a84c', marginBottom: '10px', fontFamily: 'Outfit, sans-serif' }}>
             {character?.name?.[0] || '?'}
           </div>
-          <h2 className="font-display text-center text-amber-100 text-lg truncate">
-            {character?.name || 'Unknown'}
-          </h2>
-          <p className="text-center text-xs text-amber-200/50 mt-1">
-            {[character?.race, character?.primary_class].filter(Boolean).join(' ') || 'Adventurer'}
-            {character?.level ? ` — Lv ${character.level}` : ''}
-          </p>
-          {character?.ruleset && (
-            <p className="text-center text-[10px] text-amber-200/30 mt-1">
-              {character.ruleset === '5e-2024' ? '2024 PHB' : '2014 PHB'}
-            </p>
-          )}
-          {/* Status indicators */}
-          {character && (
-            <div className="flex items-center justify-center gap-1.5 mt-2 flex-wrap">
-              {character.max_hp > 0 && character.current_hp <= character.max_hp * 0.25 && character.current_hp > 0 && (
-                <span className="text-xs bg-red-900/40 text-red-400 px-1.5 py-0.5 rounded" title="Low HP">Low HP</span>
-              )}
-              {character.current_hp === 0 && character.max_hp > 0 && (
-                <span className="text-xs bg-red-900/60 text-red-300 px-1.5 py-0.5 rounded animate-pulse" title="Down!">Down</span>
-              )}
-              {character.inspiration && (
-                <span className="text-xs bg-gold/20 text-gold px-1.5 py-0.5 rounded" title="Inspired">Inspired</span>
-              )}
-              {character.exhaustion_level > 0 && (
-                <span className="text-xs bg-orange-900/40 text-orange-400 px-1.5 py-0.5 rounded" title={`Exhaustion Level ${character.exhaustion_level}`}>Exhaust {character.exhaustion_level}</span>
-              )}
-              {activeConditionCount > 0 && (
-                <span className="text-xs bg-amber-900/40 text-amber-400 px-1.5 py-0.5 rounded" title={`${activeConditionCount} active condition(s)`}>{activeConditionCount} Cond</span>
-              )}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="py-3 border-b border-gold/10 flex justify-center">
-          <div className="w-10 h-10 rounded-full bg-[#1a1825] border-2 border-gold/30 flex items-center justify-center text-lg text-amber-200/50">
-            {character?.name?.[0] || '?'}
-          </div>
-        </div>
-      )}
+        )}
 
-      {/* Navigation */}
-      <nav className="flex-1 py-2 overflow-y-auto">
-        {sections.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => onSelect(id)}
-            className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-4 py-3.5 text-base transition-all ${
-              activeSection === id
-                ? 'bg-gold/10 text-amber-100 border-r-2 border-gold'
-                : 'text-amber-200/50 hover:text-amber-200/80 hover:bg-white/3'
-            }`}
-            title={collapsed ? label : undefined}
-          >
-            <Icon size={18} />
-            {!collapsed && label}
-            {!collapsed && id === 'combat' && activeConditionCount > 0 && (
-              <span className="ml-auto w-5 h-5 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center">
-                {activeConditionCount}
-              </span>
+        <div style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '13px', color: '#e8d9b5', lineHeight: 1.3, marginBottom: '3px' }}>
+          {character?.name || 'Unknown'}
+        </div>
+        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginBottom: '2px', fontFamily: 'Outfit, sans-serif' }}>
+          {[character?.race, character?.primary_class].filter(Boolean).join(' ')}
+          {character?.level ? ` · Lv ${character.level}` : ''}
+        </div>
+        {character?.ruleset && (
+          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.18)', fontFamily: 'Outfit, sans-serif' }}>
+            {character.ruleset === '5e-2024' ? '2024 PHB' : '2014 PHB'}
+          </div>
+        )}
+
+        {/* HP pill */}
+        {maxHp > 0 && (
+          <div className="sidebar-hp-pill">
+            <Heart size={11} style={{ color: fillColor, flexShrink: 0 }} />
+            <div className="sidebar-hp-bar">
+              <div className="sidebar-hp-fill" style={{ width: `${hpPct}%`, background: fillColor }} />
+            </div>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: fillColor, fontFamily: 'Outfit, sans-serif', whiteSpace: 'nowrap' }}>
+              {hp}/{maxHp}
+            </span>
+          </div>
+        )}
+
+        {/* Status badges */}
+        {character && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
+            {character.inspiration && (
+              <span style={{ fontSize: '9px', background: 'rgba(201,168,76,0.15)', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '1px 6px', fontFamily: 'Outfit, sans-serif', fontWeight: 600 }}>Inspired</span>
             )}
-          </button>
+            {character.exhaustion_level > 0 && (
+              <span style={{ fontSize: '9px', background: 'rgba(249,115,22,0.15)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.3)', borderRadius: '4px', padding: '1px 6px', fontFamily: 'Outfit, sans-serif', fontWeight: 600 }}>Exhaust {character.exhaustion_level}</span>
+            )}
+            {activeConditionCount > 0 && (
+              <span style={{ fontSize: '9px', background: 'rgba(239,68,68,0.12)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '4px', padding: '1px 6px', fontFamily: 'Outfit, sans-serif', fontWeight: 600 }}>{activeConditionCount} Cond</span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Navigation groups */}
+      <nav style={{ flex: 1, padding: '8px 0', overflowY: 'auto' }}>
+        {SECTION_GROUPS.map(group => (
+          <div key={group.label} style={{ marginBottom: '4px' }}>
+            <div style={{ padding: '8px 16px 4px', fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', fontFamily: 'Outfit, sans-serif' }}>
+              {group.label}
+            </div>
+            {group.items.map(({ id, label, icon: Icon }) => {
+              const active = activeSection === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => onSelect(id)}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
+                    padding: '8px 16px', fontSize: '13px', cursor: 'pointer',
+                    background: active ? 'rgba(201,168,76,0.08)' : 'transparent',
+                    border: 'none',
+                    borderLeft: active ? '2px solid #c9a84c' : '2px solid transparent',
+                    color: active ? '#e8d9b5' : 'rgba(255,255,255,0.4)',
+                    transition: 'all 0.15s', textAlign: 'left',
+                    fontFamily: 'Outfit, sans-serif', fontWeight: active ? 500 : 400,
+                  }}
+                  onMouseEnter={e => { if (!active) { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; } }}
+                  onMouseLeave={e => { if (!active) { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.background = 'transparent'; } }}
+                >
+                  <Icon size={14} />
+                  {label}
+                  {id === 'combat' && activeConditionCount > 0 && (
+                    <span style={{ marginLeft: 'auto', width: '18px', height: '18px', borderRadius: '50%', background: '#dc2626', color: 'white', fontSize: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                      {activeConditionCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         ))}
 
         {/* Wiki link */}
-        <div className="border-t border-gold/10 mt-2 pt-2">
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '8px', paddingTop: '8px' }}>
           <Link
             to="/wiki"
-            className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-4 py-3.5 text-base text-amber-200/50 hover:text-amber-200/80 hover:bg-white/3 transition-all`}
-            title={collapsed ? 'Arcane Encyclopedia' : undefined}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 16px', fontSize: '13px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none', fontFamily: 'Outfit, sans-serif', transition: 'color 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
           >
-            <BookOpen size={18} />
-            {!collapsed && 'Arcane Encyclopedia'}
+            <BookOpen size={14} />
+            Arcane Encyclopedia
           </Link>
         </div>
       </nav>
-
-      {/* Collapse toggle */}
-      <button
-        onClick={toggleCollapse}
-        className="flex items-center justify-center p-3 border-t border-gold/10 text-amber-200/30 hover:text-amber-200/60 transition-colors"
-        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      >
-        {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-      </button>
     </aside>
   );
 }

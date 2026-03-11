@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import { Plus, Trash2, LogIn, BookOpen, Heart, Shield, Library } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { listCharacters, createCharacter, deleteCharacter } from '../api/characters';
-import { RULESET_OPTIONS } from '../data/rulesets';
+import { RULESET_OPTIONS, getRuleset } from '../data/rulesets';
+import { APP_VERSION } from '../version';
 import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function Dashboard() {
@@ -13,6 +14,9 @@ export default function Dashboard() {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newRuleset, setNewRuleset] = useState('5e-2014');
+  const [newRace, setNewRace] = useState('');
+  const [newClass, setNewClass] = useState('');
+  const [newSubclass, setNewSubclass] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const navigate = useNavigate();
 
@@ -29,13 +33,31 @@ export default function Dashboard() {
 
   useEffect(() => { load(); }, []);
 
+  // Get races/classes for the selected ruleset
+  const rulesetData = getRuleset(newRuleset);
+  const availableRaces = rulesetData?.RACES || [];
+  const availableClasses = rulesetData?.CLASSES || [];
+  const selectedClassData = availableClasses.find(c => c.name === newClass);
+  const availableSubclasses = selectedClassData?.subclasses || [];
+
   const handleCreate = async () => {
     if (!newName.trim()) return;
+    if (!newRace) { toast.error('Please select a race'); return; }
+    if (!newClass) { toast.error('Please select a class'); return; }
     try {
-      const char = await createCharacter(newName.trim(), newRuleset);
+      const char = await createCharacter({
+        name: newName.trim(),
+        ruleset: newRuleset,
+        race: newRace,
+        primaryClass: newClass,
+        primarySubclass: newSubclass,
+      });
       toast.success(`${char.name} created!`);
       setNewName('');
       setNewRuleset('5e-2014');
+      setNewRace('');
+      setNewClass('');
+      setNewSubclass('');
       setShowCreate(false);
       load();
     } catch (err) {
@@ -76,8 +98,9 @@ export default function Dashboard() {
         </h1>
         <p className="text-amber-200/40 mt-2 flex items-center justify-center gap-2">
           <BookOpen size={16} />
-          D&D Campaign Character Tracker
+          D&D Companion
         </p>
+        <span className="inline-block mt-1.5 text-[10px] text-amber-200/20 font-mono tracking-wider">{APP_VERSION}</span>
         <p className="text-xs text-amber-200/25 mt-2 max-w-md mx-auto">
           Select a character to manage their stats, spells, and story — or create a new one to begin your adventure.
         </p>
@@ -188,37 +211,85 @@ export default function Dashboard() {
           onClick={(e) => e.target === e.currentTarget && setShowCreate(false)}
         >
           <motion.div
-            className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-sm w-full mx-4"
+            className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4 max-h-[85vh] overflow-y-auto"
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
           >
             <h3 className="font-display text-lg text-amber-100 mb-4">Create New Character</h3>
-            <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-              placeholder="Character name..."
-              className="input w-full mb-3"
-              autoFocus
-            />
-            <div className="mb-4">
-              <label className="text-xs text-amber-200/50 mb-1 block">Ruleset</label>
-              <select
-                className="input w-full"
-                value={newRuleset}
-                onChange={(e) => setNewRuleset(e.target.value)}
-              >
-                {RULESET_OPTIONS.map(opt => (
-                  <option key={opt.id} value={opt.id}>{opt.name}</option>
-                ))}
-              </select>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-amber-200/50 mb-1 block">Character Name *</label>
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                  placeholder="Enter a name..."
+                  className="input w-full"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="text-xs text-amber-200/50 mb-1 block">Ruleset</label>
+                <select
+                  className="input w-full"
+                  value={newRuleset}
+                  onChange={(e) => { setNewRuleset(e.target.value); setNewRace(''); setNewClass(''); setNewSubclass(''); }}
+                >
+                  {RULESET_OPTIONS.map(opt => (
+                    <option key={opt.id} value={opt.id}>{opt.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-amber-200/50 mb-1 block">Race *</label>
+                <select
+                  className="input w-full"
+                  value={newRace}
+                  onChange={(e) => setNewRace(e.target.value)}
+                >
+                  <option value="">Select a race...</option>
+                  {availableRaces.map(r => {
+                    const val = r.subrace ? `${r.name} (${r.subrace})` : r.name;
+                    return <option key={val} value={val}>{val}</option>;
+                  })}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-amber-200/50 mb-1 block">Class *</label>
+                <select
+                  className="input w-full"
+                  value={newClass}
+                  onChange={(e) => { setNewClass(e.target.value); setNewSubclass(''); }}
+                >
+                  <option value="">Select a class...</option>
+                  {availableClasses.map(c => (
+                    <option key={c.name} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              {availableSubclasses.length > 0 && (
+                <div>
+                  <label className="text-xs text-amber-200/50 mb-1 block">Subclass <span className="text-amber-200/30">(optional)</span></label>
+                  <select
+                    className="input w-full"
+                    value={newSubclass}
+                    onChange={(e) => setNewSubclass(e.target.value)}
+                  >
+                    <option value="">Choose later...</option>
+                    {availableSubclasses.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-amber-200/25 mt-1">You can pick a subclass now or set it later in the character sheet.</p>
+                </div>
+              )}
             </div>
-            <div className="flex gap-3 justify-end">
-              <button onClick={() => setShowCreate(false)} className="btn-secondary text-sm">
+            <div className="flex gap-3 justify-end mt-5">
+              <button onClick={() => { setShowCreate(false); setNewName(''); setNewRace(''); setNewClass(''); setNewSubclass(''); }} className="btn-secondary text-sm">
                 Cancel
               </button>
-              <button onClick={handleCreate} className="btn-primary text-sm">
+              <button onClick={handleCreate} disabled={!newName.trim() || !newRace || !newClass} className="btn-primary text-sm disabled:opacity-40">
                 Create
               </button>
             </div>

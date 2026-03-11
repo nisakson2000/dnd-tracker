@@ -1,14 +1,17 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Heart, Shield } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOverview } from '../api/overview';
 import { getConditions } from '../api/combat';
+import { getBackstory } from '../api/backstory';
 import { RulesetProvider } from '../contexts/RulesetContext';
 import Sidebar from '../components/Sidebar';
 import LevelUpOverlay from '../components/LevelUpOverlay';
 import BeginnerWizard from '../components/BeginnerWizard';
 import { useLevelUp } from '../hooks/useLevelUp';
+import { useCrashRecovery } from '../hooks/useCrashRecovery';
+import { useAutoBackup } from '../hooks/useAutoBackup';
 import Overview from '../sections/Overview';
 import Backstory from '../sections/Backstory';
 import Spellbook from '../sections/Spellbook';
@@ -18,7 +21,6 @@ import Combat from '../sections/Combat';
 import NPCs from '../sections/NPCs';
 import Quests from '../sections/Quests';
 import DiceRoller from '../sections/DiceRoller';
-import Party from '../sections/Party';
 import Settings from '../sections/Settings';
 
 const Journal = lazy(() => import('../sections/Journal'));
@@ -37,7 +39,6 @@ const SECTIONS = {
   npcs: NPCs,
   quests: Quests,
   lore: Lore,
-  party: Party,
   dice: DiceRoller,
   rules: RulesReference,
   settings: Settings,
@@ -54,7 +55,10 @@ export default function CharacterView() {
   const [loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
   const [activeConditionCount, setActiveConditionCount] = useState(0);
+  const [portrait, setPortrait] = useState('');
   const { showOverlay, levelUpInfo, triggerLevelUp, dismiss } = useLevelUp();
+  useCrashRecovery();
+  useAutoBackup(characterId, character?.name);
 
   useEffect(() => {
     loadCharacter();
@@ -64,10 +68,14 @@ export default function CharacterView() {
     try {
       const data = await getOverview(characterId);
       setCharacter(data.overview);
-      // Load condition count
+      // Load condition count and portrait
       try {
         const conds = await getConditions(characterId);
         setActiveConditionCount(conds.filter(c => c.active).length);
+      } catch {}
+      try {
+        const bs = await getBackstory(characterId);
+        if (bs.portrait_data) setPortrait(bs.portrait_data);
       } catch {}
     } catch (err) {
       toast.error(`Failed to load character: ${err.message}`);
@@ -106,39 +114,68 @@ export default function CharacterView() {
 
   return (
     <RulesetProvider rulesetId={rulesetId}>
-      <div className="flex min-h-screen">
+      <div style={{ display: 'flex', minHeight: '100vh' }}>
         <Sidebar
           character={character}
           activeSection={activeSection}
           onSelect={setActiveSection}
           onBack={() => navigate('/')}
           activeConditionCount={activeConditionCount}
+          portrait={portrait}
         />
-        <main className="flex-1 overflow-y-auto max-h-screen">
-          {/* Sticky character header */}
-          {character && (
-            <div className="sticky top-0 z-20 bg-[#0a0a10]/95 backdrop-blur-sm border-b border-gold/10 px-6 py-2 flex items-center gap-6 text-sm">
-              <span className="font-display text-amber-100">{character.name}</span>
-              <span className="text-amber-200/40">{[character.race, character.primary_class].filter(Boolean).join(' ')} Lv {character.level}</span>
-              {character.max_hp > 0 && (
-                <span className="flex items-center gap-1 text-red-400"><Heart size={12} /> {character.current_hp}/{character.max_hp}</span>
-              )}
-              <span className="flex items-center gap-1 text-amber-200/60"><Shield size={12} /> AC {character.armor_class}</span>
-              {character.inspiration && <span className="text-gold text-xs">* Inspired</span>}
+
+        {/* Right side: topbar + content */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+
+          {/* Topbar */}
+          <div style={{ height: '50px', background: '#0e0e16', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '0', padding: '0 20px', flexShrink: 0 }}>
+            {/* Portrait mini */}
+            {portrait && <img src={portrait} alt="" style={{ width: '28px', height: '28px', borderRadius: '6px', objectFit: 'cover', border: '1px solid rgba(201,168,76,0.3)', marginRight: '12px' }} />}
+            {/* Name + class */}
+            <div style={{ marginRight: '16px' }}>
+              <div style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '13px', color: '#e8d9b5', whiteSpace: 'nowrap' }}>
+                {character?.name || 'Unknown'}
+              </div>
+              <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontFamily: 'Outfit, sans-serif', whiteSpace: 'nowrap' }}>
+                {[character?.race, character?.primary_class].filter(Boolean).join(' ')}
+                {character?.level ? ` · Lv ${character.level}` : ''}
+              </div>
             </div>
-          )}
-          <div className="p-6 md:p-8">
-            <Suspense fallback={<div className="text-amber-200/40">Loading...</div>}>
+
+            {/* Stat chips */}
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              {character?.max_hp > 0 && (
+                <span className="stat-chip stat-chip-hp">
+                  <Heart size={10} /> {character.current_hp} / {character.max_hp}
+                </span>
+              )}
+              {character?.armor_class > 0 && (
+                <span className="stat-chip stat-chip-ac">
+                  AC {character.armor_class}
+                </span>
+              )}
+              {character?.inspiration && (
+                <span className="stat-chip stat-chip-xp">Inspired</span>
+              )}
+            </div>
+
+            <div style={{ flex: 1 }} />
+          </div>
+
+          {/* Main content */}
+          <main style={{ flex: 1, padding: '24px 32px', overflowY: 'auto', maxHeight: 'calc(100vh - 50px)' }}>
+            <Suspense fallback={<div className="text-amber-200/40">Loading…</div>}>
               <ActiveComponent
                 characterId={characterId}
                 character={character}
                 onCharacterUpdate={(updated) => setCharacter(updated)}
                 onLevelUp={triggerLevelUp}
                 onConditionsChange={(count) => setActiveConditionCount(count)}
+                onPortraitChange={setPortrait}
               />
             </Suspense>
-          </div>
-        </main>
+          </main>
+        </div>
 
         {/* Beginner Guide floating button */}
         <button

@@ -1,4 +1,5 @@
 use rusqlite::Connection;
+use std::fs;
 use tauri::State;
 
 use crate::db::AppState;
@@ -17,12 +18,8 @@ fn query_string_list(conn: &Connection, sql: &str) -> Result<Vec<String>, String
     Ok(result)
 }
 
-#[tauri::command]
-pub fn export_character(
-    state: State<'_, AppState>,
-    character_id: String,
-) -> Result<serde_json::Value, String> {
-    state.with_char_conn(&character_id, |conn| {
+fn do_export(state: &AppState, character_id: &str) -> Result<serde_json::Value, String> {
+    state.with_char_conn(character_id, |conn| {
         // Overview
         let overview = conn
             .query_row(
@@ -96,7 +93,7 @@ pub fn export_character(
         let backstory = conn.query_row(
             "SELECT backstory_text, personality_traits, ideals, bonds, flaws,
                     age, height, weight, eyes, hair, skin,
-                    allies_organizations, appearance_notes, goals_motivations
+                    allies_organizations, appearance_notes, goals_motivations, portrait_data
              FROM backstory LIMIT 1", [],
             |row| Ok(serde_json::json!({
                 "backstory_text": row.get::<_, String>(0).unwrap_or_default(),
@@ -113,6 +110,7 @@ pub fn export_character(
                 "allies_organizations": row.get::<_, String>(11).unwrap_or_default(),
                 "appearance_notes": row.get::<_, String>(12).unwrap_or_default(),
                 "goals_motivations": row.get::<_, String>(13).unwrap_or_default(),
+                "portrait_data": row.get::<_, String>(14).unwrap_or_default(),
             })),
         ).ok();
 
@@ -271,4 +269,37 @@ pub fn export_character(
             "lore_notes": lore_notes,
         }))
     })
+}
+
+#[tauri::command]
+pub fn export_character(
+    state: State<'_, AppState>,
+    character_id: String,
+) -> Result<serde_json::Value, String> {
+    do_export(&state, &character_id)
+}
+
+#[tauri::command]
+pub fn autosave_character(
+    state: State<'_, AppState>,
+    character_id: String,
+    character_name: String,
+) -> Result<String, String> {
+    let data = do_export(&state, &character_id)?;
+
+    // Write to a fixed autosave file in the app data dir (overwrites each time)
+    let autosave_dir = state.data_dir.join("autosaves");
+    fs::create_dir_all(&autosave_dir).map_err(|e| e.to_string())?;
+
+    let safe_name: String = character_name
+        .chars()
+        .map(|c| if c.is_alphanumeric() || c == '-' || c == '_' || c == ' ' { c } else { '_' })
+        .collect();
+    let filename = format!("{}_autosave.json", safe_name.trim().replace(' ', "_"));
+    let path = autosave_dir.join(&filename);
+
+    let json_string = serde_json::to_string_pretty(&data).map_err(|e| e.to_string())?;
+    fs::write(&path, json_string).map_err(|e| e.to_string())?;
+
+    Ok(path.to_string_lossy().to_string())
 }

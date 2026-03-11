@@ -3,6 +3,7 @@
 
 mod commands;
 mod db;
+mod party;
 
 use db::AppState;
 use std::fs;
@@ -75,6 +76,7 @@ fn main() {
             };
 
             app.manage(AppState::new(app_data_dir, wiki_conn));
+            app.manage(party::PartyServer::new());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -145,6 +147,7 @@ fn main() {
             commands::rest::short_rest,
             // Export / Import
             commands::export::export_character,
+            commands::export::autosave_character,
             commands::import::import_character,
             // Wiki
             commands::wiki::wiki_search,
@@ -152,6 +155,9 @@ fn main() {
             commands::wiki::wiki_list_articles,
             commands::wiki::wiki_get_article,
             commands::wiki::wiki_get_related,
+            // Party
+            party::start_party_server,
+            party::stop_party_server,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

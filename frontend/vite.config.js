@@ -21,11 +21,6 @@ export default defineConfig({
     proxy: {
       '/characters': 'http://localhost:8000',
       '/health': 'http://localhost:8000',
-      '/party': {
-        target: 'http://localhost:8000',
-        ws: true,
-        changeOrigin: true,
-      },
       '/wiki/search': 'http://localhost:8000',
       '/wiki/categories': 'http://localhost:8000',
       '/wiki/articles': 'http://localhost:8000',

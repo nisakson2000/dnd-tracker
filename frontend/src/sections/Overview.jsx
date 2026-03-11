@@ -7,7 +7,6 @@ import { useAutosave } from '../hooks/useAutosave';
 import SaveIndicator from '../components/SaveIndicator';
 import HelpTooltip from '../components/HelpTooltip';
 import { useRuleset } from '../contexts/RulesetContext';
-import { RULESET_OPTIONS } from '../data/rulesets';
 import { HELP } from '../data/helpText';
 
 const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
@@ -219,25 +218,15 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <label className="label">Name</label>
-            <input className="input w-full" value={overview.name} onChange={e => updateField('name', e.target.value)} />
+            <div className="input w-full bg-[#0a0a10] cursor-not-allowed opacity-75">{overview.name || 'Unknown'}</div>
           </div>
           <div>
             <label className="label">{ancestryLabel}</label>
-            <select className="input w-full" value={overview.race} onChange={e => updateField('race', e.target.value)}>
-              <option value="">Select...</option>
-              {RACES.map(r => (
-                <option key={`${r.name}-${r.subrace}`} value={r.subrace ? `${r.name} (${r.subrace})` : r.name}>
-                  {r.subrace ? `${r.name} (${r.subrace})` : r.name}
-                </option>
-              ))}
-            </select>
+            <div className="input w-full bg-[#0a0a10] cursor-not-allowed opacity-75">{overview.race || 'Not set'}</div>
           </div>
           <div>
             <label className="label">Class</label>
-            <select className="input w-full" value={overview.primary_class} onChange={e => updateField('primary_class', e.target.value)}>
-              <option value="">Select...</option>
-              {CLASSES.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-            </select>
+            <div className="input w-full bg-[#0a0a10] cursor-not-allowed opacity-75">{overview.primary_class || 'Not set'}</div>
           </div>
           <div>
             <label className="label">Level</label>
@@ -246,22 +235,23 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           </div>
           <div>
             <label className="label">Subclass</label>
-            {(() => {
-              const cls = CLASSES.find(c => c.name === overview.primary_class);
-              const subs = cls?.subclasses || [];
-              if (subs.length > 0) {
-                return (
-                  <select className="input w-full" value={overview.primary_subclass} onChange={e => updateField('primary_subclass', e.target.value)}>
-                    <option value="">Select...</option>
-                    {subs.map(s => <option key={s} value={s}>{s}</option>)}
-                    {overview.primary_subclass && !subs.includes(overview.primary_subclass) && (
-                      <option value={overview.primary_subclass}>{overview.primary_subclass}</option>
-                    )}
-                  </select>
-                );
-              }
-              return <input className="input w-full" value={overview.primary_subclass} onChange={e => updateField('primary_subclass', e.target.value)} />;
-            })()}
+            {overview.primary_subclass ? (
+              <div className="input w-full bg-[#0a0a10] cursor-not-allowed opacity-75">{overview.primary_subclass}</div>
+            ) : (
+              (() => {
+                const cls = CLASSES.find(c => c.name === overview.primary_class);
+                const subs = cls?.subclasses || [];
+                if (subs.length > 0) {
+                  return (
+                    <select className="input w-full" value={overview.primary_subclass} onChange={e => updateField('primary_subclass', e.target.value)}>
+                      <option value="">Select...</option>
+                      {subs.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  );
+                }
+                return <input className="input w-full" value={overview.primary_subclass || ''} onChange={e => updateField('primary_subclass', e.target.value)} />;
+              })()
+            )}
           </div>
           <div>
             <label className="label">Background</label>
@@ -279,14 +269,6 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           <div>
             <label className="label">Campaign</label>
             <input className="input w-full" value={overview.campaign_name} onChange={e => updateField('campaign_name', e.target.value)} />
-          </div>
-          <div>
-            <label className="label">Ruleset</label>
-            <select className="input w-full" value={overview.ruleset || '5e-2014'} onChange={e => updateField('ruleset', e.target.value)}>
-              {RULESET_OPTIONS.map(opt => (
-                <option key={opt.id} value={opt.id}>{opt.name}</option>
-              ))}
-            </select>
           </div>
         </div>
       </div>
@@ -326,28 +308,25 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           {/* Saving Throws */}
           <div className="card">
             <h3 className="font-display text-amber-100 mb-1">Saving Throws<HelpTooltip text={HELP.savingThrows} /></h3>
-            <p className="text-xs text-amber-200/30 mb-3">Click the circle to mark proficiency — adds your proficiency bonus ({modStr(profBonus)}) to the roll.</p>
-            <div className="space-y-1.5">
+            <p className="text-xs text-amber-200/30 mb-3">Click to mark proficiency — adds +{profBonus} to the roll.</p>
+            <div className="space-y-0.5">
               {ABILITIES.map(ab => {
                 const score = abilityMap[ab] || 10;
                 const prof = saveMap[ab] || false;
                 const mod = calcMod(score) + (prof ? profBonus : 0);
                 return (
-                  <div key={ab} className="flex items-center gap-3 py-1 group">
-                    <button
-                      onClick={() => toggleSave(ab)}
-                      className={`w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center flex-shrink-0 ${
-                        prof
-                          ? 'bg-gold border-gold shadow-[0_0_6px_rgba(201,168,76,0.3)]'
-                          : 'border-amber-200/25 hover:border-amber-200/50'
-                      }`}
-                      title={prof ? 'Proficient — click to remove' : 'Not proficient — click to add'}
-                    >
-                      {prof && <Check size={12} className="text-[#0d0d12]" strokeWidth={3} />}
-                    </button>
-                    <span className={`text-sm font-medium w-8 ${prof ? 'text-gold' : 'text-amber-200/50'}`}>{modStr(mod)}</span>
-                    <span className="text-sm text-amber-200/80">{ABILITY_NAMES[ab]}</span>
-                    {prof && <span className="text-[10px] text-gold/40 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">proficient</span>}
+                  <div
+                    key={ab}
+                    onClick={() => toggleSave(ab)}
+                    className="flex items-center gap-3 py-1.5 px-2 rounded-md cursor-pointer group hover:bg-white/[0.03] transition-colors select-none"
+                  >
+                    {/* Proficiency indicator */}
+                    <div className={`prof-circle${prof ? ' active' : ''}`} />
+                    <span className={`text-sm font-semibold w-8 text-right transition-colors ${prof ? 'text-gold' : 'text-amber-200/35'}`}>{modStr(mod)}</span>
+                    <span className={`text-sm flex-1 transition-colors ${prof ? 'text-amber-100' : 'text-amber-200/60'}`}>{ABILITY_NAMES[ab]}</span>
+                    {prof && (
+                      <span className="text-[10px] font-display tracking-wider text-gold bg-gold/15 border border-gold/20 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">PROF</span>
+                    )}
                   </div>
                 );
               })}
@@ -357,43 +336,49 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           {/* Skills */}
           <div className="card">
             <h3 className="font-display text-amber-100 mb-1">Skills</h3>
-            <p className="text-xs text-amber-200/30 mb-3">
-              <span className="inline-flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full bg-gold"></span> Proficient (+{profBonus})</span>
-              <span className="mx-2">|</span>
-              <span className="inline-flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-purple-500"></span> Expertise (+{profBonus * 2})</span>
-            </p>
-            <div className="space-y-0.5 max-h-[360px] overflow-y-auto pr-2">
+            {/* Legend */}
+            <div className="flex items-center gap-3.5 mb-3 text-[11px] text-amber-200/35">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block w-3 h-3 rounded-full bg-gold border-2 border-gold shadow-[0_0_6px_rgba(201,168,76,0.35)]" />
+                Proficient (+{profBonus})
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block w-2.5 h-2.5 rotate-45 rounded-sm bg-purple-600 border-2 border-purple-400 shadow-[0_0_6px_rgba(124,77,189,0.4)]" />
+                Expertise (+{profBonus * 2})
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block w-3 h-3 rounded-full border-2 border-amber-200/25 bg-amber-200/[0.04]" />
+                None
+              </span>
+            </div>
+            <div className="space-y-0 max-h-[380px] overflow-y-auto pr-1 skill-list">
               {Object.entries(SKILLS).sort(([a], [b]) => a.localeCompare(b)).map(([skillName, ability]) => {
                 const sk = skills.find(s => s.name === skillName);
                 const score = abilityMap[ability] || 10;
                 const mod = calcMod(score) + (sk?.proficient ? profBonus : 0) + (sk?.expertise ? profBonus : 0);
+                const state = sk?.expertise ? 'expertise' : sk?.proficient ? 'proficient' : 'none';
                 return (
-                  <div key={skillName} className="flex items-center gap-2 py-1 group hover:bg-white/[0.02] rounded px-1 -mx-1">
+                  <div key={skillName} className="flex items-center gap-2 py-[5px] px-1.5 rounded group hover:bg-white/[0.025] transition-colors select-none">
+                    {/* Proficiency circle */}
                     <button
                       onClick={() => toggleSkillProf(skillName)}
-                      className={`w-5 h-5 rounded-full border-2 transition-all flex-shrink-0 flex items-center justify-center ${
-                        sk?.proficient
-                          ? 'bg-gold border-gold shadow-[0_0_4px_rgba(201,168,76,0.3)]'
-                          : 'border-amber-200/25 hover:border-amber-200/50'
-                      }`}
-                      title={sk?.proficient ? 'Proficient — click to remove' : 'Not proficient — click to add'}
-                    >
-                      {sk?.proficient && <Check size={10} className="text-[#0d0d12]" strokeWidth={3} />}
-                    </button>
+                      className={`prof-circle${sk?.proficient ? ' active' : ''}`}
+                      style={{ width: '16px', height: '16px' }}
+                      title={sk?.proficient ? 'Proficient — click to remove' : 'Click to add proficiency'}
+                    />
+                    {/* Expertise diamond */}
                     <button
                       onClick={() => toggleSkillExpertise(skillName)}
-                      className={`w-5 h-5 rounded border-2 transition-all flex-shrink-0 flex items-center justify-center ${
-                        sk?.expertise
-                          ? 'bg-purple-500 border-purple-400 shadow-[0_0_4px_rgba(168,85,247,0.3)]'
-                          : 'border-amber-200/15 hover:border-amber-200/40'
-                      }`}
-                      title={sk?.expertise ? 'Expertise — click to remove (requires proficiency)' : 'No expertise — click to add (auto-grants proficiency)'}
-                    >
-                      {sk?.expertise && <Check size={10} className="text-white" strokeWidth={3} />}
-                    </button>
-                    <span className={`text-sm w-8 text-right font-medium ${sk?.expertise ? 'text-purple-300' : sk?.proficient ? 'text-gold' : 'text-amber-200/40'}`}>{modStr(mod)}</span>
-                    <span className="text-sm text-amber-200/80 flex-1">{skillName}</span>
-                    <span className="text-[11px] text-amber-200/25">{ability}</span>
+                      className={`expertise-diamond${sk?.expertise ? ' active' : ''}`}
+                      title={sk?.expertise ? 'Expertise — click to remove' : 'Click to add expertise (auto-grants proficiency)'}
+                    />
+                    <span className={`text-[13px] font-semibold w-[30px] text-right flex-shrink-0 transition-colors ${
+                      state === 'expertise' ? 'text-purple-300' : state === 'proficient' ? 'text-gold' : 'text-amber-200/35'
+                    }`}>{modStr(mod)}</span>
+                    <span className={`text-[13px] flex-1 transition-colors ${
+                      state === 'expertise' ? 'text-purple-100' : state === 'proficient' ? 'text-amber-100' : 'text-amber-200/60'
+                    }`}>{skillName}</span>
+                    <span className="text-[10px] font-display tracking-wider text-amber-200/[0.18] w-[26px] text-right">{ability}</span>
                   </div>
                 );
               })}
@@ -447,15 +432,42 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 <input type="number" className="input w-full" value={overview.temp_hp} onChange={e => updateField('temp_hp', parseInt(e.target.value) || 0)} />
               </div>
             </div>
-            <div className="hp-bar-container">
+            {/* HP bar with color states and temp HP segment */}
+            <div className="hp-bar-bg" style={{ marginTop: '10px' }}>
               <div
-                className={hpBarClass}
-                style={{ width: `${Math.min(100, Math.max(0, hpPercent))}%` }}
+                className={`hp-bar-fill${hpPercent < 10 ? ' animate-pulse' : ''}`}
+                style={{
+                  width: `${Math.min(100, Math.max(0, hpPercent))}%`,
+                  background: hpPercent < 10
+                    ? 'linear-gradient(90deg, #7f1d1d, #ef4444)'
+                    : hpPercent < 25
+                    ? 'linear-gradient(90deg, #c2410c, #f97316)'
+                    : hpPercent <= 50
+                    ? 'linear-gradient(90deg, #a16207, #eab308)'
+                    : 'linear-gradient(90deg, #166534, #4ade80)',
+                }}
               />
+              {overview.temp_hp > 0 && overview.max_hp > 0 && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: `${Math.min(100, Math.max(0, hpPercent))}%`,
+                    width: `${Math.min(100 - hpPercent, (overview.temp_hp / overview.max_hp) * 100)}%`,
+                    height: '100%',
+                    background: 'rgba(96,165,250,0.6)',
+                    borderRadius: '0 4px 4px 0',
+                  }}
+                />
+              )}
             </div>
-            <div className="text-xs text-amber-200/40 mt-1">
-              {overview.current_hp} / {overview.max_hp}
-              {overview.temp_hp > 0 && ` (+${overview.temp_hp} temp)`}
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '5px', fontFamily: 'Outfit, sans-serif' }}>
+              <span style={{ color: hpPercent < 25 ? '#fca5a5' : 'rgba(255,255,255,0.5)', fontWeight: hpPercent < 25 ? 600 : 400 }}>
+                {overview.current_hp} / {overview.max_hp} HP
+              </span>
+              {overview.temp_hp > 0 && (
+                <span style={{ color: '#93c5fd' }}>+{overview.temp_hp} temp</span>
+              )}
             </div>
           </div>
 
@@ -576,6 +588,56 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           </div>
         </div>
       </div>
+
+      {/* Race Traits & Class Features */}
+      {(() => {
+        const raceData = RACES.find(r => {
+          const val = r.subrace ? `${r.name} (${r.subrace})` : r.name;
+          return val === overview.race;
+        });
+        const classData = CLASSES.find(c => c.name === overview.primary_class);
+        const raceTraits = raceData?.traits || [];
+        const classFeatures = (classData?.features || []).filter(f => f.level <= overview.level);
+        if (raceTraits.length === 0 && classFeatures.length === 0) return null;
+        return (
+          <div className="card">
+            <h3 className="font-display text-amber-100 mb-3">Features & Traits</h3>
+            {raceTraits.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-amber-200/40 mb-2">
+                  Racial Traits — {overview.race}
+                </h4>
+                <div className="space-y-2">
+                  {raceTraits.map((t, i) => (
+                    <div key={i} className="bg-[#0a0a10] rounded p-3 border border-amber-200/8">
+                      <div className="text-sm text-amber-100 font-medium">{t.name}</div>
+                      <div className="text-xs text-amber-200/45 mt-0.5">{t.description}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {classFeatures.length > 0 && (
+              <div>
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-amber-200/40 mb-2">
+                  Class Features — {overview.primary_class} (Lv {overview.level})
+                </h4>
+                <div className="space-y-2">
+                  {classFeatures.map((f, i) => (
+                    <div key={i} className="bg-[#0a0a10] rounded p-3 border border-amber-200/8">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-amber-100 font-medium">{f.name}</span>
+                        <span className="text-[10px] text-amber-200/30 bg-amber-200/5 px-1.5 py-0.5 rounded">Lv {f.level}</span>
+                      </div>
+                      <div className="text-xs text-amber-200/45 mt-0.5">{f.description}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Misc fields */}
       <div className="card">

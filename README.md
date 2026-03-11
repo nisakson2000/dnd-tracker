@@ -1,6 +1,6 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.1.5**
+**Current Version: V0.1.8**
 
 A native desktop application for managing D&D 5e characters with full ruleset support, a 964-article encyclopedia, real-time party sync, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
@@ -209,9 +209,10 @@ Creates a distributable installer/executable in `src-tauri/target/release/bundle
 
 1. Launch the app with `npm run tauri dev`
 2. Click "New Character"
-3. Choose a name and ruleset (5e 2014 or 5e 2024)
-4. Click Create
-5. Click "Enter" on the character card to open the full character sheet
+3. Choose a name, ruleset (5e 2014 or 5e 2024), race, and class
+4. Optionally select a subclass (can be chosen later)
+5. Click Create
+6. Click "Enter" on the character card to open the full character sheet
 
 ## Architecture
 
@@ -239,6 +240,20 @@ Creates a distributable installer/executable in `src-tauri/target/release/bundle
 ---
 
 ## Changelog
+
+### V0.1.8 — Character Creation, Auto-Backup & Accuracy
+
+**Changes:**
+- Expanded character creation — choose race, class, and optional subclass during setup (filtered by ruleset)
+- Locked identity fields (name, race, class, subclass) on character sheet after creation
+- Race traits and class features now displayed on the character sheet, filtered by level
+- Class-filtered spell dropdown in spellbook — shows SRD 5.1 spells available to your class
+- Auto-backup every 5 minutes — overwrites a single `{name}_autosave.json` file (no file bloat)
+- Fixed drag-and-drop portrait upload (Tauri was intercepting file drops)
+- Added crash recovery hook for unsaved data
+- Expanded 5e 2014 ruleset data — 30+ races with subraces, all 12 classes with full feature lists
+- Party UI rework with new card styles and color-coded member accents
+- Accuracy improvements: proper rest mechanics, ruleset-aware features
 
 ### V0.1.5 — Tauri Migration
 

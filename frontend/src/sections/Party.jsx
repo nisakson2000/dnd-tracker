@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Users, Wifi, WifiOff, Copy, Check, LogIn, LogOut, Crown, Heart, Shield, RefreshCw, Signal } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { invoke } from '@tauri-apps/api/core';
+
+const PARTY_PORT = 8787;
 
 // ─── WebSocket hook ──────────────────────────────────────────────────────────
 
@@ -13,9 +16,7 @@ function usePartySocket({ roomCode, character, onMembers, onJoined, onUpdated, o
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
     if (!roomCode) return;
     setStatus('connecting');
-    const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const host = window.location.host;
-    const ws = new WebSocket(`${proto}://${host}/party/ws`);
+    const ws = new WebSocket(`ws://localhost:${PARTY_PORT}/party/ws`);
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -57,81 +58,69 @@ function usePartySocket({ roomCode, character, onMembers, onJoined, onUpdated, o
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+const AVATAR_COLORS = [
+  '#c9a84c', '#6d9eeb', '#e06666', '#93c47d', '#c27ba0', '#8e7cc3', '#76a5af', '#f6b26b',
+];
+
 function hpColor(hp, maxHp) {
-  if (!maxHp) return 'text-amber-200/40';
+  if (!maxHp) return 'rgba(255,255,255,0.25)';
   const pct = hp / maxHp;
-  if (pct <= 0) return 'text-red-500';
-  if (pct <= 0.25) return 'text-red-400';
-  if (pct <= 0.5) return 'text-yellow-400';
-  return 'text-emerald-400';
+  if (pct <= 0) return '#ef4444';
+  if (pct <= 0.25) return '#f87171';
+  if (pct <= 0.5) return '#eab308';
+  return '#4ade80';
 }
+
 function hpBarColor(hp, maxHp) {
-  if (!maxHp) return 'bg-amber-200/20';
+  if (!maxHp) return 'rgba(255,255,255,0.1)';
   const pct = hp / maxHp;
-  if (pct <= 0) return 'bg-red-600';
-  if (pct <= 0.25) return 'bg-red-400';
-  if (pct <= 0.5) return 'bg-yellow-400';
-  return 'bg-emerald-400';
-}
-function classIcon(cls) {
-  const c = (cls || '').toLowerCase();
-  if (['barbarian', 'fighter', 'paladin', 'monk'].includes(c)) return '\u2694\uFE0F';
-  if (['wizard', 'sorcerer', 'warlock'].includes(c)) return '\uD83D\uDD2E';
-  if (['cleric', 'druid'].includes(c)) return '\u2728';
-  if (['rogue', 'ranger'].includes(c)) return '\uD83C\uDFF9';
-  if (['bard'].includes(c)) return '\uD83C\uDFB5';
-  return '\uD83D\uDEE1\uFE0F';
+  if (pct <= 0) return '#dc2626';
+  if (pct <= 0.25) return '#f87171';
+  if (pct <= 0.5) return '#eab308';
+  return '#4ade80';
 }
 
 // ─── Member card ─────────────────────────────────────────────────────────────
 
-function MemberCard({ member, isYou }) {
+function MemberCard({ member, isYou, colorIndex = 0 }) {
   const { character } = member;
   const hp = character.hp ?? 0;
   const maxHp = character.max_hp ?? 0;
   const hpPct = maxHp > 0 ? Math.max(0, Math.min(100, (hp / maxHp) * 100)) : 0;
   const isDead = maxHp > 0 && hp <= 0;
+  const accent = AVATAR_COLORS[colorIndex % AVATAR_COLORS.length];
 
   return (
-    <div className={`relative rounded-lg border transition-all ${
-      isYou ? 'border-gold/40 bg-gold/5 shadow-[0_0_20px_rgba(201,168,76,0.08)]' : 'border-amber-200/10 bg-[#0d0d12]'
-    } ${isDead ? 'opacity-60' : ''}`}>
-      {isYou && (
-        <div className="absolute -top-2.5 left-3">
-          <span className="text-[10px] bg-gold/20 text-gold border border-gold/30 rounded px-2 py-0.5 font-medium tracking-wide">YOU</span>
+    <div className={`party-card${isYou ? ' is-you' : ''}`} style={isDead ? { opacity: 0.6 } : undefined}>
+      <div className="party-card-header">
+        <div className="party-card-avatar" style={{ background: `${accent}22`, borderColor: `${accent}55`, color: accent }}>
+          {(character.name || '?')[0]}
         </div>
-      )}
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2.5">
-            <div className={`w-9 h-9 rounded-full border flex items-center justify-center text-base ${
-              isYou ? 'border-gold/40 bg-gold/10' : 'border-amber-200/20 bg-[#1a1825]'
-            }`}>
-              {classIcon(character.primary_class)}
-            </div>
-            <div>
-              <div className="font-display text-amber-100 text-sm leading-tight">{character.name || 'Unknown'}</div>
-              <div className="text-xs text-amber-200/40 mt-0.5">
-                {[character.race, character.primary_class].filter(Boolean).join(' ')}
-                {character.level ? ` \u00b7 Lv ${character.level}` : ''}
-              </div>
-            </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '13px', color: '#e8d9b5', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {character.name || 'Unknown'}
           </div>
-          <div className="flex items-center gap-1 text-xs text-amber-200/60 shrink-0">
-            <Shield size={12} className="text-blue-400/70" />
-            <span className="font-medium text-blue-300">{character.ac ?? '\u2014'}</span>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontFamily: 'Outfit, sans-serif' }}>
+            {[character.race, character.primary_class].filter(Boolean).join(' ')}
+            {character.level ? ` · Lv ${character.level}` : ''}
           </div>
         </div>
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1 text-amber-200/50"><Heart size={11} /><span>HP</span></div>
-            <span className={`font-medium ${hpColor(hp, maxHp)}`}>
-              {isDead ? '\uD83D\uDC80 Down' : `${hp} / ${maxHp}`}
-            </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'rgba(147,197,253,0.8)', flexShrink: 0 }}>
+          <Shield size={12} />
+          <span style={{ fontWeight: 700 }}>{character.ac ?? '—'}</span>
+        </div>
+      </div>
+      <div className="party-card-body">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>
+            <Heart size={11} /> HP
           </div>
-          <div className="h-1.5 bg-[#1a1825] rounded-full overflow-hidden">
-            <div className={`h-full rounded-full transition-all duration-500 ${hpBarColor(hp, maxHp)}`} style={{ width: `${hpPct}%` }} />
-          </div>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: hpColor(hp, maxHp), fontFamily: 'Outfit, sans-serif' }}>
+            {isDead ? '💀 Down' : `${hp} / ${maxHp}`}
+          </span>
+        </div>
+        <div className="party-mini-bar">
+          <div className="party-mini-bar-fill" style={{ width: `${hpPct}%`, background: hpBarColor(hp, maxHp) }} />
         </div>
       </div>
     </div>
@@ -201,13 +190,15 @@ export default function Party({ characterId, character }) {
 
   const handleHost = async () => {
     try {
-      const res = await fetch('/party/rooms', { method: 'POST' });
+      // Start the embedded party server (auto-starts if not running)
+      await invoke('start_party_server');
+      const res = await fetch(`http://localhost:${PARTY_PORT}/party/rooms`, { method: 'POST' });
       if (!res.ok) throw new Error('Failed to create room');
       const data = await res.json();
       setRoomCode(data.room_code);
       setMode('host');
     } catch {
-      toast.error('Could not create room \u2014 is the backend running?');
+      toast.error('Could not create party server');
     }
   };
 
@@ -220,8 +211,11 @@ export default function Party({ characterId, character }) {
 
   useEffect(() => { if (roomCode && mode) connect(); }, [roomCode, mode]);
 
-  const handleLeave = () => {
+  const handleLeave = async () => {
     disconnect();
+    if (mode === 'host') {
+      try { await invoke('stop_party_server'); } catch { /* ignore */ }
+    }
     setMode(null); setRoomCode(''); setJoinInput(''); setMembers([]); setMyClientId(null);
   };
 
@@ -373,7 +367,7 @@ export default function Party({ characterId, character }) {
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-widest text-amber-200/30 mb-2">Party Members ({otherMembers.length})</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {otherMembers.map(member => <MemberCard key={member.client_id} member={member} isYou={false} />)}
+            {otherMembers.map((member, i) => <MemberCard key={member.client_id} member={member} isYou={false} colorIndex={i + 1} />)}
           </div>
         </div>
       ) : status === 'connected' ? (
