@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, ScrollText } from 'lucide-react';
+import { Plus, Trash2, ScrollText, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getFeatures, addFeature, deleteFeature } from '../api/features';
+import { getFeatures, addFeature, updateFeature, deleteFeature } from '../api/features';
 import HelpTooltip from '../components/HelpTooltip';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { HELP } from '../data/helpText';
+
+const RECHARGE_OPTIONS = ['', 'short_rest', 'long_rest', 'dawn', 'manual'];
+const RECHARGE_LABELS = { '': 'None', 'short_rest': 'Short Rest', 'long_rest': 'Long Rest', 'dawn': 'At Dawn', 'manual': 'Manual' };
 
 export default function Features({ characterId }) {
   const [features, setFeatures] = useState([]);
@@ -25,7 +28,7 @@ export default function Features({ characterId }) {
 
   const handleAdd = async (data) => {
     try {
-      await addFeature(characterId, data);
+      await addFeature(characterId, { ...data, uses_remaining: data.uses_total });
       toast.success('Feature added');
       setShowAdd(false);
       load();
@@ -41,6 +44,35 @@ export default function Features({ characterId }) {
     } catch (err) { toast.error(err.message); }
   };
 
+  const useCharge = async (feature) => {
+    if (feature.uses_remaining <= 0) {
+      toast.error(`No uses left for ${feature.name}`);
+      return;
+    }
+    const updated = { ...feature, uses_remaining: feature.uses_remaining - 1 };
+    setFeatures(prev => prev.map(f => f.id === feature.id ? updated : f));
+    try {
+      await updateFeature(characterId, feature.id, updated);
+    } catch (err) { toast.error(err.message); load(); }
+  };
+
+  const restoreCharge = async (feature) => {
+    if (feature.uses_remaining >= feature.uses_total) return;
+    const updated = { ...feature, uses_remaining: feature.uses_remaining + 1 };
+    setFeatures(prev => prev.map(f => f.id === feature.id ? updated : f));
+    try {
+      await updateFeature(characterId, feature.id, updated);
+    } catch (err) { toast.error(err.message); load(); }
+  };
+
+  const restoreAll = async (feature) => {
+    const updated = { ...feature, uses_remaining: feature.uses_total };
+    setFeatures(prev => prev.map(f => f.id === feature.id ? updated : f));
+    try {
+      await updateFeature(characterId, feature.id, updated);
+    } catch (err) { toast.error(err.message); load(); }
+  };
+
   const filtered = filter === 'all' ? features : features.filter(f => f.feature_type === filter);
 
   if (loading) return <div className="text-amber-200/40">Loading features...</div>;
@@ -52,7 +84,7 @@ export default function Features({ characterId }) {
           <ScrollText size={20} />
           <div>
             <span>Features & Traits<HelpTooltip text={HELP.feat} /></span>
-            <p className="text-xs text-amber-200/40 font-normal mt-0.5">Your class features, racial traits, and feats. These are special abilities that make your character unique — add them as you level up.</p>
+            <p className="text-xs text-amber-200/40 font-normal mt-0.5">Your class features, racial traits, and feats. Track limited-use abilities with the charge system.</p>
           </div>
         </h2>
         <button onClick={() => setShowAdd(true)} className="btn-primary text-xs flex items-center gap-1">
@@ -78,19 +110,60 @@ export default function Features({ characterId }) {
           {filtered.map(f => (
             <div key={f.id} className="card">
               <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="text-amber-100 font-medium">{f.name}</h4>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="text-amber-100 font-medium">{f.name}</h4>
+                    {f.recharge && (
+                      <span className="text-[10px] text-amber-200/40 bg-amber-200/5 px-1.5 py-0.5 rounded border border-amber-200/10">
+                        {RECHARGE_LABELS[f.recharge] || f.recharge}
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs text-amber-200/40 mt-1">
                     {f.source && <span>{f.source}</span>}
                     {f.source_level > 0 && <span className="ml-2">Level {f.source_level}</span>}
                     <span className="ml-2 capitalize text-purple-300/50">{f.feature_type}</span>
                   </div>
                 </div>
-                <button onClick={() => setConfirmDelete(f)} className="text-red-400/50 hover:text-red-400">
+                <button onClick={() => setConfirmDelete(f)} className="text-red-400/50 hover:text-red-400 flex-shrink-0">
                   <Trash2 size={14} />
                 </button>
               </div>
+
               {f.description && <p className="text-sm text-amber-200/60 mt-2 whitespace-pre-wrap">{f.description}</p>}
+
+              {/* Uses/Charges Tracker */}
+              {f.uses_total > 0 && (
+                <div className="mt-3 pt-3 border-t border-gold/10">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-amber-200/50">Uses:</span>
+                    <div className="flex gap-1.5">
+                      {Array.from({ length: f.uses_total }).map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => i < f.uses_remaining ? useCharge(f) : restoreCharge(f)}
+                          className={`w-5 h-5 rounded-full border-2 transition-all ${
+                            i < f.uses_remaining
+                              ? 'bg-gold border-gold/70 shadow-[0_0_6px_rgba(201,168,76,0.3)]'
+                              : 'border-amber-200/20 bg-transparent hover:border-amber-200/40'
+                          }`}
+                          title={i < f.uses_remaining ? 'Click to spend a use' : 'Click to restore a use'}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-amber-200/40">{f.uses_remaining} / {f.uses_total}</span>
+                    {f.uses_remaining < f.uses_total && (
+                      <button
+                        onClick={() => restoreAll(f)}
+                        className="text-xs text-gold/50 hover:text-gold transition-colors flex items-center gap-1"
+                        title="Restore all uses"
+                      >
+                        <RotateCcw size={10} /> Reset
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -110,7 +183,10 @@ export default function Features({ characterId }) {
 }
 
 function FeatureForm({ onSubmit, onCancel }) {
-  const [form, setForm] = useState({ name: '', source: '', source_level: 0, feature_type: 'class', description: '' });
+  const [form, setForm] = useState({
+    name: '', source: '', source_level: 0, feature_type: 'class', description: '',
+    uses_total: 0, uses_remaining: 0, recharge: '',
+  });
   const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
 
   useEffect(() => {
@@ -135,6 +211,23 @@ function FeatureForm({ onSubmit, onCancel }) {
           </div>
           <input type="number" className="input w-full" placeholder="Level obtained" min={0} value={form.source_level} onChange={e => update('source_level', parseInt(e.target.value) || 0)} />
           <textarea className="input w-full h-24 resize-none" placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} />
+
+          {/* Uses / Charges */}
+          <div className="border-t border-gold/10 pt-3">
+            <label className="label mb-2">Limited Uses (optional)</label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] text-amber-200/40 mb-1 block">Uses Per Rest</label>
+                <input type="number" className="input w-full" min={0} max={20} value={form.uses_total} onChange={e => update('uses_total', parseInt(e.target.value) || 0)} />
+              </div>
+              <div>
+                <label className="text-[10px] text-amber-200/40 mb-1 block">Recharges On</label>
+                <select className="input w-full" value={form.recharge} onChange={e => update('recharge', e.target.value)}>
+                  {RECHARGE_OPTIONS.map(r => <option key={r} value={r}>{RECHARGE_LABELS[r]}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="flex gap-3 justify-end mt-4">
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>

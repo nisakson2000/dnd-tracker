@@ -18,6 +18,8 @@ pub struct AttackData {
 pub struct ConditionData {
     pub name: String,
     pub active: bool,
+    pub duration_rounds: i64,
+    pub rounds_remaining: i64,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -126,13 +128,15 @@ pub fn get_conditions(
     state.with_char_conn(&character_id, |conn| {
         db::ensure_conditions(conn).map_err(|e| e.to_string())?;
         let mut stmt = conn
-            .prepare("SELECT name, active FROM conditions ORDER BY name")
+            .prepare("SELECT name, active, duration_rounds, rounds_remaining FROM conditions ORDER BY name")
             .map_err(|e| e.to_string())?;
         let conditions = stmt
             .query_map([], |row| {
                 Ok(ConditionData {
                     name: row.get(0)?,
                     active: row.get::<_, i64>(1)? != 0,
+                    duration_rounds: row.get(2).unwrap_or(0),
+                    rounds_remaining: row.get(3).unwrap_or(0),
                 })
             })
             .map_err(|e| e.to_string())?
@@ -151,8 +155,8 @@ pub fn update_conditions(
     state.with_char_conn(&character_id, |conn| {
         for item in &payload {
             conn.execute(
-                "UPDATE conditions SET active=?1 WHERE name=?2",
-                rusqlite::params![item.active as i64, item.name],
+                "UPDATE conditions SET active=?1, duration_rounds=?2, rounds_remaining=?3 WHERE name=?4",
+                rusqlite::params![item.active as i64, item.duration_rounds, item.rounds_remaining, item.name],
             )
             .map_err(|e| e.to_string())?;
         }

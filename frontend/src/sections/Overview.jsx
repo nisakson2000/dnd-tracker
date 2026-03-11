@@ -355,6 +355,28 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             <input className="input w-full" value={overview.campaign_name} onChange={e => updateField('campaign_name', e.target.value)} />
           </div>
         </div>
+
+        {/* XP Progress */}
+        <XPProgress xp={overview.experience_points} level={overview.level} onXPChange={v => updateField('experience_points', v)} />
+
+        {/* Multiclass Display */}
+        {(() => {
+          let mc = [];
+          try { mc = JSON.parse(overview.multiclass_data || '[]'); } catch { mc = []; }
+          if (!Array.isArray(mc) || mc.length === 0) return null;
+          return (
+            <div className="mt-4 pt-4 border-t border-gold/10">
+              <div className="text-xs text-amber-200/50 font-display tracking-wider uppercase mb-2">Multiclass</div>
+              <div className="flex flex-wrap gap-2">
+                {mc.map((cls, i) => (
+                  <span key={i} className="text-xs bg-purple-900/30 text-purple-200 px-3 py-1.5 rounded border border-purple-500/20">
+                    {cls.class || cls.name || 'Unknown'} {cls.subclass && `(${cls.subclass})`} Lv {cls.level || '?'}
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Two-column layout for wide screens */}
@@ -793,6 +815,54 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         onSelect={handleSubclassSelect}
         onClose={() => setShowSubclassModal(false)}
       />
+    </div>
+  );
+}
+
+// D&D 5e XP thresholds per level
+const XP_THRESHOLDS = [0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000, 85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000];
+
+function XPProgress({ xp, level, onXPChange }) {
+  const currentThreshold = XP_THRESHOLDS[level - 1] || 0;
+  const nextThreshold = level < 20 ? XP_THRESHOLDS[level] : XP_THRESHOLDS[19];
+  const xpInLevel = xp - currentThreshold;
+  const xpNeeded = nextThreshold - currentThreshold;
+  const percent = level >= 20 ? 100 : xpNeeded > 0 ? Math.min(100, Math.max(0, (xpInLevel / xpNeeded) * 100)) : 0;
+
+  return (
+    <div className="mt-4 pt-4 border-t border-gold/10">
+      <div className="flex items-center justify-between mb-2">
+        <label className="text-xs text-amber-200/50 font-display tracking-wider uppercase">Experience Points</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            min={0}
+            className="input w-28 text-sm text-right"
+            value={xp}
+            onChange={e => onXPChange(Math.max(0, parseInt(e.target.value) || 0))}
+          />
+          {level < 20 && (
+            <span className="text-xs text-amber-200/30">/ {nextThreshold.toLocaleString()} XP</span>
+          )}
+        </div>
+      </div>
+      <div className="h-2.5 rounded-full bg-[#0a0a10] border border-gold/10 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{
+            width: `${percent}%`,
+            background: level >= 20 ? 'linear-gradient(90deg, #c9a84c, #fde68a)' : 'linear-gradient(90deg, #4a3d7a, #7c3aed)',
+          }}
+        />
+      </div>
+      <div className="flex justify-between mt-1">
+        <span className="text-[10px] text-amber-200/25">{xp.toLocaleString()} XP</span>
+        {level < 20 ? (
+          <span className="text-[10px] text-amber-200/25">{Math.max(0, nextThreshold - xp).toLocaleString()} XP to level {level + 1}</span>
+        ) : (
+          <span className="text-[10px] text-gold/40">Max Level</span>
+        )}
+      </div>
     </div>
   );
 }

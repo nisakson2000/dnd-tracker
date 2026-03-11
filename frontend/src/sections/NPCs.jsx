@@ -7,6 +7,17 @@ import ConfirmDialog from '../components/ConfirmDialog';
 const ROLES = ['ally', 'enemy', 'neutral', 'party'];
 const STATUSES = ['alive', 'dead', 'unknown'];
 
+const ROLE_COLORS = {
+  ally: { bg: 'bg-emerald-600', border: 'border-emerald-400', text: 'text-emerald-400', cardBorder: 'border-emerald-500/25', cardBg: 'bg-emerald-950/10' },
+  enemy: { bg: 'bg-red-600', border: 'border-red-400', text: 'text-red-400', cardBorder: 'border-red-500/25', cardBg: 'bg-red-950/10' },
+  neutral: { bg: 'bg-amber-600', border: 'border-amber-400', text: 'text-amber-200/60', cardBorder: 'border-gold/20', cardBg: '' },
+  party: { bg: 'bg-blue-600', border: 'border-blue-400', text: 'text-blue-400', cardBorder: 'border-blue-500/25', cardBg: 'bg-blue-950/10' },
+};
+
+function getInitials(name) {
+  return name.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+}
+
 export default function NPCs({ characterId }) {
   const [npcs, setNpcs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,8 +59,8 @@ export default function NPCs({ characterId }) {
   };
 
   const filtered = filter === 'all' ? npcs : npcs.filter(n => n.role === filter);
-  const roleColors = { ally: 'text-emerald-400', enemy: 'text-red-400', neutral: 'text-amber-200/60', party: 'text-blue-400', default: 'text-amber-200/40' };
-  const statusColors = { alive: 'text-emerald-400', dead: 'text-red-400', unknown: 'text-amber-200/40', default: 'text-amber-200/40' };
+  const roleCount = {};
+  ROLES.forEach(r => { roleCount[r] = npcs.filter(n => n.role === r).length; });
 
   if (loading) return <div className="text-amber-200/40">Loading NPCs...</div>;
 
@@ -71,8 +82,11 @@ export default function NPCs({ characterId }) {
       <div className="flex gap-2">
         {['all', ...ROLES].map(r => (
           <button key={r} onClick={() => setFilter(r)}
-            className={`text-xs px-3 py-1 rounded capitalize ${filter === r ? 'bg-gold/20 text-gold border border-gold/30' : 'text-amber-200/40 border border-amber-200/10'}`}>
+            className={`text-xs px-3 py-1 rounded capitalize flex items-center gap-1.5 ${filter === r ? 'bg-gold/20 text-gold border border-gold/30' : 'text-amber-200/40 border border-amber-200/10'}`}>
             {r}
+            {r !== 'all' && roleCount[r] > 0 && (
+              <span className="text-[10px] bg-white/10 px-1.5 py-0 rounded-full">{roleCount[r]}</span>
+            )}
           </button>
         ))}
       </div>
@@ -81,32 +95,44 @@ export default function NPCs({ characterId }) {
         <div className="card text-center text-amber-200/30 py-8">No NPCs recorded. Add the characters you meet during your adventures — allies, enemies, shopkeepers, quest givers, and more.</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filtered.map(npc => (
-            <div key={npc.id} className="card">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h4 className="text-amber-100 font-medium">{npc.name}</h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${roleColors[npc.role] || roleColors.default} ${
-                      npc.role === 'ally' ? 'bg-emerald-900/40' :
-                      npc.role === 'enemy' ? 'bg-red-900/40' :
-                      npc.role === 'party' ? 'bg-blue-900/40' :
-                      'bg-gray-800/40'
-                    }`}>{npc.role}</span>
-                    <span className={`text-xs ${statusColors[npc.status] || ''}`}>{npc.status}</span>
+          {filtered.map(npc => {
+            const colors = ROLE_COLORS[npc.role] || ROLE_COLORS.neutral;
+            return (
+              <div key={npc.id} className={`card ${colors.cardBg} border ${colors.cardBorder}`}>
+                <div className="flex items-start gap-3">
+                  {/* Avatar */}
+                  <div className={`w-11 h-11 rounded-full ${colors.bg} border-2 ${colors.border} flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                    <span className="text-white font-display text-sm font-bold">{getInitials(npc.name)}</span>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="text-amber-100 font-medium">{npc.name}</h4>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className={`text-xs capitalize ${colors.text}`}>{npc.role}</span>
+                          <span className="text-amber-200/20">·</span>
+                          <span className={`text-xs ${
+                            npc.status === 'alive' ? 'text-emerald-400' :
+                            npc.status === 'dead' ? 'text-red-400 line-through' :
+                            'text-amber-200/40'
+                          }`}>{npc.status}</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-1 flex-shrink-0">
+                        <button onClick={() => { setEditing(npc); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>
+                        <button onClick={() => setConfirmDelete(npc)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>
+                      </div>
+                    </div>
+                    {npc.race && <p className="text-xs text-amber-200/40 mt-1">{[npc.race, npc.npc_class].filter(Boolean).join(' · ')}</p>}
+                    {npc.location && <p className="text-xs text-amber-200/40 mt-0.5">Location: {npc.location}</p>}
+                    {npc.description && <p className="text-sm text-amber-200/50 mt-2">{npc.description}</p>}
+                    {npc.notes && <p className="text-xs text-amber-200/40 mt-1 italic">{npc.notes}</p>}
                   </div>
                 </div>
-                <div className="flex gap-1">
-                  <button onClick={() => { setEditing(npc); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>
-                  <button onClick={() => setConfirmDelete(npc)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>
-                </div>
               </div>
-              {npc.race && <p className="text-xs text-amber-200/40">{[npc.race, npc.npc_class].filter(Boolean).join(' ')}</p>}
-              {npc.location && <p className="text-xs text-amber-200/40 mt-1">Location: {npc.location}</p>}
-              {npc.description && <p className="text-sm text-amber-200/50 mt-2">{npc.description}</p>}
-              {npc.notes && <p className="text-xs text-amber-200/40 mt-1 italic">{npc.notes}</p>}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

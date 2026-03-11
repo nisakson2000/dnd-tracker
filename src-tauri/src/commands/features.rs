@@ -11,6 +11,9 @@ pub struct FeatureData {
     pub source_level: i64,
     pub feature_type: String,
     pub description: String,
+    pub uses_total: i64,
+    pub uses_remaining: i64,
+    pub recharge: String,
 }
 
 #[tauri::command]
@@ -20,7 +23,7 @@ pub fn get_features(
 ) -> Result<Vec<FeatureData>, String> {
     state.with_char_conn(&character_id, |conn| {
         let mut stmt = conn
-            .prepare("SELECT id, name, source, source_level, feature_type, description FROM features")
+            .prepare("SELECT id, name, source, source_level, feature_type, description, uses_total, uses_remaining, recharge FROM features")
             .map_err(|e| e.to_string())?;
         let features = stmt
             .query_map([], |row| {
@@ -31,6 +34,9 @@ pub fn get_features(
                     source_level: row.get(3).unwrap_or(0),
                     feature_type: row.get(4).unwrap_or_else(|_| "class".to_string()),
                     description: row.get(5).unwrap_or_default(),
+                    uses_total: row.get(6).unwrap_or(0),
+                    uses_remaining: row.get(7).unwrap_or(0),
+                    recharge: row.get(8).unwrap_or_default(),
                 })
             })
             .map_err(|e| e.to_string())?
@@ -48,11 +54,12 @@ pub fn add_feature(
 ) -> Result<FeatureData, String> {
     state.with_char_conn(&character_id, |conn| {
         conn.execute(
-            "INSERT INTO features (name, source, source_level, feature_type, description)
-             VALUES (?1,?2,?3,?4,?5)",
+            "INSERT INTO features (name, source, source_level, feature_type, description, uses_total, uses_remaining, recharge)
+             VALUES (?1,?2,?3,?4,?5,?6,?7,?8)",
             rusqlite::params![
                 payload.name, payload.source, payload.source_level,
                 payload.feature_type, payload.description,
+                payload.uses_total, payload.uses_remaining, payload.recharge,
             ],
         )
         .map_err(|e| e.to_string())?;
@@ -71,10 +78,12 @@ pub fn update_feature(
     state.with_char_conn(&character_id, |conn| {
         let updated = conn
             .execute(
-                "UPDATE features SET name=?1, source=?2, source_level=?3, feature_type=?4, description=?5 WHERE id=?6",
+                "UPDATE features SET name=?1, source=?2, source_level=?3, feature_type=?4, description=?5, uses_total=?6, uses_remaining=?7, recharge=?8 WHERE id=?9",
                 rusqlite::params![
                     payload.name, payload.source, payload.source_level,
-                    payload.feature_type, payload.description, feature_id,
+                    payload.feature_type, payload.description,
+                    payload.uses_total, payload.uses_remaining, payload.recharge,
+                    feature_id,
                 ],
             )
             .map_err(|e| e.to_string())?;

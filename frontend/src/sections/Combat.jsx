@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Swords } from 'lucide-react';
+import { Plus, Trash2, Swords, Dice5, Timer, MinusCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAttacks, addAttack, deleteAttack, getConditions, updateConditions, getCombatNotes, updateCombatNotes } from '../api/combat';
 import { useAutosave } from '../hooks/useAutosave';
@@ -18,6 +18,21 @@ const CONDITION_ICONS = {
   'Restrained': '\u{26D3}', 'Stunned': '\u{2B50}', 'Unconscious': '\u{1F480}',
 };
 
+function rollDie(sides) {
+  return Math.floor(Math.random() * sides) + 1;
+}
+
+function parseBonus(str) {
+  const n = parseInt(str);
+  return isNaN(n) ? 0 : n;
+}
+
+function parseDamage(expr) {
+  const match = expr.match(/^(\d+)?d(\d+)([+-]\d+)?$/i);
+  if (!match) return null;
+  return { count: parseInt(match[1]) || 1, sides: parseInt(match[2]), mod: parseInt(match[3]) || 0 };
+}
+
 export default function Combat({ characterId, onConditionsChange }) {
   const { CONDITIONS } = useRuleset();
   const [attacks, setAttacks] = useState([]);
@@ -27,6 +42,7 @@ export default function Combat({ characterId, onConditionsChange }) {
   const [showAdd, setShowAdd] = useState(false);
   const [showConditionInfo, setShowConditionInfo] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [rollResults, setRollResults] = useState({});
 
   const load = async () => {
     try {
@@ -75,7 +91,16 @@ export default function Combat({ characterId, onConditionsChange }) {
 
   const toggleCondition = async (condName) => {
     const previous = [...conditions];
-    const updated = conditions.map(c => c.name === condName ? { ...c, active: !c.active } : c);
+    const updated = conditions.map(c => {
+      if (c.name !== condName) return c;
+      const newActive = !c.active;
+      return {
+        ...c,
+        active: newActive,
+        duration_rounds: newActive ? c.duration_rounds : 0,
+        rounds_remaining: newActive ? c.rounds_remaining : 0,
+      };
+    });
     setConditions(updated);
     const activeUpdated = updated.filter(c => c.active);
     onConditionsChange?.(activeUpdated.length, activeUpdated.map(c => c.name));
@@ -86,6 +111,77 @@ export default function Combat({ characterId, onConditionsChange }) {
       onConditionsChange?.(activePrev.length, activePrev.map(c => c.name));
       toast.error(err.message);
     }
+  };
+
+  const setConditionDuration = async (condName, rounds) => {
+    const updated = conditions.map(c =>
+      c.name === condName ? { ...c, duration_rounds: rounds, rounds_remaining: rounds } : c
+    );
+    setConditions(updated);
+    try { await updateConditions(characterId, updated); }
+    catch (err) { toast.error(err.message); }
+  };
+
+  const tickRound = async () => {
+    const updated = conditions.map(c => {
+      if (!c.active || c.rounds_remaining <= 0) return c;
+      const newRemaining = c.rounds_remaining - 1;
+      if (newRemaining <= 0) {
+        return { ...c, active: false, rounds_remaining: 0, duration_rounds: 0 };
+      }
+      return { ...c, rounds_remaining: newRemaining };
+    });
+    setConditions(updated);
+    const activeUpdated = updated.filter(c => c.active);
+    onConditionsChange?.(activeUpdated.length, activeUpdated.map(c => c.name));
+    try { await updateConditions(characterId, updated); }
+    catch (err) { toast.error(err.message); }
+    const expired = conditions.filter(c => c.active && c.rounds_remaining === 1);
+    if (expired.length > 0) {
+      toast.success(`Expired: ${expired.map(c => c.name).join(', ')}`);
+    }
+  };
+
+  // Inline attack roll
+  const rollAttack = (atk) => {
+    const bonus = parseBonus(atk.attack_bonus);
+    const d20 = rollDie(20);
+    const total = d20 + bonus;
+    const isNat20 = d20 === 20;
+    const isNat1 = d20 === 1;
+
+    let dmgResult = null;
+    const dmg = parseDamage(atk.damage_dice);
+    if (dmg) {
+      const rolls = Array.from({ length: isNat20 ? dmg.count * 2 : dmg.count }, () => rollDie(dmg.sides));
+      const dmgTotal = rolls.reduce((s, r) => s + r, 0) + dmg.mod;
+      dmgResult = { rolls, total: dmgTotal, crit: isNat20 };
+    }
+
+    setRollResults(prev => ({
+      ...prev,
+      [atk.id]: { d20, bonus, total, isNat20, isNat1, damage: dmgResult, ts: Date.now() },
+    }));
+
+    // Clear after 8 seconds
+    setTimeout(() => {
+      setRollResults(prev => {
+        const next = { ...prev };
+        if (next[atk.id]?.ts === Date.now()) delete next[atk.id];
+        return next;
+      });
+    }, 8000);
+  };
+
+  const rollDamageOnly = (atk) => {
+    const dmg = parseDamage(atk.damage_dice);
+    if (!dmg) { toast.error('Invalid damage expression'); return; }
+    const rolls = Array.from({ length: dmg.count }, () => rollDie(dmg.sides));
+    const dmgTotal = rolls.reduce((s, r) => s + r, 0) + dmg.mod;
+    setRollResults(prev => ({
+      ...prev,
+      [atk.id]: { ...(prev[atk.id] || {}), damage: { rolls, total: dmgTotal, crit: false }, ts: Date.now() },
+    }));
   };
 
   if (loading) return <div className="text-amber-200/40">Loading combat...</div>;
@@ -105,51 +201,97 @@ export default function Combat({ characterId, onConditionsChange }) {
         </button>
       </div>
 
-      {/* Attacks */}
+      {/* Attacks with Roll Buttons */}
       <div className="card">
         <h3 className="font-display text-amber-100 mb-1">Attacks & Weapons<HelpTooltip text="Roll d20 + attack bonus. If the total meets or exceeds the target's AC, you hit. Then roll damage dice + modifier." /></h3>
-        <p className="text-xs text-amber-200/30 mb-3">Your melee and ranged attacks. To attack: roll d20 + Attack bonus vs target's AC. On a hit, roll Damage.</p>
+        <p className="text-xs text-amber-200/30 mb-3">Click the dice icon to roll attack + damage instantly. Click damage to re-roll damage only.</p>
         {attacks.length === 0 ? (
           <p className="text-sm text-amber-200/30">No attacks configured. Add your weapons and cantrips here so you can quickly reference them during combat.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-amber-200/40 text-left">
-                  <th className="pb-2">Name</th>
-                  <th className="pb-2">Attack</th>
-                  <th className="pb-2">Damage</th>
-                  <th className="pb-2">Type</th>
-                  <th className="pb-2">Range</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {attacks.map(atk => (
-                  <tr key={atk.id} className="border-t border-gold/10">
-                    <td className="py-2 text-amber-100">{atk.name}</td>
-                    <td className="py-2 text-gold">{atk.attack_bonus}</td>
-                    <td className="py-2">{atk.damage_dice}</td>
-                    <td className="py-2 text-amber-200/50">{atk.damage_type}</td>
-                    <td className="py-2 text-amber-200/50">{atk.attack_range}</td>
-                    <td className="py-2">
-                      <button onClick={() => setConfirmDelete(atk)} className="text-red-400/50 hover:text-red-400">
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-2">
+            {attacks.map(atk => {
+              const result = rollResults[atk.id];
+              return (
+                <div key={atk.id} className={`bg-[#0a0a10] rounded-lg border transition-all ${
+                  result?.isNat20 ? 'border-gold/60 shadow-[0_0_20px_rgba(201,168,76,0.2)]' :
+                  result?.isNat1 ? 'border-red-500/60 shadow-[0_0_20px_rgba(239,68,68,0.2)]' :
+                  'border-gold/10'
+                }`}>
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    {/* Roll button */}
+                    <button
+                      onClick={() => rollAttack(atk)}
+                      className="w-10 h-10 rounded-lg bg-gold/10 border border-gold/30 hover:bg-gold/20 hover:border-gold/50 transition-all flex items-center justify-center flex-shrink-0 group"
+                      title="Roll attack + damage"
+                    >
+                      <Dice5 size={18} className="text-gold group-hover:text-amber-100 transition-colors" />
+                    </button>
+                    {/* Attack info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3">
+                        <span className="text-amber-100 font-medium">{atk.name}</span>
+                        <span className="text-gold text-sm">{atk.attack_bonus}</span>
+                        <span className="text-amber-200/60 text-sm">{atk.damage_dice} {atk.damage_type && <span className="text-amber-200/40">{atk.damage_type}</span>}</span>
+                        {atk.attack_range && <span className="text-amber-200/30 text-xs">{atk.attack_range}</span>}
+                      </div>
+                    </div>
+                    <button onClick={() => setConfirmDelete(atk)} className="text-red-400/50 hover:text-red-400 flex-shrink-0">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+
+                  {/* Roll result */}
+                  {result && (
+                    <div className={`px-4 py-2 border-t flex items-center gap-4 text-sm ${
+                      result.isNat20 ? 'border-gold/30 bg-gold/5' : result.isNat1 ? 'border-red-500/30 bg-red-950/20' : 'border-gold/10 bg-white/[0.02]'
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-200/50 text-xs">ATK:</span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded ${
+                          result.isNat20 ? 'bg-gold/20 text-gold font-bold' : result.isNat1 ? 'bg-red-900/40 text-red-300 font-bold' : 'bg-white/5 text-amber-200/40'
+                        }`}>
+                          {result.d20}
+                        </span>
+                        <span className="text-amber-200/40">+ {result.bonus} =</span>
+                        <span className={`font-bold ${result.isNat20 ? 'text-gold' : result.isNat1 ? 'text-red-400' : 'text-amber-100'}`}>
+                          {result.total}
+                        </span>
+                        {result.isNat20 && <span className="text-gold text-xs font-bold">NAT 20!</span>}
+                        {result.isNat1 && <span className="text-red-400 text-xs font-bold">NAT 1!</span>}
+                      </div>
+                      {result.damage && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-amber-200/30">|</span>
+                          <span className="text-amber-200/50 text-xs">DMG:</span>
+                          <button
+                            onClick={() => rollDamageOnly(atk)}
+                            className="flex items-center gap-1.5 hover:text-amber-100 transition-colors"
+                            title="Re-roll damage"
+                          >
+                            <span className="text-xs text-amber-200/30">[{result.damage.rolls.join(',')}]</span>
+                            <span className={`font-bold ${result.damage.crit ? 'text-gold' : 'text-amber-100'}`}>
+                              {result.damage.total}
+                            </span>
+                            {result.damage.crit && <span className="text-gold text-xs">CRIT!</span>}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Conditions */}
+      {/* Conditions with Duration Timers */}
       <ConditionsPanel
         conditions={conditions}
         conditionDescriptions={CONDITIONS}
         onToggle={toggleCondition}
+        onSetDuration={setConditionDuration}
+        onTickRound={tickRound}
       />
 
       {/* Combat Notes */}
@@ -240,10 +382,12 @@ function AttackForm({ onSubmit, onCancel }) {
   );
 }
 
-function ConditionsPanel({ conditions, conditionDescriptions, onToggle }) {
+function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDuration, onTickRound }) {
   const [expanded, setExpanded] = useState(null);
+  const [durationInput, setDurationInput] = useState({});
   const activeNames = conditions.filter(c => c.active).map(c => c.name);
   const effects = computeConditionEffects(activeNames);
+  const hasTimedConditions = conditions.some(c => c.active && c.rounds_remaining > 0);
 
   const handleConditionClick = (condName) => {
     onToggle(condName);
@@ -256,11 +400,30 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle }) {
     setExpanded(prev => prev === condName ? null : condName);
   };
 
+  const handleSetDuration = (condName) => {
+    const rounds = parseInt(durationInput[condName]) || 0;
+    if (rounds > 0) {
+      onSetDuration(condName, rounds);
+      setDurationInput(prev => ({ ...prev, [condName]: '' }));
+    }
+  };
+
   return (
     <div className="card">
-      <h3 className="font-display text-amber-100 mb-1">Active Conditions</h3>
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="font-display text-amber-100">Active Conditions</h3>
+        {hasTimedConditions && (
+          <button
+            onClick={onTickRound}
+            className="btn-primary text-xs flex items-center gap-1"
+            title="Advance one round — decrements all condition timers"
+          >
+            <Timer size={12} /> Next Round
+          </button>
+        )}
+      </div>
       <p className="text-xs text-amber-200/30 mb-3">
-        Left-click to toggle on/off. Right-click for rule description.
+        Left-click to toggle on/off. Right-click for rule description. Set duration in rounds for auto-expiry.
       </p>
       <div className="flex flex-wrap gap-2">
         {conditions.map(cond => {
@@ -276,11 +439,18 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle }) {
                     : 'bg-[#0d0d12] text-amber-200/40 border border-amber-200/10 hover:text-amber-200/70 hover:border-amber-200/20'
                 }`}
               >
-                {CONDITION_ICONS[cond.name] && <span className="mr-1">{CONDITION_ICONS[cond.name]}</span>}
-                {cond.name}
+                <span className="flex items-center gap-1">
+                  {CONDITION_ICONS[cond.name] && <span>{CONDITION_ICONS[cond.name]}</span>}
+                  {cond.name}
+                  {cond.active && cond.rounds_remaining > 0 && (
+                    <span className="ml-1 bg-red-800/60 text-red-100 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                      {cond.rounds_remaining}r
+                    </span>
+                  )}
+                </span>
               </button>
 
-              {expanded === cond.name && (conditionDescriptions[cond.name] || effect) && (
+              {expanded === cond.name && (
                 <div className="absolute z-20 top-full left-0 mt-1 p-3 bg-[#14121c] border border-gold/20 rounded text-xs text-amber-200/60 w-72 shadow-xl">
                   <div className="flex justify-between items-start mb-1">
                     <span className="font-display text-amber-100">{cond.name}</span>
@@ -300,6 +470,33 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle }) {
                       <p className="text-red-300/80 leading-relaxed">{effect.summary}</p>
                     </div>
                   )}
+                  {cond.active && (
+                    <div className="pt-2 mt-2 border-t border-gold/15">
+                      <div className="text-[10px] uppercase tracking-wider text-amber-200/50 mb-1 font-semibold">Duration Timer</div>
+                      <div className="flex gap-2 items-center">
+                        <input
+                          type="number"
+                          min={1}
+                          placeholder="Rounds"
+                          className="input w-20 text-xs py-1"
+                          value={durationInput[cond.name] || ''}
+                          onChange={e => setDurationInput(prev => ({ ...prev, [cond.name]: e.target.value }))}
+                          onKeyDown={e => e.key === 'Enter' && handleSetDuration(cond.name)}
+                          onClick={e => e.stopPropagation()}
+                        />
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleSetDuration(cond.name); }}
+                          className="btn-primary text-[10px] py-1 px-2"
+                        >
+                          Set
+                        </button>
+                        {cond.rounds_remaining > 0 && (
+                          <span className="text-amber-200/40 text-[10px]">{cond.rounds_remaining} rounds left</span>
+                        )}
+                      </div>
+                      <p className="text-amber-200/30 text-[10px] mt-1">1 round = 6 seconds. 10 rounds = 1 minute.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -315,6 +512,7 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle }) {
             {conditions.filter(c => c.active).map(c => (
               <span key={c.name} className="text-xs text-red-200 bg-red-900/40 px-2 py-0.5 rounded border border-red-500/20">
                 {CONDITION_ICONS[c.name] || ''} {c.name}
+                {c.rounds_remaining > 0 && <span className="ml-1 text-red-300/70">({c.rounds_remaining}r)</span>}
               </span>
             ))}
           </div>

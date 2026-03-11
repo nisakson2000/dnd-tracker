@@ -27,6 +27,7 @@ export default function Spellbook({ characterId }) {
   const [editingSpell, setEditingSpell] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [concentratingOn, setConcentratingOn] = useState(null); // spell id
 
   const load = async () => {
     try {
@@ -181,6 +182,31 @@ export default function Spellbook({ characterId }) {
         </div>
       )}
 
+      {/* Concentration Banner */}
+      {concentratingOn && (() => {
+        const spell = spells.find(s => s.id === concentratingOn);
+        if (!spell) return null;
+        return (
+          <div className="bg-purple-950/50 border-2 border-purple-500/40 rounded-lg p-4 shadow-[0_0_20px_rgba(124,77,189,0.15)]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                <span className="text-sm font-display text-purple-200">Concentrating on:</span>
+                <span className="text-sm font-semibold text-purple-100">{spell.name}</span>
+                <span className="text-xs bg-purple-800/40 text-purple-300 px-1.5 py-0.5 rounded">C</span>
+              </div>
+              <button
+                onClick={() => setConcentratingOn(null)}
+                className="text-xs text-purple-300/60 hover:text-purple-200 border border-purple-500/30 rounded px-2 py-1 transition-colors"
+              >
+                Drop Concentration
+              </button>
+            </div>
+            <p className="text-xs text-purple-300/50 mt-1.5">Taking damage forces a CON save (DC = max of 10 or half damage taken). Failing ends the spell.</p>
+          </div>
+        );
+      })()}
+
       {/* Spell Slots */}
       <div className="card overflow-visible">
         <h3 className="font-display text-amber-100 mb-1">
@@ -248,7 +274,31 @@ export default function Spellbook({ characterId }) {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <span className="text-amber-100 font-medium">{spell.name}</span>
-                        {spell.concentration && <span className="text-xs bg-purple-800/40 text-purple-300 px-1.5 py-0.5 rounded" title="Concentration: You must maintain focus. Taking damage forces a CON save.">C</span>}
+                        {spell.concentration && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (concentratingOn === spell.id) {
+                                setConcentratingOn(null);
+                              } else {
+                                if (concentratingOn) {
+                                  const prev = spells.find(s => s.id === concentratingOn);
+                                  toast(`Dropped concentration on ${prev?.name || 'previous spell'}`, { icon: '\u26A0\uFE0F', duration: 3000 });
+                                }
+                                setConcentratingOn(spell.id);
+                                toast.success(`Concentrating on ${spell.name}`);
+                              }
+                            }}
+                            className={`text-xs px-1.5 py-0.5 rounded transition-all ${
+                              concentratingOn === spell.id
+                                ? 'bg-purple-600/60 text-purple-100 border border-purple-400/50 shadow-[0_0_8px_rgba(124,77,189,0.3)]'
+                                : 'bg-purple-800/40 text-purple-300 hover:bg-purple-700/50'
+                            }`}
+                            title={concentratingOn === spell.id ? 'Click to drop concentration' : 'Click to concentrate on this spell'}
+                          >
+                            C
+                          </button>
+                        )}
                         {spell.ritual && <span className="text-xs bg-blue-800/40 text-blue-300 px-1.5 py-0.5 rounded" title="Ritual: Can be cast in 10 extra minutes without using a spell slot.">R</span>}
                         {level > 0 && (
                           <button

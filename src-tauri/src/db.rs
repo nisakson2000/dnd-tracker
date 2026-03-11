@@ -205,7 +205,10 @@ pub fn init_character_tables(conn: &Connection) -> SqlResult<()> {
             source TEXT DEFAULT '',
             source_level INTEGER DEFAULT 0,
             feature_type TEXT DEFAULT 'class',
-            description TEXT DEFAULT ''
+            description TEXT DEFAULT '',
+            uses_total INTEGER DEFAULT 0,
+            uses_remaining INTEGER DEFAULT 0,
+            recharge TEXT DEFAULT ''
         );
 
         CREATE TABLE IF NOT EXISTS attacks (
@@ -221,7 +224,9 @@ pub fn init_character_tables(conn: &Connection) -> SqlResult<()> {
         CREATE TABLE IF NOT EXISTS conditions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
-            active INTEGER DEFAULT 0
+            active INTEGER DEFAULT 0,
+            duration_rounds INTEGER DEFAULT 0,
+            rounds_remaining INTEGER DEFAULT 0
         );
 
         CREATE TABLE IF NOT EXISTS combat_notes (
@@ -312,6 +317,27 @@ pub fn migrate_character_db(conn: &Connection) -> SqlResult<()> {
             "ALTER TABLE character_overview ADD COLUMN multiclass_data TEXT DEFAULT '[]'",
             [],
         );
+    }
+
+    // Migrate features table: add uses_total, uses_remaining, recharge
+    let features_sql: String = conn
+        .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='features'")
+        .and_then(|mut s| s.query_row([], |row| row.get(0)))
+        .unwrap_or_default();
+    if !features_sql.contains("uses_total") {
+        let _ = conn.execute("ALTER TABLE features ADD COLUMN uses_total INTEGER DEFAULT 0", []);
+        let _ = conn.execute("ALTER TABLE features ADD COLUMN uses_remaining INTEGER DEFAULT 0", []);
+        let _ = conn.execute("ALTER TABLE features ADD COLUMN recharge TEXT DEFAULT ''", []);
+    }
+
+    // Migrate conditions table: add duration_rounds, rounds_remaining
+    let conditions_sql: String = conn
+        .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='conditions'")
+        .and_then(|mut s| s.query_row([], |row| row.get(0)))
+        .unwrap_or_default();
+    if !conditions_sql.contains("duration_rounds") {
+        let _ = conn.execute("ALTER TABLE conditions ADD COLUMN duration_rounds INTEGER DEFAULT 0", []);
+        let _ = conn.execute("ALTER TABLE conditions ADD COLUMN rounds_remaining INTEGER DEFAULT 0", []);
     }
 
     Ok(())

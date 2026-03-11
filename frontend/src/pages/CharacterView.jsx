@@ -60,6 +60,7 @@ export default function CharacterView() {
   const [activeConditionCount, setActiveConditionCount] = useState(0);
   const [activeConditions, setActiveConditions] = useState([]);
   const [portrait, setPortrait] = useState('');
+  const [diceHistory, setDiceHistory] = useState([]);
   const { showOverlay, levelUpInfo, triggerLevelUp, dismiss } = useLevelUp();
   useCrashRecovery();
   useAutoBackup(characterId, character?.name);
@@ -212,6 +213,8 @@ export default function CharacterView() {
                 }}
                 onPortraitChange={setPortrait}
                 activeConditions={activeConditions}
+                diceHistory={diceHistory}
+                onDiceHistoryChange={setDiceHistory}
               />
             </Suspense>
           </main>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Dice5 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -37,12 +37,17 @@ function parseRoll(expr) {
   return { count, sides, modifier };
 }
 
-export default function DiceRoller({ activeConditions = [] }) {
-  const [history, setHistory] = useState([]);
+export default function DiceRoller({ activeConditions = [], diceHistory, onDiceHistoryChange }) {
+  // Use lifted state if provided, else local state (fallback)
+  const [localHistory, setLocalHistory] = useState([]);
+  const history = diceHistory || localHistory;
+  const setHistory = onDiceHistoryChange || setLocalHistory;
+
   const [customExpr, setCustomExpr] = useState('');
+  const [rollLabel, setRollLabel] = useState('');
   const [lastRoll, setLastRoll] = useState(null);
   const [rolling, setRolling] = useState(false);
-  const [rollMode, setRollMode] = useState('normal'); // 'normal' | 'advantage' | 'disadvantage'
+  const [rollMode, setRollMode] = useState('normal');
   const condEffects = computeConditionEffects(activeConditions);
 
   // Auto-set roll mode based on active conditions
@@ -52,12 +57,11 @@ export default function DiceRoller({ activeConditions = [] }) {
     }
   }, [condEffects.netAttackMode]);
 
-  const doRoll = useCallback((count, sides, modifier = 0, label = '') => {
+  const doRoll = useCallback((count, sides, modifier = 0, autoLabel = '') => {
     setRolling(true);
     setTimeout(() => {
       let rolls, total, isNat20, isNat1, advInfo = null;
 
-      // Advantage/disadvantage only applies to single d20 rolls
       if (sides === 20 && count === 1 && rollMode !== 'normal') {
         const roll1 = rollDie(20);
         const roll2 = rollDie(20);
@@ -75,6 +79,7 @@ export default function DiceRoller({ activeConditions = [] }) {
       }
 
       const modeTag = advInfo ? (advInfo.mode === 'advantage' ? ' (ADV)' : ' (DIS)') : '';
+      const label = rollLabel || autoLabel;
       const entry = {
         id: Date.now(),
         expr: `${count}d${sides}${modifier > 0 ? `+${modifier}` : modifier < 0 ? modifier : ''}${modeTag}`,
@@ -90,15 +95,16 @@ export default function DiceRoller({ activeConditions = [] }) {
       setLastRoll(entry);
       setHistory(prev => [entry, ...prev].slice(0, 50));
       setRolling(false);
+      if (rollLabel) setRollLabel(''); // Clear label after use
     }, 300);
-  }, [rollMode]);
+  }, [rollMode, rollLabel, setHistory]);
 
-  const handleQuickRoll = (sides) => doRoll(1, sides);
+  const handleQuickRoll = (sides) => doRoll(1, sides, 0, `d${sides}`);
 
   const handleCustomRoll = () => {
     const parsed = parseRoll(customExpr.trim());
     if (parsed) {
-      doRoll(parsed.count, parsed.sides, parsed.modifier);
+      doRoll(parsed.count, parsed.sides, parsed.modifier, customExpr.trim());
       setCustomExpr('');
     } else if (customExpr.trim()) {
       toast.error('Invalid roll — try "3d6+5" or "1d20"');
@@ -114,6 +120,18 @@ export default function DiceRoller({ activeConditions = [] }) {
           <p className="text-xs text-amber-200/40 font-normal mt-0.5">Roll any combination of dice right here. Use the quick buttons for single rolls or type a custom expression like "2d6+3".</p>
         </div>
       </h2>
+
+      {/* Roll Label */}
+      <div className="card">
+        <h3 className="font-display text-amber-100 mb-2">Roll Label</h3>
+        <p className="text-xs text-amber-200/30 mb-2">Give your next roll context — appears in history so you know what it was for.</p>
+        <input
+          className="input w-full"
+          placeholder='e.g. "Attack — Longsword", "DEX save", "Stealth check"'
+          value={rollLabel}
+          onChange={e => setRollLabel(e.target.value)}
+        />
+      </div>
 
       {/* Advantage / Disadvantage Toggle */}
       <div className="card">
@@ -195,12 +213,12 @@ export default function DiceRoller({ activeConditions = [] }) {
           >
             {lastRoll.isNat20 && (
               <div className="text-4xl mb-2" style={{ animation: 'glow-pulse 1s ease-in-out infinite' }}>
-                ✨ NATURAL 20! ✨
+                NAT 20!
               </div>
             )}
             {lastRoll.isNat1 && (
               <div className="text-4xl mb-2 text-red-400" style={{ animation: 'glow-pulse 1s ease-in-out infinite' }}>
-                💀 NATURAL 1 💀
+                NAT 1
               </div>
             )}
             {lastRoll.label && <div className="text-xs text-gold/60 mb-1">{lastRoll.label}</div>}
@@ -245,19 +263,19 @@ export default function DiceRoller({ activeConditions = [] }) {
         ) : (
           <div className="space-y-1 max-h-[300px] overflow-y-auto">
             {history.map(entry => (
-              <div key={entry.id} className={`flex items-center justify-between py-1 px-2 rounded text-sm ${
+              <div key={entry.id} className={`flex items-center justify-between py-1.5 px-2 rounded text-sm ${
                 entry.isNat20 ? 'bg-gold/10 text-gold' : entry.isNat1 ? 'bg-red-900/20 text-red-300' : 'text-amber-200/60'
               }`}>
-                <span className="flex items-center gap-2">
-                  {entry.label && <span className="text-xs text-gold/50">{entry.label}</span>}
+                <span className="flex items-center gap-2 min-w-0">
+                  {entry.label && <span className="text-xs text-gold/50 truncate max-w-[120px]">{entry.label}</span>}
                   <span>{entry.expr}</span>
                 </span>
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 flex-shrink-0">
                   {entry.advInfo && <span className="text-xs text-amber-200/30">{entry.advInfo.roll1},{entry.advInfo.roll2}</span>}
                   {!entry.advInfo && entry.rolls.length > 1 && <span className="text-xs text-amber-200/30">[{entry.rolls.join(',')}]</span>}
                   <span className="font-bold">{entry.total}</span>
-                  {entry.isNat20 && <span>✨</span>}
-                  {entry.isNat1 && <span>💀</span>}
+                  {entry.isNat20 && <span>NAT20</span>}
+                  {entry.isNat1 && <span>NAT1</span>}
                 </span>
               </div>
             ))}

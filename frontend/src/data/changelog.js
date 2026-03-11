@@ -2,8 +2,26 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.2.3',
+    date: '03/10/2026 11:45 PM',
+    title: 'The Big 10 — Roll Buttons, Concentration, Uses, XP & More',
+    changes: [
+      'Attack Roll Buttons — click the dice icon on any weapon to instantly roll attack + damage with crit detection',
+      'Dice Roll Labels — add context like "Stealth check" or "Longsword attack" so your roll history tells a story',
+      'Dice History Persistence — roll history now survives tab switches (no more lost rolls)',
+      'XP Progress Bar — experience_points field now visible with a level-up progress bar and XP-to-next-level display',
+      'Concentration Tracking — click the C badge on a spell to concentrate; warns when switching, shows active banner with CON save reminder',
+      'Feature Uses/Charges — track Rage 2/day, Action Surge 1/short rest, etc. with visual charge circles and recharge type',
+      'Multiclass Display — multiclass_data JSON now rendered as class/subclass/level badges in the Identity card',
+      'NPC Role Avatars — NPCs now show colored circle avatars (green=ally, red=enemy, amber=neutral, blue=party) with initials',
+      'Condition Duration Timers — set rounds on active conditions, "Next Round" button auto-decrements and auto-expires',
+      'NPC cards now have role-colored borders and backgrounds for instant visual scanning',
+      'Portrait upload was already implemented (Backstory section) — confirmed working with drag-and-drop',
+    ],
+  },
+  {
     version: 'V0.2.2',
-    date: '2026-03-10',
+    date: '03/10/2026 8:30 PM',
     title: 'Automatic Condition Effects & Bug Fixes',
     changes: [
       'Automatic Condition Effects — active conditions now apply their D&D 5e mechanical effects automatically',
@@ -25,7 +43,7 @@ export const CHANGELOG = [
   },
   {
     version: 'V0.2.1',
-    date: '2026-03-10',
+    date: '03/10/2026 6:00 PM',
     title: 'Connection Hardening & Stability',
     changes: [
       'Party Connect — auto-reconnect with exponential backoff on WiFi drops',
@@ -48,7 +66,7 @@ export const CHANGELOG = [
   },
   {
     version: 'V0.2.0',
-    date: '2026-03-10',
+    date: '03/10/2026 3:00 PM',
     title: 'LAN Party & Auto-Updates',
     changes: [
       'LAN Party Connect — host shows IP, joiners enter IP + room code for reliable cross-device play',
@@ -63,7 +81,7 @@ export const CHANGELOG = [
   },
   {
     version: 'V0.1.8',
-    date: '2026-03-10',
+    date: '03/10/2026 12:00 PM',
     title: 'Character Creation & Auto-Backup',
     changes: [
       'Expanded character creation — choose race, class, and optional subclass during setup',
@@ -77,7 +95,7 @@ export const CHANGELOG = [
   },
   {
     version: 'V0.1.5',
-    date: '2026-02-20',
+    date: '02/20/2026 4:00 PM',
     title: 'Tauri Migration',
     changes: [
       'Migrated from Python/FastAPI to native Tauri 2 desktop app (Rust backend)',
@@ -90,7 +108,7 @@ export const CHANGELOG = [
   },
   {
     version: 'V0.1.0',
-    date: '2026-01-15',
+    date: '01/15/2026 2:00 PM',
     title: 'Initial Release',
     changes: [
       'Full character sheet with ability scores, saves, skills, HP, death saves',

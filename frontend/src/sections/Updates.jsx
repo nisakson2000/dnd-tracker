@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, CheckCircle, AlertCircle, Clock, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { CheckCircle, AlertCircle, WifiOff, Clock, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { CHANGELOG } from '../data/changelog';
 import { useUpdateCheck } from '../hooks/useUpdateCheck';
 import { invoke } from '@tauri-apps/api/core';
 
 export default function Updates() {
-  const { updateAvailable, latestVersion, checking, lastChecked, checkForUpdates, currentVersion } = useUpdateCheck();
+  const { updateAvailable, latestVersion, checking, lastChecked, checkResult, currentVersion } = useUpdateCheck();
   const [expandedVersion, setExpandedVersion] = useState(CHANGELOG[0]?.version || null);
+
+  // Only show last 5 versions
+  const recentVersions = CHANGELOG.slice(0, 5);
 
   return (
     <div style={{ maxWidth: '640px' }}>
@@ -16,7 +19,15 @@ export default function Updates() {
 
       {/* Update status */}
       <div className="mb-6">
-        {updateAvailable ? (
+        {checkResult === 'offline' ? (
+          <div className="flex items-center gap-3 p-4 rounded-lg" style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.12)' }}>
+            <WifiOff size={20} className="text-amber-400/60 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-amber-200/60 font-semibold">Unable to check for updates</p>
+              <p className="text-xs text-amber-200/30 mt-0.5">No internet connection. Connect to WiFi or check your network to verify you're running the latest version.</p>
+            </div>
+          </div>
+        ) : updateAvailable ? (
           <div className="flex items-center gap-3 p-4 rounded-lg" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.18)' }}>
             <AlertCircle size={20} className="text-amber-400 flex-shrink-0" />
             <div className="flex-1">
@@ -39,28 +50,20 @@ export default function Updates() {
               <p className="text-sm font-semibold" style={{ color: 'rgba(74,222,128,0.8)' }}>You're up to date</p>
               <p className="text-xs text-amber-200/30 mt-0.5">Running the latest version.</p>
             </div>
-            <button
-              onClick={checkForUpdates}
-              disabled={checking}
-              className="flex items-center gap-1.5 text-xs text-amber-200/40 hover:text-amber-200/70 transition-colors bg-transparent border-none cursor-pointer disabled:opacity-40"
-            >
-              <RefreshCw size={12} className={checking ? 'animate-spin' : ''} />
-              {checking ? 'Checking...' : 'Check now'}
-            </button>
           </div>
         )}
         {lastChecked && (
           <p className="text-[10px] text-amber-200/20 mt-2 flex items-center gap-1">
             <Clock size={9} />
-            Last checked: {lastChecked.toLocaleTimeString()}
+            Last checked: {lastChecked.toLocaleString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
           </p>
         )}
       </div>
 
-      {/* Changelog */}
+      {/* Changelog — last 5 versions */}
       <h3 className="text-[10px] font-mono tracking-widest uppercase text-amber-200/25 mb-3">Recent Versions</h3>
       <div className="space-y-3">
-        {CHANGELOG.map((entry) => {
+        {recentVersions.map((entry) => {
           const isExpanded = expandedVersion === entry.version;
           const isCurrent = entry.version === currentVersion || entry.version === `v${currentVersion}` || `v${entry.version}` === currentVersion;
 
