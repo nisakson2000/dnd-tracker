@@ -12,4 +12,5 @@ pub mod overview;
 pub mod quests;
 pub mod rest;
 pub mod spells;
+pub mod bug_report;
 pub mod wiki;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Trash2, Edit2, Map, CheckSquare, Square } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getQuests, addQuest, updateQuest, deleteQuest } from '../api/quests';
@@ -10,6 +10,7 @@ export default function Quests({ characterId }) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [sortBy, setSortBy] = useState('status');
 
   const load = async () => {
     try { setQuests(await getQuests(characterId)); }
@@ -23,7 +24,11 @@ export default function Quests({ characterId }) {
     try {
       if (editing) {
         await updateQuest(characterId, editing.id, data);
-        toast.success('Quest updated');
+        if (data.status === 'completed' && editing.status !== 'completed') {
+          toast.success('Quest completed!');
+        } else {
+          toast.success('Quest updated');
+        }
       } else {
         await addQuest(characterId, data);
         toast.success('Quest added');
@@ -46,7 +51,7 @@ export default function Quests({ characterId }) {
   const toggleObjective = async (quest, objIndex) => {
     const updated = {
       ...quest,
-      objectives: quest.objectives.map((o, i) =>
+      objectives: (quest.objectives || []).map((o, i) =>
         i === objIndex ? { ...o, completed: !o.completed } : o
       ),
     };
@@ -56,8 +61,23 @@ export default function Quests({ characterId }) {
     } catch (err) { toast.error(err.message); }
   };
 
-  const active = quests.filter(q => q.status === 'active');
-  const completed = quests.filter(q => q.status !== 'active');
+  const getProgress = (q) => {
+    if (!q.objectives || q.objectives.length === 0) return 0;
+    return (q.objectives.filter(o => o.completed).length / q.objectives.length) * 100;
+  };
+
+  const sortedQuests = useMemo(() => [...quests].sort((a, b) => {
+    if (sortBy === 'name') return (a.title || '').localeCompare(b.title || '');
+    if (sortBy === 'status') {
+      const order = { active: 0, completed: 1, failed: 2 };
+      return (order[a.status] ?? 9) - (order[b.status] ?? 9);
+    }
+    if (sortBy === 'progress') return getProgress(b) - getProgress(a);
+    return 0;
+  }), [quests, sortBy]);
+
+  const active = useMemo(() => sortedQuests.filter(q => q.status === 'active'), [sortedQuests]);
+  const completed = useMemo(() => sortedQuests.filter(q => q.status !== 'active'), [sortedQuests]);
 
   if (loading) return <div className="text-amber-200/40">Loading quests...</div>;
 
@@ -65,23 +85,23 @@ export default function Quests({ characterId }) {
     <div className="card">
       <div className="flex items-start justify-between mb-2">
         <div>
-          <h4 className="text-amber-100 font-display">{quest.title}</h4>
+          <h4 className="text-amber-100 font-display">{quest.title || 'Untitled Quest'}</h4>
           {quest.giver && <p className="text-xs text-amber-200/40">Given by: {quest.giver}</p>}
         </div>
         <div className="flex gap-1">
-          <button onClick={() => { setEditing(quest); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>
-          <button onClick={() => setConfirmDelete(quest)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>
+          <button onClick={() => { setEditing(quest); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200" aria-label={`Edit ${quest.title || 'quest'}`}><Edit2 size={14} /></button>
+          <button onClick={() => setConfirmDelete(quest)} className="text-red-400/50 hover:text-red-400" aria-label={`Delete ${quest.title || 'quest'}`}><Trash2 size={14} /></button>
         </div>
       </div>
       {quest.description && <p className="text-sm text-amber-200/50 mb-2">{quest.description}</p>}
-      {quest.objectives.length > 0 && (() => {
-        const completed = quest.objectives.filter(o => o.completed).length;
-        const total = quest.objectives.length;
+      {(quest.objectives || []).length > 0 && (() => {
+        const completed = (quest.objectives || []).filter(o => o.completed).length;
+        const total = (quest.objectives || []).length;
         const progressPct = total > 0 ? (completed / total) * 100 : 0;
         return (
           <div className="mt-2">
             <div className="space-y-1">
-              {quest.objectives.map((obj, i) => (
+              {(quest.objectives || []).map((obj, i) => (
                 <button key={obj.id || i} onClick={() => toggleObjective(quest, i)} className="flex items-center gap-2 w-full text-left text-sm">
                   {obj.completed ? <CheckSquare size={14} className="text-emerald-400 flex-shrink-0" /> : <Square size={14} className="text-amber-200/30 flex-shrink-0" />}
                   <span className={obj.completed ? 'line-through text-amber-200/30' : 'text-amber-200/60'}>{obj.text}</span>
@@ -93,7 +113,7 @@ export default function Quests({ characterId }) {
                 <span>{completed}/{total} objectives</span>
                 <span>{Math.round(progressPct)}%</span>
               </div>
-              <div className="hp-bar-container" style={{height: '6px'}}>
+              <div className="hp-bar-container" style={{height: '6px'}} role="progressbar" aria-label={`Quest progress: ${completed} of ${total} objectives complete`} aria-valuenow={completed} aria-valuemin={0} aria-valuemax={total}>
                 <div className="hp-bar-fill hp-high" style={{width: `${progressPct}%`}} />
               </div>
             </div>
@@ -126,6 +146,17 @@ export default function Quests({ characterId }) {
         </button>
       </div>
 
+      {/* Sort */}
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs text-amber-200/40">Sort:</span>
+        {[['status', 'Active First'], ['name', 'Name A-Z'], ['progress', 'Progress %']].map(([key, label]) => (
+          <button key={key} onClick={() => setSortBy(key)}
+            className={`text-xs px-2.5 py-1 rounded ${sortBy === key ? 'bg-gold/20 text-gold border border-gold/30' : 'bg-amber-200/5 text-amber-200/40 border border-amber-200/10'}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
       {active.length > 0 && (
         <div>
           <h3 className="font-display text-amber-100/70 mb-3">Active Quests</h3>
@@ -145,7 +176,11 @@ export default function Quests({ characterId }) {
       )}
 
       {quests.length === 0 && (
-        <div className="card text-center text-amber-200/30 py-8">No quests yet. When your DM gives you a mission or you discover a goal, add it here to track your progress.</div>
+        <div className="card border-dashed border-amber-200/10 text-center py-12">
+          <Map size={32} className="mx-auto text-amber-200/15 mb-3" />
+          <p className="text-sm text-amber-200/30 mb-1">No quests yet — add your first quest objective</p>
+          <p className="text-xs text-amber-200/20">When your DM gives you a mission or you discover a goal, track it here</p>
+        </div>
       )}
 
       {showForm && (
@@ -164,11 +199,20 @@ export default function Quests({ characterId }) {
 }
 
 function QuestForm({ quest, onSubmit, onCancel }) {
-  const [form, setForm] = useState(quest || {
-    title: '', giver: '', description: '', status: 'active', notes: '', objectives: [],
+  const [form, setForm] = useState(() => {
+    const base = quest || { title: '', giver: '', description: '', status: 'active', notes: '', objectives: [] };
+    return { ...base, objectives: base.objectives || [] };
   });
   const [newObj, setNewObj] = useState('');
-  const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
+  const [titleError, setTitleError] = useState(false);
+  const update = (f, v) => {
+    if (f === 'title') setTitleError(false);
+    setForm(prev => ({ ...prev, [f]: v }));
+  };
+  const handleSubmit = () => {
+    if (!form.title.trim()) { setTitleError(true); return; }
+    onSubmit(form);
+  };
 
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onCancel(); };
@@ -191,7 +235,10 @@ function QuestForm({ quest, onSubmit, onCancel }) {
       <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
         <h3 className="font-display text-lg text-amber-100 mb-4">{quest ? 'Edit Quest' : 'New Quest'}</h3>
         <div className="space-y-3">
-          <input className="input w-full" placeholder="Quest title" value={form.title} onChange={e => update('title', e.target.value)} autoFocus />
+          <div>
+            <input className={`input w-full ${titleError ? 'border-red-500' : ''}`} placeholder="Quest title" value={form.title} onChange={e => update('title', e.target.value)} autoFocus />
+            {titleError && <p className="text-red-400 text-xs mt-1">Name required</p>}
+          </div>
           <input className="input w-full" placeholder="Quest giver" value={form.giver} onChange={e => update('giver', e.target.value)} />
           <textarea className="input w-full h-20 resize-none" placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} />
           <select className="input w-full" value={form.status} onChange={e => update('status', e.target.value)}>
@@ -205,11 +252,11 @@ function QuestForm({ quest, onSubmit, onCancel }) {
             {form.objectives.map((obj, i) => (
               <div key={`${obj.text}-${i}`} className="flex items-center gap-2 mb-1">
                 <span className="text-sm text-amber-200/60 flex-1">{obj.text}</span>
-                <button onClick={() => removeObjective(i)} className="text-red-400/50 hover:text-red-400"><Trash2 size={12} /></button>
+                <button onClick={() => removeObjective(i)} className="text-red-400/50 hover:text-red-400" aria-label={`Remove objective: ${obj.text}`}><Trash2 size={12} /></button>
               </div>
             ))}
             <div className="flex gap-2 mt-1">
-              <input className="input flex-1 text-sm" placeholder="New objective..." value={newObj}
+              <input className="input flex-1 text-sm" placeholder="Add an objective and press Enter" value={newObj}
                 onChange={e => setNewObj(e.target.value)} onKeyDown={e => e.key === 'Enter' && addObjective()} />
               <button onClick={addObjective} className="btn-secondary text-xs">Add</button>
             </div>
@@ -219,7 +266,7 @@ function QuestForm({ quest, onSubmit, onCancel }) {
         </div>
         <div className="flex gap-3 justify-end mt-4">
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
-          <button onClick={() => form.title && onSubmit(form)} className="btn-primary text-sm">{quest ? 'Save' : 'Add'}</button>
+          <button onClick={handleSubmit} className="btn-primary text-sm">{quest ? 'Save' : 'Add'}</button>
         </div>
       </div>
     </div>

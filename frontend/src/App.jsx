@@ -97,6 +97,7 @@ export default function App() {
           },
           success: { iconTheme: { primary: '#4ade80', secondary: '#09090f' } },
           error: { iconTheme: { primary: '#ef4444', secondary: '#09090f' } },
+          ariaProps: { role: 'status', 'aria-live': 'polite' },
         }}
       />
 

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Download, Upload, FileJson, FileText, Copy, Check, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { exportCharacter } from '../api/export';
@@ -181,6 +181,18 @@ export default function ExportImport({ characterId, character }) {
   const fileInputRef = useRef(null);
   const [importing, setImporting] = useState(false);
   const [pendingImport, setPendingImport] = useState(null);
+  const [fileSizeEstimate, setFileSizeEstimate] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    exportCharacter(characterId).then(data => {
+      if (cancelled) return;
+      const bytes = new Blob([JSON.stringify(data, null, 2)]).size;
+      if (bytes < 1024) setFileSizeEstimate(`~${bytes} B`);
+      else setFileSizeEstimate(`~${Math.round(bytes / 1024)} KB`);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [characterId]);
 
   const handleExportJSON = async () => {
     setExporting(true);
@@ -296,7 +308,7 @@ export default function ExportImport({ characterId, character }) {
       await invoke('import_character', { characterId, payload: pendingImport });
       toast.success('Character imported successfully!');
       setPendingImport(null);
-      setTimeout(() => window.location.reload(), 1000);
+      window.location.reload();
     } catch (err) {
       toast.error(`Import failed: ${err.message}`);
     } finally {
@@ -320,11 +332,12 @@ export default function ExportImport({ characterId, character }) {
         <p className="text-sm text-amber-200/50 mb-4">
           Download your full character data as JSON (for reimporting) or as a readable text sheet (for sharing with DMs, other players, or AI).
         </p>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 items-center">
           <button onClick={handleExportJSON} disabled={exporting} className="btn-primary flex items-center gap-2">
             {exporting ? <Loader2 size={16} className="animate-spin" /> : <FileJson size={16} />}
             {exporting ? 'Exporting...' : 'Export JSON'}
           </button>
+          {fileSizeEstimate && <span className="text-xs text-amber-200/30">{fileSizeEstimate}</span>}
           <button onClick={handleExportText} disabled={exporting} className="btn-secondary flex items-center gap-2">
             {exporting ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
             {exporting ? 'Exporting...' : 'Export Text Sheet'}

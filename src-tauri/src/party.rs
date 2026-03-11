@@ -13,6 +13,9 @@ const MAX_ROOM_ATTEMPTS: usize = 100;
 const MAX_MESSAGE_SIZE: usize = 65_536; // 64KB per message
 const CLIENT_TIMEOUT_SECS: u64 = 90; // Remove clients with no activity after 90s
 const CHANNEL_BUFFER_SIZE: usize = 256; // Bounded channel — drops slow clients
+const MAX_ROOMS: usize = 50; // Prevent memory exhaustion from room spam
+const RATE_LIMIT_MSGS: u32 = 10; // Max messages per second before warning
+const RATE_LIMIT_WINDOW: std::time::Duration = std::time::Duration::from_secs(1);
 
 type Tx = mpsc::Sender<Message>;
 
@@ -22,6 +25,9 @@ struct Client {
     character_id: String,
     character: Value,
     last_seen: Instant,
+    msg_count: u32,
+    msg_window_start: Instant,
+    rate_warned: bool,
 }
 
 struct Room {
@@ -85,6 +91,7 @@ impl PartyServer {
 
         match result {
             Ok((_addr, server)) => {
+                eprintln!("[party] Server started on port {}", PARTY_PORT);
                 tokio::spawn(server);
                 // Start zombie cleanup task
                 tokio::spawn(async move {
@@ -99,6 +106,7 @@ impl PartyServer {
                 Ok(PARTY_PORT)
             }
             Err(e) => {
+                eprintln!("[party] Failed to start server on port {}: {}", PARTY_PORT, e);
                 *self.running.write().await = false;
                 *self.shutdown.lock().await = None;
                 Err(format!(
@@ -167,6 +175,10 @@ impl PartyServer {
 
     async fn create_room(self: &Arc<Self>) -> Result<String, String> {
         let mut rooms = self.rooms.write().await;
+        if rooms.len() >= MAX_ROOMS {
+            eprintln!("[party] Room limit reached ({} rooms), rejecting create request", rooms.len());
+            return Err(format!("Server room limit reached (max {}). Try again later.", MAX_ROOMS));
+        }
         for _ in 0..MAX_ROOM_ATTEMPTS {
             let code = Self::generate_room_code();
             if !rooms.contains_key(&code) {
@@ -184,6 +196,7 @@ impl PartyServer {
     }
 
     async fn add_client(self: &Arc<Self>, client_id: String, tx: Tx) {
+        let now = Instant::now();
         self.clients.write().await.insert(
             client_id,
             Client {
@@ -191,7 +204,10 @@ impl PartyServer {
                 room_code: None,
                 character_id: String::new(),
                 character: json!({}),
-                last_seen: Instant::now(),
+                last_seen: now,
+                msg_count: 0,
+                msg_window_start: now,
+                rate_warned: false,
             },
         );
     }
@@ -411,7 +427,7 @@ impl PartyServer {
                     "member": { "client_id": client_id, "character": character },
                     "timestamp": Self::timestamp(),
                 }),
-                None,
+                Some(client_id), // Exclude sender — prevents echo/state flicker
             )
             .await;
         }
@@ -472,6 +488,7 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
     let (tx, mut rx) = mpsc::channel::<Message>(CHANNEL_BUFFER_SIZE);
 
     state.add_client(client_id.clone(), tx).await;
+    eprintln!("[party] Client {} connected", client_id);
 
     // Forward channel messages to WebSocket
     let forward = tokio::spawn(async move {
@@ -485,10 +502,18 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
     });
 
     // Process incoming messages
-    while let Some(Ok(msg)) = ws_rx.next().await {
+    while let Some(result) = ws_rx.next().await {
+        let msg = match result {
+            Ok(m) => m,
+            Err(e) => {
+                eprintln!("[party] Client {} connection error: {}", client_id, e);
+                break;
+            }
+        };
         if msg.is_text() {
             if let Ok(text) = msg.to_str() {
                 if text.len() > MAX_MESSAGE_SIZE {
+                    eprintln!("[party] Client {} sent oversized message ({} bytes)", client_id, text.len());
                     let clients = state.clients.read().await;
                     if let Some(client) = clients.get(&client_id) {
                         PartyServer::send_error(client, "Message too large");
@@ -496,7 +521,42 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
                     continue;
                 }
 
-                if let Ok(parsed) = serde_json::from_str::<Value>(text) {
+                // Rate limiting check
+                {
+                    let mut clients = state.clients.write().await;
+                    if let Some(client) = clients.get_mut(&client_id) {
+                        let now = Instant::now();
+                        if now.duration_since(client.msg_window_start) >= RATE_LIMIT_WINDOW {
+                            client.msg_count = 0;
+                            client.msg_window_start = now;
+                            client.rate_warned = false;
+                        }
+                        client.msg_count += 1;
+                        if client.msg_count > RATE_LIMIT_MSGS && !client.rate_warned {
+                            client.rate_warned = true;
+                            eprintln!("[party] Client {} exceeding rate limit ({} msgs/sec)", client_id, client.msg_count);
+                            let _ = client.tx.try_send(Message::text(
+                                json!({
+                                    "type": "warning",
+                                    "message": "Slow down — you are sending messages too quickly",
+                                    "timestamp": PartyServer::timestamp(),
+                                }).to_string(),
+                            ));
+                        }
+                    }
+                }
+
+                let parsed = match serde_json::from_str::<Value>(text) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        eprintln!("[party] Client {} sent malformed JSON: {}", client_id, e);
+                        let clients = state.clients.read().await;
+                        if let Some(client) = clients.get(&client_id) {
+                            PartyServer::send_error(client, "Invalid message format");
+                        }
+                        continue;
+                    }
+                };
                     match parsed.get("type").and_then(|t| t.as_str()) {
                         Some("join") => {
                             let room = parsed
@@ -514,6 +574,34 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
                             let character =
                                 parsed.get("character").cloned().unwrap_or(json!({}));
                             state.handle_update(&client_id, character).await;
+                        }
+                        Some("bug_report") => {
+                            // Broadcast bug reports to ALL clients (including sender)
+                            // so dev builds can capture them
+                            let room_code = {
+                                let clients = state.clients.read().await;
+                                clients.get(&client_id).and_then(|c| c.room_code.clone())
+                            };
+                            if let Some(code) = room_code {
+                                let report_data = parsed.get("report").cloned().unwrap_or(json!({}));
+                                let reporter = {
+                                    let clients = state.clients.read().await;
+                                    clients.get(&client_id)
+                                        .map(|c| c.character.get("name").and_then(|n| n.as_str()).unwrap_or("Unknown").to_string())
+                                        .unwrap_or_else(|| "Unknown".to_string())
+                                };
+                                state.broadcast_to_room(
+                                    &code,
+                                    &json!({
+                                        "type": "bug_report",
+                                        "client_id": client_id,
+                                        "reporter": reporter,
+                                        "report": report_data,
+                                        "timestamp": PartyServer::timestamp(),
+                                    }),
+                                    None, // Send to everyone including sender
+                                ).await;
+                            }
                         }
                         Some("ping") => {
                             // Update last_seen timestamp
@@ -533,13 +621,13 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
                         }
                         _ => {}
                     }
-                }
             }
         } else if msg.is_close() {
             break;
         }
     }
 
+    eprintln!("[party] Client {} disconnected", client_id);
     state.remove_client(&client_id).await;
     forward.abort();
 }

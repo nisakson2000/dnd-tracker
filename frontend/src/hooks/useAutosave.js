@@ -12,6 +12,7 @@ export function useAutosave(saveFn, delay = 800) {
   useEffect(() => { saveFnRef.current = saveFn; }, [saveFn]);
 
   const doSave = useCallback(async (data) => {
+    if (data == null) return;
     setSaving(true);
     try {
       await saveFnRef.current(data);

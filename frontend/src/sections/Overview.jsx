@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { TrendingUp, Heart, Shield, Zap, Eye, Footprints, Moon, Coffee, Check, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOverview, updateOverview, updateAbilityScores, updateSavingThrows, updateSkills } from '../api/overview';
@@ -15,7 +15,8 @@ const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
 const ABILITY_NAMES = { STR: 'Strength', DEX: 'Dexterity', CON: 'Constitution', INT: 'Intelligence', WIS: 'Wisdom', CHA: 'Charisma' };
 
 function calcMod(score) {
-  return Math.floor((score - 10) / 2);
+  const s = typeof score === 'number' && !isNaN(score) ? score : 10;
+  return Math.floor((s - 10) / 2);
 }
 
 function modStr(mod) {
@@ -101,12 +102,23 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
 
   const updateField = (field, value) => {
     let v = value;
+    // Level clamping
+    if (field === 'level') {
+      v = Math.max(1, Math.min(20, v || 1));
+    }
+    // AC clamping (D&D valid range 0-30)
+    if (field === 'armor_class') {
+      v = Math.max(0, Math.min(30, v || 10));
+    }
     // HP clamping
+    if (field === 'max_hp') {
+      v = Math.max(0, Math.min(999, v || 0));
+    }
     if (field === 'current_hp') {
       v = Math.max(0, Math.min(v, overview.max_hp || 999));
     }
     if (field === 'temp_hp') {
-      v = Math.max(0, v);
+      v = Math.max(0, Math.min(999, v));
     }
     if (field === 'max_hp' && overview.current_hp > v && v > 0) {
       // If max HP drops below current, clamp current
@@ -169,25 +181,41 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     triggerSkills(updated);
   };
 
+  const abilityMap = useMemo(() => {
+    const map = {};
+    abilities.forEach(a => { map[a.ability] = a.score; });
+    return map;
+  }, [abilities]);
+  const saveMap = useMemo(() => {
+    const map = {};
+    saves.forEach(s => { map[s.ability] = s.proficient; });
+    return map;
+  }, [saves]);
+
+  const condEffects = useMemo(() => computeConditionEffects(activeConditions), [activeConditions]);
+
+  const profBonus = PROFICIENCY_BONUS[overview?.level] || 2;
+
+  const { dexMod, wisMod, percMod, passivePerc, initiative, effectiveSpeed } = useMemo(() => {
+    const dex = calcMod(abilityMap.DEX || 10);
+    const wis = calcMod(abilityMap.WIS || 10);
+    const percSkill = skills.find(s => s.name === 'Perception');
+    const perc = wis + (percSkill?.proficient ? profBonus : 0) + (percSkill?.expertise ? profBonus : 0);
+    return {
+      dexMod: dex,
+      wisMod: wis,
+      percMod: perc,
+      passivePerc: 10 + perc,
+      initiative: dex,
+      effectiveSpeed: condEffects.speedOverride === 0 ? 0 : (overview?.speed || 30),
+    };
+  }, [abilityMap, skills, profBonus, condEffects, overview?.speed]);
+
+  const sortedSkillEntries = useMemo(() => Object.entries(SKILLS).sort(([a], [b]) => a.localeCompare(b)), [SKILLS]);
+
   if (loading || !overview) {
     return <div className="text-amber-200/40">Loading character sheet...</div>;
   }
-
-  const profBonus = PROFICIENCY_BONUS[overview.level] || 2;
-  const abilityMap = {};
-  abilities.forEach(a => { abilityMap[a.ability] = a.score; });
-  const saveMap = {};
-  saves.forEach(s => { saveMap[s.ability] = s.proficient; });
-
-  const condEffects = computeConditionEffects(activeConditions);
-
-  const dexMod = calcMod(abilityMap.DEX || 10);
-  const wisMod = calcMod(abilityMap.WIS || 10);
-  const percSkill = skills.find(s => s.name === 'Perception');
-  const percMod = wisMod + (percSkill?.proficient ? profBonus : 0) + (percSkill?.expertise ? profBonus : 0);
-  const passivePerc = 10 + percMod;
-  const initiative = dexMod;
-  const effectiveSpeed = condEffects.speedOverride === 0 ? 0 : overview.speed;
 
   const hpPercent = overview.max_hp > 0 ? (overview.current_hp / overview.max_hp) * 100 : 0;
   const hpBarClass = hpPercent >= 75 ? 'hp-bar-fill hp-high' :
@@ -397,6 +425,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                     <input
                       type="number" min={1} max={30}
                       className="input text-center w-16 mx-auto text-sm"
+                      aria-label={`${ABILITY_NAMES[ab]} score`}
                       style={{ border: 'none', background: 'transparent', outline: 'none', boxShadow: 'none' }}
                       value={localAbilities[ab] ?? score}
                       onChange={e => setLocalAbilities(prev => ({ ...prev, [ab]: e.target.value }))}
@@ -428,6 +457,11 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                   <div
                     key={ab}
                     onClick={() => toggleSave(ab)}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSave(ab); } }}
+                    tabIndex={0}
+                    role="checkbox"
+                    aria-checked={prof}
+                    aria-label={`${ABILITY_NAMES[ab]} saving throw proficiency`}
                     className={`flex items-center gap-3 py-1.5 px-2 rounded-md cursor-pointer group hover:bg-white/[0.03] transition-colors select-none ${isAutoFail ? 'bg-red-950/30 border border-red-500/20 rounded' : ''}`}
                   >
                     {/* Proficiency indicator */}
@@ -475,7 +509,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
               </span>
             </div>
             <div className="space-y-0 max-h-[380px] overflow-y-auto pr-1 skill-list">
-              {Object.entries(SKILLS).sort(([a], [b]) => a.localeCompare(b)).map(([skillName, ability]) => {
+              {sortedSkillEntries.map(([skillName, ability]) => {
                 const sk = skills.find(s => s.name === skillName);
                 const score = abilityMap[ability] || 10;
                 const mod = calcMod(score) + (sk?.proficient ? profBonus : 0) + (sk?.expertise ? profBonus : 0);
@@ -513,13 +547,13 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         <div className="space-y-6">
           {/* Proficiency + Core Stats */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="card text-center">
+            <div className="card text-center" title={`Proficiency bonus: +${profBonus} (levels ${profBonus === 2 ? '1-4' : profBonus === 3 ? '5-8' : profBonus === 4 ? '9-12' : profBonus === 5 ? '13-16' : '17-20'})`}>
               <div className="text-xs text-amber-200/50 mb-1">Proficiency<HelpTooltip text={HELP.proficiencyBonus} /></div>
               <div className="text-2xl font-display text-gold">{modStr(profBonus)}</div>
             </div>
             <div className="card text-center">
               <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Shield size={12} /> AC<HelpTooltip text={HELP.ac} /></div>
-              <input type="number" min={1} className="input text-center text-2xl font-display w-20 mx-auto" value={overview.armor_class} onChange={e => updateField('armor_class', Math.max(1, parseInt(e.target.value) || 10))} />
+              <input type="number" min={0} max={30} className="input text-center text-2xl font-display w-20 mx-auto" value={overview.armor_class} onChange={e => updateField('armor_class', parseInt(e.target.value) || 0)} />
             </div>
             <div className="card text-center">
               <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Zap size={12} /> Initiative<HelpTooltip text={HELP.initiative} /></div>
@@ -564,7 +598,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
               </div>
             </div>
             {/* HP bar with color states and temp HP segment */}
-            <div className="hp-bar-bg" style={{ marginTop: '10px' }}>
+            <div className="hp-bar-bg" style={{ marginTop: '10px' }} role="progressbar" aria-label={`HP: ${overview.current_hp} of ${overview.max_hp}`} aria-valuenow={overview.current_hp} aria-valuemin={0} aria-valuemax={overview.max_hp}>
               <div
                 className={`hp-bar-fill${hpPercent < 10 ? ' animate-pulse' : ''}`}
                 style={{

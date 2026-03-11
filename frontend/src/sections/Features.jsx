@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Trash2, ScrollText, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getFeatures, addFeature, updateFeature, deleteFeature } from '../api/features';
@@ -14,6 +14,7 @@ export default function Features({ characterId }) {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('name');
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   const load = async () => {
@@ -28,7 +29,7 @@ export default function Features({ characterId }) {
 
   const handleAdd = async (data) => {
     try {
-      await addFeature(characterId, { ...data, uses_remaining: data.uses_total });
+      await addFeature(characterId, { ...data, uses_remaining: data.uses_total ?? 0 });
       toast.success('Feature added');
       setShowAdd(false);
       load();
@@ -45,11 +46,11 @@ export default function Features({ characterId }) {
   };
 
   const useCharge = async (feature) => {
-    if (feature.uses_remaining <= 0) {
-      toast.error(`No uses left for ${feature.name}`);
+    if ((feature.uses_remaining ?? 0) <= 0) {
+      toast.error(`No uses left for ${feature.name || 'this feature'}`);
       return;
     }
-    const updated = { ...feature, uses_remaining: feature.uses_remaining - 1 };
+    const updated = { ...feature, uses_remaining: (feature.uses_remaining ?? 0) - 1 };
     setFeatures(prev => prev.map(f => f.id === feature.id ? updated : f));
     try {
       await updateFeature(characterId, feature.id, updated);
@@ -57,8 +58,8 @@ export default function Features({ characterId }) {
   };
 
   const restoreCharge = async (feature) => {
-    if (feature.uses_remaining >= feature.uses_total) return;
-    const updated = { ...feature, uses_remaining: feature.uses_remaining + 1 };
+    if ((feature.uses_remaining ?? 0) >= (feature.uses_total ?? 0)) return;
+    const updated = { ...feature, uses_remaining: (feature.uses_remaining ?? 0) + 1 };
     setFeatures(prev => prev.map(f => f.id === feature.id ? updated : f));
     try {
       await updateFeature(characterId, feature.id, updated);
@@ -66,14 +67,25 @@ export default function Features({ characterId }) {
   };
 
   const restoreAll = async (feature) => {
-    const updated = { ...feature, uses_remaining: feature.uses_total };
+    const updated = { ...feature, uses_remaining: feature.uses_total ?? 0 };
     setFeatures(prev => prev.map(f => f.id === feature.id ? updated : f));
     try {
       await updateFeature(characterId, feature.id, updated);
+      toast.success('Uses restored');
     } catch (err) { toast.error(err.message); load(); }
   };
 
-  const filtered = filter === 'all' ? features : features.filter(f => f.feature_type === filter);
+  const filtered = useMemo(() => filter === 'all' ? features : features.filter(f => f.feature_type === filter), [features, filter]);
+
+  const sorted = useMemo(() => [...filtered].sort((a, b) => {
+    if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
+    if (sortBy === 'type') {
+      const order = { class: 0, racial: 1, feat: 2 };
+      return (order[a.feature_type] ?? 9) - (order[b.feature_type] ?? 9);
+    }
+    if (sortBy === 'uses') return (a.uses_remaining ?? 0) - (b.uses_remaining ?? 0);
+    return 0;
+  }), [filtered, sortBy]);
 
   if (loading) return <div className="text-amber-200/40">Loading features...</div>;
 
@@ -92,27 +104,42 @@ export default function Features({ characterId }) {
         </button>
       </div>
 
-      {/* Filter */}
-      <div className="flex gap-2">
-        {['all', 'class', 'racial', 'feat'].map(f => (
-          <button key={f} onClick={() => setFilter(f)}
-            className={`text-xs px-3 py-1 rounded capitalize ${filter === f ? 'bg-gold/20 text-gold border border-gold/30' : 'text-amber-200/40 border border-amber-200/10'}`}>
-            {f}
-          </button>
-        ))}
+      {/* Filter + Sort */}
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex gap-2">
+          {['all', 'class', 'racial', 'feat'].map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`text-xs px-3 py-1 rounded capitalize ${filter === f ? 'bg-gold/20 text-gold border border-gold/30' : 'text-amber-200/40 border border-amber-200/10'}`}>
+              {f}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5 ml-auto">
+          <span className="text-xs text-amber-200/40">Sort:</span>
+          {[['name', 'Name A-Z'], ['type', 'Type'], ['uses', 'Uses Left']].map(([key, label]) => (
+            <button key={key} onClick={() => setSortBy(key)}
+              className={`text-xs px-2.5 py-1 rounded ${sortBy === key ? 'bg-gold/20 text-gold border border-gold/30' : 'bg-amber-200/5 text-amber-200/40 border border-amber-200/10'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Feature List */}
       {filtered.length === 0 ? (
-        <div className="card text-center text-amber-200/30 py-8">No features yet. Add your class features, racial traits, and feats as you gain them. Check your class description for what you start with at level 1.</div>
+        <div className="card border-dashed border-amber-200/10 text-center py-12">
+          <ScrollText size={32} className="mx-auto text-amber-200/15 mb-3" />
+          <p className="text-sm text-amber-200/30 mb-1">No features yet — add class features, racial traits, or feats</p>
+          <p className="text-xs text-amber-200/20">Check your class description for what you start with at level 1</p>
+        </div>
       ) : (
         <div className="space-y-3">
-          {filtered.map(f => (
+          {sorted.map(f => (
             <div key={f.id} className="card">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="text-amber-100 font-medium">{f.name}</h4>
+                    <h4 className="text-amber-100 font-medium">{f.name || 'Unnamed Feature'}</h4>
                     {f.recharge && (
                       <span className="text-[10px] text-amber-200/40 bg-amber-200/5 px-1.5 py-0.5 rounded border border-amber-200/10">
                         {RECHARGE_LABELS[f.recharge] || f.recharge}
@@ -125,7 +152,7 @@ export default function Features({ characterId }) {
                     <span className="ml-2 capitalize text-purple-300/50">{f.feature_type}</span>
                   </div>
                 </div>
-                <button onClick={() => setConfirmDelete(f)} className="text-red-400/50 hover:text-red-400 flex-shrink-0">
+                <button onClick={() => setConfirmDelete(f)} className="text-red-400/50 hover:text-red-400 flex-shrink-0" aria-label={`Delete ${f.name || 'feature'}`}>
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -133,26 +160,27 @@ export default function Features({ characterId }) {
               {f.description && <p className="text-sm text-amber-200/60 mt-2 whitespace-pre-wrap">{f.description}</p>}
 
               {/* Uses/Charges Tracker */}
-              {f.uses_total > 0 && (
+              {(f.uses_total ?? 0) > 0 && (
                 <div className="mt-3 pt-3 border-t border-gold/10">
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-amber-200/50">Uses:</span>
                     <div className="flex gap-1.5">
-                      {Array.from({ length: f.uses_total }).map((_, i) => (
+                      {Array.from({ length: f.uses_total ?? 0 }).map((_, i) => (
                         <button
                           key={i}
-                          onClick={() => i < f.uses_remaining ? useCharge(f) : restoreCharge(f)}
+                          onClick={() => i < (f.uses_remaining ?? 0) ? useCharge(f) : restoreCharge(f)}
                           className={`w-5 h-5 rounded-full border-2 transition-all ${
-                            i < f.uses_remaining
+                            i < (f.uses_remaining ?? 0)
                               ? 'bg-gold border-gold/70 shadow-[0_0_6px_rgba(201,168,76,0.3)]'
                               : 'border-amber-200/20 bg-transparent hover:border-amber-200/40'
                           }`}
-                          title={i < f.uses_remaining ? 'Click to spend a use' : 'Click to restore a use'}
+                          title={i < (f.uses_remaining ?? 0) ? 'Click to spend a use' : 'Click to restore a use'}
+                          aria-label={`${f.name || 'Feature'} use ${i + 1} of ${f.uses_total}, ${i < (f.uses_remaining ?? 0) ? 'available — click to spend' : 'spent — click to restore'}`}
                         />
                       ))}
                     </div>
-                    <span className="text-xs text-amber-200/40">{f.uses_remaining} / {f.uses_total}</span>
-                    {f.uses_remaining < f.uses_total && (
+                    <span className="text-xs text-amber-200/40">{f.uses_remaining ?? 0} / {f.uses_total ?? 0}</span>
+                    {(f.uses_remaining ?? 0) < (f.uses_total ?? 0) && (
                       <button
                         onClick={() => restoreAll(f)}
                         className="text-xs text-gold/50 hover:text-gold transition-colors flex items-center gap-1"
@@ -187,7 +215,15 @@ function FeatureForm({ onSubmit, onCancel }) {
     name: '', source: '', source_level: 0, feature_type: 'class', description: '',
     uses_total: 0, uses_remaining: 0, recharge: '',
   });
-  const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
+  const [nameError, setNameError] = useState(false);
+  const update = (f, v) => {
+    if (f === 'name') setNameError(false);
+    setForm(prev => ({ ...prev, [f]: v }));
+  };
+  const handleSubmit = () => {
+    if (!form.name.trim()) { setNameError(true); return; }
+    onSubmit(form);
+  };
 
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onCancel(); };
@@ -200,7 +236,10 @@ function FeatureForm({ onSubmit, onCancel }) {
       <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="font-display text-lg text-amber-100 mb-4">Add Feature</h3>
         <div className="space-y-3">
-          <input className="input w-full" placeholder="Feature name" value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
+          <div>
+            <input className={`input w-full ${nameError ? 'border-red-500' : ''}`} placeholder="e.g. Action Surge, Sneak Attack, Lucky..." value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
+            {nameError && <p className="text-red-400 text-xs mt-1">Name required</p>}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <input className="input w-full" placeholder="Source (class/race)" value={form.source} onChange={e => update('source', e.target.value)} />
             <select className="input w-full" value={form.feature_type} onChange={e => update('feature_type', e.target.value)}>
@@ -231,7 +270,7 @@ function FeatureForm({ onSubmit, onCancel }) {
         </div>
         <div className="flex gap-3 justify-end mt-4">
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
-          <button onClick={() => form.name && onSubmit(form)} className="btn-primary text-sm">Add</button>
+          <button onClick={handleSubmit} className="btn-primary text-sm">Add</button>
         </div>
       </div>
     </div>

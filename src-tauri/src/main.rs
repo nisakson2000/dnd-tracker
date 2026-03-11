@@ -13,36 +13,56 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
-            let app_data_dir = app.path().app_data_dir().expect("Failed to get app data dir");
-            fs::create_dir_all(&app_data_dir).expect("Failed to create app data dir");
+            let app_data_dir = app.path().app_data_dir().map_err(|e| {
+                eprintln!("[init] Failed to get app data dir: {}", e);
+                Box::new(e) as Box<dyn std::error::Error>
+            })?;
+            fs::create_dir_all(&app_data_dir).map_err(|e| {
+                eprintln!("[init] Failed to create app data dir: {}", e);
+                Box::new(e) as Box<dyn std::error::Error>
+            })?;
 
             let chars_dir = app_data_dir.join("characters");
-            fs::create_dir_all(&chars_dir).expect("Failed to create characters dir");
+            fs::create_dir_all(&chars_dir).map_err(|e| {
+                eprintln!("[init] Failed to create characters dir: {}", e);
+                Box::new(e) as Box<dyn std::error::Error>
+            })?;
 
             // Copy bundled wiki.db to app data dir on first run
             let wiki_dest = app_data_dir.join("wiki.db");
             if !wiki_dest.exists() {
-                let resource_dir = app.path().resource_dir().expect("Failed to get resource dir");
-                let wiki_src = resource_dir.join("resources").join("wiki.db");
-                if wiki_src.exists() {
-                    fs::copy(&wiki_src, &wiki_dest)
-                        .expect("Failed to copy wiki.db to app data dir");
-                } else {
-                    // Try alternate path (development)
-                    let alt_src = resource_dir.join("wiki.db");
-                    if alt_src.exists() {
-                        fs::copy(&alt_src, &wiki_dest)
-                            .expect("Failed to copy wiki.db to app data dir");
+                if let Ok(resource_dir) = app.path().resource_dir() {
+                    let wiki_src = resource_dir.join("resources").join("wiki.db");
+                    if wiki_src.exists() {
+                        if let Err(e) = fs::copy(&wiki_src, &wiki_dest) {
+                            eprintln!("[init] Failed to copy wiki.db from resources: {}", e);
+                        }
+                    } else {
+                        // Try alternate path (development)
+                        let alt_src = resource_dir.join("wiki.db");
+                        if alt_src.exists() {
+                            if let Err(e) = fs::copy(&alt_src, &wiki_dest) {
+                                eprintln!("[init] Failed to copy wiki.db from alt path: {}", e);
+                            }
+                        }
                     }
+                } else {
+                    eprintln!("[init] Could not resolve resource dir — wiki.db not copied");
                 }
             }
 
             // Open wiki connection
             let wiki_conn = if wiki_dest.exists() {
-                db::open_connection(&wiki_dest).expect("Failed to open wiki.db")
+                db::open_connection(&wiki_dest).map_err(|e| {
+                    eprintln!("[init] Failed to open wiki.db: {}", e);
+                    Box::new(e) as Box<dyn std::error::Error>
+                })?
             } else {
                 // Create empty wiki.db as fallback
-                let conn = db::open_connection(&wiki_dest).expect("Failed to create wiki.db");
+                let conn = db::open_connection(&wiki_dest).map_err(|e| {
+                    eprintln!("[init] Failed to create wiki.db: {}", e);
+                    Box::new(e) as Box<dyn std::error::Error>
+                })?;
                 conn.execute_batch(
                     "CREATE TABLE IF NOT EXISTS wiki_articles (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,7 +91,10 @@ fn main() {
                         content='wiki_articles',
                         content_rowid='id'
                     );"
-                ).expect("Failed to initialize wiki tables");
+                ).map_err(|e| {
+                    eprintln!("[init] Failed to initialize wiki tables: {}", e);
+                    Box::new(e) as Box<dyn std::error::Error>
+                })?;
                 conn
             };
 
@@ -155,6 +178,8 @@ fn main() {
             commands::wiki::wiki_list_articles,
             commands::wiki::wiki_get_article,
             commands::wiki::wiki_get_related,
+            // Bug Report
+            commands::bug_report::write_bug_report,
             // Party
             party::start_party_server,
             party::stop_party_server,

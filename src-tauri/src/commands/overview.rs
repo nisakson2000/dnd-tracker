@@ -112,11 +112,11 @@ pub fn get_overview(
                     })
                 },
             )
-            .map_err(|e| format!("Character not found: {}", e))?;
+            .map_err(|e| format!("Failed to load character overview: {}", e))?;
 
         let mut abs_stmt = conn
             .prepare("SELECT ability, score FROM ability_scores")
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| format!("Failed to load ability scores: {}", e))?;
         let ability_scores: Vec<AbilityScoreData> = abs_stmt
             .query_map([], |row| {
                 Ok(AbilityScoreData {
@@ -130,7 +130,7 @@ pub fn get_overview(
 
         let mut st_stmt = conn
             .prepare("SELECT ability, proficient FROM saving_throws")
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| format!("Failed to load saving throws: {}", e))?;
         let saving_throws: Vec<SavingThrowData> = st_stmt
             .query_map([], |row| {
                 Ok(SavingThrowData {
@@ -144,7 +144,7 @@ pub fn get_overview(
 
         let mut sk_stmt = conn
             .prepare("SELECT name, proficient, expertise FROM skills")
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| format!("Failed to load skills: {}", e))?;
         let skills: Vec<SkillData> = sk_stmt
             .query_map([], |row| {
                 Ok(SkillData {
@@ -210,7 +210,7 @@ pub fn update_overview(
                 payload.ruleset, payload.multiclass_data, now,
             ],
         )
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| format!("Failed to save character overview: {}", e))?;
         Ok(serde_json::json!({"status": "saved"}))
     })
 }

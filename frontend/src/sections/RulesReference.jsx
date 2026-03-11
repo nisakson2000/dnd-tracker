@@ -4,6 +4,15 @@ import { GLOSSARY, ACTION_ECONOMY } from '../data/helpText';
 
 const CATEGORIES = [...new Set(GLOSSARY.map(g => g.category))];
 
+function highlightText(text, query) {
+  if (!query) return text;
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
+  return parts.map((part, i) =>
+    part.toLowerCase() === query.toLowerCase() ? <mark key={i} style={{ background: 'rgba(201,168,76,0.3)', color: 'inherit' }}>{part}</mark> : part
+  );
+}
+
 export default function RulesReference() {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
@@ -82,8 +91,8 @@ export default function RulesReference() {
             <div key={entry.term} className="card py-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h4 className="text-amber-100 font-medium text-sm">{entry.term}</h4>
-                  <p className="text-xs text-amber-200/60 mt-1 leading-relaxed">{entry.definition}</p>
+                  <h4 className="text-amber-100 font-medium text-sm">{highlightText(entry.term, search)}</h4>
+                  <p className="text-xs text-amber-200/60 mt-1 leading-relaxed">{highlightText(entry.definition, search)}</p>
                 </div>
                 <span className="text-xs text-purple-300/40 whitespace-nowrap">{entry.category}</span>
               </div>

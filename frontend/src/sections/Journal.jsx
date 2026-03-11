@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Trash2, Edit2, BookMarked, Search, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
@@ -12,6 +12,7 @@ export default function Journal({ characterId }) {
   const [editing, setEditing] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [sortBy, setSortBy] = useState('date');
 
   const load = async () => {
     try {
@@ -26,7 +27,7 @@ export default function Journal({ characterId }) {
   const handleAdd = async (data) => {
     try {
       await addJournalEntry(characterId, data);
-      toast.success('Entry added');
+      toast.success('Entry saved');
       setShowAdd(false);
       load();
     } catch (err) { toast.error(err.message); }
@@ -35,7 +36,7 @@ export default function Journal({ characterId }) {
   const handleUpdate = async (id, data) => {
     try {
       await updateJournalEntry(characterId, id, data);
-      toast.success('Entry updated');
+      toast.success('Entry saved');
       setEditing(null);
       load();
     } catch (err) { toast.error(err.message); }
@@ -44,17 +45,24 @@ export default function Journal({ characterId }) {
   const handleDelete = async (id) => {
     try {
       await deleteJournalEntry(characterId, id);
-      toast.success('Entry deleted');
+      toast('Entry removed');
       setConfirmDelete(null);
       load();
     } catch (err) { toast.error(err.message); }
   };
 
-  const filtered = entries.filter(e => {
+  const filtered = useMemo(() => entries.filter(e => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return (e.title || '').toLowerCase().includes(q) || (e.body || '').toLowerCase().includes(q) || (e.tags || '').toLowerCase().includes(q);
-  });
+  }), [entries, searchQuery]);
+
+  const sorted = useMemo(() => [...filtered].sort((a, b) => {
+    if (sortBy === 'date') return (b.real_date || '').localeCompare(a.real_date || '');
+    if (sortBy === 'session') return (b.session_number || 0) - (a.session_number || 0);
+    if (sortBy === 'title') return (a.title || '').localeCompare(b.title || '');
+    return 0;
+  }), [filtered, sortBy]);
 
   if (loading) return <div className="text-amber-200/40">Loading journal...</div>;
 
@@ -73,18 +81,33 @@ export default function Journal({ characterId }) {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-200/30" />
-        <input className="input w-full pl-9" placeholder="Search entries..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+      {/* Search + Sort */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-200/30" />
+          <input className="input w-full pl-9" placeholder="Search entries..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-amber-200/40">Sort:</span>
+          {[['date', 'Date'], ['session', 'Session #'], ['title', 'Title A-Z']].map(([key, label]) => (
+            <button key={key} onClick={() => setSortBy(key)}
+              className={`text-xs px-2.5 py-1 rounded ${sortBy === key ? 'bg-gold/20 text-gold border border-gold/30' : 'bg-amber-200/5 text-amber-200/40 border border-amber-200/10'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Entries */}
       {filtered.length === 0 ? (
-        <div className="card text-center text-amber-200/30 py-8">No journal entries yet. After each session, jot down what happened — key events, plot hooks, and things you want to remember.</div>
+        <div className="card border-dashed border-amber-200/10 text-center py-12">
+          <BookMarked size={32} className="mx-auto text-amber-200/15 mb-3" />
+          <p className="text-sm text-amber-200/30 mb-1">No journal entries yet — record your first adventure</p>
+          <p className="text-xs text-amber-200/20">After each session, jot down key events, plot hooks, and things you want to remember</p>
+        </div>
       ) : (
         <div className="space-y-4">
-          {filtered.map(entry => (
+          {sorted.map(entry => (
             <div key={entry.id} className="card">
               <div className="flex items-start justify-between mb-2">
                 <div>
@@ -101,10 +124,10 @@ export default function Journal({ characterId }) {
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={() => setEditing(entry)} className="text-amber-200/40 hover:text-amber-200">
+                  <button onClick={() => setEditing(entry)} className="text-amber-200/40 hover:text-amber-200" aria-label={`Edit ${entry.title || 'entry'}`}>
                     <Edit2 size={14} />
                   </button>
-                  <button onClick={() => setConfirmDelete(entry)} className="text-red-400/50 hover:text-red-400">
+                  <button onClick={() => setConfirmDelete(entry)} className="text-red-400/50 hover:text-red-400" aria-label={`Delete ${entry.title || 'entry'}`}>
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -147,20 +170,34 @@ function JournalForm({ entry, nextSessionNumber = 1, onSubmit, onCancel }) {
     title: '', session_number: nextSessionNumber, real_date: new Date().toISOString().split('T')[0],
     ingame_date: '', body: '', tags: '',
   });
-  const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
+  const [titleError, setTitleError] = useState(false);
+  const update = (f, v) => {
+    if (f === 'title') setTitleError(false);
+    setForm(prev => ({ ...prev, [f]: v }));
+  };
+  const handleSubmit = () => {
+    if (!form.title.trim()) { setTitleError(true); return; }
+    onSubmit(form);
+  };
 
   useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
+    const handler = (e) => {
+      if (e.key === 'Escape') onCancel();
+      if (e.ctrlKey && e.key === 'Enter' && form.title.trim()) { e.preventDefault(); handleSubmit(); }
+    };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [onCancel]);
+  }, [onCancel, onSubmit, form]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={e => e.target === e.currentTarget && onCancel()}>
       <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-lg w-full mx-4 max-h-[85vh] overflow-y-auto">
         <h3 className="font-display text-lg text-amber-100 mb-4">{entry ? 'Edit Entry' : 'New Journal Entry'}</h3>
         <div className="space-y-3">
-          <input className="input w-full" placeholder="Title" value={form.title} onChange={e => update('title', e.target.value)} autoFocus />
+          <div>
+            <input className={`input w-full ${titleError ? 'border-red-500' : ''}`} placeholder="Title" value={form.title} onChange={e => update('title', e.target.value)} autoFocus />
+            {titleError && <p className="text-red-400 text-xs mt-1">Title required</p>}
+          </div>
           <div className="grid grid-cols-3 gap-3">
             <div><label className="label">Session #</label><input type="number" className="input w-full" value={form.session_number} onChange={e => update('session_number', parseInt(e.target.value) || 0)} /></div>
             <div><label className="label">Date</label><input type="date" className="input w-full" value={form.real_date} onChange={e => update('real_date', e.target.value)} /></div>
@@ -172,8 +209,9 @@ function JournalForm({ entry, nextSessionNumber = 1, onSubmit, onCancel }) {
           <input className="input w-full" placeholder="Tags (comma separated)" value={form.tags} onChange={e => update('tags', e.target.value)} />
         </div>
         <div className="flex gap-3 justify-end mt-4">
+          <span className="text-xs text-amber-200/30 self-center mr-auto">Ctrl+Enter to save</span>
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
-          <button onClick={() => form.title && onSubmit(form)} className="btn-primary text-sm">{entry ? 'Save' : 'Add'}</button>
+          <button onClick={handleSubmit} className="btn-primary text-sm">{entry ? 'Save' : 'Add'}</button>
         </div>
       </div>
     </div>

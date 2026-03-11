@@ -131,12 +131,34 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
+      {/* Character Count */}
+      {!loading && (
+        <p className="text-sm text-amber-200/30 mb-6">
+          {characters.length === 0 ? 'No characters yet' : `${characters.length} Character${characters.length !== 1 ? 's' : ''}`}
+        </p>
+      )}
+
       {/* Character Grid */}
       {loading ? (
-        <div className="text-amber-200/40">Loading characters...</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
+          {[0, 1, 2].map(i => (
+            <div key={i} className="card animate-pulse">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-amber-200/5" />
+                <div className="h-5 w-32 bg-amber-200/5 rounded" />
+              </div>
+              <div className="h-3 w-40 bg-amber-200/5 rounded mb-2" />
+              <div className="h-3 w-24 bg-amber-200/5 rounded mb-4" />
+              <div className="flex gap-2 mt-auto">
+                <div className="h-8 flex-1 bg-amber-200/5 rounded" />
+                <div className="h-8 w-10 bg-amber-200/5 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
-          {characters.map((char, i) => (
+          {characters.filter(Boolean).map((char, i) => (
             <motion.div
               key={char.id}
               className="card group"
@@ -150,7 +172,7 @@ export default function Dashboard() {
                     {char.name?.[0] || '?'}
                   </div>
                   <h3 className="font-display text-xl text-amber-100 truncate">
-                    {char.name}
+                    {char.name || 'Unknown'}
                   </h3>
                 </div>
               </div>
@@ -162,12 +184,12 @@ export default function Dashboard() {
                 <div className="flex items-center gap-3 text-xs text-amber-200/40 mb-1">
                   {char.max_hp > 0 && (
                     <span className="flex items-center gap-1">
-                      <Heart size={10} className="text-red-400" /> {char.current_hp}/{char.max_hp} HP
+                      <Heart size={10} className="text-red-400" /> {char.current_hp ?? 0}/{char.max_hp ?? 0} HP
                     </span>
                   )}
                   {char.armor_class > 0 && (
                     <span className="flex items-center gap-1">
-                      <Shield size={10} className="text-amber-200/60" /> AC {char.armor_class}
+                      <Shield size={10} className="text-amber-200/60" /> AC {char.armor_class ?? 10}
                     </span>
                   )}
                 </div>
@@ -208,6 +230,10 @@ export default function Dashboard() {
           <motion.div
             className="card border-dashed flex flex-col items-center justify-center min-h-[200px] cursor-pointer hover:border-gold/50 transition-colors"
             onClick={() => setShowCreate(true)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowCreate(true); } }}
+            tabIndex={0}
+            role="button"
+            aria-label="Create new character"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: characters.length * 0.1 }}

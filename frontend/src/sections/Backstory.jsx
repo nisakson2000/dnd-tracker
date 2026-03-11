@@ -112,6 +112,7 @@ export default function Backstory({ characterId, onPortraitChange }) {
                 onClick={removePortrait}
                 className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-900/80 border border-red-500/50 text-red-300 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-800"
                 title="Remove portrait"
+                aria-label="Remove portrait"
               >
                 <Trash2 size={14} />
               </button>
@@ -158,6 +159,16 @@ export default function Backstory({ characterId, onPortraitChange }) {
             preview="edit"
           />
         </div>
+        {(() => {
+          const text = data.backstory_text || '';
+          const chars = text.length;
+          const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+          return (
+            <div className="text-xs text-amber-200/25 mt-1.5 text-right">
+              {words} {words === 1 ? 'word' : 'words'} / {chars} {chars === 1 ? 'character' : 'characters'}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Personality */}

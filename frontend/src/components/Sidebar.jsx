@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   ScrollText, BookOpen, Shield, Sparkles, Swords,
   BookMarked, Users, Map, Globe, Dice5, ArrowLeft, User, Download,
-  Library, Settings2, Heart, Bell,
+  Library, Settings2, Heart, Bell, Bug,
 } from 'lucide-react';
 
 const SECTION_GROUPS = [
@@ -33,6 +33,7 @@ const SECTION_GROUPS = [
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
       { id: 'export',     label: 'Export & Import',    icon: Download },
+      { id: 'bugreport', label: 'Bug Report',         icon: Bug },
       { id: 'updates',    label: 'Updates',            icon: Bell },
     ],
   },
@@ -54,10 +55,11 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
   const fillColor = hpColor(hp, maxHp);
 
   return (
-    <aside style={{ width: 'var(--sidebar-w, 240px)', minHeight: '100vh', background: 'rgba(4,4,11,0.6)', backdropFilter: 'blur(var(--panel-blur, 16px))', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
+    <aside role="navigation" aria-label="Character sections" style={{ width: 'var(--sidebar-w, 240px)', minHeight: '100vh', background: 'rgba(4,4,11,0.6)', backdropFilter: 'blur(var(--panel-blur, 16px))', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
       {/* Back button */}
       <button
         onClick={onBack}
+        title="Back to Dashboard"
         style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '12px', color: 'var(--text-dim)', background: 'none', border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'color 0.15s', fontFamily: 'var(--font-ui)', fontWeight: 500 }}
         onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
         onMouseLeave={e => e.currentTarget.style.color = 'var(--text-dim)'}
@@ -131,6 +133,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
                 <button
                   key={id}
                   onClick={() => onSelect(id)}
+                  aria-current={active ? 'page' : undefined}
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
                     padding: 'calc(7px * var(--density, 1)) 14px', fontSize: 'calc(12px * var(--font-scale, 1))', cursor: 'pointer',

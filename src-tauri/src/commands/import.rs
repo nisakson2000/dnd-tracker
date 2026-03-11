@@ -70,13 +70,14 @@ pub fn import_character(
             // Ensure row exists
             conn.execute("INSERT OR IGNORE INTO character_overview (id, name) VALUES (1, 'New Character')", []).map_err(|e| e.to_string())?;
 
+            // SAFETY: field names are from hardcoded arrays below, not user input — no injection risk.
             let str_fields = ["name", "race", "subrace", "primary_class", "primary_subclass",
                 "background", "alignment", "senses", "languages", "proficiencies_armor",
                 "proficiencies_weapons", "proficiencies_tools", "campaign_name", "hit_dice_total", "multiclass_data"];
             for field in &str_fields {
                 if let Some(val) = ov.get(*field) {
                     let sql = format!("UPDATE character_overview SET {} = ?1 WHERE id=1", field);
-                    conn.execute(&sql, [safe_str(val, "")]).map_err(|e| e.to_string())?;
+                    conn.execute(&sql, [safe_str(val, "")]).map_err(|e| format!("Failed to import field '{}': {}", field, e))?;
                 }
             }
             let int_fields = ["level", "experience_points", "max_hp", "current_hp", "temp_hp",
@@ -85,7 +86,7 @@ pub fn import_character(
             for field in &int_fields {
                 if let Some(val) = ov.get(*field) {
                     let sql = format!("UPDATE character_overview SET {} = ?1 WHERE id=1", field);
-                    conn.execute(&sql, [safe_i64(val, 0)]).map_err(|e| e.to_string())?;
+                    conn.execute(&sql, [safe_i64(val, 0)]).map_err(|e| format!("Failed to import field '{}': {}", field, e))?;
                 }
             }
             if let Some(val) = ov.get("inspiration") {
@@ -146,13 +147,14 @@ pub fn import_character(
         // Backstory
         if let Some(bs) = payload.get("backstory").and_then(|v| v.as_object()) {
             conn.execute("INSERT OR IGNORE INTO backstory (id) VALUES (1)", []).map_err(|e| e.to_string())?;
+            // SAFETY: field names are from hardcoded array below, not user input.
             let fields = ["backstory_text", "personality_traits", "ideals", "bonds", "flaws",
                 "age", "height", "weight", "eyes", "hair", "skin",
                 "allies_organizations", "appearance_notes", "goals_motivations"];
             for field in &fields {
                 if let Some(val) = bs.get(*field) {
                     let sql = format!("UPDATE backstory SET {} = ?1 WHERE id=1", field);
-                    conn.execute(&sql, [safe_str(val, "")]).map_err(|e| e.to_string())?;
+                    conn.execute(&sql, [safe_str(val, "")]).map_err(|e| format!("Failed to import backstory field '{}': {}", field, e))?;
                 }
             }
             imported.insert("backstory".to_string(), serde_json::json!(true));

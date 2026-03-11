@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -13,18 +13,22 @@ import { useLevelUp } from '../hooks/useLevelUp';
 import { useCrashRecovery } from '../hooks/useCrashRecovery';
 import { useAutoBackup } from '../hooks/useAutoBackup';
 import { useUpdateCheck } from '../hooks/useUpdateCheck';
-import Overview from '../sections/Overview';
-import Backstory from '../sections/Backstory';
-import Spellbook from '../sections/Spellbook';
-import Inventory from '../sections/Inventory';
-import Features from '../sections/Features';
-import Combat from '../sections/Combat';
-import NPCs from '../sections/NPCs';
-import Quests from '../sections/Quests';
-import DiceRoller from '../sections/DiceRoller';
-import Settings from '../sections/Settings';
-import Updates from '../sections/Updates';
+import { useErrorLog, setErrorContext } from '../hooks/useErrorLog';
+import { invoke } from '@tauri-apps/api/core';
+import { APP_VERSION } from '../version';
 
+const Overview = lazy(() => import('../sections/Overview'));
+const Backstory = lazy(() => import('../sections/Backstory'));
+const Spellbook = lazy(() => import('../sections/Spellbook'));
+const Inventory = lazy(() => import('../sections/Inventory'));
+const Features = lazy(() => import('../sections/Features'));
+const Combat = lazy(() => import('../sections/Combat'));
+const NPCs = lazy(() => import('../sections/NPCs'));
+const Quests = lazy(() => import('../sections/Quests'));
+const DiceRoller = lazy(() => import('../sections/DiceRoller'));
+const Settings = lazy(() => import('../sections/Settings'));
+const Updates = lazy(() => import('../sections/Updates'));
+const BugReport = lazy(() => import('../sections/BugReport'));
 const Journal = lazy(() => import('../sections/Journal'));
 const Lore = lazy(() => import('../sections/Lore'));
 const RulesReference = lazy(() => import('../sections/RulesReference'));
@@ -45,6 +49,7 @@ const SECTIONS = {
   rules: RulesReference,
   settings: Settings,
   export: ExportImport,
+  bugreport: BugReport,
   updates: Updates,
 };
 
@@ -65,6 +70,46 @@ export default function CharacterView() {
   useCrashRecovery();
   useAutoBackup(characterId, character?.name);
   const { updateAvailable, checkResult, latestVersion, currentVersion } = useUpdateCheck();
+  const { errors, pushError, clearErrors } = useErrorLog();
+
+  // Keep error context in sync with active section
+  useEffect(() => {
+    setErrorContext({ section: activeSection });
+  }, [activeSection]);
+
+  // Keep error context in sync with loaded character data
+  useEffect(() => {
+    if (character) {
+      setErrorContext({
+        characterId,
+        characterName: character.name || null,
+        characterClass: character.primary_class || null,
+        characterLevel: character.level || null,
+        characterRace: character.race || null,
+      });
+    }
+  }, [characterId, character]);
+
+  // When a bug report comes in via Party Connect, write it to desktop (dev builds auto-write)
+  const handlePartyBugReport = useCallback((msg) => {
+    if (import.meta.env.DEV) {
+      const divider = '═'.repeat(60);
+      const lines = [
+        divider,
+        `REMOTE BUG REPORT — ${msg.timestamp || new Date().toISOString()}`,
+        divider,
+        `Reporter : ${msg.reporter || 'Unknown'}`,
+        `Client ID: ${msg.client_id || 'N/A'}`,
+        '',
+        JSON.stringify(msg.report || {}, null, 2),
+        '',
+        divider,
+        '',
+      ];
+      invoke('write_bug_report', { report: lines.join('\n') }).catch(() => {});
+    }
+    toast(`Bug report from ${msg.reporter || 'a player'}`, { icon: '\uD83D\uDC1B', duration: 4000 });
+  }, []);
 
   // Show toast notification when update check completes
   useEffect(() => {
@@ -95,16 +140,21 @@ export default function CharacterView() {
       const data = await getOverview(characterId);
       setCharacter(data.overview);
       // Load condition count and portrait
+      let condFailed = false;
+      let backstoryFailed = false;
       try {
         const conds = await getConditions(characterId);
         const activeConds = (conds || []).filter(c => c.active);
         setActiveConditionCount(activeConds.length);
         setActiveConditions(activeConds.map(c => c.name));
-      } catch (e) { console.warn('Failed to load conditions:', e); }
+      } catch (e) { console.warn('Failed to load conditions:', e); condFailed = true; }
       try {
         const bs = await getBackstory(characterId);
         if (bs.portrait_data) setPortrait(bs.portrait_data);
-      } catch (e) { console.warn('Failed to load backstory:', e); }
+      } catch (e) { console.warn('Failed to load backstory:', e); backstoryFailed = true; }
+      if (condFailed && backstoryFailed) {
+        toast('Some data failed to load', { icon: '\u26A0\uFE0F', duration: 2000 });
+      }
     } catch (err) {
       toast.error(`Failed to load character: ${err.message}`);
       navigate('/');
@@ -123,6 +173,18 @@ export default function CharacterView() {
         e.preventDefault();
         const idx = parseInt(e.key) - 1;
         if (SHORTCUT_SECTIONS[idx]) setActiveSection(SHORTCUT_SECTIONS[idx]);
+      }
+      if (e.ctrlKey && e.shiftKey && e.key === '?') {
+        e.preventDefault();
+        toast(
+          'Keyboard Shortcuts:\n' +
+          'Ctrl+1–9 — Switch sections\n' +
+          'Ctrl+S — Prevented (auto-saves)\n' +
+          'Escape — Close open forms/modals\n' +
+          'Ctrl+Enter — Save form (Journal)\n' +
+          'Ctrl+Shift+/ — Show this help',
+          { duration: 6000, style: { whiteSpace: 'pre-line', textAlign: 'left', background: '#1a1520', color: '#fde68a', border: '1px solid rgba(201,168,76,0.4)' } }
+        );
       }
     };
     window.addEventListener('keydown', handler);
@@ -215,6 +277,9 @@ export default function CharacterView() {
                 activeConditions={activeConditions}
                 diceHistory={diceHistory}
                 onDiceHistoryChange={setDiceHistory}
+                errors={errors}
+                onClearErrors={clearErrors}
+                onBugReport={handlePartyBugReport}
               />
             </Suspense>
           </main>

@@ -81,7 +81,7 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
       const modeTag = advInfo ? (advInfo.mode === 'advantage' ? ' (ADV)' : ' (DIS)') : '';
       const label = rollLabel || autoLabel;
       const entry = {
-        id: Date.now(),
+        id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
         expr: `${count}d${sides}${modifier > 0 ? `+${modifier}` : modifier < 0 ? modifier : ''}${modeTag}`,
         label,
         rolls,
@@ -176,7 +176,8 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
           {DICE.map(sides => (
             <button key={sides} onClick={() => handleQuickRoll(sides)}
               className="w-16 h-16 rounded-lg bg-[#0d0d12] border-2 border-gold/20 hover:border-gold/50 transition-all flex flex-col items-center justify-center group hover:shadow-[0_0_15px_rgba(201,168,76,0.2)]"
-              title={DIE_TIPS[sides]}
+              aria-label={`Roll d${sides}`}
+              title={`Roll 1d${sides} — ${DIE_TIPS[sides]}`}
             >
               <span className="text-lg font-display text-gold group-hover:text-amber-100 transition-colors">d{sides}</span>
               <span className="text-[9px] text-amber-200/30 group-hover:text-amber-200/50">{DIE_LABELS[sides]}</span>
@@ -191,7 +192,7 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
         <div className="flex gap-2">
           <input
             className="input flex-1"
-            placeholder="e.g. 3d6+5, 2d8-1"
+            placeholder="e.g. 2d6+3, 4d8, 1d20+5"
             value={customExpr}
             onChange={e => setCustomExpr(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleCustomRoll()}
@@ -205,6 +206,8 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
         {lastRoll && (
           <motion.div
             key={lastRoll.id}
+            aria-live="polite"
+            aria-label={`Roll result: ${lastRoll.expr} = ${lastRoll.total}${lastRoll.isNat20 ? ', Natural 20!' : ''}${lastRoll.isNat1 ? ', Natural 1' : ''}`}
             className={`card text-center ${lastRoll.isNat20 ? 'border-gold shadow-[0_0_30px_rgba(201,168,76,0.3)]' : lastRoll.isNat1 ? 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.3)]' : ''}`}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -251,7 +254,7 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
       {/* Roll History */}
       <div className="card">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-display text-amber-100">Roll History</h3>
+          <h3 className="font-display text-amber-100">Roll History{history.length > 0 && <span className="text-amber-200/30 text-sm font-normal ml-2">({history.length} {history.length === 1 ? 'roll' : 'rolls'})</span>}</h3>
           {history.length > 0 && (
             <button onClick={() => setHistory([])} className="text-xs text-amber-200/30 hover:text-amber-200/60 transition-colors">
               Clear

@@ -31,9 +31,14 @@ export function useUpdateCheck() {
     setChecking(true);
     setCheckResult(null);
     try {
+      const signal = AbortSignal.timeout ? AbortSignal.timeout(5000) : (() => {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), 5000);
+        return controller.signal;
+      })();
       const res = await fetch(VERSION_MANIFEST_URL, {
         cache: 'no-store',
-        signal: AbortSignal.timeout(6000),
+        signal,
       });
       if (!res.ok) throw new Error('fetch failed');
       const data = await res.json();

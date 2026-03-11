@@ -37,12 +37,24 @@ impl AppState {
 
     /// Get or create a connection for a character
     pub fn get_char_conn(&self, character_id: &str) -> Result<(), String> {
-        let mut conns = self.connections.lock().map_err(|e| e.to_string())?;
+        let mut conns = self.connections.lock().map_err(|_| {
+            "Database is temporarily busy. Please try again.".to_string()
+        })?;
         if conns.contains_key(character_id) {
             return Ok(());
         }
+        // Limit cached connections to prevent memory exhaustion
+        if conns.len() >= 100 {
+            eprintln!("[db] Connection cache full ({} entries), evicting oldest", conns.len());
+            // Remove a random entry to make room (all are equally valid to evict)
+            if let Some(key) = conns.keys().next().cloned() {
+                conns.remove(&key);
+            }
+        }
         let db_path = self.char_db_path(character_id);
-        let conn = open_connection(&db_path).map_err(|e| e.to_string())?;
+        let conn = open_connection(&db_path).map_err(|e| {
+            format!("Failed to open character database: {}", e)
+        })?;
         conns.insert(character_id.to_string(), Mutex::new(conn));
         Ok(())
     }
@@ -53,26 +65,38 @@ impl AppState {
         F: FnOnce(&Connection) -> Result<T, String>,
     {
         self.get_char_conn(character_id)?;
-        let conns = self.connections.lock().map_err(|e| e.to_string())?;
-        let conn_mutex = conns.get(character_id).ok_or("Connection not found")?;
-        let conn = conn_mutex.lock().map_err(|e| e.to_string())?;
+        let conns = self.connections.lock().map_err(|_| {
+            "Database is temporarily busy. Please try again.".to_string()
+        })?;
+        let conn_mutex = conns.get(character_id).ok_or(
+            "Character database connection not found. Please try again.".to_string()
+        )?;
+        let conn = conn_mutex.lock().map_err(|_| {
+            "Character database is locked by another operation. Please try again.".to_string()
+        })?;
         f(&conn)
     }
 
     /// Remove a character's connection from the cache
     pub fn remove_char_conn(&self, character_id: &str) -> Result<(), String> {
-        let mut conns = self.connections.lock().map_err(|e| e.to_string())?;
+        let mut conns = self.connections.lock().map_err(|_| {
+            "Database is temporarily busy. Please try again.".to_string()
+        })?;
         conns.remove(character_id);
         Ok(())
     }
 }
 
-/// Open a SQLite connection with WAL mode and foreign keys
+/// Open a SQLite connection with WAL mode, foreign keys, and performance tuning
 pub fn open_connection(path: &Path) -> SqlResult<Connection> {
     let conn = Connection::open(path)?;
+    conn.busy_timeout(std::time::Duration::from_secs(5))?;
     conn.execute_batch(
         "PRAGMA journal_mode=WAL;
-         PRAGMA foreign_keys=ON;"
+         PRAGMA foreign_keys=ON;
+         PRAGMA synchronous=NORMAL;
+         PRAGMA cache_size=-8000;
+         PRAGMA temp_store=MEMORY;"
     )?;
     Ok(conn)
 }

@@ -116,22 +116,74 @@ npm run tauri build
 ## Changelog Summary
 
 ### V0.2.3 — The Big 10
-Attack roll buttons, dice roll labels, persistent dice history, XP progress bar, concentration tracking, feature uses/charges, multiclass display, NPC role avatars, condition duration timers, NPC card styling.
+- **Attack Roll Buttons** — click the dice icon on any weapon to instantly roll d20 + attack bonus and damage with crit detection (nat 20 doubles damage dice)
+- **Dice Roll Labels** — add context like "Stealth check" or "Longsword attack" that appears in your roll history
+- **Dice History Persistence** — roll history now survives tab switches so you never lose past rolls
+- **XP Progress Bar** — visual progress bar showing XP toward next level using official D&D 5e thresholds (levels 1-20)
+- **Concentration Tracking** — click the C badge on any concentration spell to track it; warns when switching spells, shows active banner with CON save DC reminder
+- **Feature Uses/Charges** — track limited-use abilities (Rage 2/day, Action Surge 1/short rest) with visual charge circles, spend/restore on click, recharge type badges
+- **Multiclass Display** — multiclass_data JSON now renders as class/subclass/level badges in the Identity card
+- **NPC Role Avatars** — NPCs show colored circle avatars with initials (green=ally, red=enemy, amber=neutral, blue=party) and role-colored card borders
+- **Condition Duration Timers** — set rounds on active conditions, "Next Round" button auto-decrements all timers and auto-expires conditions at 0
+- **NPC Card Styling** — cards have role-colored borders and subtle background tints for instant visual scanning
 
 ### V0.2.2 — Automatic Condition Effects
-Conditions auto-apply D&D 5e mechanical effects (speed, saves, attacks). Update check toast notifications. Party Connect + character creation bug fixes.
+- **Condition Mechanical Effects** — active conditions now auto-apply their D&D 5e effects: Grappled/Restrained/Paralyzed set speed to 0, Paralyzed/Stunned auto-fail STR/DEX saves, Blinded/Poisoned/Restrained impose disadvantage on attacks
+- **Effects Summary Banner** — Overview and Combat sections show all active penalties at a glance (speed, saves, attacks, checks)
+- **Saving Throw Badges** — AUTO-FAIL and DIS badges appear on saving throws when relevant conditions are active
+- **Dice Roller Integration** — advantage/disadvantage auto-set based on active conditions
+- **Condition Button Styling** — active conditions have stronger red highlighting with glow effect
+- **Update Check Toast** — confirms up-to-date, update available, or offline status via toast notification
+- **Bug Fixes** — Party Connect join/leave messages, character creation race/class/subclass saving, ability score input styling, missing skill/save creation on updates, Party MemberCard null crash
 
 ### V0.2.1 — Connection Hardening
-Auto-reconnect, connection timeout, host reassignment, zombie cleanup, bounded channels.
+- **Auto-Reconnect** — Party Connect reconnects automatically with exponential backoff (1s, 2s, 4s, 8s) on WiFi drops
+- **Connection Timeout** — 8-second timeout with clear error toasts instead of silent hangs
+- **Host Reassignment** — when the original host disconnects, a new host is assigned so the room stays alive
+- **Graceful Shutdown** — host ending session notifies all connected players
+- **Zombie Cleanup** — inactive clients automatically removed after 90 seconds of no ping
+- **Bounded Channels** — message channels capped to prevent memory leaks from slow clients
+- **Sync Improvements** — auto-sync now tracks name, race, and class changes (not just HP/AC)
+- **Security** — removed hardcoded GitHub repo URL from JS bundle, switched to neutral version manifest
+- **Bug Fixes** — stale WebSocket closures via callback refs, ping interval leak on reconnect, silent error swallowing in file operations, React key warnings across multiple components
 
 ### V0.2.0 — LAN Party & Auto-Updates
-Party Connect over LAN, auto-update check, Midnight Glass V3 UI, settings overhaul.
+- **Party Connect** — host shows your local IP, joiners enter IP + room code for reliable cross-device LAN play
+- **Cross-Build Compatibility** — dev builds and production builds can connect to each other seamlessly
+- **Auto-Update Check** — checks GitHub releases on launch, downloads installer directly if update available
+- **Update Screen** — startup screen with animated progress bar and version comparison
+- **Midnight Glass V3 UI** — glassmorphism panels, 6 preset themes (Midnight Glass, Ember Forge, Blood Pact, Arcane Sea, Fey Wild, Void Walker), per-ability score colors
+- **Settings Overhaul** — 4-tab settings panel with font family, font scale, UI density, and layout controls
+- **Subclass Selection** — moved to level-up flow at the appropriate class level instead of character creation
+- **Version Sync** — VERSION, version.js, tauri.conf.json, Cargo.toml all kept in sync
 
 ### V0.1.8 — Character Creation & Auto-Backup
-Expanded creation flow, race traits/class features display, auto-backup, crash recovery.
+- **Expanded Character Creation** — choose race, class, and optional subclass during setup; identity fields locked after creation
+- **Race & Class Display** — race traits and class features shown on character sheet by level
+- **Auto-Backup** — automatic backup every 5 minutes to a single overwriting JSON file with crash recovery
+- **Expanded Ruleset** — 30+ races, all 12 classes with full feature lists for D&D 5e 2014
+- **Portrait Upload** — drag-and-drop character portrait support in Tauri (PNG/JPEG/WebP/GIF, max 2 MB)
+- **Party UI Rework** — color-coded member cards with role indicators
 
 ### V0.1.5 — Tauri Migration
-Migrated from Python/FastAPI to native Tauri 2 desktop app.
+- **Native Desktop App** — migrated from Python/FastAPI backend to Tauri 2 (Rust) for a single-binary native app
+- **IPC Communication** — frontend communicates via Tauri IPC commands instead of REST API
+- **Single-Command Launch** — `npm run tauri dev` starts everything
+- **OS App Data** — character data stored in the OS-standard app data directory
+- **Bundled Wiki** — wiki.db shipped as a Tauri resource, auto-copied on first launch
+- **Native Installer** — production build creates .msi/.exe (Windows) or .deb/.AppImage (Linux)
 
 ### V0.1.0 — Initial Release
-Full character sheet, spellbook, inventory, combat, journal, quests, NPCs, lore, dice roller, wiki, party sync, level-up system.
+- Full character sheet with ability scores, saving throws, skills, HP tracking, death saves, inspiration, exhaustion
+- Spellbook with spell slot tracking, prepared spells, Warlock pact magic support
+- Inventory with 40+ preloaded weapons/armor, currency tracking, encumbrance, attunement (max 3)
+- Combat tracker with 15 D&D 5e conditions, action economy reference, combat notes
+- Campaign journal with markdown editor, session numbering, tags, full-text search
+- Quest tracker with objectives, checkboxes, progress tracking, status management
+- NPC tracker with roles, status, descriptions, notes, locations
+- Lore & World Notes with categories and search
+- Arcane Encyclopedia — 964-article searchable wiki with SQLite FTS5
+- Party Connect — LAN sync with room codes for real-time character sharing
+- Dice roller with d4-d100, custom expressions, advantage/disadvantage, nat 20/1 detection
+- Level-up system with animated overlay and class-specific stat gains
+- 5 UI themes, beginner tutorial wizard, contextual help tooltips

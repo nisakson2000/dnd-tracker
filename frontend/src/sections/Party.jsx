@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Users, Wifi, WifiOff, Copy, Check, LogIn, LogOut, Crown, Heart, Shield, RefreshCw, Signal } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
@@ -10,16 +10,18 @@ const RECONNECT_DELAYS = [1000, 2000, 4000, 8000]; // backoff steps
 
 // ─── WebSocket hook ──────────────────────────────────────────────────────────
 
-function usePartySocket({ hostIp, roomCode, character, onMembers, onJoined, onUpdated, onLeft }) {
+function usePartySocket({ hostIp, roomCode, character, onMembers, onJoined, onUpdated, onLeft, onBugReport }) {
   const wsRef = useRef(null);
   const [status, setStatus] = useState('disconnected');
   const pingIntervalRef = useRef(null);
   const reconnectTimerRef = useRef(null);
   const reconnectCountRef = useRef(0);
   const intentionalCloseRef = useRef(false);
-  // Keep latest callbacks in refs to avoid stale closures
-  const cbRef = useRef({ onMembers, onJoined, onUpdated, onLeft });
-  cbRef.current = { onMembers, onJoined, onUpdated, onLeft };
+  // Keep latest values in refs to avoid stale closures during reconnect
+  const cbRef = useRef({ onMembers, onJoined, onUpdated, onLeft, onBugReport });
+  cbRef.current = { onMembers, onJoined, onUpdated, onLeft, onBugReport };
+  const connRef = useRef({ hostIp, roomCode, character });
+  connRef.current = { hostIp, roomCode, character };
 
   const clearTimers = useCallback(() => {
     if (pingIntervalRef.current) { clearInterval(pingIntervalRef.current); pingIntervalRef.current = null; }
@@ -28,13 +30,21 @@ function usePartySocket({ hostIp, roomCode, character, onMembers, onJoined, onUp
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) return;
-    if (!roomCode || !hostIp) return;
+    const { hostIp: ip, roomCode: code, character: char } = connRef.current;
+    if (!code || !ip) return;
 
     clearTimers();
     setStatus('connecting');
     intentionalCloseRef.current = false;
 
-    const ws = new WebSocket(`ws://${hostIp}:${PARTY_PORT}/party/ws`);
+    let ws;
+    try {
+      ws = new WebSocket(`ws://${ip}:${PARTY_PORT}/party/ws`);
+    } catch (err) {
+      setStatus('disconnected');
+      toast.error('Invalid WebSocket URL — check the host IP', { duration: 5000 });
+      return;
+    }
     wsRef.current = ws;
 
     // Connection timeout — if we don't get onopen within CONNECT_TIMEOUT_MS, give up
@@ -48,13 +58,33 @@ function usePartySocket({ hostIp, roomCode, character, onMembers, onJoined, onUp
 
     ws.onopen = () => {
       clearTimeout(timeout);
-      setStatus('connected');
       reconnectCountRef.current = 0;
-      ws.send(JSON.stringify({ type: 'join', room: roomCode, character }));
-      // Start keepalive pings
-      pingIntervalRef.current = setInterval(() => {
-        if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'ping', room: roomCode }));
-      }, 25000);
+      ws.send(JSON.stringify({ type: 'join', room: code, character: char }));
+      // Wait for welcome message before marking connected — timeout after 5s
+      const welcomeTimeout = setTimeout(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          setStatus('disconnected');
+          ws.close();
+          toast.error('Joined server but room handshake failed — check your room code', { duration: 5000 });
+        }
+      }, 5000);
+      // Patch onmessage to detect welcome and clear the timeout
+      const origOnMessage = ws.onmessage;
+      ws.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === 'welcome') {
+            clearTimeout(welcomeTimeout);
+            setStatus('connected');
+            // Start keepalive pings only after welcome — read code from ref for freshness
+            pingIntervalRef.current = setInterval(() => {
+              const rc = connRef.current.roomCode;
+              if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'ping', room: rc }));
+            }, 25000);
+          }
+        } catch { /* handled below */ }
+        if (origOnMessage) origOnMessage.call(ws, e);
+      };
     };
 
     ws.onmessage = (e) => {
@@ -62,12 +92,16 @@ function usePartySocket({ hostIp, roomCode, character, onMembers, onJoined, onUp
         const msg = JSON.parse(e.data);
         if (msg.type === 'welcome') cbRef.current.onMembers(msg.members, msg.you);
         else if (msg.type === 'player_joined') cbRef.current.onJoined(msg.member);
-        else if (msg.type === 'updated' || msg.type === 'sync_event') cbRef.current.onUpdated(msg.member || msg);
-        else if (msg.type === 'player_disconnected') cbRef.current.onLeft(msg.client_id);
+        else if (msg.type === 'updated' && msg.member) cbRef.current.onUpdated(msg.member);
+        else if (msg.type === 'player_disconnected' || msg.type === 'left') cbRef.current.onLeft(msg.client_id);
         else if (msg.type === 'host_ended') {
           toast('The host ended the session', { icon: '🏰', duration: 4000 });
           intentionalCloseRef.current = true;
         }
+        else if (msg.type === 'host_promoted') {
+          toast('You are now the host', { icon: '👑', duration: 4000 });
+        }
+        else if (msg.type === 'bug_report' && cbRef.current.onBugReport) cbRef.current.onBugReport(msg);
         else if (msg.type === 'error') toast.error(msg.message);
         // pong is silently accepted (keepalive ack)
       } catch { /* ignore parse errors */ }
@@ -102,7 +136,7 @@ function usePartySocket({ hostIp, roomCode, character, onMembers, onJoined, onUp
         toast.error('Could not connect — is the host running and on the same network?', { duration: 5000 });
       }
     };
-  }, [hostIp, roomCode, character, clearTimers]);
+  }, [clearTimers]);
 
   const disconnect = useCallback(() => {
     intentionalCloseRef.current = true;
@@ -116,12 +150,19 @@ function usePartySocket({ hostIp, roomCode, character, onMembers, onJoined, onUp
   }, [clearTimers]);
 
   const sendUpdate = useCallback((char) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN && roomCode)
-      wsRef.current.send(JSON.stringify({ type: 'update', room: roomCode, character: char }));
-  }, [roomCode]);
+    const code = connRef.current.roomCode;
+    if (wsRef.current?.readyState === WebSocket.OPEN && code)
+      wsRef.current.send(JSON.stringify({ type: 'update', room: code, character: char }));
+  }, []);
+
+  const sendBugReport = useCallback((report) => {
+    const code = connRef.current.roomCode;
+    if (wsRef.current?.readyState === WebSocket.OPEN && code)
+      wsRef.current.send(JSON.stringify({ type: 'bug_report', room: code, report }));
+  }, []);
 
   useEffect(() => () => { intentionalCloseRef.current = true; clearTimers(); wsRef.current?.close(); }, [clearTimers]);
-  return { status, connect, disconnect, sendUpdate };
+  return { status, connect, disconnect, sendUpdate, sendBugReport };
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -169,7 +210,7 @@ function MemberCard({ member, isYou, colorIndex = 0 }) {
           <div style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '13px', color: '#e8d9b5', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {character.name || 'Unknown'}
           </div>
-          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontFamily: 'Outfit, sans-serif' }}>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontFamily: 'Outfit, sans-serif', maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {[character.race, character.primary_class].filter(Boolean).join(' ')}
             {character.level ? ` · Lv ${character.level}` : ''}
           </div>
@@ -188,7 +229,7 @@ function MemberCard({ member, isYou, colorIndex = 0 }) {
             {isDead ? '💀 Down' : `${hp} / ${maxHp}`}
           </span>
         </div>
-        <div className="party-mini-bar">
+        <div className="party-mini-bar" role="progressbar" aria-label={`${character.name || 'Unknown'} HP: ${hp} of ${maxHp}`} aria-valuenow={hp} aria-valuemin={0} aria-valuemax={maxHp}>
           <div className="party-mini-bar-fill" style={{ width: `${hpPct}%`, background: hpBarColor(hp, maxHp) }} />
         </div>
       </div>
@@ -212,7 +253,7 @@ function StatusDot({ status }) {
 
 // ─── Main ────────────────────────────────────────────────────────────────────
 
-export default function Party({ characterId, character }) {
+export default function Party({ characterId, character, onBugReport }) {
   const [mode, setMode] = useState(null);
   const [roomCode, setRoomCode] = useState('');
   const [hostIp, setHostIp] = useState('');
@@ -224,7 +265,7 @@ export default function Party({ characterId, character }) {
   const [autoSync, setAutoSync] = useState(true);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
-  const charSnapshot = {
+  const charSnapshot = useMemo(() => ({
     id: characterId,
     name: character?.name || 'Unknown',
     race: character?.race || '',
@@ -233,7 +274,7 @@ export default function Party({ characterId, character }) {
     hp: character?.current_hp ?? character?.max_hp ?? 0,
     max_hp: character?.max_hp ?? 0,
     ac: character?.armor_class ?? 10,
-  };
+  }), [characterId, character?.name, character?.race, character?.primary_class, character?.level, character?.current_hp, character?.max_hp, character?.armor_class]);
 
   // The IP used for the WebSocket connection
   const wsIp = mode === 'host' ? 'localhost' : joinIp;
@@ -254,15 +295,23 @@ export default function Party({ characterId, character }) {
     });
   }, []);
 
-  const { status, connect, disconnect, sendUpdate } = usePartySocket({
+  const { status, connect, disconnect, sendUpdate, sendBugReport } = usePartySocket({
     hostIp: wsIp, roomCode, character: charSnapshot,
     onMembers: handleMembers, onJoined: handleJoined, onUpdated: handleUpdated, onLeft: handleLeft,
+    onBugReport: onBugReport,
   });
 
   // Auto-sync when any tracked character stat changes
+  const prevStatsRef = useRef(null);
   useEffect(() => {
-    if (status === 'connected' && autoSync) sendUpdate(charSnapshot);
+    if (status !== 'connected' || !autoSync) return;
+    // Only send if values actually changed (avoid firing on mount or sendUpdate recreation)
+    const key = `${character?.current_hp}|${character?.max_hp}|${character?.armor_class}|${character?.level}|${character?.name}|${character?.race}|${character?.primary_class}`;
+    if (prevStatsRef.current === key) return;
+    prevStatsRef.current = key;
+    sendUpdate(charSnapshot);
   }, [
+    status, autoSync, sendUpdate,
     character?.current_hp, character?.max_hp, character?.armor_class,
     character?.level, character?.name, character?.race, character?.primary_class,
   ]);
@@ -309,6 +358,7 @@ export default function Party({ characterId, character }) {
     try {
       await navigator.clipboard.writeText(`${roomCode} · ${hostIp}`);
       setCopied(true);
+      toast.success(`Copied: ${roomCode} \u00B7 ${hostIp}`);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('Could not copy to clipboard');
@@ -440,7 +490,7 @@ export default function Party({ characterId, character }) {
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xs text-amber-200/30">{members.length} player{members.length !== 1 ? 's' : ''}</span>
-              <button onClick={copyCode} className="flex items-center gap-1.5 text-xs text-amber-200/50 hover:text-amber-200 border border-amber-200/15 hover:border-amber-200/30 rounded px-2.5 py-1.5 transition-colors">
+              <button onClick={copyCode} className="flex items-center gap-1.5 text-xs text-amber-200/50 hover:text-amber-200 border border-amber-200/15 hover:border-amber-200/30 rounded px-2.5 py-1.5 transition-colors" aria-label="Copy room code and IP">
                 {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
                 {copied ? 'Copied!' : 'Copy'}
               </button>
@@ -489,12 +539,20 @@ export default function Party({ characterId, character }) {
       {status === 'connected' && (
         <div className="flex items-center justify-between text-xs text-amber-200/30 pt-1 border-t border-amber-200/8">
           <span>Auto-sync HP/AC when you take damage</span>
-          <label className="flex items-center gap-2 cursor-pointer" onClick={() => setAutoSync(v => !v)}>
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => setAutoSync(v => !v)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAutoSync(v => !v); } }}
+            tabIndex={0}
+            role="switch"
+            aria-checked={autoSync}
+            aria-label="Auto-sync HP/AC"
+          >
             <div className={`w-8 h-4 rounded-full transition-colors relative ${autoSync ? 'bg-gold/40' : 'bg-amber-200/10'}`}>
               <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white/80 transition-all ${autoSync ? 'left-4' : 'left-0.5'}`} />
             </div>
             <span className={autoSync ? 'text-gold/60' : ''}>{autoSync ? 'On' : 'Off'}</span>
-          </label>
+          </div>
         </div>
       )}
 

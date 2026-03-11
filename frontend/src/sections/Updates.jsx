@@ -7,10 +7,15 @@ import { invoke } from '@tauri-apps/api/core';
 
 export default function Updates() {
   const { updateAvailable, latestVersion, checking, lastChecked, checkResult, currentVersion } = useUpdateCheck();
-  const [expandedVersion, setExpandedVersion] = useState(CHANGELOG[0]?.version || null);
+  // Always start expanded since we only show the current version
+  const [expandedVersion, setExpandedVersion] = useState(currentVersion || CHANGELOG[0]?.version || null);
 
-  // Only show last 5 versions
-  const recentVersions = CHANGELOG.slice(0, 5);
+  // Only show current version — full history on GitHub
+  const recentVersions = CHANGELOG.filter(
+    e => e.version === currentVersion || e.version === `v${currentVersion}` || `v${e.version}` === currentVersion
+  );
+  // Fallback: if no exact match, show the first entry (latest)
+  const displayVersions = recentVersions.length > 0 ? recentVersions : CHANGELOG.slice(0, 1);
 
   return (
     <div style={{ maxWidth: '640px' }}>
@@ -36,7 +41,7 @@ export default function Updates() {
             </div>
             <button
               onClick={() => {
-                try { invoke('plugin:shell|open', { path: 'https://github.com/nisakson2000/dnd-tracker' }); } catch {}
+                try { invoke('plugin:shell|open', { path: 'https://github.com/nisakson2000/dnd-tracker' }); } catch { /* non-critical: link open may fail in dev mode */ }
               }}
               className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors bg-transparent border-none cursor-pointer"
             >
@@ -60,10 +65,21 @@ export default function Updates() {
         )}
       </div>
 
-      {/* Changelog — last 5 versions */}
-      <h3 className="text-[10px] font-mono tracking-widest uppercase text-amber-200/25 mb-3">Recent Versions</h3>
+      {/* Changelog — current version only */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-[10px] font-mono tracking-widest uppercase text-amber-200/25">What's New</h3>
+        <button
+          onClick={() => {
+            try { invoke('plugin:shell|open', { path: 'https://github.com/nisakson2000/dnd-tracker/blob/main/MASTERUPDATELIST.md' }); } catch { /* non-critical */ }
+          }}
+          className="flex items-center gap-1 text-[10px] text-amber-200/30 hover:text-amber-200/60 transition-colors bg-transparent border-none cursor-pointer"
+          style={{ fontFamily: 'inherit' }}
+        >
+          <ExternalLink size={10} /> Full changelog
+        </button>
+      </div>
       <div className="space-y-3">
-        {recentVersions.map((entry) => {
+        {displayVersions.map((entry) => {
           const isExpanded = expandedVersion === entry.version;
           const isCurrent = entry.version === currentVersion || entry.version === `v${currentVersion}` || `v${entry.version}` === currentVersion;
 

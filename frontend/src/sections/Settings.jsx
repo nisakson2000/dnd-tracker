@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Settings2, Palette, Type, LayoutGrid, Wifi, RotateCcw } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Party from './Party';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const PRESET_THEMES = [
   { id: 'midnight-glass', label: 'Midnight Glass', accent: '#7c3aed', bg: '#04040b', swatches: ['#7c3aed','#a78bfa','#60a5fa'] },
@@ -71,7 +73,11 @@ function loadV3Settings() {
 }
 
 function saveV3Settings(s) {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  } catch (err) {
+    toast.error('Failed to save settings — localStorage may be full or disabled');
+  }
 }
 
 function applyV3Settings(s) {
@@ -108,10 +114,11 @@ function applyV3Settings(s) {
 const initialSettings = loadV3Settings();
 applyV3Settings(initialSettings);
 
-export default function Settings({ characterId, character }) {
+export default function Settings({ characterId, character, onBugReport }) {
   const [settings, setSettings] = useState(() => loadV3Settings());
   const [activeTab, setActiveTab] = useState('interface');
   const [customHex, setCustomHex] = useState(settings.accent);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const update = useCallback((updates) => {
     setSettings(prev => {
@@ -176,6 +183,10 @@ export default function Settings({ characterId, character }) {
                 key={theme.id}
                 className={`preset ${settings.preset === theme.id ? 'on' : ''}`}
                 onClick={() => update({ preset: theme.id, accent: theme.accent, bg: theme.bg })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ preset: theme.id, accent: theme.accent, bg: theme.bg }); } }}
+                tabIndex={0}
+                role="button"
+                aria-pressed={settings.preset === theme.id}
               >
                 <div className="preset-bg" style={{ background: `linear-gradient(135deg, ${theme.bg}, ${lighten(theme.bg)})` }}>
                   {theme.swatches.map((sw, i) => (
@@ -195,6 +206,11 @@ export default function Settings({ characterId, character }) {
                 className={`cswatch ${settings.accent === hex ? 'on' : ''}`}
                 style={{ background: hex }}
                 onClick={() => { update({ accent: hex, preset: '' }); setCustomHex(hex); }}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ accent: hex, preset: '' }); setCustomHex(hex); } }}
+                tabIndex={0}
+                role="button"
+                aria-label={`Accent color ${hex}`}
+                aria-pressed={settings.accent === hex}
               />
             ))}
           </div>
@@ -223,23 +239,23 @@ export default function Settings({ characterId, character }) {
           <div className="sp-sec">Panel Style</div>
           <div className="tog-row">
             <div><div className="tog-label">Glassmorphism blur</div><div className="tog-desc">Frosted glass panel backgrounds</div></div>
-            <div className={`toggle ${settings.blur ? 'on' : ''}`} onClick={() => update({ blur: !settings.blur })} />
+            <div className={`toggle ${settings.blur ? 'on' : ''}`} onClick={() => update({ blur: !settings.blur })} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ blur: !settings.blur }); } }} tabIndex={0} role="switch" aria-checked={settings.blur} />
           </div>
           <div className="tog-row">
             <div><div className="tog-label">Noise texture</div><div className="tog-desc">Subtle film grain on panels</div></div>
-            <div className={`toggle ${settings.noise ? 'on' : ''}`} onClick={() => update({ noise: !settings.noise })} />
+            <div className={`toggle ${settings.noise ? 'on' : ''}`} onClick={() => update({ noise: !settings.noise })} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ noise: !settings.noise }); } }} tabIndex={0} role="switch" aria-checked={settings.noise} />
           </div>
           <div className="tog-row">
             <div><div className="tog-label">Ambient glow</div><div className="tog-desc">Colored radial glow behind content</div></div>
-            <div className={`toggle ${settings.ambientGlow ? 'on' : ''}`} onClick={() => update({ ambientGlow: !settings.ambientGlow })} />
+            <div className={`toggle ${settings.ambientGlow ? 'on' : ''}`} onClick={() => update({ ambientGlow: !settings.ambientGlow })} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ ambientGlow: !settings.ambientGlow }); } }} tabIndex={0} role="switch" aria-checked={settings.ambientGlow} />
           </div>
           <div className="tog-row">
             <div><div className="tog-label">Shimmer animations</div><div className="tog-desc">HP bar and card shimmer effects</div></div>
-            <div className={`toggle ${settings.shimmer ? 'on' : ''}`} onClick={() => update({ shimmer: !settings.shimmer })} />
+            <div className={`toggle ${settings.shimmer ? 'on' : ''}`} onClick={() => update({ shimmer: !settings.shimmer })} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ shimmer: !settings.shimmer }); } }} tabIndex={0} role="switch" aria-checked={settings.shimmer} />
           </div>
           <div className="tog-row">
             <div><div className="tog-label">Ability color accents</div><div className="tog-desc">Per-stat colors on ability cards</div></div>
-            <div className={`toggle ${settings.abilityColors ? 'on' : ''}`} onClick={() => update({ abilityColors: !settings.abilityColors })} />
+            <div className={`toggle ${settings.abilityColors ? 'on' : ''}`} onClick={() => update({ abilityColors: !settings.abilityColors })} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ abilityColors: !settings.abilityColors }); } }} tabIndex={0} role="switch" aria-checked={settings.abilityColors} />
           </div>
         </div>
       )}
@@ -254,6 +270,10 @@ export default function Settings({ characterId, character }) {
                 key={f.family}
                 className={`fpick ${settings.displayFont === f.family ? 'on' : ''}`}
                 onClick={() => update({ displayFont: f.family })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ displayFont: f.family }); } }}
+                tabIndex={0}
+                role="button"
+                aria-pressed={settings.displayFont === f.family}
               >
                 <div className="fpick-name" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>{f.label || f.family}</div>
                 <div className="fpick-sample" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>+4 Strength</div>
@@ -268,6 +288,10 @@ export default function Settings({ characterId, character }) {
                 key={f.family}
                 className={`fpick ${settings.bodyFont === f.family ? 'on' : ''}`}
                 onClick={() => update({ bodyFont: f.family })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ bodyFont: f.family }); } }}
+                tabIndex={0}
+                role="button"
+                aria-pressed={settings.bodyFont === f.family}
               >
                 <div className="fpick-name" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>{f.label || f.family}</div>
                 <div className="fpick-sample" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>Character Sheet</div>
@@ -299,6 +323,10 @@ export default function Settings({ characterId, character }) {
                 key={d.v}
                 className={`dbtn ${settings.density === d.v ? 'on' : ''}`}
                 onClick={() => update({ density: d.v })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ density: d.v }); } }}
+                tabIndex={0}
+                role="button"
+                aria-pressed={settings.density === d.v}
               >
                 <div style={{ fontSize: '18px', marginBottom: '4px' }}>{d.icon}</div>
                 {d.label}
@@ -355,14 +383,22 @@ export default function Settings({ characterId, character }) {
             </div>
           </div>
 
-          <button className="reset-btn" onClick={resetAll}>↺ Reset all to defaults</button>
+          <button className="reset-btn" onClick={() => setShowResetConfirm(true)}>↺ Reset all to defaults</button>
         </div>
       )}
 
       {/* ── PARTY TAB ── */}
       {activeTab === 'party' && (
-        <Party characterId={characterId} character={character} />
+        <Party characterId={characterId} character={character} onBugReport={onBugReport} />
       )}
+
+      <ConfirmDialog
+        show={showResetConfirm}
+        title="Reset Settings?"
+        message="This will restore all interface, typography, and layout settings to their defaults."
+        onConfirm={() => { resetAll(); setShowResetConfirm(false); }}
+        onCancel={() => setShowResetConfirm(false)}
+      />
     </div>
   );
 }

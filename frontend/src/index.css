@@ -590,6 +590,25 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 }
 .reset-btn:hover { background: rgba(239,68,68,0.14); border-color: rgba(239,68,68,0.35); }
 
+/* ── Performance: GPU-accelerated animated elements ── */
+.hp-fill, .sidebar-hp-fill, .party-mini-bar-fill, .toggle::after {
+  will-change: width, transform;
+}
+.ab-card, .preset {
+  will-change: transform;
+}
+/* Layout containment for independent sections */
+.card, .glass, .ab-card, .vcard, .cst, .party-card {
+  contain: layout style;
+}
+
+/* ── Text overflow safety ── */
+.idv, .ph-title, .preset-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── Animations ── */
 @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }

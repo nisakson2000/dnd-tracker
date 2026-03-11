@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Users } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Trash2, Edit2, Users, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getNPCs, addNPC, updateNPC, deleteNPC } from '../api/npcs';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -24,6 +24,8 @@ export default function NPCs({ characterId }) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('name');
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   const load = async () => {
@@ -58,9 +60,30 @@ export default function NPCs({ characterId }) {
     } catch (err) { toast.error(err.message); }
   };
 
-  const filtered = filter === 'all' ? npcs : npcs.filter(n => n.role === filter);
-  const roleCount = {};
-  ROLES.forEach(r => { roleCount[r] = npcs.filter(n => n.role === r).length; });
+  const filtered = useMemo(() => npcs.filter(n => {
+    if (filter !== 'all' && n.role !== filter) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!(n.name || '').toLowerCase().includes(q) && !(n.location || '').toLowerCase().includes(q) && !(n.description || '').toLowerCase().includes(q) && !(n.notes || '').toLowerCase().includes(q)) return false;
+    }
+    return true;
+  }), [npcs, filter, searchQuery]);
+
+  const roleCount = useMemo(() => {
+    const counts = {};
+    ROLES.forEach(r => { counts[r] = npcs.filter(n => n.role === r).length; });
+    return counts;
+  }, [npcs]);
+
+  const sorted = useMemo(() => [...filtered].sort((a, b) => {
+    if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
+    if (sortBy === 'role') return (a.role || '').localeCompare(b.role || '');
+    if (sortBy === 'status') {
+      const order = { alive: 0, unknown: 1, dead: 2 };
+      return (order[a.status] ?? 9) - (order[b.status] ?? 9);
+    }
+    return 0;
+  }), [filtered, sortBy]);
 
   if (loading) return <div className="text-amber-200/40">Loading NPCs...</div>;
 
@@ -79,23 +102,45 @@ export default function NPCs({ characterId }) {
         </button>
       </div>
 
-      <div className="flex gap-2">
-        {['all', ...ROLES].map(r => (
-          <button key={r} onClick={() => setFilter(r)}
-            className={`text-xs px-3 py-1 rounded capitalize flex items-center gap-1.5 ${filter === r ? 'bg-gold/20 text-gold border border-gold/30' : 'text-amber-200/40 border border-amber-200/10'}`}>
-            {r}
-            {r !== 'all' && roleCount[r] > 0 && (
-              <span className="text-[10px] bg-white/10 px-1.5 py-0 rounded-full">{roleCount[r]}</span>
-            )}
-          </button>
-        ))}
+      {npcs.length > 0 && (
+        <div className="relative">
+          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-200/30 pointer-events-none" />
+          <input className="input w-full pl-10" placeholder="Search NPCs by name, location, or description..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+        </div>
+      )}
+
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex gap-2">
+          {['all', ...ROLES].map(r => (
+            <button key={r} onClick={() => setFilter(r)}
+              className={`text-xs px-3 py-1 rounded capitalize flex items-center gap-1.5 ${filter === r ? 'bg-gold/20 text-gold border border-gold/30' : 'text-amber-200/40 border border-amber-200/10'}`}>
+              {r}
+              {r !== 'all' && roleCount[r] > 0 && (
+                <span className="text-[10px] bg-white/10 px-1.5 py-0 rounded-full">{roleCount[r]}</span>
+              )}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5 ml-auto">
+          <span className="text-xs text-amber-200/40">Sort:</span>
+          {[['name', 'Name A-Z'], ['role', 'Role'], ['status', 'Status']].map(([key, label]) => (
+            <button key={key} onClick={() => setSortBy(key)}
+              className={`text-xs px-2.5 py-1 rounded ${sortBy === key ? 'bg-gold/20 text-gold border border-gold/30' : 'bg-amber-200/5 text-amber-200/40 border border-amber-200/10'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="card text-center text-amber-200/30 py-8">No NPCs recorded. Add the characters you meet during your adventures — allies, enemies, shopkeepers, quest givers, and more.</div>
+        <div className="card border-dashed border-amber-200/10 text-center py-12">
+          <Users size={32} className="mx-auto text-amber-200/15 mb-3" />
+          <p className="text-sm text-amber-200/30 mb-1">No NPCs tracked yet — add the characters you meet</p>
+          <p className="text-xs text-amber-200/20">Record allies, enemies, shopkeepers, quest givers, and everyone in between</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filtered.map(npc => {
+          {sorted.map(npc => {
             const colors = ROLE_COLORS[npc.role] || ROLE_COLORS.neutral;
             return (
               <div key={npc.id} className={`card ${colors.cardBg} border ${colors.cardBorder}`}>
@@ -120,8 +165,8 @@ export default function NPCs({ characterId }) {
                         </div>
                       </div>
                       <div className="flex gap-1 flex-shrink-0">
-                        <button onClick={() => { setEditing(npc); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>
-                        <button onClick={() => setConfirmDelete(npc)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>
+                        <button onClick={() => { setEditing(npc); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200" aria-label={`Edit ${npc.name || 'NPC'}`}><Edit2 size={14} /></button>
+                        <button onClick={() => setConfirmDelete(npc)} className="text-red-400/50 hover:text-red-400" aria-label={`Delete ${npc.name || 'NPC'}`}><Trash2 size={14} /></button>
                       </div>
                     </div>
                     {npc.race && <p className="text-xs text-amber-200/40 mt-1">{[npc.race, npc.npc_class].filter(Boolean).join(' · ')}</p>}
@@ -155,7 +200,15 @@ function NPCForm({ npc, onSubmit, onCancel }) {
   const [form, setForm] = useState(npc || {
     name: '', role: 'neutral', race: '', npc_class: '', location: '', description: '', notes: '', status: 'alive',
   });
-  const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
+  const [nameError, setNameError] = useState(false);
+  const update = (f, v) => {
+    if (f === 'name') setNameError(false);
+    setForm(prev => ({ ...prev, [f]: v }));
+  };
+  const handleSubmit = () => {
+    if (!form.name.trim()) { setNameError(true); return; }
+    onSubmit(form);
+  };
 
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onCancel(); };
@@ -168,7 +221,10 @@ function NPCForm({ npc, onSubmit, onCancel }) {
       <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="font-display text-lg text-amber-100 mb-4">{npc ? 'Edit NPC' : 'Add NPC'}</h3>
         <div className="space-y-3">
-          <input className="input w-full" placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
+          <div>
+            <input className={`input w-full ${nameError ? 'border-red-500' : ''}`} placeholder="e.g. Elara Brightheart" value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
+            {nameError && <p className="text-red-400 text-xs mt-1">Name required</p>}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <select className="input w-full" value={form.role} onChange={e => update('role', e.target.value)}>
               {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
@@ -181,13 +237,13 @@ function NPCForm({ npc, onSubmit, onCancel }) {
             <input className="input w-full" placeholder="Race" value={form.race} onChange={e => update('race', e.target.value)} />
             <input className="input w-full" placeholder="Class" value={form.npc_class} onChange={e => update('npc_class', e.target.value)} />
           </div>
-          <input className="input w-full" placeholder="Location" value={form.location} onChange={e => update('location', e.target.value)} />
+          <input className="input w-full" placeholder="e.g. Waterdeep, The Rusty Anchor..." value={form.location} onChange={e => update('location', e.target.value)} />
           <textarea className="input w-full h-20 resize-none" placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} />
           <textarea className="input w-full h-16 resize-none" placeholder="Notes" value={form.notes} onChange={e => update('notes', e.target.value)} />
         </div>
         <div className="flex gap-3 justify-end mt-4">
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
-          <button onClick={() => form.name && onSubmit(form)} className="btn-primary text-sm">{npc ? 'Save' : 'Add'}</button>
+          <button onClick={handleSubmit} className="btn-primary text-sm">{npc ? 'Save' : 'Add'}</button>
         </div>
       </div>
     </div>

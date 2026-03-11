@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Swords, Dice5, Timer, MinusCircle } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { Plus, Trash2, Swords, Dice5, Timer, MinusCircle, X, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAttacks, addAttack, deleteAttack, getConditions, updateConditions, getCombatNotes, updateCombatNotes } from '../api/combat';
 import { useAutosave } from '../hooks/useAutosave';
@@ -43,6 +43,14 @@ export default function Combat({ characterId, onConditionsChange }) {
   const [showConditionInfo, setShowConditionInfo] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [rollResults, setRollResults] = useState({});
+  const rollTimeoutRefs = useRef({});
+
+  // Clean up pending roll timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(rollTimeoutRefs.current).forEach(clearTimeout);
+    };
+  }, []);
 
   const load = async () => {
     try {
@@ -114,8 +122,9 @@ export default function Combat({ characterId, onConditionsChange }) {
   };
 
   const setConditionDuration = async (condName, rounds) => {
+    const safeRounds = isNaN(rounds) ? 0 : Math.max(0, rounds);
     const updated = conditions.map(c =>
-      c.name === condName ? { ...c, duration_rounds: rounds, rounds_remaining: rounds } : c
+      c.name === condName ? { ...c, duration_rounds: safeRounds, rounds_remaining: safeRounds } : c
     );
     setConditions(updated);
     try { await updateConditions(characterId, updated); }
@@ -158,18 +167,25 @@ export default function Combat({ characterId, onConditionsChange }) {
       dmgResult = { rolls, total: dmgTotal, crit: isNat20 };
     }
 
+    const ts = Date.now();
     setRollResults(prev => ({
       ...prev,
-      [atk.id]: { d20, bonus, total, isNat20, isNat1, damage: dmgResult, ts: Date.now() },
+      [atk.id]: { d20, bonus, total, isNat20, isNat1, damage: dmgResult, ts },
     }));
 
+    // Clear previous timeout for this attack if any
+    if (rollTimeoutRefs.current[atk.id]) {
+      clearTimeout(rollTimeoutRefs.current[atk.id]);
+    }
+
     // Clear after 8 seconds
-    setTimeout(() => {
+    rollTimeoutRefs.current[atk.id] = setTimeout(() => {
       setRollResults(prev => {
         const next = { ...prev };
-        if (next[atk.id]?.ts === Date.now()) delete next[atk.id];
+        if (next[atk.id]?.ts === ts) delete next[atk.id];
         return next;
       });
+      delete rollTimeoutRefs.current[atk.id];
     }, 8000);
   };
 
@@ -222,27 +238,28 @@ export default function Combat({ characterId, onConditionsChange }) {
                     <button
                       onClick={() => rollAttack(atk)}
                       className="w-10 h-10 rounded-lg bg-gold/10 border border-gold/30 hover:bg-gold/20 hover:border-gold/50 transition-all flex items-center justify-center flex-shrink-0 group"
-                      title="Roll attack + damage"
+                      title="Roll to attack"
+                      aria-label={`Roll attack for ${atk.name || 'attack'}`}
                     >
                       <Dice5 size={18} className="text-gold group-hover:text-amber-100 transition-colors" />
                     </button>
                     {/* Attack info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3">
-                        <span className="text-amber-100 font-medium">{atk.name}</span>
-                        <span className="text-gold text-sm">{atk.attack_bonus}</span>
-                        <span className="text-amber-200/60 text-sm">{atk.damage_dice} {atk.damage_type && <span className="text-amber-200/40">{atk.damage_type}</span>}</span>
+                        <span className="text-amber-100 font-medium">{atk.name || 'Unnamed Attack'}</span>
+                        <span className="text-gold text-sm">{atk.attack_bonus ?? '+0'}</span>
+                        <span className="text-amber-200/60 text-sm">{atk.damage_dice ?? '—'} {atk.damage_type && <span className="text-amber-200/40">{atk.damage_type}</span>}</span>
                         {atk.attack_range && <span className="text-amber-200/30 text-xs">{atk.attack_range}</span>}
                       </div>
                     </div>
-                    <button onClick={() => setConfirmDelete(atk)} className="text-red-400/50 hover:text-red-400 flex-shrink-0">
+                    <button onClick={() => setConfirmDelete(atk)} className="text-red-400/50 hover:text-red-400 flex-shrink-0" aria-label={`Delete ${atk.name || 'attack'}`}>
                       <Trash2 size={14} />
                     </button>
                   </div>
 
                   {/* Roll result */}
                   {result && (
-                    <div className={`px-4 py-2 border-t flex items-center gap-4 text-sm ${
+                    <div aria-live="polite" className={`px-4 py-2 border-t flex items-center gap-4 text-sm ${
                       result.isNat20 ? 'border-gold/30 bg-gold/5' : result.isNat1 ? 'border-red-500/30 bg-red-950/20' : 'border-gold/10 bg-white/[0.02]'
                     }`}>
                       <div className="flex items-center gap-2">
@@ -266,7 +283,8 @@ export default function Combat({ characterId, onConditionsChange }) {
                           <button
                             onClick={() => rollDamageOnly(atk)}
                             className="flex items-center gap-1.5 hover:text-amber-100 transition-colors"
-                            title="Re-roll damage"
+                            title="Roll damage only"
+                            aria-label={`Re-roll damage for ${atk.name || 'attack'}`}
                           >
                             <span className="text-xs text-amber-200/30">[{result.damage.rolls.join(',')}]</span>
                             <span className={`font-bold ${result.damage.crit ? 'text-gold' : 'text-amber-100'}`}>
@@ -276,6 +294,14 @@ export default function Combat({ characterId, onConditionsChange }) {
                           </button>
                         </div>
                       )}
+                      <button
+                        onClick={() => setRollResults(prev => { const next = { ...prev }; delete next[atk.id]; return next; })}
+                        className="ml-auto text-amber-200/30 hover:text-amber-200/60 transition-colors flex-shrink-0"
+                        title="Dismiss"
+                        aria-label="Dismiss roll result"
+                      >
+                        <X size={14} />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -349,7 +375,15 @@ function AttackForm({ onSubmit, onCancel }) {
   const [form, setForm] = useState({
     name: '', attack_bonus: '+0', damage_dice: '1d6', damage_type: '', attack_range: '', notes: '',
   });
-  const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
+  const [nameError, setNameError] = useState(false);
+  const update = (f, v) => {
+    if (f === 'name') setNameError(false);
+    setForm(prev => ({ ...prev, [f]: v }));
+  };
+  const handleSubmit = () => {
+    if (!form.name.trim()) { setNameError(true); return; }
+    onSubmit(form);
+  };
 
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onCancel(); };
@@ -362,10 +396,16 @@ function AttackForm({ onSubmit, onCancel }) {
       <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="font-display text-lg text-amber-100 mb-4">Add Attack</h3>
         <div className="space-y-3">
-          <input className="input w-full" placeholder="Weapon name" value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
+          <div>
+            <input className={`input w-full ${nameError ? 'border-red-500' : ''}`} placeholder="Weapon name" value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
+            {nameError && <p className="text-red-400 text-xs mt-1">Name required</p>}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <input className="input w-full" placeholder="Attack bonus" value={form.attack_bonus} onChange={e => update('attack_bonus', e.target.value)} />
-            <input className="input w-full" placeholder="Damage (e.g. 1d8+3)" value={form.damage_dice} onChange={e => update('damage_dice', e.target.value)} />
+            <div>
+              <input className="input w-full" placeholder="Damage (e.g. 1d8+3)" value={form.damage_dice} onChange={e => update('damage_dice', e.target.value)} />
+              <p className="text-amber-200/30 text-xs mt-1">e.g. 2d6+3</p>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <input className="input w-full" placeholder="Damage type" value={form.damage_type} onChange={e => update('damage_type', e.target.value)} />
@@ -375,7 +415,7 @@ function AttackForm({ onSubmit, onCancel }) {
         </div>
         <div className="flex gap-3 justify-end mt-4">
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
-          <button onClick={() => form.name && onSubmit(form)} className="btn-primary text-sm">Add</button>
+          <button onClick={handleSubmit} className="btn-primary text-sm">Add</button>
         </div>
       </div>
     </div>
@@ -385,9 +425,14 @@ function AttackForm({ onSubmit, onCancel }) {
 function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDuration, onTickRound }) {
   const [expanded, setExpanded] = useState(null);
   const [durationInput, setDurationInput] = useState({});
-  const activeNames = conditions.filter(c => c.active).map(c => c.name);
-  const effects = computeConditionEffects(activeNames);
+  const [conditionSearch, setConditionSearch] = useState('');
+  const activeNames = useMemo(() => conditions.filter(c => c.active).map(c => c.name), [conditions]);
+  const effects = useMemo(() => computeConditionEffects(activeNames), [activeNames]);
   const hasTimedConditions = conditions.some(c => c.active && c.rounds_remaining > 0);
+
+  const filteredConditions = useMemo(() => conditionSearch
+    ? conditions.filter(c => c.name.toLowerCase().includes(conditionSearch.toLowerCase()))
+    : conditions, [conditions, conditionSearch]);
 
   const handleConditionClick = (condName) => {
     onToggle(condName);
@@ -425,8 +470,14 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDur
       <p className="text-xs text-amber-200/30 mb-3">
         Left-click to toggle on/off. Right-click for rule description. Set duration in rounds for auto-expiry.
       </p>
+      {conditions.length > 6 && (
+        <div className="relative mb-3">
+          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-200/30 pointer-events-none" />
+          <input className="input w-full pl-10" placeholder="Filter conditions..." value={conditionSearch} onChange={e => setConditionSearch(e.target.value)} />
+        </div>
+      )}
       <div className="flex flex-wrap gap-2">
-        {conditions.map(cond => {
+        {filteredConditions.map(cond => {
           const effect = CONDITION_EFFECTS[cond.name];
           return (
             <div key={cond.name} className="relative">
@@ -457,6 +508,7 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDur
                     <button
                       onClick={(e) => { e.stopPropagation(); setExpanded(null); }}
                       className="text-amber-200/30 hover:text-amber-200/60 text-xs ml-2"
+                      aria-label="Close condition details"
                     >
                       &times;
                     </button>

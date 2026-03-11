@@ -1,6 +1,26 @@
-// In-app changelog — last 3 versions shown in the Updates panel.
+// In-app changelog — last 8 versions shown in the Updates panel.
+// Full history lives at: https://github.com/nisakson2000/dnd-tracker/blob/main/MASTERUPDATELIST.md
 // Bump this when releasing a new version.
 export const CHANGELOG = [
+  {
+    version: 'V0.2.4',
+    date: '03/11/2026 4:00 AM',
+    title: 'QOL Overhaul — Performance, Accessibility & Bug Reporter V3',
+    changes: [
+      'Bug Reporter V3 — rich error context (section, character, screen, UA), console.error interception, duplicate suppression, React warning noise filter',
+      'Bug report modal upgraded — numbered step builder, "What did you expect?" field, auto-detected environment, report IDs (USR-YYYYMMDD-NNN), character context chip',
+      'Python backend bug logging — HTTP error/slow request middleware, /dev/status endpoint, session summary on shutdown, fingerprint deduplication',
+      'Memoization pass — useMemo added across all 10 section components (Overview, Spellbook, Combat, Inventory, Journal, Features, NPCs, Quests, Lore, Party)',
+      'Null safety pass — guards added across 9 files for NaN, undefined, and missing data edge cases',
+      'Keyboard accessibility — 19 interactive elements fixed with tabIndex, role, aria-checked/pressed, onKeyDown (Settings, Overview, Dashboard, Party)',
+      'WCAG AA accessibility — aria-labels on icon-only buttons across 10 files, aria-live for dice/combat results, progressbar roles on HP/weight/quest bars, toast screen reader support',
+      'Bundle optimization — all 16 sections lazy-loaded (was 4), item catalog extracted to data file, main bundle 33% smaller (2496KB → 1682KB)',
+      'Rust backend hardening — party.rs error logging, rate limiting, room limits; db.rs connection pool cap; main.rs replaced all .expect() with .map_err()',
+      'SQLite tuning — busy_timeout(5s), synchronous=NORMAL, 8MB cache, temp_store=MEMORY',
+      'Fixed "Rendered more hooks than during the previous render" — useMemo calls moved before early return in Overview.jsx',
+      'Update check timeout reduced from 8s to 5s for faster startup on poor connections',
+    ],
+  },
   {
     version: 'V0.2.3',
     date: '03/10/2026 11:45 PM',

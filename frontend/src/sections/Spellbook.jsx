@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Trash2, ChevronDown, ChevronRight, Sparkles, RotateCcw, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getSpells, addSpell, updateSpell, deleteSpell, getSpellSlots, updateSpellSlots, resetSpellSlots } from '../api/spells';
@@ -8,7 +8,7 @@ import HelpTooltip from '../components/HelpTooltip';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { HELP } from '../data/helpText';
 
-function calcMod(score) { return Math.floor((score - 10) / 2); }
+function calcMod(score) { const s = typeof score === 'number' && !isNaN(score) ? score : 10; return Math.floor((s - 10) / 2); }
 
 // Subclasses that grant third-caster spellcasting
 const THIRD_CASTER_SUBCLASSES = {
@@ -26,6 +26,8 @@ export default function Spellbook({ characterId }) {
   const [showAdd, setShowAdd] = useState(false);
   const [editingSpell, setEditingSpell] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [levelFilter, setLevelFilter] = useState('all');
+  const [preparedFilter, setPreparedFilter] = useState('all');
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [concentratingOn, setConcentratingOn] = useState(null); // spell id
 
@@ -48,46 +50,56 @@ export default function Spellbook({ characterId }) {
 
   useEffect(() => { load(); }, [characterId]);
 
-  const filteredSpells = searchQuery
-    ? spells.filter(s => {
-        const q = searchQuery.toLowerCase();
-        return (s.name || '').toLowerCase().includes(q) || (s.school || '').toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q);
-      })
-    : spells;
+  const filteredSpells = useMemo(() => spells.filter(s => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!(s.name || '').toLowerCase().includes(q) && !(s.school || '').toLowerCase().includes(q) && !(s.description || '').toLowerCase().includes(q)) return false;
+    }
+    if (levelFilter !== 'all' && s.level !== parseInt(levelFilter, 10)) return false;
+    if (preparedFilter === 'prepared' && !s.prepared) return false;
+    if (preparedFilter === 'unprepared' && s.prepared) return false;
+    return true;
+  }), [spells, searchQuery, levelFilter, preparedFilter]);
 
-  const spellsByLevel = {};
-  for (let i = 0; i <= 9; i++) spellsByLevel[i] = [];
-  filteredSpells.forEach(s => {
-    if (!spellsByLevel[s.level]) spellsByLevel[s.level] = [];
-    spellsByLevel[s.level].push(s);
-  });
+  const spellsByLevel = useMemo(() => {
+    const byLevel = {};
+    for (let i = 0; i <= 9; i++) byLevel[i] = [];
+    filteredSpells.forEach(s => {
+      if (!byLevel[s.level]) byLevel[s.level] = [];
+      byLevel[s.level].push(s);
+    });
+    return byLevel;
+  }, [filteredSpells]);
 
   // Spellcasting calcs — handles base class casters and third-caster subclasses (EK/AT)
-  let spellAbility = '';
-  let spellMod = 0;
-  let spellDC = 0;
-  let spellAttack = 0;
-  let isThirdCaster = false;
-  if (charData) {
-    const cls = CLASSES.find(c => c.name === charData.overview.primary_class);
-    const subclass = charData.overview.primary_subclass;
-    const thirdCasterInfo = THIRD_CASTER_SUBCLASSES[subclass];
+  const { spellAbility, spellMod, spellDC, spellAttack, isThirdCaster } = useMemo(() => {
+    let ability = '';
+    let mod = 0;
+    let dc = 0;
+    let attack = 0;
+    let thirdCaster = false;
+    if (charData) {
+      const cls = CLASSES.find(c => c.name === charData.overview.primary_class);
+      const subclass = charData.overview.primary_subclass;
+      const thirdCasterInfo = THIRD_CASTER_SUBCLASSES[subclass];
 
-    if (cls?.spellcasting) {
-      spellAbility = cls.spellcasting.ability;
-    } else if (thirdCasterInfo && thirdCasterInfo.className === charData.overview.primary_class) {
-      spellAbility = thirdCasterInfo.ability;
-      isThirdCaster = true;
-    }
+      if (cls?.spellcasting) {
+        ability = cls.spellcasting.ability;
+      } else if (thirdCasterInfo && thirdCasterInfo.className === charData.overview.primary_class) {
+        ability = thirdCasterInfo.ability;
+        thirdCaster = true;
+      }
 
-    if (spellAbility) {
-      const abilScore = charData.ability_scores.find(a => a.ability === spellAbility);
-      spellMod = calcMod(abilScore?.score || 10);
-      const profBonus = PROFICIENCY_BONUS[charData.overview.level] || 2;
-      spellDC = 8 + profBonus + spellMod;
-      spellAttack = profBonus + spellMod;
+      if (ability) {
+        const abilScore = charData.ability_scores.find(a => a.ability === ability);
+        mod = calcMod(abilScore?.score || 10);
+        const profBonus = PROFICIENCY_BONUS[charData.overview.level] || 2;
+        dc = 8 + profBonus + mod;
+        attack = profBonus + mod;
+      }
     }
-  }
+    return { spellAbility: ability, spellMod: mod, spellDC: dc, spellAttack: attack, isThirdCaster: thirdCaster };
+  }, [charData, CLASSES, PROFICIENCY_BONUS]);
 
   const handleAddSpell = async (spellData) => {
     try {
@@ -158,9 +170,27 @@ export default function Spellbook({ characterId }) {
 
       {/* Spell Search */}
       {spells.length > 0 && (
-        <div className="relative">
-          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-200/30 pointer-events-none" />
-          <input className="input w-full pl-10" placeholder="Search spells by name, school, or description..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+        <div className="space-y-3">
+          <div className="relative">
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-200/30 pointer-events-none" />
+            <input className="input w-full pl-10" placeholder="Search spells by name, school, or description..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-amber-200/40">Level:</span>
+            {['all', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(lv => (
+              <button key={lv} onClick={() => setLevelFilter(lv)}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-all ${levelFilter === lv ? 'bg-gold/15 border-gold/30 text-gold' : 'border-amber-200/10 text-amber-200/30 hover:text-amber-200/50'}`}>
+                {lv === 'all' ? 'All' : lv === '0' ? 'Cantrip' : `${lv}${lv === '1' ? 'st' : lv === '2' ? 'nd' : lv === '3' ? 'rd' : 'th'}`}
+              </button>
+            ))}
+            <span className="text-xs text-amber-200/40 ml-2">Status:</span>
+            {['all', 'prepared', 'unprepared'].map(pf => (
+              <button key={pf} onClick={() => setPreparedFilter(pf)}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-all capitalize ${preparedFilter === pf ? 'bg-gold/15 border-gold/30 text-gold' : 'border-amber-200/10 text-amber-200/30 hover:text-amber-200/50'}`}>
+                {pf === 'all' ? 'All' : pf}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -171,7 +201,7 @@ export default function Spellbook({ characterId }) {
             <div className="text-xs text-amber-200/50">Spellcasting Ability<HelpTooltip text={HELP.spellSlots} /></div>
             <div className="text-xl font-display text-purple-300">{spellAbility}</div>
           </div>
-          <div className="card text-center">
+          <div className="card text-center" title={`Spell Save DC = 8 + proficiency + ${spellAbility} modifier`}>
             <div className="text-xs text-amber-200/50">Spell Save DC<HelpTooltip text={HELP.spellSaveDC} /></div>
             <div className="text-xl font-display text-purple-300">{spellDC}</div>
           </div>
@@ -239,6 +269,8 @@ export default function Spellbook({ characterId }) {
                       className={`w-5 h-5 rounded-full border-2 transition-all ${
                         i < usedSlots ? 'bg-purple-600/40 border-purple-400/40' : 'bg-purple-500 border-purple-300 shadow-[0_0_6px_rgba(168,85,247,0.4)]'
                       }`}
+                      title={`${maxSlots - usedSlots}/${maxSlots} ${levelNames[level]} slots remaining`}
+                      aria-label={`${levelNames[level]} spell slot ${i + 1} of ${maxSlots}, ${i < usedSlots ? 'used' : 'available'}`}
                     />
                   ))}
                 </div>
@@ -251,6 +283,13 @@ export default function Spellbook({ characterId }) {
 
       {/* Spells by Level */}
       <p className="text-xs text-amber-200/30 -mb-3">Click a spell level header to expand and see your spells. Mark spells as "Prepared" if your class requires it.</p>
+      {spells.length === 0 && (
+        <div className="card border-dashed border-amber-200/10 text-center py-12">
+          <Sparkles size={32} className="mx-auto text-amber-200/15 mb-3" />
+          <p className="text-sm text-amber-200/30 mb-1">No spells yet — add your first spell to get started</p>
+          <p className="text-xs text-amber-200/20">Use the "Add Spell" button to build your spellbook</p>
+        </div>
+      )}
       {[0,1,2,3,4,5,6,7,8,9].map(level => {
         const levelSpells = spellsByLevel[level] || [];
         if (levelSpells.length === 0) return null;
@@ -309,7 +348,7 @@ export default function Spellbook({ characterId }) {
                           </button>
                         )}
                       </div>
-                      <button onClick={() => setConfirmDelete(spell)} className="text-red-400/50 hover:text-red-400">
+                      <button onClick={() => setConfirmDelete(spell)} className="text-red-400/50 hover:text-red-400" aria-label={`Delete spell ${spell.name}`}>
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -349,8 +388,17 @@ function SpellForm({ spell, onSubmit, onCancel }) {
     spell_range: '', components: '', material: '', duration: '',
     concentration: false, ritual: false, description: '', upcast_notes: '', prepared: false,
   });
+  const [nameError, setNameError] = useState(false);
 
-  const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+  const update = (field, value) => {
+    if (field === 'name') setNameError(false);
+    setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = () => {
+    if (!form.name.trim()) { setNameError(true); return; }
+    onSubmit(form);
+  };
 
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onCancel(); };
@@ -363,11 +411,14 @@ function SpellForm({ spell, onSubmit, onCancel }) {
       <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
         <h3 className="font-display text-lg text-amber-100 mb-4">Add Spell</h3>
         <div className="space-y-3">
-          <input className="input w-full" placeholder="Spell name" value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
+          <div>
+            <input className={`input w-full ${nameError ? 'border-red-500' : ''}`} placeholder="Spell name" value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
+            {nameError && <p className="text-red-400 text-xs mt-1">Name required</p>}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="label">Level</label>
-              <select className="input w-full" value={form.level} onChange={e => update('level', parseInt(e.target.value))}>
+              <select className="input w-full" value={form.level} onChange={e => update('level', parseInt(e.target.value, 10))}>
                 {[0,1,2,3,4,5,6,7,8,9].map(l => <option key={l} value={l}>{l === 0 ? 'Cantrip' : `${l}`}</option>)}
               </select>
             </div>
@@ -390,7 +441,7 @@ function SpellForm({ spell, onSubmit, onCancel }) {
             <input className="input w-full" placeholder="Duration" value={form.duration} onChange={e => update('duration', e.target.value)} />
           </div>
           <input className="input w-full" placeholder="Material components" value={form.material} onChange={e => update('material', e.target.value)} />
-          <textarea className="input w-full h-24 resize-none" placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} />
+          <textarea className="input w-full h-24 resize-none" placeholder="Describe the spell's effects, range, components, etc." value={form.description} onChange={e => update('description', e.target.value)} />
           <textarea className="input w-full h-16 resize-none" placeholder="Upcast notes" value={form.upcast_notes} onChange={e => update('upcast_notes', e.target.value)} />
           <div className="flex gap-4">
             <label className="flex items-center gap-2 text-sm text-amber-200/60">
@@ -406,7 +457,7 @@ function SpellForm({ spell, onSubmit, onCancel }) {
         </div>
         <div className="flex gap-3 justify-end mt-4">
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
-          <button onClick={() => form.name && onSubmit(form)} className="btn-primary text-sm">Add Spell</button>
+          <button onClick={handleSubmit} className="btn-primary text-sm">Add Spell</button>
         </div>
       </div>
     </div>
