@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { TrendingUp, TrendingDown, Heart, Shield, Zap, Eye, Footprints, Moon, Coffee, Check, Star } from 'lucide-react';
+import { TrendingUp, TrendingDown, Heart, Shield, Zap, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOverview, updateOverview, updateAbilityScores, updateSavingThrows, updateSkills } from '../api/overview';
 import { longRest, shortRest } from '../api/rest';
@@ -86,6 +86,13 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const { trigger: triggerSkills } = useAutosave(saveSkills);
 
   const [showShortRest, setShowShortRest] = useState(false);
+  const [showSetup, setShowSetup] = useState(true);
+  const [setupScores, setSetupScores] = useState(null);
+  const [setupMethod, setSetupMethod] = useState(null);
+  const [setupAssignment, setSetupAssignment] = useState({ STR: 0, DEX: 1, CON: 2, INT: 3, WIS: 4, CHA: 5 });
+  const [pointBuyScores, setPointBuyScores] = useState({ STR: 8, DEX: 8, CON: 8, INT: 8, WIS: 8, CHA: 8 });
+  const [pointBuyRemaining, setPointBuyRemaining] = useState(27);
+  const [skillPicks, setSkillPicks] = useState([]);
 
   const handleLongRest = async () => {
     try {
@@ -230,6 +237,94 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   }, [overview?.primary_class, CLASSES, abilityMap, profBonus]);
 
   const sortedSkillEntries = useMemo(() => Object.entries(SKILLS).sort(([a], [b]) => a.localeCompare(b)), [SKILLS]);
+
+  const isNewCharacter = overview?.level === 1 && abilities.every(a => a.score === 10);
+
+  function roll4d6DropLowest() {
+    const dice = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
+    dice.sort((a, b) => a - b);
+    return { total: dice[1] + dice[2] + dice[3], dice };
+  }
+
+  function generateRolledScores() {
+    return Array.from({ length: 6 }, () => roll4d6DropLowest());
+  }
+
+  function getPointBuyCost(from, to) {
+    let cost = 0;
+    const dir = to > from ? 1 : -1;
+    for (let v = from; v !== to; v += dir) {
+      const c = v >= 13 ? 2 : 1;
+      cost += c * dir;
+    }
+    return cost;
+  }
+
+  function handlePointBuyChange(ab, delta) {
+    const cur = pointBuyScores[ab];
+    const next = cur + delta;
+    if (next < 8 || next > 15) return;
+    const cost = getPointBuyCost(cur, next);
+    if (pointBuyRemaining - cost < 0) return;
+    setPointBuyScores(prev => ({ ...prev, [ab]: next }));
+    setPointBuyRemaining(prev => prev - cost);
+  }
+
+  function applyScores() {
+    if (setupMethod === 'pointbuy') {
+      ABILITIES.forEach(ab => updateAbility(ab, pointBuyScores[ab]));
+      toast.success('Point buy scores applied!');
+    } else if (setupScores) {
+      ABILITIES.forEach((ab, i) => {
+        const scoreIdx = setupAssignment[ab];
+        updateAbility(ab, setupScores[scoreIdx].total);
+      });
+      toast.success('Ability scores applied!');
+    }
+  }
+
+  function applyClassRaceDefaults() {
+    const classData = CLASSES.find(c => c.name === overview.primary_class);
+    const raceData = RACES.find(r => {
+      const val = r.subrace ? `${r.name} (${r.subrace})` : r.name;
+      return val === overview.race;
+    });
+    const updates = {};
+    if (classData) {
+      // Saving throws
+      if (classData.savingThrows) {
+        classData.savingThrows.forEach(ab => {
+          const s = saves.find(sv => sv.ability === ab);
+          if (s && !s.proficient) toggleSave(ab);
+        });
+      }
+      // Armor & weapon proficiencies
+      if (classData.armorProficiencies) updates.proficiencies_armor = classData.armorProficiencies.join(', ');
+      if (classData.weaponProficiencies) updates.proficiencies_weapons = classData.weaponProficiencies.join(', ');
+      // Starting HP: hitDie max + CON modifier
+      const conMod = calcMod(abilityMap.CON || 10);
+      updates.max_hp = classData.hitDie + conMod;
+      updates.current_hp = classData.hitDie + conMod;
+      updates.hit_dice_total = `1d${classData.hitDie}`;
+    }
+    if (raceData) {
+      if (raceData.speed) updates.speed = raceData.speed;
+      if (raceData.languages) updates.languages = raceData.languages.join(', ');
+      if (raceData.darkvision > 0) updates.senses = `Darkvision ${raceData.darkvision}ft`;
+    }
+    // Apply all field updates
+    Object.entries(updates).forEach(([field, value]) => updateField(field, value));
+    toast.success(`${overview.primary_class || 'Class'} & ${overview.race || 'Race'} defaults applied!`);
+  }
+
+  function applySkillPicks() {
+    skillPicks.forEach(sk => {
+      const existing = skills.find(s => s.name === sk);
+      if (existing && !existing.proficient) toggleSkillProf(sk);
+    });
+    toast.success(`${skillPicks.length} skill proficiencies applied!`);
+    setSkillPicks([]);
+  }
 
   if (loading || !overview) {
     return <div className="text-amber-200/40">Loading character sheet...</div>;
@@ -473,6 +568,241 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           );
         })()}
       </div>
+
+      {/* Character Setup Assistant */}
+      {isNewCharacter && showSetup && (
+        <div className="card border-gold/25 shadow-[0_0_30px_rgba(201,168,76,0.08)]">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-gold/15 border border-gold/30 flex items-center justify-center">
+                <Sparkles size={18} className="text-gold" />
+              </div>
+              <div>
+                <h3 className="font-display text-amber-100 text-lg">Character Setup</h3>
+                <p className="text-xs text-amber-200/40">Quick-start your new character with guided setup</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 1: Generate Ability Scores */}
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-7 h-7 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center text-sm font-display text-gold font-bold">1</div>
+              <h4 className="font-display text-amber-100 text-sm tracking-wide">Generate Ability Scores</h4>
+            </div>
+            <div className="flex gap-2 mb-3 flex-wrap">
+              <button
+                onClick={() => { setSetupMethod('roll'); setSetupScores(generateRolledScores()); setSetupAssignment({ STR: 0, DEX: 1, CON: 2, INT: 3, WIS: 4, CHA: 5 }); }}
+                className={`text-xs px-3 py-2 rounded font-medium transition-all ${setupMethod === 'roll' ? 'bg-gold/20 text-gold border border-gold/40' : 'bg-white/[0.04] text-amber-200/60 border border-amber-200/10 hover:border-amber-200/25'}`}
+              >
+                Roll 4d6 Drop Lowest
+              </button>
+              <button
+                onClick={() => { setSetupMethod('standard'); setSetupScores([{ total: 15 }, { total: 14 }, { total: 13 }, { total: 12 }, { total: 10 }, { total: 8 }]); setSetupAssignment({ STR: 0, DEX: 1, CON: 2, INT: 3, WIS: 4, CHA: 5 }); }}
+                className={`text-xs px-3 py-2 rounded font-medium transition-all ${setupMethod === 'standard' ? 'bg-gold/20 text-gold border border-gold/40' : 'bg-white/[0.04] text-amber-200/60 border border-amber-200/10 hover:border-amber-200/25'}`}
+              >
+                Standard Array
+              </button>
+              <button
+                onClick={() => { setSetupMethod('pointbuy'); setSetupScores(null); setPointBuyScores({ STR: 8, DEX: 8, CON: 8, INT: 8, WIS: 8, CHA: 8 }); setPointBuyRemaining(27); }}
+                className={`text-xs px-3 py-2 rounded font-medium transition-all ${setupMethod === 'pointbuy' ? 'bg-gold/20 text-gold border border-gold/40' : 'bg-white/[0.04] text-amber-200/60 border border-amber-200/10 hover:border-amber-200/25'}`}
+              >
+                Point Buy
+              </button>
+            </div>
+
+            {/* Roll / Standard Array assignment */}
+            {setupMethod && setupMethod !== 'pointbuy' && setupScores && (
+              <div className="bg-[#0a0a10] rounded-lg p-4 border border-amber-200/8">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs text-amber-200/50">Generated scores:</span>
+                  <div className="flex gap-1.5">
+                    {setupScores.map((s, i) => (
+                      <span key={i} className="text-sm font-bold text-gold bg-gold/10 px-2 py-0.5 rounded border border-gold/20">
+                        {s.total}
+                        {s.dice && <span className="text-[9px] text-amber-200/30 ml-1">({s.dice.join(',')})</span>}
+                      </span>
+                    ))}
+                  </div>
+                  {setupMethod === 'roll' && (
+                    <button
+                      onClick={() => { setSetupScores(generateRolledScores()); setSetupAssignment({ STR: 0, DEX: 1, CON: 2, INT: 3, WIS: 4, CHA: 5 }); }}
+                      className="text-[10px] text-amber-200/50 hover:text-gold transition-colors ml-auto underline"
+                    >
+                      Reroll
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                  {ABILITIES.map(ab => (
+                    <div key={ab} className="text-center">
+                      <div className="text-[10px] text-amber-200/40 font-display tracking-widest mb-1">{ab}</div>
+                      <select
+                        className="input w-full text-center text-sm"
+                        value={setupAssignment[ab]}
+                        onChange={e => {
+                          const newIdx = parseInt(e.target.value);
+                          const oldIdx = setupAssignment[ab];
+                          // Find which ability currently has newIdx and swap
+                          const swapAb = Object.entries(setupAssignment).find(([, v]) => v === newIdx)?.[0];
+                          setSetupAssignment(prev => ({
+                            ...prev,
+                            [ab]: newIdx,
+                            ...(swapAb ? { [swapAb]: oldIdx } : {}),
+                          }));
+                        }}
+                      >
+                        {setupScores.map((s, i) => (
+                          <option key={i} value={i}>{s.total}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={applyScores}
+                  className="mt-3 text-xs px-4 py-2 rounded font-medium bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-all"
+                >
+                  Apply Scores
+                </button>
+              </div>
+            )}
+
+            {/* Point Buy */}
+            {setupMethod === 'pointbuy' && (
+              <div className="bg-[#0a0a10] rounded-lg p-4 border border-amber-200/8">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs text-amber-200/50">Assign points (8-15 per ability)</span>
+                  <span className={`text-sm font-display font-bold ${pointBuyRemaining > 0 ? 'text-gold' : pointBuyRemaining === 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {pointBuyRemaining} points left
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                  {ABILITIES.map(ab => (
+                    <div key={ab} className="text-center">
+                      <div className="text-[10px] text-amber-200/40 font-display tracking-widest mb-1">{ab}</div>
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => handlePointBuyChange(ab, -1)}
+                          disabled={pointBuyScores[ab] <= 8}
+                          className="w-6 h-6 rounded text-xs font-bold bg-white/[0.06] text-amber-200/60 border border-amber-200/10 hover:border-amber-200/30 disabled:opacity-30 transition-all"
+                        >
+                          -
+                        </button>
+                        <span className="text-lg font-bold text-gold w-8">{pointBuyScores[ab]}</span>
+                        <button
+                          onClick={() => handlePointBuyChange(ab, 1)}
+                          disabled={pointBuyScores[ab] >= 15 || pointBuyRemaining <= 0}
+                          className="w-6 h-6 rounded text-xs font-bold bg-white/[0.06] text-amber-200/60 border border-amber-200/10 hover:border-amber-200/30 disabled:opacity-30 transition-all"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className="text-[10px] text-amber-200/25 mt-0.5">mod {modStr(calcMod(pointBuyScores[ab]))}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-[10px] text-amber-200/30 mt-2">Cost: 8-13 = 1pt each, 14-15 = 2pt each</div>
+                <button
+                  onClick={applyScores}
+                  disabled={pointBuyRemaining < 0}
+                  className="mt-3 text-xs px-4 py-2 rounded font-medium bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-all disabled:opacity-40"
+                >
+                  Apply Scores
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Step 2: Apply Class & Race Defaults */}
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-7 h-7 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center text-sm font-display text-gold font-bold">2</div>
+              <h4 className="font-display text-amber-100 text-sm tracking-wide">Apply Class & {ancestryLabel} Defaults</h4>
+            </div>
+            <p className="text-xs text-amber-200/40 mb-3 ml-10">
+              Sets saving throws, speed, languages, senses, proficiencies, starting HP, and hit dice based on your class and {ancestryLabel.toLowerCase()}.
+            </p>
+            <div className="ml-10">
+              <button
+                onClick={applyClassRaceDefaults}
+                disabled={!overview.primary_class && !overview.race}
+                className="text-xs px-4 py-2 rounded font-medium bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-all disabled:opacity-40"
+              >
+                Apply {overview.primary_class || 'Class'} & {overview.race || ancestryLabel} Defaults
+              </button>
+            </div>
+          </div>
+
+          {/* Step 3: Choose Skill Proficiencies */}
+          {(() => {
+            const classData = CLASSES.find(c => c.name === overview.primary_class);
+            const sc = classData?.skillChoices;
+            if (!sc) return null;
+            return (
+              <div className="mb-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-7 h-7 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center text-sm font-display text-gold font-bold">3</div>
+                  <h4 className="font-display text-amber-100 text-sm tracking-wide">
+                    Choose Skill Proficiencies
+                    <span className="text-xs text-amber-200/40 font-normal ml-2">Pick {sc.count} from {overview.primary_class}</span>
+                  </h4>
+                </div>
+                <div className="flex flex-wrap gap-2 ml-10 mb-3">
+                  {sc.from.map(sk => {
+                    const selected = skillPicks.includes(sk);
+                    const atMax = skillPicks.length >= sc.count && !selected;
+                    return (
+                      <button
+                        key={sk}
+                        onClick={() => {
+                          if (selected) {
+                            setSkillPicks(prev => prev.filter(s => s !== sk));
+                          } else if (!atMax) {
+                            setSkillPicks(prev => [...prev, sk]);
+                          }
+                        }}
+                        disabled={atMax}
+                        className={`text-xs px-3 py-1.5 rounded font-medium transition-all ${
+                          selected
+                            ? 'bg-gold/20 text-gold border border-gold/40 shadow-[0_0_8px_rgba(201,168,76,0.15)]'
+                            : atMax
+                            ? 'bg-white/[0.02] text-amber-200/25 border border-amber-200/5 cursor-not-allowed'
+                            : 'bg-white/[0.04] text-amber-200/60 border border-amber-200/10 hover:border-amber-200/25'
+                        }`}
+                      >
+                        {sk}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="ml-10 flex items-center gap-3">
+                  <button
+                    onClick={applySkillPicks}
+                    disabled={skillPicks.length !== sc.count}
+                    className="text-xs px-4 py-2 rounded font-medium bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-all disabled:opacity-40"
+                  >
+                    Confirm {skillPicks.length}/{sc.count} Skills
+                  </button>
+                  {skillPicks.length > 0 && skillPicks.length !== sc.count && (
+                    <span className="text-[10px] text-amber-200/35">Pick {sc.count - skillPicks.length} more</span>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Dismiss */}
+          <div className="pt-3 border-t border-gold/10 text-center">
+            <button
+              onClick={() => setShowSetup(false)}
+              className="text-xs text-amber-200/30 hover:text-amber-200/60 transition-colors"
+            >
+              Dismiss setup assistant
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Two-column layout for wide screens */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
