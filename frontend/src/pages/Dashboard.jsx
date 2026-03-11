@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, LogIn, BookOpen, Heart, Shield, Library } from 'lucide-react';
+import { Plus, Trash2, LogIn, BookOpen, Heart, Shield, Library, Bell } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { listCharacters, createCharacter, deleteCharacter } from '../api/characters';
 import { RULESET_OPTIONS, getRuleset } from '../data/rulesets';
 import { APP_VERSION } from '../version';
 import ConfirmDialog from '../components/ConfirmDialog';
+import UpdatesPanel from '../components/UpdatesPanel';
+import { useUpdateCheck } from '../hooks/useUpdateCheck';
 
 export default function Dashboard() {
   const [characters, setCharacters] = useState([]);
@@ -16,9 +18,10 @@ export default function Dashboard() {
   const [newRuleset, setNewRuleset] = useState('5e-2014');
   const [newRace, setNewRace] = useState('');
   const [newClass, setNewClass] = useState('');
-  const [newSubclass, setNewSubclass] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [showUpdates, setShowUpdates] = useState(false);
   const navigate = useNavigate();
+  const { updateAvailable } = useUpdateCheck();
 
   const load = async () => {
     try {
@@ -37,9 +40,6 @@ export default function Dashboard() {
   const rulesetData = getRuleset(newRuleset);
   const availableRaces = rulesetData?.RACES || [];
   const availableClasses = rulesetData?.CLASSES || [];
-  const selectedClassData = availableClasses.find(c => c.name === newClass);
-  const availableSubclasses = selectedClassData?.subclasses || [];
-
   const handleCreate = async () => {
     if (!newName.trim()) return;
     if (!newRace) { toast.error('Please select a race'); return; }
@@ -50,14 +50,12 @@ export default function Dashboard() {
         ruleset: newRuleset,
         race: newRace,
         primaryClass: newClass,
-        primarySubclass: newSubclass,
       });
       toast.success(`${char.name} created!`);
       setNewName('');
       setNewRuleset('5e-2014');
       setNewRace('');
       setNewClass('');
-      setNewSubclass('');
       setShowCreate(false);
       load();
     } catch (err) {
@@ -100,17 +98,35 @@ export default function Dashboard() {
           <BookOpen size={16} />
           D&D Companion
         </p>
-        <span className="inline-block mt-1.5 text-[10px] text-amber-200/20 font-mono tracking-wider">{APP_VERSION}</span>
+        <button
+          onClick={() => setShowUpdates(true)}
+          className="inline-flex items-center gap-1.5 mt-1.5 text-[10px] text-amber-200/20 font-mono tracking-wider hover:text-amber-200/40 transition-colors cursor-pointer bg-transparent border-none relative"
+        >
+          {APP_VERSION}
+          {updateAvailable && (
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+          )}
+        </button>
         <p className="text-xs text-amber-200/25 mt-2 max-w-md mx-auto">
           Select a character to manage their stats, spells, and story — or create a new one to begin your adventure.
         </p>
-        <div className="flex justify-center mt-4">
+        <div className="flex justify-center gap-3 mt-4">
           <button
             onClick={() => navigate('/wiki')}
             className="btn flex items-center gap-2 text-sm"
           >
             <Library size={16} />
             Arcane Encyclopedia
+          </button>
+          <button
+            onClick={() => setShowUpdates(true)}
+            className="btn flex items-center gap-2 text-sm relative"
+          >
+            <Bell size={16} />
+            Updates
+            {updateAvailable && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 border border-[#14121c]" />
+            )}
           </button>
         </div>
       </motion.div>
@@ -234,7 +250,7 @@ export default function Dashboard() {
                 <select
                   className="input w-full"
                   value={newRuleset}
-                  onChange={(e) => { setNewRuleset(e.target.value); setNewRace(''); setNewClass(''); setNewSubclass(''); }}
+                  onChange={(e) => { setNewRuleset(e.target.value); setNewRace(''); setNewClass(''); }}
                 >
                   {RULESET_OPTIONS.map(opt => (
                     <option key={opt.id} value={opt.id}>{opt.name}</option>
@@ -260,7 +276,7 @@ export default function Dashboard() {
                 <select
                   className="input w-full"
                   value={newClass}
-                  onChange={(e) => { setNewClass(e.target.value); setNewSubclass(''); }}
+                  onChange={(e) => setNewClass(e.target.value)}
                 >
                   <option value="">Select a class...</option>
                   {availableClasses.map(c => (
@@ -268,25 +284,9 @@ export default function Dashboard() {
                   ))}
                 </select>
               </div>
-              {availableSubclasses.length > 0 && (
-                <div>
-                  <label className="text-xs text-amber-200/50 mb-1 block">Subclass <span className="text-amber-200/30">(optional)</span></label>
-                  <select
-                    className="input w-full"
-                    value={newSubclass}
-                    onChange={(e) => setNewSubclass(e.target.value)}
-                  >
-                    <option value="">Choose later...</option>
-                    {availableSubclasses.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                  <p className="text-[10px] text-amber-200/25 mt-1">You can pick a subclass now or set it later in the character sheet.</p>
-                </div>
-              )}
             </div>
             <div className="flex gap-3 justify-end mt-5">
-              <button onClick={() => { setShowCreate(false); setNewName(''); setNewRace(''); setNewClass(''); setNewSubclass(''); }} className="btn-secondary text-sm">
+              <button onClick={() => { setShowCreate(false); setNewName(''); setNewRace(''); setNewClass(''); }} className="btn-secondary text-sm">
                 Cancel
               </button>
               <button onClick={handleCreate} disabled={!newName.trim() || !newRace || !newClass} className="btn-primary text-sm disabled:opacity-40">
@@ -296,6 +296,9 @@ export default function Dashboard() {
           </motion.div>
         </motion.div>
       )}
+
+      {/* Updates Panel */}
+      <UpdatesPanel show={showUpdates} onClose={() => setShowUpdates(false)} />
 
       {/* Delete Confirm */}
       <ConfirmDialog

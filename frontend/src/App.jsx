@@ -8,17 +8,22 @@ import WikiArticlePage from './pages/WikiArticlePage';
 export default function App() {
   return (
     <BrowserRouter>
+      {/* Ambient background effects */}
+      <div className="ambient" />
+      <div className="ambient-noise" />
+
       <Toaster
         position="bottom-right"
         toastOptions={{
           style: {
-            background: '#14121c',
-            color: '#d4c5a0',
-            border: '1px solid rgba(201,168,76,0.3)',
-            fontFamily: 'Crimson Text, serif',
+            background: '#09090f',
+            color: 'rgba(255,255,255,0.85)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            fontFamily: 'var(--font-ui)',
+            fontSize: '13px',
           },
-          success: { iconTheme: { primary: '#c9a84c', secondary: '#14121c' } },
-          error: { iconTheme: { primary: '#8b2232', secondary: '#14121c' } },
+          success: { iconTheme: { primary: '#4ade80', secondary: '#09090f' } },
+          error: { iconTheme: { primary: '#ef4444', secondary: '#09090f' } },
         }}
       />
       <Routes>

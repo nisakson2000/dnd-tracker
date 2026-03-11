@@ -12,6 +12,7 @@ import BeginnerWizard from '../components/BeginnerWizard';
 import { useLevelUp } from '../hooks/useLevelUp';
 import { useCrashRecovery } from '../hooks/useCrashRecovery';
 import { useAutoBackup } from '../hooks/useAutoBackup';
+import { useUpdateCheck } from '../hooks/useUpdateCheck';
 import Overview from '../sections/Overview';
 import Backstory from '../sections/Backstory';
 import Spellbook from '../sections/Spellbook';
@@ -22,6 +23,7 @@ import NPCs from '../sections/NPCs';
 import Quests from '../sections/Quests';
 import DiceRoller from '../sections/DiceRoller';
 import Settings from '../sections/Settings';
+import Updates from '../sections/Updates';
 
 const Journal = lazy(() => import('../sections/Journal'));
 const Lore = lazy(() => import('../sections/Lore'));
@@ -43,6 +45,7 @@ const SECTIONS = {
   rules: RulesReference,
   settings: Settings,
   export: ExportImport,
+  updates: Updates,
 };
 
 const SHORTCUT_SECTIONS = ['overview','backstory','spellbook','inventory','features','combat','journal','npcs','quests'];
@@ -59,6 +62,7 @@ export default function CharacterView() {
   const { showOverlay, levelUpInfo, triggerLevelUp, dismiss } = useLevelUp();
   useCrashRecovery();
   useAutoBackup(characterId, character?.name);
+  const { updateAvailable } = useUpdateCheck();
 
   useEffect(() => {
     loadCharacter();
@@ -122,28 +126,37 @@ export default function CharacterView() {
           onBack={() => navigate('/')}
           activeConditionCount={activeConditionCount}
           portrait={portrait}
+          updateAvailable={updateAvailable}
         />
 
         {/* Right side: topbar + content */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
           {/* Topbar */}
-          <div style={{ height: '50px', background: '#0e0e16', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '0', padding: '0 20px', flexShrink: 0 }}>
+          <div style={{ height: 'var(--top-h, 52px)', background: 'rgba(4,4,11,0.85)', backdropFilter: 'blur(24px) saturate(1.5)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0', padding: '0 18px', flexShrink: 0 }}>
             {/* Portrait mini */}
-            {portrait && <img src={portrait} alt="" style={{ width: '28px', height: '28px', borderRadius: '6px', objectFit: 'cover', border: '1px solid rgba(201,168,76,0.3)', marginRight: '12px' }} />}
+            {portrait ? (
+              <img src={portrait} alt="" style={{ width: '30px', height: '30px', borderRadius: '9px', objectFit: 'cover', border: '1px solid var(--border-h)', marginRight: '10px' }} />
+            ) : (
+              <div style={{ width: '30px', height: '30px', borderRadius: '9px', background: 'linear-gradient(135deg, var(--accent), var(--accent-l))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px', color: 'white', boxShadow: '0 0 16px var(--accent-glow)', marginRight: '10px', flexShrink: 0 }}>
+                {character?.name?.[0] || '?'}
+              </div>
+            )}
             {/* Name + class */}
-            <div style={{ marginRight: '16px' }}>
-              <div style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '13px', color: '#e8d9b5', whiteSpace: 'nowrap' }}>
+            <div style={{ marginRight: '18px' }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 'calc(14px * var(--font-scale, 1))', fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
                 {character?.name || 'Unknown'}
               </div>
-              <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontFamily: 'Outfit, sans-serif', whiteSpace: 'nowrap' }}>
-                {[character?.race, character?.primary_class].filter(Boolean).join(' ')}
+              <div style={{ fontSize: 'calc(11px * var(--font-scale, 1))', color: 'var(--text-dim)', fontFamily: 'var(--font-ui)', whiteSpace: 'nowrap', marginTop: '1px' }}>
+                {[character?.race, character?.primary_class].filter(Boolean).join(' · ')}
                 {character?.level ? ` · Lv ${character.level}` : ''}
               </div>
             </div>
 
+            {/* Divider */}
+            <div style={{ width: '1px', height: '22px', background: 'var(--border)', margin: '0 14px', flexShrink: 0 }} />
             {/* Stat chips */}
-            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
               {character?.max_hp > 0 && (
                 <span className="stat-chip stat-chip-hp">
                   <Heart size={10} /> {character.current_hp} / {character.max_hp}
@@ -163,7 +176,7 @@ export default function CharacterView() {
           </div>
 
           {/* Main content */}
-          <main style={{ flex: 1, padding: '24px 32px', overflowY: 'auto', maxHeight: 'calc(100vh - 50px)' }}>
+          <main style={{ flex: 1, padding: 'calc(24px * var(--density, 1)) calc(28px * var(--density, 1))', overflowY: 'auto', maxHeight: 'calc(100vh - var(--top-h, 52px))', minWidth: 0 }}>
             <Suspense fallback={<div className="text-amber-200/40">Loading…</div>}>
               <ActiveComponent
                 characterId={characterId}

@@ -8,6 +8,7 @@ import SaveIndicator from '../components/SaveIndicator';
 import HelpTooltip from '../components/HelpTooltip';
 import { useRuleset } from '../contexts/RulesetContext';
 import { HELP } from '../data/helpText';
+import SubclassSelectModal from '../components/SubclassSelectModal';
 
 const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
 const ABILITY_NAMES = { STR: 'Strength', DEX: 'Dexterity', CON: 'Constitution', INT: 'Intelligence', WIS: 'Wisdom', CHA: 'Charisma' };
@@ -28,6 +29,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [localAbilities, setLocalAbilities] = useState({});
+  const [showSubclassModal, setShowSubclassModal] = useState(false);
   const prevLevelRef = useRef(null);
 
   const loadData = async () => {
@@ -118,12 +120,26 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
 
     if (field === 'level' && prevLevelRef.current !== null && v > prevLevelRef.current) {
       onLevelUp(overview.name, v, overview.primary_class);
+      // Check if this level triggers subclass selection
+      const classData = CLASSES.find(c => c.name === overview.primary_class);
+      if (classData && classData.subclassLevel && v >= classData.subclassLevel && !overview.primary_subclass) {
+        setTimeout(() => setShowSubclassModal(true), 2000); // delay so level-up overlay shows first
+      }
     }
     if (field === 'level') {
       prevLevelRef.current = v;
     }
 
     triggerOverview(updated);
+  };
+
+  const handleSubclassSelect = async (subclass) => {
+    setShowSubclassModal(false);
+    const updated = { ...overview, primary_subclass: subclass };
+    setOverview(updated);
+    triggerOverview(updated);
+    toast.success(`Subclass set to ${subclass}!`);
+    if (onCharacterUpdate) onCharacterUpdate({ ...character, primary_subclass: subclass });
   };
 
   const updateAbility = (ability, score) => {
@@ -675,6 +691,15 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           onCancel={() => setShowShortRest(false)}
         />
       )}
+
+      {/* Subclass Selection Modal */}
+      <SubclassSelectModal
+        show={showSubclassModal}
+        className={overview.primary_class}
+        subclasses={CLASSES.find(c => c.name === overview.primary_class)?.subclasses || []}
+        onSelect={handleSubclassSelect}
+        onClose={() => setShowSubclassModal(false)}
+      />
     </div>
   );
 }

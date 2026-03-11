@@ -1,193 +1,365 @@
-import { useState } from 'react';
-import { Settings2, RotateCcw, Palette, SlidersHorizontal, Type, PanelLeftClose, Wifi } from 'lucide-react';
-import { THEMES, loadSettings, saveSettings, applySettings } from '../utils/applySettings';
+import { useState, useEffect, useCallback } from 'react';
+import { Settings2, Palette, Type, LayoutGrid, Wifi, RotateCcw } from 'lucide-react';
 import Party from './Party';
 
-const THEME_LABELS = {
-  'dungeon-dark': 'Dungeon Dark',
-  'aged-parchment': 'Aged Parchment',
-  'frost-mage': 'Frost Mage',
-  'forest-druid': 'Forest Druid',
-  'infernal': 'Infernal',
+const PRESET_THEMES = [
+  { id: 'midnight-glass', label: 'Midnight Glass', accent: '#7c3aed', bg: '#04040b', swatches: ['#7c3aed','#a78bfa','#60a5fa'] },
+  { id: 'ember-forge', label: 'Ember Forge', accent: '#c9a84c', bg: '#0c0906', swatches: ['#c9a84c','#e8c87a','#fb923c'] },
+  { id: 'blood-pact', label: 'Blood Pact', accent: '#ef4444', bg: '#0a0505', swatches: ['#ef4444','#f87171','#fb923c'] },
+  { id: 'arcane-sea', label: 'Arcane Sea', accent: '#2dd4bf', bg: '#030a09', swatches: ['#2dd4bf','#34d399','#60a5fa'] },
+  { id: 'fey-wild', label: 'Fey Wild', accent: '#f472b6', bg: '#09040c', swatches: ['#f472b6','#e879f9','#a78bfa'] },
+  { id: 'void-walker', label: 'Void Walker', accent: '#94a3b8', bg: '#07070a', swatches: ['#94a3b8','#cbd5e1','#64748b'] },
+];
+
+const ACCENT_SWATCHES = [
+  '#7c3aed','#2563eb','#0891b2','#059669','#c9a84c','#dc2626',
+  '#db2777','#8b5cf6','#f97316','#64748b','#d946ef','#84cc16',
+];
+
+const DISPLAY_FONTS = [
+  { family: 'Syne', fallback: 'sans-serif' },
+  { family: 'Cinzel', fallback: 'serif' },
+  { family: 'Playfair Display', fallback: 'serif', label: 'Playfair' },
+  { family: 'Unbounded', fallback: 'sans-serif' },
+  { family: 'Space Grotesk', fallback: 'sans-serif', label: 'Space G.' },
+  { family: 'Outfit', fallback: 'sans-serif' },
+];
+
+const BODY_FONTS = [
+  { family: 'DM Sans', fallback: 'sans-serif' },
+  { family: 'Outfit', fallback: 'sans-serif' },
+  { family: 'Space Grotesk', fallback: 'sans-serif', label: 'Space G.' },
+  { family: 'Fraunces', fallback: 'serif' },
+];
+
+const SETTINGS_KEY = 'codex-v3-settings';
+
+function lighten(hex) {
+  let r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  r = Math.min(255, r+60); g = Math.min(255, g+60); b = Math.min(255, b+60);
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+
+const DEFAULTS = {
+  preset: 'midnight-glass',
+  accent: '#7c3aed',
+  bg: '#04040b',
+  displayFont: 'Syne',
+  bodyFont: 'DM Sans',
+  fontScale: 100,
+  density: 1,
+  sidebarWidth: 214,
+  borderRadius: 12,
+  blur: true,
+  noise: false,
+  grid: false,
+  ambientGlow: true,
+  shimmer: true,
+  abilityColors: true,
+  monoLabels: true,
+  uppercaseLabels: true,
+  glowIntensity: 60,
+  panelBlur: 16,
+  panelOpacity: 3,
 };
 
-const SCALE_OPTIONS = [
-  { value: 80, label: 'Compact' },
-  { value: 90, label: 'Normal' },
-  { value: 100, label: 'Comfortable' },
-  { value: 110, label: 'Large' },
-  { value: 125, label: 'Huge' },
-];
+function loadV3Settings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : { ...DEFAULTS };
+  } catch { return { ...DEFAULTS }; }
+}
 
-const FONT_OPTIONS = [
-  { value: 16, label: 'Small (16px)' },
-  { value: 18, label: 'Normal (18px)' },
-  { value: 20, label: 'Large (20px)' },
-  { value: 22, label: 'XL (22px)' },
-];
+function saveV3Settings(s) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+}
 
-const DEFAULTS = { theme: 'dungeon-dark', uiScale: 100, fontSize: 18, sidebarCollapsed: false };
+function applyV3Settings(s) {
+  const root = document.documentElement;
+  // Accent
+  root.style.setProperty('--accent', s.accent);
+  root.style.setProperty('--accent-l', lighten(s.accent));
+  root.style.setProperty('--accent-xl', s.accent + '24');
+  root.style.setProperty('--accent-glow', s.accent + '59');
+  // BG
+  root.style.setProperty('--bg', s.bg);
+  // Fonts
+  root.style.setProperty('--font-display', `'${s.displayFont}', sans-serif`);
+  root.style.setProperty('--font-ui', `'${s.bodyFont}', sans-serif`);
+  root.style.setProperty('--font-scale', s.fontScale / 100);
+  // Layout
+  root.style.setProperty('--density', s.density);
+  root.style.setProperty('--sidebar-w', s.sidebarWidth + 'px');
+  root.style.setProperty('--radius', s.borderRadius + 'px');
+  root.style.setProperty('--radius-sm', Math.max(0, s.borderRadius - 4) + 'px');
+  // Effects
+  root.style.setProperty('--panel-blur', s.blur ? s.panelBlur + 'px' : '0px');
+  // Ambient
+  const ambient = document.querySelector('.ambient');
+  if (ambient) ambient.style.opacity = s.ambientGlow ? (s.glowIntensity / 100) : '0';
+  const noise = document.querySelector('.ambient-noise');
+  if (noise) noise.style.opacity = s.noise ? '0.04' : '0';
+  // Panel opacity
+  root.style.setProperty('--bg-panel', `rgba(255,255,255,${s.panelOpacity / 100})`);
+  root.style.setProperty('--bg-panel-h', `rgba(255,255,255,${(s.panelOpacity + 2) / 100})`);
+}
+
+// Apply on load
+const initialSettings = loadV3Settings();
+applyV3Settings(initialSettings);
 
 export default function Settings({ characterId, character }) {
-  const [settings, setSettings] = useState(() => ({ ...DEFAULTS, ...loadSettings() }));
-  const [activeTab, setActiveTab] = useState('appearance');
+  const [settings, setSettings] = useState(() => loadV3Settings());
+  const [activeTab, setActiveTab] = useState('interface');
+  const [customHex, setCustomHex] = useState(settings.accent);
 
-  const update = (key, value) => {
-    const next = { ...settings, [key]: value };
-    setSettings(next);
-    saveSettings(next);
-    applySettings(next);
-  };
+  const update = useCallback((updates) => {
+    setSettings(prev => {
+      const next = { ...prev, ...updates };
+      saveV3Settings(next);
+      applyV3Settings(next);
+      return next;
+    });
+  }, []);
 
-  const resetDefaults = () => {
-    setSettings(DEFAULTS);
-    saveSettings(DEFAULTS);
-    applySettings(DEFAULTS);
+  const resetAll = () => {
+    setSettings({ ...DEFAULTS });
+    setCustomHex(DEFAULTS.accent);
+    saveV3Settings(DEFAULTS);
+    applyV3Settings(DEFAULTS);
   };
 
   const tabs = [
-    { id: 'appearance', label: 'Appearance', icon: Palette },
+    { id: 'interface', label: 'Interface', icon: Palette },
+    { id: 'typography', label: 'Typography', icon: Type },
+    { id: 'layout', label: 'Layout', icon: LayoutGrid },
     { id: 'party', label: 'Party Connect', icon: Wifi },
   ];
 
   return (
-    <div className="max-w-4xl space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-display text-amber-100 flex items-center gap-2">
-          <Settings2 size={20} />
-          <div>
-            <span>Settings</span>
-            <p className="text-xs text-amber-200/40 font-normal mt-0.5">Customize your experience and connect with your party.</p>
-          </div>
-        </h2>
+    <div style={{ maxWidth: '640px' }}>
+      <div className="flex items-center gap-3 mb-6">
+        <Settings2 size={20} className="text-amber-200/40" />
+        <div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'calc(20px * var(--font-scale))', fontWeight: 700, color: 'white', margin: 0 }}>Settings</h2>
+          <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginTop: '2px' }}>Customize your experience.</p>
+        </div>
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 border-b border-amber-200/10 pb-px">
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '20px' }}>
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all ${
-              activeTab === id
-                ? 'bg-gold/10 text-gold border-b-2 border-gold -mb-px'
-                : 'text-amber-200/40 hover:text-amber-200/70 hover:bg-white/3'
-            }`}
+            style={{
+              flex: 1, padding: '10px 8px', fontSize: '11px', fontWeight: 500,
+              textAlign: 'center', cursor: 'pointer',
+              color: activeTab === id ? 'var(--accent-l)' : 'var(--text-dim)',
+              borderBottom: activeTab === id ? '2px solid var(--accent)' : '2px solid transparent',
+              transition: 'all .15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+            }}
           >
-            <Icon size={15} />
+            <Icon size={13} />
             {label}
           </button>
         ))}
       </div>
 
-      {/* Appearance tab */}
-      {activeTab === 'appearance' && (
-        <div className="space-y-6">
-          {/* Theme Presets */}
-          <div className="card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Palette size={16} className="text-gold/60" />
-                <h3 className="font-display text-amber-100">Theme</h3>
+      {/* ── INTERFACE TAB ── */}
+      {activeTab === 'interface' && (
+        <div>
+          <div className="sp-sec">Preset Themes</div>
+          <div className="preset-grid" style={{ marginBottom: '16px' }}>
+            {PRESET_THEMES.map(theme => (
+              <div
+                key={theme.id}
+                className={`preset ${settings.preset === theme.id ? 'on' : ''}`}
+                onClick={() => update({ preset: theme.id, accent: theme.accent, bg: theme.bg })}
+              >
+                <div className="preset-bg" style={{ background: `linear-gradient(135deg, ${theme.bg}, ${lighten(theme.bg)})` }}>
+                  {theme.swatches.map((sw, i) => (
+                    <div key={i} className="pswatch" style={{ background: sw }} />
+                  ))}
+                </div>
+                <div className="preset-label">{theme.label}</div>
               </div>
-              <button onClick={resetDefaults} className="btn-secondary text-xs flex items-center gap-1">
-                <RotateCcw size={12} /> Reset All
-              </button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-              {Object.entries(THEMES).map(([id, vars]) => (
-                <button
-                  key={id}
-                  onClick={() => update('theme', id)}
-                  className={`rounded-lg p-4 border-2 transition-all text-left ${
-                    settings.theme === id
-                      ? 'border-gold shadow-[0_0_12px_rgba(201,168,76,0.3)]'
-                      : 'border-amber-200/10 hover:border-amber-200/30'
-                  }`}
-                  style={{ background: vars['--bg-deep'] }}
-                >
-                  <div className="flex gap-1.5 mb-3">
-                    <div className="w-4 h-4 rounded-full" style={{ background: vars['--accent-gold'] }} />
-                    <div className="w-4 h-4 rounded-full" style={{ background: vars['--accent-crimson'] }} />
-                    <div className="w-4 h-4 rounded-full" style={{ background: vars['--accent-purple'] }} />
-                  </div>
-                  <div className="text-xs font-display" style={{ color: vars['--text-parchment'] }}>
-                    {THEME_LABELS[id]}
-                  </div>
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
 
-          {/* UI Scale & Font Size — side by side */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* UI Scale */}
-            <div className="card">
-              <div className="flex items-center gap-2 mb-4">
-                <SlidersHorizontal size={16} className="text-gold/60" />
-                <h3 className="font-display text-amber-100">UI Scale</h3>
-              </div>
-              <div className="flex items-center gap-4">
-                <input
-                  type="range"
-                  min={80} max={125} step={5}
-                  value={settings.uiScale || 100}
-                  onChange={e => update('uiScale', parseInt(e.target.value))}
-                  className="flex-1"
-                />
-                <span className="text-sm text-amber-200/60 w-16 text-right font-display">{settings.uiScale || 100}%</span>
-              </div>
-              <div className="flex justify-between text-xs text-amber-200/30 mt-2 px-1">
-                {SCALE_OPTIONS.map(opt => (
-                  <span key={opt.value} className={settings.uiScale === opt.value ? 'text-gold' : ''}>{opt.label}</span>
-                ))}
-              </div>
-            </div>
-
-            {/* Font Size */}
-            <div className="card">
-              <div className="flex items-center gap-2 mb-4">
-                <Type size={16} className="text-gold/60" />
-                <h3 className="font-display text-amber-100">Font Size</h3>
-              </div>
-              <div className="flex gap-3">
-                {FONT_OPTIONS.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => update('fontSize', opt.value)}
-                    className={`flex-1 py-2 rounded text-sm transition-all ${
-                      (settings.fontSize || 18) === opt.value
-                        ? 'bg-gold/20 text-gold border border-gold/30'
-                        : 'text-amber-200/40 border border-amber-200/10 hover:border-amber-200/30'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="card">
-            <div className="flex items-center gap-2 mb-4">
-              <PanelLeftClose size={16} className="text-gold/60" />
-              <h3 className="font-display text-amber-100">Sidebar</h3>
-            </div>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.sidebarCollapsed || false}
-                onChange={e => update('sidebarCollapsed', e.target.checked)}
+          <div className="sp-sec">Custom Accent Color</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: '6px', marginBottom: '12px' }}>
+            {ACCENT_SWATCHES.map(hex => (
+              <div
+                key={hex}
+                className={`cswatch ${settings.accent === hex ? 'on' : ''}`}
+                style={{ background: hex }}
+                onClick={() => { update({ accent: hex, preset: '' }); setCustomHex(hex); }}
               />
-              <span className="text-sm text-amber-200/60">Start with sidebar collapsed</span>
-            </label>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '9px', border: '1px solid var(--border)', overflow: 'hidden', flexShrink: 0 }}>
+              <input
+                type="color"
+                value={customHex}
+                onChange={e => { setCustomHex(e.target.value); update({ accent: e.target.value, preset: '' }); }}
+                style={{ width: '150%', height: '150%', margin: '-20% 0 0 -20%', cursor: 'pointer', border: 'none', padding: 0, background: 'none' }}
+              />
+            </div>
+            <input
+              type="text"
+              value={customHex}
+              onChange={e => {
+                setCustomHex(e.target.value);
+                if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) update({ accent: e.target.value, preset: '' });
+              }}
+              maxLength={7}
+              placeholder="#7c3aed"
+              style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text)', outline: 'none' }}
+            />
+          </div>
+
+          <div className="sp-sec">Panel Style</div>
+          <div className="tog-row">
+            <div><div className="tog-label">Glassmorphism blur</div><div className="tog-desc">Frosted glass panel backgrounds</div></div>
+            <div className={`toggle ${settings.blur ? 'on' : ''}`} onClick={() => update({ blur: !settings.blur })} />
+          </div>
+          <div className="tog-row">
+            <div><div className="tog-label">Noise texture</div><div className="tog-desc">Subtle film grain on panels</div></div>
+            <div className={`toggle ${settings.noise ? 'on' : ''}`} onClick={() => update({ noise: !settings.noise })} />
+          </div>
+          <div className="tog-row">
+            <div><div className="tog-label">Ambient glow</div><div className="tog-desc">Colored radial glow behind content</div></div>
+            <div className={`toggle ${settings.ambientGlow ? 'on' : ''}`} onClick={() => update({ ambientGlow: !settings.ambientGlow })} />
+          </div>
+          <div className="tog-row">
+            <div><div className="tog-label">Shimmer animations</div><div className="tog-desc">HP bar and card shimmer effects</div></div>
+            <div className={`toggle ${settings.shimmer ? 'on' : ''}`} onClick={() => update({ shimmer: !settings.shimmer })} />
+          </div>
+          <div className="tog-row">
+            <div><div className="tog-label">Ability color accents</div><div className="tog-desc">Per-stat colors on ability cards</div></div>
+            <div className={`toggle ${settings.abilityColors ? 'on' : ''}`} onClick={() => update({ abilityColors: !settings.abilityColors })} />
           </div>
         </div>
       )}
 
-      {/* Party Connect tab */}
+      {/* ── TYPOGRAPHY TAB ── */}
+      {activeTab === 'typography' && (
+        <div>
+          <div className="sp-sec">Display Font</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '16px' }}>
+            {DISPLAY_FONTS.map(f => (
+              <div
+                key={f.family}
+                className={`fpick ${settings.displayFont === f.family ? 'on' : ''}`}
+                onClick={() => update({ displayFont: f.family })}
+              >
+                <div className="fpick-name" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>{f.label || f.family}</div>
+                <div className="fpick-sample" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>+4 Strength</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="sp-sec">Body Font</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '16px' }}>
+            {BODY_FONTS.map(f => (
+              <div
+                key={f.family}
+                className={`fpick ${settings.bodyFont === f.family ? 'on' : ''}`}
+                onClick={() => update({ bodyFont: f.family })}
+              >
+                <div className="fpick-name" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>{f.label || f.family}</div>
+                <div className="fpick-sample" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>Character Sheet</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="sp-sec">Font Size</div>
+          <div className="sl-row">
+            <div className="sl-header">
+              <span className="sl-label">Scale</span>
+              <span className="sl-val">{settings.fontScale}%</span>
+            </div>
+            <input type="range" min={75} max={130} value={settings.fontScale} step={5} onChange={e => update({ fontScale: +e.target.value })} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '10px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)' }}>
+              <span>Tiny</span><span>Default</span><span>Large</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── LAYOUT TAB ── */}
+      {activeTab === 'layout' && (
+        <div>
+          <div className="sp-sec">Density</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '16px' }}>
+            {[{ v: 0.8, label: 'Compact', icon: '▪▪▪' }, { v: 1, label: 'Normal', icon: '▪ ▪ ▪' }, { v: 1.2, label: 'Spacious', icon: '▪  ▪  ▪' }].map(d => (
+              <div
+                key={d.v}
+                className={`dbtn ${settings.density === d.v ? 'on' : ''}`}
+                onClick={() => update({ density: d.v })}
+              >
+                <div style={{ fontSize: '18px', marginBottom: '4px' }}>{d.icon}</div>
+                {d.label}
+              </div>
+            ))}
+          </div>
+
+          <div className="sp-sec">Sidebar Width</div>
+          <div className="sl-row">
+            <div className="sl-header">
+              <span className="sl-label">Width</span>
+              <span className="sl-val">{settings.sidebarWidth}px</span>
+            </div>
+            <input type="range" min={160} max={280} value={settings.sidebarWidth} step={4} onChange={e => update({ sidebarWidth: +e.target.value })} />
+          </div>
+
+          <div className="sp-sec">Panel Border Radius</div>
+          <div className="sl-row">
+            <div className="sl-header">
+              <span className="sl-label">Roundness</span>
+              <span className="sl-val">{settings.borderRadius}px</span>
+            </div>
+            <input type="range" min={0} max={20} value={settings.borderRadius} step={2} onChange={e => update({ borderRadius: +e.target.value })} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '10px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)' }}>
+              <span>Sharp</span><span>Rounded</span><span>Pill</span>
+            </div>
+          </div>
+
+          <div className="sp-sec">Effects</div>
+          <div className="sl-row">
+            <div className="sl-header">
+              <span className="sl-label">Glow intensity</span>
+              <span className="sl-val">{settings.glowIntensity}%</span>
+            </div>
+            <input type="range" min={0} max={100} value={settings.glowIntensity} step={5} onChange={e => update({ glowIntensity: +e.target.value })} />
+          </div>
+
+          <div className="sl-row">
+            <div className="sl-header">
+              <span className="sl-label">Backdrop blur</span>
+              <span className="sl-val">{settings.panelBlur}px</span>
+            </div>
+            <input type="range" min={0} max={32} value={settings.panelBlur} step={4} onChange={e => update({ panelBlur: +e.target.value })} />
+          </div>
+
+          <div className="sl-row">
+            <div className="sl-header">
+              <span className="sl-label">Panel darkness</span>
+              <span className="sl-val">{settings.panelOpacity}%</span>
+            </div>
+            <input type="range" min={1} max={15} value={settings.panelOpacity} step={1} onChange={e => update({ panelOpacity: +e.target.value })} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '10px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)' }}>
+              <span>Ghost</span><span>Glass</span><span>Solid</span>
+            </div>
+          </div>
+
+          <button className="reset-btn" onClick={resetAll}>↺ Reset all to defaults</button>
+        </div>
+      )}
+
+      {/* ── PARTY TAB ── */}
       {activeTab === 'party' && (
         <Party characterId={characterId} character={character} />
       )}

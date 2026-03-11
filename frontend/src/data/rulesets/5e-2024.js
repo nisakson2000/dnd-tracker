@@ -239,7 +239,7 @@ const BACKGROUNDS = [
 
 const CLASSES = [
   {
-    name: 'Barbarian', hitDie: 12, primaryAbility: 'STR',
+    name: 'Barbarian', hitDie: 12, primaryAbility: 'STR', subclassLevel: 3,
     savingThrows: ['STR', 'CON'],
     armorProficiencies: ['Light armor', 'Medium armor', 'Shields'],
     weaponProficiencies: ['Simple weapons', 'Martial weapons'],
@@ -248,7 +248,7 @@ const CLASSES = [
     spellcasting: null,
   },
   {
-    name: 'Bard', hitDie: 8, primaryAbility: 'CHA',
+    name: 'Bard', hitDie: 8, primaryAbility: 'CHA', subclassLevel: 3,
     savingThrows: ['DEX', 'CHA'],
     armorProficiencies: ['Light armor'],
     weaponProficiencies: ['Simple weapons'],
@@ -257,7 +257,7 @@ const CLASSES = [
     spellcasting: { ability: 'CHA', type: 'full' },
   },
   {
-    name: 'Cleric', hitDie: 8, primaryAbility: 'WIS',
+    name: 'Cleric', hitDie: 8, primaryAbility: 'WIS', subclassLevel: 3,
     savingThrows: ['WIS', 'CHA'],
     armorProficiencies: ['Light armor', 'Medium armor', 'Shields'],
     weaponProficiencies: ['Simple weapons'],
@@ -266,7 +266,7 @@ const CLASSES = [
     spellcasting: { ability: 'WIS', type: 'full' },
   },
   {
-    name: 'Druid', hitDie: 8, primaryAbility: 'WIS',
+    name: 'Druid', hitDie: 8, primaryAbility: 'WIS', subclassLevel: 3,
     savingThrows: ['INT', 'WIS'],
     armorProficiencies: ['Light armor', 'Shields'],
     weaponProficiencies: ['Simple weapons'],
@@ -275,7 +275,7 @@ const CLASSES = [
     spellcasting: { ability: 'WIS', type: 'full' },
   },
   {
-    name: 'Fighter', hitDie: 10, primaryAbility: 'STR',
+    name: 'Fighter', hitDie: 10, primaryAbility: 'STR', subclassLevel: 3,
     savingThrows: ['STR', 'CON'],
     armorProficiencies: ['All armor', 'Shields'],
     weaponProficiencies: ['Simple weapons', 'Martial weapons'],
@@ -284,7 +284,7 @@ const CLASSES = [
     spellcasting: null,
   },
   {
-    name: 'Monk', hitDie: 8, primaryAbility: 'DEX',
+    name: 'Monk', hitDie: 8, primaryAbility: 'DEX', subclassLevel: 3,
     savingThrows: ['STR', 'DEX'],
     armorProficiencies: [],
     weaponProficiencies: ['Simple weapons', 'Martial weapons (with Monk property)'],
@@ -293,7 +293,7 @@ const CLASSES = [
     spellcasting: null,
   },
   {
-    name: 'Paladin', hitDie: 10, primaryAbility: 'STR',
+    name: 'Paladin', hitDie: 10, primaryAbility: 'STR', subclassLevel: 3,
     savingThrows: ['WIS', 'CHA'],
     armorProficiencies: ['All armor', 'Shields'],
     weaponProficiencies: ['Simple weapons', 'Martial weapons'],
@@ -302,7 +302,7 @@ const CLASSES = [
     spellcasting: { ability: 'CHA', type: 'half' },
   },
   {
-    name: 'Ranger', hitDie: 10, primaryAbility: 'DEX',
+    name: 'Ranger', hitDie: 10, primaryAbility: 'DEX', subclassLevel: 3,
     savingThrows: ['STR', 'DEX'],
     armorProficiencies: ['Light armor', 'Medium armor', 'Shields'],
     weaponProficiencies: ['Simple weapons', 'Martial weapons'],
@@ -311,7 +311,7 @@ const CLASSES = [
     spellcasting: { ability: 'WIS', type: 'half' },
   },
   {
-    name: 'Rogue', hitDie: 8, primaryAbility: 'DEX',
+    name: 'Rogue', hitDie: 8, primaryAbility: 'DEX', subclassLevel: 3,
     savingThrows: ['DEX', 'INT'],
     armorProficiencies: ['Light armor'],
     weaponProficiencies: ['Simple weapons', 'Martial weapons (with Finesse or Light)'],
@@ -320,7 +320,7 @@ const CLASSES = [
     spellcasting: null,
   },
   {
-    name: 'Sorcerer', hitDie: 6, primaryAbility: 'CHA',
+    name: 'Sorcerer', hitDie: 6, primaryAbility: 'CHA', subclassLevel: 3,
     savingThrows: ['CON', 'CHA'],
     armorProficiencies: [],
     weaponProficiencies: ['Simple weapons'],
@@ -329,7 +329,7 @@ const CLASSES = [
     spellcasting: { ability: 'CHA', type: 'full' },
   },
   {
-    name: 'Warlock', hitDie: 8, primaryAbility: 'CHA',
+    name: 'Warlock', hitDie: 8, primaryAbility: 'CHA', subclassLevel: 3,
     savingThrows: ['WIS', 'CHA'],
     armorProficiencies: ['Light armor'],
     weaponProficiencies: ['Simple weapons'],
@@ -338,7 +338,7 @@ const CLASSES = [
     spellcasting: { ability: 'CHA', type: 'pact' },
   },
   {
-    name: 'Wizard', hitDie: 6, primaryAbility: 'INT',
+    name: 'Wizard', hitDie: 6, primaryAbility: 'INT', subclassLevel: 3,
     savingThrows: ['INT', 'WIS'],
     armorProficiencies: [],
     weaponProficiencies: ['Simple weapons'],

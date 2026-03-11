@@ -532,7 +532,7 @@ export const RACES = [
 
 export const CLASSES = [
   {
-    name: 'Barbarian', hitDie: 12, primaryAbility: 'STR',
+    name: 'Barbarian', hitDie: 12, primaryAbility: 'STR', subclassLevel: 3,
     savingThrows: ['STR', 'CON'],
     armorProficiencies: ['Light armor', 'Medium armor', 'Shields'],
     weaponProficiencies: ['Simple weapons', 'Martial weapons'],
@@ -555,7 +555,7 @@ export const CLASSES = [
     ],
   },
   {
-    name: 'Bard', hitDie: 8, primaryAbility: 'CHA',
+    name: 'Bard', hitDie: 8, primaryAbility: 'CHA', subclassLevel: 3,
     savingThrows: ['DEX', 'CHA'],
     armorProficiencies: ['Light armor'],
     weaponProficiencies: ['Simple weapons', 'Hand crossbows', 'Longswords', 'Rapiers', 'Shortswords'],
@@ -575,7 +575,7 @@ export const CLASSES = [
     ],
   },
   {
-    name: 'Cleric', hitDie: 8, primaryAbility: 'WIS',
+    name: 'Cleric', hitDie: 8, primaryAbility: 'WIS', subclassLevel: 1,
     savingThrows: ['WIS', 'CHA'],
     armorProficiencies: ['Light armor', 'Medium armor', 'Shields'],
     weaponProficiencies: ['Simple weapons'],
@@ -591,7 +591,7 @@ export const CLASSES = [
     ],
   },
   {
-    name: 'Druid', hitDie: 8, primaryAbility: 'WIS',
+    name: 'Druid', hitDie: 8, primaryAbility: 'WIS', subclassLevel: 2,
     savingThrows: ['INT', 'WIS'],
     armorProficiencies: ['Light armor (nonmetal)', 'Medium armor (nonmetal)', 'Shields (nonmetal)'],
     weaponProficiencies: ['Clubs', 'Daggers', 'Darts', 'Javelins', 'Maces', 'Quarterstaffs', 'Scimitars', 'Sickles', 'Slings', 'Spears'],
@@ -608,7 +608,7 @@ export const CLASSES = [
     ],
   },
   {
-    name: 'Fighter', hitDie: 10, primaryAbility: 'STR',
+    name: 'Fighter', hitDie: 10, primaryAbility: 'STR', subclassLevel: 3,
     savingThrows: ['STR', 'CON'],
     armorProficiencies: ['All armor', 'Shields'],
     weaponProficiencies: ['Simple weapons', 'Martial weapons'],
@@ -624,7 +624,7 @@ export const CLASSES = [
     ],
   },
   {
-    name: 'Monk', hitDie: 8, primaryAbility: 'DEX',
+    name: 'Monk', hitDie: 8, primaryAbility: 'DEX', subclassLevel: 3,
     savingThrows: ['STR', 'DEX'],
     armorProficiencies: [],
     weaponProficiencies: ['Simple weapons', 'Shortswords'],
@@ -652,7 +652,7 @@ export const CLASSES = [
     ],
   },
   {
-    name: 'Paladin', hitDie: 10, primaryAbility: 'STR',
+    name: 'Paladin', hitDie: 10, primaryAbility: 'STR', subclassLevel: 3,
     savingThrows: ['WIS', 'CHA'],
     armorProficiencies: ['All armor', 'Shields'],
     weaponProficiencies: ['Simple weapons', 'Martial weapons'],
@@ -674,7 +674,7 @@ export const CLASSES = [
     ],
   },
   {
-    name: 'Ranger', hitDie: 10, primaryAbility: 'DEX',
+    name: 'Ranger', hitDie: 10, primaryAbility: 'DEX', subclassLevel: 3,
     savingThrows: ['STR', 'DEX'],
     armorProficiencies: ['Light armor', 'Medium armor', 'Shields'],
     weaponProficiencies: ['Simple weapons', 'Martial weapons'],
@@ -696,7 +696,7 @@ export const CLASSES = [
     ],
   },
   {
-    name: 'Rogue', hitDie: 8, primaryAbility: 'DEX',
+    name: 'Rogue', hitDie: 8, primaryAbility: 'DEX', subclassLevel: 3,
     savingThrows: ['DEX', 'INT'],
     armorProficiencies: ['Light armor'],
     weaponProficiencies: ['Simple weapons', 'Hand crossbows', 'Longswords', 'Rapiers', 'Shortswords'],
@@ -718,7 +718,7 @@ export const CLASSES = [
     ],
   },
   {
-    name: 'Sorcerer', hitDie: 6, primaryAbility: 'CHA',
+    name: 'Sorcerer', hitDie: 6, primaryAbility: 'CHA', subclassLevel: 1,
     savingThrows: ['CON', 'CHA'],
     armorProficiencies: [],
     weaponProficiencies: ['Daggers', 'Darts', 'Slings', 'Quarterstaffs', 'Light crossbows'],
@@ -734,7 +734,7 @@ export const CLASSES = [
     ],
   },
   {
-    name: 'Warlock', hitDie: 8, primaryAbility: 'CHA',
+    name: 'Warlock', hitDie: 8, primaryAbility: 'CHA', subclassLevel: 1,
     savingThrows: ['WIS', 'CHA'],
     armorProficiencies: ['Light armor'],
     weaponProficiencies: ['Simple weapons'],
@@ -751,7 +751,7 @@ export const CLASSES = [
     ],
   },
   {
-    name: 'Wizard', hitDie: 6, primaryAbility: 'INT',
+    name: 'Wizard', hitDie: 6, primaryAbility: 'INT', subclassLevel: 2,
     savingThrows: ['INT', 'WIS'],
     armorProficiencies: [],
     weaponProficiencies: ['Daggers', 'Darts', 'Slings', 'Quarterstaffs', 'Light crossbows'],
