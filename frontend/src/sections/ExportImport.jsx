@@ -91,7 +91,7 @@ function generateTextSummary(data) {
   if (spells.length > 0) {
     lines.push('── Spellbook ──');
     if (data.spell_slots?.length > 0) {
-      lines.push(`  Slots: ${data.spell_slots.map(s => `Lv${s.level}: ${s.max - s.used}/${s.max}`).join('  ')}`);
+      lines.push(`  Slots: ${data.spell_slots.map(s => `Lv${s.slot_level}: ${s.max_slots - s.used_slots}/${s.max_slots}`).join('  ')}`);
     }
     const cantrips = spells.filter(s => s.level === 0);
     if (cantrips.length > 0) {

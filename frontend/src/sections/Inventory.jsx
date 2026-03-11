@@ -77,7 +77,7 @@ export default function Inventory({ characterId, character }) {
       ]);
       setItems(itemData);
       setCurrency(currData);
-      const str = overview.ability_scores.find(a => a.ability === 'STR');
+      const str = overview?.ability_scores?.find(a => a.ability === 'STR');
       setStrScore(str?.score || 10);
     } catch (err) { toast.error(err.message); }
     finally { setLoading(false); }
@@ -95,6 +95,12 @@ export default function Inventory({ characterId, character }) {
     setCurrency(updated);
     triggerCurrency(updated);
   };
+
+  const attunedCount = items.filter(i => i.attuned).length;
+  const totalWeight = items.reduce((sum, i) => sum + (i.weight * i.quantity), 0);
+  const carryCapacity = strScore * 15;
+  const encumbered = totalWeight > strScore * 5;
+  const heavilyEncumbered = totalWeight > strScore * 10;
 
   const handleAdd = async (itemData) => {
     try {
@@ -124,12 +130,6 @@ export default function Inventory({ characterId, character }) {
       load();
     } catch (err) { toast.error(err.message); }
   };
-
-  const attunedCount = items.filter(i => i.attuned).length;
-  const totalWeight = items.reduce((sum, i) => sum + (i.weight * i.quantity), 0);
-  const carryCapacity = strScore * 15;
-  const encumbered = totalWeight > strScore * 5;
-  const heavilyEncumbered = totalWeight > strScore * 10;
 
   if (loading) return <div className="text-amber-200/40">Loading inventory...</div>;
 

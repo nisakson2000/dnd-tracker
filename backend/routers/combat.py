@@ -108,6 +108,7 @@ def get_conditions(character_id: str):
 def update_conditions(character_id: str, data: list[ConditionData]):
     session = get_session(character_id)
     try:
+        _ensure_conditions(session)
         for item in data:
             row = session.query(Condition).filter_by(name=item.name).first()
             if row:

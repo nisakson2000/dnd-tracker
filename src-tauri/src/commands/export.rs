@@ -158,13 +158,16 @@ fn do_export(state: &AppState, character_id: &str) -> Result<serde_json::Value, 
         }).ok();
 
         let features = query_json_list(conn,
-            "SELECT name, source, source_level, feature_type, description FROM features",
+            "SELECT name, source, source_level, feature_type, description, uses_total, uses_remaining, recharge FROM features",
             &[], |row| Ok(serde_json::json!({
                 "name": row.get::<_, String>(0)?,
                 "source": row.get::<_, String>(1).unwrap_or_default(),
                 "source_level": row.get::<_, i64>(2).unwrap_or(0),
                 "feature_type": row.get::<_, String>(3).unwrap_or_else(|_| "class".to_string()),
                 "description": row.get::<_, String>(4).unwrap_or_default(),
+                "uses_total": row.get::<_, i64>(5).unwrap_or(0),
+                "uses_remaining": row.get::<_, i64>(6).unwrap_or(0),
+                "recharge": row.get::<_, String>(7).unwrap_or_default(),
             })))?;
 
         let attacks = query_json_list(conn,

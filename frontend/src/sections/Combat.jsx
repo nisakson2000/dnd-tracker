@@ -219,7 +219,8 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     onConditionsChange?.(activeUpdated.length, activeUpdated.map(c => c.name));
     try { await updateConditions(characterId, updated); }
     catch (err) { toast.error(err.message); }
-    const expired = conditions.filter(c => c.active && c.rounds_remaining === 1);
+    const wasActive = new Set(conditions.filter(c => c.active).map(c => c.name));
+    const expired = updated.filter(c => !c.active && wasActive.has(c.name));
     if (expired.length > 0) {
       toast.success(`Expired: ${expired.map(c => c.name).join(', ')}`);
     }

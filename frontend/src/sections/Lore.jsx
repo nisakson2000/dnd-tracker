@@ -130,7 +130,7 @@ export default function Lore({ characterId }) {
                   <div className="flex items-center gap-2 mt-0.5">
                     {note.category && <span className="text-xs bg-purple-800/30 text-purple-300 px-2 py-0.5 rounded">{note.category}</span>}
                     {note.body && (() => {
-                      const words = note.body.trim().split(/\s+/).length;
+                      const words = note.body.trim().split(/\s+/).filter(Boolean).length;
                       const mins = Math.ceil(words / 200);
                       return <span className="text-[10px] text-amber-200/25">{words} words ~ {mins} min read</span>;
                     })()}

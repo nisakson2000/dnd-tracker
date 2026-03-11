@@ -230,9 +230,11 @@ impl PartyServer {
                         should_remove_room = true;
                     } else if room.host_id == client_id {
                         // Reassign host to first remaining member
-                        needs_host_reassign = true;
-                        room.host_id = room.members[0].clone();
-                        new_host_id = Some(room.members[0].clone());
+                        if let Some(first) = room.members.first() {
+                            needs_host_reassign = true;
+                            room.host_id = first.clone();
+                            new_host_id = Some(first.clone());
+                        }
                     }
                 }
                 if should_remove_room {

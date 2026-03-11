@@ -107,7 +107,7 @@ pub fn short_rest(
                 [],
                 |row| Ok((row.get(0)?, row.get(1)?)),
             )
-            .unwrap_or((0, 0));
+            .map_err(|e| format!("Failed to read death saves: {}", e))?;
         if death_s > 0 || death_f > 0 {
             conn.execute(
                 "UPDATE character_overview SET death_save_successes=0, death_save_failures=0 WHERE id=1",

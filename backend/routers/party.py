@@ -188,20 +188,25 @@ async def party_ws(ws: WebSocket):
 
             elif msg_type == "bug_report":
                 # Broadcast bug reports to ALL clients so dev builds can capture them
+                reporter = None
+                report_id = None
+                report_data = None
+                broadcast_room = None
                 async with _room_lock:
                     in_room = room_code and client_id in _rooms.get(room_code, {})
                     if in_room:
                         _rooms[room_code][client_id]["last_seen"] = time.monotonic()
                         reporter = _rooms[room_code][client_id].get("character", {}).get("name", "Unknown")
-                if in_room:
+                        broadcast_room = room_code
+                if broadcast_room:
                     report_id = next_report_id()
                     report_data = msg.get("report", {})
                     summary = report_data.get("description", str(report_data))[:120] if isinstance(report_data, dict) else str(report_data)[:120]
                     logger.info(
                         "[BugReporter] Bug report %s from %s (client=%s, room=%s): %s",
-                        report_id, reporter, client_id, room_code, summary,
+                        report_id, reporter, client_id, broadcast_room, summary,
                     )
-                    await _broadcast(room_code, {
+                    await _broadcast(broadcast_room, {
                         "type": "bug_report",
                         "client_id": client_id,
                         "reporter": reporter,
@@ -223,4 +228,8 @@ async def party_ws(ws: WebSocket):
     except Exception as e:
         logger.exception("Party WS error: %s", e)
     finally:
+        try:
+            await ws.close()
+        except Exception:
+            pass
         await _disconnect_client(client_id)

@@ -99,7 +99,7 @@ export default function Spellbook({ characterId }) {
       }
 
       if (ability) {
-        const abilScore = charData.ability_scores.find(a => a.ability === ability);
+        const abilScore = charData?.ability_scores?.find(a => a.ability === ability);
         mod = calcMod(abilScore?.score || 10);
         const profBonus = PROFICIENCY_BONUS[charData.overview.level] || 2;
         dc = 8 + profBonus + mod;
