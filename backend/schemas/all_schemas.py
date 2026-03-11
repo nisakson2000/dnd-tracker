@@ -22,6 +22,9 @@ class CharacterSummary(FlexibleModel):
 class CharacterCreate(FlexibleModel):
     name: str = "New Character"
     ruleset: str = "5e-2014"
+    race: str = ""
+    primary_class: str = ""
+    primary_subclass: str = ""
 
 
 # Overview

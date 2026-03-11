@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getNPCs, addNPC, updateNPC, deleteNPC } from '../api/npcs';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const ROLES = ['ally', 'enemy', 'neutral', 'party'];
 const STATUSES = ['alive', 'dead', 'unknown'];
@@ -12,6 +13,7 @@ export default function NPCs({ characterId }) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const load = async () => {
     try { setNpcs(await getNPCs(characterId)); }
@@ -40,13 +42,14 @@ export default function NPCs({ characterId }) {
     try {
       await deleteNPC(characterId, id);
       toast.success('NPC removed');
+      setConfirmDelete(null);
       load();
     } catch (err) { toast.error(err.message); }
   };
 
   const filtered = filter === 'all' ? npcs : npcs.filter(n => n.role === filter);
-  const roleColors = { ally: 'text-emerald-400', enemy: 'text-red-400', neutral: 'text-amber-200/60', party: 'text-blue-400' };
-  const statusColors = { alive: 'text-emerald-400', dead: 'text-red-400', unknown: 'text-amber-200/40' };
+  const roleColors = { ally: 'text-emerald-400', enemy: 'text-red-400', neutral: 'text-amber-200/60', party: 'text-blue-400', default: 'text-amber-200/40' };
+  const statusColors = { alive: 'text-emerald-400', dead: 'text-red-400', unknown: 'text-amber-200/40', default: 'text-amber-200/40' };
 
   if (loading) return <div className="text-amber-200/40">Loading NPCs...</div>;
 
@@ -84,7 +87,7 @@ export default function NPCs({ characterId }) {
                 <div>
                   <h4 className="text-amber-100 font-medium">{npc.name}</h4>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${roleColors[npc.role] || ''} ${
+                    <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${roleColors[npc.role] || roleColors.default} ${
                       npc.role === 'ally' ? 'bg-emerald-900/40' :
                       npc.role === 'enemy' ? 'bg-red-900/40' :
                       npc.role === 'party' ? 'bg-blue-900/40' :
@@ -95,7 +98,7 @@ export default function NPCs({ characterId }) {
                 </div>
                 <div className="flex gap-1">
                   <button onClick={() => { setEditing(npc); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>
-                  <button onClick={() => handleDelete(npc.id)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>
+                  <button onClick={() => setConfirmDelete(npc)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>
                 </div>
               </div>
               {npc.race && <p className="text-xs text-amber-200/40">{[npc.race, npc.npc_class].filter(Boolean).join(' ')}</p>}
@@ -110,6 +113,14 @@ export default function NPCs({ characterId }) {
       {showForm && (
         <NPCForm npc={editing} onSubmit={handleSave} onCancel={() => { setShowForm(false); setEditing(null); }} />
       )}
+
+      <ConfirmDialog
+        show={!!confirmDelete}
+        title="Delete NPC?"
+        message={`Remove "${confirmDelete?.name}"? This cannot be undone.`}
+        onConfirm={() => handleDelete(confirmDelete.id)}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }
@@ -119,6 +130,12 @@ function NPCForm({ npc, onSubmit, onCancel }) {
     name: '', role: 'neutral', race: '', npc_class: '', location: '', description: '', notes: '', status: 'alive',
   });
   const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onCancel]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={e => e.target === e.currentTarget && onCancel()}>

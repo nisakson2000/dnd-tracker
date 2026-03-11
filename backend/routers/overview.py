@@ -104,6 +104,8 @@ def update_saving_throws(character_id: str, data: list[SavingThrowData]):
             row = session.query(SavingThrow).filter_by(ability=item.ability).first()
             if row:
                 row.proficient = item.proficient
+            else:
+                session.add(SavingThrow(ability=item.ability, proficient=item.proficient))
         session.commit()
         return {"status": "saved"}
     except Exception:
@@ -122,6 +124,8 @@ def update_skills(character_id: str, data: list[SkillData]):
             if row:
                 row.proficient = item.proficient
                 row.expertise = item.expertise
+            else:
+                session.add(Skill(name=item.name, proficient=item.proficient, expertise=item.expertise))
         session.commit()
         return {"status": "saved"}
     except Exception:

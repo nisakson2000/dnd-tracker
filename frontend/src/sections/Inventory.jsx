@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Package, Coins } from 'lucide-react';
+import { Plus, Trash2, Package, Coins, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getItems, addItem, updateItem, deleteItem, getCurrency, updateCurrency } from '../api/inventory';
 import { getOverview } from '../api/overview';
 import { useAutosave } from '../hooks/useAutosave';
 import SaveIndicator from '../components/SaveIndicator';
 import HelpTooltip from '../components/HelpTooltip';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { HELP } from '../data/helpText';
 
 // ── Item Catalog: standard PHB weapons, armor, and gear ──
@@ -325,6 +326,8 @@ export default function Inventory({ characterId, character }) {
   const [strScore, setStrScore] = useState(10);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const load = async () => {
     try {
@@ -376,6 +379,7 @@ export default function Inventory({ characterId, character }) {
     try {
       await deleteItem(characterId, id);
       toast.success('Item removed');
+      setConfirmDelete(null);
       load();
     } catch (err) { toast.error(err.message); }
   };
@@ -402,6 +406,14 @@ export default function Inventory({ characterId, character }) {
           <Plus size={12} /> Add Item
         </button>
       </div>
+
+      {/* Search */}
+      {items.length > 0 && (
+        <div className="relative">
+          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-200/30 pointer-events-none" />
+          <input className="input w-full pl-10" placeholder="Search items by name, type, or description..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+        </div>
+      )}
 
       {/* Currency */}
       <div className="card">
@@ -455,10 +467,19 @@ export default function Inventory({ characterId, character }) {
       <div className="card">
         <h3 className="font-display text-amber-100 mb-3">Items</h3>
         {items.length === 0 ? (
-          <p className="text-sm text-amber-200/30">No items yet. Add weapons, armor, potions, and other gear your character carries.</p>
+          <div className="text-center py-6">
+            <p className="text-sm text-amber-200/30 mb-3">No items yet. Add weapons, armor, potions, and other gear your character carries.</p>
+            <button onClick={() => setShowAdd(true)} className="btn-primary text-xs inline-flex items-center gap-1">
+              <Plus size={12} /> Add Your First Item
+            </button>
+          </div>
         ) : (
           <div className="space-y-2">
-            {items.map(item => (
+            {items.filter(item => {
+              if (!searchQuery) return true;
+              const q = searchQuery.toLowerCase();
+              return (item.name || '').toLowerCase().includes(q) || (item.item_type || '').toLowerCase().includes(q) || (item.description || '').toLowerCase().includes(q);
+            }).map(item => (
               <div key={item.id} className="bg-[#0d0d12] rounded p-3 border border-gold/10 flex items-start gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -491,7 +512,7 @@ export default function Inventory({ characterId, character }) {
                       {item.attuned ? 'Unattune' : 'Attune'}
                     </button>
                   )}
-                  <button onClick={() => handleDelete(item.id)} className="text-red-400/50 hover:text-red-400 p-1">
+                  <button onClick={() => setConfirmDelete(item)} className="text-red-400/50 hover:text-red-400 p-1">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -503,6 +524,14 @@ export default function Inventory({ characterId, character }) {
 
       {/* Add Modal */}
       {showAdd && <ItemForm onSubmit={handleAdd} onCancel={() => setShowAdd(false)} character={character} />}
+
+      <ConfirmDialog
+        show={!!confirmDelete}
+        title="Delete Item?"
+        message={`Remove "${confirmDelete?.name}"${confirmDelete?.quantity > 1 ? ` (x${confirmDelete.quantity})` : ''}? This cannot be undone.`}
+        onConfirm={() => handleDelete(confirmDelete.id)}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }
@@ -514,6 +543,12 @@ function ItemForm({ onSubmit, onCancel, character }) {
   });
   const [selectedCatalogItem, setSelectedCatalogItem] = useState('');
   const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onCancel]);
 
   const profs = getCharacterProficiencies(character?.primary_class, character?.race);
 

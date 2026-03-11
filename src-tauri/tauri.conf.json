@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-config-schema/schema.json",
   "productName": "The Codex",
-  "version": "0.1.7",
+  "version": "0.2.2",
   "identifier": "com.codex.dndtracker",
   "build": {
     "frontendDist": "../frontend/dist",
@@ -29,15 +29,17 @@
     ],
     "withGlobalTauri": true,
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' ws://localhost:* http://localhost:* ws://*:8787 https://gist.githubusercontent.com; img-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'"
     }
   },
   "bundle": {
-    "active": true,
-    "targets": "all",
-    "icon": [],
-    "resources": [
-      "resources/wiki.db"
-    ]
-  }
+  "active": true,
+  "targets": "all",
+  "icon": [
+    "icons/icon.ico"
+  ],
+  "resources": [
+    "resources/wiki.db"
+  ]
+}
 }

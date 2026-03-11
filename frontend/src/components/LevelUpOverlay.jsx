@@ -184,7 +184,7 @@ export default function LevelUpOverlay({ show, name, level, className, rulesetId
                   <GainSection icon={<BookOpen size={16} />} title="Class Features" delay={1.5}>
                     <div className="space-y-2">
                       {gains.features.map((f, i) => (
-                        <div key={i}>
+                        <div key={`${f.name}-${i}`}>
                           <span className="text-sm font-medium text-amber-100">{f.name}</span>
                           <p className="text-xs text-amber-200/50 leading-relaxed">{f.description}</p>
                         </div>

@@ -2,28 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// Tauri expects a fixed port during development
-const host = process.env.TAURI_DEV_HOST || 'localhost'
-
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // prevent vite from obscuring rust errors
-  clearScreen: false,
   server: {
-    host,
+    host: '0.0.0.0',      // bind to all interfaces — LAN devices can connect
     port: 5173,
-    strictPort: true,
-    open: false,
-    watch: {
-      // tell vite to ignore watching `src-tauri`
-      ignored: ['**/src-tauri/**'],
-    },
-    proxy: {
-      '/characters': 'http://localhost:8000',
-      '/health': 'http://localhost:8000',
-      '/wiki/search': 'http://localhost:8000',
-      '/wiki/categories': 'http://localhost:8000',
-      '/wiki/articles': 'http://localhost:8000',
-    },
+    // Note: No proxy needed for party (connects directly to sidecar on 8787)
+    // or updates (uses GitHub API directly). Wiki and character data use Tauri invoke.
   },
 })

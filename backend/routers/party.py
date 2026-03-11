@@ -11,9 +11,9 @@ Message protocol (JSON):
 
   Server → Client:
     { type: "welcome",  members: [...], you: <client_id> }
-    { type: "joined",   member: { client_id, character } }
-    { type: "updated",  member: { client_id, character } }
-    { type: "left",     client_id: "..." }
+    { type: "player_joined",       member: { client_id, character } }
+    { type: "updated",              member: { client_id, character } }
+    { type: "player_disconnected",  client_id: "..." }
     { type: "error",    message: "..." }
     { type: "pong" }
 """
@@ -67,7 +67,7 @@ async def _disconnect_client(client_id: str):
     if not _rooms[room_code]:
         del _rooms[room_code]
     else:
-        await _broadcast(room_code, {"type": "left", "client_id": client_id})
+        await _broadcast(room_code, {"type": "player_disconnected", "client_id": client_id})
 
 
 @router.get("/party/rooms")
@@ -116,7 +116,7 @@ async def party_ws(ws: WebSocket):
                 ]
                 await ws.send_text(json.dumps({"type": "welcome", "you": client_id, "members": members}))
                 await _broadcast(room_code, {
-                    "type": "joined",
+                    "type": "player_joined",
                     "member": {"client_id": client_id, "character": character},
                 }, exclude=client_id)
 

@@ -34,7 +34,7 @@ export default function Backstory({ characterId, onPortraitChange }) {
       })
       .catch(err => toast.error(err.message))
       .finally(() => setLoading(false));
-  }, [characterId]);
+  }, [characterId, onPortraitChange]);
 
   const saveFn = useCallback(async (d) => {
     await updateBackstory(characterId, d);

@@ -50,7 +50,11 @@ def create_character(data: CharacterCreate):
 
     session = get_session(char_id)
     try:
-        overview = CharacterOverview(id=1, name=data.name, ruleset=data.ruleset)
+        overview = CharacterOverview(
+            id=1, name=data.name, ruleset=data.ruleset,
+            race=data.race, primary_class=data.primary_class,
+            primary_subclass=data.primary_subclass,
+        )
         session.add(overview)
 
         from backend.routers.overview import _init_defaults
@@ -58,7 +62,8 @@ def create_character(data: CharacterCreate):
 
         session.commit()
         return CharacterSummary(
-            id=char_id, name=data.name, race="", primary_class="",
+            id=char_id, name=data.name, race=data.race,
+            primary_class=data.primary_class,
             level=1, campaign_name="", ruleset=data.ruleset,
         )
     except Exception:

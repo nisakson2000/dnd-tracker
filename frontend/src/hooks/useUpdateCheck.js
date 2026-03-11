@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { APP_VERSION } from '../version';
 
-const GITHUB_VERSION_URL =
-  'https://raw.githubusercontent.com/nisakson2000/dnd-tracker/main/frontend/src/version.js';
+// Same neutral manifest URL as UpdateScreen — no repo name exposed
+const VERSION_MANIFEST_URL =
+  'https://gist.githubusercontent.com/ArsenalRX/ca61bfa2b0eadf1f1e57108cbd881152/raw/version.json';
 
 function parseVersion(str) {
   const m = str.match(/V?(\d+)\.(\d+)\.(\d+)/);
@@ -17,40 +18,52 @@ function isNewer(remote, local) {
   return remote.patch > local.patch;
 }
 
+// checkResult: null | 'up_to_date' | 'update_available' | 'offline'
 export function useUpdateCheck() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [latestVersion, setLatestVersion] = useState(null);
   const [checking, setChecking] = useState(false);
   const [lastChecked, setLastChecked] = useState(null);
+  const [checkResult, setCheckResult] = useState(null);
+  const mountedRef = useRef(true);
 
-  const checkForUpdates = async () => {
+  const checkForUpdates = useCallback(async () => {
     setChecking(true);
+    setCheckResult(null);
     try {
-      const res = await fetch(GITHUB_VERSION_URL, { cache: 'no-store' });
+      const res = await fetch(VERSION_MANIFEST_URL, {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(6000),
+      });
       if (!res.ok) throw new Error('fetch failed');
-      const text = await res.text();
-      const match = text.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
-      if (match) {
-        const remoteVer = match[1];
+      const data = await res.json();
+      const remoteVer = data.version || null;
+      if (remoteVer && mountedRef.current) {
         setLatestVersion(remoteVer);
         const remote = parseVersion(remoteVer);
         const local = parseVersion(APP_VERSION);
-        setUpdateAvailable(isNewer(remote, local));
+        const hasUpdate = isNewer(remote, local);
+        setUpdateAvailable(hasUpdate);
+        setCheckResult(hasUpdate ? 'update_available' : 'up_to_date');
       }
-      setLastChecked(new Date());
+      if (mountedRef.current) setLastChecked(new Date());
     } catch {
-      // Silently fail — no internet or repo unreachable
+      if (mountedRef.current) setCheckResult('offline');
     } finally {
-      setChecking(false);
+      if (mountedRef.current) setChecking(false);
     }
-  };
+  }, []);
 
   // Check on mount, then every 30 minutes
   useEffect(() => {
+    mountedRef.current = true;
     checkForUpdates();
     const interval = setInterval(checkForUpdates, 30 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      mountedRef.current = false;
+      clearInterval(interval);
+    };
+  }, [checkForUpdates]);
 
-  return { updateAvailable, latestVersion, checking, lastChecked, checkForUpdates, currentVersion: APP_VERSION };
+  return { updateAvailable, latestVersion, checking, lastChecked, checkResult, checkForUpdates, currentVersion: APP_VERSION };
 }

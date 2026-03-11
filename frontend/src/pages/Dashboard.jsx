@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, LogIn, BookOpen, Heart, Shield, Library, Bell } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { listCharacters, createCharacter, deleteCharacter } from '../api/characters';
 import { RULESET_OPTIONS, getRuleset } from '../data/rulesets';
 import { APP_VERSION } from '../version';
 import ConfirmDialog from '../components/ConfirmDialog';
-import UpdatesPanel from '../components/UpdatesPanel';
+import UpdateScreen from './UpdateScreen';
 import { useUpdateCheck } from '../hooks/useUpdateCheck';
 
 export default function Dashboard() {
@@ -297,8 +297,16 @@ export default function Dashboard() {
         </motion.div>
       )}
 
-      {/* Updates Panel */}
-      <UpdatesPanel show={showUpdates} onClose={() => setShowUpdates(false)} />
+      {/* Updates Modal */}
+      <AnimatePresence>
+        {showUpdates && (
+          <UpdateScreen
+            key="update-modal"
+            onDone={() => setShowUpdates(false)}
+            asModal={true}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Delete Confirm */}
       <ConfirmDialog

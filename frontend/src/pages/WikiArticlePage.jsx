@@ -44,7 +44,7 @@ function formatContent(content) {
           <thead>
             <tr className="bg-amber-900/20">
               {headerRow.map((cell, j) => (
-                <th key={j} className="text-left px-3 py-2 text-amber-100 font-display text-xs border-b border-gold/20">
+                <th key={`header-${j}`} className="text-left px-3 py-2 text-amber-100 font-display text-xs border-b border-gold/20">
                   {cell}
                 </th>
               ))}
@@ -52,9 +52,9 @@ function formatContent(content) {
           </thead>
           <tbody>
             {dataRows.map((row, i) => (
-              <tr key={i} className={i % 2 === 0 ? 'bg-white/2' : ''}>
+              <tr key={`row-${i}`} className={i % 2 === 0 ? 'bg-white/2' : ''}>
                 {row.map((cell, j) => (
-                  <td key={j} className="px-3 py-2 text-amber-200/70 border-b border-gold/10">
+                  <td key={`cell-${i}-${j}`} className="px-3 py-2 text-amber-200/70 border-b border-gold/10">
                     {cell}
                   </td>
                 ))}

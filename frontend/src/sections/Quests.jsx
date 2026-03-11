@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Map, CheckSquare, Square } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getQuests, addQuest, updateQuest, deleteQuest } from '../api/quests';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function Quests({ characterId }) {
   const [quests, setQuests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const load = async () => {
     try { setQuests(await getQuests(characterId)); }
@@ -36,6 +38,7 @@ export default function Quests({ characterId }) {
     try {
       await deleteQuest(characterId, id);
       toast.success('Quest removed');
+      setConfirmDelete(null);
       load();
     } catch (err) { toast.error(err.message); }
   };
@@ -67,7 +70,7 @@ export default function Quests({ characterId }) {
         </div>
         <div className="flex gap-1">
           <button onClick={() => { setEditing(quest); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>
-          <button onClick={() => handleDelete(quest.id)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>
+          <button onClick={() => setConfirmDelete(quest)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>
         </div>
       </div>
       {quest.description && <p className="text-sm text-amber-200/50 mb-2">{quest.description}</p>}
@@ -148,6 +151,14 @@ export default function Quests({ characterId }) {
       {showForm && (
         <QuestForm quest={editing} onSubmit={handleSave} onCancel={() => { setShowForm(false); setEditing(null); }} />
       )}
+
+      <ConfirmDialog
+        show={!!confirmDelete}
+        title="Delete Quest?"
+        message={`Remove "${confirmDelete?.title}" and all its objectives? This cannot be undone.`}
+        onConfirm={() => handleDelete(confirmDelete.id)}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }
@@ -158,6 +169,12 @@ function QuestForm({ quest, onSubmit, onCancel }) {
   });
   const [newObj, setNewObj] = useState('');
   const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onCancel]);
 
   const addObjective = () => {
     if (!newObj.trim()) return;
@@ -186,7 +203,7 @@ function QuestForm({ quest, onSubmit, onCancel }) {
           <div>
             <label className="label">Objectives</label>
             {form.objectives.map((obj, i) => (
-              <div key={i} className="flex items-center gap-2 mb-1">
+              <div key={`${obj.text}-${i}`} className="flex items-center gap-2 mb-1">
                 <span className="text-sm text-amber-200/60 flex-1">{obj.text}</span>
                 <button onClick={() => removeObjective(i)} className="text-red-400/50 hover:text-red-400"><Trash2 size={12} /></button>
               </div>

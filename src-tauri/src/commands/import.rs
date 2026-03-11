@@ -57,6 +57,12 @@ pub fn import_character(
     }
 
     state.with_char_conn(&character_id, |conn| {
+        // Wrap entire import in a transaction — if anything fails, ALL changes roll back.
+        // Without this, a failure mid-import (e.g. after deleting spells but before inserting
+        // new ones) would leave the character with missing data and no way to recover.
+        conn.execute("BEGIN TRANSACTION", []).map_err(|e| e.to_string())?;
+
+        let result = (|| -> Result<serde_json::Value, String> {
         let mut imported = serde_json::Map::new();
 
         // Overview
@@ -415,5 +421,17 @@ pub fn import_character(
         }
 
         Ok(serde_json::json!({"status": "imported", "imported": imported, "errors": []}))
+        })();
+
+        match result {
+            Ok(val) => {
+                conn.execute("COMMIT", []).map_err(|e| e.to_string())?;
+                Ok(val)
+            }
+            Err(e) => {
+                let _ = conn.execute("ROLLBACK", []);
+                Err(format!("Import failed (rolled back): {}", e))
+            }
+        }
     })
 }

@@ -7,6 +7,14 @@ export default function ConfirmDialog({ show, title, message, warning, confirmTe
 
   useEffect(() => { if (!show) setTyped(''); }, [show]);
 
+  // Escape key to close
+  useEffect(() => {
+    if (!show) return;
+    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [show, onCancel]);
+
   const canConfirm = !confirmText || typed === confirmText;
 
   return (

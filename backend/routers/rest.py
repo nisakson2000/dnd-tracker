@@ -39,7 +39,7 @@ def long_rest(character_id: str):
         # Reduce exhaustion by 1 (PHB: long rest with food/water)
         if overview.exhaustion_level > 0:
             old_level = overview.exhaustion_level
-            overview.exhaustion_level = max(0, overview.exhaustion_level - 1)
+            overview.exhaustion_level = max(0, min(10, overview.exhaustion_level) - 1)
             restored.append(f"Exhaustion reduced: {old_level} → {overview.exhaustion_level}")
 
         # Recover half hit dice (rounded up)
@@ -48,7 +48,7 @@ def long_rest(character_id: str):
         max_recover = max(1, ceil(total_dice / 2))
         if overview.hit_dice_used > 0:
             recovered = min(overview.hit_dice_used, max_recover)
-            overview.hit_dice_used = max(0, overview.hit_dice_used - recovered)
+            overview.hit_dice_used = max(0, overview.hit_dice_used - recovered) if overview.hit_dice_used >= recovered else 0
             restored.append(f"Hit dice recovered: {recovered} (used: {overview.hit_dice_used} remaining)")
 
         # Reset all spell slots
@@ -86,22 +86,32 @@ def short_rest(character_id: str, hit_dice_to_spend: int = 0):
 
         restored = []
 
+        # Reset death saves (RAW: short rest resets death saves)
+        if overview.death_save_successes > 0 or overview.death_save_failures > 0:
+            overview.death_save_successes = 0
+            overview.death_save_failures = 0
+            restored.append("Death saves reset")
+
         # Spend hit dice (user chose how many)
         if hit_dice_to_spend > 0:
-            available = overview.level - overview.hit_dice_used
+            available = max(0, overview.level - overview.hit_dice_used)
             actual_spend = min(hit_dice_to_spend, available)
             if actual_spend > 0:
                 overview.hit_dice_used += actual_spend
                 restored.append(f"Spent {actual_spend} hit dice (apply rolled HP manually)")
 
-        # Reset warlock pact magic slots
-        # We check if primary_class is Warlock to reset spell slots
-        if overview.primary_class == "Warlock":
+        # Reset warlock pact magic slots — check primary class AND multiclass data
+        multiclass_data = overview.multiclass_data or "[]"
+        has_warlock = overview.primary_class == "Warlock" or "warlock" in multiclass_data.lower()
+        if has_warlock:
             slots = session.query(SpellSlot).all()
+            slots_reset = False
             for slot in slots:
                 if slot.used_slots > 0:
                     slot.used_slots = 0
-            restored.append("Pact Magic slots restored")
+                    slots_reset = True
+            if slots_reset:
+                restored.append("Pact Magic slots restored")
 
         session.commit()
 

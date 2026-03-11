@@ -85,7 +85,12 @@ def _safe_bool(val, default=False):
 
 @router.post("")
 async def import_character(character_id: str, request: Request):
-    data = await request.json()
+    try:
+        data = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON in request body")
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=400, detail="Expected a JSON object")
     errors = []
     imported = {}
 

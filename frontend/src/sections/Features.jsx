@@ -3,6 +3,7 @@ import { Plus, Trash2, ScrollText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getFeatures, addFeature, deleteFeature } from '../api/features';
 import HelpTooltip from '../components/HelpTooltip';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { HELP } from '../data/helpText';
 
 export default function Features({ characterId }) {
@@ -10,6 +11,7 @@ export default function Features({ characterId }) {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const load = async () => {
     try {
@@ -34,6 +36,7 @@ export default function Features({ characterId }) {
     try {
       await deleteFeature(characterId, id);
       toast.success('Feature removed');
+      setConfirmDelete(null);
       load();
     } catch (err) { toast.error(err.message); }
   };
@@ -83,7 +86,7 @@ export default function Features({ characterId }) {
                     <span className="ml-2 capitalize text-purple-300/50">{f.feature_type}</span>
                   </div>
                 </div>
-                <button onClick={() => handleDelete(f.id)} className="text-red-400/50 hover:text-red-400">
+                <button onClick={() => setConfirmDelete(f)} className="text-red-400/50 hover:text-red-400">
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -94,6 +97,14 @@ export default function Features({ characterId }) {
       )}
 
       {showAdd && <FeatureForm onSubmit={handleAdd} onCancel={() => setShowAdd(false)} />}
+
+      <ConfirmDialog
+        show={!!confirmDelete}
+        title="Delete Feature?"
+        message={`Remove "${confirmDelete?.name}"? This cannot be undone.`}
+        onConfirm={() => handleDelete(confirmDelete.id)}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }
@@ -101,6 +112,12 @@ export default function Features({ characterId }) {
 function FeatureForm({ onSubmit, onCancel }) {
   const [form, setForm] = useState({ name: '', source: '', source_level: 0, feature_type: 'class', description: '' });
   const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onCancel]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={e => e.target === e.currentTarget && onCancel()}>

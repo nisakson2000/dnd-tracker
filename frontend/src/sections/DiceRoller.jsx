@@ -1,8 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Dice5 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import HelpTooltip from '../components/HelpTooltip';
 import { HELP } from '../data/helpText';
+import { computeConditionEffects } from '../data/conditionEffects';
 
 const DICE = [4, 6, 8, 10, 12, 20, 100];
 
@@ -31,15 +33,24 @@ function parseRoll(expr) {
   const count = parseInt(match[1]) || 1;
   const sides = parseInt(match[2]);
   const modifier = parseInt(match[3]) || 0;
+  if (count > 100 || sides > 100 || count < 1 || sides < 1) return null;
   return { count, sides, modifier };
 }
 
-export default function DiceRoller() {
+export default function DiceRoller({ activeConditions = [] }) {
   const [history, setHistory] = useState([]);
   const [customExpr, setCustomExpr] = useState('');
   const [lastRoll, setLastRoll] = useState(null);
   const [rolling, setRolling] = useState(false);
   const [rollMode, setRollMode] = useState('normal'); // 'normal' | 'advantage' | 'disadvantage'
+  const condEffects = computeConditionEffects(activeConditions);
+
+  // Auto-set roll mode based on active conditions
+  useEffect(() => {
+    if (condEffects.netAttackMode !== 'normal') {
+      setRollMode(condEffects.netAttackMode);
+    }
+  }, [condEffects.netAttackMode]);
 
   const doRoll = useCallback((count, sides, modifier = 0, label = '') => {
     setRolling(true);
@@ -89,6 +100,8 @@ export default function DiceRoller() {
     if (parsed) {
       doRoll(parsed.count, parsed.sides, parsed.modifier);
       setCustomExpr('');
+    } else if (customExpr.trim()) {
+      toast.error('Invalid roll — try "3d6+5" or "1d20"');
     }
   };
 
@@ -106,6 +119,15 @@ export default function DiceRoller() {
       <div className="card">
         <h3 className="font-display text-amber-100 mb-2">Roll Mode</h3>
         <p className="text-xs text-amber-200/30 mb-3">Advantage/Disadvantage applies to d20 rolls only. Rolls 2d20 and takes the higher (ADV) or lower (DIS) result.</p>
+        {condEffects.netAttackMode !== 'normal' && (
+          <div className={`text-xs mb-3 px-3 py-2 rounded border ${
+            condEffects.netAttackMode === 'disadvantage'
+              ? 'bg-red-950/40 border-red-500/30 text-red-300'
+              : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+          }`}>
+            Auto-set to <span className="font-semibold">{condEffects.netAttackMode}</span> from active conditions ({activeConditions.join(', ')}). You can override manually.
+          </div>
+        )}
         <div className="flex gap-2">
           {[
             { mode: 'normal', label: 'Normal' },

@@ -3,6 +3,7 @@ import { Plus, Trash2, Edit2, Globe, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { getLoreNotes, addLoreNote, updateLoreNote, deleteLoreNote } from '../api/lore';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function Lore({ characterId }) {
   const [notes, setNotes] = useState([]);
@@ -10,6 +11,7 @@ export default function Lore({ characterId }) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const load = async () => {
     try { setNotes(await getLoreNotes(characterId)); }
@@ -38,6 +40,7 @@ export default function Lore({ characterId }) {
     try {
       await deleteLoreNote(characterId, id);
       toast.success('Note removed');
+      setConfirmDelete(null);
       load();
     } catch (err) { toast.error(err.message); }
   };
@@ -45,7 +48,7 @@ export default function Lore({ characterId }) {
   const filtered = notes.filter(n => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
-    return n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q) || n.category.toLowerCase().includes(q);
+    return (n.title || '').toLowerCase().includes(q) || (n.body || '').toLowerCase().includes(q) || (n.category || '').toLowerCase().includes(q);
   });
 
   if (loading) return <div className="text-amber-200/40">Loading lore...</div>;
@@ -83,7 +86,7 @@ export default function Lore({ characterId }) {
                 </div>
                 <div className="flex gap-1">
                   <button onClick={() => { setEditing(note); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>
-                  <button onClick={() => handleDelete(note.id)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>
+                  <button onClick={() => setConfirmDelete(note)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>
                 </div>
               </div>
               <p className="text-sm text-amber-200/50 whitespace-pre-wrap line-clamp-4">{note.body}</p>
@@ -95,6 +98,14 @@ export default function Lore({ characterId }) {
       {showForm && (
         <LoreForm note={editing} onSubmit={handleSave} onCancel={() => { setShowForm(false); setEditing(null); }} />
       )}
+
+      <ConfirmDialog
+        show={!!confirmDelete}
+        title="Delete Lore Note?"
+        message={`Remove "${confirmDelete?.title}"? This cannot be undone.`}
+        onConfirm={() => handleDelete(confirmDelete.id)}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }
@@ -102,6 +113,12 @@ export default function Lore({ characterId }) {
 function LoreForm({ note, onSubmit, onCancel }) {
   const [form, setForm] = useState(note || { title: '', category: '', body: '' });
   const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onCancel]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={e => e.target === e.currentTarget && onCancel()}>

@@ -600,3 +600,13 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
 .animate-scale-in { animation: scaleIn 0.3s ease-out forwards; }
 .animate-shimmer { background: linear-gradient(90deg, transparent 30%, var(--accent-xl) 50%, transparent 70%); background-size: 200% 100%; animation: shimmer 2s infinite; }
+
+/* ── Accessibility: respect user motion preferences ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

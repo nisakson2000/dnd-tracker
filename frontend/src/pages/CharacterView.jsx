@@ -58,11 +58,32 @@ export default function CharacterView() {
   const [loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
   const [activeConditionCount, setActiveConditionCount] = useState(0);
+  const [activeConditions, setActiveConditions] = useState([]);
   const [portrait, setPortrait] = useState('');
   const { showOverlay, levelUpInfo, triggerLevelUp, dismiss } = useLevelUp();
   useCrashRecovery();
   useAutoBackup(characterId, character?.name);
-  const { updateAvailable } = useUpdateCheck();
+  const { updateAvailable, checkResult, latestVersion, currentVersion } = useUpdateCheck();
+
+  // Show toast notification when update check completes
+  useEffect(() => {
+    if (!checkResult) return;
+    if (checkResult === 'update_available') {
+      toast(`Update available: v${latestVersion}`, {
+        icon: '\u2728',
+        duration: 5000,
+        style: { background: '#1a1520', color: '#fde68a', border: '1px solid rgba(201,168,76,0.4)' },
+      });
+    } else if (checkResult === 'up_to_date') {
+      toast.success(`You're up to date (v${currentVersion})`, { duration: 3000 });
+    } else if (checkResult === 'offline') {
+      toast('Update check failed — no internet', {
+        icon: '\uD83D\uDCE1',
+        duration: 3000,
+        style: { background: '#1a1520', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' },
+      });
+    }
+  }, [checkResult]);
 
   useEffect(() => {
     loadCharacter();
@@ -75,12 +96,14 @@ export default function CharacterView() {
       // Load condition count and portrait
       try {
         const conds = await getConditions(characterId);
-        setActiveConditionCount(conds.filter(c => c.active).length);
-      } catch {}
+        const activeConds = (conds || []).filter(c => c.active);
+        setActiveConditionCount(activeConds.length);
+        setActiveConditions(activeConds.map(c => c.name));
+      } catch (e) { console.warn('Failed to load conditions:', e); }
       try {
         const bs = await getBackstory(characterId);
         if (bs.portrait_data) setPortrait(bs.portrait_data);
-      } catch {}
+      } catch (e) { console.warn('Failed to load backstory:', e); }
     } catch (err) {
       toast.error(`Failed to load character: ${err.message}`);
       navigate('/');
@@ -136,7 +159,7 @@ export default function CharacterView() {
           <div style={{ height: 'var(--top-h, 52px)', background: 'rgba(4,4,11,0.85)', backdropFilter: 'blur(24px) saturate(1.5)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0', padding: '0 18px', flexShrink: 0 }}>
             {/* Portrait mini */}
             {portrait ? (
-              <img src={portrait} alt="" style={{ width: '30px', height: '30px', borderRadius: '9px', objectFit: 'cover', border: '1px solid var(--border-h)', marginRight: '10px' }} />
+              <img src={portrait} alt={`${character?.name || 'Character'} portrait`} style={{ width: '30px', height: '30px', borderRadius: '9px', objectFit: 'cover', border: '1px solid var(--border-h)', marginRight: '10px' }} />
             ) : (
               <div style={{ width: '30px', height: '30px', borderRadius: '9px', background: 'linear-gradient(135deg, var(--accent), var(--accent-l))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px', color: 'white', boxShadow: '0 0 16px var(--accent-glow)', marginRight: '10px', flexShrink: 0 }}>
                 {character?.name?.[0] || '?'}
@@ -183,8 +206,12 @@ export default function CharacterView() {
                 character={character}
                 onCharacterUpdate={(updated) => setCharacter(updated)}
                 onLevelUp={triggerLevelUp}
-                onConditionsChange={(count) => setActiveConditionCount(count)}
+                onConditionsChange={(count, condNames) => {
+                  setActiveConditionCount(count);
+                  setActiveConditions(condNames || []);
+                }}
                 onPortraitChange={setPortrait}
+                activeConditions={activeConditions}
               />
             </Suspense>
           </main>

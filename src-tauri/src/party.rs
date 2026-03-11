@@ -2,6 +2,7 @@ use futures_util::{SinkExt, StreamExt};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Instant;
 use tokio::sync::{mpsc, oneshot, Mutex, RwLock};
 use warp::ws::{Message, WebSocket};
 use warp::Filter;
@@ -10,19 +11,22 @@ pub const PARTY_PORT: u16 = 8787;
 const SAFE_CHARS: &[u8] = b"ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const MAX_ROOM_ATTEMPTS: usize = 100;
 const MAX_MESSAGE_SIZE: usize = 65_536; // 64KB per message
+const CLIENT_TIMEOUT_SECS: u64 = 90; // Remove clients with no activity after 90s
+const CHANNEL_BUFFER_SIZE: usize = 256; // Bounded channel — drops slow clients
 
-type Tx = mpsc::UnboundedSender<Message>;
+type Tx = mpsc::Sender<Message>;
 
 struct Client {
     tx: Tx,
     room_code: Option<String>,
-    character_id: String, // the D&D character ID this client owns
+    character_id: String,
     character: Value,
+    last_seen: Instant,
 }
 
 struct Room {
     members: Vec<String>, // client_ids
-    host_id: String,      // client_id of the host
+    host_id: String,
 }
 
 pub struct PartyServer {
@@ -53,6 +57,7 @@ impl PartyServer {
 
         let state = self.clone();
         let state2 = self.clone();
+        let state3 = self.clone();
 
         let create_room = warp::path!("party" / "rooms")
             .and(warp::post())
@@ -81,23 +86,71 @@ impl PartyServer {
         match result {
             Ok((_addr, server)) => {
                 tokio::spawn(server);
+                // Start zombie cleanup task
+                tokio::spawn(async move {
+                    loop {
+                        tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                        if !*state3.running.read().await {
+                            break;
+                        }
+                        state3.cleanup_zombies().await;
+                    }
+                });
                 Ok(PARTY_PORT)
             }
             Err(e) => {
                 *self.running.write().await = false;
                 *self.shutdown.lock().await = None;
-                Err(format!("Failed to start party server on port {}: {}", PARTY_PORT, e))
+                Err(format!(
+                    "Failed to start party server on port {}: {}",
+                    PARTY_PORT, e
+                ))
             }
         }
     }
 
     pub async fn stop(self: &Arc<Self>) {
+        // Send graceful shutdown message to all connected clients
+        {
+            let clients = self.clients.read().await;
+            let msg = Message::text(
+                json!({
+                    "type": "host_ended",
+                    "message": "The host ended the session.",
+                    "timestamp": Self::timestamp(),
+                })
+                .to_string(),
+            );
+            for client in clients.values() {
+                let _ = client.tx.try_send(msg.clone());
+            }
+        }
+
+        // Small delay so messages can flush
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+
         if let Some(tx) = self.shutdown.lock().await.take() {
             let _ = tx.send(());
         }
         *self.running.write().await = false;
         self.clients.write().await.clear();
         self.rooms.write().await.clear();
+    }
+
+    /// Remove clients that haven't sent any message in CLIENT_TIMEOUT_SECS
+    async fn cleanup_zombies(self: &Arc<Self>) {
+        let now = Instant::now();
+        let stale_ids: Vec<String> = {
+            let clients = self.clients.read().await;
+            clients
+                .iter()
+                .filter(|(_, c)| now.duration_since(c.last_seen).as_secs() > CLIENT_TIMEOUT_SECS)
+                .map(|(id, _)| id.clone())
+                .collect()
+        };
+        for id in stale_ids {
+            self.remove_client(&id).await;
+        }
     }
 
     fn generate_room_code() -> String {
@@ -121,7 +174,7 @@ impl PartyServer {
                     code.clone(),
                     Room {
                         members: Vec::new(),
-                        host_id: String::new(), // set when first client joins
+                        host_id: String::new(),
                     },
                 );
                 return Ok(code);
@@ -138,6 +191,7 @@ impl PartyServer {
                 room_code: None,
                 character_id: String::new(),
                 character: json!({}),
+                last_seen: Instant::now(),
             },
         );
     }
@@ -150,12 +204,19 @@ impl PartyServer {
 
         if let Some(code) = &room_code {
             let mut should_remove_room = false;
+            let mut needs_host_reassign = false;
+            let mut new_host_id = None;
             {
                 let mut rooms = self.rooms.write().await;
                 if let Some(room) = rooms.get_mut(code) {
                     room.members.retain(|id| id != client_id);
                     if room.members.is_empty() {
                         should_remove_room = true;
+                    } else if room.host_id == client_id {
+                        // Reassign host to first remaining member
+                        needs_host_reassign = true;
+                        room.host_id = room.members[0].clone();
+                        new_host_id = Some(room.members[0].clone());
                     }
                 }
                 if should_remove_room {
@@ -164,6 +225,7 @@ impl PartyServer {
             }
 
             if !should_remove_room {
+                // Notify room that player disconnected
                 self.broadcast_to_room(
                     code,
                     &json!({
@@ -174,6 +236,23 @@ impl PartyServer {
                     Some(client_id),
                 )
                 .await;
+
+                // Notify new host if host was reassigned
+                if needs_host_reassign {
+                    if let Some(new_id) = &new_host_id {
+                        let clients = self.clients.read().await;
+                        if let Some(client) = clients.get(new_id) {
+                            let _ = client.tx.try_send(Message::text(
+                                json!({
+                                    "type": "host_promoted",
+                                    "message": "You are now the host",
+                                    "timestamp": Self::timestamp(),
+                                })
+                                .to_string(),
+                            ));
+                        }
+                    }
+                }
             }
         }
 
@@ -181,13 +260,30 @@ impl PartyServer {
     }
 
     fn send_error(client: &Client, message: &str) {
-        let _ = client.tx.send(Message::text(
-            json!({ "type": "error", "message": message, "timestamp": Self::timestamp() }).to_string(),
+        let _ = client.tx.try_send(Message::text(
+            json!({ "type": "error", "message": message, "timestamp": Self::timestamp() })
+                .to_string(),
         ));
     }
 
     async fn handle_join(self: &Arc<Self>, client_id: &str, room: &str, character: Value) {
-        let room_exists = self.rooms.read().await.contains_key(room);
+        // Use a single write lock to check + join atomically
+        let room_exists = {
+            let mut rooms = self.rooms.write().await;
+            if let Some(r) = rooms.get_mut(room) {
+                // Add to room while we hold the lock
+                if !r.members.contains(&client_id.to_string()) {
+                    r.members.push(client_id.to_string());
+                }
+                if r.host_id.is_empty() {
+                    r.host_id = client_id.to_string();
+                }
+                true
+            } else {
+                false
+            }
+        };
+
         if !room_exists {
             let clients = self.clients.read().await;
             if let Some(client) = clients.get(client_id) {
@@ -196,7 +292,6 @@ impl PartyServer {
             return;
         }
 
-        // Extract character_id from the character payload for ownership tracking
         let char_id = character
             .get("id")
             .and_then(|v| v.as_str())
@@ -210,19 +305,7 @@ impl PartyServer {
                 client.room_code = Some(room.to_string());
                 client.character_id = char_id;
                 client.character = character;
-            }
-        }
-
-        // Add to room, set host if first member
-        {
-            let mut rooms = self.rooms.write().await;
-            if let Some(r) = rooms.get_mut(room) {
-                if !r.members.contains(&client_id.to_string()) {
-                    r.members.push(client_id.to_string());
-                }
-                if r.host_id.is_empty() {
-                    r.host_id = client_id.to_string();
-                }
+                client.last_seen = Instant::now();
             }
         }
 
@@ -235,7 +318,7 @@ impl PartyServer {
         {
             let clients = self.clients.read().await;
             if let Some(client) = clients.get(client_id) {
-                let _ = client.tx.send(Message::text(
+                let _ = client.tx.try_send(Message::text(
                     json!({
                         "type": "welcome",
                         "members": members,
@@ -268,7 +351,6 @@ impl PartyServer {
         .await;
     }
 
-    /// Handle granular sync events — only the fields that changed
     async fn handle_event(self: &Arc<Self>, client_id: &str, event: &Value) {
         let room_code = {
             let clients = self.clients.read().await;
@@ -281,10 +363,10 @@ impl PartyServer {
             .and_then(|v| v.as_str())
             .unwrap_or("unknown");
 
-        // Update the stored character snapshot with the changed fields
         {
             let mut clients = self.clients.write().await;
             if let Some(client) = clients.get_mut(client_id) {
+                client.last_seen = Instant::now();
                 if let Some(changes) = event.get("data").and_then(|d| d.as_object()) {
                     if let Some(char_obj) = client.character.as_object_mut() {
                         for (key, val) in changes {
@@ -295,7 +377,6 @@ impl PartyServer {
             }
         }
 
-        // Broadcast the granular event to room
         self.broadcast_to_room(
             &code,
             &json!({
@@ -310,12 +391,12 @@ impl PartyServer {
         .await;
     }
 
-    /// Full character update (backwards compatible)
     async fn handle_update(self: &Arc<Self>, client_id: &str, character: Value) {
         let room_code = {
             let mut clients = self.clients.write().await;
             if let Some(client) = clients.get_mut(client_id) {
                 client.character = character.clone();
+                client.last_seen = Instant::now();
                 client.room_code.clone()
             } else {
                 None
@@ -354,7 +435,12 @@ impl PartyServer {
             .unwrap_or_default()
     }
 
-    async fn broadcast_to_room(self: &Arc<Self>, room: &str, msg: &Value, exclude: Option<&str>) {
+    async fn broadcast_to_room(
+        self: &Arc<Self>,
+        room: &str,
+        msg: &Value,
+        exclude: Option<&str>,
+    ) {
         let rooms = self.rooms.read().await;
         let clients = self.clients.read().await;
         if let Some(r) = rooms.get(room) {
@@ -362,7 +448,8 @@ impl PartyServer {
             for id in &r.members {
                 if exclude.map_or(true, |ex| ex != id) {
                     if let Some(client) = clients.get(id) {
-                        let _ = client.tx.send(Message::text(text.clone()));
+                        // Use try_send — if buffer is full, skip this client (they're too slow)
+                        let _ = client.tx.try_send(Message::text(text.clone()));
                     }
                 }
             }
@@ -382,7 +469,7 @@ async fn handle_create_room(state: Arc<PartyServer>) -> impl warp::Reply {
 async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
     let client_id = uuid::Uuid::new_v4().to_string()[..8].to_string();
     let (mut ws_tx, mut ws_rx) = ws.split();
-    let (tx, mut rx) = mpsc::unbounded_channel::<Message>();
+    let (tx, mut rx) = mpsc::channel::<Message>(CHANNEL_BUFFER_SIZE);
 
     state.add_client(client_id.clone(), tx).await;
 
@@ -393,13 +480,14 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
                 break;
             }
         }
+        // Gracefully close the WebSocket when channel closes
+        let _ = ws_tx.close().await;
     });
 
     // Process incoming messages
     while let Some(Ok(msg)) = ws_rx.next().await {
         if msg.is_text() {
             if let Ok(text) = msg.to_str() {
-                // Size guard
                 if text.len() > MAX_MESSAGE_SIZE {
                     let clients = state.clients.read().await;
                     if let Some(client) = clients.get(&client_id) {
@@ -419,21 +507,25 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
                                 parsed.get("character").cloned().unwrap_or(json!({}));
                             state.handle_join(&client_id, room, character).await;
                         }
-                        // Granular sync events:
-                        // { type: "event", event: "hp_changed", data: { hp: 25, max_hp: 40 } }
                         Some("event") => {
                             state.handle_event(&client_id, &parsed).await;
                         }
-                        // Full character update (backwards compatible)
                         Some("update") => {
                             let character =
                                 parsed.get("character").cloned().unwrap_or(json!({}));
                             state.handle_update(&client_id, character).await;
                         }
                         Some("ping") => {
+                            // Update last_seen timestamp
+                            {
+                                let mut clients = state.clients.write().await;
+                                if let Some(client) = clients.get_mut(&client_id) {
+                                    client.last_seen = Instant::now();
+                                }
+                            }
                             let clients = state.clients.read().await;
                             if let Some(client) = clients.get(&client_id) {
-                                let _ = client.tx.send(Message::text(
+                                let _ = client.tx.try_send(Message::text(
                                     json!({"type": "pong", "timestamp": PartyServer::timestamp()})
                                         .to_string(),
                                 ));
@@ -467,4 +559,17 @@ pub async fn stop_party_server(
 ) -> Result<(), String> {
     party.stop().await;
     Ok(())
+}
+
+/// Returns the machine's LAN IP so the host can share it with players.
+#[tauri::command]
+pub fn get_local_ip() -> String {
+    use std::net::UdpSocket;
+    UdpSocket::bind("0.0.0.0:0")
+        .and_then(|s| {
+            s.connect("8.8.8.8:80")?;
+            s.local_addr()
+        })
+        .map(|addr| addr.ip().to_string())
+        .unwrap_or_else(|_| "127.0.0.1".to_string())
 }

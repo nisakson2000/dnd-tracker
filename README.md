@@ -1,6 +1,6 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.1.8**
+**Current Version: V0.2.2**
 
 A native desktop application for managing D&D 5e characters with full ruleset support, a 964-article encyclopedia, real-time party sync, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
@@ -41,6 +41,14 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 ### Combat Tracker
 - **Attacks & Weapons** — Add custom attacks with damage dice, damage type, range, and properties
 - **Conditions** — 15 D&D conditions with emoji icons and detailed info panels (Blinded, Charmed, Deafened, Frightened, Grappled, Incapacitated, Invisible, Paralyzed, Petrified, Poisoned, Prone, Restrained, Stunned, Unconscious, Exhaustion)
+- **Automatic Condition Effects** — Active conditions automatically apply their D&D 5e mechanical effects:
+  - Speed overrides (Grappled/Restrained/Paralyzed/Unconscious → Speed 0)
+  - Attack roll modifiers (Blinded/Poisoned/Prone/Restrained → Disadvantage; Invisible → Advantage)
+  - Saving throw effects (Paralyzed/Stunned/Unconscious → Auto-fail STR/DEX; Restrained → Disadvantage DEX)
+  - Ability check penalties (Poisoned/Frightened → Disadvantage on all checks)
+  - Dice Roller auto-sets advantage/disadvantage from conditions
+  - Effects banner on Character Sheet shows all active penalties at a glance
+  - D&D RAW: advantage + disadvantage from different sources cancel out
 - **Action Economy Reference** — Quick reference for Actions, Bonus Actions, Reactions
 - **Combat Notes** — Separate editable sections for Actions, Bonus Actions, Reactions, and Legendary Actions
 - **Auto-save** — Changes persist immediately with visual save indicator
@@ -106,13 +114,19 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 
 ### Party Connect
 - **LAN Sync** — Real-time party sync over local WiFi, no internet required
-- **Room Codes** — Host generates a 4-character code; players join by entering it
+- **Room Codes** — Host generates a 4-character code; players join by entering IP + code
+- **Dev/Built Cross-Play** — Dev builds and production .exe connect to each other seamlessly
 - **Live Data** — Syncs character name, race, class, level, HP, max HP, AC, and death status
 - **HP Color Bars** — Color-coded health indicators (green 51%+, yellow 26–50%, red 1–25%, skull at 0)
-- **Class Icons** — Thematic emoji icons per class (swords for melee, wands for casters)
 - **Connection Status** — Visual indicators for Connected/Connecting/Disconnected
-- **Auto-Sync** — Optionally auto-sync when HP or AC changes
+- **Auto-Reconnect** — Exponential backoff reconnect on WiFi drops (up to 10 retries)
+- **Connection Timeout** — 8-second timeout with clear error messages instead of silent hangs
+- **Host Reassignment** — If host disconnects, another player is automatically promoted
+- **Graceful Shutdown** — All players notified when host ends the session
+- **Zombie Cleanup** — Inactive clients removed after 90s of no activity
+- **Auto-Sync** — Optionally auto-sync when HP, AC, name, race, or class changes
 - **WebSocket Heartbeat** — 25-second ping interval to maintain connections
+- **Bounded Channels** — Memory-safe message queues prevent slow clients from causing leaks
 
 ### Rest Mechanics
 - **Long Rest** — Restores full HP, removes temporary HP, resets death saves, reduces exhaustion by 1, recovers half hit dice (rounded up), resets all spell slots
@@ -161,30 +175,80 @@ Each character stores its own ruleset. Currently supported:
 
 Switching rulesets updates races/species, classes, spell slots, conditions, exhaustion, feats, and class features throughout the UI.
 
-## Prerequisites
+## Installation
 
-- [Node.js](https://nodejs.org/) 18+
-- [Rust toolchain](https://rustup.rs/) (includes `cargo`)
-- [Tauri CLI](https://v2.tauri.app/start/prerequisites/) prerequisites for your OS
+### Windows
 
-## Setup
+1. **Install Node.js** — Download and run the installer from [nodejs.org](https://nodejs.org/) (LTS, 18+). Check "Add to PATH" during install.
 
-```bash
-# Install Tauri CLI and root dependencies
-npm install
+2. **Install Rust** — Open PowerShell and run:
+   ```powershell
+   winget install Rustlang.Rustup
+   ```
+   Or download from [rustup.rs](https://rustup.rs/). Restart your terminal after install.
 
-# Install frontend dependencies
-cd frontend
-npm install
-```
+3. **Install Visual Studio Build Tools** — Required by Tauri on Windows:
+   - Download [VS Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+   - In the installer, check **"Desktop development with C++"**
+   - Install and restart
+
+4. **Install WebView2** — Usually pre-installed on Windows 10/11. If not, download from [Microsoft](https://developer.microsoft.com/en-us/microsoft-edge/webview2/).
+
+5. **Clone and install dependencies:**
+   ```powershell
+   git clone https://github.com/nisakson2000/dnd-tracker.git
+   cd dnd-tracker
+   npm install
+   cd frontend
+   npm install
+   cd ..
+   ```
+
+6. **Run the app:**
+   ```powershell
+   npm run tauri dev
+   ```
+
+### Linux (Ubuntu/Debian)
+
+1. **Install system dependencies:**
+   ```bash
+   sudo apt update
+   sudo apt install -y libwebkit2gtk-4.1-dev build-essential curl wget file \
+     libssl-dev libayatana-appindicator3-dev librsvg2-dev \
+     libgtk-3-dev libsoup-3.0-dev libjavascriptcoregtk-4.1-dev
+   ```
+
+2. **Install Node.js 18+:**
+   ```bash
+   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+   sudo apt install -y nodejs
+   ```
+
+3. **Install Rust:**
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   source "$HOME/.cargo/env"
+   ```
+
+4. **Clone and install dependencies:**
+   ```bash
+   git clone https://github.com/nisakson2000/dnd-tracker.git
+   cd dnd-tracker
+   npm install
+   cd frontend && npm install && cd ..
+   ```
+
+5. **Run the app:**
+   ```bash
+   npm run tauri dev
+   ```
 
 ### Level-Up Audio (optional)
 
-Place the level-up audio file:
-
-```bash
-mkdir -p frontend/public/audio
-cp "/path/to/Victory Fanfare.flac" frontend/public/audio/levelup.flac
+Place a level-up sound effect at:
+```
+frontend/public/audio/levelup.flac
 ```
 
 ## Running
@@ -195,7 +259,7 @@ cp "/path/to/Victory Fanfare.flac" frontend/public/audio/levelup.flac
 npm run tauri dev
 ```
 
-This starts the Vite dev server (with hot reload) and opens the Tauri desktop window automatically.
+This starts the Vite dev server (with hot reload) and opens the Tauri desktop window automatically. First build takes a few minutes while Rust compiles; subsequent launches are fast.
 
 ### Production Build
 
@@ -203,7 +267,9 @@ This starts the Vite dev server (with hot reload) and opens the Tauri desktop wi
 npm run tauri build
 ```
 
-Creates a distributable installer/executable in `src-tauri/target/release/bundle/`.
+Creates a distributable installer/executable in `src-tauri/target/release/bundle/`:
+- **Windows:** `.msi` installer and `.exe`
+- **Linux:** `.deb` and `.AppImage`
 
 ## Creating Your First Character
 
@@ -240,6 +306,62 @@ Creates a distributable installer/executable in `src-tauri/target/release/bundle
 ---
 
 ## Changelog
+
+### V0.2.2 — Automatic Condition Effects & Bug Fixes
+
+**Changes:**
+- Automatic Condition Effects — active conditions now apply their D&D 5e mechanical effects automatically
+- Conditions modify speed (Grappled/Restrained/Paralyzed → Speed 0), saving throws (auto-fail STR/DEX), and attack rolls
+- Overview shows condition effects banner with all active penalties at a glance
+- Saving throws display AUTO-FAIL and DIS badges when conditions apply
+- Dice Roller auto-sets advantage/disadvantage based on active conditions
+- Condition buttons now have stronger red highlighting with glow effect when active
+- Combat section shows full mechanical effects summary for active conditions
+- Update check now shows toast notification — confirms up-to-date, update available, or offline
+- Confirm dialogs added to all 8 sections with delete operations (Combat, Spellbook, NPCs, Quests, Lore, Features, Inventory, Journal)
+- Search bars added to Inventory and Spellbook for filtering large lists
+- Escape key closes all modal forms
+- Fixed Party Connect — join/leave messages now match between Python backend and frontend
+- Fixed character creation — race, class, and subclass now saved by Python backend
+- Fixed ability score input styling — inputs blend seamlessly into dark cards
+- Fixed missing skill/save creation on update endpoints
+- Fixed null crashes in search filters across Journal, Lore, Inventory, Spellbook
+- Fixed missing toast import in DiceRoller (was crashing on invalid input)
+- Fixed death save reset on short rest (Python backend)
+- Fixed multiclass Warlock pact magic detection on short rest
+- Fixed setState-after-unmount in useUpdateCheck and useLevelUp hooks
+
+### V0.2.1 — Connection Hardening & Stability
+
+**Changes:**
+- Party Connect — auto-reconnect with exponential backoff on WiFi drops
+- Party Connect — 8-second connection timeout with clear error toasts instead of silent hangs
+- Party Connect — host reassignment when original host disconnects
+- Party Connect — graceful shutdown notifies all players when host ends session
+- Party Connect — zombie client cleanup removes inactive clients after 90s
+- Party Connect — bounded message channels prevent memory leaks from slow clients
+- Party Connect — IP validation on join, proper clipboard error handling
+- Party Connect — auto-sync now tracks name, race, and class changes (not just HP/AC)
+- Update system — removed hardcoded GitHub repo name from JS bundle (private repo stays private)
+- Update system — switched to neutral version manifest URL for update checks
+- Fixed stale WebSocket closures via callback refs (prevents party desync)
+- Fixed ping interval leak on reconnect (no more stacking intervals)
+- Fixed silent error swallowing in backend file operations and reload triggers
+- Fixed React key warnings across Journal, Quests, Wiki, and LevelUp components
+- Added alt text to character portrait images for accessibility
+- Version sync — all config files now at 0.2.1 (package.json files were stuck at 0.1.7)
+
+### V0.2.0 — LAN Party & Auto-Updates
+
+**Changes:**
+- LAN Party Connect — host shows IP, joiners enter IP + room code for reliable cross-device play
+- Dev builds and production builds can connect to each other seamlessly
+- Auto-update check on launch — checks for new versions, downloads installer directly
+- Update screen shown at startup with animated progress and version comparison
+- Midnight Glass V3 UI — glassmorphism panels, 6 preset themes, per-ability colors
+- Settings overhaul — 4-tab panel with font/density/layout controls
+- Subclass selection moved to level-up at the appropriate class level
+- Version sync across all config files
 
 ### V0.1.8 — Character Creation, Auto-Backup & Accuracy
 

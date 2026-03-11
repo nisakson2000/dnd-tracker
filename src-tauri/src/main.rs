@@ -158,6 +158,7 @@ fn main() {
             // Party
             party::start_party_server,
             party::stop_party_server,
+            party::get_local_ip,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronRight, Sparkles, RotateCcw } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, Sparkles, RotateCcw, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getSpells, addSpell, updateSpell, deleteSpell, getSpellSlots, updateSpellSlots, resetSpellSlots } from '../api/spells';
 import { getOverview } from '../api/overview';
 import { useRuleset } from '../contexts/RulesetContext';
 import HelpTooltip from '../components/HelpTooltip';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { HELP } from '../data/helpText';
 
 function calcMod(score) { return Math.floor((score - 10) / 2); }
@@ -24,6 +25,8 @@ export default function Spellbook({ characterId }) {
   const [expandedLevel, setExpandedLevel] = useState(0);
   const [showAdd, setShowAdd] = useState(false);
   const [editingSpell, setEditingSpell] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const load = async () => {
     try {
@@ -44,9 +47,16 @@ export default function Spellbook({ characterId }) {
 
   useEffect(() => { load(); }, [characterId]);
 
+  const filteredSpells = searchQuery
+    ? spells.filter(s => {
+        const q = searchQuery.toLowerCase();
+        return (s.name || '').toLowerCase().includes(q) || (s.school || '').toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q);
+      })
+    : spells;
+
   const spellsByLevel = {};
   for (let i = 0; i <= 9; i++) spellsByLevel[i] = [];
-  spells.forEach(s => {
+  filteredSpells.forEach(s => {
     if (!spellsByLevel[s.level]) spellsByLevel[s.level] = [];
     spellsByLevel[s.level].push(s);
   });
@@ -98,6 +108,7 @@ export default function Spellbook({ characterId }) {
     try {
       await deleteSpell(characterId, spellId);
       toast.success('Spell removed');
+      setConfirmDelete(null);
       load();
     } catch (err) { toast.error(err.message); }
   };
@@ -143,6 +154,14 @@ export default function Spellbook({ characterId }) {
           </button>
         </div>
       </div>
+
+      {/* Spell Search */}
+      {spells.length > 0 && (
+        <div className="relative">
+          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-200/30 pointer-events-none" />
+          <input className="input w-full pl-10" placeholder="Search spells by name, school, or description..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+        </div>
+      )}
 
       {/* Spellcasting Stats */}
       {spellAbility && (
@@ -240,7 +259,7 @@ export default function Spellbook({ characterId }) {
                           </button>
                         )}
                       </div>
-                      <button onClick={() => handleDeleteSpell(spell.id)} className="text-red-400/50 hover:text-red-400">
+                      <button onClick={() => setConfirmDelete(spell)} className="text-red-400/50 hover:text-red-400">
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -262,6 +281,14 @@ export default function Spellbook({ characterId }) {
 
       {/* Add Spell Modal */}
       {showAdd && <SpellForm onSubmit={handleAddSpell} onCancel={() => setShowAdd(false)} />}
+
+      <ConfirmDialog
+        show={!!confirmDelete}
+        title="Delete Spell?"
+        message={`Remove "${confirmDelete?.name}" from your spellbook? This cannot be undone.`}
+        onConfirm={() => handleDeleteSpell(confirmDelete.id)}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }
@@ -274,6 +301,12 @@ function SpellForm({ spell, onSubmit, onCancel }) {
   });
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onCancel]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={e => e.target === e.currentTarget && onCancel()}>

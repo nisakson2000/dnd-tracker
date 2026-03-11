@@ -62,7 +62,7 @@ export default function Updates() {
       <div className="space-y-3">
         {CHANGELOG.map((entry) => {
           const isExpanded = expandedVersion === entry.version;
-          const isCurrent = entry.version === currentVersion;
+          const isCurrent = entry.version === currentVersion || entry.version === `v${currentVersion}` || `v${entry.version}` === currentVersion;
 
           return (
             <div

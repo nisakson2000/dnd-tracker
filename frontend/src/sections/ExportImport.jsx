@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
-import { Download, Upload, FileJson, FileText, Copy, Check } from 'lucide-react';
+import { Download, Upload, FileJson, FileText, Copy, Check, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { exportCharacter } from '../api/export';
 import { invoke } from '@tauri-apps/api/core';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 function generateTextSummary(data) {
   const o = data.overview;
@@ -179,6 +180,7 @@ export default function ExportImport({ characterId, character }) {
   const [copied, setCopied] = useState(false);
   const fileInputRef = useRef(null);
   const [importing, setImporting] = useState(false);
+  const [pendingImport, setPendingImport] = useState(null);
 
   const handleExportJSON = async () => {
     setExporting(true);
@@ -271,24 +273,34 @@ export default function ExportImport({ characterId, character }) {
     }
   };
 
-  const handleImport = async (e) => {
+  const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setImporting(true);
     try {
       const text = await file.text();
-      const data = JSON.parse(text);
+      let data;
+      try { data = JSON.parse(text); } catch { throw new Error('File is not valid JSON'); }
+      if (!data || typeof data !== 'object') throw new Error('Invalid character file format');
+      setPendingImport(data);
+    } catch (err) {
+      toast.error(`Import failed: ${err.message}`);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
-      const result = await invoke('import_character', { characterId, payload: data });
-
+  const confirmImport = async () => {
+    if (!pendingImport) return;
+    setImporting(true);
+    try {
+      await invoke('import_character', { characterId, payload: pendingImport });
       toast.success('Character imported successfully!');
+      setPendingImport(null);
       setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       toast.error(`Import failed: ${err.message}`);
     } finally {
       setImporting(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -310,10 +322,12 @@ export default function ExportImport({ characterId, character }) {
         </p>
         <div className="flex flex-wrap gap-3">
           <button onClick={handleExportJSON} disabled={exporting} className="btn-primary flex items-center gap-2">
-            <FileJson size={16} /> Export JSON
+            {exporting ? <Loader2 size={16} className="animate-spin" /> : <FileJson size={16} />}
+            {exporting ? 'Exporting...' : 'Export JSON'}
           </button>
           <button onClick={handleExportText} disabled={exporting} className="btn-secondary flex items-center gap-2">
-            <FileText size={16} /> Export Text Sheet
+            {exporting ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
+            {exporting ? 'Exporting...' : 'Export Text Sheet'}
           </button>
           <button onClick={handleCopyText} className="btn-secondary flex items-center gap-2">
             {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
@@ -340,11 +354,19 @@ export default function ExportImport({ characterId, character }) {
             ref={fileInputRef}
             type="file"
             accept=".json"
-            onChange={handleImport}
+            onChange={handleFileSelect}
             className="hidden"
           />
         </div>
       </div>
+      <ConfirmDialog
+        show={!!pendingImport}
+        title="Overwrite Character?"
+        message="Importing will overwrite ALL current data for this character. This cannot be undone. Are you sure?"
+        warning={pendingImport?.overview?.name ? `Importing: ${pendingImport.overview.name} (Level ${pendingImport.overview.level || '?'})` : undefined}
+        onConfirm={confirmImport}
+        onCancel={() => setPendingImport(null)}
+      />
     </div>
   );
 }

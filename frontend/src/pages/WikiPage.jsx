@@ -106,6 +106,7 @@ export default function WikiPage() {
   };
 
   const clearSearch = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     setQuery('');
     setSearchResults(null);
     setSearchParams({}, { replace: true });

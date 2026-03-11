@@ -3,6 +3,7 @@ import { Plus, Trash2, Edit2, BookMarked, Search, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { getJournalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry } from '../api/journal';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function Journal({ characterId }) {
   const [entries, setEntries] = useState([]);
@@ -10,6 +11,7 @@ export default function Journal({ characterId }) {
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const load = async () => {
     try {
@@ -43,6 +45,7 @@ export default function Journal({ characterId }) {
     try {
       await deleteJournalEntry(characterId, id);
       toast.success('Entry deleted');
+      setConfirmDelete(null);
       load();
     } catch (err) { toast.error(err.message); }
   };
@@ -50,7 +53,7 @@ export default function Journal({ characterId }) {
   const filtered = entries.filter(e => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
-    return e.title.toLowerCase().includes(q) || e.body.toLowerCase().includes(q) || e.tags.toLowerCase().includes(q);
+    return (e.title || '').toLowerCase().includes(q) || (e.body || '').toLowerCase().includes(q) || (e.tags || '').toLowerCase().includes(q);
   });
 
   if (loading) return <div className="text-amber-200/40">Loading journal...</div>;
@@ -101,7 +104,7 @@ export default function Journal({ characterId }) {
                   <button onClick={() => setEditing(entry)} className="text-amber-200/40 hover:text-amber-200">
                     <Edit2 size={14} />
                   </button>
-                  <button onClick={() => handleDelete(entry.id)} className="text-red-400/50 hover:text-red-400">
+                  <button onClick={() => setConfirmDelete(entry)} className="text-red-400/50 hover:text-red-400">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -109,7 +112,7 @@ export default function Journal({ characterId }) {
               {entry.tags && (
                 <div className="flex gap-1 mb-2">
                   {entry.tags.split(',').map((tag, i) => (
-                    <span key={i} className="text-xs bg-purple-800/30 text-purple-300 px-2 py-0.5 rounded">{tag.trim()}</span>
+                    <span key={`${tag.trim()}-${i}`} className="text-xs bg-purple-800/30 text-purple-300 px-2 py-0.5 rounded">{tag.trim()}</span>
                   ))}
                 </div>
               )}
@@ -127,6 +130,14 @@ export default function Journal({ characterId }) {
           onCancel={() => { setShowAdd(false); setEditing(null); }}
         />
       )}
+
+      <ConfirmDialog
+        show={!!confirmDelete}
+        title="Delete Journal Entry?"
+        message={`Remove "${confirmDelete?.title}"? This cannot be undone.`}
+        onConfirm={() => handleDelete(confirmDelete.id)}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }
@@ -137,6 +148,12 @@ function JournalForm({ entry, nextSessionNumber = 1, onSubmit, onCancel }) {
     ingame_date: '', body: '', tags: '',
   });
   const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onCancel]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={e => e.target === e.currentTarget && onCancel()}>

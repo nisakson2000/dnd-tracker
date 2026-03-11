@@ -5,8 +5,10 @@ import { getAttacks, addAttack, deleteAttack, getConditions, updateConditions, g
 import { useAutosave } from '../hooks/useAutosave';
 import SaveIndicator from '../components/SaveIndicator';
 import HelpTooltip from '../components/HelpTooltip';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { useRuleset } from '../contexts/RulesetContext';
 import { HELP, ACTION_ECONOMY } from '../data/helpText';
+import { CONDITION_EFFECTS, computeConditionEffects } from '../data/conditionEffects';
 
 const CONDITION_ICONS = {
   'Blinded': '\u{1F441}', 'Charmed': '\u{1F495}', 'Deafened': '\u{1F507}',
@@ -24,6 +26,7 @@ export default function Combat({ characterId, onConditionsChange }) {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [showConditionInfo, setShowConditionInfo] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const load = async () => {
     try {
@@ -33,8 +36,9 @@ export default function Combat({ characterId, onConditionsChange }) {
       setAttacks(atkData);
       setConditions(condData);
       setNotes(notesData);
-      onConditionsChange?.(condData.filter(c => c.active).length);
-    } catch (err) { toast.error(err.message); }
+      const activeConds = condData.filter(c => c.active);
+      onConditionsChange?.(activeConds.length, activeConds.map(c => c.name));
+    } catch (err) { toast.error('Failed to load combat data: ' + err.message); }
     finally { setLoading(false); }
   };
 
@@ -64,6 +68,7 @@ export default function Combat({ characterId, onConditionsChange }) {
     try {
       await deleteAttack(characterId, id);
       toast.success('Attack removed');
+      setConfirmDelete(null);
       load();
     } catch (err) { toast.error(err.message); }
   };
@@ -72,9 +77,15 @@ export default function Combat({ characterId, onConditionsChange }) {
     const previous = [...conditions];
     const updated = conditions.map(c => c.name === condName ? { ...c, active: !c.active } : c);
     setConditions(updated);
-    onConditionsChange?.(updated.filter(c => c.active).length);
+    const activeUpdated = updated.filter(c => c.active);
+    onConditionsChange?.(activeUpdated.length, activeUpdated.map(c => c.name));
     try { await updateConditions(characterId, updated); }
-    catch (err) { setConditions(previous); onConditionsChange?.(previous.filter(c => c.active).length); toast.error(err.message); }
+    catch (err) {
+      setConditions(previous);
+      const activePrev = previous.filter(c => c.active);
+      onConditionsChange?.(activePrev.length, activePrev.map(c => c.name));
+      toast.error(err.message);
+    }
   };
 
   if (loading) return <div className="text-amber-200/40">Loading combat...</div>;
@@ -122,7 +133,7 @@ export default function Combat({ characterId, onConditionsChange }) {
                     <td className="py-2 text-amber-200/50">{atk.damage_type}</td>
                     <td className="py-2 text-amber-200/50">{atk.attack_range}</td>
                     <td className="py-2">
-                      <button onClick={() => handleDeleteAttack(atk.id)} className="text-red-400/50 hover:text-red-400">
+                      <button onClick={() => setConfirmDelete(atk)} className="text-red-400/50 hover:text-red-400">
                         <Trash2 size={14} />
                       </button>
                     </td>
@@ -180,6 +191,14 @@ export default function Combat({ characterId, onConditionsChange }) {
       </div>
 
       {showAdd && <AttackForm onSubmit={handleAddAttack} onCancel={() => setShowAdd(false)} />}
+
+      <ConfirmDialog
+        show={!!confirmDelete}
+        title="Delete Attack?"
+        message={`Remove "${confirmDelete?.name}"? This cannot be undone.`}
+        onConfirm={() => handleDeleteAttack(confirmDelete.id)}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }
@@ -189,6 +208,12 @@ function AttackForm({ onSubmit, onCancel }) {
     name: '', attack_bonus: '+0', damage_dice: '1d6', damage_type: '', attack_range: '', notes: '',
   });
   const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onCancel]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={e => e.target === e.currentTarget && onCancel()}>
@@ -217,6 +242,8 @@ function AttackForm({ onSubmit, onCancel }) {
 
 function ConditionsPanel({ conditions, conditionDescriptions, onToggle }) {
   const [expanded, setExpanded] = useState(null);
+  const activeNames = conditions.filter(c => c.active).map(c => c.name);
+  const effects = computeConditionEffects(activeNames);
 
   const handleConditionClick = (condName) => {
     onToggle(condName);
@@ -236,47 +263,126 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle }) {
         Left-click to toggle on/off. Right-click for rule description.
       </p>
       <div className="flex flex-wrap gap-2">
-        {conditions.map(cond => (
-          <div key={cond.name} className="relative">
-            <button
-              onClick={() => handleConditionClick(cond.name)}
-              onContextMenu={(e) => handleContextMenu(e, cond.name)}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-all select-none ${
-                cond.active
-                  ? 'bg-red-800/40 text-red-300 border border-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.2)]'
-                  : 'bg-[#0d0d12] text-amber-200/40 border border-amber-200/10 hover:text-amber-200/70 hover:border-amber-200/20'
-              }`}
-            >
-              {CONDITION_ICONS[cond.name] && <span className="mr-1">{CONDITION_ICONS[cond.name]}</span>}
-              {cond.name}
-            </button>
+        {conditions.map(cond => {
+          const effect = CONDITION_EFFECTS[cond.name];
+          return (
+            <div key={cond.name} className="relative">
+              <button
+                onClick={() => handleConditionClick(cond.name)}
+                onContextMenu={(e) => handleContextMenu(e, cond.name)}
+                className={`px-3 py-1.5 rounded text-xs font-medium transition-all select-none ${
+                  cond.active
+                    ? 'bg-red-900/60 text-red-200 border-2 border-red-500/60 shadow-[0_0_12px_rgba(239,68,68,0.35),_0_0_24px_rgba(239,68,68,0.15)] ring-1 ring-red-500/20'
+                    : 'bg-[#0d0d12] text-amber-200/40 border border-amber-200/10 hover:text-amber-200/70 hover:border-amber-200/20'
+                }`}
+              >
+                {CONDITION_ICONS[cond.name] && <span className="mr-1">{CONDITION_ICONS[cond.name]}</span>}
+                {cond.name}
+              </button>
 
-            {expanded === cond.name && conditionDescriptions[cond.name] && (
-              <div className="absolute z-20 top-full left-0 mt-1 p-3 bg-[#14121c] border border-gold/20 rounded text-xs text-amber-200/60 w-64 shadow-xl">
-                <div className="flex justify-between items-start mb-1">
-                  <span className="font-display text-amber-100">{cond.name}</span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setExpanded(null); }}
-                    className="text-amber-200/30 hover:text-amber-200/60 text-xs ml-2"
-                  >
-                    &times;
-                  </button>
+              {expanded === cond.name && (conditionDescriptions[cond.name] || effect) && (
+                <div className="absolute z-20 top-full left-0 mt-1 p-3 bg-[#14121c] border border-gold/20 rounded text-xs text-amber-200/60 w-72 shadow-xl">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-display text-amber-100">{cond.name}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setExpanded(null); }}
+                      className="text-amber-200/30 hover:text-amber-200/60 text-xs ml-2"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                  {conditionDescriptions[cond.name] && (
+                    <p className="leading-relaxed mb-2">{conditionDescriptions[cond.name]}</p>
+                  )}
+                  {effect && (
+                    <div className="pt-2 border-t border-red-500/20">
+                      <div className="text-[10px] uppercase tracking-wider text-red-400/70 mb-1 font-semibold">Mechanical Effects</div>
+                      <p className="text-red-300/80 leading-relaxed">{effect.summary}</p>
+                    </div>
+                  )}
                 </div>
-                <p className="leading-relaxed">{conditionDescriptions[cond.name]}</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Active conditions summary with mechanical effects */}
+      {activeNames.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-red-500/15 space-y-2">
+          <div className="flex flex-wrap gap-1.5">
+            <span className="text-xs text-red-400/60 font-semibold mr-1">Active:</span>
+            {conditions.filter(c => c.active).map(c => (
+              <span key={c.name} className="text-xs text-red-200 bg-red-900/40 px-2 py-0.5 rounded border border-red-500/20">
+                {CONDITION_ICONS[c.name] || ''} {c.name}
+              </span>
+            ))}
+          </div>
+
+          {/* Mechanical effects banner */}
+          <div className="bg-red-950/40 border border-red-500/20 rounded-lg p-3 space-y-1.5">
+            <div className="text-[10px] uppercase tracking-wider text-red-400/80 font-semibold">Active Effects</div>
+            {effects.speedOverride === 0 && (
+              <div className="text-xs text-red-300/90 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                Speed reduced to 0
+              </div>
+            )}
+            {effects.cantAct && (
+              <div className="text-xs text-red-300/90 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                Cannot take actions or reactions
+              </div>
+            )}
+            {effects.netAttackMode === 'disadvantage' && (
+              <div className="text-xs text-red-300/90 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                Disadvantage on your attack rolls
+              </div>
+            )}
+            {effects.netAttackMode === 'advantage' && (
+              <div className="text-xs text-emerald-300/90 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                Advantage on your attack rolls
+              </div>
+            )}
+            {effects.checkDisadvantage && (
+              <div className="text-xs text-red-300/90 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                Disadvantage on ability checks
+              </div>
+            )}
+            {effects.autoFailSaves.size > 0 && (
+              <div className="text-xs text-red-300/90 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                Auto-fail {[...effects.autoFailSaves].join(' & ')} saving throws
+              </div>
+            )}
+            {effects.saveDisadvantage.size > 0 && (
+              <div className="text-xs text-red-300/90 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                Disadvantage on {[...effects.saveDisadvantage].join(' & ')} saving throws
+              </div>
+            )}
+            {effects.attacksAgainstAdvantage && (
+              <div className="text-xs text-orange-300/90 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" />
+                Attacks against you have advantage
+              </div>
+            )}
+            {effects.autoCritMelee && (
+              <div className="text-xs text-orange-300/90 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" />
+                Melee hits against you are automatic critical hits
+              </div>
+            )}
+            {effects.resistAll && (
+              <div className="text-xs text-blue-300/90 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+                Resistance to all damage
               </div>
             )}
           </div>
-        ))}
-      </div>
-
-      {conditions.some(c => c.active) && (
-        <div className="mt-3 pt-3 border-t border-amber-200/5 flex flex-wrap gap-1">
-          <span className="text-xs text-amber-200/30 mr-1">Active:</span>
-          {conditions.filter(c => c.active).map(c => (
-            <span key={c.name} className="text-xs text-red-300">
-              {CONDITION_ICONS[c.name] || ''} {c.name}
-            </span>
-          ))}
         </div>
       )}
     </div>

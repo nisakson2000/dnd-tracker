@@ -9,6 +9,7 @@ import HelpTooltip from '../components/HelpTooltip';
 import { useRuleset } from '../contexts/RulesetContext';
 import { HELP } from '../data/helpText';
 import SubclassSelectModal from '../components/SubclassSelectModal';
+import { computeConditionEffects, CONDITION_EFFECTS } from '../data/conditionEffects';
 
 const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
 const ABILITY_NAMES = { STR: 'Strength', DEX: 'Dexterity', CON: 'Constitution', INT: 'Intelligence', WIS: 'Wisdom', CHA: 'Charisma' };
@@ -21,7 +22,7 @@ function modStr(mod) {
   return mod >= 0 ? `+${mod}` : `${mod}`;
 }
 
-export default function Overview({ characterId, character, onCharacterUpdate, onLevelUp }) {
+export default function Overview({ characterId, character, onCharacterUpdate, onLevelUp, activeConditions = [] }) {
   const { PROFICIENCY_BONUS, SKILLS, RACES, CLASSES, CONDITIONS, EXHAUSTION_LEVELS, ancestryLabel } = useRuleset();
   const [overview, setOverview] = useState(null);
   const [abilities, setAbilities] = useState([]);
@@ -178,12 +179,15 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const saveMap = {};
   saves.forEach(s => { saveMap[s.ability] = s.proficient; });
 
+  const condEffects = computeConditionEffects(activeConditions);
+
   const dexMod = calcMod(abilityMap.DEX || 10);
   const wisMod = calcMod(abilityMap.WIS || 10);
   const percSkill = skills.find(s => s.name === 'Perception');
   const percMod = wisMod + (percSkill?.proficient ? profBonus : 0) + (percSkill?.expertise ? profBonus : 0);
   const passivePerc = 10 + percMod;
   const initiative = dexMod;
+  const effectiveSpeed = condEffects.speedOverride === 0 ? 0 : overview.speed;
 
   const hpPercent = overview.max_hp > 0 ? (overview.current_hp / overview.max_hp) * 100 : 0;
   const hpBarClass = hpPercent >= 75 ? 'hp-bar-fill hp-high' :
@@ -228,6 +232,70 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           </button>
         </div>
       </div>
+
+      {/* Condition Effects Banner */}
+      {activeConditions.length > 0 && (
+        <div className="bg-red-950/50 border-2 border-red-500/30 rounded-lg p-4 shadow-[0_0_20px_rgba(239,68,68,0.1)]">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-sm font-display text-red-300 font-semibold">Active Conditions</span>
+            <div className="flex gap-1.5 ml-2">
+              {activeConditions.map(name => (
+                <span key={name} className="text-xs bg-red-900/50 text-red-200 px-2 py-0.5 rounded border border-red-500/30">
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+            {condEffects.speedOverride === 0 && (
+              <div className="text-xs text-red-300/90 flex items-center gap-1.5">
+                <span className="text-red-500">&#x2716;</span> Speed reduced to 0
+              </div>
+            )}
+            {condEffects.cantAct && (
+              <div className="text-xs text-red-300/90 flex items-center gap-1.5">
+                <span className="text-red-500">&#x2716;</span> Cannot take actions or reactions
+              </div>
+            )}
+            {condEffects.netAttackMode === 'disadvantage' && (
+              <div className="text-xs text-red-300/90 flex items-center gap-1.5">
+                <span className="text-red-500">&#x25BC;</span> Disadvantage on attack rolls
+              </div>
+            )}
+            {condEffects.netAttackMode === 'advantage' && (
+              <div className="text-xs text-emerald-300/90 flex items-center gap-1.5">
+                <span className="text-emerald-500">&#x25B2;</span> Advantage on attack rolls
+              </div>
+            )}
+            {condEffects.checkDisadvantage && (
+              <div className="text-xs text-red-300/90 flex items-center gap-1.5">
+                <span className="text-red-500">&#x25BC;</span> Disadvantage on ability checks
+              </div>
+            )}
+            {condEffects.autoFailSaves.size > 0 && (
+              <div className="text-xs text-red-300/90 flex items-center gap-1.5">
+                <span className="text-red-500">&#x2716;</span> Auto-fail {[...condEffects.autoFailSaves].join(' & ')} saves
+              </div>
+            )}
+            {condEffects.saveDisadvantage.size > 0 && (
+              <div className="text-xs text-red-300/90 flex items-center gap-1.5">
+                <span className="text-red-500">&#x25BC;</span> Disadvantage on {[...condEffects.saveDisadvantage].join(' & ')} saves
+              </div>
+            )}
+            {condEffects.attacksAgainstAdvantage && (
+              <div className="text-xs text-orange-300/90 flex items-center gap-1.5">
+                <span className="text-orange-500">&#x26A0;</span> Enemies have advantage against you
+              </div>
+            )}
+            {condEffects.autoCritMelee && (
+              <div className="text-xs text-orange-300/90 flex items-center gap-1.5">
+                <span className="text-orange-500">&#x26A0;</span> Melee hits auto-crit against you
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Identity */}
       <div className="card">
@@ -301,16 +369,18 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 const score = abilityMap[ab] || 10;
                 const mod = calcMod(score);
                 return (
-                  <div key={ab} className="text-center p-4 rounded-lg bg-[#0a0a10] border-2 border-gold/20 hover:border-gold/40 transition-all">
+                  <div key={ab} className="text-center p-4 rounded-lg bg-[#0a0a10] border border-gold/15 hover:border-gold/30 transition-all">
                     <div className="text-[11px] text-amber-200/50 font-display tracking-widest mb-2">{ab}</div>
                     <div className="text-3xl font-bold text-gold mb-1">{modStr(mod)}</div>
                     <input
                       type="number" min={1} max={30}
                       className="input text-center w-16 mx-auto text-sm"
+                      style={{ border: 'none', background: 'transparent', outline: 'none', boxShadow: 'none' }}
                       value={localAbilities[ab] ?? score}
                       onChange={e => setLocalAbilities(prev => ({ ...prev, [ab]: e.target.value }))}
                       onBlur={e => {
-                        const val = parseInt(e.target.value) || 10;
+                        const val = Math.max(1, Math.min(30, parseInt(e.target.value.trim()) || 10));
+                        setLocalAbilities(prev => ({ ...prev, [ab]: val }));
                         updateAbility(ab, val);
                       }}
                     />
@@ -330,17 +400,27 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 const score = abilityMap[ab] || 10;
                 const prof = saveMap[ab] || false;
                 const mod = calcMod(score) + (prof ? profBonus : 0);
+                const isAutoFail = condEffects.autoFailSaves.has(ab);
+                const hasDis = condEffects.saveDisadvantage.has(ab);
                 return (
                   <div
                     key={ab}
                     onClick={() => toggleSave(ab)}
-                    className="flex items-center gap-3 py-1.5 px-2 rounded-md cursor-pointer group hover:bg-white/[0.03] transition-colors select-none"
+                    className={`flex items-center gap-3 py-1.5 px-2 rounded-md cursor-pointer group hover:bg-white/[0.03] transition-colors select-none ${isAutoFail ? 'bg-red-950/30 border border-red-500/20 rounded' : ''}`}
                   >
                     {/* Proficiency indicator */}
                     <div className={`prof-circle${prof ? ' active' : ''}`} />
-                    <span className={`text-sm font-semibold w-8 text-right transition-colors ${prof ? 'text-gold' : 'text-amber-200/35'}`}>{modStr(mod)}</span>
-                    <span className={`text-sm flex-1 transition-colors ${prof ? 'text-amber-100' : 'text-amber-200/60'}`}>{ABILITY_NAMES[ab]}</span>
-                    {prof && (
+                    <span className={`text-sm font-semibold w-8 text-right transition-colors ${isAutoFail ? 'text-red-400 line-through' : prof ? 'text-gold' : 'text-amber-200/35'}`}>
+                      {isAutoFail ? 'FAIL' : modStr(mod)}
+                    </span>
+                    <span className={`text-sm flex-1 transition-colors ${isAutoFail ? 'text-red-300' : prof ? 'text-amber-100' : 'text-amber-200/60'}`}>{ABILITY_NAMES[ab]}</span>
+                    {isAutoFail && (
+                      <span className="text-[10px] font-display tracking-wider text-red-400 bg-red-900/30 border border-red-500/20 px-1.5 py-0.5 rounded">AUTO-FAIL</span>
+                    )}
+                    {hasDis && !isAutoFail && (
+                      <span className="text-[10px] font-display tracking-wider text-red-400 bg-red-900/30 border border-red-500/20 px-1.5 py-0.5 rounded">DIS</span>
+                    )}
+                    {prof && !isAutoFail && !hasDis && (
                       <span className="text-[10px] font-display tracking-wider text-gold bg-gold/15 border border-gold/20 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">PROF</span>
                     )}
                   </div>
@@ -351,7 +431,12 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
 
           {/* Skills */}
           <div className="card">
-            <h3 className="font-display text-amber-100 mb-1">Skills</h3>
+            <h3 className="font-display text-amber-100 mb-1">
+              Skills
+              {condEffects.checkDisadvantage && (
+                <span className="text-xs text-red-400 font-normal ml-2 bg-red-900/30 px-2 py-0.5 rounded border border-red-500/20">Disadvantage on all checks</span>
+              )}
+            </h3>
             {/* Legend */}
             <div className="flex items-center gap-3.5 mb-3 text-[11px] text-amber-200/35">
               <span className="inline-flex items-center gap-1.5">
@@ -412,15 +497,23 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             </div>
             <div className="card text-center">
               <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Shield size={12} /> AC<HelpTooltip text={HELP.ac} /></div>
-              <input type="number" className="input text-center text-2xl font-display w-20 mx-auto" value={overview.armor_class} onChange={e => updateField('armor_class', parseInt(e.target.value) || 10)} />
+              <input type="number" min={1} className="input text-center text-2xl font-display w-20 mx-auto" value={overview.armor_class} onChange={e => updateField('armor_class', Math.max(1, parseInt(e.target.value) || 10))} />
             </div>
             <div className="card text-center">
               <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Zap size={12} /> Initiative<HelpTooltip text={HELP.initiative} /></div>
               <div className="text-2xl font-display text-amber-100">{modStr(initiative)}</div>
             </div>
-            <div className="card text-center">
+            <div className={`card text-center ${condEffects.speedOverride === 0 ? 'border-2 border-red-500/40 bg-red-950/20' : ''}`}>
               <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Footprints size={12} /> Speed</div>
-              <input type="number" className="input text-center text-2xl font-display w-20 mx-auto" value={overview.speed} onChange={e => updateField('speed', parseInt(e.target.value) || 30)} />
+              {condEffects.speedOverride === 0 ? (
+                <>
+                  <div className="text-2xl font-display text-red-400 line-through">{overview.speed}</div>
+                  <div className="text-lg font-display text-red-300 font-bold">0 ft</div>
+                  <div className="text-[10px] text-red-400/70 mt-0.5">Condition</div>
+                </>
+              ) : (
+                <input type="number" min={0} className="input text-center text-2xl font-display w-20 mx-auto" value={overview.speed} onChange={e => updateField('speed', Math.max(0, parseInt(e.target.value) || 0))} />
+              )}
             </div>
             <div className="card text-center">
               <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Eye size={12} /> Passive Perc.<HelpTooltip text={HELP.passivePerception} /></div>
@@ -707,6 +800,12 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
 function ShortRestModal({ overview, onRest, onCancel }) {
   const [diceToSpend, setDiceToSpend] = useState(0);
   const available = Math.max(0, overview.level - overview.hit_dice_used);
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onCancel]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={e => e.target === e.currentTarget && onCancel()}>

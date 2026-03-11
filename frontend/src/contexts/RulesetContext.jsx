@@ -17,6 +17,7 @@ export function useRuleset() {
   const ctx = useContext(RulesetContext);
   if (!ctx) {
     // Fallback for components used outside a provider (e.g., Dashboard)
+    if (typeof console !== 'undefined') console.warn('useRuleset() called outside RulesetProvider — using 5e-2014 fallback');
     return getRuleset('5e-2014');
   }
   return ctx;

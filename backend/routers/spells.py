@@ -52,9 +52,12 @@ async def update_spell_slots(character_id: str, request: Request):
     session = get_session(character_id)
     try:
         for item in raw:
-            slot_level = int(item.get("slot_level", 0))
-            max_slots = int(item.get("max_slots", 0))
-            used_slots = int(item.get("used_slots", 0))
+            try:
+                slot_level = int(item.get("slot_level", 0))
+                max_slots = int(item.get("max_slots", 0))
+                used_slots = int(item.get("used_slots", 0))
+            except (ValueError, TypeError):
+                continue  # skip invalid slot entries
             row = session.query(SpellSlot).filter_by(slot_level=slot_level).first()
             if row:
                 row.max_slots = max_slots
