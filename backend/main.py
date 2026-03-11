@@ -70,7 +70,13 @@ app = FastAPI(title="D&D Character Tracker API", version="1.0.0", lifespan=lifes
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow LAN devices to connect
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:1420",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:1420",
+        "tauri://localhost",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

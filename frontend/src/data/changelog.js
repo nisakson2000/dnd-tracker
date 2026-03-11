@@ -3,6 +3,25 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.2.6',
+    date: '03/11/2026 8:00 PM',
+    title: 'Code Review Fixes — Security, Stability & Bug Fixes',
+    changes: [
+      'XSS fix — WikiPage.jsx now sanitizes HTML (strips scripts, iframes, event handlers) before rendering',
+      'React Error Boundaries — each section wrapped in SectionErrorBoundary; crashes isolated per-section with "Try Again" button',
+      'Overview expertise calculation fixed — expertise now correctly doubles proficiency bonus instead of stacking additively',
+      'Overview setTimeout memory leak fixed — subclass modal timeout cleaned up on unmount',
+      'Party.py race conditions fixed — asyncio.Lock protects all room dictionary mutations',
+      'Combat condition timer clamped to prevent negative durations on rapid clicks',
+      'Quests.rs N+1 query eliminated — objectives now fetched in bulk and grouped by quest_id',
+      'CORS restricted from wildcard to localhost/Tauri origins only',
+      'Journal stale closure fix — keyboard handler uses refs instead of capturing stale state',
+      'Autosave retry — failed saves queued for retry on next interval',
+      'DiceRoller history capped at 200 rolls to prevent unbounded growth',
+      'Dashboard character cards wrapped in React.memo() to reduce re-renders',
+    ],
+  },
+  {
     version: 'V0.2.5',
     date: '03/11/2026 6:00 PM',
     title: 'Batch 5 — Combat, Spellbook, Journal & Section Upgrades',

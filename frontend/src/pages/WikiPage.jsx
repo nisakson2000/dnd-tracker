@@ -50,6 +50,19 @@ function formatCategoryName(category) {
     .replace(/\b\w/g, c => c.toUpperCase());
 }
 
+function sanitizeHTML(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script, iframe, object, embed, link[rel="import"]').forEach(el => el.remove());
+  doc.querySelectorAll('*').forEach(el => {
+    for (const attr of [...el.attributes]) {
+      if (attr.name.startsWith('on') || attr.value.startsWith('javascript:')) {
+        el.removeAttribute(attr.name);
+      }
+    }
+  });
+  return doc.body.innerHTML;
+}
+
 export default function WikiPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -291,7 +304,7 @@ export default function WikiPage() {
                   {item.snippet ? (
                     <p
                       className="text-sm text-amber-200/60 mb-2 line-clamp-2"
-                      dangerouslySetInnerHTML={{ __html: item.snippet }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHTML(item.snippet) }}
                     />
                   ) : (
                     <p className="text-sm text-amber-200/60 mb-2 line-clamp-2">

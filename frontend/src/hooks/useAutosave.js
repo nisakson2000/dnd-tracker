@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 export function useAutosave(saveFn, delay = 800) {
   const timerRef = useRef(null);
   const pendingRef = useRef(null);
+  const failedDataRef = useRef(null);
   const saveFnRef = useRef(saveFn);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
@@ -17,7 +18,9 @@ export function useAutosave(saveFn, delay = 800) {
     try {
       await saveFnRef.current(data);
       setLastSaved(new Date());
+      failedDataRef.current = null;
     } catch (err) {
+      failedDataRef.current = data;
       toast.error(`Save failed: ${err.message || 'Unknown error'}`);
     } finally {
       setSaving(false);
@@ -27,10 +30,12 @@ export function useAutosave(saveFn, delay = 800) {
   }, []);
 
   const trigger = useCallback((data) => {
-    pendingRef.current = data;
+    const saveData = data ?? failedDataRef.current;
+    if (saveData == null) return;
+    pendingRef.current = saveData;
     window.__codex_unsaved = true;
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => doSave(data), delay);
+    timerRef.current = setTimeout(() => doSave(saveData), delay);
   }, [doSave, delay]);
 
   // Flush: cancel timer and save immediately if data is pending

@@ -39,6 +39,7 @@ pub fn get_attacks(
         let mut stmt = conn
             .prepare("SELECT id, name, attack_bonus, damage_dice, damage_type, attack_range, notes FROM attacks")
             .map_err(|e| e.to_string())?;
+        // Column order: 0=id, 1=name, 2=attack_bonus, 3=damage_dice, 4=damage_type, 5=attack_range, 6=notes
         let attacks = stmt
             .query_map([], |row| {
                 Ok(AttackData {
@@ -130,6 +131,7 @@ pub fn get_conditions(
         let mut stmt = conn
             .prepare("SELECT name, active, duration_rounds, rounds_remaining FROM conditions ORDER BY name")
             .map_err(|e| e.to_string())?;
+        // Column order: 0=name, 1=active, 2=duration_rounds, 3=rounds_remaining
         let conditions = stmt
             .query_map([], |row| {
                 Ok(ConditionData {
@@ -173,6 +175,7 @@ pub fn get_combat_notes(
         let result = conn.query_row(
             "SELECT actions, bonus_actions, reactions, legendary_actions FROM combat_notes LIMIT 1",
             [],
+            // Column order: 0=actions, 1=bonus_actions, 2=reactions, 3=legendary_actions
             |row| {
                 Ok(CombatNotesData {
                     actions: row.get(0).unwrap_or_default(),

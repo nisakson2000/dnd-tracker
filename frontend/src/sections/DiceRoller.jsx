@@ -136,9 +136,9 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
       };
 
       setLastRoll(entry);
-      setHistory(prev => [entry, ...prev].slice(0, 50));
+      setHistory(prev => [entry, ...prev].slice(0, 200));
       setRolling(false);
-      if (rollLabel) setRollLabel(''); // Clear label after use
+      if (rollLabel) setRollLabel('');
     }, 300);
   }, [rollMode, rollLabel, setHistory]);
 
@@ -171,7 +171,7 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
       isNat1: false,
       advInfo: null,
     };
-    setHistory(prev => [entry, ...prev].slice(0, 50));
+    setHistory(prev => [entry, ...prev].slice(0, 200));
   };
 
   const handleCopyHistory = async () => {

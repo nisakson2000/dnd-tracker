@@ -208,7 +208,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   const tickRound = async () => {
     const updated = conditions.map(c => {
       if (!c.active || c.rounds_remaining <= 0) return c;
-      const newRemaining = c.rounds_remaining - 1;
+      const newRemaining = Math.max(0, c.rounds_remaining - 1);
       if (newRemaining <= 0) {
         return { ...c, active: false, rounds_remaining: 0, duration_rounds: 0 };
       }

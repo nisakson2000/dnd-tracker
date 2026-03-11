@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, LogIn, BookOpen, Heart, Shield, Library, Bell, ArrowUpDown } from 'lucide-react';
@@ -39,6 +39,83 @@ const SORT_OPTIONS = [
   { id: 'level', label: 'Level' },
   { id: 'recent', label: 'Recent' },
 ];
+
+const CharacterCard = memo(function CharacterCard({ char, index, onNavigate, onDelete }) {
+  const days = daysAgo(char.updated_at);
+  const isDusty = days !== null && days >= 30;
+  const ringColor = hpRingColor(char.current_hp, char.max_hp);
+  return (
+    <motion.div
+      className="card group relative"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+    >
+      {isDusty && (
+        <span className="absolute top-2 right-2 text-[10px] text-amber-200/20" title="Not played in 30+ days">
+          cobweb
+        </span>
+      )}
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className={`w-10 h-10 rounded-full bg-[#1a1825] border-2 ${ringColor} flex items-center justify-center text-lg text-amber-200/50 flex-shrink-0`}>
+            {char.name?.[0] || '?'}
+          </div>
+          <h3 className="font-display text-xl text-amber-100 truncate">
+            {char.name || 'Unknown'}
+          </h3>
+        </div>
+      </div>
+      <p className="text-sm text-amber-200/50 mb-1">
+        {[char.race, char.primary_class].filter(Boolean).join(' ') || 'No race or class set yet'}
+        {char.level > 0 && ` — Level ${char.level}`}
+      </p>
+      {char.primary_class && (
+        <div className="flex items-center gap-3 text-xs text-amber-200/40 mb-1">
+          {char.max_hp > 0 && (
+            <span className="flex items-center gap-1">
+              <Heart size={10} className="text-red-400" /> {char.current_hp ?? 0}/{char.max_hp ?? 0} HP
+            </span>
+          )}
+          {char.armor_class > 0 && (
+            <span className="flex items-center gap-1">
+              <Shield size={10} className="text-amber-200/60" /> AC {char.armor_class ?? 10}
+            </span>
+          )}
+        </div>
+      )}
+      {char.campaign_name && (
+        <p className="text-xs text-purple-300/50 mb-1">
+          {char.campaign_name}
+        </p>
+      )}
+      {char.ruleset && (
+        <span className="text-[10px] bg-amber-900/20 text-amber-200/40 px-1.5 py-0.5 rounded">
+          {RULESET_OPTIONS.find(o => o.id === char.ruleset)?.name || char.ruleset}
+        </span>
+      )}
+      {char.updated_at && (
+        <p className="text-[11px] text-amber-200/25 mb-4">
+          {lastPlayedLabel(char.updated_at)}
+        </p>
+      )}
+      <div className="flex gap-2 mt-auto">
+        <button
+          onClick={() => onNavigate(`/character/${char.id}`)}
+          className="btn-primary flex-1 flex items-center justify-center gap-2 text-sm"
+        >
+          <LogIn size={14} /> Enter
+        </button>
+        <button
+          onClick={() => onDelete(char)}
+          className="btn-danger p-2"
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+    </motion.div>
+  );
+});
 
 export default function Dashboard() {
   const [characters, setCharacters] = useState([]);
@@ -217,83 +294,15 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
-          {sortedCharacters.filter(Boolean).map((char, i) => {
-            const days = daysAgo(char.updated_at);
-            const isDusty = days !== null && days >= 30;
-            const ringColor = hpRingColor(char.current_hp, char.max_hp);
-            return (
-            <motion.div
+          {sortedCharacters.filter(Boolean).map((char, i) => (
+            <CharacterCard
               key={char.id}
-              className="card group relative"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-            >
-              {isDusty && (
-                <span className="absolute top-2 right-2 text-[10px] text-amber-200/20" title="Not played in 30+ days">
-                  cobweb
-                </span>
-              )}
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className={`w-10 h-10 rounded-full bg-[#1a1825] border-2 ${ringColor} flex items-center justify-center text-lg text-amber-200/50 flex-shrink-0`}>
-                    {char.name?.[0] || '?'}
-                  </div>
-                  <h3 className="font-display text-xl text-amber-100 truncate">
-                    {char.name || 'Unknown'}
-                  </h3>
-                </div>
-              </div>
-              <p className="text-sm text-amber-200/50 mb-1">
-                {[char.race, char.primary_class].filter(Boolean).join(' ') || 'No race or class set yet'}
-                {char.level > 0 && ` — Level ${char.level}`}
-              </p>
-              {char.primary_class && (
-                <div className="flex items-center gap-3 text-xs text-amber-200/40 mb-1">
-                  {char.max_hp > 0 && (
-                    <span className="flex items-center gap-1">
-                      <Heart size={10} className="text-red-400" /> {char.current_hp ?? 0}/{char.max_hp ?? 0} HP
-                    </span>
-                  )}
-                  {char.armor_class > 0 && (
-                    <span className="flex items-center gap-1">
-                      <Shield size={10} className="text-amber-200/60" /> AC {char.armor_class ?? 10}
-                    </span>
-                  )}
-                </div>
-              )}
-              {char.campaign_name && (
-                <p className="text-xs text-purple-300/50 mb-1">
-                  {char.campaign_name}
-                </p>
-              )}
-              {char.ruleset && (
-                <span className="text-[10px] bg-amber-900/20 text-amber-200/40 px-1.5 py-0.5 rounded">
-                  {RULESET_OPTIONS.find(o => o.id === char.ruleset)?.name || char.ruleset}
-                </span>
-              )}
-              {char.updated_at && (
-                <p className="text-[11px] text-amber-200/25 mb-4">
-                  {lastPlayedLabel(char.updated_at)}
-                </p>
-              )}
-              <div className="flex gap-2 mt-auto">
-                <button
-                  onClick={() => navigate(`/character/${char.id}`)}
-                  className="btn-primary flex-1 flex items-center justify-center gap-2 text-sm"
-                >
-                  <LogIn size={14} /> Enter
-                </button>
-                <button
-                  onClick={() => setDeleteTarget(char)}
-                  className="btn-danger p-2"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </motion.div>
-            );
-          })}
+              char={char}
+              index={i}
+              onNavigate={navigate}
+              onDelete={setDeleteTarget}
+            />
+          ))}
 
           {/* New Character Card */}
           <motion.div

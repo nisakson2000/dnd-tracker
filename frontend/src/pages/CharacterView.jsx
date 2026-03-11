@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Heart, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -33,6 +33,23 @@ const Journal = lazy(() => import('../sections/Journal'));
 const Lore = lazy(() => import('../sections/Lore'));
 const RulesReference = lazy(() => import('../sections/RulesReference'));
 const ExportImport = lazy(() => import('../sections/ExportImport'));
+
+class SectionErrorBoundary extends React.Component {
+  state = { hasError: false, error: null };
+  static getDerivedStateFromError(error) { return { hasError: true, error }; }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="card text-center py-8">
+          <p className="text-red-400 font-medium mb-2">Something went wrong in this section</p>
+          <p className="text-xs text-amber-200/30 mb-3">{this.state.error?.message}</p>
+          <button onClick={() => this.setState({ hasError: false, error: null })} className="btn-primary text-xs">Try Again</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const SECTIONS = {
   overview: Overview,
@@ -328,25 +345,27 @@ export default function CharacterView() {
 
           {/* Main content */}
           <main style={{ flex: 1, padding: 'calc(24px * var(--density, 1)) calc(28px * var(--density, 1))', overflowY: 'auto', maxHeight: 'calc(100vh - var(--top-h, 52px))', minWidth: 0 }}>
-            <Suspense fallback={<div className="text-amber-200/40">Loading…</div>}>
-              <ActiveComponent
-                characterId={characterId}
-                character={character}
-                onCharacterUpdate={(updated) => setCharacter(updated)}
-                onLevelUp={triggerLevelUp}
-                onConditionsChange={(count, condNames) => {
-                  setActiveConditionCount(count);
-                  setActiveConditions(condNames || []);
-                }}
-                onPortraitChange={setPortrait}
-                activeConditions={activeConditions}
-                diceHistory={diceHistory}
-                onDiceHistoryChange={setDiceHistory}
-                errors={errors}
-                onClearErrors={clearErrors}
-                onBugReport={handlePartyBugReport}
-              />
-            </Suspense>
+            <SectionErrorBoundary key={activeSection}>
+              <Suspense fallback={<div className="text-amber-200/40">Loading…</div>}>
+                <ActiveComponent
+                  characterId={characterId}
+                  character={character}
+                  onCharacterUpdate={(updated) => setCharacter(updated)}
+                  onLevelUp={triggerLevelUp}
+                  onConditionsChange={(count, condNames) => {
+                    setActiveConditionCount(count);
+                    setActiveConditions(condNames || []);
+                  }}
+                  onPortraitChange={setPortrait}
+                  activeConditions={activeConditions}
+                  diceHistory={diceHistory}
+                  onDiceHistoryChange={setDiceHistory}
+                  errors={errors}
+                  onClearErrors={clearErrors}
+                  onBugReport={handlePartyBugReport}
+                />
+              </Suspense>
+            </SectionErrorBoundary>
           </main>
         </div>
 

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
@@ -64,19 +65,56 @@ pub fn get_quests(
     character_id: String,
 ) -> Result<Vec<QuestData>, String> {
     state.with_char_conn(&character_id, |conn| {
-        let mut stmt = conn
-            .prepare("SELECT id FROM quests ORDER BY status, title")
+        // Fetch all quests in one query
+        let mut quest_stmt = conn
+            .prepare("SELECT id, title, giver, description, status, notes FROM quests ORDER BY status, title")
             .map_err(|e| e.to_string())?;
-        let quest_ids: Vec<i64> = stmt
-            .query_map([], |row| row.get(0))
+        let mut quests: Vec<QuestData> = quest_stmt
+            .query_map([], |row| {
+                Ok(QuestData {
+                    id: Some(row.get(0)?),
+                    title: row.get(1)?,
+                    giver: row.get(2).unwrap_or_default(),
+                    description: row.get(3).unwrap_or_default(),
+                    status: row.get(4).unwrap_or_else(|_| "active".to_string()),
+                    notes: row.get(5).unwrap_or_default(),
+                    objectives: Vec::new(),
+                })
+            })
             .map_err(|e| e.to_string())?
             .filter_map(|r| r.ok())
             .collect();
 
-        let mut quests = Vec::new();
-        for qid in quest_ids {
-            quests.push(load_quest_with_objectives(conn, qid)?);
+        // Fetch all objectives in one query and group by quest_id
+        let mut obj_stmt = conn
+            .prepare("SELECT quest_id, id, text, completed FROM quest_objectives")
+            .map_err(|e| e.to_string())?;
+        let mut objectives_by_quest: HashMap<i64, Vec<QuestObjectiveData>> = HashMap::new();
+        let obj_rows = obj_stmt
+            .query_map([], |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    QuestObjectiveData {
+                        id: Some(row.get(1)?),
+                        text: row.get(2)?,
+                        completed: row.get::<_, i64>(3)? != 0,
+                    },
+                ))
+            })
+            .map_err(|e| e.to_string())?;
+        for obj_row in obj_rows {
+            if let Ok((quest_id, obj)) = obj_row {
+                objectives_by_quest.entry(quest_id).or_default().push(obj);
+            }
         }
+
+        // Attach objectives to their quests
+        for quest in &mut quests {
+            if let Some(qid) = quest.id {
+                quest.objectives = objectives_by_quest.remove(&qid).unwrap_or_default();
+            }
+        }
+
         Ok(quests)
     })
 }

@@ -41,9 +41,11 @@ _rooms: dict[str, dict[str, dict]] = defaultdict(dict)
 _client_room: dict[str, str] = {}
 # Track if zombie cleanup task is running
 _cleanup_task: asyncio.Task | None = None
+# Lock for room dictionary mutations
+_room_lock = asyncio.Lock()
 
 
-def _make_room_code() -> str:
+async def _make_room_code() -> str:
     chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
     for _ in range(100):
         code = "".join(__import__("random").choices(chars, k=4))
@@ -70,14 +72,15 @@ async def _broadcast(room_code: str, message: dict, exclude: str | None = None):
 
 
 async def _disconnect_client(client_id: str):
-    room_code = _client_room.pop(client_id, None)
-    if not room_code:
-        return
-    _rooms[room_code].pop(client_id, None)
-    if not _rooms[room_code]:
-        del _rooms[room_code]
-    else:
-        await _broadcast(room_code, {"type": "player_disconnected", "client_id": client_id})
+    async with _room_lock:
+        room_code = _client_room.pop(client_id, None)
+        if not room_code:
+            return
+        _rooms[room_code].pop(client_id, None)
+        if not _rooms[room_code]:
+            del _rooms[room_code]
+            return
+    await _broadcast(room_code, {"type": "player_disconnected", "client_id": client_id})
 
 
 async def _zombie_cleanup_loop():
@@ -85,11 +88,12 @@ async def _zombie_cleanup_loop():
     while True:
         await asyncio.sleep(CLEANUP_INTERVAL_SECS)
         now = time.monotonic()
-        stale = []
-        for room_code, members in list(_rooms.items()):
-            for cid, conn in list(members.items()):
-                if now - conn.get("last_seen", now) > CLIENT_TIMEOUT_SECS:
-                    stale.append(cid)
+        async with _room_lock:
+            stale = []
+            for room_code, members in list(_rooms.items()):
+                for cid, conn in list(members.items()):
+                    if now - conn.get("last_seen", now) > CLIENT_TIMEOUT_SECS:
+                        stale.append(cid)
         for cid in stale:
             logger.info("Removing zombie client: %s", cid)
             await _disconnect_client(cid)
@@ -102,14 +106,16 @@ def _ensure_cleanup_task():
 
 
 @router.get("/party/rooms")
-def list_rooms():
-    return {code: {"members": len(members)} for code, members in _rooms.items()}
+async def list_rooms():
+    async with _room_lock:
+        return {code: {"members": len(members)} for code, members in _rooms.items()}
 
 
 @router.post("/party/rooms")
-def create_room():
-    code = _make_room_code()
-    _rooms[code]  # create empty dict via defaultdict
+async def create_room():
+    async with _room_lock:
+        code = await _make_room_code()
+        _rooms[code]  # create empty dict via defaultdict
     return {"room_code": code}
 
 
@@ -143,21 +149,24 @@ async def party_ws(ws: WebSocket):
                 if not code:
                     await ws.send_text(json.dumps({"type": "error", "message": "Room code required"}))
                     continue
-                # Validate room exists (matches Rust backend behavior)
-                if code not in _rooms:
-                    await ws.send_text(json.dumps({"type": "error", "message": "Room not found"}))
-                    continue
+                async with _room_lock:
+                    if code not in _rooms:
+                        await ws.send_text(json.dumps({"type": "error", "message": "Room not found"}))
+                        continue
+                    if room_code and room_code != code:
+                        pass  # will disconnect below outside lock
                 if room_code and room_code != code:
                     await _disconnect_client(client_id)
                 room_code = code
-                _rooms[room_code][client_id] = {
-                    "ws": ws, "character": character, "last_seen": time.monotonic(),
-                }
-                _client_room[client_id] = room_code
-                members = [
-                    {"client_id": cid, "character": conn["character"]}
-                    for cid, conn in _rooms[room_code].items()
-                ]
+                async with _room_lock:
+                    _rooms[room_code][client_id] = {
+                        "ws": ws, "character": character, "last_seen": time.monotonic(),
+                    }
+                    _client_room[client_id] = room_code
+                    members = [
+                        {"client_id": cid, "character": conn["character"]}
+                        for cid, conn in _rooms[room_code].items()
+                    ]
                 await ws.send_text(json.dumps({"type": "welcome", "you": client_id, "members": members}))
                 await _broadcast(room_code, {
                     "type": "player_joined",
@@ -165,12 +174,13 @@ async def party_ws(ws: WebSocket):
                 }, exclude=client_id)
 
             elif msg_type == "update":
-                if not room_code or client_id not in _rooms.get(room_code, {}):
-                    await ws.send_text(json.dumps({"type": "error", "message": "Not in a room"}))
-                    continue
-                character = msg.get("character", {})
-                _rooms[room_code][client_id]["character"] = character
-                _rooms[room_code][client_id]["last_seen"] = time.monotonic()
+                async with _room_lock:
+                    if not room_code or client_id not in _rooms.get(room_code, {}):
+                        await ws.send_text(json.dumps({"type": "error", "message": "Not in a room"}))
+                        continue
+                    character = msg.get("character", {})
+                    _rooms[room_code][client_id]["character"] = character
+                    _rooms[room_code][client_id]["last_seen"] = time.monotonic()
                 await _broadcast(room_code, {
                     "type": "updated",
                     "member": {"client_id": client_id, "character": character},
@@ -178,9 +188,12 @@ async def party_ws(ws: WebSocket):
 
             elif msg_type == "bug_report":
                 # Broadcast bug reports to ALL clients so dev builds can capture them
-                if room_code and client_id in _rooms.get(room_code, {}):
-                    _rooms[room_code][client_id]["last_seen"] = time.monotonic()
-                    reporter = _rooms[room_code][client_id].get("character", {}).get("name", "Unknown")
+                async with _room_lock:
+                    in_room = room_code and client_id in _rooms.get(room_code, {})
+                    if in_room:
+                        _rooms[room_code][client_id]["last_seen"] = time.monotonic()
+                        reporter = _rooms[room_code][client_id].get("character", {}).get("name", "Unknown")
+                if in_room:
                     report_id = next_report_id()
                     report_data = msg.get("report", {})
                     summary = report_data.get("description", str(report_data))[:120] if isinstance(report_data, dict) else str(report_data)[:120]
@@ -197,9 +210,9 @@ async def party_ws(ws: WebSocket):
                     })  # No exclude — send to everyone including sender
 
             elif msg_type == "ping":
-                # Update last_seen for zombie detection
-                if room_code and client_id in _rooms.get(room_code, {}):
-                    _rooms[room_code][client_id]["last_seen"] = time.monotonic()
+                async with _room_lock:
+                    if room_code and client_id in _rooms.get(room_code, {}):
+                        _rooms[room_code][client_id]["last_seen"] = time.monotonic()
                 await ws.send_text(json.dumps({"type": "pong"}))
 
             else:

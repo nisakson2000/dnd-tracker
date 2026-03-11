@@ -33,6 +33,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const [localAbilities, setLocalAbilities] = useState({});
   const [showSubclassModal, setShowSubclassModal] = useState(false);
   const prevLevelRef = useRef(null);
+  const subclassTimeoutRef = useRef(null);
 
   const loadData = async () => {
     try {
@@ -54,6 +55,12 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   };
 
   useEffect(() => { loadData(); }, [characterId]);
+
+  useEffect(() => {
+    return () => {
+      if (subclassTimeoutRef.current) clearTimeout(subclassTimeoutRef.current);
+    };
+  }, []);
 
   const saveOverview = useCallback(async (data) => {
     await updateOverview(characterId, data);
@@ -136,7 +143,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
       // Check if this level triggers subclass selection
       const classData = CLASSES.find(c => c.name === overview.primary_class);
       if (classData && classData.subclassLevel && v >= classData.subclassLevel && !overview.primary_subclass) {
-        setTimeout(() => setShowSubclassModal(true), 2000); // delay so level-up overlay shows first
+        subclassTimeoutRef.current = setTimeout(() => setShowSubclassModal(true), 2000);
       }
     }
     if (field === 'level') {
@@ -200,7 +207,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     const dex = calcMod(abilityMap.DEX || 10);
     const wis = calcMod(abilityMap.WIS || 10);
     const percSkill = skills.find(s => s.name === 'Perception');
-    const perc = wis + (percSkill?.proficient ? profBonus : 0) + (percSkill?.expertise ? profBonus : 0);
+    const perc = wis + (percSkill?.expertise ? profBonus * 2 : percSkill?.proficient ? profBonus : 0);
     return {
       dexMod: dex,
       wisMod: wis,
@@ -522,7 +529,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
               {sortedSkillEntries.map(([skillName, ability]) => {
                 const sk = skills.find(s => s.name === skillName);
                 const score = abilityMap[ability] || 10;
-                const mod = calcMod(score) + (sk?.proficient ? profBonus : 0) + (sk?.expertise ? profBonus : 0);
+                const mod = calcMod(score) + (sk?.expertise ? profBonus * 2 : sk?.proficient ? profBonus : 0);
                 const state = sk?.expertise ? 'expertise' : sk?.proficient ? 'proficient' : 'none';
                 return (
                   <div key={skillName} className="flex items-center gap-2 py-[5px] px-1.5 rounded group hover:bg-white/[0.025] transition-colors select-none">

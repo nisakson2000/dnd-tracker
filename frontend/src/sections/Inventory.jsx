@@ -125,11 +125,11 @@ export default function Inventory({ characterId, character }) {
     } catch (err) { toast.error(err.message); }
   };
 
+  const attunedCount = items.filter(i => i.attuned).length;
   const totalWeight = items.reduce((sum, i) => sum + (i.weight * i.quantity), 0);
   const carryCapacity = strScore * 15;
   const encumbered = totalWeight > strScore * 5;
   const heavilyEncumbered = totalWeight > strScore * 10;
-  const attunedCount = items.filter(i => i.attuned).length;
 
   if (loading) return <div className="text-amber-200/40">Loading inventory...</div>;
 

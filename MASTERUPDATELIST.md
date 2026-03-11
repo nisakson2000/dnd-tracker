@@ -4,6 +4,32 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.2.6 — Code Review Fixes: Security, Stability & Bug Fixes
+**Released:** March 11, 2026
+
+### Security
+- XSS vulnerability fixed in WikiPage.jsx — HTML content now sanitized (strips script, iframe, object, embed elements and on* event attributes) before rendering with dangerouslySetInnerHTML
+- CORS middleware restricted from wildcard (`*`) to explicit localhost and Tauri origins
+
+### Stability
+- React Error Boundaries added — each section wrapped in `SectionErrorBoundary` component; a crash in one section no longer takes down the entire app
+- Party.py WebSocket race conditions fixed — `asyncio.Lock()` protects all room dictionary mutations
+- Journal stale closure fixed — keyboard save handler uses refs to always capture current state
+- Autosave retry mechanism — failed IPC saves are queued and retried on the next autosave interval
+- Overview setTimeout memory leak fixed — subclass modal timeout properly cleaned up on unmount
+
+### Bug Fixes
+- Overview expertise calculation corrected — expertise now doubles proficiency bonus (`profBonus * 2`) instead of stacking additively
+- Combat condition timer clamped with `Math.max(0, ...)` to prevent negative durations on rapid clicks
+- combat.rs column-order comments added to verify SELECT/get() alignment
+
+### Performance
+- Quests.rs N+1 query eliminated — objectives fetched in one bulk query and grouped by quest_id in a HashMap
+- Dashboard character cards wrapped in `React.memo()` to prevent unnecessary re-renders on sort/filter changes
+- DiceRoller roll history capped at 200 entries to prevent unbounded sessionStorage growth
+
+---
+
 ## V0.2.5 — Batch 5: Combat, Spellbook, Journal & Section Upgrades
 **Released:** March 11, 2026
 

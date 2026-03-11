@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Plus, Trash2, Edit2, BookMarked, Search, X, Download, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
@@ -303,14 +303,20 @@ function JournalForm({ entry, nextSessionNumber = 1, onSubmit, onCancel }) {
     onSubmit({ ...rest, tags: finalTags });
   };
 
+  const formRef = useRef(form);
+  useEffect(() => { formRef.current = form; }, [form]);
+
+  const handleSubmitRef = useRef(handleSubmit);
+  useEffect(() => { handleSubmitRef.current = handleSubmit; });
+
   useEffect(() => {
     const handler = (e) => {
       if (e.key === 'Escape') onCancel();
-      if (e.ctrlKey && e.key === 'Enter' && form.title.trim()) { e.preventDefault(); handleSubmit(); }
+      if (e.ctrlKey && e.key === 'Enter' && formRef.current.title.trim()) { e.preventDefault(); handleSubmitRef.current(); }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [onCancel, onSubmit, form]);
+  }, [onCancel]);
 
   // Display tags without mood: prefix in the input
   const displayTagsStr = getDisplayTags(form.tags).join(', ');
