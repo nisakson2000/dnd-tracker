@@ -276,7 +276,7 @@ export default function Settings({ characterId, character, onBugReport }) {
                 aria-pressed={settings.displayFont === f.family}
               >
                 <div className="fpick-name" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>{f.label || f.family}</div>
-                <div className="fpick-sample" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>+4 Strength</div>
+                <div className="fpick-sample" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>The Codex</div>
               </div>
             ))}
           </div>
