@@ -1,6 +1,6 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.3.8**
+**Current Version: V0.3.9**
 
 A native desktop application for managing D&D 5e characters with full ruleset support, a 1,680+ article encyclopedia, real-time party sync, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
