@@ -180,6 +180,8 @@ fn main() {
             commands::wiki::wiki_get_related,
             // Bug Report
             commands::bug_report::write_bug_report,
+            // Frontend logging
+            commands::frontend_log::frontend_log,
             // Party
             party::start_party_server,
             party::stop_party_server,

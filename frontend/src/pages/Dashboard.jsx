@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, Heart, Shield, Bell,
   Library, ChevronRight, ChevronLeft, Scroll, Check, X,
-  Copy, Search, Users,
+  Copy, Search, Users, Upload,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { invoke } from '@tauri-apps/api/core';
 import { listCharacters, createCharacter, deleteCharacter } from '../api/characters';
 import { RULESET_OPTIONS, getRuleset } from '../data/rulesets';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -340,6 +341,89 @@ function NewCharCard({ index, onClick, isDM }) {
         </div>
         <div style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 12, color: hovered ? 'rgba(200,175,130,0.4)' : 'rgba(200,175,130,0.18)', transition: 'color 0.3s' }}>
           {isDM ? 'Start a new adventure' : 'Begin a new legend'}
+        </div>
+      </div>
+
+      {/* Bottom sweep */}
+      <motion.div
+        animate={{ width: hovered ? '100%' : '0%' }}
+        transition={{ duration: 0.45 }}
+        style={{
+          position: 'absolute', bottom: 0, left: 0,
+          height: 2,
+          background: `linear-gradient(90deg, transparent, ${accent}0.5), transparent)`,
+        }}
+      />
+    </motion.div>
+  );
+}
+
+// ─── Import character card ──────────────────────────────────────────────────
+
+function ImportCharCard({ index, onImport }) {
+  const [hovered, setHovered] = useState(false);
+  const accent = 'rgba(52,152,219,';
+  const fileInputRef = useRef(null);
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      let data;
+      try { data = JSON.parse(text); } catch { throw new Error('File is not valid JSON'); }
+      if (!data || typeof data !== 'object') throw new Error('Invalid character file format');
+      onImport(data);
+    } catch (err) {
+      toast.error(`Import failed: ${err.message}`);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.08 }}
+      whileHover={{ y: -6, borderColor: `${accent}0.4)`, background: `${accent}0.04)`, boxShadow: `0 14px 50px rgba(0,0,0,0.7), 0 0 30px ${accent}0.06)` }}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      onClick={() => fileInputRef.current?.click()}
+      style={{
+        borderRadius: 14, minHeight: 240, cursor: 'pointer', position: 'relative', overflow: 'hidden',
+        border: `1px dashed ${accent}0.18)`,
+        background: 'rgba(11,9,20,0.45)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: 12,
+        boxShadow: '0 4px 30px rgba(0,0,0,0.4)',
+      }}
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        onChange={handleFileSelect}
+        style={{ display: 'none' }}
+      />
+      <motion.div
+        animate={hovered ? { scale: 1.1, boxShadow: `0 0 20px ${accent}0.2), inset 0 0 12px ${accent}0.08)` } : { scale: 1, boxShadow: 'none' }}
+        transition={{ type: 'spring', stiffness: 320 }}
+        style={{
+          width: 64, height: 64, borderRadius: '50%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: `${accent}0.05)`,
+          border: `1px dashed ${accent}0.3)`,
+          fontSize: 22, color: `${accent}0.45)`,
+        }}
+      >
+        <Upload size={22} />
+      </motion.div>
+      <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.2em', textTransform: 'uppercase', color: hovered ? 'rgba(100,180,230,0.7)' : 'rgba(100,180,230,0.38)', transition: 'color 0.3s' }}>
+          Import Character
+        </div>
+        <div style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 12, color: hovered ? 'rgba(100,180,230,0.4)' : 'rgba(100,180,230,0.18)', transition: 'color 0.3s' }}>
+          From exported JSON file
         </div>
       </div>
 
@@ -973,7 +1057,24 @@ function Divider() {
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
-function EmptyState({ onOpen, isDM }) {
+function EmptyState({ onOpen, onImport, isDM }) {
+  const fileInputRef = useRef(null);
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      let data;
+      try { data = JSON.parse(text); } catch { throw new Error('File is not valid JSON'); }
+      if (!data || typeof data !== 'object') throw new Error('Invalid character file format');
+      onImport(data);
+    } catch (err) {
+      toast.error(`Import failed: ${err.message}`);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
@@ -986,15 +1087,29 @@ function EmptyState({ onOpen, isDM }) {
       <p style={{ fontSize: 15, color: 'rgba(200,175,130,0.27)', maxWidth: 320, margin: '0 auto 32px', lineHeight: 1.75 }}>
         {isDM
           ? 'Create your first campaign to start managing sessions, NPCs, quests, and encounters.'
-          : 'No adventurers have been recorded yet. Create your first character and begin writing your legend.'}
+          : 'No adventurers have been recorded yet. Create your first character or import an existing one.'}
       </p>
-      <motion.button
-        onClick={onOpen}
-        whileHover={{ y: -2, boxShadow: isDM ? '0 8px 28px rgba(155,89,182,0.3)' : '0 8px 28px rgba(201,168,76,0.3)' }}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: isDM ? 'linear-gradient(135deg,#9b59b6,#c084fc)' : 'linear-gradient(135deg,#c9a84c,#f0d878)', color: isDM ? '#fff' : '#12101c' }}
-      >
-        <Scroll size={16} /> {isDM ? 'Create First Campaign' : 'Create First Character'}
-      </motion.button>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <motion.button
+          onClick={onOpen}
+          whileHover={{ y: -2, boxShadow: isDM ? '0 8px 28px rgba(155,89,182,0.3)' : '0 8px 28px rgba(201,168,76,0.3)' }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: isDM ? 'linear-gradient(135deg,#9b59b6,#c084fc)' : 'linear-gradient(135deg,#c9a84c,#f0d878)', color: isDM ? '#fff' : '#12101c' }}
+        >
+          <Scroll size={16} /> {isDM ? 'Create First Campaign' : 'Create New Character'}
+        </motion.button>
+        {!isDM && (
+          <>
+            <input ref={fileInputRef} type="file" accept=".json" onChange={handleFileSelect} style={{ display: 'none' }} />
+            <motion.button
+              onClick={() => fileInputRef.current?.click()}
+              whileHover={{ y: -2, boxShadow: '0 8px 28px rgba(52,152,219,0.25)' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: '1px solid rgba(52,152,219,0.3)', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: 'rgba(52,152,219,0.1)', color: 'rgba(100,180,230,0.85)' }}
+            >
+              <Upload size={16} /> Import Existing Character
+            </motion.button>
+          </>
+        )}
+      </div>
     </motion.div>
   );
 }
@@ -1045,6 +1160,21 @@ export default function Dashboard() {
       load();
     } catch (err) {
       toast.error(`Failed to delete: ${err.message}`);
+    }
+  };
+
+  const handleImport = async (data) => {
+    try {
+      const name = data.overview?.name || 'Imported Character';
+      const ruleset = data.overview?.ruleset || '5e-2014';
+      const primaryClass = data.overview?.primary_class || '';
+      const race = data.overview?.race || '';
+      const char = await createCharacter({ name, ruleset, primaryClass, race });
+      await invoke('import_character', { characterId: char.id, payload: data });
+      toast.success(`${name} imported to the Codex!`);
+      load();
+    } catch (err) {
+      toast.error(`Import failed: ${err.message}`);
     }
   };
 
@@ -1262,7 +1392,7 @@ export default function Dashboard() {
             Consulting the ancient texts…
           </div>
         ) : characters.length === 0 ? (
-          <EmptyState onOpen={() => setShowCreate(true)} isDM={isDM} />
+          <EmptyState onOpen={() => setShowCreate(true)} onImport={handleImport} isDM={isDM} />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 20 }}>
             {filteredCharacters.map((c, i) => isDM ? (
@@ -1280,7 +1410,10 @@ export default function Dashboard() {
               />
             ))}
             {!charSearch.trim() && (
-              <NewCharCard index={filteredCharacters.length} onClick={() => setShowCreate(true)} isDM={isDM} />
+              <>
+                <NewCharCard index={filteredCharacters.length} onClick={() => setShowCreate(true)} isDM={isDM} />
+                {!isDM && <ImportCharCard index={filteredCharacters.length + 1} onImport={handleImport} />}
+              </>
             )}
           </div>
         )}
