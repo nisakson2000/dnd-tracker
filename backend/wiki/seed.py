@@ -46,6 +46,16 @@ SEED_FILES = [
     # Creatures
     "monsters_low.json",
     "monsters_high.json",
+    "monsters_cr0.json",
+    "monsters_cr025.json",
+    "monsters_cr050.json",
+    "monsters_cr1.json",
+    "monsters_cr2.json",
+    "monsters_cr3_4.json",
+    "monsters_cr5_7.json",
+    "monsters_cr8_10.json",
+    "monsters_cr11_17.json",
+    "monsters_cr19_30.json",
     # World and lore
     "gods.json",
     "planes.json",

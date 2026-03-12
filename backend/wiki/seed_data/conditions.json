@@ -75,7 +75,7 @@
     "category": "condition",
     "ruleset": "universal",
     "summary": "An incapacitated creature can't take actions or reactions.",
-    "content": "## Incapacitated\n\n- An incapacitated creature **can't take actions or reactions**.\n\n### Important Notes\n- This is a fundamental condition that many other conditions include (Paralyzed, Petrified, Stunned, Unconscious all include Incapacitated).\n- The creature CAN still move (unlike Paralyzed or Unconscious).\n- The creature CAN still speak (unlike Paralyzed or Unconscious).\n- Concentration on a spell is NOT automatically broken by being incapacitated — only by specific conditions that say so, or by failing a concentration check from damage.",
+    "content": "## Incapacitated\n\n- An incapacitated creature **can't take actions or reactions**.\n\n### Important Notes\n- This is a fundamental condition that many other conditions include (Paralyzed, Petrified, Stunned, Unconscious all include Incapacitated).\n- The creature CAN still move (unlike Paralyzed or Unconscious).\n- The creature CAN still speak (unlike Paralyzed or Unconscious).\n- Concentration on a spell IS automatically broken by being incapacitated. Per the PHB: \"You lose concentration on a spell if you are incapacitated or if you die.\"",
     "tags": "condition,status effect,actions,reactions",
     "sort_order": 8
   },
