@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
 import { ModeProvider, useAppMode } from './contexts/ModeContext';
 import { useDevUpdateCheck } from './hooks/useDevUpdateCheck';
+import { APP_VERSION } from './version';
 import ModeSelect from './pages/ModeSelect';
 import Dashboard from './pages/Dashboard';
 import CharacterView from './pages/CharacterView';
@@ -124,20 +125,46 @@ function DevBanner() {
       transition: 'all 0.3s ease',
       boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
     }}>
-      {/* Dev count — always visible, counts you + peers */}
-      <span
-        style={{
-          display: 'flex', alignItems: 'center', gap: '4px',
-          position: 'absolute', left: '12px', fontSize: '10px', opacity: 0.8,
-          cursor: peers.length > 0 ? 'help' : 'default',
-        }}
-        title={peers.length > 0
-          ? peers.map(p => `${p.name}${p.active_section ? ': editing ' + p.active_section : ''}`).join('\n')
-          : 'Just you'}
-      >
-        <span style={{ color: '#4ade80', fontSize: '8px' }}>&#x25CF;</span>
-        {peers.length + 1} dev{peers.length + 1 !== 1 ? 's' : ''} in app
-      </span>
+      {/* Dev count + sync status — always visible */}
+      {(() => {
+        const devCount = peers.length + 1;
+        const allSynced = peers.length > 0 && peers.every(p => p.version === APP_VERSION.replace('V', ''));
+        return (
+          <span
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              position: 'absolute', left: '12px', fontSize: '10px',
+              cursor: peers.length > 0 ? 'help' : 'default',
+            }}
+            title={peers.length > 0
+              ? peers.map(p => `${p.name} (v${p.version || '?'})${p.active_section ? ': editing ' + p.active_section : ''}`).join('\n')
+              : 'Just you'}
+          >
+            <span style={{ color: allSynced ? '#4ade80' : '#fbbf24', fontSize: '8px' }}>&#x25CF;</span>
+            <span style={{ opacity: 0.9 }}>
+              {devCount} dev{devCount !== 1 ? 's' : ''}
+            </span>
+            {allSynced && (
+              <span style={{
+                color: '#4ade80', fontWeight: 700, fontSize: '9px',
+                padding: '1px 6px', borderRadius: 4,
+                background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.25)',
+              }}>
+                builds synced
+              </span>
+            )}
+            {peers.length > 0 && !allSynced && (
+              <span style={{
+                color: '#fbbf24', fontWeight: 700, fontSize: '9px',
+                padding: '1px 6px', borderRadius: 4,
+                background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)',
+              }}>
+                version mismatch
+              </span>
+            )}
+          </span>
+        );
+      })()}
 
       {/* Rollback button — right side, only shows for 5 min after pull */}
       {canRollback && !hasUpdate && (

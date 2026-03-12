@@ -78,9 +78,16 @@ impl DevPresence {
             return Ok(());
         }
 
-        let socket = UdpSocket::bind(format!("0.0.0.0:{}", BEACON_PORT))
-            .await
-            .map_err(|e| format!("Failed to bind UDP socket on port {}: {}", BEACON_PORT, e))?;
+        let socket = match UdpSocket::bind(format!("0.0.0.0:{}", BEACON_PORT)).await {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("[dev-presence] Port {} in use (stale process?), trying {}: {}", BEACON_PORT, BEACON_PORT + 1, e);
+                // Try alternate port — stale tauri dev process may hold the primary port
+                UdpSocket::bind(format!("0.0.0.0:{}", BEACON_PORT + 1))
+                    .await
+                    .map_err(|e2| format!("Failed to bind UDP on port {} or {}: {}", BEACON_PORT, BEACON_PORT + 1, e2))?
+            }
+        };
 
         socket.set_broadcast(true).map_err(|e| format!("Failed to enable broadcast: {}", e))?;
 
@@ -96,7 +103,11 @@ impl DevPresence {
         let active_section_ref = self.active_section.clone();
 
         tokio::spawn(async move {
-            let broadcast_addr: SocketAddr = format!("255.255.255.255:{}", BEACON_PORT).parse().unwrap();
+            // Broadcast to both primary and fallback ports so peers on either port hear us
+            let broadcast_addrs: Vec<SocketAddr> = vec![
+                format!("255.255.255.255:{}", BEACON_PORT).parse().unwrap(),
+                format!("255.255.255.255:{}", BEACON_PORT + 1).parse().unwrap(),
+            ];
             loop {
                 {
                     let is_running = running_flag.lock().await;
@@ -118,7 +129,9 @@ impl DevPresence {
                 };
 
                 if let Ok(data) = serde_json::to_vec(&msg) {
-                    let _ = send_socket.send_to(&data, broadcast_addr).await;
+                    for addr in &broadcast_addrs {
+                        let _ = send_socket.send_to(&data, addr).await;
+                    }
                 }
 
                 tokio::time::sleep(BEACON_INTERVAL).await;
@@ -129,6 +142,7 @@ impl DevPresence {
         let recv_socket = socket.clone();
         let peers = self.peers.clone();
         let my_ip = self.local_ip.clone();
+        let my_name = self.local_name.clone();
         let running_flag2 = self.running.clone();
         let chat_messages = self.chat_messages.clone();
 
@@ -145,8 +159,9 @@ impl DevPresence {
                 match tokio::time::timeout(Duration::from_secs(2), recv_socket.recv_from(&mut buf)).await {
                     Ok(Ok((len, _addr))) => {
                         if let Ok(msg) = serde_json::from_slice::<BeaconMessage>(&buf[..len]) {
-                            // Skip our own messages
-                            if msg.dev_ip == my_ip {
+                            // Skip our own messages — compare the dev_name + dev_ip combo
+                            // (hostname is unique per machine, IP field may match on fallback)
+                            if msg.dev_name == my_name && msg.dev_ip == my_ip {
                                 continue;
                             }
 
@@ -276,12 +291,12 @@ impl DevPresence {
         };
 
         let data = serde_json::to_vec(&msg).map_err(|e| format!("Serialize failed: {}", e))?;
-        let broadcast_addr: SocketAddr = format!("255.255.255.255:{}", BEACON_PORT).parse().unwrap();
 
-        socket
-            .send_to(&data, broadcast_addr)
-            .await
-            .map_err(|e| format!("Broadcast failed: {}", e))?;
+        // Send to both ports so peers on either port receive
+        for port in [BEACON_PORT, BEACON_PORT + 1] {
+            let addr: SocketAddr = format!("255.255.255.255:{}", port).parse().unwrap();
+            let _ = socket.send_to(&data, addr).await;
+        }
 
         Ok(())
     }
@@ -303,12 +318,11 @@ impl DevPresence {
         };
 
         let data = serde_json::to_vec(&msg).map_err(|e| format!("Serialize failed: {}", e))?;
-        let broadcast_addr: SocketAddr = format!("255.255.255.255:{}", BEACON_PORT).parse().unwrap();
 
-        socket
-            .send_to(&data, broadcast_addr)
-            .await
-            .map_err(|e| format!("Broadcast failed: {}", e))?;
+        for port in [BEACON_PORT, BEACON_PORT + 1] {
+            let addr: SocketAddr = format!("255.255.255.255:{}", port).parse().unwrap();
+            let _ = socket.send_to(&data, addr).await;
+        }
 
         // Also store our own message locally
         let timestamp = std::time::SystemTime::now()
