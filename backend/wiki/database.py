@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 WIKI_DB_PATH = os.path.join(PROJECT_ROOT, "wiki.db")
 
+# Module-level singletons — safe with uvicorn's async model (single-threaded event loop)
+# Would need threading.Lock if used with multi-threaded WSGI servers
 _wiki_engine = None
 _wiki_session_factory = None
 

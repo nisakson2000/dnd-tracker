@@ -114,7 +114,10 @@ pub fn create_character(
     // Store connection in cache
     {
         let mut conns = state.connections.lock().map_err(|e| e.to_string())?;
-        conns.insert(char_id.clone(), std::sync::Mutex::new(conn));
+        conns.insert(char_id.clone(), crate::db::CachedConn {
+            conn: std::sync::Mutex::new(conn),
+            last_access: std::sync::Mutex::new(std::time::Instant::now()),
+        });
     }
 
     Ok(CharacterSummary {

@@ -51,7 +51,10 @@ pub fn import_character(
         db::init_character_tables(&conn).map_err(|e| e.to_string())?;
         db::init_defaults(&conn).map_err(|e| e.to_string())?;
         let mut conns = state.connections.lock().map_err(|e| e.to_string())?;
-        conns.insert(character_id.clone(), std::sync::Mutex::new(conn));
+        conns.insert(character_id.clone(), crate::db::CachedConn {
+            conn: std::sync::Mutex::new(conn),
+            last_access: std::sync::Mutex::new(std::time::Instant::now()),
+        });
     } else {
         state.get_char_conn(&character_id)?;
     }

@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /home/nisakson/dnd-tracker
+cd "$(dirname "$0")"
 
 # Create Vite React project in temp dir, then merge with existing frontend dir
 npx --yes create-vite@latest frontend-temp --template react

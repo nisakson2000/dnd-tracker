@@ -77,8 +77,16 @@ impl PartyServer {
                 ws.on_upgrade(move |socket| handle_ws_connection(socket, state))
             });
 
+        // Restrict CORS to localhost/Tauri origins for security
+        // LAN clients connect via WebSocket which doesn't enforce CORS
         let cors = warp::cors()
-            .allow_any_origin()
+            .allow_origins(vec![
+                "http://localhost:1420",
+                "http://localhost:5173",
+                "http://127.0.0.1:1420",
+                "http://127.0.0.1:5173",
+                "tauri://localhost",
+            ])
             .allow_methods(vec!["GET", "POST"])
             .allow_headers(vec!["content-type"]);
 
@@ -621,7 +629,11 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
                                 ));
                             }
                         }
-                        _ => {}
+                        other => {
+                            if let Some(t) = other {
+                                eprintln!("[party] Client {} sent unknown message type: {}", client_id, t);
+                            }
+                        }
                     }
             }
         } else if msg.is_close() {

@@ -30,7 +30,9 @@ pub fn frontend_log(
         .append(true)
         .open(&log_path)
     {
-        let _ = file.write_all(line.as_bytes());
+        if let Err(e) = file.write_all(line.as_bytes()) {
+            eprintln!("[frontend_log] Failed to write to log file: {}", e);
+        }
 
         // Truncate if over 500KB
         if let Ok(meta) = file.metadata() {

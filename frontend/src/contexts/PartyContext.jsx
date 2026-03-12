@@ -174,6 +174,19 @@ export function PartyProvider({ children }) {
     };
   }, [clearTimers]);
 
+  // Cleanup all WebSocket resources on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      intentionalCloseRef.current = true;
+      connectingRef.current = false;
+      clearTimers();
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
+  }, [clearTimers]);
+
   const disconnect = useCallback(() => {
     intentionalCloseRef.current = true;
     connectingRef.current = false;

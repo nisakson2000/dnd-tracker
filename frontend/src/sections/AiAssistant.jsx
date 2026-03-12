@@ -33,7 +33,12 @@ function loadHistory(characterId) {
 function saveHistory(characterId, history) {
   try {
     sessionStorage.setItem(`${HISTORY_KEY}-${characterId}`, JSON.stringify(history.slice(-20)));
-  } catch {}
+  } catch (e) {
+    // sessionStorage quota exceeded — trim history and retry once
+    try {
+      sessionStorage.setItem(`${HISTORY_KEY}-${characterId}`, JSON.stringify(history.slice(-10)));
+    } catch { /* storage full, skip silently */ }
+  }
 }
 
 const EXAMPLE_PROMPTS = [
@@ -69,7 +74,8 @@ function renderInline(text) {
   return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) return <strong key={i} style={{ color: 'var(--text)', fontWeight: 600 }}>{part.slice(2, -2)}</strong>;
     if (part.startsWith('`') && part.endsWith('`')) return <code key={i} className="aa-code">{part.slice(1, -1)}</code>;
-    return part;
+    // Return as text node — no dangerouslySetInnerHTML, safe from XSS
+    return <span key={i}>{part}</span>;
   });
 }
 

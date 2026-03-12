@@ -65,11 +65,15 @@ export function useDevUpdateCheck() {
           }
         );
 
-        // Auto-pull after a short delay
+        // Auto-pull after a short delay (check mounted state to avoid stale pulls)
         if (!autoPullingRef.current) {
           autoPullingRef.current = true;
           setTimeout(() => {
-            pullUpdatesRef.current();
+            if (mountedRef.current) {
+              pullUpdatesRef.current();
+            } else {
+              autoPullingRef.current = false;
+            }
           }, AUTO_PULL_DELAY);
         }
       } else {

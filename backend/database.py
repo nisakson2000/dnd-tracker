@@ -9,6 +9,8 @@ CHARACTERS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "chara
 os.makedirs(CHARACTERS_DIR, exist_ok=True)
 
 # Cache engines to avoid creating a new engine per request
+# Note: These module-level dicts are safe with uvicorn's async model (single-threaded event loop)
+# but would need threading.Lock if used with multi-threaded WSGI servers
 _engine_cache: dict[str, object] = {}
 _session_factories: dict[str, object] = {}
 

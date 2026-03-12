@@ -21,6 +21,7 @@ let _sessionErrorCount = 0;
 
 /* ─── Duplicate suppression ─── */
 const DEDUP_WINDOW_MS = 60_000;
+const MAX_FINGERPRINTS = 500;
 const _fingerprints = new Map(); // fingerprint -> { count, firstSeen, lastSeen }
 
 function normalizeMessage(msg) {
@@ -129,7 +130,19 @@ export function useErrorLog() {
       return null;
     }
 
-    // New unique error
+    // New unique error — evict stale fingerprints if map grows too large
+    if (_fingerprints.size >= MAX_FINGERPRINTS) {
+      for (const [key, val] of _fingerprints) {
+        if (now - val.lastSeen > DEDUP_WINDOW_MS) _fingerprints.delete(key);
+      }
+      // If still too large after evicting stale entries, drop oldest half
+      if (_fingerprints.size >= MAX_FINGERPRINTS) {
+        const entries = [..._fingerprints.entries()];
+        entries.sort((a, b) => a[1].lastSeen - b[1].lastSeen);
+        const toRemove = Math.floor(entries.length / 2);
+        for (let i = 0; i < toRemove; i++) _fingerprints.delete(entries[i][0]);
+      }
+    }
     _fingerprints.set(fp, { count: 1, firstSeen: now, lastSeen: now });
 
     const item = {

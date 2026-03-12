@@ -102,6 +102,12 @@ def log_entry(
         existing["last_seen"] = now
         return False
 
+    # Evict stale fingerprints to prevent unbounded memory growth
+    if len(_fingerprints) > 500:
+        stale = [k for k, v in _fingerprints.items() if (now - v["last_seen"]) > DEDUP_WINDOW]
+        for k in stale:
+            del _fingerprints[k]
+
     # ── New entry ─────────────────────────────────────────────────
     entry: dict[str, Any] = {
         "ts": _now_iso(),
@@ -119,6 +125,9 @@ def log_entry(
         entry["extra"] = extra
 
     _entries.append(entry)
+    # Cap entries to prevent unbounded memory growth
+    if len(_entries) > 1000:
+        _entries[:] = _entries[-500:]
     _fingerprints[fp] = {"first_entry": entry, "count": 1, "last_seen": now}
 
     # Bump counters

@@ -3,12 +3,19 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+use std::time::Instant;
+
+/// Cached connection with last-access time for LRU eviction
+pub struct CachedConn {
+    pub conn: Mutex<Connection>,
+    pub last_access: Mutex<Instant>,
+}
 
 /// Global state holding the app data directory path
 pub struct AppState {
     pub data_dir: PathBuf,
-    /// Cache of open connections per character ID
-    pub connections: Mutex<HashMap<String, Mutex<Connection>>>,
+    /// Cache of open connections per character ID (with LRU tracking)
+    pub connections: Mutex<HashMap<String, CachedConn>>,
     /// Wiki connection
     pub wiki_conn: Mutex<Connection>,
 }
@@ -40,14 +47,20 @@ impl AppState {
         let mut conns = self.connections.lock().map_err(|_| {
             "Database is temporarily busy. Please try again.".to_string()
         })?;
-        if conns.contains_key(character_id) {
+        if let Some(cached) = conns.get(character_id) {
+            // Update last access time
+            if let Ok(mut t) = cached.last_access.lock() {
+                *t = Instant::now();
+            }
             return Ok(());
         }
-        // Limit cached connections to prevent memory exhaustion
+        // Limit cached connections — evict least recently used
         if conns.len() >= 100 {
-            eprintln!("[db] Connection cache full ({} entries), evicting oldest", conns.len());
-            // Remove a random entry to make room (all are equally valid to evict)
-            if let Some(key) = conns.keys().next().cloned() {
+            eprintln!("[db] Connection cache full ({} entries), evicting LRU", conns.len());
+            let lru_key = conns.iter()
+                .min_by_key(|(_, v)| v.last_access.lock().map(|t| *t).unwrap_or(Instant::now()))
+                .map(|(k, _)| k.clone());
+            if let Some(key) = lru_key {
                 conns.remove(&key);
             }
         }
@@ -55,7 +68,10 @@ impl AppState {
         let conn = open_connection(&db_path).map_err(|e| {
             format!("Failed to open character database: {}", e)
         })?;
-        conns.insert(character_id.to_string(), Mutex::new(conn));
+        conns.insert(character_id.to_string(), CachedConn {
+            conn: Mutex::new(conn),
+            last_access: Mutex::new(Instant::now()),
+        });
         Ok(())
     }
 
@@ -68,10 +84,10 @@ impl AppState {
         let conns = self.connections.lock().map_err(|_| {
             "Database is temporarily busy. Please try again.".to_string()
         })?;
-        let conn_mutex = conns.get(character_id).ok_or(
+        let cached = conns.get(character_id).ok_or(
             "Character database connection not found. Please try again.".to_string()
         )?;
-        let conn = conn_mutex.lock().map_err(|_| {
+        let conn = cached.conn.lock().map_err(|_| {
             "Character database is locked by another operation. Please try again.".to_string()
         })?;
         f(&conn)
@@ -326,10 +342,12 @@ pub fn migrate_character_db(conn: &Connection) -> SqlResult<()> {
         .unwrap_or(false);
 
     if !has_ruleset {
-        let _ = conn.execute(
+        if let Err(e) = conn.execute(
             "ALTER TABLE character_overview ADD COLUMN ruleset TEXT DEFAULT '5e-2014'",
             [],
-        );
+        ) {
+            eprintln!("[db] Migration warning: failed to add 'ruleset' column: {}", e);
+        }
     }
 
     // Check if multiclass_data column exists
@@ -340,10 +358,12 @@ pub fn migrate_character_db(conn: &Connection) -> SqlResult<()> {
         .unwrap_or(false);
 
     if !has_multiclass {
-        let _ = conn.execute(
+        if let Err(e) = conn.execute(
             "ALTER TABLE character_overview ADD COLUMN multiclass_data TEXT DEFAULT '[]'",
             [],
-        );
+        ) {
+            eprintln!("[db] Migration warning: failed to add 'multiclass_data' column: {}", e);
+        }
     }
 
     // Migrate features table: add uses_total, uses_remaining, recharge
@@ -352,9 +372,15 @@ pub fn migrate_character_db(conn: &Connection) -> SqlResult<()> {
         .and_then(|mut s| s.query_row([], |row| row.get(0)))
         .unwrap_or_default();
     if !features_sql.contains("uses_total") {
-        let _ = conn.execute("ALTER TABLE features ADD COLUMN uses_total INTEGER DEFAULT 0", []);
-        let _ = conn.execute("ALTER TABLE features ADD COLUMN uses_remaining INTEGER DEFAULT 0", []);
-        let _ = conn.execute("ALTER TABLE features ADD COLUMN recharge TEXT DEFAULT ''", []);
+        for (col, sql) in [
+            ("uses_total", "ALTER TABLE features ADD COLUMN uses_total INTEGER DEFAULT 0"),
+            ("uses_remaining", "ALTER TABLE features ADD COLUMN uses_remaining INTEGER DEFAULT 0"),
+            ("recharge", "ALTER TABLE features ADD COLUMN recharge TEXT DEFAULT ''"),
+        ] {
+            if let Err(e) = conn.execute(sql, []) {
+                eprintln!("[db] Migration warning: failed to add features.{}: {}", col, e);
+            }
+        }
     }
 
     // Migrate conditions table: add duration_rounds, rounds_remaining
@@ -363,8 +389,14 @@ pub fn migrate_character_db(conn: &Connection) -> SqlResult<()> {
         .and_then(|mut s| s.query_row([], |row| row.get(0)))
         .unwrap_or_default();
     if !conditions_sql.contains("duration_rounds") {
-        let _ = conn.execute("ALTER TABLE conditions ADD COLUMN duration_rounds INTEGER DEFAULT 0", []);
-        let _ = conn.execute("ALTER TABLE conditions ADD COLUMN rounds_remaining INTEGER DEFAULT 0", []);
+        for (col, sql) in [
+            ("duration_rounds", "ALTER TABLE conditions ADD COLUMN duration_rounds INTEGER DEFAULT 0"),
+            ("rounds_remaining", "ALTER TABLE conditions ADD COLUMN rounds_remaining INTEGER DEFAULT 0"),
+        ] {
+            if let Err(e) = conn.execute(sql, []) {
+                eprintln!("[db] Migration warning: failed to add conditions.{}: {}", col, e);
+            }
+        }
     }
 
     // Migrate journal_entries: add npcs_mentioned, pinned
@@ -373,10 +405,14 @@ pub fn migrate_character_db(conn: &Connection) -> SqlResult<()> {
         .and_then(|mut s| s.query_row([], |row| row.get(0)))
         .unwrap_or_default();
     if !journal_sql.contains("npcs_mentioned") {
-        let _ = conn.execute("ALTER TABLE journal_entries ADD COLUMN npcs_mentioned TEXT DEFAULT ''", []);
+        if let Err(e) = conn.execute("ALTER TABLE journal_entries ADD COLUMN npcs_mentioned TEXT DEFAULT ''", []) {
+            eprintln!("[db] Migration warning: failed to add journal_entries.npcs_mentioned: {}", e);
+        }
     }
     if !journal_sql.contains("pinned") {
-        let _ = conn.execute("ALTER TABLE journal_entries ADD COLUMN pinned INTEGER DEFAULT 0", []);
+        if let Err(e) = conn.execute("ALTER TABLE journal_entries ADD COLUMN pinned INTEGER DEFAULT 0", []) {
+            eprintln!("[db] Migration warning: failed to add journal_entries.pinned: {}", e);
+        }
     }
 
     // Migrate lore_notes: add related_to
@@ -385,7 +421,9 @@ pub fn migrate_character_db(conn: &Connection) -> SqlResult<()> {
         .and_then(|mut s| s.query_row([], |row| row.get(0)))
         .unwrap_or_default();
     if !lore_sql.contains("related_to") {
-        let _ = conn.execute("ALTER TABLE lore_notes ADD COLUMN related_to TEXT DEFAULT ''", []);
+        if let Err(e) = conn.execute("ALTER TABLE lore_notes ADD COLUMN related_to TEXT DEFAULT ''", []) {
+            eprintln!("[db] Migration warning: failed to add lore_notes.related_to: {}", e);
+        }
     }
 
     Ok(())

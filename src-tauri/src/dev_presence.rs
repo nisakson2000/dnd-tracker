@@ -140,8 +140,8 @@ impl DevPresence {
 
         // Build broadcast addresses — limited broadcast + subnet broadcast
         let mut broadcast_addrs: Vec<SocketAddr> = vec![
-            format!("255.255.255.255:{}", BEACON_PORT).parse().unwrap(),
-            format!("255.255.255.255:{}", BEACON_PORT + 1).parse().unwrap(),
+            format!("255.255.255.255:{}", BEACON_PORT).parse().expect("hardcoded broadcast addr must parse"),
+            format!("255.255.255.255:{}", BEACON_PORT + 1).parse().expect("hardcoded broadcast addr must parse"),
         ];
 
         if let Some(subnet_broadcast) = get_subnet_broadcast(&self.local_ip) {
@@ -372,7 +372,7 @@ impl DevPresence {
         let socket = socket_guard.as_ref().ok_or("Dev presence not running")?;
 
         for port in [BEACON_PORT, BEACON_PORT + 1] {
-            let addr: SocketAddr = format!("255.255.255.255:{}", port).parse().unwrap();
+            let addr: SocketAddr = format!("255.255.255.255:{}", port).parse().expect("hardcoded broadcast addr must parse");
             let _ = socket.send_to(data, addr).await;
         }
 
