@@ -1,6 +1,6 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.2.8**
+**Current Version: V0.2.9**
 
 A native desktop application for managing D&D 5e characters with full ruleset support, a 964-article encyclopedia, real-time party sync, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
@@ -94,6 +94,7 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - Mode-aware navigation (Player vs DM section groups)
 
 ### Dashboard
+- **Import Existing Character** — import a previously exported JSON character file as a new entry from the Dashboard
 - **Character Duplicate** — copy a character as a template
 - **Quick Stats Bar** — total characters, average level, most played class
 - **Character Search** — filter by name, race, or class
@@ -107,6 +108,7 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - Party Connect — LAN sync with room codes, auto-reconnect, DM party stats overview
 - Rest Mechanics (Long/Short Rest with proper D&D rules)
 - Level-Up System with animated overlay and class-specific gains
+- Frontend error logging — console errors, unhandled exceptions, and promise rejections captured to log file
 - 6 UI Themes, font/density controls, auto-save, auto-backup, crash recovery
 - Beginner Tutorial Wizard, contextual help tooltips
 - DevTools with Find Improvements audit (Player + DM mode-aware)
@@ -166,6 +168,12 @@ npm run tauri build
 - Auto-save (debounced 800ms), auto-backup every 5 minutes
 
 ## Changelog Summary
+
+### V0.2.9 — Import Character & Error Logging
+- Import Existing Character from Dashboard — file picker for exported JSON, creates new character entry
+- Import option shown in both empty state and character grid
+- Frontend error capture pipeline — console.error, unhandled exceptions, and promise rejections forwarded to Rust backend
+- Errors logged to stderr (dev terminal) and `frontend.log` file with auto-truncation at 500KB
 
 ### V0.2.8 — The Big 50: Comprehensive Feature & QOL Overhaul
 - 50 improvements across every section of the app

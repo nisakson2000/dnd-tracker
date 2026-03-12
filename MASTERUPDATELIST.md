@@ -4,6 +4,26 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.2.9 — Import Character & Error Logging
+**Released:** March 12, 2026
+
+### Dashboard
+- **Import Existing Character** — new "Import Character" card in player Dashboard grid and empty state
+- Users can import a previously exported JSON character file as a brand-new character entry
+- File picker opens on click, validates JSON structure, creates character and populates all data
+
+### Developer / Stability
+- **Frontend error logging** — `console.error`, unhandled exceptions (`window.error`), and unhandled promise rejections captured and forwarded to Rust backend via `frontend_log` IPC command
+- Errors logged to stderr (visible in Tauri dev terminal) and to `frontend.log` in app data directory
+- Log file auto-truncates at 500KB to prevent unbounded growth
+- `logger.error()`, `logger.warn()`, `logger.info()` utility available for explicit logging from any component
+
+### Misc
+- Added placeholder `icon.png` for Tauri build
+- Version sync across all config files (was out of sync: VERSION at 0.2.3, version.json at 0.2.1)
+
+---
+
 ## V0.2.8 — The Big 50: Comprehensive Feature & QOL Overhaul
 **Released:** March 11, 2026
 
