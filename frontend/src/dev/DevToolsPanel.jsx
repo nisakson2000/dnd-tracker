@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { ipcLog, subscribe as subscribeIpc, getIpcStats } from './devInvoke';
 import { getAllFlags, setFlag } from './featureFlags';
 
-const TABS = ['DB', 'IPC', 'Env', 'Flags', 'Perf', 'Logs', 'Schema', 'Bug Report'];
+const TABS = ['DB', 'Git', 'Chat', 'IPC', 'Env', 'Flags', 'Perf', 'Logs', 'Schema', 'Bug Report'];
 
 export default function DevToolsPanel() {
   const [open, setOpen] = useState(false);
@@ -62,6 +63,8 @@ export default function DevToolsPanel() {
       {/* Content */}
       <div style={{ flex: 1, overflow: 'auto', padding: '12px' }}>
         {tab === 'DB' && <DbPanel />}
+        {tab === 'Git' && <GitPanel />}
+        {tab === 'Chat' && <ChatPanel />}
         {tab === 'IPC' && <IpcPanel />}
         {tab === 'Env' && <EnvPanel />}
         {tab === 'Flags' && <FlagsPanel />}
@@ -518,6 +521,282 @@ function BugReportPanel() {
         </div>
       )}
       {report?.error && <div style={{ color: '#ef4444', fontSize: '11px' }}>{report.error}</div>}
+    </div>
+  );
+}
+
+// ─── Git Panel ──────────────────────────────────────────────────────────────
+
+function GitPanel() {
+  const [data, setData] = useState(null);
+  const [selected, setSelected] = useState(new Set());
+  const [commitMsg, setCommitMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [actionResult, setActionResult] = useState(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      const res = await invoke('dev_git_status');
+      setData(res);
+      setError(null);
+    } catch (err) {
+      setError(String(err));
+    }
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const toggleFile = (path) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
+  };
+
+  const stageAll = () => {
+    if (data?.files) setSelected(new Set(data.files.map(f => f.path)));
+  };
+
+  const stageSelected = async () => {
+    if (selected.size === 0) return;
+    setLoading(true);
+    try {
+      await invoke('dev_git_stage', { files: [...selected] });
+      setActionResult('Staged ' + selected.size + ' file(s)');
+      setSelected(new Set());
+      await refresh();
+    } catch (err) {
+      setError(String(err));
+    }
+    setLoading(false);
+  };
+
+  const commit = async () => {
+    if (!commitMsg.trim()) return;
+    setLoading(true);
+    try {
+      await invoke('dev_git_commit', { message: commitMsg });
+      setActionResult('Committed successfully');
+      setCommitMsg('');
+      await refresh();
+    } catch (err) {
+      setError(String(err));
+    }
+    setLoading(false);
+  };
+
+  const push = async () => {
+    setLoading(true);
+    try {
+      const res = await invoke('dev_git_push');
+      setActionResult('Pushed to origin/' + (res.branch || 'branch'));
+      await refresh();
+    } catch (err) {
+      setError(String(err));
+    }
+    setLoading(false);
+  };
+
+  const statusColor = (status) => {
+    switch (status) {
+      case 'added': return '#4ade80';
+      case 'modified': return '#fbbf24';
+      case 'deleted': return '#ef4444';
+      case 'untracked': return '#94a3b8';
+      case 'renamed': return '#38bdf8';
+      default: return 'rgba(255,255,255,0.6)';
+    }
+  };
+
+  if (!data && !error) return <div style={{ opacity: 0.4 }}>Loading git status...</div>;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' }}>
+      {error && <div style={{ color: '#ef4444', fontSize: '11px' }}>{error}</div>}
+      {actionResult && (
+        <div style={{ color: '#4ade80', fontSize: '11px', padding: '4px 8px', background: 'rgba(74,222,128,0.08)', borderRadius: '4px' }}>
+          {actionResult}
+        </div>
+      )}
+
+      {/* Changed Files */}
+      <div style={{ fontWeight: 600, opacity: 0.6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>Changed Files ({data?.files?.length || 0})</span>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <button onClick={stageAll} style={pillStyle}>Select All</button>
+          <button onClick={stageSelected} disabled={loading || selected.size === 0} style={pillStyle}>
+            Stage ({selected.size})
+          </button>
+          <button onClick={refresh} style={pillStyle}>Refresh</button>
+        </div>
+      </div>
+
+      <div style={{ overflow: 'auto', maxHeight: '200px', fontSize: '11px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', padding: '4px' }}>
+        {(!data?.files || data.files.length === 0) && (
+          <div style={{ opacity: 0.3, padding: '8px', textAlign: 'center' }}>Working tree clean</div>
+        )}
+        {data?.files?.map(f => (
+          <label key={f.path} style={{
+            display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 6px',
+            cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.03)',
+          }}>
+            <input type="checkbox" checked={selected.has(f.path)} onChange={() => toggleFile(f.path)} />
+            <span style={{
+              fontSize: '9px', fontWeight: 700, minWidth: '14px', textAlign: 'center',
+              color: statusColor(f.status),
+            }}>
+              {f.status_code}
+            </span>
+            <span style={{ flex: 1, fontFamily: 'monospace', fontSize: '10px', color: statusColor(f.status) }}>
+              {f.path}
+            </span>
+            {(f.additions > 0 || f.deletions > 0) && (
+              <span style={{ fontSize: '9px', opacity: 0.6 }}>
+                {f.additions > 0 && <span style={{ color: '#4ade80' }}>+{f.additions}</span>}
+                {f.additions > 0 && f.deletions > 0 && ' '}
+                {f.deletions > 0 && <span style={{ color: '#ef4444' }}>-{f.deletions}</span>}
+              </span>
+            )}
+          </label>
+        ))}
+      </div>
+
+      {/* Commit */}
+      <div style={{ display: 'flex', gap: '4px' }}>
+        <input value={commitMsg} onChange={e => setCommitMsg(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && commit()}
+          placeholder="Commit message..."
+          style={{ ...inputStyle, flex: 1 }} />
+        <button onClick={commit} disabled={loading || !commitMsg.trim()} style={btnStyle}>Commit</button>
+        <button onClick={push} disabled={loading} style={btnStyle}>Push</button>
+      </div>
+
+      {/* Recent Commits */}
+      <div style={{ fontWeight: 600, opacity: 0.6 }}>Recent Commits</div>
+      <div style={{ overflow: 'auto', flex: 1, fontSize: '10px', fontFamily: 'monospace', background: 'rgba(0,0,0,0.3)', padding: '8px', borderRadius: '6px' }}>
+        {(!data?.commits || data.commits.length === 0) && <div style={{ opacity: 0.3 }}>No commits</div>}
+        {data?.commits?.map((c, i) => (
+          <div key={i} style={{ padding: '2px 0', display: 'flex', gap: '8px' }}>
+            <span style={{ color: '#a78bfa', fontWeight: 600, flexShrink: 0 }}>{c.sha}</span>
+            <span style={{ opacity: 0.8 }}>{c.message}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Chat Panel ─────────────────────────────────────────────────────────────
+
+function ChatPanel() {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+  const [peers, setPeers] = useState([]);
+  const messagesEndRef = useRef(null);
+
+  // Load initial messages and poll peers
+  useEffect(() => {
+    invoke('dev_get_chat_messages').then(setMessages).catch(() => {});
+    invoke('get_dev_peers').then(setPeers).catch(() => {});
+
+    const peerInterval = setInterval(() => {
+      invoke('get_dev_peers').then(setPeers).catch(() => {});
+    }, 5000);
+
+    return () => clearInterval(peerInterval);
+  }, []);
+
+  // Listen for real-time chat messages
+  useEffect(() => {
+    let unlisten = null;
+    listen('dev-chat-message', (event) => {
+      setMessages(prev => [...prev, event.payload]);
+    }).then(fn => { unlisten = fn; });
+
+    return () => { if (unlisten) unlisten(); };
+  }, []);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+    setSending(true);
+    try {
+      await invoke('dev_send_chat', { message: input });
+      setInput('');
+      // Refresh to get our own message
+      const msgs = await invoke('dev_get_chat_messages');
+      setMessages(msgs);
+    } catch (err) {
+      console.warn('Chat send failed:', err);
+    }
+    setSending(false);
+  };
+
+  const formatTime = (ts) => {
+    const d = new Date(ts * 1000);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' }}>
+      {/* Who's working on what */}
+      <div style={{ fontSize: '10px', opacity: 0.6, fontWeight: 600 }}>Online Devs</div>
+      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', fontSize: '10px' }}>
+        {peers.length === 0 && <span style={{ opacity: 0.3 }}>No other devs online</span>}
+        {peers.map((p, i) => (
+          <span key={i} style={{
+            padding: '2px 8px', borderRadius: '4px',
+            background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)',
+            color: '#a7f3d0',
+          }}>
+            {p.name}
+            {p.active_section && (
+              <span style={{ opacity: 0.6, marginLeft: '4px' }}>
+                editing {p.active_section}
+              </span>
+            )}
+          </span>
+        ))}
+      </div>
+
+      {/* Messages */}
+      <div style={{
+        flex: 1, overflow: 'auto', fontSize: '11px',
+        background: 'rgba(0,0,0,0.3)', borderRadius: '6px', padding: '8px',
+      }}>
+        {messages.length === 0 && (
+          <div style={{ opacity: 0.3, textAlign: 'center', padding: '20px' }}>
+            No messages yet. Say something!
+          </div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} style={{ padding: '3px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+            <span style={{ color: '#a78bfa', fontWeight: 600, marginRight: '6px' }}>{m.dev_name}</span>
+            <span style={{ opacity: 0.4, fontSize: '9px', marginRight: '6px' }}>{formatTime(m.timestamp)}</span>
+            <span style={{ opacity: 0.9 }}>{m.message}</span>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div style={{ display: 'flex', gap: '4px' }}>
+        <input value={input} onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && sendMessage()}
+          placeholder="Type a message..."
+          style={{ ...inputStyle, flex: 1, fontFamily: '"DM Sans", sans-serif' }} />
+        <button onClick={sendMessage} disabled={sending || !input.trim()} style={btnStyle}>
+          Send
+        </button>
+      </div>
     </div>
   );
 }

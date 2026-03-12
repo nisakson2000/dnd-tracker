@@ -192,11 +192,18 @@ fn main() {
             // Dev updates
             commands::dev_updates::check_git_updates,
             commands::dev_updates::pull_git_updates,
+            commands::dev_updates::dev_preview_incoming,
+            commands::dev_updates::dev_rollback_update,
+            commands::dev_updates::dev_check_build_health,
+            commands::dev_updates::dev_check_conflicts,
             // Dev presence (LAN discovery)
             dev_presence::start_dev_presence,
             dev_presence::stop_dev_presence,
             dev_presence::get_dev_peers,
             dev_presence::broadcast_dev_update,
+            dev_presence::dev_send_chat,
+            dev_presence::dev_get_chat_messages,
+            dev_presence::dev_set_active_section,
             // Dev tools
             commands::dev_tools::dev_list_tables,
             commands::dev_tools::dev_query_db,
@@ -206,6 +213,11 @@ fn main() {
             commands::dev_tools::dev_collect_bug_report,
             commands::dev_tools::dev_get_schema_diff,
             commands::dev_tools::dev_run_migrations,
+            // Git panel
+            commands::dev_tools::dev_git_status,
+            commands::dev_tools::dev_git_stage,
+            commands::dev_tools::dev_git_commit,
+            commands::dev_tools::dev_git_push,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

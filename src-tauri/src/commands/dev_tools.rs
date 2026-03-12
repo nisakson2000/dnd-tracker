@@ -110,10 +110,13 @@ pub fn dev_query_db(
     character_id: Option<String>,
     query: String,
 ) -> Result<serde_json::Value, String> {
-    // Block destructive queries
+    // Only allow read-only queries
     let upper = query.trim().to_uppercase();
-    if upper.starts_with("DROP") || upper.starts_with("ALTER") || upper.starts_with("DELETE") || upper.starts_with("TRUNCATE") {
-        return Err("Destructive queries (DROP/ALTER/DELETE/TRUNCATE) are blocked in the dev inspector".to_string());
+    let is_read_only = upper.starts_with("SELECT")
+        || upper.starts_with("PRAGMA")
+        || upper.starts_with("EXPLAIN");
+    if !is_read_only {
+        return Err("Only SELECT, PRAGMA, and EXPLAIN queries are allowed in the dev inspector".to_string());
     }
 
     match character_id {
@@ -587,4 +590,155 @@ pub fn dev_run_migrations(
             "message": "Migrations applied successfully",
         }))
     })
+}
+
+// ─── Git Panel Commands ─────────────────────────────────────────────────────
+
+fn git_repo_root() -> Result<std::path::PathBuf, String> {
+    let output = std::process::Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .output();
+
+    if let Ok(output) = output {
+        if output.status.success() {
+            let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if !path.is_empty() {
+                return Ok(std::path::PathBuf::from(path));
+            }
+        }
+    }
+
+    Err("Could not find git repository root".to_string())
+}
+
+fn run_git_sync(root: &std::path::Path, args: &[&str]) -> Result<(String, String, bool), String> {
+    let output = std::process::Command::new("git")
+        .args(args)
+        .current_dir(root)
+        .output()
+        .map_err(|e| format!("Failed to run git {}: {}", args.first().unwrap_or(&""), e))?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    Ok((stdout, stderr, output.status.success()))
+}
+
+#[tauri::command]
+pub fn dev_git_status() -> Result<serde_json::Value, String> {
+    let root = git_repo_root()?;
+
+    let (status_out, _, _) = run_git_sync(&root, &["status", "--porcelain"])?;
+    let (log_out, _, _) = run_git_sync(&root, &["log", "--oneline", "-20"])?;
+
+    // Parse porcelain status into structured data with diff stats
+    let files: Vec<serde_json::Value> = status_out
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(|line| {
+            let status_code = &line[..2];
+            let file_path = line[3..].trim().to_string();
+
+            // Determine status category
+            let status = match status_code.trim() {
+                "M" | "MM" | "AM" => "modified",
+                "A" => "added",
+                "D" => "deleted",
+                "R" | "RM" => "renamed",
+                "??" => "untracked",
+                "UU" => "conflict",
+                _ => if status_code.contains('M') { "modified" }
+                     else if status_code.contains('D') { "deleted" }
+                     else if status_code.contains('A') { "added" }
+                     else { "unknown" },
+            };
+
+            // Get diff stats (insertions/deletions) for tracked files
+            let (additions, deletions) = if status != "untracked" && status != "deleted" {
+                let (numstat, _, _) = run_git_sync(&root, &["diff", "--numstat", "--", &file_path])
+                    .unwrap_or_default();
+                if let Some(first_line) = numstat.lines().next() {
+                    let parts: Vec<&str> = first_line.split('\t').collect();
+                    let add: i64 = parts.first().and_then(|s| s.parse().ok()).unwrap_or(0);
+                    let del: i64 = parts.get(1).and_then(|s| s.parse().ok()).unwrap_or(0);
+                    (add, del)
+                } else {
+                    (0i64, 0i64)
+                }
+            } else {
+                (0i64, 0i64)
+            };
+
+            json!({
+                "path": file_path,
+                "status": status,
+                "status_code": status_code.trim(),
+                "additions": additions,
+                "deletions": deletions,
+            })
+        })
+        .collect();
+
+    let commits: Vec<serde_json::Value> = log_out
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(|line| {
+            let (sha, msg) = line.split_once(' ').unwrap_or((line, ""));
+            json!({ "sha": sha, "message": msg })
+        })
+        .collect();
+
+    Ok(json!({
+        "files": files,
+        "commits": commits,
+    }))
+}
+
+#[tauri::command]
+pub fn dev_git_stage(files: Vec<String>) -> Result<serde_json::Value, String> {
+    let root = git_repo_root()?;
+
+    let file_refs: Vec<&str> = files.iter().map(|s| s.as_str()).collect();
+    let mut args = vec!["add"];
+    args.extend(&file_refs);
+
+    let (_, stderr, ok) = run_git_sync(&root, &args)?;
+    if !ok {
+        return Err(format!("git add failed: {}", stderr));
+    }
+
+    Ok(json!({ "success": true, "staged": files.len() }))
+}
+
+#[tauri::command]
+pub fn dev_git_commit(message: String) -> Result<serde_json::Value, String> {
+    let root = git_repo_root()?;
+
+    if message.trim().is_empty() {
+        return Err("Commit message cannot be empty".to_string());
+    }
+
+    let (stdout, stderr, ok) = run_git_sync(&root, &["commit", "-m", &message])?;
+    if !ok {
+        return Err(format!("git commit failed: {}", stderr));
+    }
+
+    Ok(json!({ "success": true, "output": stdout }))
+}
+
+#[tauri::command]
+pub fn dev_git_push() -> Result<serde_json::Value, String> {
+    let root = git_repo_root()?;
+
+    // Get current branch name
+    let (branch, _, ok) = run_git_sync(&root, &["branch", "--show-current"])?;
+    if !ok || branch.is_empty() {
+        return Err("Could not determine current branch".to_string());
+    }
+
+    let (stdout, stderr, ok) = run_git_sync(&root, &["push", "origin", &branch])?;
+    if !ok {
+        return Err(format!("git push failed: {}", stderr));
+    }
+
+    Ok(json!({ "success": true, "output": stdout, "branch": branch }))
 }

@@ -14,13 +14,24 @@ const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct BeaconMessage {
-    msg_type: String, // "heartbeat" | "update_pushed"
+    msg_type: String, // "heartbeat" | "update_pushed" | "chat"
     dev_name: String,
     dev_ip: String,
     #[serde(default)]
     version: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     commit_message: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    chat_text: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    active_section: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChatMessage {
+    pub dev_name: String,
+    pub message: String,
+    pub timestamp: u64,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -29,6 +40,7 @@ pub struct DevPeer {
     pub ip: String,
     pub version: String,
     pub last_seen_ms: u64,
+    pub active_section: Option<String>,
 }
 
 pub struct DevPresence {
@@ -37,6 +49,8 @@ pub struct DevPresence {
     socket: Arc<Mutex<Option<Arc<UdpSocket>>>>,
     local_name: String,
     local_ip: String,
+    chat_messages: Arc<RwLock<Vec<ChatMessage>>>,
+    active_section: Arc<RwLock<Option<String>>>,
 }
 
 impl DevPresence {
@@ -53,6 +67,8 @@ impl DevPresence {
             socket: Arc::new(Mutex::new(None)),
             local_name,
             local_ip,
+            chat_messages: Arc::new(RwLock::new(Vec::new())),
+            active_section: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -77,6 +93,7 @@ impl DevPresence {
         let name = self.local_name.clone();
         let ip = self.local_ip.clone();
         let running_flag = self.running.clone();
+        let active_section_ref = self.active_section.clone();
 
         tokio::spawn(async move {
             let broadcast_addr: SocketAddr = format!("255.255.255.255:{}", BEACON_PORT).parse().unwrap();
@@ -88,12 +105,16 @@ impl DevPresence {
                     }
                 }
 
+                let section = active_section_ref.read().await.clone();
+
                 let msg = BeaconMessage {
                     msg_type: "heartbeat".to_string(),
                     dev_name: name.clone(),
                     dev_ip: ip.clone(),
                     version: Some(APP_VERSION.to_string()),
                     commit_message: None,
+                    chat_text: None,
+                    active_section: section,
                 };
 
                 if let Ok(data) = serde_json::to_vec(&msg) {
@@ -109,9 +130,10 @@ impl DevPresence {
         let peers = self.peers.clone();
         let my_ip = self.local_ip.clone();
         let running_flag2 = self.running.clone();
+        let chat_messages = self.chat_messages.clone();
 
         tokio::spawn(async move {
-            let mut buf = [0u8; 2048];
+            let mut buf = [0u8; 4096];
             loop {
                 {
                     let is_running = running_flag2.lock().await;
@@ -137,6 +159,7 @@ impl DevPresence {
                                         ip: msg.dev_ip.clone(),
                                         version: peer_version,
                                         last_seen_ms: 0,
+                                        active_section: msg.active_section,
                                     };
                                     peers.write().await.insert(msg.dev_ip, (peer, Instant::now()));
                                 }
@@ -155,6 +178,42 @@ impl DevPresence {
                                         ip: msg.dev_ip.clone(),
                                         version: peer_version,
                                         last_seen_ms: 0,
+                                        active_section: msg.active_section,
+                                    };
+                                    peers.write().await.insert(msg.dev_ip, (peer, Instant::now()));
+                                }
+                                "chat" => {
+                                    if let Some(text) = msg.chat_text {
+                                        let timestamp = std::time::SystemTime::now()
+                                            .duration_since(std::time::UNIX_EPOCH)
+                                            .unwrap_or_default()
+                                            .as_secs();
+                                        let chat_msg = ChatMessage {
+                                            dev_name: msg.dev_name.clone(),
+                                            message: text,
+                                            timestamp,
+                                        };
+
+                                        // Emit Tauri event for instant frontend update
+                                        let _ = app_handle.emit("dev-chat-message", &chat_msg);
+
+                                        // Store in buffer
+                                        let mut msgs = chat_messages.write().await;
+                                        msgs.push(chat_msg);
+                                        // Keep last 200 messages
+                                        if msgs.len() > 200 {
+                                            let drain_count = msgs.len() - 200;
+                                            msgs.drain(..drain_count);
+                                        }
+                                    }
+
+                                    // Also update peer presence
+                                    let peer = DevPeer {
+                                        name: msg.dev_name.clone(),
+                                        ip: msg.dev_ip.clone(),
+                                        version: peer_version,
+                                        last_seen_ms: 0,
+                                        active_section: msg.active_section,
                                     };
                                     peers.write().await.insert(msg.dev_ip, (peer, Instant::now()));
                                 }
@@ -195,6 +254,7 @@ impl DevPresence {
                 ip: peer.ip.clone(),
                 version: peer.version.clone(),
                 last_seen_ms: now.duration_since(*last_seen).as_millis() as u64,
+                active_section: peer.active_section.clone(),
             })
             .collect()
     }
@@ -203,12 +263,16 @@ impl DevPresence {
         let socket_guard = self.socket.lock().await;
         let socket = socket_guard.as_ref().ok_or("Dev presence not running")?;
 
+        let section = self.active_section.read().await.clone();
+
         let msg = BeaconMessage {
             msg_type: "update_pushed".to_string(),
             dev_name: self.local_name.clone(),
             dev_ip: self.local_ip.clone(),
             version: Some(APP_VERSION.to_string()),
             commit_message,
+            chat_text: None,
+            active_section: section,
         };
 
         let data = serde_json::to_vec(&msg).map_err(|e| format!("Serialize failed: {}", e))?;
@@ -220,6 +284,59 @@ impl DevPresence {
             .map_err(|e| format!("Broadcast failed: {}", e))?;
 
         Ok(())
+    }
+
+    pub async fn send_chat(&self, message: String) -> Result<(), String> {
+        let socket_guard = self.socket.lock().await;
+        let socket = socket_guard.as_ref().ok_or("Dev presence not running")?;
+
+        let section = self.active_section.read().await.clone();
+
+        let msg = BeaconMessage {
+            msg_type: "chat".to_string(),
+            dev_name: self.local_name.clone(),
+            dev_ip: self.local_ip.clone(),
+            version: Some(APP_VERSION.to_string()),
+            commit_message: None,
+            chat_text: Some(message.clone()),
+            active_section: section,
+        };
+
+        let data = serde_json::to_vec(&msg).map_err(|e| format!("Serialize failed: {}", e))?;
+        let broadcast_addr: SocketAddr = format!("255.255.255.255:{}", BEACON_PORT).parse().unwrap();
+
+        socket
+            .send_to(&data, broadcast_addr)
+            .await
+            .map_err(|e| format!("Broadcast failed: {}", e))?;
+
+        // Also store our own message locally
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+        let chat_msg = ChatMessage {
+            dev_name: self.local_name.clone(),
+            message,
+            timestamp,
+        };
+        let mut msgs = self.chat_messages.write().await;
+        msgs.push(chat_msg);
+        if msgs.len() > 200 {
+            let drain_count = msgs.len() - 200;
+            msgs.drain(..drain_count);
+        }
+
+        Ok(())
+    }
+
+    pub async fn get_chat_messages(&self) -> Vec<ChatMessage> {
+        self.chat_messages.read().await.clone()
+    }
+
+    pub async fn set_active_section(&self, section: Option<String>) {
+        let mut s = self.active_section.write().await;
+        *s = section;
     }
 }
 
@@ -256,4 +373,28 @@ pub async fn broadcast_dev_update(
     commit_message: Option<String>,
 ) -> Result<(), String> {
     state.broadcast_update_pushed(commit_message).await
+}
+
+#[tauri::command]
+pub async fn dev_send_chat(
+    state: tauri::State<'_, DevPresence>,
+    message: String,
+) -> Result<(), String> {
+    state.send_chat(message).await
+}
+
+#[tauri::command]
+pub async fn dev_get_chat_messages(
+    state: tauri::State<'_, DevPresence>,
+) -> Result<Vec<ChatMessage>, String> {
+    Ok(state.get_chat_messages().await)
+}
+
+#[tauri::command]
+pub async fn dev_set_active_section(
+    state: tauri::State<'_, DevPresence>,
+    section: Option<String>,
+) -> Result<(), String> {
+    state.set_active_section(section).await;
+    Ok(())
 }

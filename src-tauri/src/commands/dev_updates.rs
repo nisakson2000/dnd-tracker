@@ -216,6 +216,116 @@ pub async fn pull_git_updates() -> Result<serde_json::Value, String> {
     }))
 }
 
+#[tauri::command]
+pub async fn dev_preview_incoming() -> Result<serde_json::Value, String> {
+    // No lock needed — this is a read-only diff against already-fetched refs.
+    // check_git_updates() already fetched; avoid redundant fetch + lock contention.
+    let root = repo_root()?;
+    let branch = detect_branch(&root).await?;
+
+    let remote_ref = format!("HEAD...origin/{}", branch);
+    let (diff_stat, _, _) = run_git(&root, &["diff", "--stat", &remote_ref]).await?;
+    let (diff_names, _, _) = run_git(&root, &["diff", "--name-only", &remote_ref]).await?;
+
+    let changed_files: Vec<String> = diff_names
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(|l| l.to_string())
+        .collect();
+
+    let has_rust_changes = changed_files.iter().any(|f| f.ends_with(".rs"));
+
+    Ok(serde_json::json!({
+        "diff_stat": diff_stat,
+        "changed_files": changed_files,
+        "file_count": changed_files.len(),
+        "has_rust_changes": has_rust_changes,
+    }))
+}
+
+#[tauri::command]
+pub async fn dev_rollback_update() -> Result<serde_json::Value, String> {
+    let _lock = GitLockGuard::acquire()?;
+    let root = repo_root()?;
+
+    let (stdout, stderr, ok) = run_git(&root, &["reset", "--hard", "HEAD~1"]).await?;
+    if !ok {
+        return Err(format!("git reset failed: {}", stderr));
+    }
+
+    Ok(serde_json::json!({
+        "success": true,
+        "output": stdout,
+    }))
+}
+
+#[tauri::command]
+pub async fn dev_check_build_health() -> Result<serde_json::Value, String> {
+    let root = repo_root()?;
+    let src_tauri = root.join("src-tauri");
+
+    let child = Command::new("cargo")
+        .arg("check")
+        .current_dir(&src_tauri)
+        .output();
+
+    let output = tokio::time::timeout(Duration::from_secs(120), child)
+        .await
+        .map_err(|_| "cargo check timed out after 120s".to_string())?
+        .map_err(|e| format!("cargo check failed to run: {}", e))?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+
+    Ok(serde_json::json!({
+        "success": output.status.success(),
+        "stdout": stdout,
+        "stderr": stderr,
+    }))
+}
+
+#[tauri::command]
+pub async fn dev_check_conflicts() -> Result<serde_json::Value, String> {
+    // No lock needed — read-only diff comparison against already-fetched refs.
+    let root = repo_root()?;
+    let branch = detect_branch(&root).await?;
+
+    // Local uncommitted changes
+    let (local_changes, _, _) = run_git(&root, &["diff", "--name-only"]).await?;
+    // Also include staged changes
+    let (staged_changes, _, _) = run_git(&root, &["diff", "--name-only", "--cached"]).await?;
+
+    let local_files: std::collections::HashSet<String> = local_changes
+        .lines()
+        .chain(staged_changes.lines())
+        .filter(|l| !l.is_empty())
+        .map(|l| l.to_string())
+        .collect();
+
+    // Incoming changes from remote
+    let remote_ref = format!("HEAD...origin/{}", branch);
+    let (incoming_changes, _, _) = run_git(&root, &["diff", "--name-only", &remote_ref]).await?;
+
+    let incoming_files: std::collections::HashSet<String> = incoming_changes
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(|l| l.to_string())
+        .collect();
+
+    // Intersect
+    let conflicts: Vec<String> = local_files
+        .intersection(&incoming_files)
+        .cloned()
+        .collect();
+
+    Ok(serde_json::json!({
+        "conflict_files": conflicts,
+        "conflict_count": conflicts.len(),
+        "local_changed_count": local_files.len(),
+        "incoming_changed_count": incoming_files.len(),
+    }))
+}
+
 /// Detect whether the remote uses "main" or "master"
 async fn detect_branch(root: &PathBuf) -> Result<String, String> {
     let (_, _, ok) = run_git(root, &["rev-parse", "--verify", "origin/main"]).await

@@ -8,6 +8,7 @@ const FLAG_DEFINITIONS = [
   { id: 'hot-reload-indicator', label: 'Hot Reload Indicator', default: true },
   { id: 'env-sync-check', label: 'Startup Environment Check', default: true },
   { id: 'test-char-button', label: 'Test Character Button on Dashboard', default: true },
+  { id: 'auto-pull', label: 'Auto-pull updates when pushed by another dev', default: false },
 ];
 
 function getFlags() {
@@ -35,10 +36,6 @@ export function getAllFlags() {
   const flags = getFlags();
   return FLAG_DEFINITIONS.map(def => ({
     ...def,
-    enabled: flagId => {
-      if (def.id in flags) return flags[def.id];
-      return def.default;
-    },
     value: def.id in flags ? flags[def.id] : def.default,
   }));
 }

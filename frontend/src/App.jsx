@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, Component, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, Component, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
@@ -91,7 +91,12 @@ const DEV_BANNER_HEIGHT = 24;
 const DEV_BANNER_HEIGHT_UPDATE = 36;
 
 function DevBanner() {
-  const { hasUpdate, updateInfo, pulling, pullUpdates, peers } = useDevUpdateCheck();
+  const {
+    hasUpdate, updateInfo, pulling, pullUpdates, peers,
+    diffPreview, conflictInfo, canRollback, rollbackUpdate,
+  } = useDevUpdateCheck();
+  const [showDiffTooltip, setShowDiffTooltip] = useState(false);
+  const tooltipRef = useRef(null);
 
   if (!import.meta.env.DEV) return null;
 
@@ -120,13 +125,38 @@ function DevBanner() {
       boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
     }}>
       {/* Dev count — always visible, counts you + peers */}
-      <span style={{
-        display: 'flex', alignItems: 'center', gap: '4px',
-        position: 'absolute', left: '12px', fontSize: '10px', opacity: 0.8,
-      }}>
+      <span
+        style={{
+          display: 'flex', alignItems: 'center', gap: '4px',
+          position: 'absolute', left: '12px', fontSize: '10px', opacity: 0.8,
+          cursor: peers.length > 0 ? 'help' : 'default',
+        }}
+        title={peers.length > 0
+          ? peers.map(p => `${p.name}${p.active_section ? ': editing ' + p.active_section : ''}`).join('\n')
+          : 'Just you'}
+      >
         <span style={{ color: '#4ade80', fontSize: '8px' }}>&#x25CF;</span>
         {peers.length + 1} dev{peers.length + 1 !== 1 ? 's' : ''} in app
       </span>
+
+      {/* Rollback button — right side, only shows for 5 min after pull */}
+      {canRollback && !hasUpdate && (
+        <button
+          onClick={rollbackUpdate}
+          style={{
+            position: 'absolute', right: '12px',
+            padding: '2px 10px', borderRadius: '4px', fontSize: '10px', fontWeight: 700,
+            background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)',
+            color: '#fca5a5', cursor: 'pointer',
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.35)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.2)'}
+          title="Revert last pull (git reset --hard HEAD~1)"
+        >
+          Rollback
+        </button>
+      )}
 
       {hasUpdate ? (
         <>
@@ -134,6 +164,51 @@ function DevBanner() {
             <span style={{ fontSize: '14px' }}>&#x26A1;</span>
             Update available: {updateInfo?.commit_message || updateInfo?.remote_sha}
           </span>
+
+          {/* Diff preview toggle */}
+          {diffPreview && diffPreview.file_count > 0 && (
+            <span
+              ref={tooltipRef}
+              style={{
+                position: 'relative', cursor: 'pointer',
+                opacity: 0.8, fontSize: '10px', textDecoration: 'underline',
+              }}
+              onMouseEnter={() => setShowDiffTooltip(true)}
+              onMouseLeave={() => setShowDiffTooltip(false)}
+              onClick={() => setShowDiffTooltip(prev => !prev)}
+            >
+              {diffPreview.file_count} file{diffPreview.file_count !== 1 ? 's' : ''} changed
+              {showDiffTooltip && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
+                  marginTop: '8px', padding: '10px 14px', borderRadius: '8px',
+                  background: '#1a1520', border: '1px solid rgba(255,255,255,0.15)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                  whiteSpace: 'pre', textAlign: 'left',
+                  fontSize: '11px', fontWeight: 400, fontFamily: 'monospace',
+                  color: 'rgba(255,255,255,0.8)', minWidth: '280px', maxWidth: '500px',
+                  maxHeight: '300px', overflowY: 'auto', zIndex: 100000,
+                  lineHeight: 1.5, letterSpacing: '0',
+                }}>
+                  {diffPreview.diff_stat || diffPreview.changed_files.join('\n')}
+                </div>
+              )}
+            </span>
+          )}
+
+          {/* Conflict warning */}
+          {conflictInfo && conflictInfo.conflict_count > 0 && (
+            <span style={{
+              background: 'rgba(239,68,68,0.25)', border: '1px solid rgba(239,68,68,0.4)',
+              borderRadius: '4px', padding: '1px 8px', fontSize: '10px',
+              color: '#fca5a5', fontWeight: 700,
+            }}
+              title={`Potential conflicts:\n${conflictInfo.conflict_files.join('\n')}`}
+            >
+              {conflictInfo.conflict_count} file{conflictInfo.conflict_count !== 1 ? 's' : ''} may conflict
+            </span>
+          )}
+
           {updateInfo?.has_local_changes && (
             <span style={{ opacity: 0.7, fontSize: '10px' }}>(local changes will be stashed)</span>
           )}

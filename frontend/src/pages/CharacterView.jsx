@@ -130,6 +130,13 @@ export default function CharacterView() {
   useCrashRecovery();
   useAutoBackup(characterId, character?.name);
   const { updateAvailable, checkResult, latestVersion, currentVersion } = useUpdateCheck();
+
+  // Broadcast which section we're editing to other devs (dev presence)
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    invoke('dev_set_active_section', { section: activeSection }).catch(() => {});
+    return () => { invoke('dev_set_active_section', { section: null }).catch(() => {}); };
+  }, [activeSection]);
   const { errors, pushError, clearErrors } = useErrorLog();
 
   /* ── #218  Session timer ── */
@@ -170,6 +177,13 @@ export default function CharacterView() {
   // Keep error context in sync with active section
   useEffect(() => {
     setErrorContext({ section: activeSection });
+  }, [activeSection]);
+
+  // Broadcast active section to other devs via UDP presence
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      invoke('dev_set_active_section', { section: activeSection }).catch(() => {});
+    }
   }, [activeSection]);
 
   // Keep error context in sync with loaded character data
