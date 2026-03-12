@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Settings2, Palette, Type, LayoutGrid, Wifi, RotateCcw } from 'lucide-react';
+import { Settings2, Palette, Type, LayoutGrid, Wifi, RotateCcw, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Party from './Party';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { checkOllamaStatus, listModels } from '../api/assistant';
 
 const PRESET_THEMES = [
   { id: 'midnight-glass', label: 'Midnight Glass', accent: '#7c3aed', bg: '#04040b', swatches: ['#7c3aed','#a78bfa','#60a5fa'] },
@@ -126,6 +127,148 @@ function applyV3Settings(s) {
 const initialSettings = loadV3Settings();
 applyV3Settings(initialSettings);
 
+const AI_SETTINGS_KEY = 'codex-assistant-settings';
+
+function loadAiSettings() {
+  try {
+    const raw = localStorage.getItem(AI_SETTINGS_KEY);
+    return raw ? JSON.parse(raw) : { enabled: false, model: 'phi3.5' };
+  } catch { return { enabled: false, model: 'phi3.5' }; }
+}
+
+function saveAiSettings(s) {
+  try { localStorage.setItem(AI_SETTINGS_KEY, JSON.stringify(s)); } catch {}
+}
+
+function AiSettingsTab() {
+  const [aiSettings, setAiSettings] = useState(() => loadAiSettings());
+  const [status, setStatus] = useState(null);
+  const [checking, setChecking] = useState(false);
+  const [models, setModels] = useState([]);
+
+  const checkStatus = async () => {
+    setChecking(true);
+    const result = await checkOllamaStatus(aiSettings.model);
+    setStatus(result);
+    if (result.available) {
+      const modelList = await listModels();
+      setModels(modelList);
+    }
+    setChecking(false);
+  };
+
+  useEffect(() => { checkStatus(); }, []);
+
+  const updateAi = (updates) => {
+    const next = { ...aiSettings, ...updates };
+    setAiSettings(next);
+    saveAiSettings(next);
+  };
+
+  return (
+    <div>
+      <div className="tog-row">
+        <div>
+          <div className="tog-label">Enable AI Assistant</div>
+          <div className="tog-desc">Adds an "Arcane Advisor" section powered by a local Ollama model</div>
+        </div>
+        <div
+          className={`toggle ${aiSettings.enabled ? 'on' : ''}`}
+          onClick={() => updateAi({ enabled: !aiSettings.enabled })}
+          tabIndex={0}
+          role="switch"
+          aria-checked={aiSettings.enabled}
+        />
+      </div>
+
+      <div style={{
+        padding: 14, borderRadius: 10, marginTop: 12,
+        background: 'var(--bg-panel)', border: '1px solid var(--border)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <span className="sp-sec" style={{ margin: 0 }}>Connection Status</span>
+          <button
+            onClick={checkStatus}
+            disabled={checking}
+            style={{
+              padding: '4px 12px', borderRadius: 6, fontSize: 11,
+              background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)',
+              color: 'rgba(201,168,76,0.7)', cursor: 'pointer', fontFamily: 'var(--font-display)',
+            }}
+          >
+            {checking ? 'Checking...' : 'Test Connection'}
+          </button>
+        </div>
+        {status === null ? (
+          <div style={{ color: 'var(--text-mute)', fontSize: 12 }}>Checking...</div>
+        ) : status.available ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.4)' }} />
+              <span style={{ fontSize: 12, color: '#22c55e' }}>Ollama running</span>
+            </div>
+            {status.modelInstalled ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.4)' }} />
+                <span style={{ fontSize: 12, color: '#22c55e' }}>Model "{aiSettings.model}" ready</span>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#f59e0b' }} />
+                <span style={{ fontSize: 12, color: '#f59e0b' }}>Model "{aiSettings.model}" not installed</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#ef4444' }} />
+            <span style={{ fontSize: 12, color: '#ef4444' }}>Ollama not running</span>
+          </div>
+        )}
+      </div>
+
+      {status?.available && models.length > 0 && (
+        <div style={{ marginTop: 12 }}>
+          <div className="sp-sec">Model</div>
+          <select
+            value={aiSettings.model}
+            onChange={e => { updateAi({ model: e.target.value }); setTimeout(checkStatus, 100); }}
+            style={{
+              width: '100%', padding: '8px 12px', borderRadius: 8, fontSize: 12,
+              background: 'var(--bg-input, rgba(0,0,0,0.3))', border: '1px solid var(--border)',
+              color: 'var(--text)', fontFamily: 'var(--font-ui)', outline: 'none', cursor: 'pointer',
+            }}
+          >
+            {models.map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
+          </select>
+        </div>
+      )}
+
+      {(!status?.available || !status?.modelInstalled) && (
+        <div style={{
+          marginTop: 14, padding: 14, borderRadius: 10,
+          background: 'rgba(139,92,246,0.04)', border: '1px solid rgba(139,92,246,0.12)',
+        }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text)', marginBottom: 8 }}>Setup Guide</div>
+          <ol style={{ paddingLeft: 18, fontSize: 12, color: 'var(--text-sub)', lineHeight: 2 }}>
+            {!status?.available && (
+              <>
+                <li>Download Ollama from <span style={{ color: 'var(--accent-l)' }}>https://ollama.ai</span></li>
+                <li>Install and start it</li>
+              </>
+            )}
+            <li>Run in terminal: <code style={{ background: 'rgba(255,255,255,0.06)', padding: '1px 5px', borderRadius: 4, fontSize: 11 }}>ollama pull phi3.5</code></li>
+            <li>Click "Test Connection" above</li>
+          </ol>
+          <p style={{ fontSize: 11, color: 'var(--text-mute)', marginTop: 8, fontStyle: 'italic' }}>
+            Runs entirely on your machine. On CPU-only hardware, expect 5–15s response times.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Settings({ characterId, character, onBugReport }) {
   const [settings, setSettings] = useState(() => loadV3Settings());
   const [activeTab, setActiveTab] = useState('interface');
@@ -153,6 +296,7 @@ export default function Settings({ characterId, character, onBugReport }) {
     { id: 'typography', label: 'Typography', icon: Type },
     { id: 'layout', label: 'Layout', icon: LayoutGrid },
     { id: 'party', label: 'Party Connect', icon: Wifi },
+    { id: 'ai', label: 'AI Assistant', icon: Zap },
   ];
 
   return (
@@ -420,6 +564,11 @@ export default function Settings({ characterId, character, onBugReport }) {
       {/* ── PARTY TAB ── */}
       {activeTab === 'party' && (
         <Party characterId={characterId} character={character} onBugReport={onBugReport} />
+      )}
+
+      {/* ── AI ASSISTANT TAB ── */}
+      {activeTab === 'ai' && (
+        <AiSettingsTab />
       )}
 
       <ConfirmDialog

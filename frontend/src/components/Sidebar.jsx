@@ -4,9 +4,16 @@ import {
   ScrollText, BookOpen, Shield, Sparkles, Swords,
   BookMarked, Users, Map, Globe, Dice5, ArrowLeft, User, Download,
   Library, Settings2, Heart, Bell, Bug, Terminal, Crown, LayoutDashboard,
-  Star, Search, X,
+  Star, Search, X, Zap,
 } from 'lucide-react';
 import { useAppMode } from '../contexts/ModeContext';
+
+function isAssistantEnabled() {
+  try {
+    const raw = localStorage.getItem('codex-assistant-settings');
+    return raw ? JSON.parse(raw).enabled === true : false;
+  } catch { return false; }
+}
 
 const PLAYER_SECTION_GROUPS = [
   {
@@ -34,6 +41,7 @@ const PLAYER_SECTION_GROUPS = [
     items: [
       { id: 'dice',       label: 'Dice Roller',        icon: Dice5 },
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
+      { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
       { id: 'export',     label: 'Export & Import',    icon: Download },
       { id: 'bugreport', label: 'Bug Report',         icon: Bug },
@@ -76,6 +84,7 @@ const DM_SECTION_GROUPS = [
     items: [
       { id: 'dice',       label: 'Dice Roller',        icon: Dice5 },
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
+      { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
       { id: 'export',     label: 'Export & Import',    icon: Download },
       { id: 'bugreport', label: 'Bug Report',         icon: Bug },
@@ -140,7 +149,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
 
   // Build a flat lookup of all items for pinned rendering
   const allItems = sectionGroups.flatMap(g => g.items);
-  const pinnedItems = pinnedIds.map(id => allItems.find(item => item.id === id)).filter(Boolean);
+  const pinnedItems = pinnedIds.map(id => allItems.find(item => item.id === id)).filter(item => item && (!item.conditional || item.conditional()));
 
   // ── Section search ──
   const [searchQuery, setSearchQuery] = useState('');
@@ -334,7 +343,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
             <div style={{ padding: '8px 14px 3px', fontFamily: 'var(--font-mono)', fontSize: '8px', fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--text-mute)' }}>
               {group.label}
             </div>
-            {group.items.map(({ id, label, icon: Icon }) => {
+            {group.items.filter(item => !item.conditional || item.conditional()).map(({ id, label, icon: Icon }) => {
               const active = activeSection === id;
               const isPinned = pinnedIds.includes(id);
               return (

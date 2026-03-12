@@ -1,6 +1,6 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.2.9**
+**Current Version: V0.3.0**
 
 A native desktop application for managing D&D 5e characters with full ruleset support, a 964-article encyclopedia, real-time party sync, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
@@ -103,6 +103,14 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - **Portrait Upload** — drag-and-drop character portrait (PNG/JPEG/WebP/GIF, max 2 MB)
 - Personality Traits, Bonds, Flaws, Ideals, Physical Description, Goals, Allies
 
+### AI Assistant (Optional)
+- **Arcane Advisor** — AI-powered D&D companion running entirely on your machine via Ollama
+- Answers D&D 5e rules questions with full character context
+- Can add spells, features, items, NPCs to your character sheet via natural language
+- Streaming responses with action confirmation before applying changes
+- Completely optional — disabled by default, zero performance impact when off
+- Supports any Ollama model (recommended: phi3.5 or qwen2.5:1.5b for lower-end hardware)
+
 ### Additional Features
 - Arcane Encyclopedia — 964-article searchable wiki with FTS5
 - Party Connect — LAN sync with room codes, auto-reconnect, DM party stats overview
@@ -112,6 +120,33 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - 6 UI Themes, font/density controls, auto-save, auto-backup, crash recovery
 - Beginner Tutorial Wizard, contextual help tooltips
 - DevTools with Find Improvements audit (Player + DM mode-aware)
+
+## AI Assistant (Optional)
+
+The app includes an optional AI assistant that runs entirely on your machine.
+
+### Requirements
+- [Ollama](https://ollama.ai) installed and running
+- At least 4GB of free RAM
+- Recommended model: phi3.5 (~2.2GB RAM)
+  - Install with: `ollama pull phi3.5`
+- Fallback model for lower-end hardware: qwen2.5:1.5b
+  - Install with: `ollama pull qwen2.5:1.5b`
+
+### Setup
+1. Install Ollama from https://ollama.ai
+2. Start Ollama (it runs as a background service)
+3. Pull your chosen model: `ollama pull phi3.5`
+4. In the app, go to Settings → AI Assistant → Enable
+5. Select your model and click Test Connection
+
+### Performance Note
+On CPU-only hardware (no dedicated GPU), expect response times of 5–15 seconds.
+This is normal. The assistant runs fully offline — no data leaves your machine.
+
+### Privacy
+All conversation data stays on your machine. Nothing is sent to any external service.
+The assistant only knows about your character data and the app's built-in rules reference.
 
 ## Installation
 
@@ -168,6 +203,15 @@ npm run tauri build
 - Auto-save (debounced 800ms), auto-backup every 5 minutes
 
 ## Changelog Summary
+
+### V0.3.0 — Arcane Advisor (AI Assistant)
+- Optional AI Assistant powered by local Ollama models — no internet, no API keys
+- Context-aware: knows your character's stats, spells, inventory, and D&D 5e rules
+- Can modify character data (add spells, features, items, NPCs) with confirmation
+- Streaming responses with markdown rendering
+- Setup guide and connection tester in Settings → AI Assistant tab
+- Feature flag: completely invisible when disabled, zero overhead
+- Sidebar entry appears only when enabled
 
 ### V0.2.9 — Import Character & Error Logging
 - Import Existing Character from Dashboard — file picker for exported JSON, creates new character entry

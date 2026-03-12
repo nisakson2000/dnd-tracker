@@ -4,6 +4,38 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.3.0 — Arcane Advisor (AI Assistant)
+**Released:** March 12, 2026
+
+### New Feature: Arcane Advisor
+- **AI-powered D&D companion** running entirely locally via Ollama — no internet, no API keys, no data leaves your machine
+- **Context-aware conversations** — system prompt includes full character data (stats, spells, inventory, features, conditions) and D&D 5e rules reference (glossary, conditions, mechanics)
+- **Character actions** — assistant can add spells, features, items, NPCs, and update overview fields via structured action blocks with user confirmation
+- **Streaming responses** — tokens appear word-by-word as the model generates them via Ollama's NDJSON streaming API
+- **Markdown rendering** — assistant messages render headers, bold, code, and bullet points
+- **Conversation history** — persisted per character in sessionStorage, capped at 20 messages
+- **Example prompts** — "What can I ask?" panel with 10 clickable example queries
+- **Error handling** — graceful messages for Ollama offline, model not found, and timeout states
+
+### Settings Integration
+- **New "AI Assistant" tab** in Settings with enable/disable toggle, model selector, connection tester, and setup guide
+- **Model selector** — auto-detects installed Ollama models; recommended phi3.5 (3.8B, ~2.2GB) or qwen2.5:1.5b (~1GB) for low-end hardware
+- **Setup guide** — step-by-step instructions shown when Ollama is not detected or model not installed
+- **Test Connection** button re-checks Ollama status on demand
+
+### Feature Flag
+- **Completely invisible when disabled** — no sidebar entry, no section loaded, no API calls, no Ollama connection attempts
+- **Sidebar entry** appears only when enabled (conditional rendering in both Player and DM mode)
+- **Lazy-loaded** — assistant section only imported when first navigated to
+
+### Architecture
+- Frontend calls Ollama REST API directly at `http://localhost:11434` (allowed by Tauri CSP)
+- No Rust backend changes needed — uses existing `export_character` command for character context
+- Settings stored in localStorage (`codex-assistant-settings`) matching existing pattern
+- System prompt kept under ~4000 tokens: app summary + character snapshot + condensed rules glossary
+
+---
+
 ## V0.2.9 — Import Character & Error Logging
 **Released:** March 12, 2026
 

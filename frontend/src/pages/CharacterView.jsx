@@ -36,6 +36,7 @@ const RulesReference = lazy(() => import('../sections/RulesReference'));
 const ExportImport = lazy(() => import('../sections/ExportImport'));
 const CampaignHub = lazy(() => import('../sections/CampaignHub'));
 const Party = lazy(() => import('../sections/Party'));
+const AiAssistant = lazy(() => import('../sections/AiAssistant'));
 const DevTools = import.meta.env.DEV ? lazy(() => import('../sections/DevTools')) : null;
 
 class SectionErrorBoundary extends React.Component {
@@ -76,6 +77,7 @@ const SECTIONS = {
   'campaign-hub': CampaignHub,
   'encounter': Combat,
   'party-overview': Party,
+  'ai-assistant': AiAssistant,
   ...(DevTools ? { devtools: DevTools } : {}),
 };
 
@@ -100,6 +102,7 @@ const SECTION_LABELS = {
   'campaign-hub': 'Campaign Hub',
   'encounter': 'Encounter Runner',
   'party-overview': 'Party Overview',
+  'ai-assistant': 'Arcane Advisor',
 };
 
 const SHORTCUT_SECTIONS = ['overview','backstory','spellbook','inventory','features','combat','journal','npcs','quests'];
