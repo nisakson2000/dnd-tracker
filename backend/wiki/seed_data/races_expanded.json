@@ -1,0 +1,1106 @@
+[
+  {
+    "slug": "dwarf-mountain",
+    "title": "Mountain Dwarf",
+    "category": "race",
+    "subcategory": "dwarf",
+    "ruleset": "5e-2014",
+    "summary": "Mountain dwarves are strong and hardy, accustomed to life in rugged terrain. They gain bonuses to Strength and Constitution and have proficiency with light and medium armor.",
+    "content": "## Mountain Dwarf\n\nAs a mountain dwarf, you're strong and hardy, accustomed to a difficult life in rugged terrain. You're probably on the tall side (for a dwarf), and tend toward lighter coloration. The shield dwarves of northern Faerûn, as well as the ruling Hylar clan and the noble Daewar clan of Dragonlance, are mountain dwarves.\n\n### Ability Score Increase\n- **Constitution** +2 (from Dwarf)\n- **Strength** +2\n\n### Dwarven Armor Training\nYou have proficiency with light and medium armor.\n\n### Inherited Traits (from Dwarf)\n- **Speed**: 25 feet (not reduced by heavy armor)\n- **Size**: Medium\n- **Darkvision**: 60 feet\n- **Dwarven Resilience**: Advantage on saves vs. poison; resistance to poison damage\n- **Dwarven Combat Training**: Proficiency with battleaxe, handaxe, light hammer, warhammer\n- **Tool Proficiency**: One artisan's tool of your choice\n- **Stonecunning**: Double proficiency on History checks related to stonework\n- **Languages**: Common, Dwarvish",
+    "metadata_json": {
+      "ability_bonuses": {"con": 2, "str": 2},
+      "speed": 25,
+      "size": "Medium",
+      "languages": ["Common", "Dwarvish"],
+      "traits": ["Darkvision", "Dwarven Resilience", "Dwarven Combat Training", "Tool Proficiency", "Stonecunning", "Dwarven Armor Training"],
+      "parent_race": "dwarf",
+      "subrace_traits": ["Dwarven Armor Training"],
+      "armor_proficiencies": ["light armor", "medium armor"]
+    },
+    "tags": "dwarf,mountain dwarf,subrace,constitution,strength,darkvision,dwarven armor training,medium",
+    "source": "PHB",
+    "sort_order": 50
+  },
+  {
+    "slug": "elf-wood",
+    "title": "Wood Elf",
+    "category": "race",
+    "subcategory": "elf",
+    "ruleset": "5e-2014",
+    "summary": "Wood elves have keen senses and intuition, and their fleet feet carry them quickly and stealthily through their native forests. They gain Wisdom and can hide in lightly obscured natural phenomena.",
+    "content": "## Wood Elf\n\nAs a wood elf, you have keen senses and intuition, and your fleet feet carry you quickly and stealthily through your native forests. Wood elves tend to be reclusive and distrustful of non-elves. Their skin tends to be copperish in hue, sometimes with traces of green.\n\n### Ability Score Increase\n- **Dexterity** +2 (from Elf)\n- **Wisdom** +1\n\n### Elf Weapon Training\nYou have proficiency with the longsword, shortsword, shortbow, and longbow.\n\n### Fleet of Foot\nYour base walking speed increases to **35 feet**.\n\n### Mask of the Wild\nYou can attempt to hide even when you are only lightly obscured by foliage, heavy rain, falling snow, mist, and other natural phenomena.\n\n### Inherited Traits (from Elf)\n- **Size**: Medium\n- **Darkvision**: 60 feet\n- **Keen Senses**: Proficiency in Perception\n- **Fey Ancestry**: Advantage on saves vs. charm; immune to magical sleep\n- **Trance**: 4 hours of meditation instead of 8 hours sleep\n- **Languages**: Common, Elvish",
+    "metadata_json": {
+      "ability_bonuses": {"dex": 2, "wis": 1},
+      "speed": 35,
+      "size": "Medium",
+      "languages": ["Common", "Elvish"],
+      "traits": ["Darkvision", "Keen Senses", "Fey Ancestry", "Trance", "Elf Weapon Training", "Fleet of Foot", "Mask of the Wild"],
+      "parent_race": "elf",
+      "subrace_traits": ["Elf Weapon Training", "Fleet of Foot", "Mask of the Wild"],
+      "weapon_proficiencies": ["longsword", "shortsword", "shortbow", "longbow"]
+    },
+    "tags": "elf,wood elf,subrace,dexterity,wisdom,darkvision,fleet of foot,mask of the wild,medium",
+    "source": "PHB",
+    "sort_order": 51
+  },
+  {
+    "slug": "elf-dark",
+    "title": "Dark Elf (Drow)",
+    "category": "race",
+    "subcategory": "elf",
+    "ruleset": "5e-2014",
+    "summary": "Descended from an earlier subrace of elves, the drow were banished to the Underdark for following the goddess Lolth. They possess superior darkvision and innate spellcasting, but suffer from Sunlight Sensitivity.",
+    "content": "## Dark Elf (Drow)\n\nDescended from an earlier subrace of dark-skinned elves, the drow were banished from the surface world for following the goddess Lolth down the path to evil and corruption. Now they have built their own civilization in the depths of the Underdark, patterned after the Way of Lolth. Also called dark elves, the drow have black skin that resembles polished obsidian and stark white or pale yellow hair.\n\n### Ability Score Increase\n- **Dexterity** +2 (from Elf)\n- **Charisma** +1\n\n### Superior Darkvision\nYour darkvision has a radius of **120 feet**.\n\n### Sunlight Sensitivity\nYou have disadvantage on attack rolls and on Wisdom (Perception) checks that rely on sight when you, the target of your attack, or whatever you are trying to perceive is in direct sunlight.\n\n### Drow Magic\nYou know the **dancing lights** cantrip. When you reach 3rd level, you can cast the **faerie fire** spell once per long rest. When you reach 5th level, you can cast **darkness** once per long rest. Charisma is your spellcasting ability for these spells.\n\n### Drow Weapon Training\nYou have proficiency with rapiers, shortswords, and hand crossbows.\n\n### Inherited Traits (from Elf)\n- **Speed**: 30 feet\n- **Size**: Medium\n- **Keen Senses**: Proficiency in Perception\n- **Fey Ancestry**: Advantage on saves vs. charm; immune to magical sleep\n- **Trance**: 4 hours of meditation instead of 8 hours sleep\n- **Languages**: Common, Elvish",
+    "metadata_json": {
+      "ability_bonuses": {"dex": 2, "cha": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Elvish"],
+      "traits": ["Superior Darkvision", "Keen Senses", "Fey Ancestry", "Trance", "Sunlight Sensitivity", "Drow Magic", "Drow Weapon Training"],
+      "parent_race": "elf",
+      "subrace_traits": ["Superior Darkvision", "Sunlight Sensitivity", "Drow Magic", "Drow Weapon Training"],
+      "weapon_proficiencies": ["rapier", "shortsword", "hand crossbow"],
+      "darkvision_range": 120,
+      "innate_spellcasting": {
+        "cantrips": ["dancing lights"],
+        "level_3": {"spell": "faerie fire", "uses": 1},
+        "level_5": {"spell": "darkness", "uses": 1}
+      },
+      "spellcasting_ability": "cha"
+    },
+    "tags": "elf,dark elf,drow,subrace,dexterity,charisma,superior darkvision,sunlight sensitivity,drow magic,underdark,medium",
+    "source": "PHB",
+    "sort_order": 52
+  },
+  {
+    "slug": "halfling-stout",
+    "title": "Stout Halfling",
+    "category": "race",
+    "subcategory": "halfling",
+    "ruleset": "5e-2014",
+    "summary": "Stout halflings are hardier than average and have some resistance to poison. Some say stout halflings have dwarven blood in them.",
+    "content": "## Stout Halfling\n\nAs a stout halfling, you're hardier than average and have some resistance to poison. Some say that stouts have dwarven blood. In the Forgotten Realms, these halflings are called stronghearts, and they're most common in the south.\n\n### Ability Score Increase\n- **Dexterity** +2 (from Halfling)\n- **Constitution** +1\n\n### Stout Resilience\nYou have advantage on saving throws against poison, and you have resistance against poison damage.\n\n### Inherited Traits (from Halfling)\n- **Speed**: 25 feet\n- **Size**: Small\n- **Lucky**: Reroll natural 1s on attack rolls, ability checks, and saving throws\n- **Brave**: Advantage on saves vs. being frightened\n- **Halfling Nimbleness**: Move through the space of any larger creature\n- **Languages**: Common, Halfling",
+    "metadata_json": {
+      "ability_bonuses": {"dex": 2, "con": 1},
+      "speed": 25,
+      "size": "Small",
+      "languages": ["Common", "Halfling"],
+      "traits": ["Lucky", "Brave", "Halfling Nimbleness", "Stout Resilience"],
+      "parent_race": "halfling",
+      "subrace_traits": ["Stout Resilience"],
+      "damage_resistances": ["poison"]
+    },
+    "tags": "halfling,stout halfling,subrace,dexterity,constitution,lucky,stout resilience,poison resistance,small",
+    "source": "PHB",
+    "sort_order": 53
+  },
+  {
+    "slug": "gnome-forest",
+    "title": "Forest Gnome",
+    "category": "race",
+    "subcategory": "gnome",
+    "ruleset": "5e-2014",
+    "summary": "Forest gnomes have a natural knack for illusion and a close kinship with small woodland creatures. They gain Dexterity, know the minor illusion cantrip, and can communicate with small beasts.",
+    "content": "## Forest Gnome\n\nAs a forest gnome, you have a natural knack for illusion and inherent quickness and stealth. In the worlds of D&D, forest gnomes are rare and secretive, gathering in hidden communities in sylvan forests, using illusions and trickery to conceal themselves.\n\n### Ability Score Increase\n- **Intelligence** +2 (from Gnome)\n- **Dexterity** +1\n\n### Natural Illusionist\nYou know the **minor illusion** cantrip. Intelligence is your spellcasting ability for it.\n\n### Speak with Small Beasts\nThrough sounds and gestures, you can communicate simple ideas with Small or smaller beasts. Forest gnomes love animals and often keep squirrels, badgers, rabbits, moles, woodpeckers, and other creatures as beloved pets.\n\n### Inherited Traits (from Gnome)\n- **Speed**: 25 feet\n- **Size**: Small\n- **Darkvision**: 60 feet\n- **Gnome Cunning**: Advantage on INT, WIS, and CHA saves against magic\n- **Languages**: Common, Gnomish",
+    "metadata_json": {
+      "ability_bonuses": {"int": 2, "dex": 1},
+      "speed": 25,
+      "size": "Small",
+      "languages": ["Common", "Gnomish"],
+      "traits": ["Darkvision", "Gnome Cunning", "Natural Illusionist", "Speak with Small Beasts"],
+      "parent_race": "gnome",
+      "subrace_traits": ["Natural Illusionist", "Speak with Small Beasts"],
+      "innate_spellcasting": {
+        "cantrips": ["minor illusion"]
+      },
+      "spellcasting_ability": "int"
+    },
+    "tags": "gnome,forest gnome,subrace,intelligence,dexterity,darkvision,natural illusionist,speak with small beasts,small",
+    "source": "PHB",
+    "sort_order": 54
+  },
+  {
+    "slug": "human-variant",
+    "title": "Variant Human",
+    "category": "race",
+    "subcategory": "human",
+    "ruleset": "5e-2014",
+    "summary": "Variant humans trade the standard +1 to all ability scores for two +1 bonuses of their choice, one skill proficiency, and one feat at 1st level.",
+    "content": "## Variant Human\n\nIf your campaign uses the optional feat rules, your Dungeon Master might allow these variant traits, all of which replace the human's Ability Score Increase trait. Variant humans are the most popular character option due to the versatility of a starting feat.\n\n### Ability Score Increase\n- **Two different ability scores** of your choice +1 each\n\n### Skills\nYou gain proficiency in one skill of your choice.\n\n### Feat\nYou gain one feat of your choice.\n\n### Age\nHumans reach adulthood in their late teens and live less than a century.\n\n### Size\nHumans vary widely in height and build. Your size is **Medium**.\n\n### Speed\nYour base walking speed is **30 feet**.\n\n### Languages\nYou can speak, read, and write **Common** and **one extra language** of your choice.",
+    "metadata_json": {
+      "ability_bonuses": {"choice_2": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "One extra language"],
+      "traits": ["Bonus Skill", "Bonus Feat"],
+      "parent_race": "human",
+      "subrace_traits": ["Bonus Skill", "Bonus Feat"],
+      "bonus_skill_proficiencies": 1,
+      "bonus_feats": 1,
+      "flexible_ability_bonuses": 2
+    },
+    "tags": "human,variant human,subrace,versatile,feat,skill proficiency,medium",
+    "source": "PHB",
+    "sort_order": 55
+  },
+  {
+    "slug": "aasimar",
+    "title": "Aasimar",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "5e-2024",
+    "summary": "Aasimar are humanoids touched by celestial power, bearing a spark of the Upper Planes within their souls. As a species in the 2024 rules, they can channel divine energy through radiant transformations.",
+    "content": "## Aasimar\n\nAasimar are humanoids with an amount of celestial power in their souls. Whether descended from an angel or infused with heavenly power, aasimar bear the mark of the Upper Planes in their appearance and carry a divine spark within. This celestial heritage manifests in a variety of ways, from luminous eyes to radiant halos.\n\n### Celestial Resistance\nYou have resistance to necrotic damage and radiant damage.\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Healing Hands\nAs an action, you can touch a creature and roll a number of d4s equal to your proficiency bonus. The creature regains a number of hit points equal to the total rolled. Once you use this trait, you can't use it again until you finish a long rest.\n\n### Light Bearer\nYou know the **light** cantrip.\n\n### Celestial Revelation\nWhen you reach 3rd level, choose one of the revelations below. You can use it once per long rest, and it lasts for 1 minute.\n- **Necrotic Shroud**: Frightening transformation; extra necrotic damage once per turn equal to your proficiency bonus.\n- **Radiant Consumption**: Radiant aura damages nearby creatures; extra radiant damage once per turn equal to your proficiency bonus.\n- **Radiant Soul**: Spectral wings grant flying speed equal to your walking speed; extra radiant damage once per turn equal to your proficiency bonus.\n\n### Species Details\n- **Size**: Medium (about 4-7 feet tall) or Small (about 2-4 feet tall)\n- **Speed**: 30 feet\n- **Languages**: Common and one other language",
+    "metadata_json": {
+      "ability_bonuses": {},
+      "speed": 30,
+      "size": "Medium or Small",
+      "languages": ["Common", "One other language"],
+      "traits": ["Celestial Resistance", "Darkvision", "Healing Hands", "Light Bearer", "Celestial Revelation"],
+      "has_subraces": false,
+      "damage_resistances": ["necrotic", "radiant"],
+      "innate_spellcasting": {
+        "cantrips": ["light"]
+      },
+      "flexible_ability_bonuses": "choose any"
+    },
+    "tags": "aasimar,species,celestial,darkvision,healing hands,radiant,necrotic resistance,medium,small,2024",
+    "source": "PHB 2024",
+    "sort_order": 56
+  },
+  {
+    "slug": "goliath",
+    "title": "Goliath",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "5e-2024",
+    "summary": "Goliaths are massive humanoid species with ties to giants. As a 2024 species, they gain powerful giant-related abilities depending on their chosen Giant Ancestry.",
+    "content": "## Goliath\n\nGoliaths are a people of towering stature and imposing presence, tracing their origins to giants. Standing between 7 and 8 feet tall, they tower above most other humanoids. Goliaths are driven by a fierce competitive nature and a deep respect for personal achievement.\n\n### Giant Ancestry\nYou are descended from Giants. Choose one of the following benefits — a supernatural boon from your ancestry.\n- **Cloud's Jaunt (Cloud Giant)**: As a bonus action, you can magically teleport up to 30 feet to an unoccupied space you can see. You can use this a number of times equal to your proficiency bonus per long rest.\n- **Fire's Burn (Fire Giant)**: When you hit with an attack, you can add 1d10 fire damage. You can use this a number of times equal to your proficiency bonus per long rest.\n- **Frost's Chill (Frost Giant)**: When you hit with an attack, you can add 1d6 cold damage and reduce the target's speed by 10 feet until the start of your next turn. You can use this a number of times equal to your proficiency bonus per long rest.\n- **Hill's Tumble (Hill Giant)**: When you hit a Large or smaller creature, you can knock them prone. You can use this a number of times equal to your proficiency bonus per long rest.\n- **Stone's Endurance (Stone Giant)**: When you take damage, you can use your reaction to roll 1d12 + your Constitution modifier and reduce the damage by that amount. You can use this a number of times equal to your proficiency bonus per long rest.\n- **Storm's Thunder (Storm Giant)**: When you take damage from a creature within 60 feet, you can use your reaction to deal 1d8 thunder damage to it. You can use this a number of times equal to your proficiency bonus per long rest.\n\n### Large Form\nStarting at 5th level, you can use a bonus action to magically change your size to Large (if space permits) for 10 minutes. You can use this once per long rest.\n\n### Powerful Build\nYou count as one size larger for carrying capacity and the weight you can push, drag, or lift.\n\n### Species Details\n- **Size**: Medium (about 7-8 feet tall)\n- **Speed**: 35 feet\n- **Languages**: Common and Giant",
+    "metadata_json": {
+      "ability_bonuses": {},
+      "speed": 35,
+      "size": "Medium",
+      "languages": ["Common", "Giant"],
+      "traits": ["Giant Ancestry", "Large Form", "Powerful Build"],
+      "has_subraces": false,
+      "flexible_ability_bonuses": "choose any"
+    },
+    "tags": "goliath,species,giant ancestry,powerful build,large form,strength,medium,2024",
+    "source": "PHB 2024",
+    "sort_order": 57
+  },
+  {
+    "slug": "orc",
+    "title": "Orc",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "5e-2024",
+    "summary": "Orcs are a hardy species known for their endurance and ferocity. As a 2024 species, they possess darkvision, adrenaline rush, and relentless endurance.",
+    "content": "## Orc\n\nOrcs trace their creation to Gruumsh, the one-eyed god of storms and war, who channeled his fury into the first orcs. They are a people of powerful builds and strong wills, known across the multiverse for their endurance in battle and their fierce sense of community.\n\n### Adrenaline Rush\nYou can take the Dash action as a bonus action. When you do, you gain a number of temporary hit points equal to your proficiency bonus. You can use this a number of times equal to your proficiency bonus, regaining all uses on a long rest.\n\n### Darkvision\nYou can see in dim light within 120 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Relentless Endurance\nWhen you are reduced to 0 hit points but not killed outright, you can drop to 1 hit point instead. Once you use this trait, you can't use it again until you finish a long rest.\n\n### Species Details\n- **Size**: Medium (about 6-7 feet tall)\n- **Speed**: 30 feet\n- **Languages**: Common and one other language",
+    "metadata_json": {
+      "ability_bonuses": {},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "One other language"],
+      "traits": ["Adrenaline Rush", "Darkvision", "Relentless Endurance"],
+      "has_subraces": false,
+      "darkvision_range": 120,
+      "flexible_ability_bonuses": "choose any"
+    },
+    "tags": "orc,species,darkvision,relentless endurance,adrenaline rush,medium,2024",
+    "source": "PHB 2024",
+    "sort_order": 58
+  },
+  {
+    "slug": "aarakocra",
+    "title": "Aarakocra",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Aarakocra are bird-like humanoids that hail from the Elemental Plane of Air. They possess natural wings granting them a flying speed, making them among the most mobile of all playable races.",
+    "content": "## Aarakocra\n\nSequestered in high mountains atop tall trees, the aarakocra evoke fear and wonder. Many of these birdfolk hail from the boundless vistas of the Elemental Plane of Air. They are immigrants, refugees, scouts, and explorers, their outposts functioning as footholds in a world both strange and wonderful.\n\n### Ability Score Increase\n- **Dexterity** +2\n- **Wisdom** +1\n\n### Flight\nYou have a flying speed of **50 feet**. To use this speed, you can't be wearing medium or heavy armor.\n\n### Talons\nYour talons are natural weapons, which you can use to make unarmed strikes. You deal 1d4 slashing damage with them instead of the normal bludgeoning damage for an unarmed strike.\n\n### Wind Caller\nStarting at 3rd level, you can cast **gust of wind** once per long rest (no material components). Wisdom is your spellcasting ability.\n\n### Details\n- **Age**: Aarakocra reach maturity by age 3 and rarely live longer than 30 years.\n- **Size**: Medium (about 5 feet tall with thin, lightweight bodies)\n- **Speed**: 30 feet walking, 50 feet flying\n- **Languages**: Common, Aarakocra, Auran",
+    "metadata_json": {
+      "ability_bonuses": {"dex": 2, "wis": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Aarakocra", "Auran"],
+      "traits": ["Flight", "Talons", "Wind Caller"],
+      "has_subraces": false,
+      "fly_speed": 50
+    },
+    "tags": "aarakocra,race,dexterity,wisdom,flight,flying,talons,elemental air,medium",
+    "source": "EEPC",
+    "sort_order": 59
+  },
+  {
+    "slug": "genasi",
+    "title": "Genasi",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Genasi are individuals infused with the power of the elemental planes, often through descent from genies. They manifest their elemental heritage in one of four forms: air, earth, fire, or water.",
+    "content": "## Genasi\n\nGenasi carry the power of the elemental planes in their blood. Those who think of other planes at all consider them remote, distant realms, but planar influence can be felt throughout the world. Sometimes it manifests in beings who, through an accident of birth, carry the power of the planes in their blood. The genasi are one such people, the offspring of genies and mortals.\n\n### Ability Score Increase\n- **Constitution** +2\n\n### Age\nGenasi mature at about the same rate as humans and reach adulthood in their late teens. They live somewhat longer than humans do, up to 120 years.\n\n### Size\nGenasi are as varied as their mortal parents but are generally built like humans, standing anywhere from 5 feet to over 6 feet tall. Your size is **Medium**.\n\n### Speed\nYour base walking speed is **30 feet**.\n\n### Languages\nYou can speak, read, and write **Common** and **Primordial**. Primordial is a guttural language, filled with harsh syllables and hard consonants.",
+    "metadata_json": {
+      "ability_bonuses": {"con": 2},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Primordial"],
+      "traits": [],
+      "has_subraces": true
+    },
+    "tags": "genasi,race,constitution,elemental,primordial,medium",
+    "source": "EEPC",
+    "sort_order": 60
+  },
+  {
+    "slug": "genasi-air",
+    "title": "Air Genasi",
+    "category": "race",
+    "subcategory": "genasi",
+    "ruleset": "universal",
+    "summary": "Air genasi descend from djinn and carry the power of elemental air. They can hold their breath indefinitely and cast levitate once per long rest.",
+    "content": "## Air Genasi\n\nAs an air genasi, you are descended from the djinn. As changeable as the weather, your moods shift from calm to wild and violent with little warning, but these storms rarely last long. Air genasi typically have light blue skin, hair, and eyes. A faint but constant breeze accompanies them, tousling the hair and stirring the clothing.\n\n### Ability Score Increase\n- **Constitution** +2 (from Genasi)\n- **Dexterity** +1\n\n### Unending Breath\nYou can hold your breath indefinitely while you're not incapacitated.\n\n### Mingle with the Wind\nYou can cast the **levitate** spell once with this trait, requiring no material components, and you regain the ability to cast it this way when you finish a long rest. Constitution is your spellcasting ability for this spell.\n\n### Inherited Traits (from Genasi)\n- **Speed**: 30 feet\n- **Size**: Medium\n- **Languages**: Common, Primordial",
+    "metadata_json": {
+      "ability_bonuses": {"con": 2, "dex": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Primordial"],
+      "traits": ["Unending Breath", "Mingle with the Wind"],
+      "parent_race": "genasi",
+      "subrace_traits": ["Unending Breath", "Mingle with the Wind"],
+      "innate_spellcasting": {
+        "level_1": {"spell": "levitate", "uses": 1}
+      },
+      "spellcasting_ability": "con"
+    },
+    "tags": "genasi,air genasi,subrace,constitution,dexterity,elemental air,levitate,medium",
+    "source": "EEPC",
+    "sort_order": 61
+  },
+  {
+    "slug": "genasi-earth",
+    "title": "Earth Genasi",
+    "category": "race",
+    "subcategory": "genasi",
+    "ruleset": "universal",
+    "summary": "Earth genasi descend from dao and carry the power of elemental earth. They can move across difficult terrain made of earth or stone without extra movement cost and cast pass without trace.",
+    "content": "## Earth Genasi\n\nAs an earth genasi, you are descended from the cruel and greedy dao, though you aren't necessarily evil. Earth genasi have earth-toned skin, eyes like agates or precious stones, and hair like crystalline strands or mud-like tendrils.\n\n### Ability Score Increase\n- **Constitution** +2 (from Genasi)\n- **Strength** +1\n\n### Earth Walk\nYou can move across difficult terrain made of earth or stone without expending extra movement.\n\n### Merge with Stone\nYou can cast the **pass without trace** spell once with this trait, requiring no material components, and you regain the ability to cast it this way when you finish a long rest. Constitution is your spellcasting ability for this spell.\n\n### Inherited Traits (from Genasi)\n- **Speed**: 30 feet\n- **Size**: Medium\n- **Languages**: Common, Primordial",
+    "metadata_json": {
+      "ability_bonuses": {"con": 2, "str": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Primordial"],
+      "traits": ["Earth Walk", "Merge with Stone"],
+      "parent_race": "genasi",
+      "subrace_traits": ["Earth Walk", "Merge with Stone"],
+      "innate_spellcasting": {
+        "level_1": {"spell": "pass without trace", "uses": 1}
+      },
+      "spellcasting_ability": "con"
+    },
+    "tags": "genasi,earth genasi,subrace,constitution,strength,elemental earth,pass without trace,medium",
+    "source": "EEPC",
+    "sort_order": 62
+  },
+  {
+    "slug": "genasi-fire",
+    "title": "Fire Genasi",
+    "category": "race",
+    "subcategory": "genasi",
+    "ruleset": "universal",
+    "summary": "Fire genasi descend from efreet and carry the power of elemental fire. They have darkvision, fire resistance, and innate fire magic.",
+    "content": "## Fire Genasi\n\nAs a fire genasi, you have inherited the volatile mood and keen mind of the efreet. You tend toward impatience and making snap judgments. Fire genasi have fiery red or coal-black skin, flaming red hair that may wave or crackle, and eyes that glow like embers.\n\n### Ability Score Increase\n- **Constitution** +2 (from Genasi)\n- **Intelligence** +1\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. Your ties to the Elemental Plane of Fire make your darkvision unusual: everything you see in darkness is in a shade of red.\n\n### Fire Resistance\nYou have resistance to fire damage.\n\n### Reach to the Blaze\nYou know the **produce flame** cantrip. Once you reach 3rd level, you can cast the **burning hands** spell once per long rest as a 1st-level spell. Constitution is your spellcasting ability for these spells.\n\n### Inherited Traits (from Genasi)\n- **Speed**: 30 feet\n- **Size**: Medium\n- **Languages**: Common, Primordial",
+    "metadata_json": {
+      "ability_bonuses": {"con": 2, "int": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Primordial"],
+      "traits": ["Darkvision", "Fire Resistance", "Reach to the Blaze"],
+      "parent_race": "genasi",
+      "subrace_traits": ["Darkvision", "Fire Resistance", "Reach to the Blaze"],
+      "damage_resistances": ["fire"],
+      "innate_spellcasting": {
+        "cantrips": ["produce flame"],
+        "level_3": {"spell": "burning hands", "uses": 1}
+      },
+      "spellcasting_ability": "con"
+    },
+    "tags": "genasi,fire genasi,subrace,constitution,intelligence,darkvision,fire resistance,elemental fire,medium",
+    "source": "EEPC",
+    "sort_order": 63
+  },
+  {
+    "slug": "genasi-water",
+    "title": "Water Genasi",
+    "category": "race",
+    "subcategory": "genasi",
+    "ruleset": "universal",
+    "summary": "Water genasi descend from marids and carry the power of elemental water. They can breathe underwater, have a swimming speed, and possess innate water magic.",
+    "content": "## Water Genasi\n\nThe lapping of waves, the spray of sea foam on the wind, the ocean depths — all of these things call to your heart. You wander freely and take pride in your independence, though others might consider you selfish. Water genasi have blue or green skin, sea-foam colored hair, and oversized blue-black eyes.\n\n### Ability Score Increase\n- **Constitution** +2 (from Genasi)\n- **Wisdom** +1\n\n### Amphibious\nYou can breathe air and water.\n\n### Swim\nYou have a swimming speed of **30 feet**.\n\n### Call to the Wave\nYou know the **shape water** cantrip. When you reach 3rd level, you can cast **create or destroy water** as a 2nd-level spell once per long rest. Constitution is your spellcasting ability for these spells.\n\n### Inherited Traits (from Genasi)\n- **Speed**: 30 feet walking, 30 feet swimming\n- **Size**: Medium\n- **Languages**: Common, Primordial",
+    "metadata_json": {
+      "ability_bonuses": {"con": 2, "wis": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Primordial"],
+      "traits": ["Amphibious", "Swim", "Call to the Wave"],
+      "parent_race": "genasi",
+      "subrace_traits": ["Amphibious", "Swim", "Call to the Wave"],
+      "swim_speed": 30,
+      "innate_spellcasting": {
+        "cantrips": ["shape water"],
+        "level_3": {"spell": "create or destroy water", "uses": 1}
+      },
+      "spellcasting_ability": "con"
+    },
+    "tags": "genasi,water genasi,subrace,constitution,wisdom,amphibious,swimming,elemental water,medium",
+    "source": "EEPC",
+    "sort_order": 64
+  },
+  {
+    "slug": "firbolg",
+    "title": "Firbolg",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Firbolgs are gentle forest giants with innate magic tied to nature. They can turn invisible, detect magic, and use powerful build to carry more than their size suggests.",
+    "content": "## Firbolg\n\nFirbolg tribes cloister in remote forest strongholds, preferring to spend their days in quiet harmony with the woods. When provoked, firbolgs demonstrate formidable skills with weapons and druidic magic. They stand over 7 feet tall with soft features, broad noses, and long, pointed ears.\n\n### Ability Score Increase\n- **Wisdom** +2\n- **Strength** +1\n\n### Firbolg Magic\nYou can cast **detect magic** and **disguise self** once each per short or long rest. When you use disguise self, you can make yourself appear up to 3 feet shorter than normal, allowing you to more easily blend in with humans and elves. Wisdom is your spellcasting ability.\n\n### Hidden Step\nAs a bonus action, you can magically turn invisible until the start of your next turn or until you attack, make a damage roll, or force someone to make a saving throw. Once you use this trait, you can't use it again until you finish a short or long rest.\n\n### Powerful Build\nYou count as one size larger when determining your carrying capacity and the weight you can push, drag, or lift.\n\n### Speech of Beast and Leaf\nYou have the ability to communicate in a limited manner with beasts and plants. They can understand your words, though you have no special ability to understand them in return.\n\n### Details\n- **Age**: Firbolgs reach adulthood around 30 and can live for 500 years.\n- **Size**: Medium (7 to 8 feet tall)\n- **Speed**: 30 feet\n- **Languages**: Common, Elvish, Giant",
+    "metadata_json": {
+      "ability_bonuses": {"wis": 2, "str": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Elvish", "Giant"],
+      "traits": ["Firbolg Magic", "Hidden Step", "Powerful Build", "Speech of Beast and Leaf"],
+      "has_subraces": false,
+      "innate_spellcasting": {
+        "spells": ["detect magic", "disguise self"],
+        "recharge": "short or long rest"
+      },
+      "spellcasting_ability": "wis"
+    },
+    "tags": "firbolg,race,wisdom,strength,firbolg magic,hidden step,powerful build,fey,nature,medium",
+    "source": "VGtM",
+    "sort_order": 65
+  },
+  {
+    "slug": "kenku",
+    "title": "Kenku",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Kenku are flightless corvid humanoids cursed to lack creativity and true speech. They communicate through mimicry and are skilled forgers and copyists.",
+    "content": "## Kenku\n\nHaunted by an ancient crime that robbed them of their wings, the kenku wander the world as vagabonds and burglars who live at the edge of human society. They are feathered humanoids that resemble ravens or crows, and they speak only through their remarkable ability to mimic sounds they have heard.\n\n### Ability Score Increase\n- **Dexterity** +2\n- **Wisdom** +1\n\n### Expert Forgery\nYou can duplicate other creatures' handwriting and craftwork. You have advantage on all checks made to produce forgeries or duplicates of existing objects.\n\n### Kenku Training\nYou are proficient in your choice of two of the following skills: Acrobatics, Deception, Stealth, and Sleight of Hand.\n\n### Mimicry\nYou can mimic sounds you have heard, including voices. A creature that hears the sounds you make can tell they are imitations with a successful Wisdom (Insight) check opposed by your Charisma (Deception) check.\n\n### Details\n- **Age**: Kenku have shorter lifespans than humans, reaching adulthood at about 12 and living to 60.\n- **Size**: Medium (about 5 feet tall)\n- **Speed**: 30 feet\n- **Languages**: Common, Auran (you can read and write but speak only through Mimicry)",
+    "metadata_json": {
+      "ability_bonuses": {"dex": 2, "wis": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Auran"],
+      "traits": ["Expert Forgery", "Kenku Training", "Mimicry"],
+      "has_subraces": false
+    },
+    "tags": "kenku,race,dexterity,wisdom,mimicry,forgery,stealth,medium",
+    "source": "VGtM",
+    "sort_order": 66
+  },
+  {
+    "slug": "lizardfolk",
+    "title": "Lizardfolk",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Lizardfolk are reptilian humanoids who view the world through a cold, pragmatic lens. They possess natural armor, a powerful bite, and the ability to hold their breath for extended periods.",
+    "content": "## Lizardfolk\n\nLizardfolk possess an alien and inscrutable mindset, their desires and thoughts driven by a different set of basic principles than those of warm-blooded creatures. Their dismal swamp homes might lie hundreds of miles from the nearest human settlement, but the gap between their way of thinking and that of the smooth-skins is far greater.\n\n### Ability Score Increase\n- **Constitution** +2\n- **Wisdom** +1\n\n### Bite\nYour fanged maw is a natural weapon, which you can use to make unarmed strikes. You deal 1d6 piercing damage with it instead of the normal bludgeoning damage.\n\n### Cunning Artisan\nAs part of a short rest, you can harvest bone and hide from a slain beast, construct, dragon, monstrosity, or plant creature of size Small or larger to create a shield, club, javelin, or 1d4 darts or blowgun needles.\n\n### Hold Breath\nYou can hold your breath for up to 15 minutes at a time.\n\n### Hunter's Lore\nYou gain proficiency with two of the following skills of your choice: Animal Handling, Nature, Perception, Stealth, and Survival.\n\n### Natural Armor\nYou have tough, scaly skin. When you aren't wearing armor, your AC is **13 + your Dexterity modifier**. You can use a shield and still gain this benefit.\n\n### Hungry Jaws\nIn battle, you can throw yourself into a vicious feeding frenzy. As a bonus action, you can make a special bite attack. If it hits, you gain temporary hit points equal to your Constitution modifier (minimum of 1). Once you use this trait, you can't use it again until you finish a short or long rest.\n\n### Details\n- **Age**: Lizardfolk reach maturity around age 14 and rarely live longer than 60 years.\n- **Size**: Medium (6 to 7 feet tall)\n- **Speed**: 30 feet, swim 30 feet\n- **Languages**: Common, Draconic",
+    "metadata_json": {
+      "ability_bonuses": {"con": 2, "wis": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Draconic"],
+      "traits": ["Bite", "Cunning Artisan", "Hold Breath", "Hunter's Lore", "Natural Armor", "Hungry Jaws"],
+      "has_subraces": false,
+      "swim_speed": 30,
+      "natural_armor": 13
+    },
+    "tags": "lizardfolk,race,constitution,wisdom,natural armor,bite,swim,hold breath,medium",
+    "source": "VGtM",
+    "sort_order": 67
+  },
+  {
+    "slug": "tabaxi",
+    "title": "Tabaxi",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Tabaxi are feline humanoids driven by curiosity to collect interesting artifacts, lore, and stories. They possess natural claws, darkvision, and the ability to move with bursts of incredible speed.",
+    "content": "## Tabaxi\n\nHailing from a strange and distant land, wandering tabaxi are catlike humanoids driven by curiosity to collect interesting artifacts, gather tales and stories, and lay eyes on all the world's wonders. Ultimate travelers, the inquisitive tabaxi rarely stay in one place for long.\n\n### Ability Score Increase\n- **Dexterity** +2\n- **Charisma** +1\n\n### Darkvision\nYou have a cat's keen senses, especially in the dark. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Feline Agility\nYour reflexes and agility allow you to move with a burst of speed. When you move on your turn in combat, you can double your speed until the end of the turn. Once you use this trait, you can't use it again until you move 0 feet on one of your turns.\n\n### Cat's Claws\nYour claws are natural weapons, dealing 1d4 slashing damage on unarmed strikes. You also have a climbing speed of **20 feet**.\n\n### Cat's Talent\nYou have proficiency in the Perception and Stealth skills.\n\n### Details\n- **Age**: Tabaxi have lifespans equivalent to humans.\n- **Size**: Medium (6 to 7 feet tall)\n- **Speed**: 30 feet, climb 20 feet\n- **Languages**: Common, one other of your choice",
+    "metadata_json": {
+      "ability_bonuses": {"dex": 2, "cha": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "One other language"],
+      "traits": ["Darkvision", "Feline Agility", "Cat's Claws", "Cat's Talent"],
+      "has_subraces": false,
+      "climb_speed": 20,
+      "skill_proficiencies": ["Perception", "Stealth"]
+    },
+    "tags": "tabaxi,race,dexterity,charisma,darkvision,feline agility,cat claws,climbing,medium",
+    "source": "VGtM",
+    "sort_order": 68
+  },
+  {
+    "slug": "triton",
+    "title": "Triton",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Tritons are aquatic guardians from the Elemental Plane of Water who settled the ocean depths to watch over the mortal world. They can breathe water and air and possess innate aquatic magic.",
+    "content": "## Triton\n\nTritons guard the ocean depths, building small settlements beside deep trenches, portals to the elemental planes, and other dangerous spots far from the eyes of land-bound folk. They have emerged from their deep-sea homes to protect the surface world from threats below the waves.\n\n### Ability Score Increase\n- **Strength** +1\n- **Constitution** +1\n- **Charisma** +1\n\n### Amphibious\nYou can breathe air and water.\n\n### Control Air and Water\nYou can cast **fog cloud** once per long rest. At 3rd level, you can also cast **gust of wind** once per long rest. At 5th level, you can also cast **wall of water** once per long rest. Charisma is your spellcasting ability.\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Emissary of the Sea\nAquatic beasts can understand your speech, though you have no special ability to understand them.\n\n### Guardians of the Depths\nAdapted to the deep ocean, you have resistance to cold damage and ignore any drawbacks caused by a deep, underwater environment.\n\n### Details\n- **Age**: Tritons reach maturity around age 15 and can live to 200.\n- **Size**: Medium (about 5 feet tall)\n- **Speed**: 30 feet, swim 30 feet\n- **Languages**: Common, Primordial",
+    "metadata_json": {
+      "ability_bonuses": {"str": 1, "con": 1, "cha": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Primordial"],
+      "traits": ["Amphibious", "Control Air and Water", "Darkvision", "Emissary of the Sea", "Guardians of the Depths"],
+      "has_subraces": false,
+      "swim_speed": 30,
+      "damage_resistances": ["cold"],
+      "innate_spellcasting": {
+        "level_1": {"spell": "fog cloud", "uses": 1},
+        "level_3": {"spell": "gust of wind", "uses": 1},
+        "level_5": {"spell": "wall of water", "uses": 1}
+      },
+      "spellcasting_ability": "cha"
+    },
+    "tags": "triton,race,strength,constitution,charisma,amphibious,swimming,darkvision,cold resistance,aquatic,medium",
+    "source": "VGtM",
+    "sort_order": 69
+  },
+  {
+    "slug": "bugbear",
+    "title": "Bugbear",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Bugbears are hulking goblinoids born for battle and mayhem. Despite their fearsome appearance, they are stealthy ambushers with long, powerful arms that give them extended reach in combat.",
+    "content": "## Bugbear\n\nBugbears are the biggest of the goblinoid races, towering over their goblin and hobgoblin kin. Despite their size, they move with surprising stealth and are natural-born ambushers. In the wild, bugbears survive through ambush tactics and brute strength.\n\n### Ability Score Increase\n- **Strength** +2\n- **Dexterity** +1\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Long-Limbed\nWhen you make a melee attack on your turn, your reach for it is 5 feet greater than normal.\n\n### Powerful Build\nYou count as one size larger when determining your carrying capacity and the weight you can push, drag, or lift.\n\n### Sneaky\nYou are proficient in the Stealth skill.\n\n### Surprise Attack\nIf you surprise a creature and hit it with an attack on your first turn in combat, the attack deals an extra 2d6 damage to it.\n\n### Details\n- **Age**: Bugbears reach adulthood at age 16 and live up to 80 years.\n- **Size**: Medium (between 6 and 8 feet tall)\n- **Speed**: 30 feet\n- **Languages**: Common, Goblin",
+    "metadata_json": {
+      "ability_bonuses": {"str": 2, "dex": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Goblin"],
+      "traits": ["Darkvision", "Long-Limbed", "Powerful Build", "Sneaky", "Surprise Attack"],
+      "has_subraces": false,
+      "skill_proficiencies": ["Stealth"]
+    },
+    "tags": "bugbear,race,strength,dexterity,darkvision,long-limbed,surprise attack,stealth,goblinoid,medium",
+    "source": "VGtM",
+    "sort_order": 70
+  },
+  {
+    "slug": "goblin",
+    "title": "Goblin",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Goblins are small, nimble goblinoids known for their cunning and agility. They can disengage or hide as a bonus action and deal extra damage to larger creatures.",
+    "content": "## Goblin\n\nGoblins occupy an uneasy place in a dangerous world, and they react by lashing out at any creatures they believe they can bully. Cunning in battle and cruel in victory, goblins are fawning and servile in defeat — and their memory of a defeat lasts only until they believe they can exact revenge.\n\n### Ability Score Increase\n- **Dexterity** +2\n- **Constitution** +1\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Fury of the Small\nWhen you damage a creature with an attack or a spell and the creature's size is larger than yours, you can cause the attack or spell to deal extra damage to the creature. The extra damage equals your proficiency bonus. Once you use this trait, you can't use it again until you finish a short or long rest.\n\n### Nimble Escape\nYou can take the Disengage or Hide action as a bonus action on each of your turns.\n\n### Details\n- **Age**: Goblins reach adulthood at age 8 and live up to 60 years.\n- **Size**: Small (between 3 and 4 feet tall)\n- **Speed**: 30 feet\n- **Languages**: Common, Goblin",
+    "metadata_json": {
+      "ability_bonuses": {"dex": 2, "con": 1},
+      "speed": 30,
+      "size": "Small",
+      "languages": ["Common", "Goblin"],
+      "traits": ["Darkvision", "Fury of the Small", "Nimble Escape"],
+      "has_subraces": false
+    },
+    "tags": "goblin,race,dexterity,constitution,darkvision,fury of the small,nimble escape,goblinoid,small",
+    "source": "VGtM",
+    "sort_order": 71
+  },
+  {
+    "slug": "hobgoblin",
+    "title": "Hobgoblin",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Hobgoblins are disciplined and militaristic goblinoids who value honor and martial prowess. They can bolster allies' failed rolls and gain proficiency with martial gear.",
+    "content": "## Hobgoblin\n\nWar is the lifeblood of hobgoblins. Its glories are the dreams that inspire them. Its horrors don't trouble them. Every hobgoblin is raised to fight, trained in martial discipline, and hardened by a culture that demands absolute loyalty to the group.\n\n### Ability Score Increase\n- **Constitution** +2\n- **Intelligence** +1\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Martial Training\nYou are proficient with two martial weapons of your choice and with light armor.\n\n### Saving Face\nHobgoblins are careful not to show weakness in front of their allies, for fear of losing status. If you miss with an attack roll or fail an ability check or a saving throw, you can gain a bonus to the roll equal to the number of allies you can see within 30 feet of you (maximum bonus of +5). Once you use this trait, you can't use it again until you finish a short or long rest.\n\n### Details\n- **Age**: Hobgoblins mature at the same rate as humans and have similar lifespans.\n- **Size**: Medium (between 5 and 6 feet tall)\n- **Speed**: 30 feet\n- **Languages**: Common, Goblin",
+    "metadata_json": {
+      "ability_bonuses": {"con": 2, "int": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Goblin"],
+      "traits": ["Darkvision", "Martial Training", "Saving Face"],
+      "has_subraces": false,
+      "armor_proficiencies": ["light armor"]
+    },
+    "tags": "hobgoblin,race,constitution,intelligence,darkvision,martial training,saving face,goblinoid,medium",
+    "source": "VGtM",
+    "sort_order": 72
+  },
+  {
+    "slug": "kobold",
+    "title": "Kobold",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Kobolds are small reptilian humanoids who claim kinship with dragons. They are resourceful pack tacticians who gain advantage on attacks when allies are nearby.",
+    "content": "## Kobold\n\nKobolds are craven reptilian humanoids that commonly infest dungeons. They make up for their physical ineptitude with a cleverness for trap making and a tendency to overwhelm opponents with sheer numbers. Kobolds revere dragons and serve them as minions and toadies, believing themselves to be draconic kin.\n\n### Ability Score Increase\n- **Dexterity** +2\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Draconic Cry\nAs a bonus action, you let out a cry at your enemies within 10 feet of you. Until the start of your next turn, you and your allies have advantage on attack rolls against any of those enemies who could hear you. You can use this trait a number of times equal to your proficiency bonus, regaining all uses on a long rest.\n\n### Kobold Legacy\nChoose one of the following:\n- **Craftiness**: Proficiency in one of Arcana, Investigation, Medicine, Sleight of Hand, or Survival.\n- **Defiance**: Advantage on saving throws to avoid or end the frightened condition on yourself.\n- **Draconic Sorcery**: You know one cantrip from the sorcerer spell list. Intelligence, Wisdom, or Charisma is your spellcasting ability.\n\n### Details\n- **Age**: Kobolds reach adulthood at age 6 and can live up to 120 years.\n- **Size**: Small (between 2 and 3 feet tall)\n- **Speed**: 30 feet\n- **Languages**: Common, Draconic",
+    "metadata_json": {
+      "ability_bonuses": {"dex": 2},
+      "speed": 30,
+      "size": "Small",
+      "languages": ["Common", "Draconic"],
+      "traits": ["Darkvision", "Draconic Cry", "Kobold Legacy"],
+      "has_subraces": false
+    },
+    "tags": "kobold,race,dexterity,darkvision,draconic cry,pack tactics,dragon,small",
+    "source": "VGtM",
+    "sort_order": 73
+  },
+  {
+    "slug": "yuan-ti-pureblood",
+    "title": "Yuan-ti Pureblood",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Yuan-ti purebloods are the most human-looking of the serpent folk, able to pass as human with minimal effort. They possess innate serpentine magic, poison immunity, and magic resistance.",
+    "content": "## Yuan-ti Pureblood\n\nThe serpent creatures known as yuan-ti are all that remains of an ancient, decadent human empire. In ages past, humans who worshiped serpent gods became cursed and transformed into yuan-ti. Purebloods are the most human-seeming of all, with only slight serpentine features like forked tongues, snake eyes, or patches of scales.\n\n### Ability Score Increase\n- **Charisma** +2\n- **Intelligence** +1\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Innate Spellcasting\nYou know the **poison spray** cantrip. At 3rd level, you can cast **animal friendship** (snakes only) at will. At 3rd level, you can also cast **suggestion** once per long rest. Charisma is your spellcasting ability.\n\n### Magic Resistance\nYou have advantage on saving throws against spells and other magical effects.\n\n### Poison Immunity\nYou are immune to poison damage and the poisoned condition.\n\n### Details\n- **Age**: Purebloods mature at the same rate as humans and have similar lifespans.\n- **Size**: Medium (same range as humans)\n- **Speed**: 30 feet\n- **Languages**: Common, Abyssal, Draconic",
+    "metadata_json": {
+      "ability_bonuses": {"cha": 2, "int": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Abyssal", "Draconic"],
+      "traits": ["Darkvision", "Innate Spellcasting", "Magic Resistance", "Poison Immunity"],
+      "has_subraces": false,
+      "damage_immunities": ["poison"],
+      "condition_immunities": ["poisoned"],
+      "innate_spellcasting": {
+        "cantrips": ["poison spray"],
+        "level_3": [
+          {"spell": "animal friendship", "restriction": "snakes only", "uses": "at will"},
+          {"spell": "suggestion", "uses": 1}
+        ]
+      },
+      "spellcasting_ability": "cha"
+    },
+    "tags": "yuan-ti,pureblood,race,charisma,intelligence,darkvision,magic resistance,poison immunity,serpent,medium",
+    "source": "VGtM",
+    "sort_order": 74
+  },
+  {
+    "slug": "changeling",
+    "title": "Changeling",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Changelings are shapeshifters with the ability to alter their appearance at will. They are often found in Eberron but can appear in any setting, using their gift for subterfuge, performance, or simply fitting in.",
+    "content": "## Changeling\n\nA changeling can shift its face and form with a thought as a form of artistic and emotional expression. Changelings have long been persecuted by other peoples, leading many to develop personas and live secret lives. Their true form is pale with colorless eyes and silver-white hair.\n\n### Ability Score Increase\n- **Charisma** +2\n- **One other ability score** of your choice +1\n\n### Shapechanger\nAs an action, you can change your appearance and your voice. You determine the specifics of the changes, including your coloration, hair length, and sex. You can also adjust your height and weight, but not so much that your size changes. You can make yourself appear as a member of another race, though none of your game statistics change. You can't duplicate the appearance of a creature you've never seen, and you revert to your natural form if you die.\n\n### Changeling Instincts\nYou gain proficiency with two of the following skills of your choice: Deception, Insight, Intimidation, and Persuasion.\n\n### Details\n- **Age**: Changelings mature slightly faster than humans but share a similar lifespan.\n- **Size**: Medium (same range as humans)\n- **Speed**: 30 feet\n- **Languages**: Common, two other languages of your choice",
+    "metadata_json": {
+      "ability_bonuses": {"cha": 2, "choice_1": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Two other languages"],
+      "traits": ["Shapechanger", "Changeling Instincts"],
+      "has_subraces": false,
+      "flexible_ability_bonuses": 1
+    },
+    "tags": "changeling,race,charisma,shapechanger,deception,eberron,medium",
+    "source": "ERLW",
+    "sort_order": 75
+  },
+  {
+    "slug": "kalashtar",
+    "title": "Kalashtar",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Kalashtar are spiritually linked to quori spirits from the plane of dreams. They possess telepathy, psychic resistance, and advantage on Wisdom saving throws, making them naturally serene and insightful.",
+    "content": "## Kalashtar\n\nThe kalashtar are a compound people, created from the union of humanity and renegade spirits from the plane of dreams — spirits called quori. Kalashtar are often seen as wise, spiritual people with great compassion for others. There is an unmistakable alien quality to the kalashtar, though.\n\n### Ability Score Increase\n- **Wisdom** +2\n- **Charisma** +1\n\n### Dual Mind\nYou have advantage on all Wisdom saving throws.\n\n### Mental Discipline\nYou have resistance to psychic damage.\n\n### Mind Link\nYou can speak telepathically to any creature you can see, provided the creature is within a number of feet of you equal to 10 times your level. You don't need to share a language for the creature to understand your telepathic utterances, but the creature must understand at least one language.\n\n### Severed from Dreams\nKalashtar sleep, but they don't connect to the plane of dreams as other creatures do. Instead, their minds draw from the memories of their otherworldly spirit while they sleep. You are immune to spells and effects that require you to dream, like the **dream** spell.\n\n### Details\n- **Age**: Kalashtar mature and age at the same rate as humans.\n- **Size**: Medium (similar build to humans)\n- **Speed**: 30 feet\n- **Languages**: Common, Quori, one other language",
+    "metadata_json": {
+      "ability_bonuses": {"wis": 2, "cha": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Quori", "One other language"],
+      "traits": ["Dual Mind", "Mental Discipline", "Mind Link", "Severed from Dreams"],
+      "has_subraces": false,
+      "damage_resistances": ["psychic"]
+    },
+    "tags": "kalashtar,race,wisdom,charisma,telepathy,psychic resistance,eberron,quori,medium",
+    "source": "ERLW",
+    "sort_order": 76
+  },
+  {
+    "slug": "shifter",
+    "title": "Shifter",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Shifters are humanoids with a bestial aspect, descended from lycanthropes. They can temporarily enhance their animalistic features through Shifting, gaining temporary hit points and subrace-specific benefits.",
+    "content": "## Shifter\n\nShifters are sometimes called the weretouched, as they are descendants of people who contracted full or partial lycanthropy. Humanoids with a bestial aspect, shifters can't fully change shape, but they can temporarily enhance their animalistic features — a state they call shifting.\n\n### Ability Score Increase\n- Varies by subrace\n\n### Shifting\nAs a bonus action, you can assume a more bestial appearance. This transformation lasts for 1 minute, until you die, or until you revert to your normal appearance as a bonus action. When you shift, you gain temporary hit points equal to your level + your Constitution modifier (minimum of 1). You also gain additional benefits depending on your subrace. Once you shift, you can't do so again until you finish a short or long rest.\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Details\n- **Age**: Shifters are quick to mature, reaching adulthood at age 10 and rarely living past 70.\n- **Size**: Medium\n- **Speed**: 30 feet\n- **Languages**: Common\n- **Subraces**: Beasthide (CON +2, STR +1), Longtooth (STR +2, DEX +1), Swiftstride (DEX +2, CHA +1), Wildhunt (WIS +2, DEX +1)",
+    "metadata_json": {
+      "ability_bonuses": {},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common"],
+      "traits": ["Shifting", "Darkvision"],
+      "has_subraces": true
+    },
+    "tags": "shifter,race,shifting,darkvision,lycanthrope,bestial,eberron,medium",
+    "source": "ERLW",
+    "sort_order": 77
+  },
+  {
+    "slug": "warforged",
+    "title": "Warforged",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Warforged are living constructs originally built for war. They don't need to eat, drink, breathe, or sleep, and they have integrated protective plating that provides natural armor.",
+    "content": "## Warforged\n\nWarforged are made from wood and metal, but they can feel pain and emotion. Built as weapons, they now must find a purpose beyond war. A warforged can be a steadfast ally, a cold-hearted killing machine, or a visionary in search of purpose and meaning.\n\n### Ability Score Increase\n- **Constitution** +2\n- **One other ability score** of your choice +1\n\n### Constructed Resilience\nYou were created to have remarkable fortitude:\n- You have advantage on saving throws against being poisoned, and you have resistance to poison damage.\n- You don't need to eat, drink, or breathe.\n- You are immune to disease.\n- You don't need to sleep, and magic can't put you to sleep.\n\n### Sentry's Rest\nWhen you take a long rest, you must spend at least six hours in an inactive, motionless state, rather than sleeping. In this state, you appear inert, but you are not unconscious, and you can see and hear as normal.\n\n### Integrated Protection\nYour body has built-in defensive layers, which can be enhanced with armor. You gain a +1 bonus to Armor Class. You can don only armor with which you have proficiency. To don or doff armor, you must incorporate it into or remove it from your body over the course of 1 hour. You can rest while donning or doffing armor this way. While you live, the armor can't be removed against your will.\n\n### Specialized Design\nYou gain one skill proficiency and one tool proficiency of your choice.\n\n### Details\n- **Age**: Warforged don't age and are typically 2-30 years old. Maximum lifespan is unknown.\n- **Size**: Medium (built from 5 to over 6 feet tall)\n- **Speed**: 30 feet\n- **Languages**: Common, one other language of your choice",
+    "metadata_json": {
+      "ability_bonuses": {"con": 2, "choice_1": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "One other language"],
+      "traits": ["Constructed Resilience", "Sentry's Rest", "Integrated Protection", "Specialized Design"],
+      "has_subraces": false,
+      "damage_resistances": ["poison"],
+      "ac_bonus": 1,
+      "flexible_ability_bonuses": 1
+    },
+    "tags": "warforged,race,constitution,construct,integrated protection,poison resistance,no sleep,no eat,eberron,medium",
+    "source": "ERLW",
+    "sort_order": 78
+  },
+  {
+    "slug": "centaur",
+    "title": "Centaur",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Centaurs are swift humanoids with equine lower bodies. They possess powerful hooves for attacks, the ability to carry riders, and exceptional speed across open terrain.",
+    "content": "## Centaur\n\nCentaurs gallop across the open plains, their bodies and souls united in harmony with the natural world. They combine the features of a human torso from the waist up and a horse body from the waist down. Centaurs live in harmony with nature and are fierce protectors of their herds and homelands.\n\n### Ability Score Increase\n- **Strength** +2\n- **Wisdom** +1\n\n### Fey\nYour creature type is fey, rather than humanoid.\n\n### Charge\nIf you move at least 30 feet straight toward a target and then hit it with a melee weapon attack on the same turn, you can immediately follow that attack with a bonus action, making one attack against the target with your hooves.\n\n### Hooves\nYour hooves are natural melee weapons, dealing 1d4 + your Strength modifier bludgeoning damage.\n\n### Equine Build\nYou count as one size larger when determining your carrying capacity and the weight you can push or drag. You have disadvantage on Climbing checks. Any climb that requires hands and feet is especially difficult for you due to your equine body.\n\n### Details\n- **Age**: Centaurs mature and age at about the same rate as humans.\n- **Size**: Medium (about 6-7 feet from hoof to head)\n- **Speed**: 40 feet\n- **Languages**: Common, Sylvan",
+    "metadata_json": {
+      "ability_bonuses": {"str": 2, "wis": 1},
+      "speed": 40,
+      "size": "Medium",
+      "languages": ["Common", "Sylvan"],
+      "traits": ["Fey", "Charge", "Hooves", "Equine Build"],
+      "has_subraces": false,
+      "creature_type": "fey"
+    },
+    "tags": "centaur,race,strength,wisdom,fey,charge,hooves,fast,medium",
+    "source": "GGtR",
+    "sort_order": 79
+  },
+  {
+    "slug": "minotaur",
+    "title": "Minotaur",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Minotaurs are barrel-chested humanoids with bull-like heads crowned by horns. They possess a powerful gore attack, can shove creatures after charging, and have an intimidating presence.",
+    "content": "## Minotaur\n\nMinotaurs are barrel-chested humanoids with heads resembling those of bulls. Their horns range in size from about 1 foot long to great, curling weapons easily three times that length. They are known for their fierce tempers and relentless tenacity.\n\n### Ability Score Increase\n- **Strength** +2\n- **Constitution** +1\n\n### Horns\nYour horns are natural melee weapons, dealing 1d6 + your Strength modifier piercing damage.\n\n### Goring Rush\nImmediately after you use the Dash action on your turn and move at least 20 feet, you can make one melee attack with your horns as a bonus action.\n\n### Hammering Horns\nImmediately after you hit a creature with a melee attack as part of the Attack action on your turn, you can use a bonus action to attempt to shove that creature with your horns. The creature must be no more than one size larger than you and within 5 feet of you. It must make a Strength saving throw (DC = 8 + your proficiency bonus + your Strength modifier). On a failure, the creature is pushed 10 feet away from you.\n\n### Imposing Presence\nYou have proficiency in one of the following skills of your choice: Intimidation or Persuasion.\n\n### Details\n- **Age**: Minotaurs enter adulthood at around age 17 and can live up to 150 years.\n- **Size**: Medium (about 6 feet tall)\n- **Speed**: 30 feet\n- **Languages**: Common, Minotaur",
+    "metadata_json": {
+      "ability_bonuses": {"str": 2, "con": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Minotaur"],
+      "traits": ["Horns", "Goring Rush", "Hammering Horns", "Imposing Presence"],
+      "has_subraces": false
+    },
+    "tags": "minotaur,race,strength,constitution,horns,goring rush,hammering horns,medium",
+    "source": "GGtR",
+    "sort_order": 80
+  },
+  {
+    "slug": "satyr",
+    "title": "Satyr",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Satyrs are fey creatures of merriment and revelry with goat-like lower bodies. They possess magic resistance, natural ram attacks, and a mirthful leap ability.",
+    "content": "## Satyr\n\nSatyrs are fey beings who revel in the wild, untamed forces of nature and the joy of music, dance, and revelry. They have the upper bodies of elves or humans and the lower bodies of goats. Their horns are small and ram-like, and their laughter is infectious.\n\n### Ability Score Increase\n- **Charisma** +2\n- **Dexterity** +1\n\n### Fey\nYour creature type is fey, rather than humanoid.\n\n### Ram\nYour head and horns are natural melee weapons, dealing 1d4 + your Strength modifier bludgeoning damage.\n\n### Magic Resistance\nYou have advantage on saving throws against spells and other magical effects.\n\n### Mirthful Leaps\nWhenever you make a long jump or a high jump, you can roll a d8 and add the number rolled to the number of feet you cover, even when making a standing jump. This extra distance costs movement as normal.\n\n### Reveler\nYou have proficiency in the Performance and Persuasion skills and proficiency with one musical instrument of your choice.\n\n### Details\n- **Age**: Satyrs mature and age at about the same rate as humans.\n- **Size**: Medium (about 5 feet tall)\n- **Speed**: 35 feet\n- **Languages**: Common, Sylvan",
+    "metadata_json": {
+      "ability_bonuses": {"cha": 2, "dex": 1},
+      "speed": 35,
+      "size": "Medium",
+      "languages": ["Common", "Sylvan"],
+      "traits": ["Fey", "Ram", "Magic Resistance", "Mirthful Leaps", "Reveler"],
+      "has_subraces": false,
+      "creature_type": "fey",
+      "skill_proficiencies": ["Performance", "Persuasion"]
+    },
+    "tags": "satyr,race,charisma,dexterity,fey,magic resistance,reveler,mirthful leaps,medium",
+    "source": "MOoT",
+    "sort_order": 81
+  },
+  {
+    "slug": "leonin",
+    "title": "Leonin",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Leonin are lion-like humanoids who live on the golden plains. They are proud, fierce warriors with a terrifying roar and natural claws.",
+    "content": "## Leonin\n\nThe leonin guard the shining lands of Oreskos, a golden plain far from the influence of the gods' cities. Prides of these nomadic, lion-like humanoids rarely interact with other peoples, having once been exploited by a tyrannical god. When leonin do venture beyond their homeland, it is with great purpose.\n\n### Ability Score Increase\n- **Constitution** +2\n- **Strength** +1\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Claws\nYour claws are natural weapons, which you can use to make unarmed strikes. You deal 1d4 + your Strength modifier slashing damage with them.\n\n### Hunter's Instincts\nYou have proficiency in one of the following skills of your choice: Athletics, Intimidation, Perception, or Survival.\n\n### Daunting Roar\nAs a bonus action, you can let out an especially menacing roar. Creatures of your choice within 10 feet of you that can hear you must succeed on a Wisdom saving throw (DC = 8 + your proficiency bonus + your Constitution modifier) or become frightened of you until the end of your next turn. Once you use this trait, you can't use it again until you finish a short or long rest.\n\n### Details\n- **Age**: Leonin mature and age at about the same rate as humans.\n- **Size**: Medium (typically over 6 feet tall)\n- **Speed**: 35 feet\n- **Languages**: Common, Leonin",
+    "metadata_json": {
+      "ability_bonuses": {"con": 2, "str": 1},
+      "speed": 35,
+      "size": "Medium",
+      "languages": ["Common", "Leonin"],
+      "traits": ["Darkvision", "Claws", "Hunter's Instincts", "Daunting Roar"],
+      "has_subraces": false
+    },
+    "tags": "leonin,race,constitution,strength,darkvision,claws,daunting roar,theros,medium",
+    "source": "MOoT",
+    "sort_order": 82
+  },
+  {
+    "slug": "fairy",
+    "title": "Fairy",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Fairies are tiny fey creatures with insectile wings that grant them the ability to fly. They can squeeze through spaces as if they were Tiny and possess innate fey magic.",
+    "content": "## Fairy\n\nThe Feywild is home to many fantastic peoples, including fairies. Fairies are a wee folk, but not nearly as diminutive as their pixie and sprite friends. Fairies resemble elves in many ways but have insectile wings and an innate connection to the magic of the Feywild.\n\n### Ability Score Increase\n- **One ability score** of your choice +2, and **another** +1 (or three different +1)\n\n### Fairy Magic\nYou know the **druidcraft** cantrip. At 3rd level, you can cast **faerie fire** once per long rest. At 5th level, you can cast **enlarge/reduce** once per long rest. You can cast each of these with any spell slots you have of the appropriate level. Intelligence, Wisdom, or Charisma is your spellcasting ability (choose when you select this race).\n\n### Flight\nBecause of your wings, you have a flying speed equal to your walking speed. You can't use this flying speed if you're wearing medium or heavy armor.\n\n### Details\n- **Age**: Fairies have a lifespan similar to humans.\n- **Size**: Small\n- **Speed**: 30 feet, fly 30 feet\n- **Languages**: Common, Sylvan",
+    "metadata_json": {
+      "ability_bonuses": {"choice_1": 2, "choice_2": 1},
+      "speed": 30,
+      "size": "Small",
+      "languages": ["Common", "Sylvan"],
+      "traits": ["Fairy Magic", "Flight"],
+      "has_subraces": false,
+      "creature_type": "fey",
+      "fly_speed": 30,
+      "flexible_ability_bonuses": 2,
+      "innate_spellcasting": {
+        "cantrips": ["druidcraft"],
+        "level_3": {"spell": "faerie fire", "uses": 1},
+        "level_5": {"spell": "enlarge/reduce", "uses": 1}
+      }
+    },
+    "tags": "fairy,race,fey,flight,flying,fairy magic,druidcraft,small",
+    "source": "WBtW",
+    "sort_order": 83
+  },
+  {
+    "slug": "harengon",
+    "title": "Harengon",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Harengon are rabbit-like humanoids originating from the Feywild. They possess extraordinary jumping ability, quick reflexes that let them add proficiency to initiative, and lucky footwork.",
+    "content": "## Harengon\n\nHarengon originated in the Feywild, where they spoke Sylvan and roamed the wilds. Harengon are bipedal, with the long feet of a rabbit and fur in a variety of colors. They share the keen senses and powerful legs of leporine creatures and are also full of energy.\n\n### Ability Score Increase\n- **One ability score** of your choice +2, and **another** +1 (or three different +1)\n\n### Hare-Trigger\nYou can add your proficiency bonus to your initiative rolls.\n\n### Leporine Senses\nYou have proficiency in the Perception skill.\n\n### Lucky Footwork\nWhen you fail a Dexterity saving throw, you can use your reaction to roll a d4 and add it to the save, potentially turning the failure into a success.\n\n### Rabbit Hop\nAs a bonus action, you can jump a number of feet equal to five times your proficiency bonus, without provoking opportunity attacks. You can use this trait a number of times equal to your proficiency bonus, regaining all uses on a long rest.\n\n### Details\n- **Age**: Harengon have lifespans similar to humans.\n- **Size**: Medium or Small (your choice)\n- **Speed**: 30 feet\n- **Languages**: Common, one other language of your choice",
+    "metadata_json": {
+      "ability_bonuses": {"choice_1": 2, "choice_2": 1},
+      "speed": 30,
+      "size": "Medium or Small",
+      "languages": ["Common", "One other language"],
+      "traits": ["Hare-Trigger", "Leporine Senses", "Lucky Footwork", "Rabbit Hop"],
+      "has_subraces": false,
+      "flexible_ability_bonuses": 2,
+      "skill_proficiencies": ["Perception"]
+    },
+    "tags": "harengon,race,rabbit,fey,hare-trigger,initiative,lucky footwork,rabbit hop,medium,small",
+    "source": "WBtW",
+    "sort_order": 84
+  },
+  {
+    "slug": "owlin",
+    "title": "Owlin",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Owlin are owl-like humanoids with large wings that grant flight and keen senses honed by the darkness. They are natural fliers with darkvision and stealth proficiency.",
+    "content": "## Owlin\n\nOwlin come from the Feywild, and are distant relatives of giant owls. Like owls, owlin are graced with feathered wings and keen senses, especially in the dark. They are quiet and contemplative, preferring to observe before acting.\n\n### Ability Score Increase\n- **One ability score** of your choice +2, and **another** +1 (or three different +1)\n\n### Darkvision\nYou can see in dim light within 120 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Flight\nYou have a flying speed equal to your walking speed. You can't use this flying speed if you're wearing medium or heavy armor.\n\n### Silent Feathers\nYou have proficiency in the Stealth skill.\n\n### Details\n- **Age**: Owlin have lifespans similar to humans.\n- **Size**: Medium or Small (your choice)\n- **Speed**: 30 feet, fly 30 feet\n- **Languages**: Common, one other language of your choice",
+    "metadata_json": {
+      "ability_bonuses": {"choice_1": 2, "choice_2": 1},
+      "speed": 30,
+      "size": "Medium or Small",
+      "languages": ["Common", "One other language"],
+      "traits": ["Darkvision", "Flight", "Silent Feathers"],
+      "has_subraces": false,
+      "darkvision_range": 120,
+      "fly_speed": 30,
+      "flexible_ability_bonuses": 2,
+      "skill_proficiencies": ["Stealth"]
+    },
+    "tags": "owlin,race,flight,flying,darkvision,stealth,owl,feywild,medium,small",
+    "source": "SACoC",
+    "sort_order": 85
+  },
+  {
+    "slug": "dhampir",
+    "title": "Dhampir",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Dhampirs are beings poised between the living and the undead, often created by vampiric influence. They possess a vampiric bite that can empower them, spider-like climbing, and darkvision.",
+    "content": "## Dhampir\n\nPoised between the worlds of the living and the dead, dhampirs retain their grip on life yet are sustained by the undead. Their vampiric origins manifest in a hunger that can be satisfied through a vampiric bite, which empowers them with dark vitality. Each dhampir knows a thirst slaked only by the living.\n\n### Lineage\nDhampir is a lineage that can replace your existing race or be chosen at character creation. You keep your previous ability score increases or choose new ones.\n\n### Ability Score Increase\n- **One ability score** of your choice +2, and **another** +1 (or three different +1)\n\n### Ancestral Legacy\nIf you replace a race with this lineage, you can keep the following elements of that race: any skill proficiencies, climbing speed, flying speed, or swimming speed.\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Deathless Nature\nYou don't need to breathe.\n\n### Spider Climb\nYou have a climbing speed equal to your walking speed. In addition, at 3rd level, you can move up, down, and across vertical surfaces and upside down along ceilings, while leaving your hands free.\n\n### Vampiric Bite\nYour fanged bite is a natural weapon that deals 1d4 piercing damage plus your Constitution modifier. When you use your bite and are missing half your hit points or more, you can empower yourself: you gain a bonus to the next ability check or attack roll you make equal to the damage dealt by the bite. You can empower yourself this way a number of times equal to your proficiency bonus per long rest.\n\n### Details\n- **Size**: Medium or Small (your choice)\n- **Speed**: 35 feet, climb 35 feet\n- **Languages**: Common, one other language of your choice",
+    "metadata_json": {
+      "ability_bonuses": {"choice_1": 2, "choice_2": 1},
+      "speed": 35,
+      "size": "Medium or Small",
+      "languages": ["Common", "One other language"],
+      "traits": ["Ancestral Legacy", "Darkvision", "Deathless Nature", "Spider Climb", "Vampiric Bite"],
+      "has_subraces": false,
+      "climb_speed": 35,
+      "flexible_ability_bonuses": 2,
+      "lineage": true
+    },
+    "tags": "dhampir,race,lineage,vampiric bite,spider climb,darkvision,undead,gothic,medium,small",
+    "source": "VRGtR",
+    "sort_order": 86
+  },
+  {
+    "slug": "hexblood",
+    "title": "Hexblood",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Hexbloods are individuals transformed by hag magic, carrying a fey curse in their blood. They can send messages through a magical token, use hex and disguise self, and sense magic nearby.",
+    "content": "## Hexblood\n\nWhere wishing fails, hags craft and scheme. Some become combatants of fate, honing magic to force what they desire. Others hold to old ways, producing hexes and curses to sow their will. Hexbloods are the result of these machinations — individuals transformed by hag magic or born of hag lineages.\n\n### Lineage\nHexblood is a lineage that can replace your existing race or be chosen at character creation.\n\n### Ability Score Increase\n- **One ability score** of your choice +2, and **another** +1 (or three different +1)\n\n### Ancestral Legacy\nIf you replace a race with this lineage, you can keep the following elements of that race: any skill proficiencies, climbing speed, flying speed, or swimming speed.\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Eerie Token\nAs a bonus action, you can harmlessly remove a lock of your hair, one of your nails, or one of your teeth. This token is imbued with magic until you finish a long rest. While the token is imbued this way, you can use an action to send a telepathic message to the holder of the token (up to 10 miles) or use an action to enter a trance and see and hear through the token (up to 10 miles).\n\n### Hex Magic\nYou can cast the **disguise self** and **hex** spells with this trait. You can cast each once per long rest or with spell slots. Intelligence, Wisdom, or Charisma is your spellcasting ability.\n\n### Details\n- **Size**: Medium or Small (your choice)\n- **Speed**: 30 feet\n- **Languages**: Common, one other language of your choice",
+    "metadata_json": {
+      "ability_bonuses": {"choice_1": 2, "choice_2": 1},
+      "speed": 30,
+      "size": "Medium or Small",
+      "languages": ["Common", "One other language"],
+      "traits": ["Ancestral Legacy", "Darkvision", "Eerie Token", "Hex Magic"],
+      "has_subraces": false,
+      "flexible_ability_bonuses": 2,
+      "lineage": true,
+      "innate_spellcasting": {
+        "spells": ["disguise self", "hex"],
+        "recharge": "long rest or spell slot"
+      }
+    },
+    "tags": "hexblood,race,lineage,hex magic,eerie token,darkvision,hag,fey,gothic,medium,small",
+    "source": "VRGtR",
+    "sort_order": 87
+  },
+  {
+    "slug": "reborn",
+    "title": "Reborn",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Reborn are individuals who have died and returned to life through various means. They carry fragmented memories of their past and possess deathless resilience, requiring little sustenance or sleep.",
+    "content": "## Reborn\n\nDeath isn't always the end. The reborn exemplify this, being individuals who have died yet, for some reason, returned. Some of them were revived through necromancy, while others clawed their way back from the afterlife. Whatever the cause, they now exist between life and death.\n\n### Lineage\nReborn is a lineage that can replace your existing race or be chosen at character creation.\n\n### Ability Score Increase\n- **One ability score** of your choice +2, and **another** +1 (or three different +1)\n\n### Ancestral Legacy\nIf you replace a race with this lineage, you can keep the following elements of that race: any skill proficiencies, climbing speed, flying speed, or swimming speed.\n\n### Deathless Nature\nYou have advantage on saving throws against disease and being poisoned, and you have resistance to poison damage. You don't need to eat, drink, or breathe. You don't need to sleep and can't be put to sleep by magic. To benefit from a long rest, you can spend 4 hours in a motionless state.\n\n### Knowledge from a Past Life\nWhen you make an ability check that uses a skill, you can roll a d6 and add the number to the check. You can use this trait a number of times equal to your proficiency bonus, regaining all uses on a long rest.\n\n### Details\n- **Size**: Medium or Small (your choice)\n- **Speed**: 30 feet\n- **Languages**: Common, one other language of your choice",
+    "metadata_json": {
+      "ability_bonuses": {"choice_1": 2, "choice_2": 1},
+      "speed": 30,
+      "size": "Medium or Small",
+      "languages": ["Common", "One other language"],
+      "traits": ["Ancestral Legacy", "Deathless Nature", "Knowledge from a Past Life"],
+      "has_subraces": false,
+      "flexible_ability_bonuses": 2,
+      "lineage": true,
+      "damage_resistances": ["poison"]
+    },
+    "tags": "reborn,race,lineage,deathless,undead,poison resistance,no sleep,gothic,medium,small",
+    "source": "VRGtR",
+    "sort_order": 88
+  },
+  {
+    "slug": "tortle",
+    "title": "Tortle",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Tortles are turtle-like humanoids with natural shells that provide exceptional armor. They can withdraw into their shell for additional protection and can hold their breath for up to an hour.",
+    "content": "## Tortle\n\nWhat many tortles consider a simple life, others might call a life of adventure. They are nomad survivalists eager to explore the wilderness, experience its wonders, and discover its many secrets. Tortles have a saying: \"We wear our homes on our backs.\"\n\n### Ability Score Increase\n- **Strength** +2\n- **Wisdom** +1\n\n### Claws\nYour claws are natural weapons, dealing 1d4 + your Strength modifier slashing damage on unarmed strikes.\n\n### Hold Breath\nYou can hold your breath for up to 1 hour at a time.\n\n### Natural Armor\nDue to your shell and the shape of your body, you are ill-suited to wearing armor. Your shell provides ample protection; it gives you a base AC of **17** (your Dexterity modifier doesn't affect this number). You gain no benefit from wearing armor, but if you are using a shield, you can apply the shield's bonus as normal.\n\n### Shell Defense\nYou can withdraw into your shell as an action. Until you emerge, you gain a +4 bonus to AC, and you have advantage on Strength and Constitution saving throws. While in your shell, you are prone, your speed is 0 and can't increase, you have disadvantage on Dexterity saving throws, you can't take reactions, and the only action you can take is a bonus action to emerge.\n\n### Survival Instinct\nYou gain proficiency with the Survival skill.\n\n### Details\n- **Age**: Tortles reach adulthood by age 15 and live an average of 50 years.\n- **Size**: Medium (about 5-6 feet tall, 450+ pounds)\n- **Speed**: 30 feet\n- **Languages**: Common, Aquan",
+    "metadata_json": {
+      "ability_bonuses": {"str": 2, "wis": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "Aquan"],
+      "traits": ["Claws", "Hold Breath", "Natural Armor", "Shell Defense", "Survival Instinct"],
+      "has_subraces": false,
+      "natural_armor": 17,
+      "skill_proficiencies": ["Survival"]
+    },
+    "tags": "tortle,race,strength,wisdom,natural armor,shell defense,hold breath,medium",
+    "source": "TTP",
+    "sort_order": 89
+  },
+  {
+    "slug": "grung",
+    "title": "Grung",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Grung are small poisonous frog-like humanoids with vibrant coloring. They are agile amphibians whose skin secretes a poison that can be applied to weapons, and they are excellent climbers and jumpers.",
+    "content": "## Grung\n\nGrungs are aggressive frog-like humanoids found in rain forests and tropical jungles. These tree-dwelling amphibians live in a hierarchical society based on their skin color, with each color denoting a different caste. Their toxic skin makes them dangerous opponents.\n\n### Ability Score Increase\n- **Dexterity** +2\n- **Constitution** +1\n\n### Arboreal Alertness\nYou have proficiency in the Perception skill.\n\n### Amphibious\nYou can breathe air and water.\n\n### Poison Immunity\nYou are immune to poison damage and the poisoned condition.\n\n### Poisonous Skin\nAny creature that grapples you or otherwise comes into direct contact with your skin must succeed on a DC 12 Constitution saving throw or become poisoned for 1 minute. A poisoned creature can repeat the saving throw at the end of each of its turns, ending the effect on a success. You can also apply this poison to any piercing weapon as part of an attack with that weapon (no action required).\n\n### Standing Leap\nYour long jump is up to 25 feet and your high jump is up to 15 feet, with or without a running start.\n\n### Water Dependency\nIf you fail to immerse yourself in water for at least 1 hour during a day, you take 1 level of exhaustion at the end of that day.\n\n### Details\n- **Age**: Grungs mature to adulthood in a single year, but have been known to live up to 50 years.\n- **Size**: Small (about 2.5-3 feet tall)\n- **Speed**: 25 feet, climb 25 feet\n- **Languages**: Grung (they rarely learn other languages)",
+    "metadata_json": {
+      "ability_bonuses": {"dex": 2, "con": 1},
+      "speed": 25,
+      "size": "Small",
+      "languages": ["Grung"],
+      "traits": ["Arboreal Alertness", "Amphibious", "Poison Immunity", "Poisonous Skin", "Standing Leap", "Water Dependency"],
+      "has_subraces": false,
+      "climb_speed": 25,
+      "damage_immunities": ["poison"],
+      "condition_immunities": ["poisoned"],
+      "skill_proficiencies": ["Perception"]
+    },
+    "tags": "grung,race,dexterity,constitution,amphibious,poison,climbing,small",
+    "source": "OGA",
+    "sort_order": 90
+  },
+  {
+    "slug": "astral-elf",
+    "title": "Astral Elf",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Astral elves are elves who migrated to the Astral Plane and were transformed by its timeless nature. They possess starlight-infused traits, sacred flame, and a radiant step ability.",
+    "content": "## Astral Elf\n\nLong ago, some elves ventured to the Astral Plane to be closer to their gods. There, suffused with the energy of that plane, they underwent a physical and spiritual transformation. The astral elves have been shaped by the Astral Plane's timeless nature and the radiance of their divine patrons.\n\n### Ability Score Increase\n- **One ability score** of your choice +2, and **another** +1 (or three different +1)\n\n### Astral Fire\nYou know one of the following cantrips of your choice: **dancing lights**, **light**, or **sacred flame**. Intelligence, Wisdom, or Charisma is your spellcasting ability.\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Fey Ancestry\nYou have advantage on saving throws against being charmed, and magic can't put you to sleep.\n\n### Keen Senses\nYou have proficiency in the Perception skill.\n\n### Starlight Step\nAs a bonus action, you can magically teleport up to 30 feet to an unoccupied space you can see. You can use this trait a number of times equal to your proficiency bonus, regaining all uses on a long rest.\n\n### Trance\nYou don't need to sleep, and magic can't put you to sleep. You can finish a long rest in 4 hours if you spend those hours in a trancelike meditation, during which you retain consciousness. During this trance, you can gain two proficiencies that last until your next long rest.\n\n### Details\n- **Size**: Medium\n- **Speed**: 30 feet\n- **Languages**: Common, one other language of your choice",
+    "metadata_json": {
+      "ability_bonuses": {"choice_1": 2, "choice_2": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "One other language"],
+      "traits": ["Astral Fire", "Darkvision", "Fey Ancestry", "Keen Senses", "Starlight Step", "Trance"],
+      "has_subraces": false,
+      "flexible_ability_bonuses": 2,
+      "skill_proficiencies": ["Perception"]
+    },
+    "tags": "astral elf,race,fey ancestry,darkvision,starlight step,trance,spelljammer,medium",
+    "source": "AAG",
+    "sort_order": 91
+  },
+  {
+    "slug": "autognome",
+    "title": "Autognome",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Autognomes are mechanical beings built by rock gnomes. They are living constructs with built-in armor, self-repair abilities, and resistance to poison.",
+    "content": "## Autognome\n\nAutognomes are mechanical beings built by rock gnomes. Sometimes combative, sometimes curious, these sentient constructs are often found wandering the multiverse, seeking adventure and purpose beyond their original programming.\n\n### Ability Score Increase\n- **One ability score** of your choice +2, and **another** +1 (or three different +1)\n\n### Armored Casing\nYou are encased in thin metal or some other durable material. While you aren't wearing armor, your base Armor Class is 13 + your Dexterity modifier.\n\n### Built for Success\nYou can add a d4 to one attack roll, ability check, or saving throw you make, and you can do so after seeing the d20 roll but before the effects of the roll are resolved. You can use this trait a number of times equal to your proficiency bonus, regaining all uses on a long rest.\n\n### Healing Machine\nIf the **mending** cantrip is cast on you, you can spend a Hit Die, roll it, and regain hit points equal to the roll plus your Constitution modifier (minimum of 1).\n\n### Mechanical Nature\nYou have resistance to poison damage and immunity to disease, and you have advantage on saving throws against being paralyzed or poisoned. You don't need to eat, drink, or breathe.\n\n### Sentry's Rest\nWhen you take a long rest, you spend at least 6 hours in an inactive, motionless state. You appear inert but are conscious.\n\n### Specialized Design\nYou gain two tool proficiencies of your choice.\n\n### Details\n- **Size**: Small\n- **Speed**: 30 feet\n- **Languages**: Common, one other language of your choice\n- **Creature Type**: Construct",
+    "metadata_json": {
+      "ability_bonuses": {"choice_1": 2, "choice_2": 1},
+      "speed": 30,
+      "size": "Small",
+      "languages": ["Common", "One other language"],
+      "traits": ["Armored Casing", "Built for Success", "Healing Machine", "Mechanical Nature", "Sentry's Rest", "Specialized Design"],
+      "has_subraces": false,
+      "creature_type": "construct",
+      "natural_armor": 13,
+      "damage_resistances": ["poison"],
+      "flexible_ability_bonuses": 2
+    },
+    "tags": "autognome,race,construct,natural armor,poison resistance,spelljammer,small",
+    "source": "AAG",
+    "sort_order": 92
+  },
+  {
+    "slug": "giff",
+    "title": "Giff",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Giff are broad, hippo-headed humanoids from Wildspace who love firearms and martial discipline. They possess astral spark damage, powerful build, and advantage on Strength checks and saves.",
+    "content": "## Giff\n\nGiff are broad-shouldered, hippo-headed humanoids who ply the seas of Wildspace in their ships. They are known for their love of weapons — especially firearms — and their strict military hierarchy. Despite their imposing appearance, giff are often jovial and gregarious.\n\n### Ability Score Increase\n- **One ability score** of your choice +2, and **another** +1 (or three different +1)\n\n### Astral Spark\nYour psychic connection to the Astral Plane gives you an edge in combat. When you hit a target with a simple or martial weapon, you can deal extra force damage equal to your proficiency bonus.\n\n### Firearms Mastery\nYou have proficiency with all firearms and ignore the loading property of firearms.\n\n### Hippo Build\nYou have advantage on Strength-based ability checks and Strength saving throws. In addition, you count as one size larger when determining your carrying capacity and the weight you can push, drag, or lift.\n\n### Details\n- **Size**: Medium (about 6-7 feet tall)\n- **Speed**: 30 feet, swim 30 feet\n- **Languages**: Common, one other language of your choice",
+    "metadata_json": {
+      "ability_bonuses": {"choice_1": 2, "choice_2": 1},
+      "speed": 30,
+      "size": "Medium",
+      "languages": ["Common", "One other language"],
+      "traits": ["Astral Spark", "Firearms Mastery", "Hippo Build"],
+      "has_subraces": false,
+      "swim_speed": 30,
+      "flexible_ability_bonuses": 2
+    },
+    "tags": "giff,race,firearms,astral spark,powerful build,strength,spelljammer,medium",
+    "source": "AAG",
+    "sort_order": 93
+  },
+  {
+    "slug": "plasmoid",
+    "title": "Plasmoid",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Plasmoids are amorphous beings made of living ooze. They can squeeze through incredibly small spaces, reshape their bodies to form pseudopods, and are resistant to acid and poison.",
+    "content": "## Plasmoid\n\nPlasmoids are amorphous beings with no typical shape. In the presence of other folk, they often adopt a humanoid form, but there is little about their natural appearance that is humanoid. They are sentient oozes capable of thought, emotion, and independent action.\n\n### Ability Score Increase\n- **One ability score** of your choice +2, and **another** +1 (or three different +1)\n\n### Amorphous\nYou can squeeze through a space as narrow as 1 inch wide, provided you are wearing and carrying nothing. You have advantage on ability checks you make to initiate or escape a grapple.\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Hold Shape\nAs an action, you can reshape your body to appear humanoid or return to your natural amorphous shape. While in humanoid shape, you can wear armor and carry equipment.\n\n### Natural Resilience\nYou have resistance to acid and poison damage, and you have advantage on saving throws against being poisoned.\n\n### Shape Self\nAs a bonus action, you can extrude a pseudopod up to 6 inches wide and 10 feet long or reabsorb it into your body. You can use this pseudopod to manipulate an object, open an unlocked door or container, stow or retrieve an item, or pour out a liquid. The pseudopod can't attack, activate magic items, or carry more than 10 pounds.\n\n### Details\n- **Size**: Medium or Small (your choice)\n- **Speed**: 30 feet\n- **Languages**: Common, one other language of your choice\n- **Creature Type**: Ooze",
+    "metadata_json": {
+      "ability_bonuses": {"choice_1": 2, "choice_2": 1},
+      "speed": 30,
+      "size": "Medium or Small",
+      "languages": ["Common", "One other language"],
+      "traits": ["Amorphous", "Darkvision", "Hold Shape", "Natural Resilience", "Shape Self"],
+      "has_subraces": false,
+      "creature_type": "ooze",
+      "damage_resistances": ["acid", "poison"],
+      "flexible_ability_bonuses": 2
+    },
+    "tags": "plasmoid,race,ooze,amorphous,darkvision,acid resistance,poison resistance,spelljammer,medium,small",
+    "source": "AAG",
+    "sort_order": 94
+  },
+  {
+    "slug": "thri-kreen",
+    "title": "Thri-kreen",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Thri-kreen are insectoid humanoids with four arms, natural armor, and chameleon-like camouflage. They don't need to sleep and can communicate telepathically.",
+    "content": "## Thri-kreen\n\nThri-kreen have insectoid features and two pairs of arms. Their bodies are encased in protective chitin, and they can change the color of this carapace to blend in with their natural surroundings. Although thri-kreen communicate with one another through a combination of clicks, whistles, and antenna gestures, they can also use telepathy.\n\n### Ability Score Increase\n- **One ability score** of your choice +2, and **another** +1 (or three different +1)\n\n### Chameleon Carapace\nWhile you aren't wearing armor, your carapace gives you a base AC of 13 + your Dexterity modifier. As an action, you can change the color of your carapace to match the color and texture of your surroundings, giving you advantage on Stealth checks to hide.\n\n### Darkvision\nYou can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.\n\n### Secondary Arms\nYou have two slightly smaller secondary arms below your primary pair. These secondary arms can manipulate an object, open or close a door or container, pick up or set down a Tiny object, or wield a weapon that has the light property. They can't do anything that requires manual precision or fine motor skills.\n\n### Sleepless\nYou don't require sleep and can choose to remain conscious during a long rest, though you must still refrain from strenuous activity to benefit from the rest.\n\n### Thri-kreen Telepathy\nWithout speech, you can communicate telepathically with any willing creature you can see within 120 feet. The contacted creature doesn't need to share a language but must understand at least one language.\n\n### Details\n- **Size**: Medium or Small (your choice)\n- **Speed**: 30 feet\n- **Languages**: Common, one other language of your choice, plus Thri-kreen telepathy\n- **Creature Type**: Monstrosity",
+    "metadata_json": {
+      "ability_bonuses": {"choice_1": 2, "choice_2": 1},
+      "speed": 30,
+      "size": "Medium or Small",
+      "languages": ["Common", "One other language"],
+      "traits": ["Chameleon Carapace", "Darkvision", "Secondary Arms", "Sleepless", "Thri-kreen Telepathy"],
+      "has_subraces": false,
+      "creature_type": "monstrosity",
+      "natural_armor": 13,
+      "flexible_ability_bonuses": 2
+    },
+    "tags": "thri-kreen,race,insectoid,darkvision,secondary arms,telepathy,chameleon,spelljammer,medium,small",
+    "source": "AAG",
+    "sort_order": 95
+  },
+  {
+    "slug": "kender",
+    "title": "Kender",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Kender are small, fearless humanoids from the world of Krynn. Their natural immunity to the frightened condition and taunt ability make them uniquely bold adventurers.",
+    "content": "## Kender\n\nDuring the mythical origins of Krynn, Reorx the forge god captured a number of gnomes and transformed them into a new people called kender. Cursed with — or blessed by — parsing curiosity, kender are Small and fearless, with a natural immunity to fear.\n\n### Ability Score Increase\n- **One ability score** of your choice +2, and **another** +1 (or three different +1)\n\n### Fearless\nYou are immune to the frightened condition.\n\n### Kender Aptitude\nYou have proficiency in one of the following skills of your choice: Insight, Investigation, Sleight of Hand, Stealth, or Survival.\n\n### Taunt\nYou have an extraordinary ability to fluster creatures. As a bonus action, you can make a Charisma (Persuasion) or Charisma (Intimidation) check contested by a creature's Wisdom (Insight) check. If your check succeeds, the target has disadvantage on attack rolls against creatures other than you until the start of your next turn. You can use this trait a number of times equal to your proficiency bonus, regaining all uses on a long rest.\n\n### Details\n- **Age**: Kender mature at the same rate as humans.\n- **Size**: Small (about 3-4 feet tall)\n- **Speed**: 30 feet\n- **Languages**: Common, one other language of your choice",
+    "metadata_json": {
+      "ability_bonuses": {"choice_1": 2, "choice_2": 1},
+      "speed": 30,
+      "size": "Small",
+      "languages": ["Common", "One other language"],
+      "traits": ["Fearless", "Kender Aptitude", "Taunt"],
+      "has_subraces": false,
+      "condition_immunities": ["frightened"],
+      "flexible_ability_bonuses": 2
+    },
+    "tags": "kender,race,fearless,taunt,dragonlance,krynn,small",
+    "source": "DSotDQ",
+    "sort_order": 96
+  },
+  {
+    "slug": "custom-lineage",
+    "title": "Custom Lineage",
+    "category": "race",
+    "subcategory": "",
+    "ruleset": "universal",
+    "summary": "Custom Lineage is a flexible character creation option from Tasha's Cauldron of Everything, allowing players to build a unique origin with one +2 ability score, a feat, darkvision or a skill, and variable size.",
+    "content": "## Custom Lineage\n\nInstead of choosing one of the game's standard races, you can use the following traits to represent your character's lineage, giving you full control over how your character's origin is reflected mechanically. This option can represent a unique heritage, a character whose origin doesn't match any standard race, or simply a more flexible starting point.\n\n### Ability Score Increase\n- **One ability score** of your choice +2\n\n### Feat\nYou gain one feat of your choice for which you qualify.\n\n### Variable Trait\nYou gain one of the following options of your choice:\n- **Darkvision** (60 feet), or\n- **Proficiency in one skill** of your choice\n\n### Details\n- **Size**: Small or Medium (your choice)\n- **Speed**: 30 feet\n- **Languages**: Common, one other language of your choice",
+    "metadata_json": {
+      "ability_bonuses": {"choice_1": 2},
+      "speed": 30,
+      "size": "Small or Medium",
+      "languages": ["Common", "One other language"],
+      "traits": ["Bonus Feat", "Variable Trait"],
+      "has_subraces": false,
+      "bonus_feats": 1,
+      "flexible_ability_bonuses": 1
+    },
+    "tags": "custom lineage,race,versatile,feat,flexible,tashas,medium,small",
+    "source": "TCoE",
+    "sort_order": 97
+  }
+]

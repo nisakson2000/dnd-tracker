@@ -1,0 +1,930 @@
+[
+  {
+    "slug": "path-of-the-beast",
+    "title": "Path of the Beast",
+    "category": "subclass",
+    "subcategory": "barbarian",
+    "ruleset": "5e-2014",
+    "summary": "A primal path that channels bestial instincts, transforming the barbarian's body into a natural weapon during rage.",
+    "content": "## Path of the Beast\n\nThese barbarians have been so touched by the wilds that when they rage, they manifest bestial traits. Some feel a kinship with animals, while others draw on a feral power lurking within their souls.\n\n### Features\n\n**Level 3: Form of the Beast**\nWhen you rage, you manifest a natural weapon — a bite, claws, or tail. Each form provides a different combat benefit: bite heals you, claws grant extra attacks, and tail provides reach with a reactive AC bonus.\n\n**Level 6: Bestial Soul**\nYour natural weapons count as magical. You also gain your choice of swimming speed, climbing speed, or extended jump distance.\n\n**Level 10: Infectious Fury**\nWhen you hit with your natural weapons, you can curse the target, forcing it to attack one of its allies or take psychic damage.\n\n**Level 14: Call the Hunt**\nWhen you rage, you can grant allies within 30 feet a bonus to attack rolls, sharing the power of your bestial fury.",
+    "metadata_json": {
+      "parent_class": "barbarian",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Form of the Beast"],
+        "6": ["Bestial Soul"],
+        "10": ["Infectious Fury"],
+        "14": ["Call the Hunt"]
+      }
+    },
+    "tags": "subclass,barbarian,path of the beast,natural weapons,transformation,primal,TCoE",
+    "source": "TCoE",
+    "sort_order": 100
+  },
+  {
+    "slug": "path-of-wild-magic",
+    "title": "Path of Wild Magic",
+    "category": "subclass",
+    "subcategory": "barbarian",
+    "ruleset": "5e-2014",
+    "summary": "A primal path infused with chaotic magical energy, producing unpredictable magical effects when the barbarian rages.",
+    "content": "## Path of Wild Magic\n\nMany places in the multiverse abound with beauty, intense emotion, and rampant magic; the Feywild, the Upper Planes, and other realms of supernatural power radiate with such forces and can profoundly influence people. Barbarians exposed to this magic feel its wild influence and manifest it through their rage.\n\n### Features\n\n**Level 3: Magic Awareness**\nAs an action, you can sense the presence of spells and magic items within 60 feet. This uses a spell slot equivalent.\n\n**Level 3: Wild Surge**\nWhen you rage, roll on the Wild Magic table to produce a random magical effect, such as teleportation, spirit bolts, or protective magic.\n\n**Level 6: Bolstering Magic**\nYou can touch a creature and bolster it with wild magic, granting either a bonus to attack rolls and ability checks or restoring a spell slot.\n\n**Level 10: Unstable Backlash**\nWhen you take damage or fail a saving throw while raging, you can roll a new Wild Surge effect, replacing the current one.\n\n**Level 14: Controlled Surge**\nWhen you roll on the Wild Magic table, you roll twice and choose which effect to use.",
+    "metadata_json": {
+      "parent_class": "barbarian",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Magic Awareness", "Wild Surge"],
+        "6": ["Bolstering Magic"],
+        "10": ["Unstable Backlash"],
+        "14": ["Controlled Surge"]
+      }
+    },
+    "tags": "subclass,barbarian,path of wild magic,chaos,feywild,surge,random,TCoE",
+    "source": "TCoE",
+    "sort_order": 101
+  },
+  {
+    "slug": "college-of-creation",
+    "title": "College of Creation",
+    "category": "subclass",
+    "subcategory": "bard",
+    "ruleset": "5e-2014",
+    "summary": "A bardic college that channels the cosmic Song of Creation, bringing items and performances to life with creative magic.",
+    "content": "## College of Creation\n\nBards believe the cosmos is a work of art — the creation of the first combiner, something they call the Song of Creation. The College of Creation draws on that primeval song through dance, music, and poetry to bring ideas to life.\n\n### Features\n\n**Level 3: Mote of Potential**\nWhen you give a creature a Bardic Inspiration die, a mote of potential orbits them and provides an additional effect when the die is used — extra damage, temporary HP, or forced saves depending on how the die is spent.\n\n**Level 3: Performance of Creation**\nAs an action, you create a nonmagical item that you have seen, worth no more than 20 times your bard level in gold. It lasts a number of hours equal to your proficiency bonus.\n\n**Level 6: Animating Performance**\nYou can animate a Large or smaller nonmagical item, making it a dancing construct that fights alongside you.\n\n**Level 14: Creative Crescendo**\nYour Performance of Creation can create multiple items at once, and item size and value limits are removed.",
+    "metadata_json": {
+      "parent_class": "bard",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Mote of Potential", "Performance of Creation"],
+        "6": ["Animating Performance"],
+        "14": ["Creative Crescendo"]
+      }
+    },
+    "tags": "subclass,bard,college of creation,creation,animate,construct,Song of Creation,TCoE",
+    "source": "TCoE",
+    "sort_order": 102
+  },
+  {
+    "slug": "college-of-eloquence",
+    "title": "College of Eloquence",
+    "category": "subclass",
+    "subcategory": "bard",
+    "ruleset": "5e-2014",
+    "summary": "A bardic college that masters the art of oratory, wielding words with such power that they can inspire allies and demoralize foes with unmatched eloquence.",
+    "content": "## College of Eloquence\n\nAdherents of the College of Eloquence master the art of oratory. Persuasion is regarded as a high art, and a well-reasoned, well-spoken argument often proves more powerful than objective truth.\n\n### Features\n\n**Level 3: Silver Tongue**\nWhen you make a Persuasion or Deception check, you can treat a roll of 9 or lower on the d20 as a 10.\n\n**Level 3: Unsettling Words**\nAs a bonus action, you can expend a Bardic Inspiration die to unsettle a creature, subtracting the roll from its next saving throw.\n\n**Level 6: Unfailing Inspiration**\nWhen a creature uses your Bardic Inspiration die and fails, it keeps the die instead of losing it.\n\n**Level 6: Universal Speech**\nYou can magically make your speech understood by any creature for 1 hour.\n\n**Level 14: Infectious Inspiration**\nWhen a creature succeeds using your Bardic Inspiration, you can use your reaction to give another creature a Bardic Inspiration die without expending a use.",
+    "metadata_json": {
+      "parent_class": "bard",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Silver Tongue", "Unsettling Words"],
+        "6": ["Unfailing Inspiration", "Universal Speech"],
+        "14": ["Infectious Inspiration"]
+      }
+    },
+    "tags": "subclass,bard,college of eloquence,persuasion,speech,inspiration,support,TCoE",
+    "source": "TCoE",
+    "sort_order": 103
+  },
+  {
+    "slug": "order-domain",
+    "title": "Order Domain",
+    "category": "subclass",
+    "subcategory": "cleric",
+    "ruleset": "5e-2014",
+    "summary": "A divine domain devoted to law and structure, granting the ability to compel allies to strike and impose obedience on foes.",
+    "content": "## Order Domain\n\nThe Order domain represents discipline, as combiner as devotion to the laws that govern a society, an institution, or a philosophy. Clerics of Order meditate on logic and justice as they serve their gods.\n\n### Features\n\n**Level 1: Order Domain Spells**\nYou gain domain spells including Command, Heroism, Hold Person, Zone of Truth, Mass Healing Word, Slow, Compulsion, Locate Creature, Commune, and Dominate Person.\n\n**Level 1: Bonus Proficiencies**\nYou gain proficiency with heavy armor and the Intimidation or Persuasion skill.\n\n**Level 1: Voice of Authority**\nWhen you cast a spell with a spell slot on an ally, that ally can use their reaction to make a weapon attack.\n\n**Level 2: Channel Divinity: Order's Demand**\nYou can charm creatures within 30 feet and optionally make them drop what they are holding.\n\n**Level 6: Embodiment of the Law**\nWhen you cast an enchantment spell of 1st level or higher, you can reduce the casting time from 1 action to 1 bonus action.\n\n**Level 8: Divine Strike**\nYour weapon attacks deal an extra 1d8 psychic damage (2d8 at 14th level).\n\n**Level 17: Order's Wrath**\nWhen you deal Divine Strike damage, you can curse the target so the next ally to hit it deals extra 2d8 psychic damage.",
+    "metadata_json": {
+      "parent_class": "cleric",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Order Domain Spells", "Bonus Proficiencies", "Voice of Authority"],
+        "2": ["Channel Divinity: Order's Demand"],
+        "6": ["Embodiment of the Law"],
+        "8": ["Divine Strike"],
+        "17": ["Order's Wrath"]
+      }
+    },
+    "tags": "subclass,cleric,order domain,law,enchantment,authority,support,TCoE",
+    "source": "TCoE",
+    "sort_order": 104
+  },
+  {
+    "slug": "peace-domain",
+    "title": "Peace Domain",
+    "category": "subclass",
+    "subcategory": "cleric",
+    "ruleset": "5e-2014",
+    "summary": "A divine domain that forges bonds between allies, allowing them to share damage and bolster each other through an emblem of peace.",
+    "content": "## Peace Domain\n\nThe balm of peace thrives at the heart of healthy communities, between friendly nations, and in the souls of the kindhearted. The gods of peace inspire people to resolve conflict and establish fair dealings.\n\n### Features\n\n**Level 1: Peace Domain Spells**\nYou gain domain spells including Heroism, Sanctuary, Aid, Warding Bond, Beacon of Hope, Sending, Aura of Purity, Otiluke's Resilient Sphere, Greater Restoration, and Rary's Telepathic Bond.\n\n**Level 1: Implement of Peace**\nYou gain proficiency in Insight, Medicine, or Persuasion.\n\n**Level 1: Emblem of Peace**\nYou can magically bond allies together. Bonded creatures can teleport to swap places and add a d4 to attack rolls, ability checks, or saving throws once per turn.\n\n**Level 2: Channel Divinity: Balm of Peace**\nYou can move up to your speed without provoking opportunity attacks, restoring hit points to creatures you pass by.\n\n**Level 6: Protective Bond**\nBonded creatures can use their reaction to teleport and take damage meant for another bonded ally.\n\n**Level 8: Potent Spellcasting**\nYou add your Wisdom modifier to the damage you deal with cleric cantrips.\n\n**Level 17: Expansive Bond**\nYour Emblem of Peace grants resistance to all damage when a bonded creature takes damage for another, and the bond works at any distance on the same plane.",
+    "metadata_json": {
+      "parent_class": "cleric",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Peace Domain Spells", "Implement of Peace", "Emblem of Peace"],
+        "2": ["Channel Divinity: Balm of Peace"],
+        "6": ["Protective Bond"],
+        "8": ["Potent Spellcasting"],
+        "17": ["Expansive Bond"]
+      }
+    },
+    "tags": "subclass,cleric,peace domain,bond,healing,support,protection,TCoE",
+    "source": "TCoE",
+    "sort_order": 105
+  },
+  {
+    "slug": "twilight-domain",
+    "title": "Twilight Domain",
+    "category": "subclass",
+    "subcategory": "cleric",
+    "ruleset": "5e-2014",
+    "summary": "A divine domain that guards the boundary between light and darkness, granting darkvision, twilight sanctuary, and flight.",
+    "content": "## Twilight Domain\n\nThe twilit transition from light into darkness often brings calm and even joy, as the day's labors end and the hours of rest begin. The darkness can also bring terrors, but the gods of twilight guard against the horrors of the night.\n\n### Features\n\n**Level 1: Twilight Domain Spells**\nYou gain domain spells including Faerie Fire, Sleep, Moonbeam, See Invisibility, Aura of Vitality, Leomund's Tiny Hut, Aura of Life, Greater Invisibility, Circle of Power, and Mislead.\n\n**Level 1: Bonus Proficiencies**\nYou gain proficiency with martial weapons and heavy armor.\n\n**Level 1: Eyes of Night**\nYou have darkvision out to 300 feet. You can share this darkvision with willing creatures.\n\n**Level 2: Channel Divinity: Twilight Sanctuary**\nYou create a 30-foot sphere of dim light. Each round, creatures in the sphere gain temporary hit points or end one charmed/frightened effect.\n\n**Level 6: Steps of Night**\nAs a bonus action, you can grant yourself flight for 1 minute when you are in dim light or darkness.\n\n**Level 8: Divine Strike**\nYour weapon attacks deal an extra 1d8 radiant damage (2d8 at 14th level).\n\n**Level 17: Twilight Shroud**\nCreatures in your Twilight Sanctuary gain half cover.",
+    "metadata_json": {
+      "parent_class": "cleric",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Twilight Domain Spells", "Bonus Proficiencies", "Eyes of Night"],
+        "2": ["Channel Divinity: Twilight Sanctuary"],
+        "6": ["Steps of Night"],
+        "8": ["Divine Strike"],
+        "17": ["Twilight Shroud"]
+      }
+    },
+    "tags": "subclass,cleric,twilight domain,darkvision,sanctuary,temporary hp,flight,TCoE",
+    "source": "TCoE",
+    "sort_order": 106
+  },
+  {
+    "slug": "circle-of-spores",
+    "title": "Circle of Spores",
+    "category": "subclass",
+    "subcategory": "druid",
+    "ruleset": "5e-2014",
+    "summary": "A druidic circle that harnesses the power of decay and fungi, using spores to damage enemies and animate the dead.",
+    "content": "## Circle of Spores\n\nDruids of the Circle of Spores find beauty in decay. They see in mold and other fungi the ability to transform lifeless material into abundant, albeit somewhat strange, life. These druids believe that life and death are parts of a grand cycle.\n\n### Features\n\n**Level 2: Circle Spells**\nYou gain circle spells including Chill Touch, Blindness/Deafness, Gentle Repose, Animate Dead, Gaseous Form, Blight, Confusion, Cloudkill, and Contagion.\n\n**Level 2: Halo of Spores**\nCreatures that move within 10 feet of you or start their turn there can be forced to take necrotic damage. The damage scales as you level.\n\n**Level 2: Symbiotic Entity**\nAs an action, you expend a use of Wild Shape to gain temporary hit points and enhance your Halo of Spores and melee attacks with extra necrotic damage.\n\n**Level 6: Fungal Infestation**\nWhen a Small or Medium beast or humanoid dies near you, you can animate it as a zombie servant using your spores.\n\n**Level 10: Spreading Spores**\nYou can place your Halo of Spores at a point up to 30 feet away as a bonus action, creating a 10-foot cube.\n\n**Level 14: Fungal Body**\nYou can't be blinded, deafened, frightened, or poisoned, and critical hits against you are treated as normal hits.",
+    "metadata_json": {
+      "parent_class": "druid",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Circle Spells", "Halo of Spores", "Symbiotic Entity"],
+        "6": ["Fungal Infestation"],
+        "10": ["Spreading Spores"],
+        "14": ["Fungal Body"]
+      }
+    },
+    "tags": "subclass,druid,circle of spores,necrotic,fungi,decay,undead,TCoE",
+    "source": "TCoE",
+    "sort_order": 107
+  },
+  {
+    "slug": "circle-of-stars",
+    "title": "Circle of Stars",
+    "category": "subclass",
+    "subcategory": "druid",
+    "ruleset": "5e-2014",
+    "summary": "A druidic circle that draws power from starlight and constellations, using a star map to cast spells and assume stellar forms.",
+    "content": "## Circle of Stars\n\nThe Circle of Stars allows druids to draw on the power of starlight. These druids have tracked heavenly patterns since time immemorial, discovering secrets hidden amid the constellations.\n\n### Features\n\n**Level 2: Star Map**\nYou create a star map that serves as a spellcasting focus. You learn Guidance and Guiding Bolt, and can cast Guiding Bolt without expending a spell slot a number of times equal to your proficiency bonus.\n\n**Level 2: Starry Form**\nAs a bonus action, you expend a use of Wild Shape to assume a starry form, choosing Archer (ranged radiant attack), Chalice (healing bonus), or Dragon (minimum 10 on concentration checks).\n\n**Level 6: Cosmic Omen**\nAfter a long rest, a constellation gives you an omen — Weal (add a die to ally rolls) or Woe (subtract a die from enemy rolls) as a reaction.\n\n**Level 10: Twinkling Constellations**\nYou can change your Starry Form constellation at the start of each turn. Archer and Chalice forms become more powerful.\n\n**Level 14: Full of Stars**\nWhile in Starry Form, you gain resistance to bludgeoning, piercing, and slashing damage, and your form becomes luminous.",
+    "metadata_json": {
+      "parent_class": "druid",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Star Map", "Starry Form"],
+        "6": ["Cosmic Omen"],
+        "10": ["Twinkling Constellations"],
+        "14": ["Full of Stars"]
+      }
+    },
+    "tags": "subclass,druid,circle of stars,starlight,constellation,radiant,versatile,TCoE",
+    "source": "TCoE",
+    "sort_order": 108
+  },
+  {
+    "slug": "circle-of-wildfire",
+    "title": "Circle of Wildfire",
+    "category": "subclass",
+    "subcategory": "druid",
+    "ruleset": "5e-2014",
+    "summary": "A druidic circle that embraces the destructive and renewing power of fire, summoning a wildfire spirit companion.",
+    "content": "## Circle of Wildfire\n\nDruids within the Circle of Wildfire understand that destruction is sometimes the precursor of creation, such as when a forest fire promotes later growth. These druids bond with a primal spirit that harbors both destructive and creative power.\n\n### Features\n\n**Level 2: Circle Spells**\nYou gain circle spells including Burning Hands, Cure Wounds, Flaming Sphere, Scorching Ray, Plant Growth, Revivify, Aura of Life, Fire Shield, Flame Strike, and Mass Cure Wounds.\n\n**Level 2: Summon Wildfire Spirit**\nYou expend a use of Wild Shape to summon a wildfire spirit, a Small elemental companion that can teleport allies and deal fire damage.\n\n**Level 6: Enhanced Bond**\nYour wildfire spirit enhances your spells. You gain a bonus to damage rolls and healing rolls for spells you cast, and you can cast spells as if you were in the spirit's space.\n\n**Level 10: Cauterizing Flames**\nWhen a creature you can see dies, you can use a reaction to have your spirit heal or deal fire damage to creatures near the fallen.\n\n**Level 14: Blazing Revival**\nIf your wildfire spirit dies, it can drop to 1 HP instead, or if you drop to 0 HP, the spirit can sacrifice itself to revive you with half your hit points.",
+    "metadata_json": {
+      "parent_class": "druid",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Circle Spells", "Summon Wildfire Spirit"],
+        "6": ["Enhanced Bond"],
+        "10": ["Cauterizing Flames"],
+        "14": ["Blazing Revival"]
+      }
+    },
+    "tags": "subclass,druid,circle of wildfire,fire,healing,companion,spirit,TCoE",
+    "source": "TCoE",
+    "sort_order": 109
+  },
+  {
+    "slug": "psi-warrior",
+    "title": "Psi Warrior",
+    "category": "subclass",
+    "subcategory": "fighter",
+    "ruleset": "5e-2014",
+    "summary": "A martial archetype that augments physical might with psionic power, using telekinetic force to protect, strike, and move objects.",
+    "content": "## Psi Warrior\n\nAwake to the psionic power within, a Psi Warrior is a fighter who augments their physical might with psi-infused weapon strikes, telekinetic lashes, and barriers of mental force.\n\n### Features\n\n**Level 3: Psionic Power**\nYou gain a pool of Psionic Energy dice (d6s). You can use them for Protective Field (reduce damage to a creature as a reaction), Psionic Strike (add force damage to a weapon hit), or Telekinetic Movement (move an object or creature with your mind).\n\n**Level 7: Telekinetic Adept**\nYou can propel yourself with psi (Psi-Powered Leap grants flight until end of turn) and hurl creatures with Telekinetic Thrust when you deal Psionic Strike damage.\n\n**Level 10: Guarded Mind**\nYou gain resistance to psychic damage. If you start your turn charmed or frightened, you can expend a Psionic Energy die to end those effects.\n\n**Level 15: Bulwark of Force**\nYou can create a shield of telekinetic force that grants half cover to you and allies within 30 feet.\n\n**Level 18: Telekinetic Master**\nYou can cast Telekinesis without components, using your Psionic Energy. While concentrating on it, you can make one weapon attack as a bonus action.",
+    "metadata_json": {
+      "parent_class": "fighter",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Psionic Power"],
+        "7": ["Telekinetic Adept"],
+        "10": ["Guarded Mind"],
+        "15": ["Bulwark of Force"],
+        "18": ["Telekinetic Master"]
+      }
+    },
+    "tags": "subclass,fighter,psi warrior,psionic,telekinetic,force,mental,TCoE",
+    "source": "TCoE",
+    "sort_order": 110
+  },
+  {
+    "slug": "rune-knight",
+    "title": "Rune Knight",
+    "category": "subclass",
+    "subcategory": "fighter",
+    "ruleset": "5e-2014",
+    "summary": "A martial archetype that learns giant rune magic, inscribing runes on equipment for powerful effects and growing to giant size.",
+    "content": "## Rune Knight\n\nRune Knights enhance their martial prowess using the supernatural power of runes, an ancient practice that originated with giants. Rune cutters can be found among any family of giants, and you likely learned your methods from such a tradition.\n\n### Features\n\n**Level 3: Bonus Proficiencies**\nYou gain proficiency with smith's tools.\n\n**Level 3: Rune Carver**\nYou learn two runes (from Cloud, Fire, Frost, Stone, Hill, and Storm) that you can inscribe on objects. Each rune grants a passive benefit and an activated effect.\n\n**Level 3: Giant's Might**\nAs a bonus action, you become Large (if smaller), gain advantage on Strength checks and saves, and deal extra damage once per turn.\n\n**Level 7: Runic Shield**\nWhen a creature you can see is hit by an attack, you can use your reaction to force the attacker to reroll and use the new roll.\n\n**Level 10: Great Stature**\nYour height increases by 3d4 inches, and Giant's Might extra damage increases to 1d8.\n\n**Level 15: Master of Runes**\nYou can invoke each rune twice per rest instead of once. You learn one additional rune.\n\n**Level 18: Runic Juggernaut**\nGiant's Might can make you Huge, and the extra damage increases to 1d10.",
+    "metadata_json": {
+      "parent_class": "fighter",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Bonus Proficiencies", "Rune Carver", "Giant's Might"],
+        "7": ["Runic Shield"],
+        "10": ["Great Stature"],
+        "15": ["Master of Runes"],
+        "18": ["Runic Juggernaut"]
+      }
+    },
+    "tags": "subclass,fighter,rune knight,runes,giant,size,strength,TCoE",
+    "source": "TCoE",
+    "sort_order": 111
+  },
+  {
+    "slug": "way-of-the-astral-self",
+    "title": "Way of the Astral Self",
+    "category": "subclass",
+    "subcategory": "monk",
+    "ruleset": "5e-2014",
+    "summary": "A monastic tradition that manifests an astral form of the monk's inner self, granting spectral arms, a visage, and eventually a complete astral body.",
+    "content": "## Way of the Astral Self\n\nA monk who follows the Way of the Astral Self believes their body is an illusion. By tapping into their ki, they can manifest their true astral self — a translucent embodiment of the monk's soul.\n\n### Features\n\n**Level 3: Arms of the Astral Self**\nAs a bonus action, you spend 1 ki point to summon spectral arms that grant reach, use Wisdom for attacks, and deal force damage.\n\n**Level 6: Visage of the Astral Self**\nYou can manifest an astral visage gaining advantages in sight (darkvision 120 ft), speech (voice carries 600 ft), and wisdom (advantage on Insight and Intimidation).\n\n**Level 11: Body of the Astral Self**\nWhen both arms and visage are active, you can manifest a complete astral body. You gain a reaction to deflect energy damage and empower your astral arms attacks.\n\n**Level 17: Awakened Astral Self**\nYour astral form reaches full power. You gain extra attacks with astral arms, bonus to AC, and when you use Astral Barrage, you gain additional attack options.",
+    "metadata_json": {
+      "parent_class": "monk",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Arms of the Astral Self"],
+        "6": ["Visage of the Astral Self"],
+        "11": ["Body of the Astral Self"],
+        "17": ["Awakened Astral Self"]
+      }
+    },
+    "tags": "subclass,monk,way of the astral self,astral,ki,force,spectral,TCoE",
+    "source": "TCoE",
+    "sort_order": 112
+  },
+  {
+    "slug": "way-of-mercy",
+    "title": "Way of Mercy",
+    "category": "subclass",
+    "subcategory": "monk",
+    "ruleset": "5e-2014",
+    "summary": "A monastic tradition that uses ki to heal wounds and deliver death, wearing the iconic plague doctor mask and balancing mercy with harm.",
+    "content": "## Way of Mercy\n\nMonks of the Way of Mercy learn to manipulate the life force of others to bring aid to those in need. They are wandering physicians to the poor and hurt, but they also bring swift mercy to those beyond saving.\n\n### Features\n\n**Level 3: Implements of Mercy**\nYou gain proficiency in Insight and Medicine, and you gain a special mask that serves as your monastic focus.\n\n**Level 3: Hand of Healing**\nAs an action or replacing a Flurry of Blows attack, you can spend 1 ki point to restore hit points to a creature you touch.\n\n**Level 3: Hand of Harm**\nWhen you hit with an unarmed strike, you can spend 1 ki point to deal extra necrotic damage. If the target is poisoned or incapacitated, it takes even more.\n\n**Level 6: Physician's Touch**\nYour Hand of Healing can end one disease or condition (blinded, deafened, paralyzed, poisoned, stunned). Your Hand of Harm can poison the target.\n\n**Level 11: Flurry of Healing and Harm**\nYou can use Hand of Healing and Hand of Harm without spending ki when you use Flurry of Blows.\n\n**Level 17: Hand of Ultimate Mercy**\nYou can spend 5 ki points to cast Revivify without material components.",
+    "metadata_json": {
+      "parent_class": "monk",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Implements of Mercy", "Hand of Healing", "Hand of Harm"],
+        "6": ["Physician's Touch"],
+        "11": ["Flurry of Healing and Harm"],
+        "17": ["Hand of Ultimate Mercy"]
+      }
+    },
+    "tags": "subclass,monk,way of mercy,healing,necrotic,ki,physician,TCoE",
+    "source": "TCoE",
+    "sort_order": 113
+  },
+  {
+    "slug": "oath-of-glory",
+    "title": "Oath of Glory",
+    "category": "subclass",
+    "subcategory": "paladin",
+    "ruleset": "5e-2014",
+    "summary": "A sacred oath sworn to achieve legendary deeds, granting abilities that enhance physical prowess and inspire allies to greatness.",
+    "content": "## Oath of Glory\n\nPaladins who take the Oath of Glory believe they and their companions are destined to achieve glory through deeds of heroism. They train diligently and encourage their companions so they're all ready when destiny calls.\n\n### Features\n\n**Level 3: Oath Spells**\nYou gain oath spells including Guiding Bolt, Heroism, Enhance Ability, Magic Weapon, Haste, Protection from Energy, Compulsion, Freedom of Movement, Commune, and Flame Strike.\n\n**Level 3: Channel Divinity: Peerless Athlete**\nAs a bonus action, you gain advantage on Athletics and Acrobatics checks, can carry/push/lift twice as much, and add 10 feet to long and high jumps.\n\n**Level 3: Channel Divinity: Inspiring Smite**\nAfter dealing Divine Smite damage, you can distribute temporary hit points to creatures within 30 feet.\n\n**Level 7: Aura of Alacrity**\nYour walking speed increases by 10 feet. Allies within 5 feet (10 feet at 18th) also gain this bonus.\n\n**Level 15: Glorious Defense**\nWhen a creature you can see hits you or an ally with an attack, you can add your Charisma modifier to the target's AC. If the attack misses, you can counterattack.\n\n**Level 20: Living Legend**\nYou gain advantage on Charisma checks, can turn a missed attack into a hit once per turn, and can reroll a failed saving throw.",
+    "metadata_json": {
+      "parent_class": "paladin",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Oath Spells", "Channel Divinity: Peerless Athlete", "Channel Divinity: Inspiring Smite"],
+        "7": ["Aura of Alacrity"],
+        "15": ["Glorious Defense"],
+        "20": ["Living Legend"]
+      }
+    },
+    "tags": "subclass,paladin,oath of glory,heroism,athletics,speed,inspiration,TCoE",
+    "source": "TCoE",
+    "sort_order": 114
+  },
+  {
+    "slug": "oath-of-the-watchers",
+    "title": "Oath of the Watchers",
+    "category": "subclass",
+    "subcategory": "paladin",
+    "ruleset": "5e-2014",
+    "summary": "A sacred oath sworn to guard the mortal realm against extraplanar threats, specializing in countering aberrations, fey, fiends, and elementals.",
+    "content": "## Oath of the Watchers\n\nThe Oath of the Watchers binds paladins to protect the mortal realm from the predations of extraplanar creatures. Paladins who follow this oath are ever vigilant in spotting the influence of extraplanar forces.\n\n### Features\n\n**Level 3: Oath Spells**\nYou gain oath spells including Alarm, Detect Magic, Moonbeam, See Invisibility, Counterspell, Nondetection, Aura of Purity, Banishment, Hold Monster, and Scrying.\n\n**Level 3: Channel Divinity: Watcher's Will**\nYou can grant a number of creatures advantage on Intelligence, Wisdom, and Charisma saving throws for 1 minute.\n\n**Level 3: Channel Divinity: Abjure the Extraplanar**\nYou can turn aberrations, celestials, elementals, fey, and fiends.\n\n**Level 7: Aura of the Sentinel**\nYou and allies within 10 feet (30 feet at 18th level) gain a bonus to initiative equal to your proficiency bonus.\n\n**Level 15: Vigilant Rebuke**\nWhen a creature you can see succeeds on an Intelligence, Wisdom, or Charisma saving throw, you can deal 2d8 + Charisma modifier force damage to the caster as a reaction.\n\n**Level 20: Mortal Bulwark**\nYou gain truesight 120 feet, advantage on attacks against extraplanar creatures, and can banish a creature you hit.",
+    "metadata_json": {
+      "parent_class": "paladin",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Oath Spells", "Channel Divinity: Watcher's Will", "Channel Divinity: Abjure the Extraplanar"],
+        "7": ["Aura of the Sentinel"],
+        "15": ["Vigilant Rebuke"],
+        "20": ["Mortal Bulwark"]
+      }
+    },
+    "tags": "subclass,paladin,oath of the watchers,extraplanar,banishment,abjuration,vigilance,TCoE",
+    "source": "TCoE",
+    "sort_order": 115
+  },
+  {
+    "slug": "fey-wanderer",
+    "title": "Fey Wanderer",
+    "category": "subclass",
+    "subcategory": "ranger",
+    "ruleset": "5e-2014",
+    "summary": "A ranger archetype infused with the wonder of the Feywild, wielding psychic damage and fey charm to protect allies and beguile foes.",
+    "content": "## Fey Wanderer\n\nA Fey Wanderer has a mystical connection to the Feywild. Their experiences among the fey have transformed them, granting them a joyful or eerily otherworldly demeanor and fey-touched magical abilities.\n\n### Features\n\n**Level 3: Fey Wanderer Magic**\nYou gain bonus spells including Charm Person, Misty Step, Dispel Magic, Dimension Door, and Mislead.\n\n**Level 3: Dreadful Strikes**\nYou can augment your weapon strikes with psychic damage, dealing extra 1d4 psychic damage once per turn to each creature you hit (increases to 1d6 at 11th level).\n\n**Level 3: Otherworldly Glamour**\nYou gain a bonus to Charisma checks equal to your Wisdom modifier and gain proficiency in one Charisma skill.\n\n**Level 7: Beguiling Twist**\nWhen a creature you can see succeeds on a save against being charmed or frightened, you can redirect the effect to a different creature.\n\n**Level 11: Fey Reinforcements**\nYou can cast Summon Fey without a material component, and it can be cast once without a spell slot.\n\n**Level 15: Misty Wanderer**\nYou can cast Misty Step without a spell slot a number of times equal to your Wisdom modifier, and you can bring a willing creature within 5 feet along.",
+    "metadata_json": {
+      "parent_class": "ranger",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Fey Wanderer Magic", "Dreadful Strikes", "Otherworldly Glamour"],
+        "7": ["Beguiling Twist"],
+        "11": ["Fey Reinforcements"],
+        "15": ["Misty Wanderer"]
+      }
+    },
+    "tags": "subclass,ranger,fey wanderer,feywild,psychic,charm,charisma,TCoE",
+    "source": "TCoE",
+    "sort_order": 116
+  },
+  {
+    "slug": "swarmkeeper",
+    "title": "Swarmkeeper",
+    "category": "subclass",
+    "subcategory": "ranger",
+    "ruleset": "5e-2014",
+    "summary": "A ranger archetype that commands a swarm of nature spirits, using them to attack, move targets, and eventually fly.",
+    "content": "## Swarmkeeper\n\nA Swarmkeeper has bonded with a swarm of nature spirits — tiny fey, insects, birds, or other creatures — that follows them on their adventures. The swarm communicates with the ranger and provides assistance in various ways.\n\n### Features\n\n**Level 3: Swarmkeeper Magic**\nYou gain bonus spells including Faerie Fire, Mage Hand, Web, Gaseous Form, Arcane Eye, and Insect Plague.\n\n**Level 3: Gathered Swarm**\nOnce per turn when you hit with an attack, the swarm assists you. Choose to deal extra 1d6 piercing damage, move the target 15 feet, or move yourself 5 feet.\n\n**Level 7: Writhing Tide**\nAs a bonus action, you can gain a hover fly speed of 10 feet for 1 minute, carried by your swarm.\n\n**Level 11: Mighty Swarm**\nYour Gathered Swarm becomes stronger: damage increases to 1d8, target movement can knock prone, and self-movement grants half cover.\n\n**Level 15: Swarming Dispersal**\nWhen you take damage, you can use a reaction to become a swarm, gaining resistance to the damage and teleporting up to 30 feet.",
+    "metadata_json": {
+      "parent_class": "ranger",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Swarmkeeper Magic", "Gathered Swarm"],
+        "7": ["Writhing Tide"],
+        "11": ["Mighty Swarm"],
+        "15": ["Swarming Dispersal"]
+      }
+    },
+    "tags": "subclass,ranger,swarmkeeper,swarm,nature spirits,piercing,movement,TCoE",
+    "source": "TCoE",
+    "sort_order": 117
+  },
+  {
+    "slug": "phantom",
+    "title": "Phantom",
+    "category": "subclass",
+    "subcategory": "rogue",
+    "ruleset": "5e-2014",
+    "summary": "A roguish archetype that walks the line between life and death, gaining power from departed souls to deal necrotic damage and become ghostlike.",
+    "content": "## Phantom\n\nMany rogues walk a fine line between life and death, risking their own lives and taking the lives of others. While adventuring on that line, some rogues discover a mystical connection to death itself, becoming a Phantom.\n\n### Features\n\n**Level 3: Whispers of the Dead**\nAfter a rest, you gain a skill or tool proficiency of your choice by consulting with spirits. It lasts until you change it.\n\n**Level 3: Wails from the Grave**\nWhen you deal Sneak Attack damage, you can direct necrotic damage at a second creature near the target equal to half your Sneak Attack dice.\n\n**Level 9: Tokens of the Departed**\nWhen a creature you can see dies, you can capture a soul trinket. You can use soul trinkets to ask the spirit a question or gain advantage on death saving throws and Constitution saves.\n\n**Level 13: Ghost Walk**\nAs a bonus action, you assume a ghostly form gaining a hover fly speed of 10 feet and the ability to move through creatures and objects.\n\n**Level 17: Death's Friend**\nYour Wails from the Grave no longer requires Sneak Attack. When you deal Sneak Attack without an available soul trinket, one appears.",
+    "metadata_json": {
+      "parent_class": "rogue",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Whispers of the Dead", "Wails from the Grave"],
+        "9": ["Tokens of the Departed"],
+        "13": ["Ghost Walk"],
+        "17": ["Death's Friend"]
+      }
+    },
+    "tags": "subclass,rogue,phantom,necrotic,death,ghost,souls,TCoE",
+    "source": "TCoE",
+    "sort_order": 118
+  },
+  {
+    "slug": "soulknife",
+    "title": "Soulknife",
+    "category": "subclass",
+    "subcategory": "rogue",
+    "ruleset": "5e-2014",
+    "summary": "A roguish archetype that manifests psychic blades from the mind, using psionic power for stealth, communication, and deadly strikes.",
+    "content": "## Soulknife\n\nMost assassins strike with physical weapons, and many burglars and spies use thieves' tools to infiltrate secure locations. In contrast, a Soulknife strikes and infiltrates with the mind, cutting through barriers both physical and psychic.\n\n### Features\n\n**Level 3: Psionic Power**\nYou gain Psionic Energy dice (d6s) that fuel your abilities. You can use Psi-Bolstered Knack to add a die to failed skill checks and Psychic Whispers for telepathic communication.\n\n**Level 3: Psychic Blades**\nYou can manifest psychic blades — finesse, thrown melee weapons that deal psychic damage and vanish after hitting or missing.\n\n**Level 9: Soul Blades**\nYou gain Homing Strikes (reroll missed psychic blade attacks) and Psychic Teleportation (throw a blade to teleport to the spot).\n\n**Level 13: Psychic Veil**\nAs an action, you become invisible for 1 hour or until you deal damage or force a saving throw.\n\n**Level 17: Rend Mind**\nWhen you deal Sneak Attack damage with your psychic blades, you can force the target to make a Wisdom save or be stunned.",
+    "metadata_json": {
+      "parent_class": "rogue",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Psionic Power", "Psychic Blades"],
+        "9": ["Soul Blades"],
+        "13": ["Psychic Veil"],
+        "17": ["Rend Mind"]
+      }
+    },
+    "tags": "subclass,rogue,soulknife,psionic,psychic,blades,telepathy,TCoE",
+    "source": "TCoE",
+    "sort_order": 119
+  },
+  {
+    "slug": "aberrant-mind",
+    "title": "Aberrant Mind",
+    "category": "subclass",
+    "subcategory": "sorcerer",
+    "ruleset": "5e-2014",
+    "summary": "A sorcerous origin touched by alien influence from the Far Realm, granting telepathic abilities and access to psionic spells cast subtly through sorcery points.",
+    "content": "## Aberrant Mind\n\nAn alien influence has wrapped its tendrils around your mind, giving you psionic power. You can now touch other minds with that power and alter the world around you by using it to control the magical energy of the multiverse.\n\n### Features\n\n**Level 1: Psionic Spells**\nYou learn additional spells at each sorcerer level tied to aberrant themes: Arms of Hadar, Dissonant Whispers, Calm Emotions, Detect Thoughts, Hunger of Hadar, Sending, Evard's Black Tentacles, Summon Aberration, Telekinesis, and Rary's Telepathic Bond.\n\n**Level 1: Telepathic Speech**\nYou can form a telepathic connection with one creature, allowing wordless communication within 30 feet.\n\n**Level 6: Psionic Sorcery**\nYou can cast Psionic Spells by spending sorcery points instead of spell slots. When cast this way, the spell requires no verbal or somatic components and no material components unless they are consumed.\n\n**Level 6: Psychic Defenses**\nYou gain resistance to psychic damage, and you have advantage on saving throws against being charmed or frightened.\n\n**Level 14: Revelation in Flesh**\nBy spending sorcery points, you transform your body to gain see invisibility, fly speed, swim speed and water breathing, or the ability to squeeze through 1-inch spaces.\n\n**Level 18: Warping Implosion**\nYou can teleport 120 feet and force creatures near your departure point to make a Strength save or take 3d10 force damage and be pulled toward the space you left.",
+    "metadata_json": {
+      "parent_class": "sorcerer",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Psionic Spells", "Telepathic Speech"],
+        "6": ["Psionic Sorcery", "Psychic Defenses"],
+        "14": ["Revelation in Flesh"],
+        "18": ["Warping Implosion"]
+      }
+    },
+    "tags": "subclass,sorcerer,aberrant mind,psionic,telepathy,far realm,psychic,TCoE",
+    "source": "TCoE",
+    "sort_order": 120
+  },
+  {
+    "slug": "clockwork-soul",
+    "title": "Clockwork Soul",
+    "category": "subclass",
+    "subcategory": "sorcerer",
+    "ruleset": "5e-2014",
+    "summary": "A sorcerous origin connected to the plane of Mechanus, harnessing cosmic order to restore balance, neutralize advantage/disadvantage, and create protective wards.",
+    "content": "## Clockwork Soul\n\nThe cosmic force of order has suffused you with magic. That power arises from Mechanus or a realm like it — a plane of existence shaped entirely by clockwork efficiency.\n\n### Features\n\n**Level 1: Clockwork Magic**\nYou learn additional spells at each sorcerer level: Alarm, Protection from Evil and Good, Aid, Lesser Restoration, Dispel Magic, Protection from Energy, Freedom of Movement, Summon Construct, Greater Restoration, and Wall of Force.\n\n**Level 1: Restore Balance**\nWhen a creature you can see within 60 feet is about to roll with advantage or disadvantage, you can use your reaction to cancel it, making it a normal roll.\n\n**Level 6: Bastion of Law**\nYou can spend sorcery points to create a ward of shimmering clockwork magic on a creature. The ward has a number of d8s that can be expended to reduce damage taken.\n\n**Level 14: Trance of Order**\nAs a bonus action, you enter a state of clockwork order for 1 minute. You can treat any d20 roll of 9 or lower as a 10 for attack rolls, ability checks, and saving throws.\n\n**Level 18: Clockwork Cavalcade**\nYou summon spirits of order that restore 100 hit points among allies, repair objects, and end every spell of 6th level or lower in a 30-foot cube.",
+    "metadata_json": {
+      "parent_class": "sorcerer",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Clockwork Magic", "Restore Balance"],
+        "6": ["Bastion of Law"],
+        "14": ["Trance of Order"],
+        "18": ["Clockwork Cavalcade"]
+      }
+    },
+    "tags": "subclass,sorcerer,clockwork soul,order,mechanus,protection,ward,TCoE",
+    "source": "TCoE",
+    "sort_order": 121
+  },
+  {
+    "slug": "the-fathomless",
+    "title": "The Fathomless",
+    "category": "subclass",
+    "subcategory": "warlock",
+    "ruleset": "5e-2014",
+    "summary": "An otherworldly patron from the depths of the ocean, granting tentacle attacks, cold resistance, and the ability to breathe underwater.",
+    "content": "## The Fathomless\n\nYou have plighted your pact with an entity that lurks somewhere in the depths of the ocean, or even on the Elemental Plane of Water. Such entities include krakens, ancient water elementals, godlike hallucinations dreamed into being by kuo-toa, or sea elf demigods.\n\n### Features\n\n**Level 1: Expanded Spell List**\nYour patron grants additional spells: Create or Destroy Water, Thunderwave, Gust of Wind, Silence, Lightning Bolt, Sleet Storm, Control Water, Summon Elemental, Bigby's Hand, and Cone of Cold.\n\n**Level 1: Tentacle of the Deeps**\nAs a bonus action, you summon a spectral tentacle that lasts 1 minute. You can make melee spell attacks with it dealing cold damage, and it can reduce a hit creature's speed.\n\n**Level 1: Gift of the Sea**\nYou gain a swimming speed of 40 feet and can breathe underwater.\n\n**Level 6: Oceanic Soul**\nYou gain resistance to cold damage. When you are fully submerged, any creature also fully submerged can understand your speech and you theirs.\n\n**Level 6: Guardian Coil**\nWhen you or a creature you can see takes damage within 10 feet of the tentacle, you can use a reaction to reduce the damage.\n\n**Level 10: Grasping Tentacles**\nYou can cast Evard's Black Tentacles once without a spell slot. When you cast it this way, you gain temporary hit points and the spell doesn't require concentration.\n\n**Level 14: Fathomless Plunge**\nAs an action, you teleport yourself and up to 5 willing creatures within 30 feet to a body of water you have seen, up to 1 mile away.",
+    "metadata_json": {
+      "parent_class": "warlock",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Expanded Spell List", "Tentacle of the Deeps", "Gift of the Sea"],
+        "6": ["Oceanic Soul", "Guardian Coil"],
+        "10": ["Grasping Tentacles"],
+        "14": ["Fathomless Plunge"]
+      }
+    },
+    "tags": "subclass,warlock,the fathomless,ocean,cold,tentacle,swimming,TCoE",
+    "source": "TCoE",
+    "sort_order": 122
+  },
+  {
+    "slug": "the-genie",
+    "title": "The Genie",
+    "category": "subclass",
+    "subcategory": "warlock",
+    "ruleset": "5e-2014",
+    "summary": "An otherworldly patron pact with a noble genie, granting a vessel refuge, bonus elemental damage, and the power to grant wishes.",
+    "content": "## The Genie\n\nYou have made a pact with one of the rarest kinds of genie, a noble genie. Such entities rule vast fiefs on the Elemental Planes and have great influence over lesser genies and elemental creatures.\n\n### Features\n\n**Level 1: Expanded Spell List**\nYour patron grants additional spells based on genie type (Dao/earth, Djinni/air, Efreeti/fire, Marid/water), plus shared spells like Detect Evil and Good, Phantasmal Force, Create Food and Water, Phantasmal Killer, Creation, and Wish.\n\n**Level 1: Genie's Vessel**\nYou gain a magical vessel (ring, lamp, etc.) that you can enter as a bonus action, resting inside an extradimensional space. You can also add your proficiency bonus as bonus damage once per turn, with damage type based on genie kind.\n\n**Level 6: Elemental Gift**\nYou gain resistance to a damage type based on your genie kind. You can also give yourself a flying speed of 30 feet for 10 minutes.\n\n**Level 10: Sanctuary Vessel**\nWhen you enter your vessel, up to 5 willing creatures can enter with you. The vessel now provides the benefits of a short rest in 10 minutes.\n\n**Level 14: Limited Wish**\nYou can entreat your patron to grant a wish. You cast a 6th-level or lower spell from any class spell list without material components. Once used, you must finish 1d4 long rests to use it again.",
+    "metadata_json": {
+      "parent_class": "warlock",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Expanded Spell List", "Genie's Vessel"],
+        "6": ["Elemental Gift"],
+        "10": ["Sanctuary Vessel"],
+        "14": ["Limited Wish"]
+      }
+    },
+    "tags": "subclass,warlock,the genie,elemental,vessel,wish,dao,djinni,efreeti,marid,TCoE",
+    "source": "TCoE",
+    "sort_order": 123
+  },
+  {
+    "slug": "college-of-spirits",
+    "title": "College of Spirits",
+    "category": "subclass",
+    "subcategory": "bard",
+    "ruleset": "5e-2014",
+    "summary": "A bardic college that conducts seances and channels tales from beyond the grave, using a Spiritual Focus to invoke random spirit effects.",
+    "content": "## College of Spirits\n\nBards of the College of Spirits seek tales with inherent power — be they legends, histories, or fictions — and bring their subjects to life. Using occult trappings, these bards can reach out to spirits to guide their magic.\n\n### Features\n\n**Level 3: Guiding Whispers**\nYou learn Guidance, which doesn't count against your spells known. You can also use a Spiritual Focus (candle, crystal ball, skull, tarokka deck, etc.) as a spellcasting focus.\n\n**Level 3: Spiritual Focus**\nYou can use your Spiritual Focus as a spellcasting focus for bard spells. When you cast a bard spell that deals damage or restores hit points through it, roll a d6 and add it to one roll.\n\n**Level 3: Tales from Beyond**\nYou conduct a seance to channel a random spirit story through your Bardic Inspiration. The recipient gains an effect based on the tale rolled on the Spirit Tales table.\n\n**Level 6: Spirit Session**\nYou can conduct an hour-long ritual to temporarily learn one spell from any class, chosen by communing with spirits.\n\n**Level 14: Mystical Connection**\nYou roll on the Spirit Tales table with advantage, choosing either roll.",
+    "metadata_json": {
+      "parent_class": "bard",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Guiding Whispers", "Spiritual Focus", "Tales from Beyond"],
+        "6": ["Spirit Session"],
+        "14": ["Mystical Connection"]
+      }
+    },
+    "tags": "subclass,bard,college of spirits,seance,spirits,occult,tales,VRGtR",
+    "source": "VRGtR",
+    "sort_order": 124
+  },
+  {
+    "slug": "the-undead",
+    "title": "The Undead",
+    "category": "subclass",
+    "subcategory": "warlock",
+    "ruleset": "5e-2014",
+    "summary": "An otherworldly patron pact with a powerful undead being such as a lich or vampire, granting a terrifying undead form and necrotic power.",
+    "content": "## The Undead\n\nYou've made a pact with a deathless being, a creature that defies the cycle of life and death, forsaking its mortal shell so it might eternally pursue its obsessions. Entities such as Acererak, Azalin, Lord Soth, Strahd, or Vecna are examples.\n\n### Features\n\n**Level 1: Expanded Spell List**\nYour patron grants additional spells: Bane, False Life, Blindness/Deafness, Phantasmal Force, Phantom Steed, Speak with Dead, Death Ward, Greater Invisibility, Antilife Shell, and Cloudkill.\n\n**Level 1: Form of Dread**\nAs a bonus action, you transform for 1 minute, gaining temporary hit points, immunity to the frightened condition, and once per turn when you hit with an attack, the target must succeed on a Wisdom save or be frightened of you.\n\n**Level 6: Grave Touched**\nYou don't need to eat, drink, or breathe. Once per turn when you deal damage with an attack, you can change the damage type to necrotic and add an extra die of damage when in your Form of Dread.\n\n**Level 10: Necrotic Husk**\nYou gain resistance to necrotic damage. When reduced to 0 HP, you can explode dealing necrotic damage and revive with 1 HP.\n\n**Level 14: Spirit Projection**\nAs an action, your spirit leaves your body and gains flight, resistance to damage, healing from necrotic damage you deal, and the ability to phase through walls.",
+    "metadata_json": {
+      "parent_class": "warlock",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Expanded Spell List", "Form of Dread"],
+        "6": ["Grave Touched"],
+        "10": ["Necrotic Husk"],
+        "14": ["Spirit Projection"]
+      }
+    },
+    "tags": "subclass,warlock,the undead,necrotic,fear,undeath,dread,VRGtR",
+    "source": "VRGtR",
+    "sort_order": 125
+  },
+  {
+    "slug": "echo-knight",
+    "title": "Echo Knight",
+    "category": "subclass",
+    "subcategory": "fighter",
+    "ruleset": "5e-2014",
+    "summary": "A martial archetype from Wildemount that manifests an echo from an unrealized timeline, using it to attack, move, and scout from two positions at once.",
+    "content": "## Echo Knight\n\nA mysterious and feared frontline warrior of the Kryn Dynasty, the Echo Knight has mastered the art of using dunamis to summon the fading shades of unrealized timelines to aid them in battle.\n\n### Features\n\n**Level 3: Manifest Echo**\nAs a bonus action, you create a translucent echo of yourself. You can attack from its position, swap places with it, and use it to make opportunity attacks.\n\n**Level 3: Unleash Incarnation**\nWhen you take the Attack action, you can make an additional melee attack from the echo's position a number of times equal to your Constitution modifier.\n\n**Level 7: Echo Avatar**\nYou can transfer your consciousness to your echo, seeing and hearing through it for up to 10 minutes while it is up to 1000 feet away.\n\n**Level 10: Shadow Martyr**\nWhen a creature you can see is targeted by an attack, you can use a reaction to teleport your echo to that creature, and the echo takes the attack instead.\n\n**Level 15: Reclaim Potential**\nWhen your echo is destroyed, you can gain temporary hit points equal to 2d6 + your Constitution modifier.\n\n**Level 18: Legion of One**\nYou can create two echoes instead of one. If you try to create a third, one of the previous ones is destroyed.",
+    "metadata_json": {
+      "parent_class": "fighter",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Manifest Echo", "Unleash Incarnation"],
+        "7": ["Echo Avatar"],
+        "10": ["Shadow Martyr"],
+        "15": ["Reclaim Potential"],
+        "18": ["Legion of One"]
+      }
+    },
+    "tags": "subclass,fighter,echo knight,dunamancy,echo,timeline,wildemount,EGtW",
+    "source": "EGtW",
+    "sort_order": 126
+  },
+  {
+    "slug": "way-of-the-ascendant-dragon",
+    "title": "Way of the Ascendant Dragon",
+    "category": "subclass",
+    "subcategory": "monk",
+    "ruleset": "5e-2014",
+    "summary": "A monastic tradition inspired by dragons, channeling draconic power through ki to deal elemental damage, fly, and unleash devastating breath weapons.",
+    "content": "## Way of the Ascendant Dragon\n\nThe fundamental teaching of this tradition holds that by emulating dragons, a monk becomes a more integrated part of the world and its magic. Monks who follow this tradition revere the power and majesty of dragons.\n\n### Features\n\n**Level 3: Draconic Disciple**\nYou can change the damage type of your unarmed strikes to acid, cold, fire, lightning, or poison. You gain Draconic Presence — using Intimidation or Persuasion with your ki save DC.\n\n**Level 3: Breath of the Dragon**\nAs an action (or replacing one Flurry of Blows attack), you exhale a breath weapon in a 20-foot cone or 30-foot line dealing elemental damage on a failed Dexterity save.\n\n**Level 6: Wings Unfurled**\nWhen you use Step of the Wind, you can gain a flying speed equal to your walking speed until the end of your turn.\n\n**Level 11: Aspect of the Wyrm**\nAs a bonus action, you create a draconic aura for 1 minute that grants either resistance to a chosen elemental damage type or frightens enemies.\n\n**Level 17: Ascendant Aspect**\nYour Breath of the Dragon now deals extra damage, your aura deals damage to creatures that start in it, and you gain blindsight 10 feet and an augmented Explosive Breath.",
+    "metadata_json": {
+      "parent_class": "monk",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Draconic Disciple", "Breath of the Dragon"],
+        "6": ["Wings Unfurled"],
+        "11": ["Aspect of the Wyrm"],
+        "17": ["Ascendant Aspect"]
+      }
+    },
+    "tags": "subclass,monk,way of the ascendant dragon,dragon,breath weapon,elemental,ki,FToD",
+    "source": "FToD",
+    "sort_order": 127
+  },
+  {
+    "slug": "drakewarden",
+    "title": "Drakewarden",
+    "category": "subclass",
+    "subcategory": "ranger",
+    "ruleset": "5e-2014",
+    "summary": "A ranger archetype bonded with a draconic spirit that manifests as a drake companion, growing in power until it can be ridden into battle.",
+    "content": "## Drakewarden\n\nYour connection to the natural world takes the form of a draconic spirit, which can manifest in physical form as a drake. As your powers grow, your drake grows as well, blossoming from a+small four-legged companion to a majestic winged creature.\n\n### Features\n\n**Level 3: Draconic Gift**\nYou learn Thaumaturgy and the Draconic language.\n\n**Level 3: Drake Companion**\nAs an action, you summon a Small drake companion. It has its own stat block, takes its turn after yours, and can deal extra elemental damage when you or it attacks.\n\n**Level 7: Bond of Fang and Scale**\nYour drake grows to Medium with a fly speed and can be used as a mount for Small riders. You gain resistance to the drake's damage type while near it, and the drake's bite becomes magical.\n\n**Level 11: Drake's Breath**\nAs an action, you can grant your drake (or yourself) a 30-foot cone breath weapon dealing 8d6 damage of your drake's element.\n\n**Level 15: Perfected Bond**\nYour drake grows to Large with an enhanced fly speed and becomes a mount for Medium creatures. Its bite deals extra damage, and when you or the drake would take damage, the other can use a reaction to grant resistance.",
+    "metadata_json": {
+      "parent_class": "ranger",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Draconic Gift", "Drake Companion"],
+        "7": ["Bond of Fang and Scale"],
+        "11": ["Drake's Breath"],
+        "15": ["Perfected Bond"]
+      }
+    },
+    "tags": "subclass,ranger,drakewarden,dragon,drake,companion,mount,elemental,FToD",
+    "source": "FToD",
+    "sort_order": 128
+  },
+  {
+    "slug": "path-of-the-giant",
+    "title": "Path of the Giant",
+    "category": "subclass",
+    "subcategory": "barbarian",
+    "ruleset": "5e-2014",
+    "summary": "A primal path inspired by the might of giants, allowing the barbarian to grow in size, hurl creatures, and channel elemental giant power.",
+    "content": "## Path of the Giant\n\nBarbarians who walk the Path of the Giant draw strength from the primal forces that are the Giants' heritage. As they rage, they channel that power to grow in size and might, becoming titans on the battlefield.\n\n### Features\n\n**Level 3: Giant Power**\nYou learn a language (Giant or another) and you learn either Druidcraft or Thaumaturgy.\n\n**Level 3: Giant's Havoc**\nWhile raging, you can become Large (if space allows), your reach increases by 5 feet, and your attacks deal bonus damage equal to your rage damage.\n\n**Level 6: Elemental Cleaver**\nWhile raging, you can infuse your weapon with elemental energy (acid, cold, fire, lightning, or thunder). It deals extra 1d6 damage of that type and has the Thrown property (20/60).\n\n**Level 10: Mighty Impel**\nAs a bonus action while raging, you can hurl a Large or smaller creature within your reach. The thrown creature takes damage if it hits a surface, or can land safely if willing.\n\n**Level 14: Demiurgic Colossus**\nWhile raging, you can become Huge and gain 10 extra reach. Your Elemental Cleaver damage increases to 2d6, and you can add extra damage when you use Mighty Impel.",
+    "metadata_json": {
+      "parent_class": "barbarian",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Giant Power", "Giant's Havoc"],
+        "6": ["Elemental Cleaver"],
+        "10": ["Mighty Impel"],
+        "14": ["Demiurgic Colossus"]
+      }
+    },
+    "tags": "subclass,barbarian,path of the giant,giant,size,elemental,throw,BGG",
+    "source": "BGG",
+    "sort_order": 129
+  },
+  {
+    "slug": "lunar-sorcery",
+    "title": "Lunar Sorcery",
+    "category": "subclass",
+    "subcategory": "sorcerer",
+    "ruleset": "5e-2014",
+    "summary": "A sorcerous origin drawing power from the moon and its phases, gaining different abilities based on the current lunar phase chosen.",
+    "content": "## Lunar Sorcery\n\nOn many worlds, the weights of the moons are felt as a cosmic presence. You or someone in your lineage was exposed to the concentrated light of the moon, transforming their magic.\n\n### Features\n\n**Level 1: Moon Fire**\nYou learn Sacred Flame, which doesn't count against your cantrips known. When you cast it, you can target one or two creatures.\n\n**Level 1: Lunar Embodiment**\nYou choose a lunar phase (Full, New, or Crescent) when you finish a long rest. Each phase grants a set of bonus spells that you always have prepared and don't count against your spells known.\n\n**Level 6: Lunar Boons**\nEach lunar phase grants an additional benefit: Full Moon reduces damage to you when you use metamagic, New Moon grants advantage on Stealth, Crescent Moon grants resistance to necrotic and radiant damage.\n\n**Level 6: Waxing and Waning**\nWhen you use metamagic, you can spend 1 sorcery point to change your current lunar phase.\n\n**Level 14: Lunar Empowerment**\nEach phase gains another enhancement: Full Moon sheds light and grants advantage on Investigation/Perception, New Moon grants advantage on Stealth and Deception, Crescent Moon grants resistance to radiant and necrotic.\n\n**Level 18: Lunar Phenomenon**\nAs a bonus action, you invoke a powerful lunar effect based on your phase. Full Moon creates a blinding burst, New Moon creates magical darkness, and Crescent Moon grants flight and damage resistance.",
+    "metadata_json": {
+      "parent_class": "sorcerer",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Moon Fire", "Lunar Embodiment"],
+        "6": ["Lunar Boons", "Waxing and Waning"],
+        "14": ["Lunar Empowerment"],
+        "18": ["Lunar Phenomenon"]
+      }
+    },
+    "tags": "subclass,sorcerer,lunar sorcery,moon,phases,versatile,metamagic,SotDQ",
+    "source": "SotDQ",
+    "sort_order": 130
+  },
+  {
+    "slug": "oathbreaker",
+    "title": "Oathbreaker",
+    "category": "subclass",
+    "subcategory": "paladin",
+    "ruleset": "5e-2014",
+    "summary": "A paladin who has broken their sacred oath, turning to darkness and commanding undead with their corrupted divine power.",
+    "content": "## Oathbreaker\n\nAn Oathbreaker is a paladin who breaks their sacred oaths to pursue some dark ambition or serve an evil power. Whatever light burned in the paladin's heart has been extinguished. Only darkness remains.\n\n### Features\n\n**Level 3: Oathbreaker Spells**\nYou gain oath spells including Hellish Rebuke, Inflict Wounds, Crown of Madness, Darkness, Animate Dead, Bestow Curse, Blight, Confusion, Contagion, and Dominate Person.\n\n**Level 3: Channel Divinity: Control Undead**\nAs an action, you target one undead creature within 30 feet. It must make a Wisdom saving throw or obey your commands for 24 hours.\n\n**Level 3: Channel Divinity: Dreadful Aspect**\nAs an action, each creature of your choice within 30 feet must make a Wisdom saving throw or be frightened for 1 minute.\n\n**Level 7: Aura of Hate**\nYou and fiends and undead within 10 feet (30 feet at 18th level) gain a bonus to melee weapon damage rolls equal to your Charisma modifier.\n\n**Level 15: Supernatural Resistance**\nYou gain resistance to bludgeoning, piercing, and slashing damage from nonmagical weapons.\n\n**Level 20: Dread Lord**\nYou create an aura of shadow, dealing psychic damage, granting you shadow attacks, and frightening creatures around you.",
+    "metadata_json": {
+      "parent_class": "paladin",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Oathbreaker Spells", "Channel Divinity: Control Undead", "Channel Divinity: Dreadful Aspect"],
+        "7": ["Aura of Hate"],
+        "15": ["Supernatural Resistance"],
+        "20": ["Dread Lord"]
+      }
+    },
+    "tags": "subclass,paladin,oathbreaker,undead,darkness,evil,necrotic,DMG",
+    "source": "DMG",
+    "sort_order": 131
+  },
+  {
+    "slug": "death-domain",
+    "title": "Death Domain",
+    "category": "subclass",
+    "subcategory": "cleric",
+    "ruleset": "5e-2014",
+    "summary": "A divine domain concerned with the forces that cause death and the negative energy that gives rise to undead creatures.",
+    "content": "## Death Domain\n\nThe Death domain is concerned with the forces that cause death, as well as the negative energy that gives rise to undead creatures. Gods of death include Myrkul, Chemosh, and Wee Jas.\n\n### Features\n\n**Level 1: Death Domain Spells**\nYou gain domain spells including False Life, Ray of Sickness, Blindness/Deafness, Ray of Enfeeblement, Animate Dead, Vampiric Touch, Blight, Death Ward, Antilife Shell, and Cloudkill.\n\n**Level 1: Bonus Proficiency**\nYou gain proficiency with martial weapons.\n\n**Level 1: Reaper**\nYou learn one necromancy cantrip. When you cast a necromancy cantrip that normally targets one creature, it can target two creatures within 5 feet of each other.\n\n**Level 2: Channel Divinity: Touch of Death**\nWhen you hit a creature with a melee attack, you can deal extra necrotic damage equal to 5 + twice your cleric level.\n\n**Level 6: Inescapable Destruction**\nYour necrotic damage from cleric spells and Channel Divinity ignores resistance to necrotic damage.\n\n**Level 8: Divine Strike**\nYour weapon attacks deal an extra 1d8 necrotic damage (2d8 at 14th level).\n\n**Level 17: Improved Reaper**\nWhen you cast a necromancy spell of 1st through 5th level that targets only one creature, you can target two creatures within 5 feet of each other.",
+    "metadata_json": {
+      "parent_class": "cleric",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Death Domain Spells", "Bonus Proficiency", "Reaper"],
+        "2": ["Channel Divinity: Touch of Death"],
+        "6": ["Inescapable Destruction"],
+        "8": ["Divine Strike"],
+        "17": ["Improved Reaper"]
+      }
+    },
+    "tags": "subclass,cleric,death domain,necrotic,undead,necromancy,DMG",
+    "source": "DMG",
+    "sort_order": 132
+  },
+  {
+    "slug": "arcana-domain",
+    "title": "Arcana Domain",
+    "category": "subclass",
+    "subcategory": "cleric",
+    "ruleset": "5e-2014",
+    "summary": "A divine domain that bridges arcane and divine magic, granting wizard cantrips, arcane knowledge, and the ability to dispel or abjure magical creatures.",
+    "content": "## Arcana Domain\n\nMagic is an energy that suffuses the multiverse and that fuels both destruction and creation. Gods of the Arcana domain know the secrets and potential of magic intimately.\n\n### Features\n\n**Level 1: Arcana Domain Spells**\nYou gain domain spells including Detect Magic, Magic Missile, Magic Weapon, Nystul's Magic Aura, Dispel Magic, Magic Circle, Arcane Eye, Leomund's Secret Chest, Planar Binding, and Teleportation Circle.\n\n**Level 1: Arcane Initiate**\nYou gain proficiency in Arcana and learn two wizard cantrips, which count as cleric cantrips for you.\n\n**Level 2: Channel Divinity: Arcane Abjuration**\nYou can turn celestials, elementals, fey, and fiends. At higher levels, you can banish them.\n\n**Level 6: Spell Breaker**\nWhen you restore hit points to an ally with a spell of 1st level or higher, you can also end one spell on that creature with a level equal to or lower than the healing spell's level.\n\n**Level 8: Potent Spellcasting**\nYou add your Wisdom modifier to the damage of your cleric cantrips.\n\n**Level 17: Arcane Mastery**\nYou choose four spells from the wizard spell list, one each of 6th, 7th, 8th, and 9th level. They are always prepared and count as cleric spells.",
+    "metadata_json": {
+      "parent_class": "cleric",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Arcana Domain Spells", "Arcane Initiate"],
+        "2": ["Channel Divinity: Arcane Abjuration"],
+        "6": ["Spell Breaker"],
+        "8": ["Potent Spellcasting"],
+        "17": ["Arcane Mastery"]
+      }
+    },
+    "tags": "subclass,cleric,arcana domain,arcane,wizard cantrips,dispel,magic,SCAG",
+    "source": "SCAG",
+    "sort_order": 133
+  },
+  {
+    "slug": "bladesinging",
+    "title": "Bladesinging",
+    "category": "subclass",
+    "subcategory": "wizard",
+    "ruleset": "5e-2014",
+    "summary": "An arcane tradition blending swordplay and wizardry, using the Bladesong to enhance AC, speed, and concentration while wielding a weapon.",
+    "content": "## Bladesinging\n\nBladesingers master a tradition of wizardry that incorporates swordplay and dance. Originally created by elves, this tradition has been adopted by non-elf practitioners in recent years.\n\n### Features\n\n**Level 2: Training in War and Song**\nYou gain proficiency with light armor and one type of one-handed melee weapon of your choice. You can also gain proficiency in Performance.\n\n**Level 2: Bladesong**\nAs a bonus action, you start a Bladesong that lasts 1 minute and grants bonuses to AC, walking speed, Acrobatics checks, and Constitution saving throws for concentration — all equal to your Intelligence modifier.\n\n**Level 6: Extra Attack**\nYou can attack twice when you take the Attack action. Moreover, you can replace one of those attacks with casting a cantrip.\n\n**Level 10: Song of Defense**\nWhile your Bladesong is active, you can expend a spell slot as a reaction to reduce damage you take by 5 times the spell slot's level.\n\n**Level 14: Song of Victory**\nWhile your Bladesong is active, you add your Intelligence modifier to melee weapon damage.",
+    "metadata_json": {
+      "parent_class": "wizard",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Training in War and Song", "Bladesong"],
+        "6": ["Extra Attack"],
+        "10": ["Song of Defense"],
+        "14": ["Song of Victory"]
+      }
+    },
+    "tags": "subclass,wizard,bladesinging,melee,sword,dance,elven,gish,TCoE",
+    "source": "TCoE",
+    "sort_order": 134
+  },
+  {
+    "slug": "chronurgy-magic",
+    "title": "Chronurgy Magic",
+    "category": "subclass",
+    "subcategory": "wizard",
+    "ruleset": "5e-2014",
+    "summary": "An arcane tradition from Wildemount that manipulates time, allowing the wizard to alter initiative, reroll saves, and freeze spells in time.",
+    "content": "## Chronurgy Magic\n\nFocusing on the manipulation of time, those who follow the Chronurgy tradition learn to alter the pace of reality to their liking. Practitioners are known as chronurgists.\n\n### Features\n\n**Level 2: Chronal Shift**\nAs a reaction after you or a creature you can see makes an attack roll, ability check, or saving throw, you can force a reroll and choose which result to use. You can use this twice per long rest.\n\n**Level 2: Temporal Awareness**\nYou can add your Intelligence modifier to initiative rolls.\n\n**Level 6: Momentary Stasis**\nAs an action, you force a Large or smaller creature to make a Constitution saving throw or be incapacitated and frozen in time until the end of your next turn.\n\n**Level 10: Arcane Abeyance**\nYou can condense a 4th-level or lower spell into a tiny bead that can be held and activated by any creature as an action.\n\n**Level 14: Convergent Future**\nYou can decide whether an attack roll, ability check, or saving throw you can see succeeds or fails, making the minimum needed or one less. You gain exhaustion after using this.",
+    "metadata_json": {
+      "parent_class": "wizard",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Chronal Shift", "Temporal Awareness"],
+        "6": ["Momentary Stasis"],
+        "10": ["Arcane Abeyance"],
+        "14": ["Convergent Future"]
+      }
+    },
+    "tags": "subclass,wizard,chronurgy magic,time,dunamancy,reroll,wildemount,EGtW",
+    "source": "EGtW",
+    "sort_order": 135
+  },
+  {
+    "slug": "graviturgy-magic",
+    "title": "Graviturgy Magic",
+    "category": "subclass",
+    "subcategory": "wizard",
+    "ruleset": "5e-2014",
+    "summary": "An arcane tradition from Wildemount that manipulates gravity, altering weight, movement, and the density of the battlefield.",
+    "content": "## Graviturgy Magic\n\nUnderstanding and mastering the forces that draw bodies of matter together or push them apart, the students of the Graviturgy tradition learn to further manipulate the forces of gravity.\n\n### Features\n\n**Level 2: Adjust Density**\nAs an action, you magically alter a creature's weight, halving or doubling it. Halved creatures gain extra speed and jump distance; doubled creatures have reduced speed and deal extra damage on falls.\n\n**Level 6: Gravity Well**\nWhenever you cast a spell on a creature, you can move it 5 feet to an unoccupied space if it is willing or fails its saving throw.\n\n**Level 10: Violent Attraction**\nAs a reaction when a creature within 60 feet hits with a weapon attack or falls, you can increase the damage by 1d10, pulling it magnetically or gravitationally.\n\n**Level 14: Event Horizon**\nAs an action, you emit an aura of gravitational force. Hostile creatures that start their turn within 30 feet must make a Strength save or take force damage and have their speed reduced to 0. Even on a success, their speed is halved.",
+    "metadata_json": {
+      "parent_class": "wizard",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Adjust Density"],
+        "6": ["Gravity Well"],
+        "10": ["Violent Attraction"],
+        "14": ["Event Horizon"]
+      }
+    },
+    "tags": "subclass,wizard,graviturgy magic,gravity,dunamancy,force,wildemount,EGtW",
+    "source": "EGtW",
+    "sort_order": 136
+  },
+  {
+    "slug": "order-of-scribes",
+    "title": "Order of Scribes",
+    "category": "subclass",
+    "subcategory": "wizard",
+    "ruleset": "5e-2014",
+    "summary": "An arcane tradition devoted to the written word, animating their spellbook as a sentient companion and mastering spell manipulation through notation.",
+    "content": "## Order of Scribes\n\nMagic of the book — that is what many folk call wizardry. The name is apt, given how much time wizards spend studying tomes and penning theories. The Order of Scribes takes this devotion further.\n\n### Features\n\n**Level 2: Wizardly Quill**\nAs a bonus action, you create a Tiny quill that writes without ink, copies spells at increased speed (2 minutes per spell level), and can erase text.\n\n**Level 2: Awakened Spellbook**\nYour spellbook gains sentience. You can replace the damage type of spells with a type from another spell in your book of the same level. You can also cast wizard rituals as an action instead of adding 10 minutes.\n\n**Level 6: Manifest Mind**\nAs a bonus action, you project your spellbook's mind as a spectral object that hovers nearby. You can cast spells as if you were in its space, and it provides additional sensory input.\n\n**Level 10: Master Scrivener**\nDuring a long rest, you can create a magic scroll of a 1st- or 2nd-level spell that is cast at one level higher and doesn't require a spell slot.\n\n**Level 14: One with the Word**\nYour spellbook can save you from death. When you drop to 0 HP, you can use a reaction to have spells vanish from your book to prevent the damage (3d6 per spell level absorbed). Advantage on Arcana checks is also granted while your Awakened Spellbook is on your person.",
+    "metadata_json": {
+      "parent_class": "wizard",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Wizardly Quill", "Awakened Spellbook"],
+        "6": ["Manifest Mind"],
+        "10": ["Master Scrivener"],
+        "14": ["One with the Word"]
+      }
+    },
+    "tags": "subclass,wizard,order of scribes,spellbook,scribe,versatile,ritual,TCoE",
+    "source": "TCoE",
+    "sort_order": 137
+  },
+  {
+    "slug": "path-of-the-wild-heart",
+    "title": "Path of the Wild Heart",
+    "category": "subclass",
+    "subcategory": "barbarian",
+    "ruleset": "5e-2024",
+    "summary": "A primal path that forges a spiritual bond with animals, granting animal-themed rage abilities, communication with beasts, and enhanced travel.",
+    "content": "## Path of the Wild Heart\n\nThe Path of the Wild Heart represents a spiritual connection to the animal kingdom. Barbarians who follow this path form bonds with animals and draw on their primal power during rage.\n\n### Features\n\n**Level 3: Animal Speaker**\nYou can cast Beast Sense and Speak with Animals as rituals.\n\n**Level 3: Rage of the Wilds**\nWhen you rage, you choose an animal aspect: Bear (resistance to all damage except Psychic), Eagle (Dash as bonus action, opportunity attacks against you have disadvantage), or Wolf (allies have advantage on attacks against creatures within 5 feet of you).\n\n**Level 6: Aspect of the Wilds**\nYou gain a passive benefit: Owl (darkvision 60 ft and advantage on Perception), Panther (climbing speed equal to walking speed), or Salmon (swimming speed equal to walking speed).\n\n**Level 10: Nature Speaker**\nYou can cast Commune with Nature as a ritual.\n\n**Level 14: Power of the Wilds**\nYou gain a more powerful rage option: Falcon (fly speed equal to walking speed), Lion (enemies within 5 feet that hit you provoke an opportunity attack as a reaction), or Ram (you can push a Large or smaller creature 15 feet when you hit with a melee attack).",
+    "metadata_json": {
+      "parent_class": "barbarian",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Animal Speaker", "Rage of the Wilds"],
+        "6": ["Aspect of the Wilds"],
+        "10": ["Nature Speaker"],
+        "14": ["Power of the Wilds"]
+      }
+    },
+    "tags": "subclass,barbarian,path of the wild heart,animals,totem,nature,primal,2024 PHB",
+    "source": "2024 PHB",
+    "sort_order": 138
+  },
+  {
+    "slug": "path-of-the-world-tree",
+    "title": "Path of the World Tree",
+    "category": "subclass",
+    "subcategory": "barbarian",
+    "ruleset": "5e-2024",
+    "summary": "A primal path drawing power from the World Tree, channeling vitality to teleport allies, grant temporary hit points, and create planar portals.",
+    "content": "## Path of the World Tree\n\nBarbarians who follow the Path of the World Tree believe that their rage links them to the cosmic ash tree Yggdrasil. This mythic tree connects the planes of existence, and these barbarians tap into that connection.\n\n### Features\n\n**Level 3: Vitality of the Tree**\nWhen you rage and as a bonus action while raging, you can grant a creature you can see within 10 feet temporary hit points equal to your Barbarian level, or you can teleport them to an unoccupied space you can see within 10 feet of you.\n\n**Level 6: Branches of the Tree**\nWhile raging, when a creature within your reach hits someone other than you, you can use your reaction to reduce the damage and deal force damage back.\n\n**Level 10: Battering Roots**\nYour attacks while raging can push creatures 5 feet, and the ground within your reach is difficult terrain for enemies.\n\n**Level 14: Travel Along the Tree**\nAs a bonus action while raging, you can teleport up to 60 feet to an unoccupied space you can see. You can also bring one willing creature within your reach.",
+    "metadata_json": {
+      "parent_class": "barbarian",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Vitality of the Tree"],
+        "6": ["Branches of the Tree"],
+        "10": ["Battering Roots"],
+        "14": ["Travel Along the Tree"]
+      }
+    },
+    "tags": "subclass,barbarian,path of the world tree,yggdrasil,teleport,support,planar,2024 PHB",
+    "source": "2024 PHB",
+    "sort_order": 139
+  },
+  {
+    "slug": "college-of-dance",
+    "title": "College of Dance",
+    "category": "subclass",
+    "subcategory": "bard",
+    "ruleset": "5e-2024",
+    "summary": "A bardic college that channels magic through movement and dance, gaining enhanced mobility, unarmed combat prowess, and performance-based buffs.",
+    "content": "## College of Dance\n\nBards of the College of Dance know that the Words of Creation can't be contained in just speech or song; they are in every step, every movement. These bards practice a fluid style of magic that combines grace and combat.\n\n### Features\n\n**Level 3: Dazzling Footwork**\nYour walking speed increases by 10 feet, and you don't provoke opportunity attacks when you move. You also gain a special Bardic Damage die for unarmed strikes that scales with your Bardic Inspiration die.\n\n**Level 3: Inspiring Movement**\nWhen a creature uses your Bardic Inspiration and the roll succeeds, a creature within 30 feet can move up to half its speed as a reaction without provoking opportunity attacks.\n\n**Level 6: Tandem Footwork**\nWhen you roll initiative, you can spend a use of Bardic Inspiration. Each creature of your choice that you can see within 30 feet rolls the Bardic Inspiration die and adds it to their initiative.\n\n**Level 14: Leading Evasion**\nWhen you are subjected to a Dexterity saving throw for half damage, you take no damage on a success and half on a failure. Allies within 5 feet share this benefit.",
+    "metadata_json": {
+      "parent_class": "bard",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Dazzling Footwork", "Inspiring Movement"],
+        "6": ["Tandem Footwork"],
+        "14": ["Leading Evasion"]
+      }
+    },
+    "tags": "subclass,bard,college of dance,movement,mobility,unarmed,evasion,2024 PHB",
+    "source": "2024 PHB",
+    "sort_order": 140
+  },
+  {
+    "slug": "circle-of-the-sea",
+    "title": "Circle of the Sea",
+    "category": "subclass",
+    "subcategory": "druid",
+    "ruleset": "5e-2024",
+    "summary": "A druidic circle attuned to the ocean and its storms, wielding water and lightning to damage foes and protect allies.",
+    "content": "## Circle of the Sea\n\nDruids of the Circle of the Sea draw on the power of oceans, rivers, and storms. They protect coastal communities and sailors, channeling the wrath of the sea against their enemies.\n\n### Features\n\n**Level 2: Circle Spells**\nYou gain circle spells including Fog Cloud, Thunderwave, Gust of Wind, Shatter, Lightning Bolt, Water Breathing, Control Water, Ice Storm, Conjure Elemental, and Maelstrom.\n\n**Level 2: Wrath of the Sea**\nAs a bonus action when you use Wild Shape, you can channel ocean energy. Once per turn when you deal damage with a cantrip or weapon, you can deal extra cold or lightning damage to the target and push creatures away.\n\n**Level 6: Aquatic Affinity**\nYou gain a swimming speed equal to your walking speed and can breathe underwater. You can also share water breathing with allies.\n\n**Level 10: Stormborn**\nYou gain resistance to cold and lightning damage. You can also fly in rainy or stormy conditions.\n\n**Level 14: Oceanic Gift**\nWhen you use Wrath of the Sea, you gain temporary hit points, and creatures you choose within 10 feet gain resistance to cold and lightning damage.",
+    "metadata_json": {
+      "parent_class": "druid",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Circle Spells", "Wrath of the Sea"],
+        "6": ["Aquatic Affinity"],
+        "10": ["Stormborn"],
+        "14": ["Oceanic Gift"]
+      }
+    },
+    "tags": "subclass,druid,circle of the sea,ocean,lightning,cold,storm,water,2024 PHB",
+    "source": "2024 PHB",
+    "sort_order": 141
+  }
+]

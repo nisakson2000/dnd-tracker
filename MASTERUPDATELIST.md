@@ -4,6 +4,40 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.3.8 — Wiki Races & Subclasses Expansion
+**Released:** March 12, 2026
+
+### Arcane Encyclopedia — Character Options Update
+- **154 new wiki articles** — total now 1,378 (up from 1,235)
+- **48 new playable races/species** — total now 61 (up from 13)
+- **106 new subclasses** — total now 118 (up from 12, covering all 12 classes)
+- **237 new cross-references** (460 total) — subclass-to-class links, subrace-to-race links, related race connections
+- Updated article count in UI to 1,350+
+
+### New Races & Species
+- **PHB 2014 missing subraces** (6): Mountain Dwarf, Wood Elf, Dark Elf (Drow), Stout Halfling, Forest Gnome, Variant Human
+- **PHB 2024 species** (3): Aasimar, Goliath, Orc (with 2024 flexible ability score rules)
+- **Volo's Guide races** (12): Aarakocra, Firbolg, Kenku, Lizardfolk, Tabaxi, Triton, Bugbear, Goblin, Hobgoblin, Kobold, Yuan-ti Pureblood, Grung
+- **Eberron races** (4): Changeling, Kalashtar, Shifter, Warforged
+- **Genasi** (5): Base + Air, Earth, Fire, Water subraces
+- **Gothic lineages** (3): Dhampir, Hexblood, Reborn
+- **Spelljammer races** (6): Astral Elf, Autognome, Giff, Plasmoid, Thri-kreen, Kender
+- **Other supplement races** (9): Centaur, Minotaur, Satyr, Leonin, Fairy, Harengon, Owlin, Tortle, Custom Lineage
+
+### New Subclasses (by source)
+- **PHB 2014** (28): All missing PHB subclasses including Totem Warrior, College of Valor, all Cleric domains, Circle of the Moon, Battle Master, Eldritch Knight, and all Wizard schools
+- **Xanathar's Guide** (31): Ancestral Guardian, Glamour, Forge Domain, Gloom Stalker, Hexblade, Swashbuckler, Divine Soul, and more
+- **SCAG** (5): Battlerager, Banneret, Long Death, Crown, Undying
+- **Tasha's Cauldron** (26): Beast, Wild Magic, Creation, Eloquence, Peace/Twilight Domain, Stars, Wildfire, Psi Warrior, Rune Knight, Mercy, Soulknife, Aberrant Mind, Clockwork Soul, Genie, and more
+- **Other supplements** (8): Echo Knight (EGtW), College of Spirits (VRGtR), The Undead (VRGtR), Ascendant Dragon (FToD), Drakewarden (FToD), Path of the Giant (BGG), Lunar Sorcery (SotDQ), Oathbreaker (DMG)
+- **2024 PHB new** (4): Wild Heart, World Tree, College of Dance, Circle of the Sea
+- **Additional** (6): Chronurgy Magic, Graviturgy Magic, Bladesinging, Order of Scribes, Death Domain, Arcana Domain
+
+### Version Sync
+- All version files bumped to 0.3.8: VERSION, version.json, version.js, package.json (root + frontend), tauri.conf.json, Cargo.toml
+
+---
+
 ## V0.3.7 — Auto-Pull Updates
 **Released:** March 11, 2026
 

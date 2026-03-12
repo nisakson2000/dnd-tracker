@@ -1183,5 +1183,1190 @@
     "source_slug": "spirit-naga",
     "target_slug": "guardian-naga",
     "relationship_type": "related"
+  },
+  {
+    "source_slug": "path-of-the-totem-warrior",
+    "target_slug": "barbarian",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "barbarian",
+    "target_slug": "path-of-the-totem-warrior",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "college-of-valor",
+    "target_slug": "bard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "bard",
+    "target_slug": "college-of-valor",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "knowledge-domain",
+    "target_slug": "cleric",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "cleric",
+    "target_slug": "knowledge-domain",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "light-domain",
+    "target_slug": "cleric",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "cleric",
+    "target_slug": "light-domain",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "nature-domain",
+    "target_slug": "cleric",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "cleric",
+    "target_slug": "nature-domain",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "tempest-domain",
+    "target_slug": "cleric",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "cleric",
+    "target_slug": "tempest-domain",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "trickery-domain",
+    "target_slug": "cleric",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "cleric",
+    "target_slug": "trickery-domain",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "war-domain",
+    "target_slug": "cleric",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "cleric",
+    "target_slug": "war-domain",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "circle-of-the-moon",
+    "target_slug": "druid",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "druid",
+    "target_slug": "circle-of-the-moon",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "battle-master",
+    "target_slug": "fighter",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "fighter",
+    "target_slug": "battle-master",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "eldritch-knight",
+    "target_slug": "fighter",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "fighter",
+    "target_slug": "eldritch-knight",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "way-of-shadow",
+    "target_slug": "monk",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "monk",
+    "target_slug": "way-of-shadow",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "way-of-the-four-elements",
+    "target_slug": "monk",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "monk",
+    "target_slug": "way-of-the-four-elements",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "oath-of-the-ancients",
+    "target_slug": "paladin",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "paladin",
+    "target_slug": "oath-of-the-ancients",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "oath-of-vengeance",
+    "target_slug": "paladin",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "paladin",
+    "target_slug": "oath-of-vengeance",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "beast-master",
+    "target_slug": "ranger",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "ranger",
+    "target_slug": "beast-master",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "arcane-trickster",
+    "target_slug": "rogue",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "rogue",
+    "target_slug": "arcane-trickster",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "assassin",
+    "target_slug": "rogue",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "rogue",
+    "target_slug": "assassin",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "wild-magic",
+    "target_slug": "sorcerer",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "sorcerer",
+    "target_slug": "wild-magic",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "the-archfey",
+    "target_slug": "warlock",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "warlock",
+    "target_slug": "the-archfey",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "the-great-old-one",
+    "target_slug": "warlock",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "warlock",
+    "target_slug": "the-great-old-one",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "school-of-abjuration",
+    "target_slug": "wizard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "wizard",
+    "target_slug": "school-of-abjuration",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "school-of-conjuration",
+    "target_slug": "wizard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "wizard",
+    "target_slug": "school-of-conjuration",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "school-of-divination",
+    "target_slug": "wizard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "wizard",
+    "target_slug": "school-of-divination",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "school-of-enchantment",
+    "target_slug": "wizard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "wizard",
+    "target_slug": "school-of-enchantment",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "school-of-illusion",
+    "target_slug": "wizard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "wizard",
+    "target_slug": "school-of-illusion",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "school-of-necromancy",
+    "target_slug": "wizard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "wizard",
+    "target_slug": "school-of-necromancy",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "school-of-transmutation",
+    "target_slug": "wizard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "wizard",
+    "target_slug": "school-of-transmutation",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "path-of-the-ancestral-guardian",
+    "target_slug": "barbarian",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "barbarian",
+    "target_slug": "path-of-the-ancestral-guardian",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "path-of-the-storm-herald",
+    "target_slug": "barbarian",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "barbarian",
+    "target_slug": "path-of-the-storm-herald",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "path-of-the-zealot",
+    "target_slug": "barbarian",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "barbarian",
+    "target_slug": "path-of-the-zealot",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "path-of-the-battlerager",
+    "target_slug": "barbarian",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "barbarian",
+    "target_slug": "path-of-the-battlerager",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "college-of-glamour",
+    "target_slug": "bard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "bard",
+    "target_slug": "college-of-glamour",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "college-of-swords",
+    "target_slug": "bard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "bard",
+    "target_slug": "college-of-swords",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "college-of-whispers",
+    "target_slug": "bard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "bard",
+    "target_slug": "college-of-whispers",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "forge-domain",
+    "target_slug": "cleric",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "cleric",
+    "target_slug": "forge-domain",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "grave-domain",
+    "target_slug": "cleric",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "cleric",
+    "target_slug": "grave-domain",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "circle-of-dreams",
+    "target_slug": "druid",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "druid",
+    "target_slug": "circle-of-dreams",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "circle-of-the-shepherd",
+    "target_slug": "druid",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "druid",
+    "target_slug": "circle-of-the-shepherd",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "arcane-archer",
+    "target_slug": "fighter",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "fighter",
+    "target_slug": "arcane-archer",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "cavalier",
+    "target_slug": "fighter",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "fighter",
+    "target_slug": "cavalier",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "samurai",
+    "target_slug": "fighter",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "fighter",
+    "target_slug": "samurai",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "purple-dragon-knight",
+    "target_slug": "fighter",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "fighter",
+    "target_slug": "purple-dragon-knight",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "way-of-the-drunken-master",
+    "target_slug": "monk",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "monk",
+    "target_slug": "way-of-the-drunken-master",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "way-of-the-kensei",
+    "target_slug": "monk",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "monk",
+    "target_slug": "way-of-the-kensei",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "way-of-the-sun-soul",
+    "target_slug": "monk",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "monk",
+    "target_slug": "way-of-the-sun-soul",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "way-of-the-long-death",
+    "target_slug": "monk",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "monk",
+    "target_slug": "way-of-the-long-death",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "oath-of-conquest",
+    "target_slug": "paladin",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "paladin",
+    "target_slug": "oath-of-conquest",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "oath-of-redemption",
+    "target_slug": "paladin",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "paladin",
+    "target_slug": "oath-of-redemption",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "oath-of-the-crown",
+    "target_slug": "paladin",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "paladin",
+    "target_slug": "oath-of-the-crown",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "gloom-stalker",
+    "target_slug": "ranger",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "ranger",
+    "target_slug": "gloom-stalker",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "horizon-walker",
+    "target_slug": "ranger",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "ranger",
+    "target_slug": "horizon-walker",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "monster-slayer",
+    "target_slug": "ranger",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "ranger",
+    "target_slug": "monster-slayer",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "inquisitive",
+    "target_slug": "rogue",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "rogue",
+    "target_slug": "inquisitive",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "mastermind",
+    "target_slug": "rogue",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "rogue",
+    "target_slug": "mastermind",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "scout",
+    "target_slug": "rogue",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "rogue",
+    "target_slug": "scout",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "swashbuckler",
+    "target_slug": "rogue",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "rogue",
+    "target_slug": "swashbuckler",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "divine-soul",
+    "target_slug": "sorcerer",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "sorcerer",
+    "target_slug": "divine-soul",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "shadow-magic",
+    "target_slug": "sorcerer",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "sorcerer",
+    "target_slug": "shadow-magic",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "storm-sorcery",
+    "target_slug": "sorcerer",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "sorcerer",
+    "target_slug": "storm-sorcery",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "the-celestial",
+    "target_slug": "warlock",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "warlock",
+    "target_slug": "the-celestial",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "the-hexblade",
+    "target_slug": "warlock",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "warlock",
+    "target_slug": "the-hexblade",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "the-undying",
+    "target_slug": "warlock",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "warlock",
+    "target_slug": "the-undying",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "war-magic",
+    "target_slug": "wizard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "wizard",
+    "target_slug": "war-magic",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "path-of-the-beast",
+    "target_slug": "barbarian",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "barbarian",
+    "target_slug": "path-of-the-beast",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "path-of-wild-magic",
+    "target_slug": "barbarian",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "barbarian",
+    "target_slug": "path-of-wild-magic",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "college-of-creation",
+    "target_slug": "bard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "bard",
+    "target_slug": "college-of-creation",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "college-of-eloquence",
+    "target_slug": "bard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "bard",
+    "target_slug": "college-of-eloquence",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "order-domain",
+    "target_slug": "cleric",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "cleric",
+    "target_slug": "order-domain",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "peace-domain",
+    "target_slug": "cleric",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "cleric",
+    "target_slug": "peace-domain",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "twilight-domain",
+    "target_slug": "cleric",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "cleric",
+    "target_slug": "twilight-domain",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "circle-of-spores",
+    "target_slug": "druid",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "druid",
+    "target_slug": "circle-of-spores",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "circle-of-stars",
+    "target_slug": "druid",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "druid",
+    "target_slug": "circle-of-stars",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "circle-of-wildfire",
+    "target_slug": "druid",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "druid",
+    "target_slug": "circle-of-wildfire",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "psi-warrior",
+    "target_slug": "fighter",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "fighter",
+    "target_slug": "psi-warrior",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "rune-knight",
+    "target_slug": "fighter",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "fighter",
+    "target_slug": "rune-knight",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "way-of-the-astral-self",
+    "target_slug": "monk",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "monk",
+    "target_slug": "way-of-the-astral-self",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "way-of-mercy",
+    "target_slug": "monk",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "monk",
+    "target_slug": "way-of-mercy",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "oath-of-glory",
+    "target_slug": "paladin",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "paladin",
+    "target_slug": "oath-of-glory",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "oath-of-the-watchers",
+    "target_slug": "paladin",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "paladin",
+    "target_slug": "oath-of-the-watchers",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "fey-wanderer",
+    "target_slug": "ranger",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "ranger",
+    "target_slug": "fey-wanderer",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "swarmkeeper",
+    "target_slug": "ranger",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "ranger",
+    "target_slug": "swarmkeeper",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "phantom",
+    "target_slug": "rogue",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "rogue",
+    "target_slug": "phantom",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "soulknife",
+    "target_slug": "rogue",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "rogue",
+    "target_slug": "soulknife",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "aberrant-mind",
+    "target_slug": "sorcerer",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "sorcerer",
+    "target_slug": "aberrant-mind",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "clockwork-soul",
+    "target_slug": "sorcerer",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "sorcerer",
+    "target_slug": "clockwork-soul",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "the-fathomless",
+    "target_slug": "warlock",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "warlock",
+    "target_slug": "the-fathomless",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "the-genie",
+    "target_slug": "warlock",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "warlock",
+    "target_slug": "the-genie",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "college-of-spirits",
+    "target_slug": "bard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "bard",
+    "target_slug": "college-of-spirits",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "the-undead",
+    "target_slug": "warlock",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "warlock",
+    "target_slug": "the-undead",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "echo-knight",
+    "target_slug": "fighter",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "fighter",
+    "target_slug": "echo-knight",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "way-of-the-ascendant-dragon",
+    "target_slug": "monk",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "monk",
+    "target_slug": "way-of-the-ascendant-dragon",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "drakewarden",
+    "target_slug": "ranger",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "ranger",
+    "target_slug": "drakewarden",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "path-of-the-giant",
+    "target_slug": "barbarian",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "barbarian",
+    "target_slug": "path-of-the-giant",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "lunar-sorcery",
+    "target_slug": "sorcerer",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "sorcerer",
+    "target_slug": "lunar-sorcery",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "oathbreaker",
+    "target_slug": "paladin",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "paladin",
+    "target_slug": "oathbreaker",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "death-domain",
+    "target_slug": "cleric",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "cleric",
+    "target_slug": "death-domain",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "arcana-domain",
+    "target_slug": "cleric",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "cleric",
+    "target_slug": "arcana-domain",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "bladesinging",
+    "target_slug": "wizard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "wizard",
+    "target_slug": "bladesinging",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "chronurgy-magic",
+    "target_slug": "wizard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "wizard",
+    "target_slug": "chronurgy-magic",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "graviturgy-magic",
+    "target_slug": "wizard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "wizard",
+    "target_slug": "graviturgy-magic",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "order-of-scribes",
+    "target_slug": "wizard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "wizard",
+    "target_slug": "order-of-scribes",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "path-of-the-wild-heart",
+    "target_slug": "barbarian",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "barbarian",
+    "target_slug": "path-of-the-wild-heart",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "path-of-the-world-tree",
+    "target_slug": "barbarian",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "barbarian",
+    "target_slug": "path-of-the-world-tree",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "college-of-dance",
+    "target_slug": "bard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "bard",
+    "target_slug": "college-of-dance",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "circle-of-the-sea",
+    "target_slug": "druid",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "druid",
+    "target_slug": "circle-of-the-sea",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "path-of-the-berserker",
+    "target_slug": "barbarian",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "barbarian",
+    "target_slug": "path-of-the-berserker",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "dwarf-mountain",
+    "target_slug": "dwarf",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "dwarf",
+    "target_slug": "dwarf-mountain",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "elf-wood",
+    "target_slug": "elf",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "elf",
+    "target_slug": "elf-wood",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "elf-dark",
+    "target_slug": "elf",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "elf",
+    "target_slug": "elf-dark",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "halfling-stout",
+    "target_slug": "halfling",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "halfling",
+    "target_slug": "halfling-stout",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "gnome-forest",
+    "target_slug": "gnome",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "gnome",
+    "target_slug": "gnome-forest",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "human-variant",
+    "target_slug": "human",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "human",
+    "target_slug": "human-variant",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "genasi-air",
+    "target_slug": "genasi",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "genasi",
+    "target_slug": "genasi-air",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "genasi-earth",
+    "target_slug": "genasi",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "genasi",
+    "target_slug": "genasi-earth",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "genasi-fire",
+    "target_slug": "genasi",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "genasi",
+    "target_slug": "genasi-fire",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "genasi-water",
+    "target_slug": "genasi",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "genasi",
+    "target_slug": "genasi-water",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "changeling",
+    "target_slug": "doppelganger",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "warforged",
+    "target_slug": "iron-golem",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "dhampir",
+    "target_slug": "vampire",
+    "relationship_type": "related"
   }
 ]

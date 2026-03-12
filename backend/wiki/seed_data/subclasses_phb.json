@@ -1,0 +1,624 @@
+[
+  {
+    "slug": "path-of-the-totem-warrior",
+    "title": "Path of the Totem Warrior",
+    "category": "subclass",
+    "subcategory": "barbarian",
+    "ruleset": "5e-2014",
+    "summary": "A primal path that draws on the spirit of nature, forging a spiritual bond with a totem animal to gain its power and protection.",
+    "content": "## Path of the Totem Warrior\n\nThe Path of the Totem Warrior is a spiritual journey, as the barbarian accepts a spirit animal as guide, protector, and inspiration. In battle, your totem spirit fills you with supernatural might, adding magical fuel to your barbarian rage.\n\n### Spirit Seeker (3rd Level)\n\nYours is a path that seeks attunement with the natural world, giving you a kinship with beasts. At 3rd level when you adopt this path, you gain the ability to cast Beast Sense and Speak with Animals spells, but only as rituals.\n\n### Totem Spirit (3rd Level)\n\nAt 3rd level, when you adopt this path, you choose a totem spirit and gain its feature. You must make or acquire a physical totem object that incorporates fur or feathers, claws, teeth, or bones of the totem animal. You may also gain minor physical attributes that are reminiscent of your totem spirit.\n\n**Bear.** While raging, you have resistance to all damage except psychic damage.\n\n**Eagle.** While you're raging and aren't wearing heavy armor, other creatures have disadvantage on opportunity attack rolls against you, and you can use the Dash action as a bonus action on your turn.\n\n**Wolf.** While you're raging, your friends have advantage on melee attack rolls against any creature within 5 feet of you that is hostile to you.\n\n### Aspect of the Beast (6th Level)\n\nAt 6th level, you gain a magical benefit based on the totem animal of your choice. You can choose the same animal you selected at 3rd level or a different one.\n\n**Bear.** You gain the might of a bear. Your carrying capacity (including maximum load and maximum lift) is doubled, and you have advantage on Strength checks made to push, pull, lift, or break objects.\n\n**Eagle.** You gain the eyesight of an eagle. You can see up to 1 mile away with no difficulty, able to discern even fine details as though looking at something no more than 100 feet away from you. Additionally, dim light doesn't impose disadvantage on your Wisdom (Perception) checks.\n\n**Wolf.** You gain the hunting sensibilities of a wolf. You can track other creatures while traveling at a fast pace, and you can move stealthily while traveling at a normal pace.\n\n### Spirit Walker (10th Level)\n\nAt 10th level, you can cast the Commune with Nature spell, but only as a ritual. When you do so, a spiritual version of one of the animals you chose for Totem Spirit or Aspect of the Beast appears to you to convey the information you seek.\n\n### Totemic Attunement (14th Level)\n\nAt 14th level, you gain a magical benefit based on a totem animal of your choice.\n\n**Bear.** While you're raging, any creature within 5 feet of you that's hostile to you has disadvantage on attack rolls against targets other than you or another character with this feature.\n\n**Eagle.** While raging, you have a flying speed equal to your current walking speed. This benefit works only in short bursts; you fall if you end your turn in the air and nothing else is holding you aloft.\n\n**Wolf.** While you're raging, you can use a bonus action on your turn to knock a Large or smaller creature prone when you hit it with a melee weapon attack.",
+    "metadata_json": {
+      "parent_class": "barbarian",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Spirit Seeker", "Totem Spirit"],
+        "6": ["Aspect of the Beast"],
+        "10": ["Spirit Walker"],
+        "14": ["Totemic Attunement"]
+      }
+    },
+    "tags": "subclass,barbarian,totem warrior,nature,spirit animal,bear,eagle,wolf",
+    "source": "PHB",
+    "sort_order": 20
+  },
+  {
+    "slug": "college-of-valor",
+    "title": "College of Valor",
+    "category": "subclass",
+    "subcategory": "bard",
+    "ruleset": "5e-2014",
+    "summary": "A bardic college that celebrates heroic deeds in song and story, inspiring allies in battle while wielding weapons and armor alongside magic.",
+    "content": "## College of Valor\n\nBards of the College of Valor are daring skalds whose tales keep alive the memory of the great heroes of the past, and thereby inspire a new generation of heroes. These bards gather in mead halls or around great bonfires to sing the deeds of the mighty, both past and present.\n\n### Bonus Proficiencies (3rd Level)\n\nWhen you join the College of Valor at 3rd level, you gain proficiency with medium armor, shields, and martial weapons.\n\n### Combat Inspiration (3rd Level)\n\nAlso at 3rd level, you learn to inspire others in battle. A creature that has a Bardic Inspiration die from you can roll that die and add the number rolled to a weapon damage roll it just made. Alternatively, when an attack roll is made against the creature, it can use its reaction to roll the Bardic Inspiration die and add the number rolled to its AC against that attack, after seeing the roll but before knowing whether it hits or misses.\n\n### Extra Attack (6th Level)\n\nStarting at 6th level, you can attack twice, instead of once, whenever you take the Attack action on your turn.\n\n### Battle Magic (14th Level)\n\nAt 14th level, you have mastered the art of weaving spellcasting and weapon use into a single harmonious act. When you use your action to cast a bard spell, you can make one weapon attack as a bonus action.",
+    "metadata_json": {
+      "parent_class": "bard",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Bonus Proficiencies", "Combat Inspiration"],
+        "6": ["Extra Attack"],
+        "14": ["Battle Magic"]
+      }
+    },
+    "tags": "subclass,bard,college of valor,martial,combat,inspiration,melee",
+    "source": "PHB",
+    "sort_order": 21
+  },
+  {
+    "slug": "knowledge-domain",
+    "title": "Knowledge Domain",
+    "category": "subclass",
+    "subcategory": "cleric",
+    "ruleset": "5e-2014",
+    "summary": "A divine domain devoted to learning and understanding, granting access to hidden knowledge and the ability to read thoughts.",
+    "content": "## Knowledge Domain\n\nThe gods of knowledge value learning and understanding above all. Some teach that knowledge is to be gathered and shared in libraries and universities, or promote the practical knowledge of craft and invention. Deities include Oghma, Boccob, Gilean, Aureon, and Thoth.\n\n### Knowledge Domain Spells\n\n| Cleric Level | Spells |\n|---|---|\n| 1st | Command, Identify |\n| 3rd | Augury, Suggestion |\n| 5th | Nondetection, Speak with Dead |\n| 7th | Arcane Eye, Confusion |\n| 9th | Legend Lore, Scrying |\n\n### Blessings of Knowledge (1st Level)\n\nAt 1st level, you learn two languages of your choice. You also become proficient in your choice of two of the following skills: Arcana, History, Nature, or Religion. Your proficiency bonus is doubled for any ability check you make that uses either of those skills.\n\n### Channel Divinity: Knowledge of the Ages (2nd Level)\n\nStarting at 2nd level, you can use your Channel Divinity to tap into a divine well of knowledge. As an action, you choose one skill or tool. For 10 minutes, you have proficiency with the chosen skill or tool.\n\n### Channel Divinity: Read Thoughts (6th Level)\n\nAt 6th level, you can use your Channel Divinity to read a creature's thoughts. You can then use your access to the creature's mind to command it. As an action, choose one creature that you can see within 60 feet of you. That creature must make a Wisdom saving throw. If the creature succeeds on the saving throw, you can't use this feature on it again until you finish a long rest. If the creature fails its save, you can read its surface thoughts when it is within 60 feet of you. This effect lasts for 1 minute. During that time, you can use your action to cast the Suggestion spell on the creature without expending a spell slot. The target automatically fails its saving throw against the spell.\n\n### Potent Spellcasting (8th Level)\n\nStarting at 8th level, you add your Wisdom modifier to the damage you deal with any cleric cantrip.\n\n### Visions of the Past (17th Level)\n\nStarting at 17th level, you can call up visions of the past that relate to an object you hold or your immediate surroundings. You spend at least 1 minute in meditation and prayer, then receive dreamlike, shadowy glimpses of recent events. You can meditate for a number of minutes equal to your Wisdom score and must maintain concentration during that time, as if you were casting a spell. **Object Reading** gives you a vision of the previous owner. **Area Reading** gives you visions of recent events in your immediate vicinity going back a number of days equal to your Wisdom score.",
+    "metadata_json": {
+      "parent_class": "cleric",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Knowledge Domain Spells", "Blessings of Knowledge"],
+        "2": ["Channel Divinity: Knowledge of the Ages"],
+        "6": ["Channel Divinity: Read Thoughts"],
+        "8": ["Potent Spellcasting"],
+        "17": ["Visions of the Past"]
+      }
+    },
+    "tags": "subclass,cleric,knowledge domain,divination,skills,proficiency,information",
+    "source": "PHB",
+    "sort_order": 22
+  },
+  {
+    "slug": "light-domain",
+    "title": "Light Domain",
+    "category": "subclass",
+    "subcategory": "cleric",
+    "ruleset": "5e-2014",
+    "summary": "A divine domain that channels the power of radiance and fire, punishing darkness and evil with searing light and flame.",
+    "content": "## Light Domain\n\nGods of light promote the ideals of rebirth and renewal, truth, vigilance, and beauty, often using the symbol of the sun. Clerics of a god of light are enlightened souls infused with radiance and the power of their gods' discerning vision, charged with chasing away lies and burning away darkness.\n\n### Light Domain Spells\n\n| Cleric Level | Spells |\n|---|---|\n| 1st | Burning Hands, Faerie Fire |\n| 3rd | Flaming Sphere, Scorching Ray |\n| 5th | Daylight, Fireball |\n| 7th | Guardian of Faith, Wall of Fire |\n| 9th | Flame Strike, Scrying |\n\n### Bonus Cantrip (1st Level)\n\nWhen you choose this domain at 1st level, you gain the Light cantrip if you don't already know it.\n\n### Warding Flare (1st Level)\n\nAlso at 1st level, you can interpose divine light between yourself and an attacking enemy. When you are attacked by a creature within 30 feet of you that you can see, you can use your reaction to impose disadvantage on the attack roll, causing light to flare before the attacker before it hits or misses. An attacker that can't be blinded is immune to this feature. You can use this feature a number of times equal to your Wisdom modifier (a minimum of once). You regain all expended uses when you finish a long rest.\n\n### Channel Divinity: Radiance of the Dawn (2nd Level)\n\nStarting at 2nd level, you can use your Channel Divinity to harness sunlight, banishing darkness and dealing radiant damage to your foes. As an action, you present your holy symbol, and any magical darkness within 30 feet of you is dispelled. Additionally, each hostile creature within 30 feet of you must make a Constitution saving throw. A creature takes radiant damage equal to 2d10 + your cleric level on a failed saving throw, and half as much damage on a successful one. A creature that has total cover from you is not affected.\n\n### Improved Flare (6th Level)\n\nStarting at 6th level, you can also use your Warding Flare feature when a creature that you can see within 30 feet of you attacks a creature other than you.\n\n### Potent Spellcasting (8th Level)\n\nStarting at 8th level, you add your Wisdom modifier to the damage you deal with any cleric cantrip.\n\n### Corona of Light (17th Level)\n\nStarting at 17th level, you can use your action to activate an aura of sunlight that lasts for 1 minute or until you dismiss it using another action. You emit bright light in a 60-foot radius and dim light 30 feet beyond that. Your enemies in the bright light have disadvantage on saving throws against any spell that deals fire or radiant damage.",
+    "metadata_json": {
+      "parent_class": "cleric",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Light Domain Spells", "Bonus Cantrip", "Warding Flare"],
+        "2": ["Channel Divinity: Radiance of the Dawn"],
+        "6": ["Improved Flare"],
+        "8": ["Potent Spellcasting"],
+        "17": ["Corona of Light"]
+      }
+    },
+    "tags": "subclass,cleric,light domain,radiant,fire,illumination,offensive",
+    "source": "PHB",
+    "sort_order": 23
+  },
+  {
+    "slug": "nature-domain",
+    "title": "Nature Domain",
+    "category": "subclass",
+    "subcategory": "cleric",
+    "ruleset": "5e-2014",
+    "summary": "A divine domain tied to nature and the wilderness, granting druid cantrips, heavy armor, and the ability to charm plants and animals.",
+    "content": "## Nature Domain\n\nGods of nature are as varied as the natural world itself, from inscrutable gods of the deep forests to friendly deities associated with particular springs and groves. Druids revere nature as a whole, but nature clerics serve specific nature deities and act as envoys between the gods and the people.\n\n### Nature Domain Spells\n\n| Cleric Level | Spells |\n|---|---|\n| 1st | Animal Friendship, Speak with Animals |\n| 3rd | Barkskin, Spike Growth |\n| 5th | Plant Growth, Wind Wall |\n| 7th | Dominate Beast, Grasping Vine |\n| 9th | Insect Plague, Tree Stride |\n\n### Acolyte of Nature (1st Level)\n\nAt 1st level, you learn one druid cantrip of your choice. You also gain proficiency in one of the following skills of your choice: Animal Handling, Nature, or Survival.\n\n### Bonus Proficiency (1st Level)\n\nAlso at 1st level, you gain proficiency with heavy armor.\n\n### Channel Divinity: Charm Animals and Plants (2nd Level)\n\nStarting at 2nd level, you can use your Channel Divinity to charm animals and plants. As an action, you present your holy symbol and invoke the name of your deity. Each beast or plant creature that can see you within 30 feet of you must make a Wisdom saving throw. If the creature fails its saving throw, it is charmed by you for 1 minute or until it takes damage. While it is charmed by you, it is friendly to you and other creatures you designate.\n\n### Dampen Elements (6th Level)\n\nStarting at 6th level, when you or a creature within 30 feet of you takes acid, cold, fire, lightning, or thunder damage, you can use your reaction to grant resistance to the creature against that instance of the damage.\n\n### Divine Strike (8th Level)\n\nAt 8th level, you gain the ability to infuse your weapon strikes with divine energy. Once on each of your turns when you hit a creature with a weapon attack, you can cause the attack to deal an extra 1d8 cold, fire, or lightning damage (your choice) to the target. When you reach 14th level, the extra damage increases to 2d8.\n\n### Master of Nature (17th Level)\n\nAt 17th level, you gain the ability to command animals and plant creatures. While creatures are charmed by your Charm Animals and Plants feature, you can take a bonus action on your turn to verbally command what each of those creatures will do on its next turn.",
+    "metadata_json": {
+      "parent_class": "cleric",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Nature Domain Spells", "Acolyte of Nature", "Bonus Proficiency"],
+        "2": ["Channel Divinity: Charm Animals and Plants"],
+        "6": ["Dampen Elements"],
+        "8": ["Divine Strike"],
+        "17": ["Master of Nature"]
+      }
+    },
+    "tags": "subclass,cleric,nature domain,nature,animals,plants,heavy armor,elemental",
+    "source": "PHB",
+    "sort_order": 24
+  },
+  {
+    "slug": "tempest-domain",
+    "title": "Tempest Domain",
+    "category": "subclass",
+    "subcategory": "cleric",
+    "ruleset": "5e-2014",
+    "summary": "A divine domain that commands the fury of storms, granting mastery over thunder and lightning and the power to punish attackers with crackling energy.",
+    "content": "## Tempest Domain\n\nGods whose portfolios include the Tempest domain govern storms, sea, and sky. They include gods of lightning and thunder, gods of earthquakes, some fire gods, and certain gods of violence, physical strength, and courage. Clerics of tempest deities command the elements themselves.\n\n### Tempest Domain Spells\n\n| Cleric Level | Spells |\n|---|---|\n| 1st | Fog Cloud, Thunderwave |\n| 3rd | Gust of Wind, Shatter |\n| 5th | Call Lightning, Sleet Storm |\n| 7th | Control Water, Ice Storm |\n| 9th | Destructive Wave, Insect Plague |\n\n### Bonus Proficiencies (1st Level)\n\nAt 1st level, you gain proficiency with martial weapons and heavy armor.\n\n### Wrath of the Storm (1st Level)\n\nAlso at 1st level, you can thunderously rebuke attackers. When a creature within 5 feet of you that you can see hits you with an attack, you can use your reaction to cause the creature to make a Dexterity saving throw. The creature takes 2d8 lightning or thunder damage (your choice) on a failed saving throw, and half as much damage on a successful one. You can use this feature a number of times equal to your Wisdom modifier (a minimum of once). You regain all expended uses when you finish a long rest.\n\n### Channel Divinity: Destructive Wrath (2nd Level)\n\nStarting at 2nd level, you can use your Channel Divinity to wield the power of the storm with unchecked ferocity. When you roll lightning or thunder damage, you can use your Channel Divinity to deal maximum damage, instead of rolling.\n\n### Thunderbolt Strike (6th Level)\n\nAt 6th level, when you deal lightning damage to a Large or smaller creature, you can also push it up to 10 feet away from you.\n\n### Divine Strike (8th Level)\n\nAt 8th level, you gain the ability to infuse your weapon strikes with divine energy. Once on each of your turns when you hit a creature with a weapon attack, you can cause the attack to deal an extra 1d8 thunder damage to the target. When you reach 14th level, the extra damage increases to 2d8.\n\n### Stormborn (17th Level)\n\nAt 17th level, you have a flying speed equal to your current walking speed whenever you are not underground or indoors.",
+    "metadata_json": {
+      "parent_class": "cleric",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Tempest Domain Spells", "Bonus Proficiencies", "Wrath of the Storm"],
+        "2": ["Channel Divinity: Destructive Wrath"],
+        "6": ["Thunderbolt Strike"],
+        "8": ["Divine Strike"],
+        "17": ["Stormborn"]
+      }
+    },
+    "tags": "subclass,cleric,tempest domain,lightning,thunder,storm,martial,heavy armor",
+    "source": "PHB",
+    "sort_order": 25
+  },
+  {
+    "slug": "trickery-domain",
+    "title": "Trickery Domain",
+    "category": "subclass",
+    "subcategory": "cleric",
+    "ruleset": "5e-2014",
+    "summary": "A divine domain of deception and mischief, granting illusions, stealth blessings, and the ability to create duplicates of yourself.",
+    "content": "## Trickery Domain\n\nGods of trickery are mischief-makers and instigators who stand as a constant challenge to the accepted order among both gods and mortals. They are patrons of thieves, scoundrels, gamblers, rebels, and liberators. Their clerics are a disruptive force in the world, puncturing pride, mocking tyrants, and stealing from the rich.\n\n### Trickery Domain Spells\n\n| Cleric Level | Spells |\n|---|---|\n| 1st | Charm Person, Disguise Self |\n| 3rd | Mirror Image, Pass without Trace |\n| 5th | Blink, Dispel Magic |\n| 7th | Dimension Door, Polymorph |\n| 9th | Dominate Person, Modify Memory |\n\n### Blessing of the Trickster (1st Level)\n\nStarting when you choose this domain at 1st level, you can use your action to touch a willing creature other than yourself to give it advantage on Dexterity (Stealth) checks. This blessing lasts for 1 hour or until you use this feature again.\n\n### Channel Divinity: Invoke Duplicity (2nd Level)\n\nStarting at 2nd level, you can use your Channel Divinity to create an illusory duplicate of yourself. As an action, you create a perfect illusion of yourself that lasts for 1 minute, or until you lose your concentration. The illusion appears in an unoccupied space that you can see within 30 feet of you. As a bonus action on your turn, you can move the illusion up to 30 feet to a space you can see, but it must remain within 120 feet of you. For the duration, you can cast spells as though you were in the illusion's space, but you must use your own senses. Additionally, when both you and your illusion are within 5 feet of a creature that can see the illusion, you have advantage on attack rolls against that creature.\n\n### Channel Divinity: Cloak of Shadows (6th Level)\n\nStarting at 6th level, you can use your Channel Divinity to vanish. As an action, you become invisible until the end of your next turn. You become visible if you attack or cast a spell.\n\n### Divine Strike (8th Level)\n\nAt 8th level, you gain the ability to infuse your weapon strikes with poison. Once on each of your turns when you hit a creature with a weapon attack, you can cause the attack to deal an extra 1d8 poison damage to the target. When you reach 14th level, the extra damage increases to 2d8.\n\n### Improved Duplicity (17th Level)\n\nAt 17th level, you can create up to four duplicates of yourself, instead of one, when you use Invoke Duplicity. As a bonus action on your turn, you can move any number of them up to 30 feet, to a maximum range of 120 feet.",
+    "metadata_json": {
+      "parent_class": "cleric",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Trickery Domain Spells", "Blessing of the Trickster"],
+        "2": ["Channel Divinity: Invoke Duplicity"],
+        "6": ["Channel Divinity: Cloak of Shadows"],
+        "8": ["Divine Strike"],
+        "17": ["Improved Duplicity"]
+      }
+    },
+    "tags": "subclass,cleric,trickery domain,illusion,stealth,deception,mischief",
+    "source": "PHB",
+    "sort_order": 26
+  },
+  {
+    "slug": "war-domain",
+    "title": "War Domain",
+    "category": "subclass",
+    "subcategory": "cleric",
+    "ruleset": "5e-2014",
+    "summary": "A divine domain of martial prowess and battle, granting bonus attacks, guided strikes, and the ability to channel divine power into war.",
+    "content": "## War Domain\n\nWar has many manifestations. It can make heroes of ordinary people. It can be desperate and horrific, with acts of cruelty and cowardice eclipsing instances of excellence and courage. Clerics of war gods excel in battle, inspiring others to fight the good fight or offering acts of violence as prayers.\n\n### War Domain Spells\n\n| Cleric Level | Spells |\n|---|---|\n| 1st | Divine Favor, Shield of Faith |\n| 3rd | Magic Weapon, Spiritual Weapon |\n| 5th | Crusader's Mantle, Spirit Guardians |\n| 7th | Freedom of Movement, Stoneskin |\n| 9th | Flame Strike, Hold Monster |\n\n### Bonus Proficiencies (1st Level)\n\nAt 1st level, you gain proficiency with martial weapons and heavy armor.\n\n### War Priest (1st Level)\n\nFrom 1st level, your god delivers bolts of inspiration to you while you are engaged in battle. When you use the Attack action, you can make one weapon attack as a bonus action. You can use this feature a number of times equal to your Wisdom modifier (a minimum of once). You regain all expended uses when you finish a long rest.\n\n### Channel Divinity: Guided Strike (2nd Level)\n\nStarting at 2nd level, you can use your Channel Divinity to strike with supernatural accuracy. When you make an attack roll, you can use your Channel Divinity to gain a +10 bonus to the roll. You make this choice after you see the roll, but before the DM says whether the attack hits or misses.\n\n### Channel Divinity: War God's Blessing (6th Level)\n\nAt 6th level, when a creature within 30 feet of you makes an attack roll, you can use your reaction to grant that creature a +10 bonus to the roll, using your Channel Divinity. You make this choice after you see the roll, but before the DM says whether the attack hits or misses.\n\n### Divine Strike (8th Level)\n\nAt 8th level, you gain the ability to infuse your weapon strikes with divine energy. Once on each of your turns when you hit a creature with a weapon attack, you can cause the attack to deal an extra 1d8 damage of the same type dealt by the weapon to the target. When you reach 14th level, the extra damage increases to 2d8.\n\n### Avatar of Battle (17th Level)\n\nAt 17th level, you gain resistance to bludgeoning, piercing, and slashing damage from nonmagical weapons.",
+    "metadata_json": {
+      "parent_class": "cleric",
+      "subclass_level": 1,
+      "features": {
+        "1": ["War Domain Spells", "Bonus Proficiencies", "War Priest"],
+        "2": ["Channel Divinity: Guided Strike"],
+        "6": ["Channel Divinity: War God's Blessing"],
+        "8": ["Divine Strike"],
+        "17": ["Avatar of Battle"]
+      }
+    },
+    "tags": "subclass,cleric,war domain,martial,combat,heavy armor,bonus attack",
+    "source": "PHB",
+    "sort_order": 27
+  },
+  {
+    "slug": "circle-of-the-moon",
+    "title": "Circle of the Moon",
+    "category": "subclass",
+    "subcategory": "druid",
+    "ruleset": "5e-2014",
+    "summary": "A druidic circle that emphasizes powerful Wild Shape transformations, allowing combat-ready beast forms and eventually elemental shapes.",
+    "content": "## Circle of the Moon\n\nDruids of the Circle of the Moon are fierce guardians of the wilds. Their order gathers under the full moon to share news and trade warnings. They haunt the deepest parts of the wilderness, where they might go for weeks on end before crossing paths with another humanoid creature, let alone another druid.\n\n### Combat Wild Shape (2nd Level)\n\nWhen you choose this circle at 2nd level, you gain the ability to use Wild Shape on your turn as a bonus action, rather than as an action. Additionally, while you are transformed by Wild Shape, you can use a bonus action to expend one spell slot and regain 1d8 hit points per level of the spell slot expended.\n\n### Circle Forms (2nd Level)\n\nThe rites of your circle grant you the ability to transform into more dangerous animal forms. Starting at 2nd level, you can use your Wild Shape to transform into a beast with a challenge rating as high as 1 (you ignore the Max. CR column of the Beast Shapes table, but must abide by the other limitations there). Starting at 6th level, you can transform into a beast with a challenge rating as high as your druid level divided by 3, rounded down.\n\n### Primal Strike (6th Level)\n\nStarting at 6th level, your attacks in beast form count as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage.\n\n### Elemental Wild Shape (10th Level)\n\nAt 10th level, you can expend two uses of Wild Shape at the same time to transform into an air elemental, an earth elemental, a fire elemental, or a water elemental.\n\n### Thousand Forms (14th Level)\n\nBy 14th level, you have learned to use magic to alter your physical form in more subtle ways. You can cast the Alter Self spell at will.",
+    "metadata_json": {
+      "parent_class": "druid",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Combat Wild Shape", "Circle Forms"],
+        "6": ["Primal Strike"],
+        "10": ["Elemental Wild Shape"],
+        "14": ["Thousand Forms"]
+      }
+    },
+    "tags": "subclass,druid,circle of the moon,wild shape,shapeshifting,beast,elemental,melee",
+    "source": "PHB",
+    "sort_order": 28
+  },
+  {
+    "slug": "battle-master",
+    "title": "Battle Master",
+    "category": "subclass",
+    "subcategory": "fighter",
+    "ruleset": "5e-2014",
+    "summary": "A martial archetype that employs tactical maneuvers in combat, using superiority dice to perform special attacks, parries, and battlefield control.",
+    "content": "## Battle Master\n\nThose who emulate the archetypal Battle Master employ martial techniques passed down through generations. To a Battle Master, combat is an academic field, sometimes including subjects beyond battle such as weaponsmithing and calligraphy. Not every fighter absorbs the lessons of history, theory, and artistry that are reflected in the Battle Master archetype, but those who do are well-rounded fighters of great skill and knowledge.\n\n### Combat Superiority (3rd Level)\n\nWhen you choose this archetype at 3rd level, you learn maneuvers that are fueled by special dice called superiority dice. You learn three maneuvers of your choice from the list available to the Battle Master. You learn two additional maneuvers at 7th, 10th, and 15th level. You have four superiority dice, which are d8s. A superiority die is expended when you use it. You regain all of your expended superiority dice when you finish a short or long rest. You gain another superiority die at 7th level and one more at 15th level. Your superiority dice turn into d10s at 10th level and d12s at 18th level.\n\n### Student of War (3rd Level)\n\nAt 3rd level, you gain proficiency with one type of artisan's tools of your choice.\n\n### Know Your Enemy (7th Level)\n\nStarting at 7th level, if you spend at least 1 minute observing or interacting with another creature outside combat, you can learn certain information about its capabilities compared to your own. The DM tells you if the creature is your equal, superior, or inferior in regard to two of the following characteristics of your choice: Strength score, Dexterity score, Constitution score, Armor Class, current hit points, total class levels (if any), or fighter class levels (if any).\n\n### Improved Combat Superiority (10th Level)\n\nAt 10th level, your superiority dice turn into d10s. At 18th level, they turn into d12s.\n\n### Relentless (15th Level)\n\nStarting at 15th level, when you roll initiative and have no superiority dice remaining, you regain one superiority die.",
+    "metadata_json": {
+      "parent_class": "fighter",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Combat Superiority", "Student of War"],
+        "7": ["Know Your Enemy"],
+        "10": ["Improved Combat Superiority"],
+        "15": ["Relentless"]
+      }
+    },
+    "tags": "subclass,fighter,battle master,maneuvers,superiority dice,tactical,martial",
+    "source": "PHB",
+    "sort_order": 29
+  },
+  {
+    "slug": "eldritch-knight",
+    "title": "Eldritch Knight",
+    "category": "subclass",
+    "subcategory": "fighter",
+    "ruleset": "5e-2014",
+    "summary": "A martial archetype that combines weapon mastery with arcane magic, learning wizard spells to augment combat abilities.",
+    "content": "## Eldritch Knight\n\nThe archetypal Eldritch Knight combines the martial mastery common to all fighters with a careful study of magic. Eldritch Knights use magical techniques similar to those practiced by wizards. They focus their study on two of the eight schools of magic: abjuration and evocation.\n\n### Spellcasting (3rd Level)\n\nWhen you reach 3rd level, you augment your martial prowess with the ability to cast spells. You learn two cantrips of your choice from the wizard spell list. You learn an additional wizard cantrip at 10th level. You know three 1st-level wizard spells, two of which must be from the abjuration or evocation schools. The Eldritch Knight Spellcasting table shows how many spell slots you have. Intelligence is your spellcasting ability.\n\n### Weapon Bond (3rd Level)\n\nAt 3rd level, you learn a ritual that creates a magical bond between yourself and one weapon. Once you have bonded a weapon to yourself, you can't be disarmed of that weapon unless you are incapacitated. If it is on the same plane of existence, you can summon that weapon as a bonus action on your turn, causing it to teleport instantly to your hand. You can have up to two bonded weapons.\n\n### War Magic (7th Level)\n\nBeginning at 7th level, when you use your action to cast a cantrip, you can make one weapon attack as a bonus action.\n\n### Eldritch Strike (10th Level)\n\nAt 10th level, you learn how to make your weapon strikes undercut a creature's resistance to your spells. When you hit a creature with a weapon attack, that creature has disadvantage on the next saving throw it makes against a spell you cast before the end of your next turn.\n\n### Arcane Charge (15th Level)\n\nAt 15th level, you gain the ability to teleport up to 30 feet to an unoccupied space you can see when you use your Action Surge. You can teleport before or after the additional action.\n\n### Improved War Magic (18th Level)\n\nStarting at 18th level, when you use your action to cast a spell, you can make one weapon attack as a bonus action.",
+    "metadata_json": {
+      "parent_class": "fighter",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Spellcasting", "Weapon Bond"],
+        "7": ["War Magic"],
+        "10": ["Eldritch Strike"],
+        "15": ["Arcane Charge"],
+        "18": ["Improved War Magic"]
+      }
+    },
+    "tags": "subclass,fighter,eldritch knight,spellcasting,wizard,abjuration,evocation,gish",
+    "source": "PHB",
+    "sort_order": 30
+  },
+  {
+    "slug": "way-of-shadow",
+    "title": "Way of Shadow",
+    "category": "subclass",
+    "subcategory": "monk",
+    "ruleset": "5e-2014",
+    "summary": "A monastic tradition that follows the way of stealth and darkness, using ki to duplicate the effects of shadow magic and strike from hiding.",
+    "content": "## Way of Shadow\n\nMonks of the Way of Shadow follow a tradition that values stealth and subterfuge. These monks might be called ninjas or shadowdancers, and they serve as spies and assassins. Sometimes the members of a ninja monastery are family members, forming a clan sworn to secrecy about their arts and missions.\n\n### Shadow Arts (3rd Level)\n\nStarting when you choose this tradition at 3rd level, you can use your ki to duplicate the effects of certain spells. As an action, you can spend 2 ki points to cast Darkness, Darkvision, Pass without Trace, or Silence, without providing material components. Additionally, you gain the Minor Illusion cantrip if you don't already know it.\n\n### Shadow Step (6th Level)\n\nAt 6th level, you gain the ability to step from one shadow into another. When you are in dim light or darkness, as a bonus action you can teleport up to 60 feet to an unoccupied space you can see that is also in dim light or darkness. You then have advantage on the first melee attack you make before the end of the turn.\n\n### Cloak of Shadows (11th Level)\n\nBy 11th level, you have learned to become one with the shadows. When you are in an area of dim light or darkness, you can use your action to become invisible. You remain invisible until you make an attack, cast a spell, or are in an area of bright light.\n\n### Opportunist (17th Level)\n\nAt 17th level, you can exploit a creature's momentary distraction when it is hit by an attack. Whenever a creature within 5 feet of you is hit by an attack made by a creature other than you, you can use your reaction to make a melee attack against that creature.",
+    "metadata_json": {
+      "parent_class": "monk",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Shadow Arts"],
+        "6": ["Shadow Step"],
+        "11": ["Cloak of Shadows"],
+        "17": ["Opportunist"]
+      }
+    },
+    "tags": "subclass,monk,way of shadow,stealth,darkness,ninja,teleportation,ki",
+    "source": "PHB",
+    "sort_order": 31
+  },
+  {
+    "slug": "way-of-the-four-elements",
+    "title": "Way of the Four Elements",
+    "category": "subclass",
+    "subcategory": "monk",
+    "ruleset": "5e-2014",
+    "summary": "A monastic tradition that channels ki into elemental magic, allowing the monk to harness fire, water, earth, and air in devastating displays.",
+    "content": "## Way of the Four Elements\n\nYou follow a monastic tradition that teaches you to harness the elements. When you focus your ki, you can align yourself with the forces of creation and bend four elements to your will, using them as an extension of your body. Some members of this tradition dedicate themselves to a single element, but others weave the elements together.\n\n### Disciple of the Elements (3rd Level)\n\nWhen you choose this tradition at 3rd level, you learn magical disciplines that harness the power of the four elements. You learn the Elemental Attunement discipline and one other elemental discipline of your choice. You learn one additional elemental discipline of your choice at 6th, 11th, and 17th level.\n\nWhenever you learn a new elemental discipline, you can also replace one elemental discipline that you already know with a different discipline. To cast one of these spells, you use its casting time and other rules, but you don't need to provide material components for it. Once you reach 5th level in this class, you can spend additional ki points to increase the level of an elemental discipline spell that you cast, provided that the spell has an enhanced effect at a higher level.\n\n### Elemental Attunement\n\nYou can use your action to briefly control elemental forces nearby, causing one of the following effects of your choice: create a harmless sensory effect related to air, earth, fire, or water; instantaneously light or snuff out a candle, a torch, or a small campfire; chill or warm up to 1 pound of nonliving material for up to 1 hour; or cause earth, fire, water, or mist to shape itself into a crude form you designate for 1 minute.\n\n### Example Disciplines\n\nDisciplines include Fangs of the Fire Snake (fire melee reach), Fist of Four Thunders (Thunderwave), Fist of Unbroken Air (ranged air blast), Rush of the Gale Spirits (Gust of Wind), Shape the Flowing River (water/ice control), Sweeping Cinder Strike (Burning Hands), and Water Whip (ranged water grapple), among many others at higher levels.",
+    "metadata_json": {
+      "parent_class": "monk",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Disciple of the Elements", "Elemental Attunement"],
+        "6": ["Additional Elemental Discipline"],
+        "11": ["Additional Elemental Discipline"],
+        "17": ["Additional Elemental Discipline"]
+      }
+    },
+    "tags": "subclass,monk,way of the four elements,elemental,fire,water,earth,air,ki,spellcasting",
+    "source": "PHB",
+    "sort_order": 32
+  },
+  {
+    "slug": "oath-of-the-ancients",
+    "title": "Oath of the Ancients",
+    "category": "subclass",
+    "subcategory": "paladin",
+    "ruleset": "5e-2014",
+    "summary": "A sacred oath aligned with the forces of light and nature, protecting the beauty and joy of the world against darkness and decay.",
+    "content": "## Oath of the Ancients\n\nThe Oath of the Ancients is as old as the race of elves and the rituals of the druids. Sometimes called fey knights, green knights, or horned knights, paladins who swear this oath cast their lot with the side of the light in the cosmic struggle against darkness because they love the beautiful and life-giving things of the world.\n\n### Tenets of the Ancients\n\n- **Kindle the Light.** Through your acts of mercy, kindness, and forgiveness, kindle the light of hope in the world.\n- **Shelter the Light.** Where there is good, beauty, love, and laughter in the world, stand against the wickedness that would swallow it.\n- **Preserve Your Own Light.** Delight in song and laughter, in beauty and art.\n- **Be the Light.** Be a glorious beacon for all who live in despair.\n\n### Oath Spells\n\n| Paladin Level | Spells |\n|---|---|\n| 3rd | Ensnaring Strike, Speak with Animals |\n| 5th | Moonbeam, Misty Step |\n| 9th | Plant Growth, Protection from Energy |\n| 13th | Ice Storm, Stoneskin |\n| 17th | Commune with Nature, Tree Stride |\n\n### Channel Divinity (3rd Level)\n\n**Nature's Wrath.** You can use your Channel Divinity to invoke primeval forces to ensnare a foe. As an action, you can cause spectral vines to spring up and reach for a creature within 10 feet of you that you can see. The creature must succeed on a Strength or Dexterity saving throw (its choice) or be restrained. While restrained, the creature repeats the saving throw at the end of each of its turns, freeing itself on a success.\n\n**Turn the Faithless.** You can use your Channel Divinity to utter ancient words that are painful for fey and fiends to hear. As an action, each fey or fiend within 30 feet of you that can hear you must make a Wisdom saving throw. On a failed save, the creature is turned for 1 minute or until it takes damage.\n\n### Aura of Warding (7th Level)\n\nBeginning at 7th level, you and friendly creatures within 10 feet of you have resistance to damage from spells. At 18th level, the range of this aura increases to 30 feet.\n\n### Undying Sentinel (15th Level)\n\nStarting at 15th level, when you are reduced to 0 hit points and are not killed outright, you can choose to drop to 1 hit point instead. Once you use this ability, you can't use it again until you finish a long rest. Additionally, you suffer none of the drawbacks of old age, and you can't be aged magically.\n\n### Elder Champion (20th Level)\n\nAt 20th level, you can assume the form of an ancient force of nature, taking on an appearance you choose. Using your action, you undergo a transformation. For 1 minute, you regain 10 hit points at the start of each of your turns, you can cast paladin spells with a casting time of 1 action as a bonus action, and enemy creatures within 10 feet of you have disadvantage on saving throws against your paladin spells and Channel Divinity options.",
+    "metadata_json": {
+      "parent_class": "paladin",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Oath Spells", "Channel Divinity: Nature's Wrath", "Channel Divinity: Turn the Faithless"],
+        "7": ["Aura of Warding"],
+        "15": ["Undying Sentinel"],
+        "20": ["Elder Champion"]
+      }
+    },
+    "tags": "subclass,paladin,oath of the ancients,nature,fey,aura,spell resistance,green knight",
+    "source": "PHB",
+    "sort_order": 33
+  },
+  {
+    "slug": "oath-of-vengeance",
+    "title": "Oath of Vengeance",
+    "category": "subclass",
+    "subcategory": "paladin",
+    "ruleset": "5e-2014",
+    "summary": "A sacred oath focused on punishing those who have committed grievous sins, relentlessly pursuing sworn enemies with divine fury.",
+    "content": "## Oath of Vengeance\n\nThe Oath of Vengeance is a solemn commitment to punish those who have committed a grievous sin. When evil forces slaughter helpless villagers, when an entire people turns against the will of the gods, when a thieves' guild grows too violent and powerful, when a dragon rampages through the countryside — at times like these, paladins arise and swear an Oath of Vengeance.\n\n### Tenets of Vengeance\n\n- **Fight the Greater Evil.** Faced with a choice of fighting my sworn foes or combating a lesser evil, I choose the greater evil.\n- **No Mercy for the Wicked.** Ordinary foes might win my mercy, but my sworn enemies do not.\n- **By Any Means Necessary.** My qualms can't get in the way of exterminating my foes.\n- **Restitution.** If my foes wreak ruin on the world, it is because I failed to stop them. I must help those harmed by their misdeeds.\n\n### Oath Spells\n\n| Paladin Level | Spells |\n|---|---|\n| 3rd | Bane, Hunter's Mark |\n| 5th | Hold Person, Misty Step |\n| 9th | Haste, Protection from Energy |\n| 13th | Banishment, Dimension Door |\n| 17th | Hold Monster, Scrying |\n\n### Channel Divinity (3rd Level)\n\n**Abjure Enemy.** As an action, you present your holy symbol and speak a prayer of denunciation, using your Channel Divinity. Choose one creature within 60 feet of you that you can see. That creature must make a Wisdom saving throw, unless it is immune to being frightened. Fiends and undead have disadvantage on this saving throw. On a failed save, the creature is frightened for 1 minute or until it takes any damage. While frightened, the creature's speed is 0, and it can't benefit from any bonus to its speed. On a successful save, the creature's speed is halved for 1 minute or until the creature takes any damage.\n\n**Vow of Enmity.** As a bonus action, you can utter a vow of enmity against a creature you can see within 10 feet of you, using your Channel Divinity. You gain advantage on attack rolls against the creature for 1 minute or until it drops to 0 hit points or falls unconscious.\n\n### Relentless Avenger (7th Level)\n\nBy 7th level, your supernatural focus helps you close off a foe's retreat. When you hit a creature with an opportunity attack, you can move up to half your speed immediately after the attack and as part of the same reaction. This movement doesn't provoke opportunity attacks.\n\n### Soul of Vengeance (15th Level)\n\nStarting at 15th level, the authority with which you speak your Vow of Enmity gives you greater power over your foe. When a creature under the effect of your Vow of Enmity makes an attack, you can use your reaction to make a melee weapon attack against that creature if it is within range.\n\n### Avenging Angel (20th Level)\n\nAt 20th level, you can assume the form of an angelic avenger. Using your action, you undergo a transformation. For 1 hour, you gain a flying speed of 60 feet, and you emanate an aura of menace in a 30-foot radius. The first time any enemy creature enters the aura or starts its turn there during a battle, the creature must succeed on a Wisdom saving throw or become frightened of you for 1 minute or until it takes any damage.",
+    "metadata_json": {
+      "parent_class": "paladin",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Oath Spells", "Channel Divinity: Abjure Enemy", "Channel Divinity: Vow of Enmity"],
+        "7": ["Relentless Avenger"],
+        "15": ["Soul of Vengeance"],
+        "20": ["Avenging Angel"]
+      }
+    },
+    "tags": "subclass,paladin,oath of vengeance,smite,pursuit,single-target,offensive",
+    "source": "PHB",
+    "sort_order": 34
+  },
+  {
+    "slug": "beast-master",
+    "title": "Beast Master",
+    "category": "subclass",
+    "subcategory": "ranger",
+    "ruleset": "5e-2014",
+    "summary": "A ranger archetype that forms a mystical bond with a beast companion, fighting side by side as a coordinated team.",
+    "content": "## Beast Master\n\nThe Beast Master archetype embodies a friendship between the civilized races and the beasts of the world. United in focus, beast and ranger work as one to fight the monstrous foes that threaten civilization and the wilderness alike.\n\n### Ranger's Companion (3rd Level)\n\nAt 3rd level, you gain a beast companion that accompanies you on your adventures and is trained to fight alongside you. Choose a beast that is no larger than Medium and that has a challenge rating of 1/4 or lower. Add your proficiency bonus to the beast's AC, attack rolls, and damage rolls, as well as to any saving throws and skills it is proficient in. Its hit point maximum equals its normal maximum or four times your ranger level, whichever is higher. The beast obeys your commands as best it can. It takes its turn on your initiative, though it doesn't take an action unless you command it to. On your turn, you can verbally command the beast where to move (no action required by you). You can use your action to verbally command it to take the Attack, Dash, Disengage, Dodge, or Help action. Once you have the Extra Attack feature, you can make one weapon attack yourself when you command the beast to take the Attack action. If you are incapacitated or absent, the beast acts on its own, focusing on protecting you and itself. The beast never requires your command to use its reaction. If the beast dies, you can obtain another one by spending 8 hours magically bonding with another beast that isn't hostile to you.\n\n### Exceptional Training (7th Level)\n\nBeginning at 7th level, on any of your turns when your beast companion doesn't attack, you can use a bonus action to command the beast to take the Dash, Disengage, Dodge, or Help action on its turn.\n\n### Bestial Fury (11th Level)\n\nStarting at 11th level, your beast companion can make two attacks when you command it to use the Attack action.\n\n### Share Spells (15th Level)\n\nBeginning at 15th level, when you cast a spell targeting yourself, you can also affect your beast companion with the spell if the beast is within 30 feet of you.",
+    "metadata_json": {
+      "parent_class": "ranger",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Ranger's Companion"],
+        "7": ["Exceptional Training"],
+        "11": ["Bestial Fury"],
+        "15": ["Share Spells"]
+      }
+    },
+    "tags": "subclass,ranger,beast master,animal companion,pet,teamwork,wilderness",
+    "source": "PHB",
+    "sort_order": 35
+  },
+  {
+    "slug": "arcane-trickster",
+    "title": "Arcane Trickster",
+    "category": "subclass",
+    "subcategory": "rogue",
+    "ruleset": "5e-2014",
+    "summary": "A roguish archetype that blends stealth with enchantment and illusion magic, using Mage Hand for larceny and spells to enhance cunning.",
+    "content": "## Arcane Trickster\n\nSome rogues enhance their fine-honed skills of stealth and agility with magic, learning tricks of enchantment and illusion. These rogues include pickpockets and burglars, but also pranksters, mischief-makers, and a significant number of adventurers.\n\n### Spellcasting (3rd Level)\n\nWhen you reach 3rd level, you gain the ability to cast spells. You learn three cantrips: Mage Hand and two other cantrips of your choice from the wizard spell list. You learn three 1st-level wizard spells, two of which must be from the enchantment or illusion schools. Intelligence is your spellcasting ability for your wizard spells.\n\n### Mage Hand Legerdemain (3rd Level)\n\nStarting at 3rd level, when you cast Mage Hand, you can make the spectral hand invisible, and you can perform the following additional tasks with it: stow or retrieve an object from a container worn or carried by another creature, use thieves' tools to pick locks and disarm traps at range. You can perform one of these tasks without being noticed by a creature if you succeed on a Dexterity (Sleight of Hand) check contested by the creature's Wisdom (Perception) check. You can use the bonus action granted by your Cunning Action to control the hand.\n\n### Magical Ambush (9th Level)\n\nStarting at 9th level, if you are hidden from a creature when you cast a spell on it, the creature has disadvantage on any saving throw it makes against the spell this turn.\n\n### Versatile Trickster (13th Level)\n\nAt 13th level, you gain the ability to distract targets with your Mage Hand. As a bonus action on your turn, you can designate a creature within 5 feet of the hand created by Mage Hand. Doing so gives you advantage on attack rolls against that creature until the end of the turn.\n\n### Spell Thief (17th Level)\n\nAt 17th level, you gain the ability to magically steal the knowledge of how to cast a spell from another spellcaster. Immediately after a creature casts a spell that targets you or includes you in its area of effect, you can use your reaction to force the creature to make a saving throw with its spellcasting ability modifier. The DC equals your spell save DC. On a failed save, you negate the spell's effect against you, and you steal the knowledge of the spell if it is at least 1st level and of a level you can cast (it doesn't need to be a wizard spell). For the next 8 hours, you know the spell and can cast it using your spell slots. The creature can't cast that spell until the 8 hours have passed. Once you use this feature, you can't use it again until you finish a long rest.",
+    "metadata_json": {
+      "parent_class": "rogue",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Spellcasting", "Mage Hand Legerdemain"],
+        "9": ["Magical Ambush"],
+        "13": ["Versatile Trickster"],
+        "17": ["Spell Thief"]
+      }
+    },
+    "tags": "subclass,rogue,arcane trickster,spellcasting,illusion,enchantment,mage hand,gish",
+    "source": "PHB",
+    "sort_order": 36
+  },
+  {
+    "slug": "assassin",
+    "title": "Assassin",
+    "category": "subclass",
+    "subcategory": "rogue",
+    "ruleset": "5e-2014",
+    "summary": "A roguish archetype devoted to the art of killing, mastering disguise, poison, and the deadly art of striking foes who haven't yet acted in combat.",
+    "content": "## Assassin\n\nYou focus your training on the grim art of death. Those who adhere to this archetype are diverse: hired killers, spies, bounty hunters, and even specially anointed priests trained to exterminate the enemies of their deity. Stealth, poison, and disguise help you eliminate your foes with deadly efficiency.\n\n### Bonus Proficiencies (3rd Level)\n\nWhen you choose this archetype at 3rd level, you gain proficiency with the disguise kit and the poisoner's kit.\n\n### Assassinate (3rd Level)\n\nStarting at 3rd level, you are at your deadliest when you get the drop on your enemies. You have advantage on attack rolls against any creature that hasn't taken a turn in the combat yet. In addition, any hit you score against a creature that is surprised is a critical hit.\n\n### Infiltration Expertise (9th Level)\n\nStarting at 9th level, you can unfailingly create false identities for yourself. You must spend seven days and 25 gp to establish the history, profession, and affiliations for an identity. You can't establish an identity that belongs to someone else. Thereafter, if you adopt the new identity as a disguise, other creatures believe you to be that person until given an obvious reason not to.\n\n### Impostor (13th Level)\n\nAt 13th level, you gain the ability to unerringly mimic another person's speech, writing, and behavior. You must spend at least three hours studying these three components of the person's behavior, listening to speech, examining handwriting, and observing mannerisms. Your ruse is indiscernible to the casual observer. If a wary creature suspects something is amiss, you have advantage on any Charisma (Deception) check you make to avoid detection.\n\n### Death Strike (17th Level)\n\nStarting at 17th level, you become a master of instant death. When you attack and hit a creature that is surprised, it must make a Constitution saving throw (DC 8 + your Dexterity modifier + your proficiency bonus). On a failed save, double the damage of your attack against the creature.",
+    "metadata_json": {
+      "parent_class": "rogue",
+      "subclass_level": 3,
+      "features": {
+        "3": ["Bonus Proficiencies", "Assassinate"],
+        "9": ["Infiltration Expertise"],
+        "13": ["Impostor"],
+        "17": ["Death Strike"]
+      }
+    },
+    "tags": "subclass,rogue,assassin,stealth,poison,disguise,surprise,critical hit",
+    "source": "PHB",
+    "sort_order": 37
+  },
+  {
+    "slug": "wild-magic",
+    "title": "Wild Magic",
+    "category": "subclass",
+    "subcategory": "sorcerer",
+    "ruleset": "5e-2014",
+    "summary": "A sorcerous origin tied to the forces of chaos, where innate magic surges unpredictably through the caster with random and sometimes spectacular effects.",
+    "content": "## Wild Magic\n\nYour innate magic comes from the wild forces of chaos that underlie the order of creation. You might have endured exposure to some form of raw magic, perhaps through a planar portal leading to Limbo, the Elemental Planes, or the mysterious Far Realm. Perhaps you were blessed by a powerful fey creature or marked by a demon. Whatever the cause, your magic is volatile and unpredictable.\n\n### Wild Magic Surge (1st Level)\n\nStarting when you choose this origin at 1st level, your spellcasting can unleash surges of untamed magic. Once per turn, the DM can have you roll a d20 immediately after you cast a sorcerer spell of 1st level or higher. If you roll a 1, roll on the Wild Magic Surge table to create a magical effect. If that effect is a spell, it is too wild to be affected by your Metamagic, and if it normally requires concentration, it doesn't require concentration in this case; the spell lasts for its full duration.\n\n### Tides of Chaos (1st Level)\n\nStarting at 1st level, you can manipulate the forces of chance and chaos to gain advantage on one attack roll, ability check, or saving throw. Once you do so, you must finish a long rest before you can use this feature again. Any time before you regain the use of this feature, the DM can have you roll on the Wild Magic Surge table immediately after you cast a sorcerer spell of 1st level or higher. You then regain the use of this feature.\n\n### Bend Luck (6th Level)\n\nStarting at 6th level, you have the ability to twist fate using your wild magic. When another creature you can see makes an attack roll, an ability check, or a saving throw, you can use your reaction and spend 2 sorcery points to roll 1d4 and apply the number rolled as a bonus or penalty (your choice) to the creature's roll. You can do so after the creature rolls but before any effects of the roll occur.\n\n### Controlled Chaos (14th Level)\n\nAt 14th level, you gain a modicum of control over the surges of your wild magic. Whenever you roll on the Wild Magic Surge table, you can roll twice and use either number.\n\n### Spell Bombardment (18th Level)\n\nBeginning at 18th level, the harmful energy of your spells intensifies. When you roll damage for a spell and roll the highest number possible on any of the dice, choose one of those dice, roll it again and add that roll to the damage. You can use the feature only once per turn.",
+    "metadata_json": {
+      "parent_class": "sorcerer",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Wild Magic Surge", "Tides of Chaos"],
+        "6": ["Bend Luck"],
+        "14": ["Controlled Chaos"],
+        "18": ["Spell Bombardment"]
+      }
+    },
+    "tags": "subclass,sorcerer,wild magic,chaos,random,surge,unpredictable,arcane",
+    "source": "PHB",
+    "sort_order": 38
+  },
+  {
+    "slug": "the-archfey",
+    "title": "The Archfey",
+    "category": "subclass",
+    "subcategory": "warlock",
+    "ruleset": "5e-2014",
+    "summary": "An otherworldly patron pact with a lord or lady of the fey, granting beguiling charm, misty escape, and the power to entrance or terrify foes.",
+    "content": "## The Archfey\n\nYour patron is a lord or lady of the fey, a creature of legend who holds secrets that were forgotten before the mortal races were born. This being's motivations are often inscrutable, and sometimes whimsical, and might involve a striving for greater magical power or the settling of age-old grudges.\n\n### Expanded Spell List\n\nThe Archfey lets you choose from an expanded list of spells when you learn a warlock spell.\n\n| Spell Level | Spells |\n|---|---|\n| 1st | Faerie Fire, Sleep |\n| 2nd | Calm Emotions, Phantasmal Force |\n| 3rd | Blink, Plant Growth |\n| 4th | Dominate Beast, Greater Invisibility |\n| 5th | Dominate Person, Seeming |\n\n### Fey Presence (1st Level)\n\nStarting at 1st level, your patron bestows upon you the ability to project the beguiling and fearsome presence of the fey. As an action, you can cause each creature in a 10-foot cube originating from you to make a Wisdom saving throw against your warlock spell save DC. The creatures that fail their saving throws are all charmed or frightened by you (your choice) until the end of your next turn. Once you use this feature, you can't use it again until you finish a short or long rest.\n\n### Misty Escape (6th Level)\n\nStarting at 6th level, you can vanish in a puff of mist in response to harm. When you take damage, you can use your reaction to turn invisible and teleport up to 60 feet to an unoccupied space you can see. You remain invisible until the start of your next turn or until you attack or cast a spell. Once you use this feature, you can't use it again until you finish a short or long rest.\n\n### Beguiling Defenses (10th Level)\n\nBeginning at 10th level, your patron teaches you how to turn the mind-affecting magic of your enemies against them. You are immune to being charmed, and when another creature attempts to charm you, you can use your reaction to attempt to turn the charm back on that creature. The creature must succeed on a Wisdom saving throw against your warlock spell save DC or be charmed by you for 1 minute or until the creature takes any damage.\n\n### Dark Delirium (14th Level)\n\nStarting at 14th level, you can plunge a creature into an illusory realm. As an action, choose a creature that you can see within 60 feet of you. It must make a Wisdom saving throw against your warlock spell save DC. On a failed save, it is charmed or frightened by you (your choice) for 1 minute or until your concentration is broken. This effect ends early if the creature takes any damage. Until this illusion ends, the creature thinks it is lost in a misty realm, the appearance of which you choose. The creature can see and hear only itself, you, and the illusion. You must finish a short or long rest before you can use this feature again.",
+    "metadata_json": {
+      "parent_class": "warlock",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Expanded Spell List", "Fey Presence"],
+        "6": ["Misty Escape"],
+        "10": ["Beguiling Defenses"],
+        "14": ["Dark Delirium"]
+      }
+    },
+    "tags": "subclass,warlock,the archfey,fey,charm,illusion,teleportation,enchantment",
+    "source": "PHB",
+    "sort_order": 39
+  },
+  {
+    "slug": "the-great-old-one",
+    "title": "The Great Old One",
+    "category": "subclass",
+    "subcategory": "warlock",
+    "ruleset": "5e-2014",
+    "summary": "An otherworldly patron pact with an unknowable entity from the Far Realm, granting telepathy, psychic defenses, and the ability to enslave minds.",
+    "content": "## The Great Old One\n\nYour patron is a mysterious entity whose nature is utterly foreign to the fabric of reality. It might come from the Far Realm, the space beyond reality, or it could be one of the elder gods known only in legends. Its motives are incomprehensible to mortals, and its knowledge so immense and ancient that even the greatest libraries pale in comparison.\n\n### Expanded Spell List\n\nThe Great Old One lets you choose from an expanded list of spells when you learn a warlock spell.\n\n| Spell Level | Spells |\n|---|---|\n| 1st | Dissonant Whispers, Tasha's Hideous Laughter |\n| 2nd | Detect Thoughts, Phantasmal Force |\n| 3rd | Clairvoyance, Sending |\n| 4th | Dominate Beast, Evard's Black Tentacles |\n| 5th | Dominate Person, Telekinesis |\n\n### Awakened Mind (1st Level)\n\nStarting at 1st level, your alien knowledge gives you the ability to touch the minds of other creatures. You can communicate telepathically with any creature you can see within 30 feet of you. You don't need to share a language with the creature for it to understand your telepathic utterances, but the creature must be able to understand at least one language.\n\n### Entropic Ward (6th Level)\n\nAt 6th level, you learn to magically ward yourself against attack and to turn an enemy's failed strike into good luck for yourself. When a creature makes an attack roll against you, you can use your reaction to impose disadvantage on that roll. If the attack misses you, your next attack roll against the creature has advantage if you make it before the end of your next turn. Once you use this feature, you can't use it again until you finish a short or long rest.\n\n### Thought Shield (10th Level)\n\nStarting at 10th level, your thoughts can't be read by telepathy or other means unless you allow it. You also have resistance to psychic damage, and whenever a creature deals psychic damage to you, that creature takes the same amount of damage that you do.\n\n### Create Thrall (14th Level)\n\nAt 14th level, you gain the ability to infect a humanoid's mind with the alien magic of your patron. You can use your action to touch an incapacitated humanoid. That creature is then charmed by you until a Remove Curse spell is cast on it, the charmed condition is removed from it, or you use this feature again. You can communicate telepathically with the charmed creature as long as the two of you are on the same plane of existence.",
+    "metadata_json": {
+      "parent_class": "warlock",
+      "subclass_level": 1,
+      "features": {
+        "1": ["Expanded Spell List", "Awakened Mind"],
+        "6": ["Entropic Ward"],
+        "10": ["Thought Shield"],
+        "14": ["Create Thrall"]
+      }
+    },
+    "tags": "subclass,warlock,the great old one,psychic,telepathy,aberrant,mind,eldritch",
+    "source": "PHB",
+    "sort_order": 40
+  },
+  {
+    "slug": "school-of-abjuration",
+    "title": "School of Abjuration",
+    "category": "subclass",
+    "subcategory": "wizard",
+    "ruleset": "5e-2014",
+    "summary": "An arcane tradition focused on protective magic, creating wards and barriers that negate harmful effects and banish hostile creatures.",
+    "content": "## School of Abjuration\n\nThe School of Abjuration emphasizes magic that blocks, banishes, or protects. Detractors of this school say that its tradition is about denial, negation rather than positive assertion. You understand, however, that ending harmful effects, protecting the weak, and banishing evil influences is anything but a philosophical void.\n\n### Abjuration Savant (2nd Level)\n\nBeginning when you select this school at 2nd level, the gold and time you must spend to copy an abjuration spell into your spellbook is halved.\n\n### Arcane Ward (2nd Level)\n\nStarting at 2nd level, you can weave magic around yourself for protection. When you cast an abjuration spell of 1st level or higher, you can simultaneously use a strand of the spell's magic to create a magical ward on yourself that lasts until you finish a long rest. The ward has a hit point maximum equal to twice your wizard level + your Intelligence modifier. Whenever you take damage, the ward takes the damage instead. If this damage reduces the ward to 0 hit points, you take any remaining damage. When the ward has 0 hit points, it can't absorb damage, but its magic remains. Whenever you cast an abjuration spell of 1st level or higher, the ward regains a number of hit points equal to twice the level of the spell.\n\n### Projected Ward (6th Level)\n\nStarting at 6th level, when a creature that you can see within 30 feet of you takes damage, you can use your reaction to cause your Arcane Ward to absorb that damage. If this damage reduces the ward to 0 hit points, the warded creature takes any remaining damage.\n\n### Improved Abjuration (10th Level)\n\nBeginning at 10th level, when you cast an abjuration spell that requires you to make an ability check as a part of casting that spell (as in Counterspell and Dispel Magic), you add your proficiency bonus to that ability check.\n\n### Spell Resistance (14th Level)\n\nStarting at 14th level, you have advantage on saving throws against spells. Furthermore, you have resistance against the damage of spells.",
+    "metadata_json": {
+      "parent_class": "wizard",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Abjuration Savant", "Arcane Ward"],
+        "6": ["Projected Ward"],
+        "10": ["Improved Abjuration"],
+        "14": ["Spell Resistance"]
+      }
+    },
+    "tags": "subclass,wizard,school of abjuration,abjuration,protection,ward,defensive,arcane",
+    "source": "PHB",
+    "sort_order": 41
+  },
+  {
+    "slug": "school-of-conjuration",
+    "title": "School of Conjuration",
+    "category": "subclass",
+    "subcategory": "wizard",
+    "ruleset": "5e-2014",
+    "summary": "An arcane tradition focused on summoning creatures and objects, teleporting across distances, and creating matter from nothing.",
+    "content": "## School of Conjuration\n\nAs a conjurer, you favor spells that produce objects and creatures out of thin air. You can conjure billowing clouds of killing fog or summon creatures from elsewhere to fight on your behalf. As your mastery grows, you learn spells of transportation and can teleport yourself across vast distances.\n\n### Conjuration Savant (2nd Level)\n\nBeginning when you select this school at 2nd level, the gold and time you must spend to copy a conjuration spell into your spellbook is halved.\n\n### Minor Conjuration (2nd Level)\n\nStarting at 2nd level, you can use your action to conjure up an inanimate object in your hand or on the ground in an unoccupied space that you can see within 10 feet of you. This object can be no larger than 3 feet on a side and weigh no more than 10 pounds, and its form must be that of a nonmagical object that you have seen. The object is visibly magical, radiating dim light out to 5 feet. It disappears after 1 hour, when you use this feature again, or if it takes or deals any damage.\n\n### Benign Transposition (6th Level)\n\nStarting at 6th level, you can use your action to teleport up to 30 feet to an unoccupied space that you can see. Alternatively, you can choose a space within range that is occupied by a Small or Medium creature. If that creature is willing, you both teleport, swapping places. Once you use this feature, you can't use it again until you finish a long rest or you cast a conjuration spell of 1st level or higher.\n\n### Focused Conjuration (10th Level)\n\nBeginning at 10th level, while you are concentrating on a conjuration spell, your concentration can't be broken as a result of taking damage.\n\n### Durable Summons (14th Level)\n\nStarting at 14th level, any creature that you summon or create with a conjuration spell has 30 temporary hit points.",
+    "metadata_json": {
+      "parent_class": "wizard",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Conjuration Savant", "Minor Conjuration"],
+        "6": ["Benign Transposition"],
+        "10": ["Focused Conjuration"],
+        "14": ["Durable Summons"]
+      }
+    },
+    "tags": "subclass,wizard,school of conjuration,conjuration,summoning,teleportation,arcane",
+    "source": "PHB",
+    "sort_order": 42
+  },
+  {
+    "slug": "school-of-divination",
+    "title": "School of Divination",
+    "category": "subclass",
+    "subcategory": "wizard",
+    "ruleset": "5e-2014",
+    "summary": "An arcane tradition focused on seeing the future and uncovering hidden truths, using portent dice to alter fate itself.",
+    "content": "## School of Divination\n\nThe counsel of a diviner is sought by royalty and commoners alike, for all seek a clearer understanding of the past, present, and future. As a diviner, you strive to part the veils of space, time, and consciousness so that you can see clearly.\n\n### Divination Savant (2nd Level)\n\nBeginning when you select this school at 2nd level, the gold and time you must spend to copy a divination spell into your spellbook is halved.\n\n### Portent (2nd Level)\n\nStarting at 2nd level when you choose this school, glimpses of the future begin to press in on your awareness. When you finish a long rest, roll two d20s and record the numbers rolled. You can replace any attack roll, saving throw, or ability check made by you or a creature that you can see with one of these foretelling rolls. You must choose to do so before the roll, and you can replace a roll in this way only once per turn. Each foretelling roll can be used only once. When you finish a long rest, you lose any unused foretelling rolls.\n\n### Expert Divination (6th Level)\n\nBeginning at 6th level, casting divination spells comes so easily to you that it expends only a fraction of your spellcasting efforts. When you cast a divination spell of 2nd level or higher using a spell slot, you regain one expended spell slot. The slot you regain must be of a level lower than the spell you cast and can't be higher than 5th level.\n\n### The Third Eye (10th Level)\n\nStarting at 10th level, you can use your action to increase your powers of perception. When you do so, choose one of the following benefits, which lasts until you are incapacitated or you take a short or long rest: Darkvision (60 ft), Ethereal Sight (60 ft into the Ethereal Plane), Greater Comprehension (read any language), or See Invisibility (see invisible creatures and objects within 10 ft).\n\n### Greater Portent (14th Level)\n\nStarting at 14th level, the visions in your dreams intensify and paint a more accurate picture in your mind of what is to come. You roll three d20s for your Portent feature, rather than two.",
+    "metadata_json": {
+      "parent_class": "wizard",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Divination Savant", "Portent"],
+        "6": ["Expert Divination"],
+        "10": ["The Third Eye"],
+        "14": ["Greater Portent"]
+      }
+    },
+    "tags": "subclass,wizard,school of divination,divination,portent,foresight,fate,arcane",
+    "source": "PHB",
+    "sort_order": 43
+  },
+  {
+    "slug": "school-of-enchantment",
+    "title": "School of Enchantment",
+    "category": "subclass",
+    "subcategory": "wizard",
+    "ruleset": "5e-2014",
+    "summary": "An arcane tradition focused on magic that charms and beguiles, allowing you to entrance creatures and alter their memories.",
+    "content": "## School of Enchantment\n\nAs a member of the School of Enchantment, you have honed your ability to magically entrance and beguile other people and monsters. Some enchanters are peacemakers who bewitch the violent to lay down their arms and charm the cruel into showing mercy. Others are tyrants who magically bind the unwilling into their service.\n\n### Enchantment Savant (2nd Level)\n\nBeginning when you select this school at 2nd level, the gold and time you must spend to copy an enchantment spell into your spellbook is halved.\n\n### Hypnotic Gaze (2nd Level)\n\nStarting at 2nd level, your soft words and enchanting gaze can magically enthrall another creature. As an action, choose one creature that you can see within 5 feet of you. If the target can see or hear you, it must succeed on a Wisdom saving throw against your wizard spell save DC or be charmed by you until the end of your next turn. The charmed creature's speed drops to 0, and the creature is incapacitated and visibly dazed. On subsequent turns, you can use your action to maintain this effect, extending its duration until the end of your next turn. The effect ends if you move more than 5 feet away from the creature, if the creature can neither see nor hear you, or if the creature takes damage.\n\n### Instinctive Charm (6th Level)\n\nBeginning at 6th level, when a creature you can see within 30 feet of you makes an attack roll against you, you can use your reaction to divert the attack, provided that another creature is within the attack's range. The attacker must make a Wisdom saving throw against your wizard spell save DC. On a failed save, the attacker must target the creature that is closest to it, not including you or itself. If multiple creatures are closest, the attacker chooses which one to target. On a successful save, you can't use this feature against the attacker again until you finish a long rest.\n\n### Split Enchantment (10th Level)\n\nStarting at 10th level, when you cast an enchantment spell of 1st level or higher that targets only one creature, you can have it target a second creature.\n\n### Alter Memories (14th Level)\n\nAt 14th level, you gain the ability to make a creature unaware of your magical influence on it. When you cast an enchantment spell to charm one or more creatures, you can alter one creature's understanding so that it remains unaware of being charmed. Additionally, once before the spell expires, you can use your action to try to make the chosen creature forget some of the time it spent charmed. The creature must succeed on an Intelligence saving throw against your wizard spell save DC or lose a number of minutes of its memories equal to 1 + your Charisma modifier (minimum 1). The number of minutes can't exceed the duration of the spell.",
+    "metadata_json": {
+      "parent_class": "wizard",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Enchantment Savant", "Hypnotic Gaze"],
+        "6": ["Instinctive Charm"],
+        "10": ["Split Enchantment"],
+        "14": ["Alter Memories"]
+      }
+    },
+    "tags": "subclass,wizard,school of enchantment,enchantment,charm,mind control,beguile,arcane",
+    "source": "PHB",
+    "sort_order": 44
+  },
+  {
+    "slug": "school-of-illusion",
+    "title": "School of Illusion",
+    "category": "subclass",
+    "subcategory": "wizard",
+    "ruleset": "5e-2014",
+    "summary": "An arcane tradition focused on illusion magic, creating increasingly real phantasms that can deceive the senses and eventually become reality.",
+    "content": "## School of Illusion\n\nYou focus your studies on magic that dazzles the senses, befuddles the mind, and tricks even the wisest folk. Your magic is subtle, but the illusions crafted by your keen mind make the impossible seem real. Some illusionists are benign tricksters who use their spells to entertain. Others are more sinister masters of deception.\n\n### Illusion Savant (2nd Level)\n\nBeginning when you select this school at 2nd level, the gold and time you must spend to copy an illusion spell into your spellbook is halved.\n\n### Improved Minor Illusion (2nd Level)\n\nWhen you choose this school at 2nd level, you learn the Minor Illusion cantrip. If you already know this cantrip, you learn a different wizard cantrip of your choice. The cantrip doesn't count against your number of cantrips known. When you cast Minor Illusion, you can create both a sound and an image with a single casting of the spell.\n\n### Malleable Illusions (6th Level)\n\nStarting at 6th level, when you cast an illusion spell that has a duration of 1 minute or longer, you can use your action to change the nature of that illusion (using the spell's normal parameters for the illusion), provided that you can see the illusion.\n\n### Illusory Self (10th Level)\n\nBeginning at 10th level, you can create an illusory duplicate of yourself as an instant, almost instinctual reaction to danger. When a creature makes an attack roll against you, you can use your reaction to interpose the illusory duplicate between the attacker and yourself. The attack automatically misses you, then the illusion dissipates. Once you use this feature, you can't use it again until you finish a short or long rest.\n\n### Illusory Reality (14th Level)\n\nBy 14th level, you have learned the secret of weaving shadow magic into your illusions to give them a semi-reality. When you cast an illusion spell of 1st level or higher, you can choose one inanimate, nonmagical object that is part of the illusion and make that object real. You can do this on your turn as a bonus action while the spell is ongoing. The object remains real for 1 minute. The object can't deal damage or otherwise directly harm anyone.",
+    "metadata_json": {
+      "parent_class": "wizard",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Illusion Savant", "Improved Minor Illusion"],
+        "6": ["Malleable Illusions"],
+        "10": ["Illusory Self"],
+        "14": ["Illusory Reality"]
+      }
+    },
+    "tags": "subclass,wizard,school of illusion,illusion,deception,phantasm,trickery,arcane",
+    "source": "PHB",
+    "sort_order": 45
+  },
+  {
+    "slug": "school-of-necromancy",
+    "title": "School of Necromancy",
+    "category": "subclass",
+    "subcategory": "wizard",
+    "ruleset": "5e-2014",
+    "summary": "An arcane tradition that explores the cosmic forces of life and death, granting the ability to raise undead servants and siphon life force from enemies.",
+    "content": "## School of Necromancy\n\nThe School of Necromancy explores the cosmic forces of life, death, and undeath. As you focus your studies in this tradition, you learn to manipulate the energy that animates all living things. As you progress, you learn to sap the life force from a creature as your magic destroys its body, transforming that vital energy into magical power you can manipulate.\n\n### Necromancy Savant (2nd Level)\n\nBeginning when you select this school at 2nd level, the gold and time you must spend to copy a necromancy spell into your spellbook is halved.\n\n### Grim Harvest (2nd Level)\n\nAt 2nd level, you gain the ability to reap life energy from creatures you kill with your spells. Once per turn when you kill one or more creatures with a spell of 1st level or higher, you regain hit points equal to twice the spell's level, or three times its level if the spell belongs to the School of Necromancy. You don't gain this benefit for killing constructs or undead.\n\n### Undead Thralls (6th Level)\n\nAt 6th level, you add the Animate Dead spell to your spellbook if it is not there already. When you cast Animate Dead, you can target one additional corpse or pile of bones, creating another zombie or skeleton, as appropriate. Whenever you create an undead using a necromancy spell, it has additional benefits: the creature's hit point maximum is increased by an amount equal to your wizard level, and the creature adds your proficiency bonus to its weapon damage rolls.\n\n### Inured to Undeath (10th Level)\n\nBeginning at 10th level, you have resistance to necrotic damage, and your hit point maximum can't be reduced. You have spent so much time dealing with undead and the forces that animate them that you have become inured to some of their worst effects.\n\n### Command Undead (14th Level)\n\nStarting at 14th level, you can use magic to bring undead under your control, even those created by other wizards. As an action, you can choose one undead that you can see within 60 feet of you. That creature must make a Charisma saving throw against your wizard spell save DC. If it succeeds, you can't use this feature on it again. If it fails, it becomes friendly to you and obeys your commands until you use this feature again. Intelligent undead are harder to control in this way; if the target has an Intelligence of 8 or higher, it has advantage on the saving throw. If it fails the saving throw and has an Intelligence of 12 or higher, it can repeat the saving throw at the end of every hour until it succeeds and frees itself.",
+    "metadata_json": {
+      "parent_class": "wizard",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Necromancy Savant", "Grim Harvest"],
+        "6": ["Undead Thralls"],
+        "10": ["Inured to Undeath"],
+        "14": ["Command Undead"]
+      }
+    },
+    "tags": "subclass,wizard,school of necromancy,necromancy,undead,life drain,animate dead,arcane",
+    "source": "PHB",
+    "sort_order": 46
+  },
+  {
+    "slug": "school-of-transmutation",
+    "title": "School of Transmutation",
+    "category": "subclass",
+    "subcategory": "wizard",
+    "ruleset": "5e-2014",
+    "summary": "An arcane tradition focused on magic that modifies energy and matter, granting the ability to transform objects, creatures, and even the fundamental nature of reality.",
+    "content": "## School of Transmutation\n\nYou are a student of spells that modify energy and matter. To you, the world is not a fixed thing, but eminently mutable, and you delight in being an agent of change. You wield the raw stuff of creation and learn to alter both physical forms and mental qualities.\n\n### Transmutation Savant (2nd Level)\n\nBeginning when you select this school at 2nd level, the gold and time you must spend to copy a transmutation spell into your spellbook is halved.\n\n### Minor Alchemy (2nd Level)\n\nStarting at 2nd level, you can temporarily alter the physical properties of one nonmagical object, changing it from one substance into another. You perform a special alchemical procedure on one object composed entirely of wood, stone (but not a gemstone), iron, copper, or silver, transforming it into a different one of those materials. For each 10 minutes you spend performing the procedure, you can transform up to 1 cubic foot of material. After 1 hour, or until you lose your concentration, the material reverts to its original substance.\n\n### Transmuter's Stone (6th Level)\n\nStarting at 6th level, you can spend 8 hours creating a transmuter's stone that stores transmutation magic. You can benefit from the stone yourself or give it to another creature. A creature gains a benefit of your choice as long as the stone is in the creature's possession. When you create the stone, choose the benefit from the following options: darkvision out to 60 feet, an increase to speed of 10 feet while the creature is unencumbered, proficiency in Constitution saving throws, or resistance to acid, cold, fire, lightning, or thunder damage (your choice whenever you choose this benefit). Each time you cast a transmutation spell of 1st level or higher, you can change the effect of your stone if the stone is on your person. If you create a new transmuter's stone, the previous one ceases to function.\n\n### Shapechanger (10th Level)\n\nAt 10th level, you add the Polymorph spell to your spellbook, if it is not already there. You can cast Polymorph without expending a spell slot. When you do so, you can target only yourself and transform into a beast whose challenge rating is 1 or lower. Once you cast Polymorph in this way, you can't do so again until you finish a short or long rest, though you can still cast it normally using an available spell slot.\n\n### Master Transmuter (14th Level)\n\nStarting at 14th level, you can use your action to consume the reserve of transmutation magic stored within your transmuter's stone in a single burst. When you do so, choose one of the following effects. Your transmuter's stone is destroyed and can't be remade until you finish a long rest.\n\n**Major Transformation.** You can transmute one nonmagical object — no larger than a 5-foot cube — into another nonmagical object of similar size and mass and of equal or lesser value.\n\n**Panacea.** You remove all curses, diseases, and poisons affecting a creature that you touch with the transmuter's stone. The creature also regains all its hit points.\n\n**Restore Life.** You cast the Raise Dead spell on a creature you touch with the transmuter's stone, without expending a spell slot or needing to have the spell in your spellbook.\n\n**Restore Youth.** You touch the transmuter's stone to a willing creature, and that creature's apparent age is reduced by 3d10 years, to a minimum of 13 years. This effect doesn't extend the creature's lifespan.",
+    "metadata_json": {
+      "parent_class": "wizard",
+      "subclass_level": 2,
+      "features": {
+        "2": ["Transmutation Savant", "Minor Alchemy"],
+        "6": ["Transmuter's Stone"],
+        "10": ["Shapechanger"],
+        "14": ["Master Transmuter"]
+      }
+    },
+    "tags": "subclass,wizard,school of transmutation,transmutation,alchemy,polymorph,transformation,arcane",
+    "source": "PHB",
+    "sort_order": 47
+  }
+]

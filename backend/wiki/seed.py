@@ -24,7 +24,11 @@ SEED_FILES = [
     # Character options
     "classes.json",
     "subclasses.json",
+    "subclasses_phb.json",
+    "subclasses_xgte.json",
+    "subclasses_tcoe.json",
     "races.json",
+    "races_expanded.json",
     "backgrounds.json",
     "feats.json",
     "character_options.json",

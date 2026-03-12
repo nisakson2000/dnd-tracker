@@ -1,8 +1,8 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.3.7**
+**Current Version: V0.3.8**
 
-A native desktop application for managing D&D 5e characters with full ruleset support, a 1,200+ article encyclopedia, real-time party sync, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
+A native desktop application for managing D&D 5e characters with full ruleset support, a 1,378+ article encyclopedia, real-time party sync, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
 ## Features
 
@@ -105,7 +105,7 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 
 ### AI Assistant (Optional)
 - **Arcane Advisor** — AI-powered D&D companion running entirely on your machine via Ollama
-- **Wiki-powered responses** — searches the 1,200+ article SRD encyclopedia before every query for accurate D&D 5e answers
+- **Wiki-powered responses** — searches the 1,350+ article SRD encyclopedia before every query for accurate D&D 5e answers
 - **Brief and focused** — answers in 1-3 sentences with token cap and low temperature
 - **Floating ArcaneWidget** — context-aware mini-chat available on all sections, not just the AI tab
 - **All communication through Rust backend** — bypasses WebKitGTK CSP restrictions on Linux
@@ -114,7 +114,7 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - Uses phi3.5 model (~2.2GB) — auto-downloads when AI is enabled
 
 ### Additional Features
-- Arcane Encyclopedia — 1,200+ article searchable wiki with FTS5
+- Arcane Encyclopedia — 1,350+ article searchable wiki with FTS5
 - Party Connect — LAN sync with room codes, auto-reconnect, DM party stats overview, persistent connection across navigation
 - Dev Build Banner — "DEV BUILD" indicator with live dev count, hidden in production
 - GitHub Auto-Update — dev builds poll for new commits every 5s, one-click Pull & Reload with auto-stash, rebase fallback, instant peer push notifications
@@ -144,7 +144,7 @@ The app includes an optional AI assistant that runs entirely on your machine.
 
 ### How It Works
 - All Ollama communication is routed through the Rust backend (required for Linux/WebKitGTK compatibility)
-- Before every query, the app searches its 1,200+ article wiki for relevant D&D 5e content and includes it in the prompt
+- Before every query, the app searches its 1,350+ article wiki for relevant D&D 5e content and includes it in the prompt
 - Responses are capped at 128 tokens with low temperature (0.3) for brief, accurate answers
 - A floating chat widget (ArcaneWidget) is available on all sections for quick questions
 
@@ -261,7 +261,7 @@ npm run tauri build
 
 ### V0.3.0 — Arcane Advisor (AI Assistant)
 - Optional AI Assistant powered by local Ollama (phi3.5) — no internet, no API keys
-- Wiki-powered: searches 1,200+ article SRD encyclopedia for accurate D&D 5e answers
+- Wiki-powered: searches 1,350+ article SRD encyclopedia for accurate D&D 5e answers
 - Streaming responses via Rust backend (Tauri Channel API)
 - Feature flag: completely invisible when disabled, zero overhead
 - Sidebar entry appears only when enabled
@@ -360,7 +360,7 @@ npm run tauri build
 - Quest tracker with objectives, checkboxes, progress tracking, status management
 - NPC tracker with roles, status, descriptions, notes, locations
 - Lore & World Notes with categories and search
-- Arcane Encyclopedia — 1,200+ article searchable wiki with SQLite FTS5
+- Arcane Encyclopedia — 1,350+ article searchable wiki with SQLite FTS5
 - Party Connect — LAN sync with room codes for real-time character sharing
 - Dice roller with d4-d100, custom expressions, advantage/disadvantage, nat 20/1 detection
 - Level-up system with animated overlay and class-specific stat gains
