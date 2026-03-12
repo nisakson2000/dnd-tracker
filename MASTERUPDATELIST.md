@@ -4,6 +4,44 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.3.5 — Wiki Bestiary Expansion
+**Released:** March 12, 2026
+
+### Arcane Encyclopedia — Massive Bestiary Update
+- **266 new monster entries** — full SRD 5.1 bestiary now covered, from CR 0 (Cat, Bat, Frog) through CR 30 (Tarrasque)
+- **Total wiki articles: 1,235** (up from 964)
+- **Total monsters: 315** (up from 51) — every SRD creature with full stat blocks, traits, and actions
+- **All 10 chromatic & metallic dragon age chains** — Wyrmling → Young → Adult → Ancient for all 10 dragon types
+- **Complete CR coverage** — no gaps from CR 0 through CR 30, including fractional CRs (1/8, 1/4, 1/2)
+- **114 new cross-references** (223 total) — dragon age chains, creature variants, fiend hierarchies, undead progressions, elemental connections, giant ordning, NPC progressions, lycanthrope links, hag covens, golem types, naga types
+- **Accuracy fix** — corrected Incapacitated condition: now correctly states concentration IS broken by incapacitation (per PHB p.203)
+- **Updated article count** in UI, meta tags, and changelog to reflect 1,200+ articles
+
+### New Monster Categories
+- **Beasts** (34 new) — all common animals, dire variants, swarms, giant variants
+- **Humanoids** (15 new) — NPCs (Acolyte, Scout, Spy, Thug, Bandit Captain, Gladiator, Archmage), goblinoids, lizardfolk, sahuagin
+- **Fiends** (14 new) — complete devil hierarchy (Lemure → Pit Fiend), demon hierarchy (Dretch → Balor)
+- **Dragons** (30 new) — all wyrmlings, young, adult, and ancient dragons for brass, copper, bronze, silver, gold, black, blue, green, red, white
+- **Undead** (8 new) — Ghast, Specter, Vampire Spawn, Mummy Lord, and more
+- **Monstrosities** (18 new) — Basilisk, Bulette, Behir, Remorhaz, Purple Worm, and more
+- **Elementals** (10 new) — all mephits, Invisible Stalker, Salamander, Azer, Magmin, Xorn
+- **Giants** (2 new) — Hill Giant, Ettin
+- **Oozes** (3 new) — Gray Ooze, Ochre Jelly, Black Pudding
+- **Constructs** (5 new) — Flesh/Clay/Stone Golem, Flying Sword, Shield Guardian, Rug of Smothering
+- **Celestials** (4 new) — Couatl, Deva, Pegasus, Unicorn, Planetar
+- **Fey** (3 new) — Dryad, Satyr, Sprite
+- **Plants** (3 new) — Awakened Shrub, Shrieker, Awakened Tree, Shambling Mound, Violet Fungus
+- **Aberrations** (4 new) — Aboleth, Chuul, Gibbering Mouther, Otyugh
+
+### Legendary Creatures Added
+- Aboleth, Unicorn, Gynosphinx, Androsphinx, Mummy Lord, Kraken, Tarrasque
+- All Adult and Ancient dragons (20 entries with legendary actions)
+
+### Version Sync
+- All version files bumped to 0.3.5: VERSION, version.json, version.js, package.json (root + frontend), tauri.conf.json, Cargo.toml
+
+---
+
 ## V0.3.4 — Dev Presence Reliability Fix
 **Released:** March 11, 2026
 

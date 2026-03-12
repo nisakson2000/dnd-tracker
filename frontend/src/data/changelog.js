@@ -210,7 +210,7 @@ export const CHANGELOG = [
       'Inventory with 40+ weapons/armor, currency, encumbrance, attunement',
       'Combat tracker with 15 conditions, action economy, combat notes',
       'Campaign journal, quest tracker, NPC tracker, lore notes',
-      'Arcane Encyclopedia — 964-article searchable wiki',
+      'Arcane Encyclopedia — 1,200+ article searchable wiki',
       'Party Connect — LAN sync with room codes',
       'Dice roller, level-up system, 5 UI themes, beginner tutorial',
     ],
