@@ -4,8 +4,57 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
-## V0.3.3 — Arcane Advisor Overhaul
+## V0.3.4 — Dev Presence Reliability Fix
+**Released:** March 11, 2026
+
+### Peer Detection Fixes
+- **Direct unicast to known peers** — heartbeats now sent directly to each known peer's IP in addition to broadcast, bypassing firewalls and routers that silently drop `255.255.255.255` packets
+- **Subnet-directed broadcast** — computes actual subnet broadcast address (e.g., `192.168.1.255`) and sends to it alongside limited broadcast for better LAN coverage
+- **Source IP fallback for peer identification** — if a peer's self-reported IP is a hostname fallback (`host-*`), uses the actual UDP source address instead for reliable identification
+- **Shared peer list with heartbeat sender** — sender task now reads the peer map to unicast directly to all known peers every heartbeat cycle
+- **Faster heartbeat interval** — reduced from 5s to 3s for quicker peer detection
+- **Increased peer timeout** — extended from 15s to 20s to prevent premature peer expiry during brief network hiccups
+
+### Diagnostic Logging
+- **Startup logging** — logs bound port, local name, and IP on presence start
+- **Heartbeat logging** — logs every 10th heartbeat with peer count (every 30s) to keep terminal readable
+- **Receive logging** — logs first 3 received heartbeats and every 20th thereafter, showing peer name, IP, and version
+- **Error logging** — recv errors now logged instead of silently swallowed
+
+### Refactored Send Path
+- **`send_to_all()` helper** — consolidated broadcast + subnet + unicast sending into a single method used by `broadcast_update_pushed()` and `send_chat()`, eliminating code duplication
+- **Listen port in beacon messages** — beacons now include `listen_port` field so peers know which port the sender is actually on
+
+### Version Sync
+- All version files bumped to 0.3.4: VERSION, version.json, version.js, package.json (root + frontend), tauri.conf.json, Cargo.toml
+
+---
+
+## V0.3.3 — Arcane Advisor Overhaul + Dev Dashboard & Sync Improvements
 **Released:** March 12, 2026
+
+### Dev Settings Dashboard (Dev Builds Only)
+- **New "Dev Settings" mode** — third option on ModeSelect screen (purple, wrench icon), only visible in dev builds
+- **13-section Dev Dashboard** with sidebar navigation: Overview, Player Settings, DM Settings, Feature Flags, Git Panel, Dev Chat, DB Inspector, Environment, IPC Logger, Performance, Log Viewer, Schema Diff, Bug Report
+- **Player/DM Settings tabs** — access character management from both Player and DM contexts in one place
+
+### Dev Sync Improvements
+- **15-second git polling** — reduced from 60s for faster update detection across WiFi/internet
+- **Sequential diff/conflict fetches** — fixed race condition where concurrent `fetchDiffPreview()` and `fetchConflictInfo()` both tried to acquire the git lock
+- **Removed redundant locks** — `dev_preview_incoming` and `dev_check_conflicts` no longer acquire GitLockGuard (read-only operations)
+- **Removed redundant git fetch** — `dev_preview_incoming` no longer runs its own fetch (already done by `check_git_updates`)
+- **"Builds synced" indicator** — green badge in dev banner when all peers are on the same version; yellow "version mismatch" when not
+- **Active section broadcasting** — CharacterView broadcasts which section the dev is editing to peers via `dev_set_active_section`
+
+### Dev Presence Resilience (V0.3.3)
+- **Fallback port binding** — if port 8799 is in use (stale process), automatically tries port 8800
+- **Dual-port broadcasting** — heartbeats sent to both 8799 and 8800 so peers on either port receive
+- **Hostname-based IP fallback** — if real IP can't be detected (no internet), uses `host-{hostname}` instead of 127.0.0.1 to prevent self-filtering issues
+- **Combo self-filter** — skips own messages using `dev_name + dev_ip` instead of just IP
+
+### Security
+- **DB inspector allowlist** — `dev_query_db` now only allows SELECT, PRAGMA, and EXPLAIN queries (was denylist, could be bypassed)
+- **Dead code cleanup** — removed unused `enabled` function property from feature flags
 
 ### Rust-Side Ollama Proxy
 - **All Ollama communication routed through Rust backend** — WebKitGTK CSP blocks frontend `fetch()` to localhost on Linux; moved all HTTP calls to three new Rust commands (`check_ollama`, `ollama_chat`, `ollama_pull`) using `reqwest` with `rustls-tls`

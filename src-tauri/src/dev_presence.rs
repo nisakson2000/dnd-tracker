@@ -8,8 +8,8 @@ use tokio::net::UdpSocket;
 use tokio::sync::{Mutex, RwLock};
 
 const BEACON_PORT: u16 = 8799;
-const BEACON_INTERVAL: Duration = Duration::from_secs(5);
-const PEER_TIMEOUT: Duration = Duration::from_secs(15);
+const BEACON_INTERVAL: Duration = Duration::from_secs(3); // faster heartbeat for quicker detection
+const PEER_TIMEOUT: Duration = Duration::from_secs(20); // 20s timeout (was 15s, too tight)
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -25,6 +25,9 @@ struct BeaconMessage {
     chat_text: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     active_section: Option<String>,
+    /// Port the sender is listening on, so peers can unicast back
+    #[serde(default)]
+    listen_port: Option<u16>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,6 +52,7 @@ pub struct DevPresence {
     socket: Arc<Mutex<Option<Arc<UdpSocket>>>>,
     local_name: String,
     local_ip: String,
+    bound_port: Arc<Mutex<u16>>,
     chat_messages: Arc<RwLock<Vec<ChatMessage>>>,
     active_section: Arc<RwLock<Option<String>>>,
 }
@@ -61,12 +65,15 @@ impl DevPresence {
 
         let local_ip = get_local_ip_sync().unwrap_or_else(|| "127.0.0.1".to_string());
 
+        eprintln!("[dev-presence] Initializing: name={}, ip={}", local_name, local_ip);
+
         Self {
             peers: Arc::new(RwLock::new(HashMap::new())),
             running: Arc::new(Mutex::new(false)),
             socket: Arc::new(Mutex::new(None)),
             local_name,
             local_ip,
+            bound_port: Arc::new(Mutex::new(BEACON_PORT)),
             chat_messages: Arc::new(RwLock::new(Vec::new())),
             active_section: Arc::new(RwLock::new(None)),
         }
@@ -78,14 +85,19 @@ impl DevPresence {
             return Ok(());
         }
 
-        let socket = match UdpSocket::bind(format!("0.0.0.0:{}", BEACON_PORT)).await {
-            Ok(s) => s,
+        // Try primary port, then fallback
+        let (socket, actual_port) = match UdpSocket::bind(format!("0.0.0.0:{}", BEACON_PORT)).await {
+            Ok(s) => {
+                eprintln!("[dev-presence] Bound to port {}", BEACON_PORT);
+                (s, BEACON_PORT)
+            }
             Err(e) => {
                 eprintln!("[dev-presence] Port {} in use (stale process?), trying {}: {}", BEACON_PORT, BEACON_PORT + 1, e);
-                // Try alternate port — stale tauri dev process may hold the primary port
-                UdpSocket::bind(format!("0.0.0.0:{}", BEACON_PORT + 1))
+                let s = UdpSocket::bind(format!("0.0.0.0:{}", BEACON_PORT + 1))
                     .await
-                    .map_err(|e2| format!("Failed to bind UDP on port {} or {}: {}", BEACON_PORT, BEACON_PORT + 1, e2))?
+                    .map_err(|e2| format!("Failed to bind UDP on port {} or {}: {}", BEACON_PORT, BEACON_PORT + 1, e2))?;
+                eprintln!("[dev-presence] Bound to fallback port {}", BEACON_PORT + 1);
+                (s, BEACON_PORT + 1)
             }
         };
 
@@ -93,21 +105,38 @@ impl DevPresence {
 
         let socket = Arc::new(socket);
         *self.socket.lock().await = Some(socket.clone());
+        *self.bound_port.lock().await = actual_port;
         *running = true;
 
-        // Spawn heartbeat sender
+        eprintln!("[dev-presence] Started on port {} — broadcasting as {} ({})", actual_port, self.local_name, self.local_ip);
+
+        // Build broadcast addresses — limited broadcast + subnet broadcast
+        let mut broadcast_addrs: Vec<SocketAddr> = vec![
+            format!("255.255.255.255:{}", BEACON_PORT).parse().unwrap(),
+            format!("255.255.255.255:{}", BEACON_PORT + 1).parse().unwrap(),
+        ];
+
+        // Add subnet-directed broadcast if we have a real IP
+        if let Some(subnet_broadcast) = get_subnet_broadcast(&self.local_ip) {
+            for port in [BEACON_PORT, BEACON_PORT + 1] {
+                if let Ok(addr) = format!("{}:{}", subnet_broadcast, port).parse::<SocketAddr>() {
+                    broadcast_addrs.push(addr);
+                }
+            }
+            eprintln!("[dev-presence] Also broadcasting to subnet {}", subnet_broadcast);
+        }
+
+        // Spawn heartbeat sender — now with direct unicast to known peers
         let send_socket = socket.clone();
         let name = self.local_name.clone();
         let ip = self.local_ip.clone();
         let running_flag = self.running.clone();
         let active_section_ref = self.active_section.clone();
+        let peers_for_sender = self.peers.clone();
+        let bound_port_for_sender = actual_port;
 
         tokio::spawn(async move {
-            // Broadcast to both primary and fallback ports so peers on either port hear us
-            let broadcast_addrs: Vec<SocketAddr> = vec![
-                format!("255.255.255.255:{}", BEACON_PORT).parse().unwrap(),
-                format!("255.255.255.255:{}", BEACON_PORT + 1).parse().unwrap(),
-            ];
+            let mut heartbeat_count: u64 = 0;
             loop {
                 {
                     let is_running = running_flag.lock().await;
@@ -126,11 +155,35 @@ impl DevPresence {
                     commit_message: None,
                     chat_text: None,
                     active_section: section,
+                    listen_port: Some(bound_port_for_sender),
                 };
 
                 if let Ok(data) = serde_json::to_vec(&msg) {
+                    // 1. Broadcast to all broadcast addresses
                     for addr in &broadcast_addrs {
                         let _ = send_socket.send_to(&data, addr).await;
+                    }
+
+                    // 2. Direct unicast to each known peer IP — this bypasses
+                    // broadcast issues (firewalls, routers dropping 255.255.255.255)
+                    let known_peers = peers_for_sender.read().await;
+                    for (_key, (peer, _)) in known_peers.iter() {
+                        // Don't unicast to non-routable IPs
+                        if peer.ip.starts_with("host-") || peer.ip == "127.0.0.1" {
+                            continue;
+                        }
+                        for port in [BEACON_PORT, BEACON_PORT + 1] {
+                            if let Ok(addr) = format!("{}:{}", peer.ip, port).parse::<SocketAddr>() {
+                                let _ = send_socket.send_to(&data, addr).await;
+                            }
+                        }
+                    }
+
+                    // Log every 10th heartbeat (every 30s) to keep terminal readable
+                    heartbeat_count += 1;
+                    if heartbeat_count % 10 == 1 {
+                        let peer_count = known_peers.len();
+                        eprintln!("[dev-presence] heartbeat #{} sent — {} known peer(s)", heartbeat_count, peer_count);
                     }
                 }
 
@@ -148,6 +201,7 @@ impl DevPresence {
 
         tokio::spawn(async move {
             let mut buf = [0u8; 4096];
+            let mut recv_count: u64 = 0;
             loop {
                 {
                     let is_running = running_flag2.lock().await;
@@ -157,45 +211,55 @@ impl DevPresence {
                 }
 
                 match tokio::time::timeout(Duration::from_secs(2), recv_socket.recv_from(&mut buf)).await {
-                    Ok(Ok((len, _addr))) => {
+                    Ok(Ok((len, src_addr))) => {
                         if let Ok(msg) = serde_json::from_slice::<BeaconMessage>(&buf[..len]) {
                             // Skip our own messages — compare the dev_name + dev_ip combo
-                            // (hostname is unique per machine, IP field may match on fallback)
                             if msg.dev_name == my_name && msg.dev_ip == my_ip {
                                 continue;
                             }
 
+                            recv_count += 1;
                             let peer_version = msg.version.clone().unwrap_or_else(|| "unknown".to_string());
+
+                            // Use the actual source IP for peer identification when possible
+                            // (more reliable than the self-reported IP which may be a hostname fallback)
+                            let peer_ip = if msg.dev_ip.starts_with("host-") {
+                                // Peer couldn't detect their real IP — use the source address
+                                src_addr.ip().to_string()
+                            } else {
+                                msg.dev_ip.clone()
+                            };
 
                             match msg.msg_type.as_str() {
                                 "heartbeat" => {
+                                    if recv_count <= 3 || recv_count % 20 == 0 {
+                                        eprintln!("[dev-presence] recv heartbeat from {} ({}) v{}", msg.dev_name, peer_ip, peer_version);
+                                    }
                                     let peer = DevPeer {
                                         name: msg.dev_name,
-                                        ip: msg.dev_ip.clone(),
+                                        ip: peer_ip.clone(),
                                         version: peer_version,
                                         last_seen_ms: 0,
                                         active_section: msg.active_section,
                                     };
-                                    peers.write().await.insert(msg.dev_ip, (peer, Instant::now()));
+                                    peers.write().await.insert(peer_ip, (peer, Instant::now()));
                                 }
                                 "update_pushed" => {
-                                    // Another dev pushed — emit Tauri event so frontend
-                                    // can immediately trigger a git check
+                                    eprintln!("[dev-presence] recv update_pushed from {} — {:?}", msg.dev_name, msg.commit_message);
                                     let payload = serde_json::json!({
                                         "dev_name": msg.dev_name,
                                         "commit_message": msg.commit_message,
                                     });
                                     let _ = app_handle.emit("dev-update-pushed", payload);
 
-                                    // Also update peer presence
                                     let peer = DevPeer {
                                         name: msg.dev_name.clone(),
-                                        ip: msg.dev_ip.clone(),
+                                        ip: peer_ip.clone(),
                                         version: peer_version,
                                         last_seen_ms: 0,
                                         active_section: msg.active_section,
                                     };
-                                    peers.write().await.insert(msg.dev_ip, (peer, Instant::now()));
+                                    peers.write().await.insert(peer_ip, (peer, Instant::now()));
                                 }
                                 "chat" => {
                                     if let Some(text) = msg.chat_text {
@@ -209,28 +273,24 @@ impl DevPresence {
                                             timestamp,
                                         };
 
-                                        // Emit Tauri event for instant frontend update
                                         let _ = app_handle.emit("dev-chat-message", &chat_msg);
 
-                                        // Store in buffer
                                         let mut msgs = chat_messages.write().await;
                                         msgs.push(chat_msg);
-                                        // Keep last 200 messages
                                         if msgs.len() > 200 {
                                             let drain_count = msgs.len() - 200;
                                             msgs.drain(..drain_count);
                                         }
                                     }
 
-                                    // Also update peer presence
                                     let peer = DevPeer {
                                         name: msg.dev_name.clone(),
-                                        ip: msg.dev_ip.clone(),
+                                        ip: peer_ip.clone(),
                                         version: peer_version,
                                         last_seen_ms: 0,
                                         active_section: msg.active_section,
                                     };
-                                    peers.write().await.insert(msg.dev_ip, (peer, Instant::now()));
+                                    peers.write().await.insert(peer_ip, (peer, Instant::now()));
                                 }
                                 _ => {}
                             }
@@ -242,7 +302,9 @@ impl DevPresence {
                             });
                         }
                     }
-                    Ok(Err(_)) => {}
+                    Ok(Err(e)) => {
+                        eprintln!("[dev-presence] recv error: {}", e);
+                    }
                     Err(_) => {} // timeout, just loop
                 }
             }
@@ -274,11 +336,45 @@ impl DevPresence {
             .collect()
     }
 
-    pub async fn broadcast_update_pushed(&self, commit_message: Option<String>) -> Result<(), String> {
+    /// Send to all broadcast + direct unicast to known peers
+    async fn send_to_all(&self, data: &[u8]) -> Result<(), String> {
         let socket_guard = self.socket.lock().await;
         let socket = socket_guard.as_ref().ok_or("Dev presence not running")?;
 
+        // Broadcast addresses
+        for port in [BEACON_PORT, BEACON_PORT + 1] {
+            let addr: SocketAddr = format!("255.255.255.255:{}", port).parse().unwrap();
+            let _ = socket.send_to(data, addr).await;
+        }
+
+        // Subnet broadcast
+        if let Some(subnet_broadcast) = get_subnet_broadcast(&self.local_ip) {
+            for port in [BEACON_PORT, BEACON_PORT + 1] {
+                if let Ok(addr) = format!("{}:{}", subnet_broadcast, port).parse::<SocketAddr>() {
+                    let _ = socket.send_to(data, addr).await;
+                }
+            }
+        }
+
+        // Direct unicast to known peers
+        let known_peers = self.peers.read().await;
+        for (_key, (peer, _)) in known_peers.iter() {
+            if peer.ip.starts_with("host-") || peer.ip == "127.0.0.1" {
+                continue;
+            }
+            for port in [BEACON_PORT, BEACON_PORT + 1] {
+                if let Ok(addr) = format!("{}:{}", peer.ip, port).parse::<SocketAddr>() {
+                    let _ = socket.send_to(data, addr).await;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn broadcast_update_pushed(&self, commit_message: Option<String>) -> Result<(), String> {
         let section = self.active_section.read().await.clone();
+        let bound_port = *self.bound_port.lock().await;
 
         let msg = BeaconMessage {
             msg_type: "update_pushed".to_string(),
@@ -288,24 +384,16 @@ impl DevPresence {
             commit_message,
             chat_text: None,
             active_section: section,
+            listen_port: Some(bound_port),
         };
 
         let data = serde_json::to_vec(&msg).map_err(|e| format!("Serialize failed: {}", e))?;
-
-        // Send to both ports so peers on either port receive
-        for port in [BEACON_PORT, BEACON_PORT + 1] {
-            let addr: SocketAddr = format!("255.255.255.255:{}", port).parse().unwrap();
-            let _ = socket.send_to(&data, addr).await;
-        }
-
-        Ok(())
+        self.send_to_all(&data).await
     }
 
     pub async fn send_chat(&self, message: String) -> Result<(), String> {
-        let socket_guard = self.socket.lock().await;
-        let socket = socket_guard.as_ref().ok_or("Dev presence not running")?;
-
         let section = self.active_section.read().await.clone();
+        let bound_port = *self.bound_port.lock().await;
 
         let msg = BeaconMessage {
             msg_type: "chat".to_string(),
@@ -315,14 +403,11 @@ impl DevPresence {
             commit_message: None,
             chat_text: Some(message.clone()),
             active_section: section,
+            listen_port: Some(bound_port),
         };
 
         let data = serde_json::to_vec(&msg).map_err(|e| format!("Serialize failed: {}", e))?;
-
-        for port in [BEACON_PORT, BEACON_PORT + 1] {
-            let addr: SocketAddr = format!("255.255.255.255:{}", port).parse().unwrap();
-            let _ = socket.send_to(&data, addr).await;
-        }
+        self.send_to_all(&data).await?;
 
         // Also store our own message locally
         let timestamp = std::time::SystemTime::now()
@@ -370,12 +455,24 @@ fn get_local_ip_sync() -> Option<String> {
     // Fallback: use hostname to get an IP (works without internet)
     if let Ok(host) = hostname::get() {
         let host_str = host.to_string_lossy().to_string();
-        // Use the hostname as a unique identifier even if we can't get the IP
-        // This prevents two devs from both getting 127.0.0.1 and filtering each other
         return Some(format!("host-{}", host_str));
     }
 
     None
+}
+
+/// Compute subnet broadcast address from a local IP (assumes /24 subnet).
+/// e.g. "192.168.1.42" -> Some("192.168.1.255")
+fn get_subnet_broadcast(local_ip: &str) -> Option<String> {
+    if local_ip.starts_with("host-") || local_ip == "127.0.0.1" {
+        return None;
+    }
+    let parts: Vec<&str> = local_ip.split('.').collect();
+    if parts.len() == 4 {
+        Some(format!("{}.{}.{}.255", parts[0], parts[1], parts[2]))
+    } else {
+        None
+    }
 }
 
 // ─── Tauri Commands ──────────────────────────────────────────────────────────
