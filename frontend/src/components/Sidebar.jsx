@@ -126,6 +126,15 @@ function loadPinned() {
 
 export default function Sidebar({ character, activeSection, onSelect, onBack, activeConditionCount = 0, portrait = '', updateAvailable = false }) {
   const { mode: appMode } = useAppMode();
+  const [, forceUpdate] = useState(0);
+
+  // Re-render when AI settings change so the Arcane Advisor item appears/disappears
+  useEffect(() => {
+    const handler = () => forceUpdate(n => n + 1);
+    window.addEventListener('codex-ai-settings-changed', handler);
+    return () => window.removeEventListener('codex-ai-settings-changed', handler);
+  }, []);
+
   const isDM = appMode === 'dm';
   const sectionGroups = isDM ? DM_SECTION_GROUPS : PLAYER_SECTION_GROUPS;
 

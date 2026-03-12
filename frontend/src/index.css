@@ -627,6 +627,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 @keyframes crit-glow { 0%, 100% { text-shadow: 0 0 20px rgba(255,215,0,0.4), 0 0 40px rgba(255,215,0,0.2); } 50% { text-shadow: 0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,215,0,0.4), 0 0 80px rgba(255,215,0,0.2); } }
 @keyframes crit-miss-glow { 0%, 100% { text-shadow: 0 0 20px rgba(239,68,68,0.4), 0 0 40px rgba(239,68,68,0.2); } 50% { text-shadow: 0 0 30px rgba(239,68,68,0.8), 0 0 60px rgba(239,68,68,0.4), 0 0 80px rgba(239,68,68,0.2); } }
 @keyframes amber-pulse { 0%, 100% { box-shadow: 0 0 4px rgba(245,158,11,0.3), inset 0 0 0 1px rgba(245,158,11,0.25); } 50% { box-shadow: 0 0 14px rgba(245,158,11,0.5), inset 0 0 0 1px rgba(245,158,11,0.5); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 .animate-amber-pulse { animation: amber-pulse 2s ease-in-out infinite; border-color: rgba(245,158,11,0.4) !important; }
 
 .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }

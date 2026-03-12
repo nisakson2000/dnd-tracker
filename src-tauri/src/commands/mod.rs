@@ -17,3 +17,4 @@ pub mod wiki;
 pub mod frontend_log;
 pub mod dev_updates;
 pub mod dev_tools;
+pub mod ollama;

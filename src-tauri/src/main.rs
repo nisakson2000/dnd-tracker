@@ -185,6 +185,10 @@ fn main() {
             commands::bug_report::write_bug_report,
             // Frontend logging
             commands::frontend_log::frontend_log,
+            // Ollama
+            commands::ollama::check_ollama,
+            commands::ollama::ollama_chat,
+            commands::ollama::ollama_pull,
             // Party
             party::start_party_server,
             party::stop_party_server,

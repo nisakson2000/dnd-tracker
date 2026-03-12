@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, BookOpen, ExternalLink, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getArticle } from '../api/wiki';
+import ArcaneWidget from '../components/ArcaneWidget';
 
 const RELATIONSHIP_LABELS = {
   'related': 'Related',
@@ -360,6 +361,11 @@ export default function WikiArticlePage() {
       </div>
 
       <div className="h-12" />
+
+      <ArcaneWidget
+        section="wiki-article"
+        sectionData={{ articleTitle: article.title, articleCategory: article.category, articleSummary: article.summary }}
+      />
     </div>
   );
 }

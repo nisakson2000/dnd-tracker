@@ -10,6 +10,7 @@ import { PartyProvider } from '../contexts/PartyContext';
 import Sidebar from '../components/Sidebar';
 import LevelUpOverlay from '../components/LevelUpOverlay';
 import BeginnerWizard from '../components/BeginnerWizard';
+import ArcaneWidget from '../components/ArcaneWidget';
 import { useLevelUp } from '../hooks/useLevelUp';
 import { useCrashRecovery } from '../hooks/useCrashRecovery';
 import { useAutoBackup } from '../hooks/useAutoBackup';
@@ -412,15 +413,22 @@ export default function CharacterView() {
           </main>
         </div>
 
-        {/* D&D Help floating button */}
+        {/* Arcane Advisor floating widget (context-aware per section) */}
+        {activeSection !== 'ai-assistant' && (
+          <ArcaneWidget
+            characterId={characterId}
+            section={activeSection}
+          />
+        )}
+
+        {/* D&D Help button (bottom-left, out of widget's way) */}
         <button
           onClick={() => setShowWizard(true)}
-          className="fixed bottom-6 right-6 z-40 rounded-full bg-gold/15 border border-gold/30 text-gold hover:bg-gold/25 hover:border-gold/50 transition-all shadow-lg flex items-center gap-2 group"
-          style={{ padding: '10px 18px', fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.05em', cursor: 'pointer' }}
-          title="Learn the basics of D&D — ability scores, combat, spells, dice & more"
+          className="fixed bottom-6 left-[calc(var(--sidebar-w,214px)+16px)] z-40 rounded-full bg-gold/15 border border-gold/30 text-gold hover:bg-gold/25 hover:border-gold/50 transition-all shadow-lg"
+          style={{ padding: '8px 14px', fontFamily: 'var(--font-heading)', fontSize: 12, cursor: 'pointer' }}
+          title="Learn the basics of D&D"
         >
-          <span style={{ fontSize: 16, lineHeight: 1 }}>?</span>
-          <span className="hidden group-hover:inline" style={{ fontSize: 11, color: 'rgba(201,168,76,0.8)' }}>D&D Help</span>
+          ?
         </button>
 
         {showWizard && <BeginnerWizard onClose={() => setShowWizard(false)} />}

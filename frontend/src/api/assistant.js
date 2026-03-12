@@ -1,70 +1,72 @@
-const OLLAMA_URL = 'http://localhost:11434';
+import { invoke, Channel } from '@tauri-apps/api/core';
 
-export async function checkOllamaStatus(model = 'phi3.5') {
+const MODEL = 'phi3.5';
+
+export async function checkOllamaStatus() {
   try {
-    const res = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(5000) });
-    if (!res.ok) return { available: false, model, error: 'Ollama returned an error' };
-    const data = await res.json();
-    const models = (data.models || []).map(m => m.name);
-    const hasModel = models.some(m => m.startsWith(model));
+    const result = await invoke('check_ollama');
+    const models = result.models || [];
+    const hasModel = models.some(m => m.startsWith(MODEL));
     return {
-      available: true,
-      model,
+      available: result.available,
+      model: MODEL,
       modelInstalled: hasModel,
       installedModels: models,
-      error: hasModel ? null : `Model "${model}" not installed`,
+      error: result.error || (hasModel ? null : `Model "${MODEL}" not installed`),
     };
   } catch (err) {
-    return { available: false, model, modelInstalled: false, installedModels: [], error: 'Ollama is not running' };
+    return { available: false, model: MODEL, modelInstalled: false, installedModels: [], error: String(err) };
   }
 }
 
-export async function listModels() {
+export async function pullModel(onProgress) {
+  const channel = new Channel();
+  channel.onmessage = (progress) => {
+    if (onProgress) onProgress(progress);
+  };
+  await invoke('ollama_pull', { model: MODEL, onProgress: channel });
+}
+
+export async function searchWikiContext(query) {
   try {
-    const res = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(5000) });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.models || []).map(m => ({ name: m.name, size: m.size, modified: m.modified_at }));
+    const result = await invoke('wiki_search', { q: query, perPage: 3 });
+    if (!result.items || result.items.length === 0) return '';
+    return result.items
+      .map(item => `[${item.title}] ${item.summary}`)
+      .join('\n');
   } catch {
-    return [];
+    return '';
   }
 }
 
-export async function* streamChat(model, messages) {
-  const res = await fetch(`${OLLAMA_URL}/api/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, stream: true }),
-  });
+export async function* streamChat(messages) {
+  const queue = [];
+  let resolveWait = null;
+  let finished = false;
+  let error = null;
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => 'Unknown error');
-    throw new Error(`Ollama error: ${text}`);
-  }
+  const channel = new Channel();
+  channel.onmessage = (chunk) => {
+    if (chunk.content) queue.push(chunk.content);
+    if (chunk.done) finished = true;
+    if (resolveWait) { resolveWait(); resolveWait = null; }
+  };
 
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
+  const invokePromise = invoke('ollama_chat', { model: MODEL, messages, onChunk: channel })
+    .catch(err => {
+      error = err;
+      finished = true;
+      if (resolveWait) { resolveWait(); resolveWait = null; }
+    });
 
   while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() || '';
-
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      try {
-        const json = JSON.parse(line);
-        if (json.message?.content) {
-          yield json.message.content;
-        }
-        if (json.done) return;
-      } catch {
-        // Skip malformed lines
-      }
+    while (queue.length > 0) {
+      yield queue.shift();
     }
+    if (finished) break;
+    await new Promise(r => { resolveWait = r; });
   }
+
+  await invokePromise;
+  if (error) throw new Error(String(error));
 }

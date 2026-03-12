@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { searchArticles, getCategories, listArticles } from '../api/wiki';
+import ArcaneWidget from '../components/ArcaneWidget';
 
 const CATEGORY_ICONS = {
   'conditions': Heart,
@@ -365,6 +366,8 @@ export default function WikiPage() {
       )}
 
       <div className="h-12" />
+
+      <ArcaneWidget section="rules" />
     </div>
   );
 }
