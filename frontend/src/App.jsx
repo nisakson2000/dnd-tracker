@@ -136,9 +136,9 @@ function DevBanner() {
               position: 'absolute', left: '12px', fontSize: '10px',
               cursor: peers.length > 0 ? 'help' : 'default',
             }}
-            title={peers.length > 0
-              ? peers.map(p => `${p.name} (v${p.version || '?'})${p.active_section ? ': editing ' + p.active_section : ''}`).join('\n')
-              : 'Just you'}
+            title={`You: v${APP_VERSION.replace('V', '')}` + (peers.length > 0
+              ? '\n' + peers.map(p => `${p.name} (v${p.version || '?'})${p.active_section ? ': editing ' + p.active_section : ''}`).join('\n')
+              : '\nNo other devs detected')}
           >
             <span style={{ color: allSynced ? '#4ade80' : '#fbbf24', fontSize: '8px' }}>&#x25CF;</span>
             <span style={{ opacity: 0.9 }}>

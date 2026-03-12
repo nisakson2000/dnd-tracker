@@ -208,6 +208,7 @@ fn main() {
             dev_presence::dev_send_chat,
             dev_presence::dev_get_chat_messages,
             dev_presence::dev_set_active_section,
+            dev_presence::dev_presence_diagnostics,
             // Dev tools
             commands::dev_tools::dev_list_tables,
             commands::dev_tools::dev_query_db,
