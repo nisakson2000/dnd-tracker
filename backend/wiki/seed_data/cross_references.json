@@ -2368,5 +2368,2421 @@
     "source_slug": "dhampir",
     "target_slug": "vampire",
     "relationship_type": "related"
+  },
+
+  {
+    "source_slug": "ammunition-plus-1",
+    "target_slug": "ammunition-plus-2",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "ammunition-plus-2",
+    "target_slug": "ammunition-plus-3",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "ammunition-plus-1",
+    "target_slug": "ammunition-plus-3",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "weapon-plus-1",
+    "target_slug": "weapon-plus-2",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "weapon-plus-2",
+    "target_slug": "weapon-plus-3",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "armor-plus-1",
+    "target_slug": "armor-plus-2",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "armor-plus-2",
+    "target_slug": "armor-plus-3",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "shield-plus-1",
+    "target_slug": "shield-plus-2",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "shield-plus-2",
+    "target_slug": "shield-plus-3",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "wand-of-the-war-mage-plus-1",
+    "target_slug": "wand-of-the-war-mage-plus-2",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "wand-of-the-war-mage-plus-2",
+    "target_slug": "wand-of-the-war-mage-plus-3",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "spell-scroll-cantrip",
+    "target_slug": "spell-scroll-1st-level",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "spell-scroll-1st-level",
+    "target_slug": "spell-scroll-4th-level",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "spell-scroll-4th-level",
+    "target_slug": "spell-scroll-5th-level",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "spell-scroll-5th-level",
+    "target_slug": "spell-scroll-6th-level",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "spell-scroll-6th-level",
+    "target_slug": "spell-scroll-7th-level",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "spell-scroll-7th-level",
+    "target_slug": "spell-scroll-8th-level",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "spell-scroll-8th-level",
+    "target_slug": "spell-scroll-9th-level",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "potion-of-healing",
+    "target_slug": "potion-of-greater-healing",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "potion-of-greater-healing",
+    "target_slug": "potion-of-superior-healing",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "potion-of-superior-healing",
+    "target_slug": "potion-of-supreme-healing",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "potion-of-giant-strength-hill",
+    "target_slug": "potion-of-giant-strength-fire",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "potion-of-giant-strength-fire",
+    "target_slug": "potion-of-giant-strength-stone",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "potion-of-giant-strength-stone",
+    "target_slug": "potion-of-cloud-giant-strength",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "potion-of-cloud-giant-strength",
+    "target_slug": "potion-of-giant-strength-storm",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "belt-of-giant-strength",
+    "target_slug": "belt-of-fire-giant-strength",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "belt-of-giant-strength",
+    "target_slug": "belt-of-cloud-giant-strength",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "belt-of-giant-strength",
+    "target_slug": "belt-of-giant-strength-storm",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "belt-of-fire-giant-strength",
+    "target_slug": "belt-of-cloud-giant-strength",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "belt-of-cloud-giant-strength",
+    "target_slug": "belt-of-giant-strength-storm",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "horn-of-valhalla-silver",
+    "target_slug": "horn-of-valhalla-brass",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "horn-of-valhalla-brass",
+    "target_slug": "horn-of-valhalla-bronze",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "horn-of-valhalla-bronze",
+    "target_slug": "horn-of-valhalla-iron",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "crystal-ball",
+    "target_slug": "crystal-ball-of-mind-reading",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "crystal-ball",
+    "target_slug": "crystal-ball-of-telepathy",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "crystal-ball",
+    "target_slug": "crystal-ball-of-true-seeing",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "crystal-ball-of-mind-reading",
+    "target_slug": "crystal-ball-of-telepathy",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "crystal-ball-of-telepathy",
+    "target_slug": "crystal-ball-of-true-seeing",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "ioun-stone-awareness",
+    "target_slug": "ioun-stone-protection",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "ioun-stone-awareness",
+    "target_slug": "ioun-stone-reserve",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "ioun-stone-awareness",
+    "target_slug": "ioun-stone-sustenance",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "ioun-stone-absorption",
+    "target_slug": "ioun-stone-agility",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "ioun-stone-absorption",
+    "target_slug": "ioun-stone-fortitude",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "ioun-stone-insight",
+    "target_slug": "ioun-stone-intellect",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "ioun-stone-leadership",
+    "target_slug": "ioun-stone-strength",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "sovereign-glue",
+    "target_slug": "universal-solvent",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "universal-solvent",
+    "target_slug": "sovereign-glue",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wand-of-fireballs",
+    "target_slug": "fireball",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wand-of-lightning-bolts",
+    "target_slug": "lightning-bolt",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wand-of-magic-missiles",
+    "target_slug": "magic-missile",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wand-of-magic-detection",
+    "target_slug": "detect-magic",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wand-of-paralysis",
+    "target_slug": "hold-person",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wand-of-polymorph",
+    "target_slug": "polymorph",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wand-of-fear",
+    "target_slug": "fear",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wand-of-binding",
+    "target_slug": "hold-monster",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wand-of-web",
+    "target_slug": "web",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wand-of-enemy-detection",
+    "target_slug": "detect-evil-and-good",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wand-of-secrets",
+    "target_slug": "find-traps",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-fire",
+    "target_slug": "fireball",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-fire",
+    "target_slug": "wall-of-fire",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-frost",
+    "target_slug": "cone-of-cold",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-frost",
+    "target_slug": "wall-of-ice",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-frost",
+    "target_slug": "ice-storm",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-healing",
+    "target_slug": "cure-wounds",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-healing",
+    "target_slug": "lesser-restoration",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-healing",
+    "target_slug": "mass-cure-wounds",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-the-woodlands",
+    "target_slug": "barkskin",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-the-woodlands",
+    "target_slug": "speak-with-plants",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-the-woodlands",
+    "target_slug": "wall-of-thorns",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-the-woodlands",
+    "target_slug": "druid",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "staff-of-power",
+    "target_slug": "fireball",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-power",
+    "target_slug": "lightning-bolt",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-power",
+    "target_slug": "cone-of-cold",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-power",
+    "target_slug": "wall-of-force",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-the-magi",
+    "target_slug": "staff-of-power",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "staff-of-the-magi",
+    "target_slug": "wizard",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "staff-of-the-python",
+    "target_slug": "druid",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "staff-of-the-python",
+    "target_slug": "cleric",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "staff-of-charming",
+    "target_slug": "charm-person",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-charming",
+    "target_slug": "command",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-swarming-insects",
+    "target_slug": "insect-plague",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-striking",
+    "target_slug": "staff-of-power",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "staff-of-thunder-and-lightning",
+    "target_slug": "lightning-bolt",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "staff-of-thunder-and-lightning",
+    "target_slug": "thunderwave",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "holy-avenger",
+    "target_slug": "paladin",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "holy-avenger",
+    "target_slug": "dispel-magic",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "robe-of-the-archmagi",
+    "target_slug": "wizard",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "robe-of-the-archmagi",
+    "target_slug": "sorcerer",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "robe-of-the-archmagi",
+    "target_slug": "warlock",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "longsword",
+    "target_slug": "flame-tongue",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "longsword",
+    "target_slug": "frost-brand",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "longsword",
+    "target_slug": "sun-blade",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "longsword",
+    "target_slug": "vorpal-sword",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "longsword",
+    "target_slug": "sword-of-life-stealing",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "longsword",
+    "target_slug": "sword-of-wounding",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "longsword",
+    "target_slug": "sword-of-sharpness",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "longsword",
+    "target_slug": "nine-lives-stealer",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "longsword",
+    "target_slug": "dancing-sword",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "longsword",
+    "target_slug": "defender",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "longsword",
+    "target_slug": "sword-of-kas",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "plate-armor",
+    "target_slug": "armor-of-invulnerability",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "plate-armor",
+    "target_slug": "plate-armor-of-etherealness",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "plate-armor",
+    "target_slug": "armor-of-vulnerability",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "plate-armor",
+    "target_slug": "demon-armor",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "flame-tongue",
+    "target_slug": "frost-brand",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "frost-brand",
+    "target_slug": "flame-tongue",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "sword-of-life-stealing",
+    "target_slug": "sword-of-wounding",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "sword-of-wounding",
+    "target_slug": "sword-of-sharpness",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "sword-of-sharpness",
+    "target_slug": "vorpal-sword",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "dancing-sword",
+    "target_slug": "defender",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "nine-lives-stealer",
+    "target_slug": "sword-of-life-stealing",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "necklace-of-fireballs",
+    "target_slug": "fireball",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "necklace-of-fireballs",
+    "target_slug": "wand-of-fireballs",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "helm-of-brilliance",
+    "target_slug": "fireball",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "helm-of-brilliance",
+    "target_slug": "wall-of-fire",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "helm-of-brilliance",
+    "target_slug": "daylight",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "helm-of-brilliance",
+    "target_slug": "prismatic-spray",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "helm-of-telepathy",
+    "target_slug": "detect-thoughts",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "helm-of-telepathy",
+    "target_slug": "suggestion",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "helm-of-teleportation",
+    "target_slug": "teleport",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "helm-of-comprehending-languages",
+    "target_slug": "comprehend-languages",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "boots-of-levitation",
+    "target_slug": "levitate",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "boots-of-speed",
+    "target_slug": "haste",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "boots-of-speed",
+    "target_slug": "boots-of-striding-and-springing",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "boots-of-elvenkind",
+    "target_slug": "cloak-of-elvenkind",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cloak-of-elvenkind",
+    "target_slug": "boots-of-elvenkind",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cloak-of-displacement",
+    "target_slug": "cloak-of-protection",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cloak-of-protection",
+    "target_slug": "ring-of-protection",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "bag-of-holding",
+    "target_slug": "handy-haversack",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "bag-of-holding",
+    "target_slug": "portable-hole",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "handy-haversack",
+    "target_slug": "bag-of-holding",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "portable-hole",
+    "target_slug": "bag-of-holding",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "bag-of-holding",
+    "target_slug": "bag-of-devouring",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "bag-of-devouring",
+    "target_slug": "bag-of-holding",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gauntlets-of-ogre-power",
+    "target_slug": "belt-of-giant-strength",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "headband-of-intellect",
+    "target_slug": "amulet-of-health",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "amulet-of-health",
+    "target_slug": "headband-of-intellect",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "hat-of-disguise",
+    "target_slug": "disguise-self",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cape-of-the-mountebank",
+    "target_slug": "dimension-door",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "broom-of-flying",
+    "target_slug": "carpet-of-flying",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "carpet-of-flying",
+    "target_slug": "broom-of-flying",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "carpet-of-flying",
+    "target_slug": "wings-of-flying",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wings-of-flying",
+    "target_slug": "winged-boots",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "winged-boots",
+    "target_slug": "boots-of-levitation",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "rope-of-climbing",
+    "target_slug": "slippers-of-spider-climbing",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "slippers-of-spider-climbing",
+    "target_slug": "spider-climb",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cloak-of-arachnida",
+    "target_slug": "spider-climb",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cloak-of-arachnida",
+    "target_slug": "slippers-of-spider-climbing",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "cloak-of-arachnida",
+    "target_slug": "web",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-invisibility",
+    "target_slug": "invisibility",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-invisibility",
+    "target_slug": "potion-of-invisibility",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-free-action",
+    "target_slug": "freedom-of-movement",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-evasion",
+    "target_slug": "rogue",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "ring-of-evasion",
+    "target_slug": "monk",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "ring-of-spell-storing",
+    "target_slug": "pearl-of-power",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-telekinesis",
+    "target_slug": "telekinesis",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-three-wishes",
+    "target_slug": "wish",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-three-wishes",
+    "target_slug": "luck-blade",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "luck-blade",
+    "target_slug": "wish",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "deck-of-many-things",
+    "target_slug": "deck-of-illusions",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "deck-of-illusions",
+    "target_slug": "deck-of-many-things",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "sphere-of-annihilation",
+    "target_slug": "talisman-of-the-sphere",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "talisman-of-the-sphere",
+    "target_slug": "sphere-of-annihilation",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "rod-of-absorption",
+    "target_slug": "rod-of-lordly-might",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "rod-of-absorption",
+    "target_slug": "staff-of-the-magi",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "rod-of-alertness",
+    "target_slug": "rod-of-security",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "rod-of-security",
+    "target_slug": "rod-of-alertness",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-flying",
+    "target_slug": "fly",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-speed",
+    "target_slug": "haste",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-invisibility",
+    "target_slug": "invisibility",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-gaseous-form",
+    "target_slug": "gaseous-form",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-clairvoyance",
+    "target_slug": "clairvoyance",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-mind-reading",
+    "target_slug": "detect-thoughts",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-animal-friendship",
+    "target_slug": "animal-friendship",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-water-breathing",
+    "target_slug": "water-breathing",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-growth",
+    "target_slug": "enlarge-reduce",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-diminution",
+    "target_slug": "enlarge-reduce",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-growth",
+    "target_slug": "potion-of-diminution",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-heroism",
+    "target_slug": "heroism",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "oil-of-etherealness",
+    "target_slug": "etherealness",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "oil-of-slipperiness",
+    "target_slug": "grease",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "oil-of-slipperiness",
+    "target_slug": "freedom-of-movement",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "oil-of-sharpness",
+    "target_slug": "weapon-plus-3",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "philter-of-love",
+    "target_slug": "charm-person",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-poison",
+    "target_slug": "potion-of-healing",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "dagger",
+    "target_slug": "dagger-of-venom",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "dagger-of-venom",
+    "target_slug": "dagger",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "dagger-of-venom",
+    "target_slug": "poison-basic-vial",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "scimitar",
+    "target_slug": "scimitar-of-speed",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "scimitar-of-speed",
+    "target_slug": "scimitar",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "warhammer",
+    "target_slug": "dwarven-thrower",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "dwarven-thrower",
+    "target_slug": "warhammer",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "dwarven-thrower",
+    "target_slug": "belt-of-dwarvenkind",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "trident",
+    "target_slug": "trident-of-fish-command",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "trident-of-fish-command",
+    "target_slug": "trident",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "mace",
+    "target_slug": "mace-of-disruption",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "mace",
+    "target_slug": "mace-of-smiting",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "mace",
+    "target_slug": "mace-of-terror",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "mace-of-disruption",
+    "target_slug": "mace-of-smiting",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "mace-of-disruption",
+    "target_slug": "mace-of-terror",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "mace-of-smiting",
+    "target_slug": "mace-of-terror",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "mace-of-disruption",
+    "target_slug": "cleric",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "shield",
+    "target_slug": "arrow-catching-shield",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "shield",
+    "target_slug": "animated-shield",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "shield",
+    "target_slug": "shield-of-missile-attraction",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "shield",
+    "target_slug": "spellguard-shield",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "arrow-catching-shield",
+    "target_slug": "shield-of-missile-attraction",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "shield-of-missile-attraction",
+    "target_slug": "arrow-catching-shield",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "animated-shield",
+    "target_slug": "spellguard-shield",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "chain-shirt",
+    "target_slug": "elven-chain",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "elven-chain",
+    "target_slug": "chain-shirt",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "studded-leather-armor",
+    "target_slug": "glamoured-studded-leather",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "glamoured-studded-leather",
+    "target_slug": "studded-leather-armor",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "scale-mail",
+    "target_slug": "dragon-scale-mail",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "dragon-scale-mail",
+    "target_slug": "scale-mail",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "bowl-of-commanding-water-elementals",
+    "target_slug": "water-elemental",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "bowl-of-commanding-water-elementals",
+    "target_slug": "conjure-elemental",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "brazier-of-commanding-fire-elementals",
+    "target_slug": "fire-elemental",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "brazier-of-commanding-fire-elementals",
+    "target_slug": "conjure-elemental",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "censer-of-controlling-air-elementals",
+    "target_slug": "air-elemental",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "censer-of-controlling-air-elementals",
+    "target_slug": "conjure-elemental",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "stone-of-controlling-earth-elementals",
+    "target_slug": "earth-elemental",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "stone-of-controlling-earth-elementals",
+    "target_slug": "conjure-elemental",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "bowl-of-commanding-water-elementals",
+    "target_slug": "brazier-of-commanding-fire-elementals",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "brazier-of-commanding-fire-elementals",
+    "target_slug": "censer-of-controlling-air-elementals",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "censer-of-controlling-air-elementals",
+    "target_slug": "stone-of-controlling-earth-elementals",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "stone-of-controlling-earth-elementals",
+    "target_slug": "bowl-of-commanding-water-elementals",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "figurine-of-wondrous-power-bronze-griffon",
+    "target_slug": "griffon",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "figurine-of-wondrous-power-ebony-fly",
+    "target_slug": "figurine-of-wondrous-power-bronze-griffon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "figurine-of-wondrous-power-golden-lions",
+    "target_slug": "lion",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "figurine-of-wondrous-power-marble-elephant",
+    "target_slug": "elephant",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "figurine-of-wondrous-power-onyx-dog",
+    "target_slug": "mastiff",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "figurine-of-wondrous-power-serpentine-owl",
+    "target_slug": "giant-owl",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "figurine-of-wondrous-power-silver-raven",
+    "target_slug": "figurine-of-wondrous-power-bronze-griffon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "figurine-of-wondrous-power-ivory-goats",
+    "target_slug": "figurine-of-wondrous-power-golden-lions",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "figurine-of-wondrous-power-obsidian-steed",
+    "target_slug": "figurine-of-wondrous-power-ebony-fly",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "feather-token-anchor",
+    "target_slug": "feather-token-bird",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "feather-token-bird",
+    "target_slug": "feather-token-fan",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "feather-token-fan",
+    "target_slug": "feather-token-swan-boat",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "feather-token-swan-boat",
+    "target_slug": "feather-token-tree",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "feather-token-tree",
+    "target_slug": "feather-token-whip",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "efreeti-bottle",
+    "target_slug": "efreeti",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-djinni-summoning",
+    "target_slug": "djinni",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-djinni-summoning",
+    "target_slug": "efreeti-bottle",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "iron-flask",
+    "target_slug": "efreeti",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "iron-flask",
+    "target_slug": "djinni",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "iron-flask",
+    "target_slug": "efreeti-bottle",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "iron-flask",
+    "target_slug": "ring-of-djinni-summoning",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-elemental-command",
+    "target_slug": "ring-of-djinni-summoning",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-elemental-command",
+    "target_slug": "conjure-elemental",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "candle-of-invocation",
+    "target_slug": "cleric",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "candle-of-invocation",
+    "target_slug": "gate",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "manual-of-bodily-health",
+    "target_slug": "manual-of-gainful-exercise",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "manual-of-gainful-exercise",
+    "target_slug": "manual-of-quickness-of-action",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "tome-of-clear-thought",
+    "target_slug": "tome-of-understanding",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "tome-of-understanding",
+    "target_slug": "tome-of-leadership-and-influence",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "manual-of-bodily-health",
+    "target_slug": "tome-of-clear-thought",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "manual-of-golems",
+    "target_slug": "manual-of-bodily-health",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "mirror-of-life-trapping",
+    "target_slug": "iron-flask",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "riding-horse",
+    "target_slug": "warhorse",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "pony",
+    "target_slug": "riding-horse",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "donkey-or-mule",
+    "target_slug": "riding-horse",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "draft-horse",
+    "target_slug": "riding-horse",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "riding-horse",
+    "target_slug": "saddle-riding",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "warhorse",
+    "target_slug": "saddle-military",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "warhorse",
+    "target_slug": "barding",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "saddle-riding",
+    "target_slug": "saddle-military",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "saddle-military",
+    "target_slug": "saddle-exotic",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "saddle-riding",
+    "target_slug": "saddlebags",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "saddle-riding",
+    "target_slug": "bit-and-bridle",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "horseshoes-of-speed",
+    "target_slug": "horseshoes-of-a-zephyr",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "horseshoes-of-speed",
+    "target_slug": "warhorse",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "horseshoes-of-a-zephyr",
+    "target_slug": "warhorse",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "camel",
+    "target_slug": "saddle-exotic",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "elephant",
+    "target_slug": "saddle-exotic",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "find-steed",
+    "target_slug": "warhorse",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "find-steed",
+    "target_slug": "riding-horse",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "find-steed",
+    "target_slug": "pony",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "rowboat",
+    "target_slug": "keelboat",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "keelboat",
+    "target_slug": "sailing-ship",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "sailing-ship",
+    "target_slug": "galley",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "longship",
+    "target_slug": "galley",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "warship",
+    "target_slug": "galley",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "folding-boat",
+    "target_slug": "rowboat",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "folding-boat",
+    "target_slug": "sailing-ship",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cart",
+    "target_slug": "wagon",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "wagon",
+    "target_slug": "carriage",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "chariot",
+    "target_slug": "carriage",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "sled",
+    "target_slug": "cart",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "draft-horse",
+    "target_slug": "wagon",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "draft-horse",
+    "target_slug": "cart",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "silvered-weapon",
+    "target_slug": "silvered-ammunition",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "silvered-weapon",
+    "target_slug": "adamantine-weapon",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "silvered-ammunition",
+    "target_slug": "adamantine-weapon",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "adamantine-weapon",
+    "target_slug": "adamantine-armor",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ink-1oz-bottle",
+    "target_slug": "ink-pen",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "ink-pen",
+    "target_slug": "parchment-one-sheet",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "parchment-one-sheet",
+    "target_slug": "paper-one-sheet",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "ink-pen",
+    "target_slug": "spellbook",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "ink-1oz-bottle",
+    "target_slug": "spellbook",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "spellbook",
+    "target_slug": "wizard",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "lamp",
+    "target_slug": "lantern-bullseye",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "lamp",
+    "target_slug": "lantern-hooded",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "lantern-bullseye",
+    "target_slug": "lantern-hooded",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "candle",
+    "target_slug": "lamp",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "candle",
+    "target_slug": "torch",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "lantern-of-revealing",
+    "target_slug": "lantern-bullseye",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "lantern-of-revealing",
+    "target_slug": "lantern-hooded",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "lantern-of-revealing",
+    "target_slug": "see-invisibility",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gem-of-seeing",
+    "target_slug": "true-seeing",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gem-of-seeing",
+    "target_slug": "gem-of-brightness",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gem-of-brightness",
+    "target_slug": "daylight",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "eyes-of-charming",
+    "target_slug": "charm-person",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "eyes-of-minute-seeing",
+    "target_slug": "magnifying-glass",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "eyes-of-the-eagle",
+    "target_slug": "spyglass",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "goggles-of-night",
+    "target_slug": "darkvision",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "robe-of-eyes",
+    "target_slug": "goggles-of-night",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "robe-of-eyes",
+    "target_slug": "see-invisibility",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "robe-of-eyes",
+    "target_slug": "robe-of-scintillating-colors",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "robe-of-scintillating-colors",
+    "target_slug": "robe-of-stars",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "robe-of-stars",
+    "target_slug": "robe-of-the-archmagi",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "robe-of-useful-items",
+    "target_slug": "robe-of-eyes",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "robes",
+    "target_slug": "robe-of-useful-items",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "robes",
+    "target_slug": "robe-of-eyes",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "robes",
+    "target_slug": "robe-of-scintillating-colors",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "robes",
+    "target_slug": "robe-of-stars",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "robes",
+    "target_slug": "robe-of-the-archmagi",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "circlet-of-blasting",
+    "target_slug": "scorching-ray",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "javelin-of-lightning",
+    "target_slug": "javelin",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "javelin",
+    "target_slug": "javelin-of-lightning",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "javelin-of-lightning",
+    "target_slug": "lightning-bolt",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "medallion-of-thoughts",
+    "target_slug": "detect-thoughts",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "necklace-of-adaptation",
+    "target_slug": "necklace-of-prayer-beads",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "necklace-of-prayer-beads",
+    "target_slug": "cleric",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "periapt-of-health",
+    "target_slug": "periapt-of-wound-closure",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "periapt-of-wound-closure",
+    "target_slug": "periapt-of-proof-against-poison",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "periapt-of-proof-against-poison",
+    "target_slug": "periapt-of-health",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-jumping",
+    "target_slug": "jump",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-warmth",
+    "target_slug": "boots-of-the-winterlands",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-water-walking",
+    "target_slug": "water-walk",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-swimming",
+    "target_slug": "gloves-of-swimming-and-climbing",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-mind-shielding",
+    "target_slug": "amulet-of-proof-against-detection-and-location",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "amulet-of-proof-against-detection-and-location",
+    "target_slug": "nondetection",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-animal-influence",
+    "target_slug": "animal-friendship",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-animal-influence",
+    "target_slug": "speak-with-animals",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-feather-falling",
+    "target_slug": "feather-fall",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-the-ram",
+    "target_slug": "ram-portable",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-x-ray-vision",
+    "target_slug": "gem-of-seeing",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-shooting-stars",
+    "target_slug": "ring-of-spell-turning",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ring-of-spell-turning",
+    "target_slug": "mantle-of-spell-resistance",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "scarab-of-protection",
+    "target_slug": "brooch-of-shielding",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "brooch-of-shielding",
+    "target_slug": "shield",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "horn-of-blasting",
+    "target_slug": "shatter",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "horn-of-blasting",
+    "target_slug": "horn-of-valhalla-silver",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "chime-of-opening",
+    "target_slug": "knock",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "pipes-of-haunting",
+    "target_slug": "fear",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "pipes-of-the-sewers",
+    "target_slug": "pipes-of-haunting",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cloak-of-the-bat",
+    "target_slug": "bat",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cloak-of-the-bat",
+    "target_slug": "cloak-of-elvenkind",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cloak-of-the-manta-ray",
+    "target_slug": "ring-of-swimming",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cloak-of-the-manta-ray",
+    "target_slug": "cloak-of-the-bat",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "dust-of-disappearance",
+    "target_slug": "invisibility",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "dust-of-disappearance",
+    "target_slug": "dust-of-dryness",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "dust-of-dryness",
+    "target_slug": "decanter-of-endless-water",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "dust-of-sneezing-and-choking",
+    "target_slug": "dust-of-disappearance",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "eversmoking-bottle",
+    "target_slug": "fog-cloud",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "eversmoking-bottle",
+    "target_slug": "efreeti-bottle",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "elemental-gem",
+    "target_slug": "conjure-elemental",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "instant-fortress",
+    "target_slug": "leomunds-tiny-hut",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "iron-bands-of-binding",
+    "target_slug": "hold-monster",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "iron-bands-of-binding",
+    "target_slug": "manacles",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "dimensional-shackles",
+    "target_slug": "manacles",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "dimensional-shackles",
+    "target_slug": "iron-bands-of-binding",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wind-fan",
+    "target_slug": "gust-of-wind",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wind-fan",
+    "target_slug": "feather-token-fan",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "bracers-of-archery",
+    "target_slug": "longbow",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "bracers-of-archery",
+    "target_slug": "bracers-of-defense",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "bracers-of-defense",
+    "target_slug": "monk",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "bracers-of-defense",
+    "target_slug": "mage-armor",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gloves-of-missile-snaring",
+    "target_slug": "gloves-of-swimming-and-climbing",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gloves-of-missile-snaring",
+    "target_slug": "arrow-catching-shield",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-climbing",
+    "target_slug": "rope-of-climbing",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-climbing",
+    "target_slug": "climbers-kit",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "potion-of-climbing",
+    "target_slug": "gloves-of-swimming-and-climbing",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "marvelous-pigments",
+    "target_slug": "creation",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "restorative-ointment",
+    "target_slug": "lesser-restoration",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "restorative-ointment",
+    "target_slug": "cure-wounds",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "efficient-quiver",
+    "target_slug": "quiver",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "quiver",
+    "target_slug": "arrows-20",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "case-crossbow-bolt",
+    "target_slug": "crossbow-bolts-20",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "arrows-20",
+    "target_slug": "longbow",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "arrows-20",
+    "target_slug": "shortbow",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "crossbow-bolts-20",
+    "target_slug": "light-crossbow",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "crossbow-bolts-20",
+    "target_slug": "heavy-crossbow",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "crossbow-bolts-20",
+    "target_slug": "hand-crossbow",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "sling-bullets-20",
+    "target_slug": "sling",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "blowgun-needles-50",
+    "target_slug": "blowgun",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "arrow-of-slaying",
+    "target_slug": "arrows-20",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "arrow-of-slaying",
+    "target_slug": "longbow",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "arrow-of-slaying",
+    "target_slug": "dragon-slayer",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "arrow-of-slaying",
+    "target_slug": "giant-slayer",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "dragon-slayer",
+    "target_slug": "giant-slayer",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "berserker-axe",
+    "target_slug": "battleaxe",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "berserker-axe",
+    "target_slug": "greataxe",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "berserker-axe",
+    "target_slug": "barbarian",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "berserker-axe",
+    "target_slug": "axe-of-the-dwarvish-lords",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "axe-of-the-dwarvish-lords",
+    "target_slug": "battleaxe",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "axe-of-the-dwarvish-lords",
+    "target_slug": "belt-of-dwarvenkind",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "oathbow",
+    "target_slug": "longbow",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "oathbow",
+    "target_slug": "ranger",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "hammer-of-thunderbolts",
+    "target_slug": "maul",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "hammer-of-thunderbolts",
+    "target_slug": "belt-of-giant-strength",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "hammer-of-thunderbolts",
+    "target_slug": "gauntlets-of-ogre-power",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "hammer-of-thunderbolts",
+    "target_slug": "dwarven-thrower",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cube-of-force",
+    "target_slug": "wall-of-force",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cubic-gate",
+    "target_slug": "cube-of-force",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cubic-gate",
+    "target_slug": "plane-shift",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "well-of-many-worlds",
+    "target_slug": "cubic-gate",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "well-of-many-worlds",
+    "target_slug": "amulet-of-the-planes",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "amulet-of-the-planes",
+    "target_slug": "plane-shift",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "plate-armor-of-etherealness",
+    "target_slug": "etherealness",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "plate-armor-of-etherealness",
+    "target_slug": "armor-of-invulnerability",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "demon-armor",
+    "target_slug": "armor-of-vulnerability",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "talisman-of-pure-good",
+    "target_slug": "talisman-of-ultimate-evil",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "talisman-of-ultimate-evil",
+    "target_slug": "talisman-of-pure-good",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "talisman-of-pure-good",
+    "target_slug": "cleric",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "talisman-of-ultimate-evil",
+    "target_slug": "warlock",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "book-of-exalted-deeds",
+    "target_slug": "book-of-vile-darkness",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "book-of-vile-darkness",
+    "target_slug": "book-of-exalted-deeds",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "book-of-exalted-deeds",
+    "target_slug": "cleric",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "book-of-exalted-deeds",
+    "target_slug": "paladin",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "hand-of-vecna",
+    "target_slug": "eye-of-vecna",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "eye-of-vecna",
+    "target_slug": "hand-of-vecna",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "sword-of-kas",
+    "target_slug": "eye-of-vecna",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "sword-of-kas",
+    "target_slug": "hand-of-vecna",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "sword-of-kas",
+    "target_slug": "vorpal-sword",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wand-of-orcus",
+    "target_slug": "animate-dead",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wand-of-orcus",
+    "target_slug": "finger-of-death",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wand-of-orcus",
+    "target_slug": "power-word-stun",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "orb-of-dragonkind",
+    "target_slug": "dragon-scale-mail",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "orb-of-dragonkind",
+    "target_slug": "dragon-slayer",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "vicious-weapon",
+    "target_slug": "weapon-plus-1",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "rope-of-entanglement",
+    "target_slug": "rope-hempen-50ft",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "rope-of-entanglement",
+    "target_slug": "rope-silk-50ft",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "rope-of-entanglement",
+    "target_slug": "entangle",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "rope-of-climbing",
+    "target_slug": "rope-hempen-50ft",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "rope-of-climbing",
+    "target_slug": "rope-silk-50ft",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "rope-hempen-50ft",
+    "target_slug": "rope-silk-50ft",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "clothes-common",
+    "target_slug": "clothes-fine",
+    "relationship_type": "upgrade"
+  },
+  {
+    "source_slug": "clothes-fine",
+    "target_slug": "clothes-costume",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "clothes-travelers",
+    "target_slug": "clothes-common",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "ball-bearings",
+    "target_slug": "caltrops",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "caltrops",
+    "target_slug": "ball-bearings",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "caltrops",
+    "target_slug": "hunting-trap",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "hunting-trap",
+    "target_slug": "caltrops",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "poison-basic-vial",
+    "target_slug": "antitoxin",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "antitoxin",
+    "target_slug": "poison-basic-vial",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "vial",
+    "target_slug": "poison-basic-vial",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "vial",
+    "target_slug": "antitoxin",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "vial",
+    "target_slug": "holy-water",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "flask-or-tankard",
+    "target_slug": "oil-flask",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "flask-or-tankard",
+    "target_slug": "alchemists-fire",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "case-map-or-scroll",
+    "target_slug": "spell-scroll-cantrip",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "case-map-or-scroll",
+    "target_slug": "parchment-one-sheet",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "chest",
+    "target_slug": "bag-of-holding",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "sack",
+    "target_slug": "pouch",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "pouch",
+    "target_slug": "bag-of-holding",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "lock",
+    "target_slug": "chime-of-opening",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "lock",
+    "target_slug": "thieves-tools",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "thieves-tools",
+    "target_slug": "rogue",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "holy-symbol",
+    "target_slug": "cleric",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "holy-symbol",
+    "target_slug": "paladin",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "arcane-focus",
+    "target_slug": "wizard",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "arcane-focus",
+    "target_slug": "sorcerer",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "arcane-focus",
+    "target_slug": "warlock",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "trade-goods-gold-1lb",
+    "target_slug": "trade-goods-silver-1lb",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "trade-goods-silver-1lb",
+    "target_slug": "trade-goods-copper-1lb",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "trade-goods-gold-1lb",
+    "target_slug": "trade-goods-platinum-1lb",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "trade-goods-wheat-1lb",
+    "target_slug": "trade-goods-flour-1lb",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "trade-goods-ginger-1lb",
+    "target_slug": "trade-goods-cinnamon-1lb",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "feed-per-day",
+    "target_slug": "stabling-per-day",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "feed-per-day",
+    "target_slug": "riding-horse",
+    "relationship_type": "component"
+  },
+  {
+    "source_slug": "stabling-per-day",
+    "target_slug": "riding-horse",
+    "relationship_type": "component"
   }
 ]

@@ -4,6 +4,34 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.3.9 — Wiki Magic Items & Equipment Expansion
+**Released:** March 12, 2026
+
+### Arcane Encyclopedia — Items & Equipment Update
+- **302 new wiki articles** — total now 1,680 (up from 1,378)
+- **206 new magic items** by rarity — total now 303 (up from 97)
+- **103 new equipment entries** — mounts, vehicles, adventuring gear, trade goods
+- **483 new cross-references** (943 total) — variant chains, spell links, class connections, equipment-to-magic-item links
+
+### New Magic Items (by rarity)
+- **Common** (3): Potion of Climbing, Spell Scroll (Cantrip), Spell Scroll (1st Level)
+- **Uncommon** (50): Ammunition +1, Bag of Tricks, Bracers of Archery, Brooch of Shielding, Circlet of Blasting, Decanter of Endless Water, Dust of Disappearance, Elemental Gem, Eversmoking Bottle, Javelin of Lightning, Medallion of Thoughts, Pipes of Haunting, Ring of Jumping, Ring of Mind Shielding, Slippers of Spider Climbing, Wand of Web, and more
+- **Rare** (74): All Figurines of Wondrous Power, Feather Tokens, Ioun Stones (Awareness/Protection/Reserve/Sustenance), Belt of Dwarvenkind, Berserker Axe, Dagger of Venom, Elven Chain, Glamoured Studded Leather, Helm of Teleportation, Horn of Blasting, Instant Fortress, Mace of Smiting, Wand of Wonder, Wings of Flying, and more
+- **Very Rare** (46): All Tomes & Manuals, Arrow of Slaying, Candle of Invocation, Demon Armor, Efreeti Bottle, Mirror of Life Trapping, Nine Lives Stealer, Ring of Shooting Stars, Robe of Stars, Staff of Frost, Staff of Thunder and Lightning, Sword of Sharpness, and more
+- **Legendary** (25): Apparatus of the Crab, Armor of Invulnerability, Belt of Giant Strength (Storm), Crystal Ball variants, Cubic Gate, Defender, Hammer of Thunderbolts, Iron Flask, Ring of Djinni Summoning, Ring of Elemental Command, Robe of the Archmagi, Scarab of Protection, Well of Many Worlds, and more
+- **Artifacts** (8): Axe of the Dwarvish Lords, Book of Exalted Deeds, Book of Vile Darkness, Eye of Vecna, Hand of Vecna, Orb of Dragonkind, Sword of Kas, Wand of Orcus
+
+### New Equipment
+- **Adventuring Gear** (52): Ball bearings, caltrops, chalk, climber's kit, fishing tackle, hunting trap, manacles, spyglass, and more
+- **Mounts & Vehicles** (22): Camel, elephant, warhorse, carriage, galley, longship, warship, barding, saddles
+- **Trade Goods** (11): Wheat, flour, salt, iron, silver, gold, platinum by weight
+- **Special Materials** (4): Silvered weapons/ammunition rules, adamantine weapon/armor crafting
+
+### Version Sync
+- All version files bumped to 0.3.9: VERSION, version.json, version.js, package.json (root + frontend), tauri.conf.json, Cargo.toml
+
+---
+
 ## V0.3.8 — Wiki Races & Subclasses Expansion
 **Released:** March 12, 2026
 

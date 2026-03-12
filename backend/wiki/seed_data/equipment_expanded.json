@@ -1,0 +1,1775 @@
+[
+  {
+    "slug": "ball-bearings",
+    "title": "Ball Bearings (bag of 1,000)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "Tiny metal spheres that can be spread across an area to create difficult terrain and knock creatures prone.",
+    "content": "## Ball Bearings (bag of 1,000)\n\n*Adventuring Gear, 1 gp, 2 lb.*\n\nAs an action, you can spill these tiny metal balls from their pouch to cover a level, square area that is 10 feet on a side. A creature moving across the covered area must succeed on a DC 10 Dexterity saving throw or fall prone. A creature moving through the area at half speed doesn't need to make the save.",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": "2 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,hazard,terrain",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "block-and-tackle",
+    "title": "Block and Tackle",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A set of pulleys with a cable threaded through them and a hook to attach to objects, allowing you to hoist heavy loads.",
+    "content": "## Block and Tackle\n\n*Adventuring Gear, 1 gp, 5 lb.*\n\nA set of pulleys with a cable threaded through them and a hook to attach to objects. A block and tackle allows you to hoist up to four times the weight you can normally lift.",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": "5 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility,lifting",
+    "source": "SRD 5.1",
+    "sort_order": 101
+  },
+  {
+    "slug": "caltrops",
+    "title": "Caltrops (bag of 20)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "Small metal spikes scattered on the ground to impede movement and damage creatures that step on them.",
+    "content": "## Caltrops (bag of 20)\n\n*Adventuring Gear, 1 gp, 2 lb.*\n\nAs an action, you can spread a bag of caltrops to cover a square area that is 5 feet on a side. Any creature that enters the area must succeed on a DC 15 Dexterity saving throw or stop moving this turn and take 1 piercing damage. Taking this damage reduces the creature's walking speed by 10 feet until the creature regains at least 1 hit point. A creature moving through the area at half speed doesn't need to make the save.",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": "2 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,hazard,terrain,damage",
+    "source": "SRD 5.1",
+    "sort_order": 102
+  },
+  {
+    "slug": "chain-10ft",
+    "title": "Chain (10 feet)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A 10-foot length of heavy iron chain with AC 19 and 10 hit points that can be burst with a DC 20 Strength check.",
+    "content": "## Chain (10 feet)\n\n*Adventuring Gear, 5 gp, 10 lb.*\n\nA chain has 10 hit points. It can be burst with a successful DC 20 Strength check.",
+    "metadata_json": {
+      "cost": "5 gp",
+      "weight": "10 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility,restraint",
+    "source": "SRD 5.1",
+    "sort_order": 103
+  },
+  {
+    "slug": "chalk-1-piece",
+    "title": "Chalk (1 piece)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A small piece of chalk used to mark surfaces, leave trails, or draw diagrams.",
+    "content": "## Chalk (1 piece)\n\n*Adventuring Gear, 1 cp, --*\n\nA piece of chalk useful for marking dungeon walls, leaving messages, or drawing diagrams. An essential tool for dungeon delvers who want to avoid getting lost.",
+    "metadata_json": {
+      "cost": "1 cp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility,writing",
+    "source": "SRD 5.1",
+    "sort_order": 104
+  },
+  {
+    "slug": "climbers-kit",
+    "title": "Climber's Kit",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A set of climbing gear including pitons, boot tips, gloves, and a harness that prevents falling more than 25 feet.",
+    "content": "## Climber's Kit\n\n*Adventuring Gear, 25 gp, 12 lb.*\n\nA climber's kit includes special pitons, boot tips, gloves, and a harness. You can use the climber's kit as an action to anchor yourself; when you do, you can't fall more than 25 feet from the point where you anchored yourself, and you can't climb more than 25 feet away from that point without undoing the anchor.",
+    "metadata_json": {
+      "cost": "25 gp",
+      "weight": "12 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,climbing,exploration",
+    "source": "SRD 5.1",
+    "sort_order": 105
+  },
+  {
+    "slug": "fishing-tackle",
+    "title": "Fishing Tackle",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A kit containing a wooden rod, silken line, corkwood bobbers, steel hooks, lead sinkers, velvet lures, and narrow netting.",
+    "content": "## Fishing Tackle\n\n*Adventuring Gear, 1 gp, 4 lb.*\n\nThis kit includes a wooden rod, silken line, corkwood bobbers, steel hooks, lead sinkers, velvet lures, and narrow netting. Useful for catching fish for food during travel or downtime.",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": "4 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,survival,food",
+    "source": "SRD 5.1",
+    "sort_order": 106
+  },
+  {
+    "slug": "hunting-trap",
+    "title": "Hunting Trap",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A steel jaw trap that snaps shut when a creature steps on it, restraining and damaging the creature.",
+    "content": "## Hunting Trap\n\n*Adventuring Gear, 5 gp, 25 lb.*\n\nWhen you use your action to set it, this trap forms a saw-toothed steel ring that snaps shut when a creature steps on a pressure plate in the center. The trap is affixed by a heavy chain to an immobile object, such as a tree or a spike driven into the ground.\n\nA creature that steps on the plate must succeed on a DC 13 Dexterity saving throw or take 1d4 piercing damage and stop moving. Thereafter, until the creature breaks free of the trap, its movement is limited by the length of the chain (typically 3 feet long). A creature can use its action to make a DC 13 Strength check, freeing itself or another creature within its reach on a success. Each failed check deals 1 piercing damage to the trapped creature.",
+    "metadata_json": {
+      "cost": "5 gp",
+      "weight": "25 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,trap,hunting,damage",
+    "source": "SRD 5.1",
+    "sort_order": 107
+  },
+  {
+    "slug": "ink-1oz-bottle",
+    "title": "Ink (1 ounce bottle)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A small bottle of ink used for writing with an ink pen.",
+    "content": "## Ink (1 ounce bottle)\n\n*Adventuring Gear, 10 gp, --*\n\nA 1-ounce bottle of ink, typically black. Used with an ink pen for writing letters, copying spell scrolls, or keeping a journal.",
+    "metadata_json": {
+      "cost": "10 gp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,writing,utility",
+    "source": "SRD 5.1",
+    "sort_order": 108
+  },
+  {
+    "slug": "ink-pen",
+    "title": "Ink Pen",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A writing instrument used with ink for scribing notes, letters, or spell scrolls.",
+    "content": "## Ink Pen\n\n*Adventuring Gear, 2 cp, --*\n\nA simple quill or pen used with ink for writing. Essential for wizards copying spells and scholars taking notes.",
+    "metadata_json": {
+      "cost": "2 cp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,writing,utility",
+    "source": "SRD 5.1",
+    "sort_order": 109
+  },
+  {
+    "slug": "lamp",
+    "title": "Lamp",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A simple oil lamp that casts bright light in a 15-foot radius and dim light for an additional 30 feet.",
+    "content": "## Lamp\n\n*Adventuring Gear, 5 sp, 1 lb.*\n\nA lamp casts bright light in a 15-foot radius and dim light for an additional 30 feet. Once lit, it burns for 6 hours on a flask (1 pint) of oil.",
+    "metadata_json": {
+      "cost": "5 sp",
+      "weight": "1 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,light,exploration",
+    "source": "SRD 5.1",
+    "sort_order": 110
+  },
+  {
+    "slug": "magnifying-glass",
+    "title": "Magnifying Glass",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A lens used for closely inspecting items or starting fires by focusing sunlight.",
+    "content": "## Magnifying Glass\n\n*Adventuring Gear, 100 gp, --*\n\nThis lens allows a closer look at small objects. It is also useful as a substitute for flint and steel when starting fires. Lighting a fire with a magnifying glass requires light as bright as sunlight to focus, tinder to ignite, and about 5 minutes for the fire to ignite.\n\nA magnifying glass grants advantage on any ability check made to appraise or inspect an item that is small or highly detailed.",
+    "metadata_json": {
+      "cost": "100 gp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility,inspection",
+    "source": "SRD 5.1",
+    "sort_order": 111
+  },
+  {
+    "slug": "manacles",
+    "title": "Manacles",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "Iron restraints that can bind a Small or Medium creature, requiring a DC 20 Dexterity or Strength check to escape.",
+    "content": "## Manacles\n\n*Adventuring Gear, 2 gp, 6 lb.*\n\nThese metal restraints can bind a Small or Medium creature. Escaping the manacles requires a successful DC 20 Dexterity check. Breaking them requires a successful DC 20 Strength check. Each set of manacles comes with one key. Without the key, a creature proficient with thieves' tools can pick the manacles' lock with a successful DC 15 Dexterity check. Manacles have 15 hit points.",
+    "metadata_json": {
+      "cost": "2 gp",
+      "weight": "6 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,restraint,utility",
+    "source": "SRD 5.1",
+    "sort_order": 112
+  },
+  {
+    "slug": "perfume-vial",
+    "title": "Perfume (vial)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A small vial of fragrant perfume useful for social situations.",
+    "content": "## Perfume (vial)\n\n*Adventuring Gear, 5 gp, --*\n\nA small glass vial of perfume. Useful for masking unpleasant odors, making good impressions in social situations, or as a component in alchemical recipes.",
+    "metadata_json": {
+      "cost": "5 gp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,social,utility",
+    "source": "SRD 5.1",
+    "sort_order": 113
+  },
+  {
+    "slug": "poison-basic-vial",
+    "title": "Poison, Basic (vial)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A simple poison that can be applied to a weapon or ammunition to deal extra poison damage.",
+    "content": "## Poison, Basic (vial)\n\n*Adventuring Gear, 100 gp, --*\n\nYou can use the poison in this vial to coat one slashing or piercing weapon or up to three pieces of ammunition. Applying the poison takes an action. A creature hit by the poisoned weapon or ammunition must make a DC 10 Constitution saving throw or take 1d4 poison damage. Once applied, the poison retains potency for 1 minute before drying.",
+    "metadata_json": {
+      "cost": "100 gp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,poison,consumable,damage",
+    "source": "SRD 5.1",
+    "sort_order": 114
+  },
+  {
+    "slug": "ram-portable",
+    "title": "Ram, Portable",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A heavy portable battering ram that grants a +4 bonus to Strength checks made to break down doors.",
+    "content": "## Ram, Portable\n\n*Adventuring Gear, 4 gp, 35 lb.*\n\nYou can use a portable ram to break down doors. When doing so, you gain a +4 bonus on the Strength check. One other character can help you use the ram, giving you advantage on this check.",
+    "metadata_json": {
+      "cost": "4 gp",
+      "weight": "35 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility,strength",
+    "source": "SRD 5.1",
+    "sort_order": 115
+  },
+  {
+    "slug": "signal-whistle",
+    "title": "Signal Whistle",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A small whistle that can be heard clearly at a distance, useful for signaling allies.",
+    "content": "## Signal Whistle\n\n*Adventuring Gear, 5 cp, --*\n\nA small metal or wooden whistle that produces a loud, clear tone audible at a considerable distance. Useful for coordinating with allies, calling for help, or signaling during exploration.",
+    "metadata_json": {
+      "cost": "5 cp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility,communication",
+    "source": "SRD 5.1",
+    "sort_order": 116
+  },
+  {
+    "slug": "spyglass",
+    "title": "Spyglass",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A small telescope that makes objects viewed through it appear twice as large.",
+    "content": "## Spyglass\n\n*Adventuring Gear, 1,000 gp, 1 lb.*\n\nObjects viewed through a spyglass are magnified to twice their size. An invaluable tool for scouts, sailors, and anyone who needs to observe distant objects or creatures.",
+    "metadata_json": {
+      "cost": "1000 gp",
+      "weight": "1 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility,vision,exploration",
+    "source": "SRD 5.1",
+    "sort_order": 117
+  },
+  {
+    "slug": "steel-mirror",
+    "title": "Steel Mirror",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A polished steel mirror useful for looking around corners or reflecting gaze attacks.",
+    "content": "## Steel Mirror\n\n*Adventuring Gear, 5 gp, 1/2 lb.*\n\nA polished steel mirror, useful for looking around corners, signaling with reflected light, checking for traps, or indirectly viewing creatures with dangerous gaze attacks such as a medusa.",
+    "metadata_json": {
+      "cost": "5 gp",
+      "weight": "0.5 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility,exploration",
+    "source": "SRD 5.1",
+    "sort_order": 118
+  },
+  {
+    "slug": "hourglass",
+    "title": "Hourglass",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A glass device for measuring the passage of time, typically one hour per turn.",
+    "content": "## Hourglass\n\n*Adventuring Gear, 25 gp, 1 lb.*\n\nA glass timing device filled with fine sand that measures the passage of approximately one hour. Useful for tracking guard shifts, timing spells or rituals, and managing rest periods.",
+    "metadata_json": {
+      "cost": "25 gp",
+      "weight": "1 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility,time",
+    "source": "SRD 5.1",
+    "sort_order": 119
+  },
+  {
+    "slug": "rope-silk-50ft",
+    "title": "Rope, Silk (50 feet)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A 50-foot length of silk rope that is lighter and stronger than hemp, with 2 hit points.",
+    "content": "## Rope, Silk (50 feet)\n\n*Adventuring Gear, 10 gp, 5 lb.*\n\nSilk rope has 2 hit points and can be burst with a DC 17 Strength check. It is lighter and smoother than hempen rope, making it easier to climb and tie knots with.",
+    "metadata_json": {
+      "cost": "10 gp",
+      "weight": "5 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,rope,climbing,utility",
+    "source": "SRD 5.1",
+    "sort_order": 120
+  },
+  {
+    "slug": "candle",
+    "title": "Candle",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A small wax candle that provides dim light in a 5-foot radius for 1 hour.",
+    "content": "## Candle\n\n*Adventuring Gear, 1 cp, --*\n\nFor 1 hour, a candle sheds bright light in a 5-foot radius and dim light for an additional 5 feet.",
+    "metadata_json": {
+      "cost": "1 cp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,light",
+    "source": "SRD 5.1",
+    "sort_order": 121
+  },
+  {
+    "slug": "case-crossbow-bolt",
+    "title": "Case, Crossbow Bolt",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A wooden case that holds up to 20 crossbow bolts.",
+    "content": "## Case, Crossbow Bolt\n\n*Adventuring Gear, 1 gp, 1 lb.*\n\nThis wooden case can hold up to 20 crossbow bolts.",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": "1 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,ammunition,storage",
+    "source": "SRD 5.1",
+    "sort_order": 122
+  },
+  {
+    "slug": "case-map-or-scroll",
+    "title": "Case, Map or Scroll",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A cylindrical leather case that holds up to 10 rolled sheets of paper or 5 rolled sheets of parchment.",
+    "content": "## Case, Map or Scroll\n\n*Adventuring Gear, 1 gp, 1 lb.*\n\nThis cylindrical leather case can hold up to ten rolled-up sheets of paper or five rolled-up sheets of parchment.",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": "1 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,storage,utility",
+    "source": "SRD 5.1",
+    "sort_order": 123
+  },
+  {
+    "slug": "chest",
+    "title": "Chest",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A wooden chest that can hold up to 12 cubic feet or 300 pounds of gear.",
+    "content": "## Chest\n\n*Adventuring Gear, 5 gp, 25 lb.*\n\nA sturdy wooden chest that can hold 12 cubic feet / 300 pounds of gear.",
+    "metadata_json": {
+      "cost": "5 gp",
+      "weight": "25 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,storage",
+    "source": "SRD 5.1",
+    "sort_order": 124
+  },
+  {
+    "slug": "clothes-common",
+    "title": "Clothes, Common",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A set of simple, everyday clothes including a loose shirt, pants or skirt, and basic shoes.",
+    "content": "## Clothes, Common\n\n*Adventuring Gear, 5 sp, 3 lb.*\n\nA set of common clothing: a loose shirt, pants or skirt, and basic shoes or sandals. Typical everyday attire for commoners and peasants.",
+    "metadata_json": {
+      "cost": "5 sp",
+      "weight": "3 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,clothing",
+    "source": "SRD 5.1",
+    "sort_order": 125
+  },
+  {
+    "slug": "clothes-costume",
+    "title": "Clothes, Costume",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A set of costume clothes for disguise or performance purposes.",
+    "content": "## Clothes, Costume\n\n*Adventuring Gear, 5 gp, 4 lb.*\n\nA set of costume clothing, useful for theatrical performances, disguises, or masquerades.",
+    "metadata_json": {
+      "cost": "5 gp",
+      "weight": "4 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,clothing,disguise",
+    "source": "SRD 5.1",
+    "sort_order": 126
+  },
+  {
+    "slug": "clothes-fine",
+    "title": "Clothes, Fine",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A set of high-quality, fashionable clothes suitable for nobles and formal occasions.",
+    "content": "## Clothes, Fine\n\n*Adventuring Gear, 15 gp, 6 lb.*\n\nA set of fine clothing including a fancy shirt with silk accents, well-tailored pants or skirt, quality shoes, and accessories. Suitable for audiences with nobility or other formal occasions.",
+    "metadata_json": {
+      "cost": "15 gp",
+      "weight": "6 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,clothing,social",
+    "source": "SRD 5.1",
+    "sort_order": 127
+  },
+  {
+    "slug": "clothes-travelers",
+    "title": "Clothes, Traveler's",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "Durable, practical clothes designed for traveling, including boots, a cloak, and sturdy garments.",
+    "content": "## Clothes, Traveler's\n\n*Adventuring Gear, 2 gp, 4 lb.*\n\nSturdy, practical clothing including boots, a wool or linen cloak, and durable garments designed for life on the road.",
+    "metadata_json": {
+      "cost": "2 gp",
+      "weight": "4 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,clothing,travel",
+    "source": "SRD 5.1",
+    "sort_order": 128
+  },
+  {
+    "slug": "mess-kit",
+    "title": "Mess Kit",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A tin box containing a cup and simple cutlery, used for cooking and eating meals in the field.",
+    "content": "## Mess Kit\n\n*Adventuring Gear, 2 sp, 1 lb.*\n\nThis tin box contains a cup and simple cutlery. The box clamps together, and one side can be used as a cooking pan while the other serves as a plate or shallow bowl.",
+    "metadata_json": {
+      "cost": "2 sp",
+      "weight": "1 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,cooking,travel",
+    "source": "SRD 5.1",
+    "sort_order": 129
+  },
+  {
+    "slug": "pouch",
+    "title": "Pouch",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A cloth or leather belt pouch that can hold up to 1/5 cubic foot or 6 pounds of gear.",
+    "content": "## Pouch\n\n*Adventuring Gear, 5 sp, 1 lb.*\n\nA cloth or leather pouch can hold up to 20 sling bullets or 50 blowgun needles, among other things. A compartmentalized pouch for holding spell components is called a component pouch (described separately).",
+    "metadata_json": {
+      "cost": "5 sp",
+      "weight": "1 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,storage",
+    "source": "SRD 5.1",
+    "sort_order": 130
+  },
+  {
+    "slug": "quiver",
+    "title": "Quiver",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A container for holding up to 20 arrows.",
+    "content": "## Quiver\n\n*Adventuring Gear, 1 gp, 1 lb.*\n\nA quiver can hold up to 20 arrows.",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": "1 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,ammunition,storage",
+    "source": "SRD 5.1",
+    "sort_order": 131
+  },
+  {
+    "slug": "sack",
+    "title": "Sack",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A simple cloth sack that can hold up to 1 cubic foot or 30 pounds of gear.",
+    "content": "## Sack\n\n*Adventuring Gear, 1 cp, 1/2 lb.*\n\nA simple cloth bag that can hold up to 1 cubic foot / 30 pounds of gear.",
+    "metadata_json": {
+      "cost": "1 cp",
+      "weight": "0.5 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,storage",
+    "source": "SRD 5.1",
+    "sort_order": 132
+  },
+  {
+    "slug": "scale-merchants",
+    "title": "Scale, Merchant's",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A small balance scale with weights, used for measuring the precise weight of goods and precious metals.",
+    "content": "## Scale, Merchant's\n\n*Adventuring Gear, 5 gp, 3 lb.*\n\nA scale includes a small balance, pans, and a suitable assortment of weights up to 2 pounds. With it, you can measure the exact weight of small objects, such as raw precious metals or trade goods, to help determine their worth.",
+    "metadata_json": {
+      "cost": "5 gp",
+      "weight": "3 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,trade,utility",
+    "source": "SRD 5.1",
+    "sort_order": 133
+  },
+  {
+    "slug": "sealing-wax",
+    "title": "Sealing Wax",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A stick of wax used to seal letters and documents with an official mark.",
+    "content": "## Sealing Wax\n\n*Adventuring Gear, 5 sp, --*\n\nUsed with a signet ring to seal envelopes, scroll cases, or other containers with an official mark that shows if they have been tampered with.",
+    "metadata_json": {
+      "cost": "5 sp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,writing,utility",
+    "source": "SRD 5.1",
+    "sort_order": 134
+  },
+  {
+    "slug": "signet-ring",
+    "title": "Signet Ring",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A ring bearing an engraved family crest or personal symbol, used to stamp sealing wax.",
+    "content": "## Signet Ring\n\n*Adventuring Gear, 5 gp, --*\n\nA ring bearing an engraved personal symbol, family crest, or emblem. Used with sealing wax to authenticate letters and documents.",
+    "metadata_json": {
+      "cost": "5 gp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility,social",
+    "source": "SRD 5.1",
+    "sort_order": 135
+  },
+  {
+    "slug": "soap",
+    "title": "Soap",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A small cake of soap for personal hygiene.",
+    "content": "## Soap\n\n*Adventuring Gear, 2 cp, --*\n\nA cake of soap useful for maintaining personal hygiene on the road. Can also be used to make surfaces slippery.",
+    "metadata_json": {
+      "cost": "2 cp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility,hygiene",
+    "source": "SRD 5.1",
+    "sort_order": 136
+  },
+  {
+    "slug": "tent-two-person",
+    "title": "Tent, Two-Person",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A simple, portable canvas shelter for two people.",
+    "content": "## Tent, Two-Person\n\n*Adventuring Gear, 2 gp, 20 lb.*\n\nA simple and portable canvas shelter, big enough for two Medium creatures to sleep in.",
+    "metadata_json": {
+      "cost": "2 gp",
+      "weight": "20 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,shelter,camping",
+    "source": "SRD 5.1",
+    "sort_order": 137
+  },
+  {
+    "slug": "whetstone",
+    "title": "Whetstone",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A flat stone used to sharpen bladed weapons and tools.",
+    "content": "## Whetstone\n\n*Adventuring Gear, 1 cp, 1 lb.*\n\nA flat abrasive stone used for sharpening blades and other edged tools. A warrior's essential maintenance tool.",
+    "metadata_json": {
+      "cost": "1 cp",
+      "weight": "1 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility,maintenance",
+    "source": "SRD 5.1",
+    "sort_order": 138
+  },
+  {
+    "slug": "arrows-20",
+    "title": "Arrows (20)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A bundle of 20 arrows for use with shortbows and longbows.",
+    "content": "## Arrows (20)\n\n*Ammunition, 1 gp, 1 lb.*\n\nA bundle of 20 arrows for use with any bow. At the end of a battle, you can spend 1 minute to search the battlefield and recover half your expended ammunition.",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": "1 lb",
+      "type": "Ammunition"
+    },
+    "tags": "equipment,adventuring-gear,ammunition,arrows",
+    "source": "SRD 5.1",
+    "sort_order": 139
+  },
+  {
+    "slug": "crossbow-bolts-20",
+    "title": "Crossbow Bolts (20)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A bundle of 20 crossbow bolts for use with light, heavy, or hand crossbows.",
+    "content": "## Crossbow Bolts (20)\n\n*Ammunition, 1 gp, 1.5 lb.*\n\nA bundle of 20 crossbow bolts for use with any crossbow. At the end of a battle, you can spend 1 minute to search the battlefield and recover half your expended ammunition.",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": "1.5 lb",
+      "type": "Ammunition"
+    },
+    "tags": "equipment,adventuring-gear,ammunition,bolts",
+    "source": "SRD 5.1",
+    "sort_order": 140
+  },
+  {
+    "slug": "sling-bullets-20",
+    "title": "Sling Bullets (20)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A pouch of 20 lead sling bullets for use with a sling.",
+    "content": "## Sling Bullets (20)\n\n*Ammunition, 4 cp, 1.5 lb.*\n\nA pouch of 20 lead sling bullets. At the end of a battle, you can spend 1 minute to search the battlefield and recover half your expended ammunition.",
+    "metadata_json": {
+      "cost": "4 cp",
+      "weight": "1.5 lb",
+      "type": "Ammunition"
+    },
+    "tags": "equipment,adventuring-gear,ammunition,sling",
+    "source": "SRD 5.1",
+    "sort_order": 141
+  },
+  {
+    "slug": "blowgun-needles-50",
+    "title": "Blowgun Needles (50)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A case of 50 small needles for use with a blowgun.",
+    "content": "## Blowgun Needles (50)\n\n*Ammunition, 1 gp, 1 lb.*\n\nA case of 50 tiny needles for use with a blowgun. At the end of a battle, you can spend 1 minute to search the battlefield and recover half your expended ammunition.",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": "1 lb",
+      "type": "Ammunition"
+    },
+    "tags": "equipment,adventuring-gear,ammunition,needles",
+    "source": "SRD 5.1",
+    "sort_order": 142
+  },
+  {
+    "slug": "camel",
+    "title": "Camel",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A desert mount with a carrying capacity of 480 pounds and a speed of 50 feet.",
+    "content": "## Camel\n\n*Mount, 50 gp*\n\n**Speed:** 50 ft.\n**Carrying Capacity:** 480 lb.\n\nA hardy beast of burden well-suited to desert travel. Camels can go long periods without water and are commonly used in arid regions.",
+    "metadata_json": {
+      "cost": "50 gp",
+      "weight": "--",
+      "type": "Mount",
+      "speed": "50 ft",
+      "carrying_capacity": "480 lb"
+    },
+    "tags": "equipment,mounts-and-vehicles,mount,desert",
+    "source": "SRD 5.1",
+    "sort_order": 150
+  },
+  {
+    "slug": "donkey-or-mule",
+    "title": "Donkey or Mule",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A sturdy pack animal with a carrying capacity of 420 pounds and a speed of 40 feet.",
+    "content": "## Donkey or Mule\n\n*Mount, 8 gp*\n\n**Speed:** 40 ft.\n**Carrying Capacity:** 420 lb.\n\nA reliable pack animal commonly used to carry supplies. While slower than horses, donkeys and mules are surefooted and hardy.",
+    "metadata_json": {
+      "cost": "8 gp",
+      "weight": "--",
+      "type": "Mount",
+      "speed": "40 ft",
+      "carrying_capacity": "420 lb"
+    },
+    "tags": "equipment,mounts-and-vehicles,mount,pack-animal",
+    "source": "SRD 5.1",
+    "sort_order": 151
+  },
+  {
+    "slug": "elephant",
+    "title": "Elephant",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A massive mount with a carrying capacity of 1,320 pounds and a speed of 40 feet.",
+    "content": "## Elephant\n\n*Mount, 200 gp*\n\n**Speed:** 40 ft.\n**Carrying Capacity:** 1,320 lb.\n\nA massive, powerful creature that can serve as both a mount and a beast of war. Elephants can carry enormous loads and are sometimes equipped with howdahs for carrying multiple riders.",
+    "metadata_json": {
+      "cost": "200 gp",
+      "weight": "--",
+      "type": "Mount",
+      "speed": "40 ft",
+      "carrying_capacity": "1320 lb"
+    },
+    "tags": "equipment,mounts-and-vehicles,mount,exotic",
+    "source": "SRD 5.1",
+    "sort_order": 152
+  },
+  {
+    "slug": "draft-horse",
+    "title": "Draft Horse",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A large, strong horse bred for pulling loads, with a carrying capacity of 540 pounds and a speed of 40 feet.",
+    "content": "## Draft Horse\n\n*Mount, 50 gp*\n\n**Speed:** 40 ft.\n**Carrying Capacity:** 540 lb.\n\nA large, powerful horse bred for pulling wagons and plows rather than riding. Draft horses have greater carrying capacity but are slower than riding horses.",
+    "metadata_json": {
+      "cost": "50 gp",
+      "weight": "--",
+      "type": "Mount",
+      "speed": "40 ft",
+      "carrying_capacity": "540 lb"
+    },
+    "tags": "equipment,mounts-and-vehicles,mount,horse",
+    "source": "SRD 5.1",
+    "sort_order": 153
+  },
+  {
+    "slug": "riding-horse",
+    "title": "Riding Horse",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A common riding mount with a carrying capacity of 480 pounds and a speed of 60 feet.",
+    "content": "## Riding Horse\n\n*Mount, 75 gp*\n\n**Speed:** 60 ft.\n**Carrying Capacity:** 480 lb.\n\nA standard horse bred for riding, with good speed and adequate carrying capacity. The most common mount for overland travel.",
+    "metadata_json": {
+      "cost": "75 gp",
+      "weight": "--",
+      "type": "Mount",
+      "speed": "60 ft",
+      "carrying_capacity": "480 lb"
+    },
+    "tags": "equipment,mounts-and-vehicles,mount,horse",
+    "source": "SRD 5.1",
+    "sort_order": 154
+  },
+  {
+    "slug": "pony",
+    "title": "Pony",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A small horse suitable as a mount for Small creatures, with a carrying capacity of 225 pounds and a speed of 40 feet.",
+    "content": "## Pony\n\n*Mount, 30 gp*\n\n**Speed:** 40 ft.\n**Carrying Capacity:** 225 lb.\n\nA smaller breed of horse suitable as a mount for halflings, gnomes, and other Small creatures. Also used as pack animals.",
+    "metadata_json": {
+      "cost": "30 gp",
+      "weight": "--",
+      "type": "Mount",
+      "speed": "40 ft",
+      "carrying_capacity": "225 lb"
+    },
+    "tags": "equipment,mounts-and-vehicles,mount,horse,small",
+    "source": "SRD 5.1",
+    "sort_order": 155
+  },
+  {
+    "slug": "warhorse",
+    "title": "Warhorse",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A horse trained for combat with a carrying capacity of 540 pounds and a speed of 60 feet.",
+    "content": "## Warhorse\n\n*Mount, 400 gp*\n\n**Speed:** 60 ft.\n**Carrying Capacity:** 540 lb.\n\nA horse bred and trained for battle. Warhorses are larger and more aggressive than riding horses, and they do not shy from combat. They can make hoof attacks and are trained to respond to their rider's commands in battle.",
+    "metadata_json": {
+      "cost": "400 gp",
+      "weight": "--",
+      "type": "Mount",
+      "speed": "60 ft",
+      "carrying_capacity": "540 lb"
+    },
+    "tags": "equipment,mounts-and-vehicles,mount,horse,combat",
+    "source": "SRD 5.1",
+    "sort_order": 156
+  },
+  {
+    "slug": "mastiff",
+    "title": "Mastiff",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A large dog that can serve as a mount for Small creatures or as a guard animal, with a speed of 40 feet.",
+    "content": "## Mastiff\n\n*Mount, 25 gp*\n\n**Speed:** 40 ft.\n**Carrying Capacity:** 195 lb.\n\nMastiffs are impressive hounds prized for their loyalty and keen senses. They can serve as mounts for halflings and other Small creatures, as guard dogs, or as hunting companions.",
+    "metadata_json": {
+      "cost": "25 gp",
+      "weight": "--",
+      "type": "Mount",
+      "speed": "40 ft",
+      "carrying_capacity": "195 lb"
+    },
+    "tags": "equipment,mounts-and-vehicles,mount,animal,small",
+    "source": "SRD 5.1",
+    "sort_order": 157
+  },
+  {
+    "slug": "carriage",
+    "title": "Carriage",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "An enclosed horse-drawn vehicle for transporting passengers in comfort.",
+    "content": "## Carriage\n\n*Vehicle (Land), 100 gp, 600 lb.*\n\nAn enclosed, four-wheeled vehicle drawn by horses. Carriages provide shelter from the elements and are favored by merchants and nobles for overland travel.",
+    "metadata_json": {
+      "cost": "100 gp",
+      "weight": "600 lb",
+      "type": "Vehicle (Land)"
+    },
+    "tags": "equipment,mounts-and-vehicles,vehicle,land",
+    "source": "SRD 5.1",
+    "sort_order": 160
+  },
+  {
+    "slug": "cart",
+    "title": "Cart",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A simple two-wheeled vehicle drawn by a single draft animal.",
+    "content": "## Cart\n\n*Vehicle (Land), 15 gp, 200 lb.*\n\nA simple, open two-wheeled vehicle pulled by a single draft animal. Carts are commonly used by farmers and merchants to haul goods.",
+    "metadata_json": {
+      "cost": "15 gp",
+      "weight": "200 lb",
+      "type": "Vehicle (Land)"
+    },
+    "tags": "equipment,mounts-and-vehicles,vehicle,land",
+    "source": "SRD 5.1",
+    "sort_order": 161
+  },
+  {
+    "slug": "chariot",
+    "title": "Chariot",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A light two-wheeled vehicle drawn by horses, used in racing and combat.",
+    "content": "## Chariot\n\n*Vehicle (Land), 250 gp, 100 lb.*\n\nA light, open two-wheeled vehicle pulled by one or more horses. Chariots are used for racing, warfare, and ceremonial processions.",
+    "metadata_json": {
+      "cost": "250 gp",
+      "weight": "100 lb",
+      "type": "Vehicle (Land)"
+    },
+    "tags": "equipment,mounts-and-vehicles,vehicle,land,combat",
+    "source": "SRD 5.1",
+    "sort_order": 162
+  },
+  {
+    "slug": "sled",
+    "title": "Sled",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A vehicle designed to travel over snow and ice, pulled by draft animals.",
+    "content": "## Sled\n\n*Vehicle (Land), 20 gp, 300 lb.*\n\nA vehicle with runners instead of wheels, designed for travel over snow and ice. Typically pulled by dogs or draft animals.",
+    "metadata_json": {
+      "cost": "20 gp",
+      "weight": "300 lb",
+      "type": "Vehicle (Land)"
+    },
+    "tags": "equipment,mounts-and-vehicles,vehicle,land,snow",
+    "source": "SRD 5.1",
+    "sort_order": 163
+  },
+  {
+    "slug": "wagon",
+    "title": "Wagon",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A large four-wheeled vehicle drawn by draft animals, used for hauling heavy loads.",
+    "content": "## Wagon\n\n*Vehicle (Land), 35 gp, 400 lb.*\n\nA large, sturdy four-wheeled vehicle drawn by one or more draft animals. Wagons are the standard transport for heavy goods and supplies over land routes.",
+    "metadata_json": {
+      "cost": "35 gp",
+      "weight": "400 lb",
+      "type": "Vehicle (Land)"
+    },
+    "tags": "equipment,mounts-and-vehicles,vehicle,land",
+    "source": "SRD 5.1",
+    "sort_order": 164
+  },
+  {
+    "slug": "rowboat",
+    "title": "Rowboat",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A small boat propelled by oars, suitable for rivers, lakes, and coastal waters.",
+    "content": "## Rowboat\n\n*Vehicle (Water), 50 gp, 100 lb.*\n\n**Speed:** 1.5 mph\n**Crew:** 1\n**Passengers:** 3\n\nA small, flat-bottomed boat propelled by oars. Suitable for crossing rivers, fishing on lakes, or traveling short distances along coasts.",
+    "metadata_json": {
+      "cost": "50 gp",
+      "weight": "100 lb",
+      "type": "Vehicle (Water)",
+      "speed": "1.5 mph"
+    },
+    "tags": "equipment,mounts-and-vehicles,vehicle,water",
+    "source": "SRD 5.1",
+    "sort_order": 170
+  },
+  {
+    "slug": "keelboat",
+    "title": "Keelboat",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A river vessel with a keel, propelled by oars or a single sail, carrying up to half a ton of cargo.",
+    "content": "## Keelboat\n\n*Vehicle (Water), 3,000 gp*\n\n**Speed:** 1 mph\n**Crew:** 1\n**Passengers:** 6\n**Cargo:** 1/2 ton\n\nA keelboat is a flat-bottomed vessel with a shallow draft, ideal for river and coastal travel. It can be propelled by oars or a single sail and typically carries cargo along trade routes.",
+    "metadata_json": {
+      "cost": "3000 gp",
+      "weight": "--",
+      "type": "Vehicle (Water)",
+      "speed": "1 mph"
+    },
+    "tags": "equipment,mounts-and-vehicles,vehicle,water,river",
+    "source": "SRD 5.1",
+    "sort_order": 171
+  },
+  {
+    "slug": "sailing-ship",
+    "title": "Sailing Ship",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A large ocean-going vessel with multiple sails, capable of carrying 100 tons of cargo.",
+    "content": "## Sailing Ship\n\n*Vehicle (Water), 10,000 gp*\n\n**Speed:** 2 mph\n**Crew:** 20\n**Passengers:** 20\n**Cargo:** 100 tons\n\nA large, sea-worthy vessel equipped with multiple sails. Sailing ships are the standard transport for ocean crossings and long-distance maritime trade.",
+    "metadata_json": {
+      "cost": "10000 gp",
+      "weight": "--",
+      "type": "Vehicle (Water)",
+      "speed": "2 mph"
+    },
+    "tags": "equipment,mounts-and-vehicles,vehicle,water,ocean",
+    "source": "SRD 5.1",
+    "sort_order": 172
+  },
+  {
+    "slug": "galley",
+    "title": "Galley",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A massive oar-powered warship capable of carrying 150 tons of cargo.",
+    "content": "## Galley\n\n*Vehicle (Water), 30,000 gp*\n\n**Speed:** 4 mph\n**Crew:** 80\n**Passengers:** --\n**Cargo:** 150 tons\n\nA large, oar-powered vessel used primarily for warfare and long-distance trade. Galleys are among the largest ships that commonly sail the seas.",
+    "metadata_json": {
+      "cost": "30000 gp",
+      "weight": "--",
+      "type": "Vehicle (Water)",
+      "speed": "4 mph"
+    },
+    "tags": "equipment,mounts-and-vehicles,vehicle,water,warship",
+    "source": "SRD 5.1",
+    "sort_order": 173
+  },
+  {
+    "slug": "longship",
+    "title": "Longship",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A long, narrow vessel with oars and a single sail, capable of both ocean travel and river navigation.",
+    "content": "## Longship\n\n*Vehicle (Water), 10,000 gp*\n\n**Speed:** 3 mph\n**Crew:** 40\n**Passengers:** 150\n**Cargo:** 10 tons\n\nA long, narrow vessel with a shallow draft, propelled by oars and a single square sail. Longships are fast and maneuverable, capable of navigating both open ocean and shallow rivers.",
+    "metadata_json": {
+      "cost": "10000 gp",
+      "weight": "--",
+      "type": "Vehicle (Water)",
+      "speed": "3 mph"
+    },
+    "tags": "equipment,mounts-and-vehicles,vehicle,water,ocean,river",
+    "source": "SRD 5.1",
+    "sort_order": 174
+  },
+  {
+    "slug": "warship",
+    "title": "Warship",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A large, heavily built ship designed for naval combat, carrying 200 tons of cargo.",
+    "content": "## Warship\n\n*Vehicle (Water), 25,000 gp*\n\n**Speed:** 2.5 mph\n**Crew:** 60\n**Passengers:** 60\n**Cargo:** 200 tons\n\nA large, reinforced ship built for naval warfare. Warships are equipped with weapons such as ballistae and rams, and are crewed by trained sailors and marines.",
+    "metadata_json": {
+      "cost": "25000 gp",
+      "weight": "--",
+      "type": "Vehicle (Water)",
+      "speed": "2.5 mph"
+    },
+    "tags": "equipment,mounts-and-vehicles,vehicle,water,warship,combat",
+    "source": "SRD 5.1",
+    "sort_order": 175
+  },
+  {
+    "slug": "barding",
+    "title": "Barding",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "Armor designed for a mount, costing four times as much as equivalent humanoid armor and weighing twice as much.",
+    "content": "## Barding\n\n*Mount Equipment*\n\nBarding is armor designed to protect an animal's head, neck, chest, and body. Any type of armor shown on the Armor table can be purchased as barding. The cost is four times the equivalent armor made for humanoids, and it weighs twice as much.\n\n### Examples\n| Type | Cost | AC | Weight |\n|---|---|---|---|\n| Chain Shirt Barding | 200 gp | 13 + Dex (max 2) | 40 lb. |\n| Chain Mail Barding | 300 gp | 16 | 110 lb. |\n| Plate Barding | 6,000 gp | 18 | 130 lb. |",
+    "metadata_json": {
+      "cost": "Varies (4x armor cost)",
+      "weight": "Varies (2x armor weight)",
+      "type": "Mount Equipment"
+    },
+    "tags": "equipment,mounts-and-vehicles,mount,armor,barding",
+    "source": "SRD 5.1",
+    "sort_order": 176
+  },
+  {
+    "slug": "saddle-riding",
+    "title": "Saddle, Riding",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A standard saddle for riding a mount.",
+    "content": "## Saddle, Riding\n\n*Tack and Harness, 10 gp, 25 lb.*\n\nA standard saddle for riding horses and similar mounts.",
+    "metadata_json": {
+      "cost": "10 gp",
+      "weight": "25 lb",
+      "type": "Tack and Harness"
+    },
+    "tags": "equipment,mounts-and-vehicles,tack,saddle",
+    "source": "SRD 5.1",
+    "sort_order": 177
+  },
+  {
+    "slug": "saddle-military",
+    "title": "Saddle, Military",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A combat saddle that braces the rider, granting advantage on checks to remain mounted.",
+    "content": "## Saddle, Military\n\n*Tack and Harness, 20 gp, 30 lb.*\n\nA military saddle braces the rider, helping you keep your seat on an active mount in battle. It gives you advantage on any check you make to remain mounted.",
+    "metadata_json": {
+      "cost": "20 gp",
+      "weight": "30 lb",
+      "type": "Tack and Harness"
+    },
+    "tags": "equipment,mounts-and-vehicles,tack,saddle,combat",
+    "source": "SRD 5.1",
+    "sort_order": 178
+  },
+  {
+    "slug": "saddle-exotic",
+    "title": "Saddle, Exotic",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A specialized saddle required for riding aquatic or flying mounts.",
+    "content": "## Saddle, Exotic\n\n*Tack and Harness, 60 gp, 40 lb.*\n\nAn exotic saddle is required for riding any aquatic or flying mount, or for unusual creatures such as a griffon or pegasus.",
+    "metadata_json": {
+      "cost": "60 gp",
+      "weight": "40 lb",
+      "type": "Tack and Harness"
+    },
+    "tags": "equipment,mounts-and-vehicles,tack,saddle,exotic,flying",
+    "source": "SRD 5.1",
+    "sort_order": 179
+  },
+  {
+    "slug": "saddlebags",
+    "title": "Saddlebags",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "Bags that attach to a saddle for storing gear on a mount.",
+    "content": "## Saddlebags\n\n*Tack and Harness, 4 gp, 8 lb.*\n\nLeather bags that attach to a saddle for carrying equipment and supplies on a mount.",
+    "metadata_json": {
+      "cost": "4 gp",
+      "weight": "8 lb",
+      "type": "Tack and Harness"
+    },
+    "tags": "equipment,mounts-and-vehicles,tack,storage",
+    "source": "SRD 5.1",
+    "sort_order": 180
+  },
+  {
+    "slug": "bit-and-bridle",
+    "title": "Bit and Bridle",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "Headgear for controlling a mount, essential for riding.",
+    "content": "## Bit and Bridle\n\n*Tack and Harness, 2 gp, 1 lb.*\n\nA metal bit and leather bridle used to direct and control a mount.",
+    "metadata_json": {
+      "cost": "2 gp",
+      "weight": "1 lb",
+      "type": "Tack and Harness"
+    },
+    "tags": "equipment,mounts-and-vehicles,tack",
+    "source": "SRD 5.1",
+    "sort_order": 181
+  },
+  {
+    "slug": "feed-per-day",
+    "title": "Feed (per day)",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A day's worth of feed for a horse or similar mount.",
+    "content": "## Feed (per day)\n\n*Tack and Harness, 5 cp, 10 lb.*\n\nA day's supply of grain, hay, and other feed for a horse, pony, or similar mount.",
+    "metadata_json": {
+      "cost": "5 cp",
+      "weight": "10 lb",
+      "type": "Tack and Harness"
+    },
+    "tags": "equipment,mounts-and-vehicles,tack,supply",
+    "source": "SRD 5.1",
+    "sort_order": 182
+  },
+  {
+    "slug": "stabling-per-day",
+    "title": "Stabling (per day)",
+    "category": "equipment",
+    "subcategory": "mounts-and-vehicles",
+    "ruleset": "universal",
+    "summary": "A day's stabling at a stable or inn for one mount.",
+    "content": "## Stabling (per day)\n\n*Service, 5 sp*\n\nIncludes a stall, feed, and water for one mount for a full day at a stable or inn.",
+    "metadata_json": {
+      "cost": "5 sp",
+      "weight": "--",
+      "type": "Service"
+    },
+    "tags": "equipment,mounts-and-vehicles,service,mount",
+    "source": "SRD 5.1",
+    "sort_order": 183
+  },
+  {
+    "slug": "trade-goods-wheat-1lb",
+    "title": "Wheat (1 lb.)",
+    "category": "equipment",
+    "subcategory": "trade-goods",
+    "ruleset": "universal",
+    "summary": "One pound of wheat, a basic trade commodity.",
+    "content": "## Wheat (1 lb.)\n\n*Trade Good, 1 cp*\n\nOne pound of wheat grain. Wheat is the most common food staple and a baseline trade commodity.",
+    "metadata_json": {
+      "cost": "1 cp",
+      "weight": "1 lb",
+      "type": "Trade Good"
+    },
+    "tags": "equipment,trade-goods,food,commodity",
+    "source": "SRD 5.1",
+    "sort_order": 190
+  },
+  {
+    "slug": "trade-goods-flour-1lb",
+    "title": "Flour (1 lb.)",
+    "category": "equipment",
+    "subcategory": "trade-goods",
+    "ruleset": "universal",
+    "summary": "One pound of flour, a common trade commodity worth twice as much as wheat.",
+    "content": "## Flour (1 lb.)\n\n*Trade Good, 2 cp*\n\nOne pound of milled flour. More valuable than raw wheat due to the processing involved.",
+    "metadata_json": {
+      "cost": "2 cp",
+      "weight": "1 lb",
+      "type": "Trade Good"
+    },
+    "tags": "equipment,trade-goods,food,commodity",
+    "source": "SRD 5.1",
+    "sort_order": 191
+  },
+  {
+    "slug": "trade-goods-salt-1lb",
+    "title": "Salt (1 lb.)",
+    "category": "equipment",
+    "subcategory": "trade-goods",
+    "ruleset": "universal",
+    "summary": "One pound of salt, a valuable preservative and seasoning.",
+    "content": "## Salt (1 lb.)\n\n*Trade Good, 5 cp*\n\nOne pound of salt. An essential commodity for food preservation and seasoning, salt is a valuable trade good in many regions.",
+    "metadata_json": {
+      "cost": "5 cp",
+      "weight": "1 lb",
+      "type": "Trade Good"
+    },
+    "tags": "equipment,trade-goods,commodity,preservative",
+    "source": "SRD 5.1",
+    "sort_order": 192
+  },
+  {
+    "slug": "trade-goods-iron-1lb",
+    "title": "Iron (1 lb.)",
+    "category": "equipment",
+    "subcategory": "trade-goods",
+    "ruleset": "universal",
+    "summary": "One pound of iron, a common metal used in tools, weapons, and armor.",
+    "content": "## Iron (1 lb.)\n\n*Trade Good, 1 sp*\n\nOne pound of raw iron. The most commonly used metal for weapons, armor, tools, and construction.",
+    "metadata_json": {
+      "cost": "1 sp",
+      "weight": "1 lb",
+      "type": "Trade Good"
+    },
+    "tags": "equipment,trade-goods,metal,commodity",
+    "source": "SRD 5.1",
+    "sort_order": 193
+  },
+  {
+    "slug": "trade-goods-canvas-1sqyd",
+    "title": "Canvas (1 sq. yd.)",
+    "category": "equipment",
+    "subcategory": "trade-goods",
+    "ruleset": "universal",
+    "summary": "One square yard of canvas, a heavy cloth used for sails and tents.",
+    "content": "## Canvas (1 sq. yd.)\n\n*Trade Good, 1 sp*\n\nOne square yard of heavy canvas cloth. Used for making sails, tents, and other durable fabric goods.",
+    "metadata_json": {
+      "cost": "1 sp",
+      "weight": "1 lb",
+      "type": "Trade Good"
+    },
+    "tags": "equipment,trade-goods,cloth,commodity",
+    "source": "SRD 5.1",
+    "sort_order": 194
+  },
+  {
+    "slug": "trade-goods-copper-1lb",
+    "title": "Copper (1 lb.)",
+    "category": "equipment",
+    "subcategory": "trade-goods",
+    "ruleset": "universal",
+    "summary": "One pound of copper, a common soft metal used in coinage and alloys.",
+    "content": "## Copper (1 lb.)\n\n*Trade Good, 5 sp*\n\nOne pound of raw copper. Used in making coins, bronze alloys, and decorative items.",
+    "metadata_json": {
+      "cost": "5 sp",
+      "weight": "1 lb",
+      "type": "Trade Good"
+    },
+    "tags": "equipment,trade-goods,metal,commodity",
+    "source": "SRD 5.1",
+    "sort_order": 195
+  },
+  {
+    "slug": "trade-goods-ginger-1lb",
+    "title": "Ginger (1 lb.)",
+    "category": "equipment",
+    "subcategory": "trade-goods",
+    "ruleset": "universal",
+    "summary": "One pound of ginger root, a valuable spice for cooking and medicine.",
+    "content": "## Ginger (1 lb.)\n\n*Trade Good, 1 gp*\n\nOne pound of ginger root. A valuable spice used in cooking and herbal medicine.",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": "1 lb",
+      "type": "Trade Good"
+    },
+    "tags": "equipment,trade-goods,spice,commodity",
+    "source": "SRD 5.1",
+    "sort_order": 196
+  },
+  {
+    "slug": "trade-goods-cinnamon-1lb",
+    "title": "Cinnamon (1 lb.)",
+    "category": "equipment",
+    "subcategory": "trade-goods",
+    "ruleset": "universal",
+    "summary": "One pound of cinnamon, a prized spice worth 2 gold pieces.",
+    "content": "## Cinnamon (1 lb.)\n\n*Trade Good, 2 gp*\n\nOne pound of cinnamon bark. A prized spice used in cooking, perfumery, and traditional remedies.",
+    "metadata_json": {
+      "cost": "2 gp",
+      "weight": "1 lb",
+      "type": "Trade Good"
+    },
+    "tags": "equipment,trade-goods,spice,commodity",
+    "source": "SRD 5.1",
+    "sort_order": 197
+  },
+  {
+    "slug": "trade-goods-silver-1lb",
+    "title": "Silver (1 lb.)",
+    "category": "equipment",
+    "subcategory": "trade-goods",
+    "ruleset": "universal",
+    "summary": "One pound of silver, a precious metal used in coinage, jewelry, and weapons effective against certain creatures.",
+    "content": "## Silver (1 lb.)\n\n*Trade Good, 5 gp*\n\nOne pound of raw silver. Used for coinage, jewelry, and silvered weapons. Silver is effective against certain creatures such as lycanthropes.",
+    "metadata_json": {
+      "cost": "5 gp",
+      "weight": "1 lb",
+      "type": "Trade Good"
+    },
+    "tags": "equipment,trade-goods,metal,precious,commodity",
+    "source": "SRD 5.1",
+    "sort_order": 198
+  },
+  {
+    "slug": "trade-goods-gold-1lb",
+    "title": "Gold (1 lb.)",
+    "category": "equipment",
+    "subcategory": "trade-goods",
+    "ruleset": "universal",
+    "summary": "One pound of gold, a precious metal used as the standard currency and in jewelry.",
+    "content": "## Gold (1 lb.)\n\n*Trade Good, 50 gp*\n\nOne pound of raw gold. The standard precious metal for coinage across most civilizations. Also used in fine jewelry, magical components, and gilding.",
+    "metadata_json": {
+      "cost": "50 gp",
+      "weight": "1 lb",
+      "type": "Trade Good"
+    },
+    "tags": "equipment,trade-goods,metal,precious,commodity",
+    "source": "SRD 5.1",
+    "sort_order": 199
+  },
+  {
+    "slug": "trade-goods-platinum-1lb",
+    "title": "Platinum (1 lb.)",
+    "category": "equipment",
+    "subcategory": "trade-goods",
+    "ruleset": "universal",
+    "summary": "One pound of platinum, the most valuable standard trade metal.",
+    "content": "## Platinum (1 lb.)\n\n*Trade Good, 500 gp*\n\nOne pound of raw platinum. The most valuable of the standard trade metals, platinum is used for the highest denomination of coinage and the finest jewelry.",
+    "metadata_json": {
+      "cost": "500 gp",
+      "weight": "1 lb",
+      "type": "Trade Good"
+    },
+    "tags": "equipment,trade-goods,metal,precious,commodity",
+    "source": "SRD 5.1",
+    "sort_order": 200
+  },
+  {
+    "slug": "silvered-weapon",
+    "title": "Silvered Weapon",
+    "category": "equipment",
+    "subcategory": "special-materials",
+    "ruleset": "universal",
+    "summary": "A weapon coated in silver to overcome the resistances of certain creatures like lycanthropes.",
+    "content": "## Silvered Weapon\n\n*Special Material, +100 gp*\n\nSome monsters that have immunity or resistance to nonmagical weapons are susceptible to silver weapons, so cautious adventurers invest extra coin to plate their weapons with silver.\n\nYou can silver a single weapon or ten pieces of ammunition for 100 gp. This cost represents not only the price of the silver, but the time and expertise needed to add silver to the weapon without making it less effective.\n\n### Creatures Vulnerable to Silver\nLycanthropes (werewolves, wererats, etc.) and certain devils are among the creatures that can be harmed by silvered weapons even when they resist other nonmagical attacks.",
+    "metadata_json": {
+      "cost": "+100 gp",
+      "weight": "--",
+      "type": "Special Material"
+    },
+    "tags": "equipment,special-materials,silver,weapon,lycanthrope",
+    "source": "SRD 5.1",
+    "sort_order": 210
+  },
+  {
+    "slug": "silvered-ammunition",
+    "title": "Silvered Ammunition (10)",
+    "category": "equipment",
+    "subcategory": "special-materials",
+    "ruleset": "universal",
+    "summary": "Ten pieces of silver-coated ammunition effective against creatures resistant to nonmagical weapons.",
+    "content": "## Silvered Ammunition (10)\n\n*Special Material, +100 gp (includes silvering cost)*\n\nTen pieces of ammunition (arrows, bolts, or bullets) coated in silver. The silvering process costs 100 gp for ten pieces and allows the ammunition to overcome the damage resistance of creatures such as lycanthropes and certain fiends.\n\nThe base cost of the ammunition is in addition to the silvering cost.",
+    "metadata_json": {
+      "cost": "+100 gp (plus ammunition cost)",
+      "weight": "Varies",
+      "type": "Special Material"
+    },
+    "tags": "equipment,special-materials,silver,ammunition,lycanthrope",
+    "source": "SRD 5.1",
+    "sort_order": 211
+  },
+  {
+    "slug": "adamantine-weapon",
+    "title": "Adamantine Weapon",
+    "category": "equipment",
+    "subcategory": "special-materials",
+    "ruleset": "universal",
+    "summary": "A weapon forged from adamantine, capable of dealing critical hits to objects and breaking through barriers.",
+    "content": "## Adamantine Weapon\n\n*Special Material*\n\nMelee weapons and ammunition made of or coated with adamantine are unusually effective when used to break objects. Whenever an adamantine weapon or piece of ammunition hits an object, the hit is a critical hit.\n\n### Notes\n- Adamantine is one of the hardest known metals\n- Particularly effective against constructs and barriers\n- Pricing varies by DM; typically +500 gp over base weapon cost\n- The adamantine weapon rules appear in Xanathar's Guide to Everything",
+    "metadata_json": {
+      "cost": "+500 gp (over base weapon)",
+      "weight": "Same as base weapon",
+      "type": "Special Material"
+    },
+    "tags": "equipment,special-materials,adamantine,weapon",
+    "source": "SRD 5.1",
+    "sort_order": 213
+  },
+  {
+    "slug": "parchment-one-sheet",
+    "title": "Parchment (one sheet)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A single sheet of parchment for writing spells, letters, or maps.",
+    "content": "## Parchment (one sheet)\n\n*Adventuring Gear, 1 sp, --*\n\nA sheet of prepared animal skin used for writing. Parchment is more durable than paper and is commonly used for spell scrolls, legal documents, and maps.",
+    "metadata_json": {
+      "cost": "1 sp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,writing,utility",
+    "source": "SRD 5.1",
+    "sort_order": 143
+  },
+  {
+    "slug": "paper-one-sheet",
+    "title": "Paper (one sheet)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A single sheet of paper for writing notes, letters, or sketches.",
+    "content": "## Paper (one sheet)\n\n*Adventuring Gear, 2 sp, --*\n\nA single sheet of paper. Less durable than parchment but adequate for most writing purposes.",
+    "metadata_json": {
+      "cost": "2 sp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,writing,utility",
+    "source": "SRD 5.1",
+    "sort_order": 144
+  },
+  {
+    "slug": "vial",
+    "title": "Vial",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A small glass container that can hold up to 4 ounces of liquid.",
+    "content": "## Vial\n\n*Adventuring Gear, 1 gp, --*\n\nA small glass container that holds up to 4 ounces of liquid. Used for storing potions, poisons, acids, and other liquids.",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,container,utility",
+    "source": "SRD 5.1",
+    "sort_order": 145
+  },
+  {
+    "slug": "flask-or-tankard",
+    "title": "Flask or Tankard",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A simple container for holding drinks, holding about 1 pint of liquid.",
+    "content": "## Flask or Tankard\n\n*Adventuring Gear, 2 cp, 1 lb.*\n\nA metal or leather container for holding liquids, typically about 1 pint. Flasks are cylindrical and portable; tankards have handles for drinking.",
+    "metadata_json": {
+      "cost": "2 cp",
+      "weight": "1 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,container,drink",
+    "source": "SRD 5.1",
+    "sort_order": 146
+  },
+  {
+    "slug": "jug-or-pitcher",
+    "title": "Jug or Pitcher",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A ceramic or metal vessel for holding about 1 gallon of liquid.",
+    "content": "## Jug or Pitcher\n\n*Adventuring Gear, 2 cp, 4 lb.*\n\nA ceramic or metal vessel for holding about 1 gallon of liquid.",
+    "metadata_json": {
+      "cost": "2 cp",
+      "weight": "4 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,container,drink",
+    "source": "SRD 5.1",
+    "sort_order": 147
+  },
+  {
+    "slug": "bucket",
+    "title": "Bucket",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A wooden or metal bucket that holds about 3 gallons of liquid or half a cubic foot of solids.",
+    "content": "## Bucket\n\n*Adventuring Gear, 5 cp, 2 lb.*\n\nA simple bucket that holds 3 gallons of liquid or 1/2 cubic foot of solids.",
+    "metadata_json": {
+      "cost": "5 cp",
+      "weight": "2 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,container,utility",
+    "source": "SRD 5.1",
+    "sort_order": 148
+  },
+  {
+    "slug": "barrel",
+    "title": "Barrel",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A large wooden barrel that holds 40 gallons of liquid or 4 cubic feet of dry goods.",
+    "content": "## Barrel\n\n*Adventuring Gear, 2 gp, 70 lb.*\n\nA large wooden barrel that can hold 40 gallons of liquid or 4 cubic feet of dry goods.",
+    "metadata_json": {
+      "cost": "2 gp",
+      "weight": "70 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,container,storage",
+    "source": "SRD 5.1",
+    "sort_order": 149
+  },
+  {
+    "slug": "basket",
+    "title": "Basket",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A woven basket that holds about 2 cubic feet or 40 pounds of gear.",
+    "content": "## Basket\n\n*Adventuring Gear, 4 sp, 2 lb.*\n\nA woven basket that can hold 2 cubic feet / 40 pounds of gear.",
+    "metadata_json": {
+      "cost": "4 sp",
+      "weight": "2 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,container,storage",
+    "source": "SRD 5.1",
+    "sort_order": 149
+  },
+  {
+    "slug": "blanket",
+    "title": "Blanket",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A thick cloth blanket for warmth during rest.",
+    "content": "## Blanket\n\n*Adventuring Gear, 5 sp, 3 lb.*\n\nA warm cloth blanket for sleeping outdoors. Provides basic warmth and comfort during long rests.",
+    "metadata_json": {
+      "cost": "5 sp",
+      "weight": "3 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,camping,rest",
+    "source": "SRD 5.1",
+    "sort_order": 149
+  },
+  {
+    "slug": "bell",
+    "title": "Bell",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A small bell that produces a clear ringing sound, useful as an alarm or signal.",
+    "content": "## Bell\n\n*Adventuring Gear, 1 gp, --*\n\nA tiny bell that produces a clear ringing sound. Can be attached to string as a simple alarm or used for signaling.",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility,alarm",
+    "source": "SRD 5.1",
+    "sort_order": 149
+  },
+  {
+    "slug": "book",
+    "title": "Book",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A blank leather-bound book with parchment pages for recording information.",
+    "content": "## Book\n\n*Adventuring Gear, 25 gp, 5 lb.*\n\nA book might contain poetry, historical accounts, information pertaining to a particular field of lore, diagrams and notes on gnomish contraptions, or just about anything else that can be represented using text or pictures. A blank book has no writing in it but provides 100 pages of parchment for recording information.",
+    "metadata_json": {
+      "cost": "25 gp",
+      "weight": "5 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,writing,knowledge",
+    "source": "SRD 5.1",
+    "sort_order": 149
+  },
+  {
+    "slug": "glass-bottle",
+    "title": "Glass Bottle",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A glass bottle that holds about 1.5 pints of liquid.",
+    "content": "## Glass Bottle\n\n*Adventuring Gear, 2 gp, 2 lb.*\n\nA stoppered glass bottle that can hold about 1.5 pints of liquid.",
+    "metadata_json": {
+      "cost": "2 gp",
+      "weight": "2 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,container,utility",
+    "source": "SRD 5.1",
+    "sort_order": 149
+  },
+  {
+    "slug": "ladder-10ft",
+    "title": "Ladder (10 feet)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A 10-foot wooden ladder for climbing walls and reaching high places.",
+    "content": "## Ladder (10 feet)\n\n*Adventuring Gear, 1 sp, 25 lb.*\n\nA simple wooden ladder, 10 feet long. Useful for scaling walls, reaching high shelves, or crossing gaps.",
+    "metadata_json": {
+      "cost": "1 sp",
+      "weight": "25 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,climbing,utility",
+    "source": "SRD 5.1",
+    "sort_order": 149
+  },
+  {
+    "slug": "lock",
+    "title": "Lock",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A standard lock with a key, requiring a DC 15 Dexterity check with thieves' tools to pick.",
+    "content": "## Lock\n\n*Adventuring Gear, 10 gp, 1 lb.*\n\nA key is provided with the lock. Without the key, a creature proficient with thieves' tools can pick this lock with a successful DC 15 Dexterity check. Your DM may decide that better locks are available for higher prices.",
+    "metadata_json": {
+      "cost": "10 gp",
+      "weight": "1 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,security,utility",
+    "source": "SRD 5.1",
+    "sort_order": 149
+  },
+  {
+    "slug": "pole-10ft",
+    "title": "Pole (10 feet)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A 10-foot wooden pole used for probing traps, testing surfaces, and vaulting.",
+    "content": "## Pole (10 feet)\n\n*Adventuring Gear, 5 cp, 7 lb.*\n\nA 10-foot-long wooden pole. An essential dungeon-delving tool for probing ahead for traps, testing the depth of water, or keeping something at a distance.",
+    "metadata_json": {
+      "cost": "5 cp",
+      "weight": "7 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,exploration,dungeon",
+    "source": "SRD 5.1",
+    "sort_order": 149
+  },
+  {
+    "slug": "shovel",
+    "title": "Shovel",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A digging tool for excavating earth, burying objects, or clearing debris.",
+    "content": "## Shovel\n\n*Adventuring Gear, 2 gp, 5 lb.*\n\nA standard digging shovel for excavating dirt, sand, and gravel. Useful for burying treasure, digging graves, or clearing cave-ins.",
+    "metadata_json": {
+      "cost": "2 gp",
+      "weight": "5 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,tool,digging",
+    "source": "SRD 5.1",
+    "sort_order": 149
+  },
+  {
+    "slug": "string-10ft",
+    "title": "String (10 feet)",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A 10-foot length of thin string, useful for tying, tripping, or rigging simple alarms.",
+    "content": "## String (10 feet)\n\n*Adventuring Gear, 1 sp, --*\n\nA 10-foot length of thin but sturdy string. Can be used for tying small objects, rigging alarms with a bell, or other creative uses.",
+    "metadata_json": {
+      "cost": "1 sp",
+      "weight": "0 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility",
+    "source": "SRD 5.1",
+    "sort_order": 149
+  },
+  {
+    "slug": "robes",
+    "title": "Robes",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "Flowing garments commonly worn by spellcasters and religious figures.",
+    "content": "## Robes\n\n*Adventuring Gear, 1 gp, 4 lb.*\n\nFlowing garments commonly worn by wizards, monks, priests, and other spellcasters. Robes are comfortable and allow freedom of movement for somatic spell components.",
+    "metadata_json": {
+      "cost": "1 gp",
+      "weight": "4 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,clothing,spellcaster",
+    "source": "SRD 5.1",
+    "sort_order": 149
+  },
+  {
+    "slug": "abacus",
+    "title": "Abacus",
+    "category": "equipment",
+    "subcategory": "adventuring-gear",
+    "ruleset": "universal",
+    "summary": "A calculating frame used for arithmetic, favored by merchants and scholars.",
+    "content": "## Abacus\n\n*Adventuring Gear, 2 gp, 2 lb.*\n\nA calculating frame of beads on wires, used for performing arithmetic. Commonly used by merchants, accountants, and scholars.",
+    "metadata_json": {
+      "cost": "2 gp",
+      "weight": "2 lb",
+      "type": "Adventuring Gear"
+    },
+    "tags": "equipment,adventuring-gear,utility,math",
+    "source": "SRD 5.1",
+    "sort_order": 149
+  }
+]

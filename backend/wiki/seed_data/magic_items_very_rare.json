@@ -1,0 +1,844 @@
+[
+  {
+    "slug": "ammunition-plus-3",
+    "title": "Ammunition +3",
+    "category": "magic-item",
+    "subcategory": "weapon",
+    "ruleset": "universal",
+    "summary": "Magic ammunition that grants a +3 bonus to attack and damage rolls.",
+    "content": "## Ammunition +3\n\n*Weapon (any ammunition), very rare*\n\nYou have a +3 bonus to attack and damage rolls made with this piece of magic ammunition. Once it hits a target, the ammunition is no longer magical.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Weapon (any ammunition)",
+      "attunement": false
+    },
+    "tags": "magic-item,weapon,very-rare,ammunition,bonus",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "amulet-of-the-planes",
+    "title": "Amulet of the Planes",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "An amulet that allows the wearer to use an action to name a location on another plane of existence and make a DC 15 Intelligence check to cast plane shift.",
+    "content": "## Amulet of the Planes\n\n*Wondrous item, very rare (requires attunement)*\n\nWhile wearing this amulet, you can use an action to name a location that you are familiar with on another plane of existence. Then make a DC 15 Intelligence check. On a successful check, you cast the *plane shift* spell. On a failure, you and each creature and object within 15 feet of you travel to a random destination. Roll a d100. On a 1-60, you travel to a random location on the plane you named. On a 61-100, you travel to a randomly determined plane of existence.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,very-rare,planar-travel,plane-shift",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "arrow-of-slaying",
+    "title": "Arrow of Slaying",
+    "category": "magic-item",
+    "subcategory": "weapon",
+    "ruleset": "universal",
+    "summary": "A magic arrow designed to slay a particular kind of creature, dealing extra damage on a hit.",
+    "content": "## Arrow of Slaying\n\n*Weapon (arrow), very rare*\n\nAn *arrow of slaying* is a magic weapon meant to slay a particular kind of creature. Some are more focused than others; for example, there are both *arrows of dragon slaying* and *arrows of blue dragon slaying*. If a creature belonging to the type, race, or group associated with an *arrow of slaying* takes damage from the arrow, the creature must make a DC 17 Constitution saving throw, taking an extra 6d10 piercing damage on a failed save, or half as much extra damage on a successful one.\n\nOnce an *arrow of slaying* deals its extra damage to a creature, it becomes a nonmagical arrow.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Weapon (arrow)",
+      "attunement": false
+    },
+    "tags": "magic-item,weapon,very-rare,arrow,slaying,extra-damage",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "bag-of-devouring",
+    "title": "Bag of Devouring",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A bag that resembles a bag of holding but is actually the feeding orifice of an extradimensional creature.",
+    "content": "## Bag of Devouring\n\n*Wondrous item, very rare*\n\nThis bag superficially resembles a *bag of holding* but is a feeding orifice for a gigantic extradimensional creature. Turning the bag inside out closes the orifice.\n\nThe extradimensional creature attached to the bag can sense whatever is placed inside the bag. Animal or vegetable matter placed wholly in the bag is devoured and lost forever. When part of a living creature is placed in the bag, as happens when someone reaches inside it, there is a 50 percent chance that the creature is pulled inside the bag. A creature inside the bag can use its action to try to escape with a successful DC 15 Strength check. Another creature can use its action to reach into the bag to pull a creature out, doing so with a successful DC 20 Strength check (provided it isn't pulled inside the bag first). Any creature that starts its turn inside the bag is devoured, its body destroyed.\n\nInanimate objects can be stored in the bag, which can hold a cubic foot of such material. However, once each day, the bag swallows any objects inside it and spits them out into another plane of existence. The DM determines the time and plane.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,very-rare,bag,extradimensional,trap",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "belt-of-fire-giant-strength",
+    "title": "Belt of Giant Strength (Fire)",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A belt that sets the wearer's Strength score to 25 while worn.",
+    "content": "## Belt of Giant Strength (Fire)\n\n*Wondrous item, very rare (requires attunement)*\n\nWhile wearing this belt, your Strength score changes to 25. If your Strength is already equal to or greater than the belt's score, the item has no effect on you.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": true,
+      "strength_score": 25
+    },
+    "tags": "magic-item,wondrous-item,very-rare,belt,giant-strength,fire-giant,strength",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "belt-of-cloud-giant-strength",
+    "title": "Belt of Giant Strength (Cloud)",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A belt that sets the wearer's Strength score to 27 while worn.",
+    "content": "## Belt of Giant Strength (Cloud)\n\n*Wondrous item, very rare (requires attunement)*\n\nWhile wearing this belt, your Strength score changes to 27. If your Strength is already equal to or greater than the belt's score, the item has no effect on you.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": true,
+      "strength_score": 27
+    },
+    "tags": "magic-item,wondrous-item,very-rare,belt,giant-strength,cloud-giant,strength",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "candle-of-invocation",
+    "title": "Candle of Invocation",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A magic candle dedicated to a deity's alignment that provides benefits to matching characters and can open a gate to the Outer Planes.",
+    "content": "## Candle of Invocation\n\n*Wondrous item, very rare (requires attunement)*\n\nThis slender taper is dedicated to a deity and shares that deity's alignment. The candle's alignment can be detected with the *detect evil and good* spell. The DM chooses the god and associated alignment or determines the alignment randomly.\n\nThe candle's magic is activated when the candle is lit, which requires an action. After burning for 4 hours, the candle is destroyed. You can snuff it out early for use at a later time. Deduct the time it burned in increments of 1 minute from the candle's total burn time.\n\nWhile lit, the candle sheds dim light in a 30-foot radius. Any creature within that light whose alignment matches that of the candle makes attack rolls, saving throws, and ability checks with advantage. In addition, a cleric or druid in the light whose alignment matches the candle's can cast 1st-level spells he or she has prepared without expending spell slots, though the spell's effect is as if cast with a 1st-level slot.\n\nAlternatively, when you light the candle for the first time, you can cast the *gate* spell with it. Doing so destroys the candle.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,very-rare,candle,alignment,gate,cleric,druid",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "cloak-of-arachnida",
+    "title": "Cloak of Arachnida",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A cloak that grants spider-like abilities including climbing, web resistance, and web spinning.",
+    "content": "## Cloak of Arachnida\n\n*Wondrous item, very rare (requires attunement)*\n\nThis fine garment is made of black silk interwoven with faint silvery threads. While wearing it, you gain the following benefits:\n\n- You have resistance to poison damage.\n- You have a climbing speed equal to your walking speed.\n- You can move up, down, and across vertical surfaces and upside down along ceilings, while leaving your hands free.\n- You can't be caught in webs of any sort and can move through webs as if they were difficult terrain.\n- You can use an action to cast the *web* spell (save DC 13). The web created by the spell fills twice its normal area. Once used, this property of the cloak can't be used again until the next dawn.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,very-rare,cloak,climbing,spider,web,poison-resistance",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "demon-armor",
+    "title": "Demon Armor",
+    "category": "magic-item",
+    "subcategory": "armor",
+    "ruleset": "universal",
+    "summary": "Plate armor that grants a +1 AC bonus and unarmed strike enhancement but carries a curse.",
+    "content": "## Demon Armor\n\n*Armor (plate), very rare (requires attunement)*\n\nWhile wearing this armor, you gain a +1 bonus to AC, and you can understand and speak Abyssal. In addition, the armor's clawed gauntlets turn unarmed strikes with your hands into magic weapons that deal slashing damage, with a +1 bonus to attack and damage rolls and a damage die of 1d8.\n\n**Curse.** Once you don this cursed armor, you can't doff it unless you are targeted by the *remove curse* spell or similar magic. While wearing the armor, you have disadvantage on attack rolls against demons and on saving throws against their spells and special abilities.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Armor (plate)",
+      "attunement": true,
+      "cursed": true,
+      "ac_bonus": 1
+    },
+    "tags": "magic-item,armor,very-rare,plate,cursed,demon,abyssal,unarmed",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "dwarven-thrower",
+    "title": "Dwarven Thrower",
+    "category": "magic-item",
+    "subcategory": "weapon",
+    "ruleset": "universal",
+    "summary": "A magic warhammer that grants bonuses to attack and damage and returns when thrown, with extra damage against giants.",
+    "content": "## Dwarven Thrower\n\n*Weapon (warhammer), very rare (requires attunement by a dwarf)*\n\nYou gain a +3 bonus to attack and damage rolls made with this magic weapon. It has the thrown property with a normal range of 20 feet and a long range of 60 feet. When you hit with a ranged attack using this weapon, it deals an extra 1d8 damage or, if the target is a giant, 2d8 damage. Immediately after the attack, the weapon flies back to your hand.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Weapon (warhammer)",
+      "attunement": true,
+      "attunement_requirement": "dwarf"
+    },
+    "tags": "magic-item,weapon,very-rare,warhammer,thrown,dwarf,giant-slaying,returning",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "efreeti-bottle",
+    "title": "Efreeti Bottle",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A brass bottle containing an efreeti that may serve, attack, or grant wishes when opened.",
+    "content": "## Efreeti Bottle\n\n*Wondrous item, very rare*\n\nThis painted brass bottle weighs 1 pound. When you use an action to remove the stopper, a cloud of thick smoke flows out of the bottle. At the end of your turn, the smoke disappears with a flash of harmless fire, and an efreeti appears in an unoccupied space within 30 feet of you.\n\nThe first time the bottle is opened, the DM rolls to determine what happens.\n\n| d100 | Effect |\n|------|--------|\n| 01-10 | The efreeti attacks you. After fighting for 5 rounds, the efreeti disappears, and the bottle loses its magic. |\n| 11-90 | The efreeti serves you for 1 hour, doing as you command. Then the efreeti returns to the bottle, and a new stopper contains it. The stopper can't be removed for 24 hours. The next two times the bottle is opened, the same effect occurs. After the third time, the efreeti disappears, and the bottle loses its magic. |\n| 91-100 | The efreeti can cast the *wish* spell three times for you. It disappears when it grants the final wish or after 1 hour, and the bottle loses its magic. |",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,very-rare,bottle,efreeti,genie,wish",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "figurine-of-wondrous-power-obsidian-steed",
+    "title": "Figurine of Wondrous Power (Obsidian Steed)",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "An obsidian figurine that transforms into a nightmare mount for 24 hours.",
+    "content": "## Figurine of Wondrous Power (Obsidian Steed)\n\n*Wondrous item, very rare*\n\nThis polished obsidian horse can become a nightmare for up to 24 hours. The nightmare fights only to defend itself. After 24 hours or when reduced to 0 hit points, it reverts to its figurine form and can't be used again for 5 days.\n\nIf you have a good alignment, the figurine has a 10 percent chance each time you use it to ignore your orders, including a command to revert to figurine form. If you mount the nightmare while it is ignoring your orders, you and the nightmare are instantly transported to a random location on the plane of Hades, where the nightmare reverts to figurine form.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,very-rare,figurine,nightmare,mount,summoning",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "horn-of-valhalla-bronze",
+    "title": "Horn of Valhalla (Bronze)",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A horn that summons berserker warrior spirits to fight for you.",
+    "content": "## Horn of Valhalla (Bronze)\n\n*Wondrous item, very rare*\n\nYou can use an action to blow this horn. In response, 4d4+4 warrior spirits from the plane of Ysgard appear within 60 feet of you. They use the berserker statistics, and they return to Ysgard after 1 hour or when they drop to 0 hit points. Once you use the horn, it can't be used again for 7 days.\n\nIf you blow the horn without having proficiency with all medium armor, the summoned berserkers attack you. If you meet the requirement, they are friendly to you and your companions and follow your commands.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": false,
+      "proficiency_required": "medium armor"
+    },
+    "tags": "magic-item,wondrous-item,very-rare,horn,summoning,berserker,valhalla",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "horseshoes-of-a-zephyr",
+    "title": "Horseshoes of a Zephyr",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Horseshoes that allow a mount to hover and move without touching the ground.",
+    "content": "## Horseshoes of a Zephyr\n\n*Wondrous item, very rare*\n\nThese iron horseshoes come in a set of four. While all four shoes are affixed to the hooves of a horse or similar creature, they allow the creature to move normally while floating 4 inches above the ground. This effect means the creature can cross or stand above nonsolid or unstable surfaces, such as water or lava. It also means the creature leaves no tracks and ignores difficult terrain. In addition, the creature can move at normal speed for up to 12 hours a day without suffering exhaustion from a forced march.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,very-rare,horseshoes,mount,hover,travel",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "ioun-stone-absorption",
+    "title": "Ioun Stone (Absorption)",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "An ioun stone that can absorb spells of 4th level or lower cast at you, storing their energy for later use.",
+    "content": "## Ioun Stone (Absorption)\n\n*Wondrous item, very rare (requires attunement)*\n\nWhile this pale lavender ellipsoid orbits your head, you can use your reaction to cancel a spell of 4th level or lower cast by a creature you can see and targeting only you. Once the stone has canceled 20 levels of spells, it burns out and turns dull gray, losing its magic. If you are targeted by a spell whose level is higher than the number of spell levels the stone has left, the stone can't cancel that spell.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,very-rare,ioun-stone,spell-absorption,counterspell",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "ioun-stone-agility",
+    "title": "Ioun Stone (Agility)",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "An ioun stone that increases the user's Dexterity score by 2, to a maximum of 20.",
+    "content": "## Ioun Stone (Agility)\n\n*Wondrous item, very rare (requires attunement)*\n\nYour Dexterity score increases by 2, to a maximum of 20, while this deep red sphere orbits your head.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": true,
+      "ability_bonus": {
+        "dexterity": 2
+      }
+    },
+    "tags": "magic-item,wondrous-item,very-rare,ioun-stone,dexterity,ability-score",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "ioun-stone-fortitude",
+    "title": "Ioun Stone (Fortitude)",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "An ioun stone that increases the user's Constitution score by 2, to a maximum of 20.",
+    "content": "## Ioun Stone (Fortitude)\n\n*Wondrous item, very rare (requires attunement)*\n\nYour Constitution score increases by 2, to a maximum of 20, while this pink rhomboid orbits your head.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": true,
+      "ability_bonus": {
+        "constitution": 2
+      }
+    },
+    "tags": "magic-item,wondrous-item,very-rare,ioun-stone,constitution,ability-score",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "ioun-stone-insight",
+    "title": "Ioun Stone (Insight)",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "An ioun stone that increases the user's Wisdom score by 2, to a maximum of 20.",
+    "content": "## Ioun Stone (Insight)\n\n*Wondrous item, very rare (requires attunement)*\n\nYour Wisdom score increases by 2, to a maximum of 20, while this incandescent blue sphere orbits your head.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": true,
+      "ability_bonus": {
+        "wisdom": 2
+      }
+    },
+    "tags": "magic-item,wondrous-item,very-rare,ioun-stone,wisdom,ability-score",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "ioun-stone-intellect",
+    "title": "Ioun Stone (Intellect)",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "An ioun stone that increases the user's Intelligence score by 2, to a maximum of 20.",
+    "content": "## Ioun Stone (Intellect)\n\n*Wondrous item, very rare (requires attunement)*\n\nYour Intelligence score increases by 2, to a maximum of 20, while this marbled scarlet and blue sphere orbits your head.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": true,
+      "ability_bonus": {
+        "intelligence": 2
+      }
+    },
+    "tags": "magic-item,wondrous-item,very-rare,ioun-stone,intelligence,ability-score",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "ioun-stone-leadership",
+    "title": "Ioun Stone (Leadership)",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "An ioun stone that increases the user's Charisma score by 2, to a maximum of 20.",
+    "content": "## Ioun Stone (Leadership)\n\n*Wondrous item, very rare (requires attunement)*\n\nYour Charisma score increases by 2, to a maximum of 20, while this marbled pink and green sphere orbits your head.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": true,
+      "ability_bonus": {
+        "charisma": 2
+      }
+    },
+    "tags": "magic-item,wondrous-item,very-rare,ioun-stone,charisma,ability-score",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "ioun-stone-strength",
+    "title": "Ioun Stone (Strength)",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "An ioun stone that increases the user's Strength score by 2, to a maximum of 20.",
+    "content": "## Ioun Stone (Strength)\n\n*Wondrous item, very rare (requires attunement)*\n\nYour Strength score increases by 2, to a maximum of 20, while this pale blue rhomboid orbits your head.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": true,
+      "ability_bonus": {
+        "strength": 2
+      }
+    },
+    "tags": "magic-item,wondrous-item,very-rare,ioun-stone,strength,ability-score",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "manual-of-bodily-health",
+    "title": "Manual of Bodily Health",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A magical tome that permanently increases the reader's Constitution score and maximum by 2.",
+    "content": "## Manual of Bodily Health\n\n*Wondrous item, very rare*\n\nThis book contains health and diet tips, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Constitution score increases by 2, as does your maximum for that score. The manual then loses its magic, but regains it in a century.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": false,
+      "ability_increase": {
+        "constitution": 2
+      }
+    },
+    "tags": "magic-item,wondrous-item,very-rare,tome,constitution,permanent-bonus",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "manual-of-gainful-exercise",
+    "title": "Manual of Gainful Exercise",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A magical tome that permanently increases the reader's Strength score and maximum by 2.",
+    "content": "## Manual of Gainful Exercise\n\n*Wondrous item, very rare*\n\nThis book describes fitness exercises, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Strength score increases by 2, as does your maximum for that score. The manual then loses its magic, but regains it in a century.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": false,
+      "ability_increase": {
+        "strength": 2
+      }
+    },
+    "tags": "magic-item,wondrous-item,very-rare,tome,strength,permanent-bonus",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "manual-of-golems",
+    "title": "Manual of Golems",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A tome containing instructions and magical formulae for creating a particular type of golem.",
+    "content": "## Manual of Golems\n\n*Wondrous item, very rare*\n\nThis tome contains information and incantations necessary to make a particular type of golem. The DM chooses the type or determines it randomly. To decipher and use the manual, you must be a spellcaster with at least two 5th-level spell slots. A creature that can't use a *manual of golems* and attempts to read it takes 6d6 psychic damage.\n\n| Golem | Time | Cost |\n|-------|------|------|\n| Clay | 30 days | 65,000 gp |\n| Flesh | 60 days | 50,000 gp |\n| Iron | 120 days | 100,000 gp |\n| Stone | 90 days | 80,000 gp |\n\nTo create the golem, you must work for the listed time, spending the listed cost to purchase supplies. Once you finish creating the golem, the book is consumed in eldritch flames. The golem becomes animate when the ashes of the manual are sprinkled on it. It is under your control, and it understands and obeys your spoken commands.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,very-rare,tome,golem,crafting,spellcaster",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "manual-of-quickness-of-action",
+    "title": "Manual of Quickness of Action",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A magical tome that permanently increases the reader's Dexterity score and maximum by 2.",
+    "content": "## Manual of Quickness of Action\n\n*Wondrous item, very rare*\n\nThis book contains coordination and balance exercises, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Dexterity score increases by 2, as does your maximum for that score. The manual then loses its magic, but regains it in a century.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": false,
+      "ability_increase": {
+        "dexterity": 2
+      }
+    },
+    "tags": "magic-item,wondrous-item,very-rare,tome,dexterity,permanent-bonus",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "marvelous-pigments",
+    "title": "Marvelous Pigments",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Magical paints that bring painted objects into three-dimensional reality.",
+    "content": "## Marvelous Pigments\n\n*Wondrous item, very rare*\n\nTypically found in 1d4 pots inside a fine wooden box with a brush (weighing 1 pound in total), these pigments allow you to create three-dimensional objects by painting them in two dimensions. The paint flows from the brush to produce the desired object as you concentrate on its image.\n\nEach pot of paint is sufficient to cover 1,000 square feet of a surface, which lets you create inanimate objects or terrain features--such as a door, a pit, flowers, trees, cells, rooms, or weapons--that are up to 10,000 cubic feet. It takes 10 minutes to cover 100 square feet.\n\nWhen you complete the painting, the object or terrain feature depicted becomes a real, nonmagical object. Thus, painting a door on a wall creates an actual door that can be opened to whatever is beyond. Painting a pit on a floor creates a real pit, and its depth counts against the total area of objects you create.\n\nNothing created by the pigments can have a value greater than 25 gp. If you paint an object of greater value (such as a diamond or a pile of gold), the object looks authentic, but close inspection reveals it is made from paste, bone, or some other worthless material.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,very-rare,pigments,creation,painting,utility",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "mirror-of-life-trapping",
+    "title": "Mirror of Life Trapping",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A mirror that can trap creatures in extradimensional cells within it.",
+    "content": "## Mirror of Life Trapping\n\n*Wondrous item, very rare*\n\nWhen this 4-foot-tall mirror is viewed indirectly, its surface shows faint images of creatures. The mirror weighs 50 pounds, and it has AC 11, 10 hit points, and vulnerability to bludgeoning damage. It shatters and is destroyed when reduced to 0 hit points.\n\nIf the mirror is hanging on a vertical surface and you are within 5 feet of it, you can use an action to speak its command word and activate it. It remains activated until you use an action to speak the command word again.\n\nAny creature other than you that sees its reflection in the activated mirror while within 30 feet of it must succeed on a DC 15 Charisma saving throw or be trapped, along with anything it is wearing or carrying, in one of the mirror's twelve extradimensional cells. A creature that knows the mirror's nature makes the saving throw with advantage.\n\nAn occupied cell shows a tiny reflection of the trapped creature. You can use an action to speak the mirror's command word and the name of one trapped creature to free that creature. The freed creature appears in an unoccupied space near the mirror and facing away from it.\n\nWhen the mirror traps a creature and all twelve cells are occupied, it randomly frees one trapped creature to accommodate the new prisoner. A freed creature appears in an unoccupied space within sight of the mirror but facing away from it. If the mirror is shattered, all creatures contained within it are freed and appear in unoccupied spaces near it.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,very-rare,mirror,trap,extradimensional,saving-throw",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "nine-lives-stealer",
+    "title": "Nine Lives Stealer",
+    "category": "magic-item",
+    "subcategory": "weapon",
+    "ruleset": "universal",
+    "summary": "A magic sword that can instantly slay creatures with low hit points, with nine charges.",
+    "content": "## Nine Lives Stealer\n\n*Weapon (any sword), very rare (requires attunement)*\n\nYou gain a +2 bonus to attack and damage rolls made with this magic weapon. The sword has 1d8 + 1 charges. If you score a critical hit against a creature that has fewer than 100 hit points, it must succeed on a DC 15 Constitution saving throw or be slain instantly as the sword tears its life force from its body (a construct or an undead is immune). The sword loses 1 charge if the creature is slain. When the sword has no charges remaining, it loses this property.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Weapon (any sword)",
+      "attunement": true,
+      "bonus": 2
+    },
+    "tags": "magic-item,weapon,very-rare,sword,instant-death,charges,critical-hit",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "oil-of-sharpness",
+    "title": "Oil of Sharpness",
+    "category": "magic-item",
+    "subcategory": "potion",
+    "ruleset": "universal",
+    "summary": "An oil that grants a +3 bonus to attack and damage rolls for a coated weapon or ammunition.",
+    "content": "## Oil of Sharpness\n\n*Potion, very rare*\n\nThis clear, gelatinous oil sparkles with tiny, ultrathin silver shards. The oil can coat one slashing or piercing weapon or up to 5 pieces of slashing or piercing ammunition. Applying the oil takes 1 minute. For 1 hour, the coated item is magical and has a +3 bonus to attack and damage rolls.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Potion",
+      "attunement": false
+    },
+    "tags": "magic-item,potion,very-rare,oil,weapon-enhancement,bonus",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "potion-of-cloud-giant-strength",
+    "title": "Potion of Giant Strength (Cloud)",
+    "category": "magic-item",
+    "subcategory": "potion",
+    "ruleset": "universal",
+    "summary": "A potion that sets the drinker's Strength score to 27 for 1 hour.",
+    "content": "## Potion of Giant Strength (Cloud)\n\n*Potion, very rare*\n\nWhen you drink this potion, your Strength score changes to 27 for 1 hour. The potion has no effect on you if your Strength is equal to or greater than that score.\n\nThis potion's transparent liquid has a floating cloud-like wisp in it.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Potion",
+      "attunement": false,
+      "strength_score": 27
+    },
+    "tags": "magic-item,potion,very-rare,giant-strength,cloud-giant,strength",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "ring-of-shooting-stars",
+    "title": "Ring of Shooting Stars",
+    "category": "magic-item",
+    "subcategory": "ring",
+    "ruleset": "universal",
+    "summary": "A ring that grants darkvision and allows the wearer to cast dancing lights, faerie fire, and ball lightning effects.",
+    "content": "## Ring of Shooting Stars\n\n*Ring, very rare (requires attunement outdoors at night)*\n\nWhile wearing this ring in dim light or darkness, you can cast *dancing lights* and *light* from the ring at will. Casting either spell from the ring requires an action.\n\nThe ring has 6 charges for the following other properties. The ring regains 1d6 expended charges daily at dawn.\n\n**Faerie Fire.** You can expend 1 charge as an action to cast *faerie fire* from the ring.\n\n**Ball Lightning.** You can expend 2 charges as an action to create one to four 3-foot-diameter spheres of lightning. The more spheres you create, the less powerful each sphere is individually. Each sphere appears in an unoccupied space you can see within 120 feet of you. The spheres last as long as you concentrate (as if concentrating on a spell), up to 1 minute. Each sphere sheds dim light in a 30-foot radius. As a bonus action, you can move each sphere up to 30 feet, but no farther than 120 feet away from you. When a creature other than you comes within 5 feet of a sphere, the sphere discharges lightning at that creature and disappears. That creature must make a DC 15 Dexterity saving throw. On a failed save, the creature takes lightning damage based on the number of spheres you created (4 spheres = 2d4, 3 spheres = 2d6, 2 spheres = 5d4, 1 sphere = 4d12).\n\n**Shooting Stars.** You can expend 1 to 3 charges as an action. For every charge you expend, you launch a glowing mote of light from the ring at a point you can see within 60 feet of you. Each creature within a 15-foot cube originating from that point is showered in sparks and must make a DC 15 Dexterity saving throw, taking 5d4 fire damage on a failed save, or half as much damage on a successful one.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Ring",
+      "attunement": true,
+      "charges": 6
+    },
+    "tags": "magic-item,ring,very-rare,charges,lightning,fire,faerie-fire,dancing-lights",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "robe-of-scintillating-colors",
+    "title": "Robe of Scintillating Colors",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A robe with 3 charges that can dazzle and stun nearby creatures with shifting patterns of color.",
+    "content": "## Robe of Scintillating Colors\n\n*Wondrous item, very rare (requires attunement)*\n\nThis robe has 3 charges, and it regains 1d3 expended charges daily at dawn. While you wear it, you can use an action and expend 1 charge to cause the garment to display a shifting pattern of dazzling hues until the end of your next turn. During this time, the robe sheds bright light in a 30-foot radius and dim light for an additional 30 feet. Creatures that can see you have disadvantage on attack rolls against you. In addition, any creature in the bright light that can see you when the robe's power is activated must succeed on a DC 15 Wisdom saving throw or become stunned until the effect ends.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": true,
+      "charges": 3
+    },
+    "tags": "magic-item,wondrous-item,very-rare,robe,light,stun,disadvantage",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "robe-of-stars",
+    "title": "Robe of Stars",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A robe that grants a saving throw bonus, allows casting of magic missile, and enables travel to the Astral Plane.",
+    "content": "## Robe of Stars\n\n*Wondrous item, very rare (requires attunement)*\n\nThis black or dark blue robe is embroidered with small white or silver stars. You gain a +1 bonus to saving throws while you wear it.\n\nSix stars, located on the robe's upper front portion, are particularly large. While wearing this robe, you can use an action to pull off one of the stars and use it to cast *magic missile* as a 5th-level spell. Daily at dusk, 1d6 removed stars reappear on the robe.\n\nWhile you wear the robe, you can use an action to enter the Astral Plane along with everything you are wearing and carrying. You remain there until you use an action to return to the plane you were on. You reappear in the last space you occupied, or if that space is occupied, the nearest unoccupied space.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,very-rare,robe,saving-throw,magic-missile,astral-plane",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "rod-of-alertness",
+    "title": "Rod of Alertness",
+    "category": "magic-item",
+    "subcategory": "rod",
+    "ruleset": "universal",
+    "summary": "A rod that grants a bonus to initiative and perception, with charges for protective and detection spells.",
+    "content": "## Rod of Alertness\n\n*Rod, very rare (requires attunement)*\n\nThis rod has a flanged head and the following properties.\n\n**Alertness.** While holding the rod, you have advantage on Wisdom (Perception) checks and on rolls for initiative.\n\n**Spells.** While holding the rod, you can use an action to cast one of the following spells from it: *detect evil and good*, *detect magic*, *detect poison and disease*, or *see invisibility*.\n\n**Protective Aura.** As an action, you can plant the haft end of the rod in the ground, whereupon the rod's head sheds bright light in a 60-foot radius and dim light for an additional 60 feet. While in that bright light, you and any creature that is friendly to you gain a +1 bonus to AC, saving throws, and can sense the location of any invisible hostile creature that is also in the bright light.\n\nThe rod's head stops glowing and the effect ends after 10 minutes, or when a creature uses an action to pull the rod from the ground. This property can't be used again until the next dawn.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Rod",
+      "attunement": true
+    },
+    "tags": "magic-item,rod,very-rare,initiative,perception,detection,protective-aura",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "rod-of-security",
+    "title": "Rod of Security",
+    "category": "magic-item",
+    "subcategory": "rod",
+    "ruleset": "universal",
+    "summary": "A rod that transports up to 200 creatures to an extradimensional paradise for up to 200 days.",
+    "content": "## Rod of Security\n\n*Rod, very rare*\n\nWhile holding this rod, you can use an action to activate it. The rod then instantly transports you and up to 199 other willing creatures you can see to a paradise that exists in an extraplanar space. You choose the form that the paradise takes. It could be a tranquil garden, lovely glade, cheery tavern, immense palace, tropical island, fantastic carnival, or whatever else you can imagine. Regardless of its nature, the paradise contains enough water and food to sustain its visitors. Everything else that can be interacted with inside the extraplanar space can exist only there. For example, a flower picked from a garden in the paradise disappears if it is taken outside the extraplanar space.\n\nFor each hour spent in the paradise, a visitor regains hit points as if it had spent 1 Hit Die. Also, creatures don't age while in the paradise, although time passes normally. Visitors can remain in the paradise for up to 200 days divided by the number of creatures present (round down).\n\nWhen the time runs out or you use an action to end it, all visitors reappear in the location they occupied when you activated the rod, or an unoccupied space nearest that location. The rod can't be used again until ten days have passed.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Rod",
+      "attunement": false
+    },
+    "tags": "magic-item,rod,very-rare,paradise,extradimensional,healing,rest",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "spell-scroll-6th-level",
+    "title": "Spell Scroll (6th Level)",
+    "category": "magic-item",
+    "subcategory": "scroll",
+    "ruleset": "universal",
+    "summary": "A scroll bearing a 6th-level spell that can be read to cast the spell without components.",
+    "content": "## Spell Scroll (6th Level)\n\n*Scroll, very rare*\n\nA *spell scroll* bears the words of a single spell, written in a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust.\n\nIf the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 16. On a failed check, the spell disappears from the scroll with no other effect.\n\nThe spell's save DC is 17 and its attack bonus is +9.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Scroll",
+      "attunement": false,
+      "spell_level": 6,
+      "save_dc": 17,
+      "attack_bonus": 9
+    },
+    "tags": "magic-item,scroll,very-rare,spell-scroll,6th-level,spellcasting",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "spell-scroll-7th-level",
+    "title": "Spell Scroll (7th Level)",
+    "category": "magic-item",
+    "subcategory": "scroll",
+    "ruleset": "universal",
+    "summary": "A scroll bearing a 7th-level spell that can be read to cast the spell without components.",
+    "content": "## Spell Scroll (7th Level)\n\n*Scroll, very rare*\n\nA *spell scroll* bears the words of a single spell, written in a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust.\n\nIf the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 17. On a failed check, the spell disappears from the scroll with no other effect.\n\nThe spell's save DC is 18 and its attack bonus is +10.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Scroll",
+      "attunement": false,
+      "spell_level": 7,
+      "save_dc": 18,
+      "attack_bonus": 10
+    },
+    "tags": "magic-item,scroll,very-rare,spell-scroll,7th-level,spellcasting",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "spell-scroll-8th-level",
+    "title": "Spell Scroll (8th Level)",
+    "category": "magic-item",
+    "subcategory": "scroll",
+    "ruleset": "universal",
+    "summary": "A scroll bearing an 8th-level spell that can be read to cast the spell without components.",
+    "content": "## Spell Scroll (8th Level)\n\n*Scroll, very rare*\n\nA *spell scroll* bears the words of a single spell, written in a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust.\n\nIf the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 18. On a failed check, the spell disappears from the scroll with no other effect.\n\nThe spell's save DC is 18 and its attack bonus is +10.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Scroll",
+      "attunement": false,
+      "spell_level": 8,
+      "save_dc": 18,
+      "attack_bonus": 10
+    },
+    "tags": "magic-item,scroll,very-rare,spell-scroll,8th-level,spellcasting",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "spellguard-shield",
+    "title": "Spellguard Shield",
+    "category": "magic-item",
+    "subcategory": "armor",
+    "ruleset": "universal",
+    "summary": "A shield that grants advantage on saving throws against spells and spell attack rolls have disadvantage against you.",
+    "content": "## Spellguard Shield\n\n*Armor (shield), very rare (requires attunement)*\n\nWhile holding this shield, you have advantage on saving throws against spells and other magical effects, and spell attacks have disadvantage against you.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Armor (shield)",
+      "attunement": true
+    },
+    "tags": "magic-item,armor,very-rare,shield,spell-resistance,saving-throw,disadvantage",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "staff-of-frost",
+    "title": "Staff of Frost",
+    "category": "magic-item",
+    "subcategory": "staff",
+    "ruleset": "universal",
+    "summary": "A staff with 10 charges that grants cold resistance and can cast cold-based spells.",
+    "content": "## Staff of Frost\n\n*Staff, very rare (requires attunement by a druid, sorcerer, warlock, or wizard)*\n\nYou have resistance to cold damage while you hold this staff.\n\nThe staff has 10 charges. While holding it, you can use an action to expend 1 or more of its charges to cast one of the following spells from it, using your spell save DC: *cone of cold* (5 charges), *fog cloud* (1 charge), *ice storm* (4 charges), or *wall of ice* (4 charges).\n\nThe staff regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 1, the staff turns to water and is destroyed.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Staff",
+      "attunement": true,
+      "attunement_requirement": "druid, sorcerer, warlock, or wizard",
+      "charges": 10
+    },
+    "tags": "magic-item,staff,very-rare,charges,cold,resistance,cone-of-cold,ice-storm,wall-of-ice",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "staff-of-striking",
+    "title": "Staff of Striking",
+    "category": "magic-item",
+    "subcategory": "staff",
+    "ruleset": "universal",
+    "summary": "A staff with 10 charges that grants a +3 bonus to attack and damage rolls, with charges for extra damage.",
+    "content": "## Staff of Striking\n\n*Staff, very rare (requires attunement)*\n\nThis staff can be wielded as a magic quarterstaff that grants a +3 bonus to attack and damage rolls made with it.\n\nThe staff has 10 charges. When you hit with a melee attack using it, you can expend up to 3 of its charges. For each charge you expend, the target takes an extra 1d6 force damage. The staff regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 1, the staff becomes a nonmagical quarterstaff.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Staff",
+      "attunement": true,
+      "charges": 10,
+      "bonus": 3
+    },
+    "tags": "magic-item,staff,very-rare,charges,quarterstaff,force-damage,melee",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "staff-of-thunder-and-lightning",
+    "title": "Staff of Thunder and Lightning",
+    "category": "magic-item",
+    "subcategory": "staff",
+    "ruleset": "universal",
+    "summary": "A staff that grants a +2 bonus and has five special thunder and lightning abilities.",
+    "content": "## Staff of Thunder and Lightning\n\n*Staff, very rare (requires attunement)*\n\nThis staff can be wielded as a magic quarterstaff that grants a +2 bonus to attack and damage rolls made with it. It also has the following additional properties. When one of these properties is used, it can't be used again until the next dawn.\n\n**Lightning.** When you hit with a melee attack using the staff, you can cause the target to take an extra 2d6 lightning damage.\n\n**Thunder.** When you hit with a melee attack using the staff, you can cause the staff to emit a crack of thunder, audible out to 300 feet. The target you hit must succeed on a DC 17 Constitution saving throw or become stunned until the end of your next turn.\n\n**Lightning Strike.** You can use an action to cause a bolt of lightning to leap from the staff's tip in a line that is 5 feet wide and 120 feet long. Each creature in that line must make a DC 17 Dexterity saving throw, taking 9d6 lightning damage on a failed save, or half as much damage on a successful one.\n\n**Thunderclap.** You can use an action to cause the staff to issue a deafening thunderclap, audible out to 600 feet. Each creature within 60 feet of you (not including you) must make a DC 17 Constitution saving throw. On a failed save, a creature takes 2d6 thunder damage and becomes deafened for 1 minute. On a successful save, a creature takes half damage and isn't deafened.\n\n**Thunder and Lightning.** You can use an action to use the Lightning Strike and Thunderclap properties at the same time. Doing so doesn't expend the daily use of those properties, only the use of this one.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Staff",
+      "attunement": true,
+      "bonus": 2
+    },
+    "tags": "magic-item,staff,very-rare,lightning,thunder,quarterstaff,stun,damage",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "sword-of-sharpness",
+    "title": "Sword of Sharpness",
+    "category": "magic-item",
+    "subcategory": "weapon",
+    "ruleset": "universal",
+    "summary": "A magic sword that deals extra damage on a roll of 20 and can sever limbs.",
+    "content": "## Sword of Sharpness\n\n*Weapon (any sword that deals slashing damage), very rare (requires attunement)*\n\nWhen you attack an object with this magic sword and hit, maximize your weapon damage dice against the target.\n\nWhen you attack a creature with this weapon and roll a 20 on the attack roll, that target takes an extra 4d6 slashing damage. Then roll another d20. If you roll a 20, you lop off one of the target's limbs, with the effect of such loss determined by the DM. If the creature has no limb to sever, you lop off a portion of its body instead.\n\nIn addition, you can speak the sword's command word to cause the blade to shed bright light in a 10-foot radius and dim light for an additional 10 feet. Speaking the command word again or sheathing the sword puts out the light.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Weapon (any sword that deals slashing damage)",
+      "attunement": true
+    },
+    "tags": "magic-item,weapon,very-rare,sword,slashing,critical-hit,sever-limb,light",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "tome-of-clear-thought",
+    "title": "Tome of Clear Thought",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A magical tome that permanently increases the reader's Intelligence score and maximum by 2.",
+    "content": "## Tome of Clear Thought\n\n*Wondrous item, very rare*\n\nThis book contains memory and logic exercises, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Intelligence score increases by 2, as does your maximum for that score. The manual then loses its magic, but regains it in a century.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": false,
+      "ability_increase": {
+        "intelligence": 2
+      }
+    },
+    "tags": "magic-item,wondrous-item,very-rare,tome,intelligence,permanent-bonus",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "tome-of-leadership-and-influence",
+    "title": "Tome of Leadership and Influence",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A magical tome that permanently increases the reader's Charisma score and maximum by 2.",
+    "content": "## Tome of Leadership and Influence\n\n*Wondrous item, very rare*\n\nThis book contains guidelines for influencing and charming others, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Charisma score increases by 2, as does your maximum for that score. The manual then loses its magic, but regains it in a century.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": false,
+      "ability_increase": {
+        "charisma": 2
+      }
+    },
+    "tags": "magic-item,wondrous-item,very-rare,tome,charisma,permanent-bonus",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  },
+  {
+    "slug": "tome-of-understanding",
+    "title": "Tome of Understanding",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A magical tome that permanently increases the reader's Wisdom score and maximum by 2.",
+    "content": "## Tome of Understanding\n\n*Wondrous item, very rare*\n\nThis book contains intuition and insight exercises, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Wisdom score increases by 2, as does your maximum for that score. The manual then loses its magic, but regains it in a century.",
+    "metadata_json": {
+      "rarity": "very rare",
+      "type": "Wondrous item",
+      "attunement": false,
+      "ability_increase": {
+        "wisdom": 2
+      }
+    },
+    "tags": "magic-item,wondrous-item,very-rare,tome,wisdom,permanent-bonus",
+    "source": "SRD 5.1",
+    "sort_order": 300
+  }
+]

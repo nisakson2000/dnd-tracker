@@ -1,0 +1,903 @@
+[
+  {
+    "slug": "potion-of-climbing",
+    "title": "Potion of Climbing",
+    "category": "magic-item",
+    "subcategory": "potion",
+    "ruleset": "universal",
+    "summary": "A potion that grants a climbing speed equal to walking speed for 1 hour.",
+    "content": "## Potion of Climbing\n\n*Potion, common*\n\nWhen you drink this potion, you gain a climbing speed equal to your walking speed for 1 hour. During this time, you have advantage on Strength (Athletics) checks you make to climb. The potion is separated into brown, silver, and gray layers resembling bands of stone. Shaking the bottle fails to mix the colors.",
+    "metadata_json": {
+      "rarity": "common",
+      "type": "Potion",
+      "attunement": false
+    },
+    "tags": "magic-item,potion,common,climbing,movement",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "spell-scroll-cantrip",
+    "title": "Spell Scroll (Cantrip)",
+    "category": "magic-item",
+    "subcategory": "scroll",
+    "ruleset": "universal",
+    "summary": "A scroll bearing a single cantrip that can be cast without components.",
+    "content": "## Spell Scroll (Cantrip)\n\n*Scroll, common*\n\nA spell scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust.\n\nA cantrip spell scroll has a save DC of 13 and an attack bonus of +5.\n\nIf the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 10. On a failed check, the spell disappears from the scroll with no other effect.",
+    "metadata_json": {
+      "rarity": "common",
+      "type": "Scroll",
+      "attunement": false
+    },
+    "tags": "magic-item,scroll,common,cantrip,spellcasting",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "spell-scroll-1st-level",
+    "title": "Spell Scroll (1st Level)",
+    "category": "magic-item",
+    "subcategory": "scroll",
+    "ruleset": "universal",
+    "summary": "A scroll bearing a single 1st-level spell that can be cast without components.",
+    "content": "## Spell Scroll (1st Level)\n\n*Scroll, common*\n\nA spell scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your class's spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell's normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust.\n\nA 1st-level spell scroll has a save DC of 13 and an attack bonus of +5.\n\nIf the spell is on your class's spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC is 11. On a failed check, the spell disappears from the scroll with no other effect.\n\nA wizard can copy a spell from a spell scroll into a spellbook. The DC is 11, and the scroll is destroyed whether the check succeeds or fails.",
+    "metadata_json": {
+      "rarity": "common",
+      "type": "Scroll",
+      "attunement": false
+    },
+    "tags": "magic-item,scroll,common,1st-level,spellcasting",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "ammunition-plus-1",
+    "title": "Ammunition, +1",
+    "category": "magic-item",
+    "subcategory": "weapon",
+    "ruleset": "universal",
+    "summary": "Magical ammunition that grants a +1 bonus to attack and damage rolls.",
+    "content": "## Ammunition, +1\n\n*Weapon (any ammunition), uncommon*\n\nYou have a +1 bonus to attack and damage rolls made with this piece of magic ammunition. Once it hits a target, the ammunition is no longer magical.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Weapon",
+      "attunement": false
+    },
+    "tags": "magic-item,weapon,uncommon,ammunition,bonus,combat",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "amulet-of-proof-against-detection-and-location",
+    "title": "Amulet of Proof against Detection and Location",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "An amulet that hides the wearer from divination magic.",
+    "content": "## Amulet of Proof against Detection and Location\n\n*Wondrous item, uncommon (requires attunement)*\n\nWhile wearing this amulet, you are hidden from divination magic. You can't be targeted by such magic or perceived through magical scrying sensors.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,uncommon,divination,protection,stealth",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "bag-of-tricks",
+    "title": "Bag of Tricks",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A small sack that produces fuzzy objects which transform into random animals.",
+    "content": "## Bag of Tricks\n\n*Wondrous item, uncommon*\n\nThis ordinary bag, made from gray, rust, or tan cloth, appears empty. Reaching inside the bag, however, reveals the presence of a small, fuzzy object. The bag weighs 1/2 pound.\n\nYou can use an action to pull the fuzzy object from the bag and throw it up to 20 feet. When the object lands, it transforms into a creature you determine by rolling a d8. The creature vanishes at the next dawn or when it is reduced to 0 hit points.\n\nThe creature is friendly to you and your companions, and it acts on your turn. You can use a bonus action to command how the creature moves and what action it takes on its next turn, or to give it general orders, such as to attack your enemies. In the absence of such orders, the creature acts in a fashion appropriate to its nature.\n\nOnce three fuzzy objects have been pulled from the bag, the bag can't be used again until the next dawn.\n\n**Gray Bag of Tricks:**\nd8 | Creature\n1 | Weasel\n2 | Giant rat\n3 | Badger\n4 | Boar\n5 | Panther\n6 | Giant badger\n7 | Dire wolf\n8 | Giant elk\n\n**Rust Bag of Tricks:**\nd8 | Creature\n1 | Rat\n2 | Owl\n3 | Mastiff\n4 | Goat\n5 | Giant goat\n6 | Giant boar\n7 | Lion\n8 | Brown bear\n\n**Tan Bag of Tricks:**\nd8 | Creature\n1 | Jackal\n2 | Ape\n3 | Baboon\n4 | Axe beak\n5 | Black bear\n6 | Giant weasel\n7 | Giant hyena\n8 | Tiger",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,summoning,animals,utility",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "boots-of-striding-and-springing",
+    "title": "Boots of Striding and Springing",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Boots that set walking speed to 30 feet minimum and triple jump distance.",
+    "content": "## Boots of Striding and Springing\n\n*Wondrous item, uncommon (requires attunement)*\n\nWhile you wear these boots, your walking speed becomes 30 feet, unless your walking speed is higher, and your speed isn't reduced if you are encumbered or wearing heavy armor. In addition, you can jump three times the normal distance, though you can't jump farther than your remaining movement would allow.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,uncommon,movement,jumping,boots",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "boots-of-the-winterlands",
+    "title": "Boots of the Winterlands",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Boots that grant cold resistance and allow walking on ice and snow without difficulty.",
+    "content": "## Boots of the Winterlands\n\n*Wondrous item, uncommon (requires attunement)*\n\nThese furred boots are snug and feel quite warm. While you wear them, you gain the following benefits:\n\n- You have resistance to cold damage.\n- You ignore difficult terrain created by ice or snow.\n- You can tolerate temperatures as low as -50 degrees Fahrenheit without any additional protection. If you wear heavy clothes, you can tolerate temperatures as low as -100 degrees Fahrenheit.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,uncommon,cold,resistance,boots,winter",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "bracers-of-archery",
+    "title": "Bracers of Archery",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Bracers that grant proficiency and a +2 damage bonus with longbows and shortbows.",
+    "content": "## Bracers of Archery\n\n*Wondrous item, uncommon (requires attunement)*\n\nWhile wearing these bracers, you have proficiency with the longbow and shortbow, and you gain a +2 bonus to damage rolls on ranged attacks made with such weapons.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,uncommon,archery,ranged,damage-bonus",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "brooch-of-shielding",
+    "title": "Brooch of Shielding",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A brooch that grants resistance to force damage and immunity to magic missile.",
+    "content": "## Brooch of Shielding\n\n*Wondrous item, uncommon (requires attunement)*\n\nWhile wearing this brooch, you have resistance to force damage, and you have immunity to damage from the *magic missile* spell.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,uncommon,force,resistance,magic-missile,protection",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "circlet-of-blasting",
+    "title": "Circlet of Blasting",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A circlet that allows the wearer to cast Scorching Ray once per day.",
+    "content": "## Circlet of Blasting\n\n*Wondrous item, uncommon*\n\nWhile wearing this circlet, you can use an action to cast the *scorching ray* spell with it. When you make the spell's attacks, you do so with an attack bonus of +5. The circlet can't be used this way again until the next dawn.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,fire,scorching-ray,offensive",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "cloak-of-the-manta-ray",
+    "title": "Cloak of the Manta Ray",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A cloak that grants a 60-foot swim speed and underwater breathing when the hood is raised.",
+    "content": "## Cloak of the Manta Ray\n\n*Wondrous item, uncommon*\n\nWhile wearing this cloak with its hood up, you can breathe underwater, and you have a swimming speed of 60 feet. Pulling the hood up or down requires an action.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,swimming,underwater,breathing,aquatic",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "decanter-of-endless-water",
+    "title": "Decanter of Endless Water",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A stoppered flask that produces water on command in varying amounts and force.",
+    "content": "## Decanter of Endless Water\n\n*Wondrous item, uncommon*\n\nThis stoppered flask sloshes when shaken, as if it contains water. The decanter weighs 2 pounds.\n\nYou can use an action to remove the stopper and speak one of three command words, whereupon an amount of fresh water or salt water (your choice) pours out of the flask. The water stops pouring out at the start of your next turn. Choose from the following options:\n\n- **\"Stream.\"** The decanter produces 1 gallon of water.\n- **\"Fountain.\"** The decanter produces 5 gallons of water.\n- **\"Geyser.\"** The decanter produces 30 gallons of water that gushes forth in a geyser 30 feet long and 1 foot wide. As a bonus action while holding the decanter, you can aim the geyser at a creature you can see within 30 feet of you. The target must succeed on a DC 13 Strength saving throw or take 1d4 bludgeoning damage and fall prone. Instead of a creature, you can target an object that isn't being worn or carried and that weighs no more than 200 pounds. The object is either knocked over or pushed up to 15 feet away from you.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,water,utility,combat",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "deck-of-illusions",
+    "title": "Deck of Illusions",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A deck of cards that creates illusory creatures when drawn and thrown.",
+    "content": "## Deck of Illusions\n\n*Wondrous item, uncommon*\n\nThis box contains a set of parchment cards. A full deck has 34 cards. A deck found as treasure is usually missing 1d20 - 1 cards.\n\nThe magic of the deck functions only if cards are drawn at random (you can use an altered deck of playing cards to simulate the deck). You can use an action to draw a card at random from the deck and throw it to the ground at a point within 30 feet of you.\n\nAn illusion of one or more creatures forms over the thrown card and remains until dispelled. An illusory creature appears real, of the appropriate size, and behaves as if it were a real creature except that it can do no harm. While you are within 120 feet of the illusory creature and can see it, you can use an action to move it magically anywhere within 30 feet of its card. Any physical interaction with the illusory creature reveals it to be an illusion, because objects pass through it. Someone who uses an action to visually inspect the creature identifies it as illusory with a successful DC 15 Intelligence (Investigation) check. The creature then appears translucent.\n\nIf the illusory creature is ever more than 120 feet away from its card, the illusion disappears. The illusion also ends if the card is picked up or moved.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,illusion,cards,utility",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "dust-of-disappearance",
+    "title": "Dust of Disappearance",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Magical dust that makes creatures and objects invisible for 2d4 minutes.",
+    "content": "## Dust of Disappearance\n\n*Wondrous item, uncommon*\n\nFound in a small packet, this powder resembles very fine sand. There is enough of it for one use. When you use an action to throw the dust into the air, you and each creature and object within 10 feet of you become invisible for 2d4 minutes. The duration is the same for all subjects, and the dust is consumed when its magic takes effect. If a creature affected by the dust attacks or casts a spell, the invisibility ends for that creature.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,invisibility,stealth,consumable",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "dust-of-dryness",
+    "title": "Dust of Dryness",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Dust that absorbs water or deals damage to water elementals; contains 1d6+4 pinches.",
+    "content": "## Dust of Dryness\n\n*Wondrous item, uncommon*\n\nThis small packet contains 1d6 + 4 pinches of dust. You can use an action to sprinkle a pinch of it over water. The dust turns a cube of water 15 feet on a side into one marble-sized pellet, which floats or rests near where the dust was sprinkled. The pellet weighs an ounce.\n\nSomeone can use an action to smash the pellet against a hard surface, causing the pellet to shatter and release the water the dust absorbed. Doing so ends that pellet's magic.\n\nAn elemental composed mostly of water that is exposed to a pinch of the dust must make a DC 13 Constitution saving throw, taking 10d6 necrotic damage on a failed save, or half as much damage on a successful one.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,water,utility,consumable,elemental",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "dust-of-sneezing-and-choking",
+    "title": "Dust of Sneezing and Choking",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Cursed dust that causes incapacitation and suffocation when thrown.",
+    "content": "## Dust of Sneezing and Choking\n\n*Wondrous item, uncommon*\n\nFound in a small container, this powder resembles very fine sand. It appears to be dust of disappearance, and an *identify* spell reveals it to be such. There is enough of it for one use.\n\nWhen you use an action to throw a handful of the dust into the air, you and each creature that needs to breathe within 30 feet of you must succeed on a DC 15 Constitution saving throw or become unable to breathe, while sneezing uncontrollably. A creature affected in this way is incapacitated and suffocating. As long as it is conscious, a creature can repeat the saving throw at the end of each of its turns, ending the effect on it on a success. The *lesser restoration* spell can also end the effect on a creature.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,cursed,consumable,crowd-control",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "efficient-quiver",
+    "title": "Efficient Quiver",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A quiver with three extradimensional compartments that hold a large number of items.",
+    "content": "## Efficient Quiver\n\n*Wondrous item, uncommon*\n\nEach of the quiver's three compartments connects to an extradimensional space that allows the quiver to hold numerous items while never weighing more than 2 pounds. The shortest compartment can hold up to sixty arrows, bolts, or similar objects. The midsize compartment holds up to eighteen javelins or similar objects. The longest compartment holds up to six long objects, such as bows, quarterstaffs, or spears.\n\nYou can draw any item the quiver contains as if doing so from a regular quiver or scabbard.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,storage,extradimensional,quiver",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "elemental-gem",
+    "title": "Elemental Gem",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A gem that summons an elemental when broken, as if conjure elemental had been cast.",
+    "content": "## Elemental Gem\n\n*Wondrous item, uncommon*\n\nThis gem contains a mote of elemental energy. When you use an action to break the gem, an elemental is summoned as if you had cast the *conjure elemental* spell, and the gem's magic is lost. The type of gem determines the elemental summoned by the spell.\n\n| Gem | Summoned Elemental |\n|---|---|\n| Blue sapphire | Air elemental |\n| Yellow diamond | Earth elemental |\n| Red corundum | Fire elemental |\n| Emerald | Water elemental |",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,elemental,summoning,consumable",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "eversmoking-bottle",
+    "title": "Eversmoking Bottle",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A bottle that produces thick smoke heavily obscuring a 60-foot radius area.",
+    "content": "## Eversmoking Bottle\n\n*Wondrous item, uncommon*\n\nSmoke leaks from the lead-stoppered mouth of this brass bottle, which weighs 1 pound. When you use an action to remove the stopper, a cloud of thick smoke pours out in a 60-foot radius from the bottle. The cloud's area is heavily obscured. Each minute the bottle remains open and within the cloud, the radius increases by 10 feet until it reaches its maximum radius of 120 feet.\n\nThe cloud persists as long as the bottle is open. Closing the bottle requires you to speak its command word as an action. Once the bottle is closed, the cloud disperses after 10 minutes. A moderate wind (11 to 20 miles per hour) can also disperse the smoke after 1 minute, and a strong wind (21 or more miles per hour) can do so after 1 round.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,smoke,obscurement,utility,tactical",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "eyes-of-charming",
+    "title": "Eyes of Charming",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Crystal lenses that allow casting Charm Person three times per day.",
+    "content": "## Eyes of Charming\n\n*Wondrous item, uncommon (requires attunement)*\n\nThese crystal lenses fit over the eyes. They have 3 charges. While wearing them, you can expend 1 charge to cast the *charm person* spell (save DC 13) on a humanoid within 30 feet of you, provided that you and the target can see each other. The lenses regain all expended charges daily at dawn.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,uncommon,charm,enchantment,social",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "eyes-of-minute-seeing",
+    "title": "Eyes of Minute Seeing",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Lenses that grant advantage on Investigation checks relying on sight within 1 foot.",
+    "content": "## Eyes of Minute Seeing\n\n*Wondrous item, uncommon*\n\nThese crystal lenses fit over the eyes. While wearing them, you can see much better than normal out to a range of 1 foot. You have advantage on Intelligence (Investigation) checks that rely on sight while searching an area or studying an object within that range.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,investigation,perception,detail",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "figurine-of-wondrous-power-silver-raven",
+    "title": "Figurine of Wondrous Power (Silver Raven)",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A silver statuette that transforms into a raven for up to 12 hours.",
+    "content": "## Figurine of Wondrous Power (Silver Raven)\n\n*Wondrous item, uncommon*\n\nThis silver statuette of a raven can become a real raven for up to 12 hours (see the Monster Manual or SRD for the raven's statistics). Once it has been used, it can't be used again until 2 days have passed. While in raven form, the figurine allows you to cast the *animal messenger* spell on it at will.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,figurine,raven,summoning,messenger",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "gem-of-brightness",
+    "title": "Gem of Brightness",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A prism with 50 charges that can emit light, flare brightly, or fire a beam of radiant damage.",
+    "content": "## Gem of Brightness\n\n*Wondrous item, uncommon*\n\nThis prism has 50 charges. While you are holding it, you can use an action to speak one of three command words to cause one of the following effects:\n\n- The first command word causes the gem to shed bright light in a 30-foot radius and dim light for an additional 30 feet. This effect doesn't expend a charge. It lasts until you use a bonus action to repeat the command word or until you use another function of the gem.\n- The second command word expends 1 charge and causes the gem to fire a brilliant beam of light at one creature you can see within 60 feet of you. The creature must succeed on a DC 15 Constitution saving throw or become blinded for 1 minute. The creature can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success.\n- The third command word expends 5 charges and causes the gem to flare with blinding light in a 30-foot cone originating from it. Each creature in the cone must make a saving throw as if struck by the beam created with the second command word.\n\nWhen all of the gem's charges are expended, the gem becomes a nonmagical jewel worth 50 gp.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,light,radiant,blinding,charges",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "gloves-of-missile-snaring",
+    "title": "Gloves of Missile Snaring",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Gloves that let you reduce ranged weapon damage by 1d10 + Dex and potentially catch the missile.",
+    "content": "## Gloves of Missile Snaring\n\n*Wondrous item, uncommon (requires attunement)*\n\nThese gloves seem to almost meld into your hands when you don them. When a ranged weapon attack hits you while you're wearing them, you can use your reaction to reduce the damage by 1d10 + your Dexterity modifier, provided that you have a free hand. If you reduce the damage to 0, you can catch the missile if it is small enough for you to hold in that hand.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,uncommon,defense,ranged,reaction,missile",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "gloves-of-swimming-and-climbing",
+    "title": "Gloves of Swimming and Climbing",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Gloves that grant climbing and swimming speeds of 20 feet and +5 to Athletics checks for climbing and swimming.",
+    "content": "## Gloves of Swimming and Climbing\n\n*Wondrous item, uncommon (requires attunement)*\n\nWhile wearing these gloves, climbing and swimming don't cost you extra movement, and you gain a +5 bonus to Strength (Athletics) checks made to climb or swim.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,uncommon,climbing,swimming,athletics,movement",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "helm-of-comprehending-languages",
+    "title": "Helm of Comprehending Languages",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A helm that allows the wearer to cast Comprehend Languages at will.",
+    "content": "## Helm of Comprehending Languages\n\n*Wondrous item, uncommon*\n\nWhile wearing this helm, you can use an action to cast the *comprehend languages* spell from it at will.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,language,communication,divination",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "javelin-of-lightning",
+    "title": "Javelin of Lightning",
+    "category": "magic-item",
+    "subcategory": "weapon",
+    "ruleset": "universal",
+    "summary": "A javelin that transforms into a bolt of lightning dealing 4d6 damage in a line.",
+    "content": "## Javelin of Lightning\n\n*Weapon (javelin), uncommon*\n\nThis javelin is a magic weapon. When you hurl it and speak its command word, it transforms into a bolt of lightning, forming a line 5 feet wide that extends out from you to a target within 120 feet. Each creature in the line excluding you and the target must make a DC 13 Dexterity saving throw, taking 4d6 lightning damage on a failed save, and half as much damage on a successful one. The lightning bolt turns back into a javelin when it reaches the target. Make a ranged weapon attack against the target. On a hit, the target takes damage from the javelin plus 4d6 lightning damage.\n\nThe javelin's property can't be used again until the next dawn. In the meantime, the javelin can still be used as a magic weapon.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Weapon",
+      "attunement": false
+    },
+    "tags": "magic-item,weapon,uncommon,javelin,lightning,thrown,damage",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "medallion-of-thoughts",
+    "title": "Medallion of Thoughts",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A medallion with 3 charges that allows casting Detect Thoughts.",
+    "content": "## Medallion of Thoughts\n\n*Wondrous item, uncommon (requires attunement)*\n\nThe medallion has 3 charges. While wearing it, you can use an action and expend 1 charge to cast the *detect thoughts* spell (save DC 13) from it. The medallion regains 1d3 expended charges daily at dawn.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,uncommon,telepathy,detect-thoughts,divination",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "necklace-of-adaptation",
+    "title": "Necklace of Adaptation",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A necklace that allows the wearer to breathe in any environment and grants advantage against harmful gases.",
+    "content": "## Necklace of Adaptation\n\n*Wondrous item, uncommon (requires attunement)*\n\nWhile wearing this necklace, you can breathe normally in any environment, and you have advantage on saving throws made against harmful gases and vapors (such as *cloudkill* and *stinking cloud* effects, inhaled poisons, and the breath weapons of some dragons).",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,uncommon,breathing,gas,poison,protection",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "oil-of-slipperiness",
+    "title": "Oil of Slipperiness",
+    "category": "magic-item",
+    "subcategory": "potion",
+    "ruleset": "universal",
+    "summary": "An oil that coats a creature or object with a Freedom of Movement effect for 8 hours.",
+    "content": "## Oil of Slipperiness\n\n*Potion, uncommon*\n\nThis sticky black unguent is thick and heavy in the container, but it flows quickly when poured. The oil can cover a Medium or smaller creature, along with the equipment it's wearing and carrying (one additional vial is required for each size category above Medium). Applying the oil takes 10 minutes. The affected creature then gains the effect of a *freedom of movement* spell for 8 hours.\n\nAlternatively, the oil can be poured on the ground as an action, where it covers a 10-foot square, duplicating the effect of the *grease* spell in that area for 8 hours.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Potion",
+      "attunement": false
+    },
+    "tags": "magic-item,potion,uncommon,freedom-of-movement,grease,consumable",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "periapt-of-health",
+    "title": "Periapt of Health",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "An amulet that grants immunity to disease.",
+    "content": "## Periapt of Health\n\n*Wondrous item, uncommon*\n\nYou are immune to contracting any disease while you wear this pendant. If you are already infected with a disease, the effects of the disease are suppressed while you wear the pendant.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,disease,immunity,health",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "periapt-of-wound-closure",
+    "title": "Periapt of Wound Closure",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A pendant that stabilizes the wearer at 0 HP and doubles hit dice healing.",
+    "content": "## Periapt of Wound Closure\n\n*Wondrous item, uncommon (requires attunement)*\n\nWhile you wear this pendant, you stabilize whenever you are dying at the start of your turn. In addition, whenever you roll a Hit Die to regain hit points, double the number of hit points it restores.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,uncommon,healing,stabilize,hit-dice,survival",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "philter-of-love",
+    "title": "Philter of Love",
+    "category": "magic-item",
+    "subcategory": "potion",
+    "ruleset": "universal",
+    "summary": "A potion that charms the drinker, making them regard the first creature they see as their true love.",
+    "content": "## Philter of Love\n\n*Potion, uncommon*\n\nThe next time you see a creature within 10 minutes after drinking this philter, you become charmed by that creature for 1 hour. If the creature is of a species and gender you are normally attracted to, you regard it as your true love while you are charmed. This potion's rose-hued, effervescent liquid contains one easy-to-miss bubble shaped like a heart.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Potion",
+      "attunement": false
+    },
+    "tags": "magic-item,potion,uncommon,charm,enchantment,social,consumable",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "pipes-of-haunting",
+    "title": "Pipes of Haunting",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Pipes with 3 charges that frighten creatures within 30 feet when played.",
+    "content": "## Pipes of Haunting\n\n*Wondrous item, uncommon*\n\nYou must be proficient with wind instruments to use these pipes. They have 3 charges. You can use an action to play them and expend 1 charge to create an eerie, spellbinding tune. Each creature within 30 feet of you that hears you play must succeed on a DC 15 Wisdom saving throw or become frightened of you for 1 minute. If you wish, all creatures in the area that aren't hostile toward you automatically succeed on the saving throw. A creature that fails the saving throw can repeat it at the end of each of its turns, ending the effect on itself on a success. A creature that succeeds on its saving throw is immune to the effect of these pipes for 24 hours. The pipes regain 1d3 expended charges daily at dawn.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,fear,crowd-control,music,wind-instrument",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "pipes-of-the-sewers",
+    "title": "Pipes of the Sewers",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Pipes that summon and control swarms of rats when played.",
+    "content": "## Pipes of the Sewers\n\n*Wondrous item, uncommon (requires attunement)*\n\nYou must be proficient with wind instruments to use these pipes. While you are attuned to the pipes, ordinary rats and giant rats are indifferent toward you and will not attack you unless you threaten or harm them.\n\nThe pipes have 3 charges. If you play the pipes as an action, you can use a bonus action to expend 1 to 3 charges, calling forth one swarm of rats with each expended charge, provided that enough rats are within half a mile of you to be called in this way (as determined by the DM). If there aren't enough rats to form a swarm, the charge is wasted. Called swarms move toward the music by the shortest available route but aren't under your control otherwise. The pipes regain 1d3 expended charges daily at dawn.\n\nWhenever a swarm of rats that isn't under another creature's control comes within 30 feet of you while you are playing the pipes, you can make a Charisma check contested by the swarm's Wisdom check. If you lose the contest, the swarm behaves as it normally would and can't be swayed by the pipes' music for the next 24 hours. If you win the contest, the swarm is swayed by the pipes' music and becomes friendly to you and your companions for as long as you continue to play the pipes, up to 1 hour. A friendly swarm obeys your commands. If you issue no commands to a friendly swarm, it defends itself but otherwise takes no actions. If a friendly swarm starts its turn and can't hear the pipes' music, your control over that swarm ends.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,uncommon,rats,summoning,music,wind-instrument",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "potion-of-animal-friendship",
+    "title": "Potion of Animal Friendship",
+    "category": "magic-item",
+    "subcategory": "potion",
+    "ruleset": "universal",
+    "summary": "A potion that lets the drinker cast Animal Friendship (save DC 13) for 1 hour.",
+    "content": "## Potion of Animal Friendship\n\n*Potion, uncommon*\n\nWhen you drink this potion, you can cast the *animal friendship* spell (save DC 13) for 1 hour at will. Agitating this muddy liquid brings little bits into view: a fish scale, a hummingbird tongue, a cat claw, or a squirrel hair.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Potion",
+      "attunement": false
+    },
+    "tags": "magic-item,potion,uncommon,animal,friendship,beast,consumable",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "potion-of-giant-strength-hill",
+    "title": "Potion of Giant Strength (Hill)",
+    "category": "magic-item",
+    "subcategory": "potion",
+    "ruleset": "universal",
+    "summary": "A potion that sets the drinker's Strength score to 21 for 1 hour.",
+    "content": "## Potion of Giant Strength (Hill)\n\n*Potion, uncommon*\n\nWhen you drink this potion, your Strength score changes to 21 for 1 hour. The potion has no effect on you if your Strength is equal to or greater than that score.\n\nThis potion's transparent liquid has floating in it a sliver of fingernail from a hill giant.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Potion",
+      "attunement": false
+    },
+    "tags": "magic-item,potion,uncommon,strength,giant,ability-score,consumable",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "potion-of-growth",
+    "title": "Potion of Growth",
+    "category": "magic-item",
+    "subcategory": "potion",
+    "ruleset": "universal",
+    "summary": "A potion that causes the drinker to grow as if affected by the Enlarge/Reduce spell for 1d4 hours.",
+    "content": "## Potion of Growth\n\n*Potion, uncommon*\n\nWhen you drink this potion, you gain the \"enlarge\" effect of the *enlarge/reduce* spell for 1d4 hours (no concentration required). The red in the potion's liquid continuously expands from a tiny bead to color the clear liquid around it and then contracts. Shaking the bottle fails to interrupt this process.\n\nFor the duration, your size doubles in all dimensions, and your weight is multiplied by eight. Your size increases by one category. Your weapons also grow to match your new size. While enlarged, your attacks with enlarged weapons deal 1d4 extra damage.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Potion",
+      "attunement": false
+    },
+    "tags": "magic-item,potion,uncommon,enlarge,size,damage-bonus,consumable",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "potion-of-poison",
+    "title": "Potion of Poison",
+    "category": "magic-item",
+    "subcategory": "potion",
+    "ruleset": "universal",
+    "summary": "A deceptive potion that appears to be a beneficial potion but poisons the drinker.",
+    "content": "## Potion of Poison\n\n*Potion, uncommon*\n\nThis concoction looks, smells, and tastes like a *potion of healing* or other beneficial potion. However, it is actually poison masked by illusion magic. An *identify* spell reveals its true nature.\n\nIf you drink it, you take 3d6 poison damage, and you must succeed on a DC 13 Constitution saving throw or be poisoned. At the start of each of your turns while you are poisoned in this way, you take 3d6 poison damage. At the end of each of your turns, you can repeat the saving throw. On a successful save, the poison damage you take on your subsequent turns decreases by 1d6. The poison ends when the damage decreases to 0.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Potion",
+      "attunement": false
+    },
+    "tags": "magic-item,potion,uncommon,poison,trap,deceptive,consumable",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "potion-of-water-breathing",
+    "title": "Potion of Water Breathing",
+    "category": "magic-item",
+    "subcategory": "potion",
+    "ruleset": "universal",
+    "summary": "A potion that grants the ability to breathe underwater for 1 hour.",
+    "content": "## Potion of Water Breathing\n\n*Potion, uncommon*\n\nYou can breathe underwater for 1 hour after drinking this potion. Its cloudy green fluid smells of the sea and has a jellyfish-like bubble floating in it.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Potion",
+      "attunement": false
+    },
+    "tags": "magic-item,potion,uncommon,underwater,breathing,aquatic,consumable",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "restorative-ointment",
+    "title": "Restorative Ointment (Keoghtom's Ointment)",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "An ointment with 1d4+1 doses that heals 2d8+2 HP and cures poison and disease.",
+    "content": "## Restorative Ointment (Keoghtom's Ointment)\n\n*Wondrous item, uncommon*\n\nThis glass jar, 3 inches in diameter, contains 1d4 + 1 doses of a thick mixture that smells faintly of aloe. The jar and its contents weigh 1/2 pound.\n\nAs an action, one dose of the ointment can be applied to the skin. The creature that receives it regains 2d8 + 2 hit points, ceases to be poisoned, and is cured of any disease.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,healing,poison,disease,consumable",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "ring-of-jumping",
+    "title": "Ring of Jumping",
+    "category": "magic-item",
+    "subcategory": "ring",
+    "ruleset": "universal",
+    "summary": "A ring that allows the wearer to cast Jump on themselves at will.",
+    "content": "## Ring of Jumping\n\n*Ring, uncommon (requires attunement)*\n\nWhile wearing this ring, you can cast the *jump* spell from it as a bonus action at will, but can target only yourself when you do so.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Ring",
+      "attunement": true
+    },
+    "tags": "magic-item,ring,uncommon,jumping,movement,utility",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "ring-of-mind-shielding",
+    "title": "Ring of Mind Shielding",
+    "category": "magic-item",
+    "subcategory": "ring",
+    "ruleset": "universal",
+    "summary": "A ring that protects the wearer from telepathy, thought-reading, and can shelter the soul upon death.",
+    "content": "## Ring of Mind Shielding\n\n*Ring, uncommon (requires attunement)*\n\nWhile wearing this ring, you are immune to magic that allows other creatures to read your thoughts, determine whether you are lying, know your alignment, or know your creature type. Creatures can telepathically communicate with you only if you allow it.\n\nYou can use an action to cause the ring to become invisible until you use another action to make it visible, until you remove the ring, or until you die.\n\nIf you die while wearing the ring, your soul enters it, unless it already houses a soul. You can remain in the ring or depart for the afterlife. As long as your soul is in the ring, you can telepathically communicate with any creature wearing it. A wearer can't prevent this telepathic communication.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Ring",
+      "attunement": true
+    },
+    "tags": "magic-item,ring,uncommon,telepathy,mind,protection,soul,invisible",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "ring-of-warmth",
+    "title": "Ring of Warmth",
+    "category": "magic-item",
+    "subcategory": "ring",
+    "ruleset": "universal",
+    "summary": "A ring that grants cold resistance and protects against extreme cold temperatures.",
+    "content": "## Ring of Warmth\n\n*Ring, uncommon (requires attunement)*\n\nWhile wearing this ring, you have resistance to cold damage. In addition, you and everything you wear and carry are unharmed by temperatures as low as -50 degrees Fahrenheit.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Ring",
+      "attunement": true
+    },
+    "tags": "magic-item,ring,uncommon,cold,resistance,temperature,survival",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "ring-of-water-walking",
+    "title": "Ring of Water Walking",
+    "category": "magic-item",
+    "subcategory": "ring",
+    "ruleset": "universal",
+    "summary": "A ring that allows the wearer to stand and walk on liquid surfaces as if they were solid ground.",
+    "content": "## Ring of Water Walking\n\n*Ring, uncommon*\n\nWhile wearing this ring, you can stand on and move across any liquid surface as if it were solid ground.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Ring",
+      "attunement": false
+    },
+    "tags": "magic-item,ring,uncommon,water,movement,utility",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "robe-of-useful-items",
+    "title": "Robe of Useful Items",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A robe covered in cloth patches that can be detached and transformed into real objects or creatures.",
+    "content": "## Robe of Useful Items\n\n*Wondrous item, uncommon*\n\nThis robe has cloth patches of various shapes and colors covering it. While wearing the robe, you can use an action to detach one of the patches, causing it to become the object or creature it represents. Once the last patch is removed, the robe becomes an ordinary garment.\n\nThe robe has two of each of the following patches:\n- Dagger\n- Bullseye lantern (filled and lit)\n- Steel mirror\n- 10-foot pole\n- Hempen rope (50 feet, coiled)\n- Sack\n\nIn addition, the robe has 4d4 other patches. The DM chooses the patches or determines them randomly.\n\nd100 | Patch\n01-08 | Bag of 100 gp\n09-15 | Silver coffer (1 foot long, 6 inches wide and deep) worth 500 gp\n16-22 | Iron door (up to 10 feet wide and 10 feet high, barred on one side of your choice), which you can place in an opening you can reach; it conforms to fit the opening, attaching and hinging itself\n23-30 | 10 gems worth 100 gp each\n31-44 | Wooden ladder (24 feet long)\n45-51 | A riding horse with saddle bags\n52-59 | Pit (a cube 10 feet on a side), which you can place on the ground within 10 feet of you\n60-68 | 4 potions of healing\n69-75 | Rowboat (12 feet long)\n76-83 | Spell scroll containing one spell of 1st to 3rd level\n84-90 | 2 mastiffs\n91-96 | Window (2 feet by 4 feet, up to 2 feet deep), which you can place on a vertical surface you can reach\n97-00 | Portable ram",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,utility,versatile,patches,consumable",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "slippers-of-spider-climbing",
+    "title": "Slippers of Spider Climbing",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "Slippers that allow walking on walls and ceilings with hands free, with a climbing speed equal to walking speed.",
+    "content": "## Slippers of Spider Climbing\n\n*Wondrous item, uncommon (requires attunement)*\n\nWhile you wear these light shoes, you can move up, down, and across vertical surfaces and upside down along ceilings, while leaving your hands free. You have a climbing speed equal to your walking speed. However, the slippers don't allow you to move this way on a slippery surface, such as one covered by ice or oil.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": true
+    },
+    "tags": "magic-item,wondrous-item,uncommon,climbing,spider,movement,walls,ceiling",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "staff-of-the-python",
+    "title": "Staff of the Python",
+    "category": "magic-item",
+    "subcategory": "staff",
+    "ruleset": "universal",
+    "summary": "A staff that can transform into a giant constrictor snake on command.",
+    "content": "## Staff of the Python\n\n*Staff, uncommon (requires attunement by a cleric, druid, or warlock)*\n\nYou can use an action to speak this staff's command word and throw the staff on the ground within 10 feet of you. The staff becomes a giant constrictor snake under your control and acts on its own initiative count. By using a bonus action to speak the command word again, you return the staff to its normal form in a space formerly occupied by the snake.\n\nOn your turn, you can mentally command the snake if it is within 60 feet of you and you aren't incapacitated. You decide what action the snake takes and where it moves during its next turn, or you can issue it a general command, such as to attack your enemies or guard a location.\n\nIf the snake is reduced to 0 hit points, it dies and reverts to its staff form. The staff then shatters and is destroyed. If the snake reverts to staff form before losing all its hit points, it regains all of them.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Staff",
+      "attunement": true
+    },
+    "tags": "magic-item,staff,uncommon,snake,summoning,cleric,druid,warlock",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "trident-of-fish-command",
+    "title": "Trident of Fish Command",
+    "category": "magic-item",
+    "subcategory": "weapon",
+    "ruleset": "universal",
+    "summary": "A magic trident with 3 charges that allows casting Dominate Beast on beasts with a swimming speed.",
+    "content": "## Trident of Fish Command\n\n*Weapon (trident), uncommon (requires attunement)*\n\nThis trident is a magic weapon. It has 3 charges. While you carry it, you can use an action and expend 1 charge to cast *dominate beast* (save DC 15) from it on a beast that has an innate swimming speed. The trident regains 1d3 expended charges daily at dawn.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Weapon",
+      "attunement": true
+    },
+    "tags": "magic-item,weapon,uncommon,trident,aquatic,dominate,beast,charges",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "wand-of-secrets",
+    "title": "Wand of Secrets",
+    "category": "magic-item",
+    "subcategory": "wand",
+    "ruleset": "universal",
+    "summary": "A wand with 3 charges that pulses and points toward secret doors and traps within 30 feet.",
+    "content": "## Wand of Secrets\n\n*Wand, uncommon*\n\nThe wand has 3 charges. While holding it, you can use an action to expend 1 of its charges, and if a secret door or trap is within 30 feet of you, the wand pulses and points at the one nearest to you. The wand regains 1d3 expended charges daily at dawn.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wand",
+      "attunement": false
+    },
+    "tags": "magic-item,wand,uncommon,detection,traps,secret-doors,exploration",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "wand-of-web",
+    "title": "Wand of Web",
+    "category": "magic-item",
+    "subcategory": "wand",
+    "ruleset": "universal",
+    "summary": "A wand with 7 charges that allows casting the Web spell.",
+    "content": "## Wand of Web\n\n*Wand, uncommon (requires attunement by a spellcaster)*\n\nThis wand has 7 charges. While holding it, you can use an action to expend 1 of its charges to cast the *web* spell (save DC 15) from it.\n\nThe wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll a d20. On a 1, the wand crumbles into ashes and is destroyed.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wand",
+      "attunement": true
+    },
+    "tags": "magic-item,wand,uncommon,web,restraint,crowd-control,spellcaster",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  },
+  {
+    "slug": "wind-fan",
+    "title": "Wind Fan",
+    "category": "magic-item",
+    "subcategory": "wondrous-item",
+    "ruleset": "universal",
+    "summary": "A fan that casts Gust of Wind when used, with a chance of not working on subsequent uses before the next dawn.",
+    "content": "## Wind Fan\n\n*Wondrous item, uncommon*\n\nWhile holding this fan, you can use an action to cast the *gust of wind* spell (save DC 13) from it. Once used, the fan shouldn't be used again until the next dawn. Each time it is used again before then, there is a cumulative 20 percent chance that the fan will tear into useless, nonmagical tatters.",
+    "metadata_json": {
+      "rarity": "uncommon",
+      "type": "Wondrous Item",
+      "attunement": false
+    },
+    "tags": "magic-item,wondrous-item,uncommon,wind,gust,utility,consumable-risk",
+    "source": "SRD 5.1",
+    "sort_order": 100
+  }
+]
