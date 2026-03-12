@@ -1,170 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Users, Wifi, WifiOff, Copy, Check, LogIn, LogOut, Crown, Heart, Shield, RefreshCw, Signal, AlertTriangle, Activity } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { invoke } from '@tauri-apps/api/core';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useAppMode } from '../contexts/ModeContext';
-
-const PARTY_PORT = 8787;
-const CONNECT_TIMEOUT_MS = 8000;
-const RECONNECT_DELAYS = [1000, 2000, 4000, 8000]; // backoff steps
-
-// ─── WebSocket hook ──────────────────────────────────────────────────────────
-
-function usePartySocket({ hostIp, roomCode, character, onMembers, onJoined, onUpdated, onLeft, onBugReport }) {
-  const wsRef = useRef(null);
-  const [status, setStatus] = useState('disconnected');
-  const pingIntervalRef = useRef(null);
-  const reconnectTimerRef = useRef(null);
-  const reconnectCountRef = useRef(0);
-  const intentionalCloseRef = useRef(false);
-  // Keep latest values in refs to avoid stale closures during reconnect
-  const cbRef = useRef({ onMembers, onJoined, onUpdated, onLeft, onBugReport });
-  cbRef.current = { onMembers, onJoined, onUpdated, onLeft, onBugReport };
-  const connRef = useRef({ hostIp, roomCode, character });
-  connRef.current = { hostIp, roomCode, character };
-
-  const clearTimers = useCallback(() => {
-    if (pingIntervalRef.current) { clearInterval(pingIntervalRef.current); pingIntervalRef.current = null; }
-    if (reconnectTimerRef.current) { clearTimeout(reconnectTimerRef.current); reconnectTimerRef.current = null; }
-  }, []);
-
-  const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) return;
-    const { hostIp: ip, roomCode: code, character: char } = connRef.current;
-    if (!code || !ip) return;
-
-    clearTimers();
-    setStatus('connecting');
-    intentionalCloseRef.current = false;
-
-    let ws;
-    try {
-      ws = new WebSocket(`ws://${ip}:${PARTY_PORT}/party/ws`);
-    } catch (err) {
-      setStatus('disconnected');
-      toast.error('Invalid WebSocket URL — check the host IP', { duration: 5000 });
-      return;
-    }
-    wsRef.current = ws;
-
-    // Connection timeout — if we don't get onopen within CONNECT_TIMEOUT_MS, give up
-    const timeout = setTimeout(() => {
-      if (ws.readyState !== WebSocket.OPEN) {
-        ws.close();
-        setStatus('disconnected');
-        toast.error('Connection timed out — check the host IP and make sure you\'re on the same WiFi', { duration: 5000 });
-      }
-    }, CONNECT_TIMEOUT_MS);
-
-    ws.onopen = () => {
-      clearTimeout(timeout);
-      reconnectCountRef.current = 0;
-      ws.send(JSON.stringify({ type: 'join', room: code, character: char }));
-      // Wait for welcome message before marking connected — timeout after 5s
-      const welcomeTimeout = setTimeout(() => {
-        if (ws.readyState === WebSocket.OPEN) {
-          setStatus('disconnected');
-          ws.close();
-          toast.error('Joined server but room handshake failed — check your room code', { duration: 5000 });
-        }
-      }, 5000);
-      // Patch onmessage to detect welcome and clear the timeout
-      const origOnMessage = ws.onmessage;
-      ws.onmessage = (e) => {
-        try {
-          const msg = JSON.parse(e.data);
-          if (msg.type === 'welcome') {
-            clearTimeout(welcomeTimeout);
-            setStatus('connected');
-            // Start keepalive pings only after welcome — read code from ref for freshness
-            pingIntervalRef.current = setInterval(() => {
-              const rc = connRef.current.roomCode;
-              if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'ping', room: rc }));
-            }, 25000);
-          }
-        } catch { /* handled below */ }
-        if (origOnMessage) origOnMessage.call(ws, e);
-      };
-    };
-
-    ws.onmessage = (e) => {
-      try {
-        const msg = JSON.parse(e.data);
-        if (msg.type === 'welcome') cbRef.current.onMembers(msg.members, msg.you);
-        else if (msg.type === 'player_joined') cbRef.current.onJoined(msg.member);
-        else if (msg.type === 'updated' && msg.member) cbRef.current.onUpdated(msg.member);
-        else if (msg.type === 'player_disconnected' || msg.type === 'left') cbRef.current.onLeft(msg.client_id);
-        else if (msg.type === 'host_ended') {
-          toast('The host ended the session', { icon: '🏰', duration: 4000 });
-          intentionalCloseRef.current = true;
-        }
-        else if (msg.type === 'host_promoted') {
-          toast('You are now the host', { icon: '👑', duration: 4000 });
-        }
-        else if (msg.type === 'bug_report' && cbRef.current.onBugReport) cbRef.current.onBugReport(msg);
-        else if (msg.type === 'error') toast.error(msg.message);
-        // pong is silently accepted (keepalive ack)
-      } catch { /* ignore parse errors */ }
-    };
-
-    ws.onclose = () => {
-      clearTimeout(timeout);
-      clearTimers();
-      wsRef.current = null;
-      setStatus('disconnected');
-
-      // Auto-reconnect unless we intentionally disconnected
-      if (!intentionalCloseRef.current && roomCode && hostIp) {
-        const attempt = reconnectCountRef.current;
-        const delay = RECONNECT_DELAYS[Math.min(attempt, RECONNECT_DELAYS.length - 1)];
-        reconnectCountRef.current = attempt + 1;
-
-        if (attempt < 10) { // max 10 retries
-          toast(`Connection lost — retrying in ${Math.round(delay / 1000)}s…`, { icon: '🔄', duration: delay });
-          reconnectTimerRef.current = setTimeout(() => {
-            if (!intentionalCloseRef.current) connect();
-          }, delay);
-        } else {
-          toast.error('Could not reconnect after multiple attempts. Try rejoining manually.', { duration: 6000 });
-        }
-      }
-    };
-
-    ws.onerror = () => {
-      // onerror is always followed by onclose, so we just log here
-      if (reconnectCountRef.current === 0) {
-        toast.error('Could not connect — is the host running and on the same network?', { duration: 5000 });
-      }
-    };
-  }, [clearTimers]);
-
-  const disconnect = useCallback(() => {
-    intentionalCloseRef.current = true;
-    clearTimers();
-    reconnectCountRef.current = 0;
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-    setStatus('disconnected');
-  }, [clearTimers]);
-
-  const sendUpdate = useCallback((char) => {
-    const code = connRef.current.roomCode;
-    if (wsRef.current?.readyState === WebSocket.OPEN && code)
-      wsRef.current.send(JSON.stringify({ type: 'update', room: code, character: char }));
-  }, []);
-
-  const sendBugReport = useCallback((report) => {
-    const code = connRef.current.roomCode;
-    if (wsRef.current?.readyState === WebSocket.OPEN && code)
-      wsRef.current.send(JSON.stringify({ type: 'bug_report', room: code, report }));
-  }, []);
-
-  useEffect(() => () => { intentionalCloseRef.current = true; clearTimers(); wsRef.current?.close(); }, [clearTimers]);
-  return { status, connect, disconnect, sendUpdate, sendBugReport };
-}
+import { useParty } from '../contexts/PartyContext';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -227,7 +66,7 @@ function MemberCard({ member, isYou, colorIndex = 0 }) {
             <Heart size={11} /> HP
           </div>
           <span style={{ fontSize: '11px', fontWeight: 700, color: hpColor(hp, maxHp), fontFamily: 'Outfit, sans-serif' }}>
-            {isDead ? '💀 Down' : `${hp} / ${maxHp}`}
+            {isDead ? '\uD83D\uDC80 Down' : `${hp} / ${maxHp}`}
           </span>
         </div>
         <div className="party-mini-bar" role="progressbar" aria-label={`${character.name || 'Unknown'} HP: ${hp} of ${maxHp}`} aria-valuenow={hp} aria-valuemin={0} aria-valuemax={maxHp}>
@@ -246,7 +85,7 @@ function StatusDot({ status }) {
         status === 'connecting' ? 'bg-yellow-400 animate-pulse' : 'bg-amber-200/20'
       }`} />
       <span className={status === 'connected' ? 'text-emerald-400' : status === 'connecting' ? 'text-yellow-400' : 'text-amber-200/30'}>
-        {status === 'connected' ? 'Connected' : status === 'connecting' ? 'Connecting…' : 'Disconnected'}
+        {status === 'connected' ? 'Connected' : status === 'connecting' ? 'Connecting\u2026' : 'Disconnected'}
       </span>
     </div>
   );
@@ -265,7 +104,6 @@ function PartyStatsOverview({ members }) {
   const hpPercentages = withHp.map(m => (m.character.hp / m.character.max_hp) * 100);
   const avgHpPct = Math.round(hpPercentages.reduce((a, b) => a + b, 0) / hpPercentages.length);
 
-  // Find lowest HP member
   let lowestMember = withHp[0];
   let lowestPct = 100;
   withHp.forEach(m => {
@@ -274,13 +112,11 @@ function PartyStatsOverview({ members }) {
   });
   lowestPct = Math.round(lowestPct);
 
-  // Level range
   const levels = members.filter(m => m.character?.level).map(m => m.character.level);
   const minLevel = levels.length > 0 ? Math.min(...levels) : '?';
   const maxLevel = levels.length > 0 ? Math.max(...levels) : '?';
-  const levelRange = minLevel === maxLevel ? `${minLevel}` : `${minLevel}–${maxLevel}`;
+  const levelRange = minLevel === maxLevel ? `${minLevel}` : `${minLevel}\u2013${maxLevel}`;
 
-  // Danger colors
   const avgColor = avgHpPct <= 25 ? '#ef4444' : avgHpPct <= 50 ? '#eab308' : '#4ade80';
   const lowestColor = lowestPct <= 0 ? '#ef4444' : lowestPct <= 25 ? '#f87171' : lowestPct <= 50 ? '#eab308' : '#4ade80';
 
@@ -329,16 +165,21 @@ function PartyStatsOverview({ members }) {
 
 export default function Party({ characterId, character, onBugReport }) {
   const { mode: appMode } = useAppMode();
-  const [mode, setMode] = useState(null);
-  const [roomCode, setRoomCode] = useState('');
-  const [hostIp, setHostIp] = useState('');
-  const [joinIp, setJoinIp] = useState('');
-  const [joinInput, setJoinInput] = useState('');
-  const [members, setMembers] = useState([]);
-  const [myClientId, setMyClientId] = useState(null);
+  const party = useParty();
+  const {
+    wsStatus: status, mode, roomCode, hostIp, joinIp, joinInput, members, myClientId, autoSync,
+    setJoinIp, setJoinInput, setAutoSync,
+    connect, sendUpdate, handleHost, handleLeave,
+    onBugReportRef,
+  } = party;
+
   const [copied, setCopied] = useState(false);
-  const [autoSync, setAutoSync] = useState(true);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+
+  // Wire up the bug report callback
+  useEffect(() => {
+    onBugReportRef.current = onBugReport;
+  }, [onBugReport, onBugReportRef]);
 
   const charSnapshot = useMemo(() => ({
     id: characterId,
@@ -351,36 +192,15 @@ export default function Party({ characterId, character, onBugReport }) {
     ac: character?.armor_class ?? 10,
   }), [characterId, character?.name, character?.race, character?.primary_class, character?.level, character?.current_hp, character?.max_hp, character?.armor_class]);
 
-  // The IP used for the WebSocket connection
-  const wsIp = mode === 'host' ? 'localhost' : joinIp;
-
-  const handleMembers = useCallback((list, youId) => { setMembers(list); setMyClientId(youId); }, []);
-  const handleJoined = useCallback((member) => {
-    setMembers(prev => prev.find(m => m.client_id === member.client_id) ? prev : [...prev, member]);
-    toast.success(`${member.character?.name || 'Someone'} joined the party!`, { icon: '⚔️' });
-  }, []);
-  const handleUpdated = useCallback((member) => {
-    setMembers(prev => prev.map(m => m.client_id === member.client_id ? member : m));
-  }, []);
-  const handleLeft = useCallback((clientId) => {
-    setMembers(prev => {
-      const leaving = prev.find(m => m.client_id === clientId);
-      if (leaving) toast(`${leaving.character?.name || 'Someone'} left the party`, { icon: '👋' });
-      return prev.filter(m => m.client_id !== clientId);
-    });
-  }, []);
-
-  const { status, connect, disconnect, sendUpdate, sendBugReport } = usePartySocket({
-    hostIp: wsIp, roomCode, character: charSnapshot,
-    onMembers: handleMembers, onJoined: handleJoined, onUpdated: handleUpdated, onLeft: handleLeft,
-    onBugReport: onBugReport,
-  });
+  // Connect when room code + mode are ready
+  useEffect(() => {
+    if (roomCode && mode) connect(charSnapshot);
+  }, [roomCode, mode, connect, charSnapshot]);
 
   // Auto-sync when any tracked character stat changes
   const prevStatsRef = useRef(null);
   useEffect(() => {
     if (status !== 'connected' || !autoSync) return;
-    // Only send if values actually changed (avoid firing on mount or sendUpdate recreation)
     const key = `${character?.current_hp}|${character?.max_hp}|${character?.armor_class}|${character?.level}|${character?.name}|${character?.race}|${character?.primary_class}`;
     if (prevStatsRef.current === key) return;
     prevStatsRef.current = key;
@@ -391,47 +211,19 @@ export default function Party({ characterId, character, onBugReport }) {
     character?.level, character?.name, character?.race, character?.primary_class,
   ]);
 
-  const handleHost = async () => {
-    try {
-      await invoke('start_party_server');
-      let ip = 'localhost';
-      try { ip = await invoke('get_local_ip'); } catch { /* fallback */ }
-      setHostIp(ip);
-      const res = await fetch(`http://localhost:${PARTY_PORT}/party/rooms`, { method: 'POST' });
-      if (!res.ok) throw new Error('Failed to create room');
-      const data = await res.json();
-      setRoomCode(data.room_code);
-      setMode('host');
-    } catch (err) {
-      toast.error('Could not start party server — is port 8787 available?', { duration: 5000 });
-    }
-  };
-
   const handleJoin = () => {
     const code = joinInput.trim().toUpperCase();
     const ip = joinIp.trim();
     if (!ip) { toast.error('Enter the host\'s IP address'); return; }
     if (!/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip) || ip.split('.').some(n => parseInt(n) > 255)) { toast.error('Enter a valid IP address (e.g. 192.168.1.5)'); return; }
     if (code.length < 4) { toast.error('Enter the 4-character room code'); return; }
-    setRoomCode(code);
-    setMode('join');
-  };
-
-  // Connect when room code + mode are ready
-  useEffect(() => { if (roomCode && mode) connect(); }, [roomCode, mode, connect]);
-
-  const handleLeave = async () => {
-    setShowLeaveConfirm(false);
-    disconnect();
-    if (mode === 'host') {
-      try { await invoke('stop_party_server'); } catch { /* ignore */ }
-    }
-    setMode(null); setRoomCode(''); setJoinInput(''); setJoinIp(''); setHostIp(''); setMembers([]); setMyClientId(null);
+    party.setRoomCode(code);
+    party.setMode('join');
   };
 
   const copyCode = async () => {
     try {
-      await navigator.clipboard.writeText(`${roomCode} · ${hostIp}`);
+      await navigator.clipboard.writeText(`${roomCode} \u00B7 ${hostIp}`);
       setCopied(true);
       toast.success(`Copied: ${roomCode} \u00B7 ${hostIp}`);
       setTimeout(() => setCopied(false), 2000);
@@ -454,7 +246,7 @@ export default function Party({ characterId, character, onBugReport }) {
           <p className="text-sm text-amber-200/40 mt-1.5">
             {isDM
               ? 'Host a session so your players can join and sync their characters in real-time.'
-              : 'Join your DM\'s party session to sync your character live — over your local network.'}
+              : 'Join your DM\'s party session to sync your character live \u2014 over your local network.'}
           </p>
         </div>
 
@@ -533,7 +325,7 @@ export default function Party({ characterId, character, onBugReport }) {
 
         <div className="flex items-start gap-2 text-xs text-amber-200/25 border border-amber-200/8 rounded p-3">
           <Wifi size={13} className="shrink-0 mt-0.5" />
-          <span>All players must be on the <strong className="text-amber-200/40">same WiFi or local network</strong> as the host. Windows may ask to allow network access the first time — click <strong className="text-amber-200/40">Allow</strong>.</span>
+          <span>All players must be on the <strong className="text-amber-200/40">same WiFi or local network</strong> as the host. Windows may ask to allow network access the first time \u2014 click <strong className="text-amber-200/40">Allow</strong>.</span>
         </div>
       </div>
     );
@@ -585,7 +377,7 @@ export default function Party({ characterId, character, onBugReport }) {
               <Wifi size={12} className="text-amber-200/30" />
               <span className="text-xs text-amber-200/40">Your IP:</span>
               <span className="font-mono text-sm text-amber-100 font-semibold">{hostIp}</span>
-              <span className="text-xs text-amber-200/25">— share this with your players</span>
+              <span className="text-xs text-amber-200/25">\u2014 share this with your players</span>
             </div>
           )}
         </div>
@@ -594,7 +386,7 @@ export default function Party({ characterId, character, onBugReport }) {
       {status === 'disconnected' && !mode && (
         <div className="card border-red-400/20 bg-red-400/5 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-red-400/80"><WifiOff size={16} /> Connection lost</div>
-          <button onClick={connect} className="btn-secondary text-xs border-red-400/30 text-red-400">Reconnect</button>
+          <button onClick={() => connect(charSnapshot)} className="btn-secondary text-xs border-red-400/30 text-red-400">Reconnect</button>
         </div>
       )}
 
@@ -620,7 +412,7 @@ export default function Party({ characterId, character, onBugReport }) {
       ) : status === 'connected' ? (
         <div className="card border-dashed border-amber-200/10 text-center py-10">
           <Users size={28} className="mx-auto text-amber-200/20 mb-3" />
-          <p className="text-sm text-amber-200/30 mb-1">Waiting for party members…</p>
+          <p className="text-sm text-amber-200/30 mb-1">Waiting for party members\u2026</p>
           <p className="text-xs text-amber-200/20">Share code <span className="font-mono text-gold/60">{roomCode}</span> and IP <span className="font-mono text-gold/60">{hostIp}</span> with your players</p>
         </div>
       ) : null}
@@ -649,7 +441,7 @@ export default function Party({ characterId, character, onBugReport }) {
         show={showLeaveConfirm}
         title={mode === 'host' ? 'End Party Session?' : 'Leave Party?'}
         message={mode === 'host' ? 'This will disconnect all players and end the session.' : 'You will be disconnected from the party.'}
-        onConfirm={handleLeave}
+        onConfirm={() => { setShowLeaveConfirm(false); handleLeave(); }}
         onCancel={() => setShowLeaveConfirm(false)}
       />
     </div>

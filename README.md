@@ -1,6 +1,6 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.3.0**
+**Current Version: V0.3.1**
 
 A native desktop application for managing D&D 5e characters with full ruleset support, a 964-article encyclopedia, real-time party sync, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
@@ -113,7 +113,9 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 
 ### Additional Features
 - Arcane Encyclopedia — 964-article searchable wiki with FTS5
-- Party Connect — LAN sync with room codes, auto-reconnect, DM party stats overview
+- Party Connect — LAN sync with room codes, auto-reconnect, DM party stats overview, persistent connection across navigation
+- Dev Build Banner — "DEV BUILD" indicator shown in dev mode, hidden in production
+- GitHub Auto-Update — dev builds poll for new commits every 60s, one-click Pull & Reload with auto-stash
 - Rest Mechanics (Long/Short Rest with proper D&D rules)
 - Level-Up System with animated overlay and class-specific gains
 - Frontend error logging — console errors, unhandled exceptions, and promise rejections captured to log file
@@ -203,6 +205,15 @@ npm run tauri build
 - Auto-save (debounced 800ms), auto-backup every 5 minutes
 
 ## Changelog Summary
+
+### V0.3.1 — Party Connect Overhaul, Dev Build Banner & Auto-Update System
+- Party Connect moved from Settings tab to its own sidebar section under Tools (both modes)
+- Party session now persists across navigation — WebSocket connection lifted to React context
+- Fixed stale character data on reconnect and concurrent WebSocket race conditions
+- Dev Build Banner — purple "DEV BUILD" banner at top of screen in dev mode, hidden in production
+- GitHub Auto-Update for dev builds — polls every 60s, shows commit message, one-click Pull & Reload
+- Auto-stashes dirty working tree before pulling, pops after; handles main vs master branch
+- Version sync across all config files
 
 ### V0.3.0 — Arcane Advisor (AI Assistant)
 - Optional AI Assistant powered by local Ollama models — no internet, no API keys

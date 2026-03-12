@@ -1,8 +1,9 @@
-import { useState, Component } from 'react';
+import { useState, useEffect, useCallback, Component } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
 import { ModeProvider, useAppMode } from './contexts/ModeContext';
+import { useDevUpdateCheck } from './hooks/useDevUpdateCheck';
 import ModeSelect from './pages/ModeSelect';
 import Dashboard from './pages/Dashboard';
 import CharacterView from './pages/CharacterView';
@@ -12,9 +13,6 @@ import UpdateScreen from './pages/UpdateScreen';
 import CharacterSetup from './pages/CharacterSetup';
 
 // ─── Error Boundary ──────────────────────────────────────────────────────────
-// Catches any unhandled React error and shows a recovery screen instead of
-// a blank white page. This is critical for production — without it, a single
-// component crash kills the entire app.
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -77,14 +75,79 @@ class ErrorBoundary extends Component {
   }
 }
 
+// ─── Dev Banner ─────────────────────────────────────────────────────────────
+
+const DEV_BANNER_HEIGHT = 24;
+const DEV_BANNER_HEIGHT_UPDATE = 36;
+
+function DevBanner({ onHeightChange }) {
+  const { hasUpdate, updateInfo, pulling, pullUpdates } = useDevUpdateCheck();
+
+  // Notify parent of height changes so padding stays in sync
+  useEffect(() => {
+    if (onHeightChange) onHeightChange(hasUpdate ? DEV_BANNER_HEIGHT_UPDATE : DEV_BANNER_HEIGHT);
+  }, [hasUpdate, onHeightChange]);
+
+  if (!import.meta.env.DEV) return null;
+
+  const height = hasUpdate ? DEV_BANNER_HEIGHT_UPDATE : DEV_BANNER_HEIGHT;
+
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
+      height: `${height}px`,
+      background: hasUpdate
+        ? 'linear-gradient(90deg, #b45309, #92400e)'
+        : 'linear-gradient(90deg, #7c3aed, #6d28d9)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+      fontFamily: 'var(--font-ui, "DM Sans", sans-serif)',
+      fontSize: hasUpdate ? '12px' : '10px',
+      fontWeight: 600,
+      color: 'rgba(255,255,255,0.9)',
+      letterSpacing: '0.04em',
+      transition: 'all 0.3s ease',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+    }}>
+      {hasUpdate ? (
+        <>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '14px' }}>&#x26A1;</span>
+            Update available: {updateInfo?.commit_message || updateInfo?.remote_sha}
+          </span>
+          <button
+            onClick={pullUpdates}
+            disabled={pulling}
+            style={{
+              padding: '2px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: 700,
+              background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)',
+              color: 'white', cursor: pulling ? 'wait' : 'pointer',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => { if (!pulling) e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; }}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+          >
+            {pulling ? 'Pulling...' : 'Pull & Reload'}
+          </button>
+        </>
+      ) : (
+        <span style={{ opacity: 0.8 }}>DEV BUILD</span>
+      )}
+    </div>
+  );
+}
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 function AppContent() {
   const [updateDone, setUpdateDone] = useState(false);
   const { mode } = useAppMode();
+  const [bannerHeight, setBannerHeight] = useState(import.meta.env.DEV ? DEV_BANNER_HEIGHT : 0);
 
   return (
-    <>
+    <div style={bannerHeight > 0 ? { paddingTop: `${bannerHeight}px` } : undefined}>
+      {/* Dev build banner */}
+      <DevBanner onHeightChange={setBannerHeight} />
+
       {/* Ambient background effects */}
       <div className="ambient" />
       <div className="ambient-noise" />
@@ -131,7 +194,7 @@ function AppContent() {
           </Routes>
         </BrowserRouter>
       )}
-    </>
+    </div>
   );
 }
 

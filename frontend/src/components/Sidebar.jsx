@@ -4,7 +4,7 @@ import {
   ScrollText, BookOpen, Shield, Sparkles, Swords,
   BookMarked, Users, Map, Globe, Dice5, ArrowLeft, User, Download,
   Library, Settings2, Heart, Bell, Bug, Terminal, Crown, LayoutDashboard,
-  Star, Search, X, Zap,
+  Star, Search, X, Zap, Wifi,
 } from 'lucide-react';
 import { useAppMode } from '../contexts/ModeContext';
 
@@ -41,6 +41,7 @@ const PLAYER_SECTION_GROUPS = [
     items: [
       { id: 'dice',       label: 'Dice Roller',        icon: Dice5 },
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
+      { id: 'party-connect', label: 'Party Connect',   icon: Wifi },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
       { id: 'export',     label: 'Export & Import',    icon: Download },
@@ -84,6 +85,7 @@ const DM_SECTION_GROUPS = [
     items: [
       { id: 'dice',       label: 'Dice Roller',        icon: Dice5 },
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
+      { id: 'party-connect', label: 'Party Connect',   icon: Wifi },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
       { id: 'export',     label: 'Export & Import',    icon: Download },

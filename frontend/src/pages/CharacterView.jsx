@@ -6,6 +6,7 @@ import { getOverview } from '../api/overview';
 import { getConditions } from '../api/combat';
 import { getBackstory } from '../api/backstory';
 import { RulesetProvider } from '../contexts/RulesetContext';
+import { PartyProvider } from '../contexts/PartyContext';
 import Sidebar from '../components/Sidebar';
 import LevelUpOverlay from '../components/LevelUpOverlay';
 import BeginnerWizard from '../components/BeginnerWizard';
@@ -77,6 +78,7 @@ const SECTIONS = {
   'campaign-hub': CampaignHub,
   'encounter': Combat,
   'party-overview': Party,
+  'party-connect': Party,
   'ai-assistant': AiAssistant,
   ...(DevTools ? { devtools: DevTools } : {}),
 };
@@ -102,6 +104,7 @@ const SECTION_LABELS = {
   'campaign-hub': 'Campaign Hub',
   'encounter': 'Encounter Runner',
   'party-overview': 'Party Overview',
+  'party-connect': 'Party Connect',
   'ai-assistant': 'Arcane Advisor',
 };
 
@@ -296,6 +299,7 @@ export default function CharacterView() {
 
   return (
     <RulesetProvider rulesetId={rulesetId}>
+      <PartyProvider>
       <div style={{ display: 'flex', minHeight: '100vh' }}>
         <Sidebar
           character={character}
@@ -416,6 +420,7 @@ export default function CharacterView() {
           onDismiss={dismiss}
         />
       </div>
+      </PartyProvider>
     </RulesetProvider>
   );
 }

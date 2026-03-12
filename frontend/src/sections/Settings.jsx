@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Settings2, Palette, Type, LayoutGrid, Wifi, RotateCcw, Zap } from 'lucide-react';
+import { Settings2, Palette, Type, LayoutGrid, RotateCcw, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
-import Party from './Party';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { checkOllamaStatus, listModels } from '../api/assistant';
 
@@ -295,7 +294,6 @@ export default function Settings({ characterId, character, onBugReport }) {
     { id: 'interface', label: 'Interface', icon: Palette },
     { id: 'typography', label: 'Typography', icon: Type },
     { id: 'layout', label: 'Layout', icon: LayoutGrid },
-    { id: 'party', label: 'Party Connect', icon: Wifi },
     { id: 'ai', label: 'AI Assistant', icon: Zap },
   ];
 
@@ -559,11 +557,6 @@ export default function Settings({ characterId, character, onBugReport }) {
 
           <button className="reset-btn" onClick={() => setShowResetConfirm(true)}>↺ Reset all to defaults</button>
         </div>
-      )}
-
-      {/* ── PARTY TAB ── */}
-      {activeTab === 'party' && (
-        <Party characterId={characterId} character={character} onBugReport={onBugReport} />
       )}
 
       {/* ── AI ASSISTANT TAB ── */}

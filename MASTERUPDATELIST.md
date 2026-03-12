@@ -4,6 +4,40 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.3.1 — Party Connect Overhaul, Dev Build Banner & Auto-Update System
+**Released:** March 11, 2026
+
+### Party Connect
+- **Moved to sidebar** — Party Connect is now its own section under Tools (both Player and DM modes) instead of being buried inside the Settings tab
+- **Persistent WebSocket connection** — party state lifted to a React context (`PartyContext`) so navigating between sections no longer unmounts the component or kills the WebSocket — no more accidental disbanding
+- **Stale snapshot fix** — reconnect timer now reads fresh character data via `charSnapshotRef` instead of using the stale closure from the initial connection
+- **Race condition guard** — `connectingRef` flag prevents multiple simultaneous WebSocket connections from racing during rapid navigation
+- **sendUpdate keeps snapshot fresh** — every stat sync also updates `charSnapshotRef` so reconnect always has the latest HP, AC, level, etc.
+
+### Dev Build Banner
+- **"DEV BUILD" banner** — fixed purple banner at the top of the screen, only visible when running `npm run tauri dev` (uses `import.meta.env.DEV`)
+- **Completely hidden in production** — `import.meta.env.DEV` is false in production builds, so the banner and all dev update code is tree-shaken out
+- **Dynamic height** — banner is 24px normally, expands to 36px when an update is available; content padding adjusts automatically to prevent overlap
+
+### GitHub Auto-Update System (Dev Builds Only)
+- **Automatic polling** — checks GitHub for new commits on launch and every 60 seconds thereafter
+- **Toast notification** — when a new commit is detected, shows a toast with the commit message
+- **Orange update banner** — "DEV BUILD" banner turns orange with the commit message and a "Pull & Reload" button
+- **Pull & Reload** — one-click: auto-stashes dirty working tree, runs `git pull --ff-only`, pops stash, reloads the app window
+- **Rust commands** — `check_git_updates` (fetch + compare HEAD vs origin) and `pull_git_updates` (stash + pull + pop)
+- **Edge case handling:**
+  - Validates `.git/` directory exists before running any git commands
+  - Checks `origin` remote exists before fetching
+  - Auto-detects `main` vs `master` branch on origin
+  - Dirty working tree auto-stashed before pull, popped after
+  - Fast-forward failures return clear error message instead of raw git output
+  - Safe string slicing with `.get(..7)` to prevent panics on empty SHA
+
+### Version Sync
+- All version files bumped to 0.3.1: VERSION, version.json, version.js, package.json (root + frontend), tauri.conf.json, Cargo.toml
+
+---
+
 ## V0.3.0 — Arcane Advisor (AI Assistant)
 **Released:** March 12, 2026
 

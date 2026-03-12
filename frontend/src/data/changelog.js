@@ -3,6 +3,23 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.3.1',
+    date: '03/11/2026',
+    title: 'Party Connect Overhaul, Dev Build Banner & Auto-Update System',
+    changes: [
+      'Party Connect moved from Settings tab to its own sidebar section under Tools (both Player and DM modes)',
+      'Party Connect now persists across navigation — WebSocket connection lifted to React context so switching tabs no longer disbands the party',
+      'Reconnect uses fresh character data instead of stale snapshot from initial connection',
+      'Race condition guard prevents duplicate WebSocket connections during rapid navigation',
+      'Dev Build Banner — purple "DEV BUILD" banner shown at top of screen in development mode, hidden in production builds',
+      'GitHub Auto-Update System — dev builds poll GitHub every 60 seconds for new commits',
+      'Update notification with commit message shown as toast and orange banner with "Pull & Reload" button',
+      'Pull & Reload auto-stashes dirty working tree, pulls latest code, pops stash, and reloads the app',
+      'Git edge case handling — detects main vs master branch, validates git repo and remote exist, handles merge conflicts gracefully',
+      'Dynamic banner height — padding adjusts when update banner expands to prevent content overlap',
+    ],
+  },
+  {
     version: 'V0.2.6',
     date: '03/11/2026 8:00 PM',
     title: 'Code Review Fixes — Security, Stability & Bug Fixes',
