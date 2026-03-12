@@ -1,6 +1,6 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.3.6**
+**Current Version: V0.3.7**
 
 A native desktop application for managing D&D 5e characters with full ruleset support, a 1,200+ article encyclopedia, real-time party sync, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
@@ -211,6 +211,11 @@ npm run tauri build
 - Auto-save (debounced 800ms), auto-backup every 5 minutes
 
 ## Changelog Summary
+
+### V0.3.7 — Auto-Pull Updates
+- Automatic pull and reload when a new commit is detected — no manual interaction needed
+- Both devs get updates within seconds of a push, app reloads automatically
+- Fixed trailing-space directory name bug that silently broke all git sync commands
 
 ### V0.3.6 — Dev Sync Diagnostics & UX Fixes
 - Diagnostic logging in git update checker — prints local/remote SHA, fetch result, and update decision to terminal for debugging sync issues

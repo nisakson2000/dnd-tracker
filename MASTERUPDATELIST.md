@@ -4,6 +4,29 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.3.7 — Auto-Pull Updates
+**Released:** March 11, 2026
+
+### Automatic Update Pull & Reload
+- **Auto-pull on detection** — when `check_git_updates` detects a new remote commit, the app automatically pulls it and reloads within ~7 seconds (5s poll + 2s delay)
+- **No manual interaction** — removed the "Pull & Reload" button workflow; updates are fully automatic
+- **Toast notification** — shows "Auto-pulling update: <commit message>" before pulling
+- **Auto-reload** — `window.location.reload()` fires after successful pull; `tauri dev` handles Rust recompilation automatically
+- **Peer broadcast auto-pull** — when a LAN peer pushes and broadcasts via UDP, the app immediately checks and auto-pulls instead of just showing a notification
+
+### Bug Fix
+- **Trailing-space directory name fix** — `repo_root()` used `.trim()` which stripped the trailing space from the directory name `dnd-tracker-main `, making the path invalid and silently breaking every git command. Changed to `.trim_end_matches('\n')` to preserve directory name spaces.
+
+### Cleanup
+- Removed `isEnabled('auto-pull')` feature flag check — auto-pull is now always on
+- Removed `fetchDiffPreview` and `fetchConflictInfo` from update check flow (not needed for auto-pull)
+- Simplified `pullUpdates` — always reloads after pull
+
+### Version Sync
+- All version files bumped to 0.3.7: VERSION, version.json, version.js, package.json (root + frontend), tauri.conf.json, Cargo.toml
+
+---
+
 ## V0.3.6 — Dev Sync Diagnostics & UX Fixes
 **Released:** March 11, 2026
 

@@ -2,11 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import toast from 'react-hot-toast';
-import { isEnabled } from '../dev/featureFlags';
-
 const GIT_POLL_INTERVAL = 5_000; // 5 seconds for git polling
 const PEER_POLL_INTERVAL = 3_000; // 3 seconds for peer list refresh
 const ROLLBACK_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const AUTO_PULL_DELAY = 2_000; // 2s delay before auto-pulling (let fetch settle)
 
 export function useDevUpdateCheck() {
   const [hasUpdate, setHasUpdate] = useState(false);
@@ -17,9 +16,10 @@ export function useDevUpdateCheck() {
   const [conflictInfo, setConflictInfo] = useState(null);
   const [canRollback, setCanRollback] = useState(false);
   const mountedRef = useRef(true);
-  const hasNotifiedRef = useRef(false);
   const presenceStartedRef = useRef(false);
   const checkingRef = useRef(false); // prevent concurrent git checks
+  const autoPullingRef = useRef(false); // prevent concurrent auto-pulls
+  const pullUpdatesRef = useRef(null); // stable ref to latest pullUpdates
 
   // Check rollback eligibility on mount
   useEffect(() => {
@@ -40,33 +40,9 @@ export function useDevUpdateCheck() {
     }
   }, []);
 
-  const fetchDiffPreview = useCallback(async () => {
-    try {
-      const preview = await invoke('dev_preview_incoming');
-      if (mountedRef.current) {
-        setDiffPreview(preview);
-      }
-      return preview;
-    } catch {
-      // ignore — preview is best-effort
-      return null;
-    }
-  }, []);
-
-  const fetchConflictInfo = useCallback(async () => {
-    try {
-      const info = await invoke('dev_check_conflicts');
-      if (mountedRef.current) {
-        setConflictInfo(info);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
   const checkForUpdates = useCallback(async () => {
-    // Skip if already checking (git lock)
-    if (checkingRef.current) return;
+    // Skip if already checking (git lock) or already auto-pulling
+    if (checkingRef.current || autoPullingRef.current) return;
     checkingRef.current = true;
     try {
       const result = await invoke('check_git_updates');
@@ -75,51 +51,42 @@ export function useDevUpdateCheck() {
         setHasUpdate(true);
         setUpdateInfo(result);
 
-        // Fetch diff preview and conflict info sequentially (both acquire git lock)
-        await fetchDiffPreview();
-        await fetchConflictInfo();
+        // Show toast and auto-pull
+        toast(
+          `Auto-pulling update: "${result.commit_message || result.remote_sha}"`,
+          {
+            icon: '\u2B07\uFE0F',
+            duration: 3000,
+            style: {
+              background: '#1a1520',
+              color: '#fde68a',
+              border: '1px solid rgba(201,168,76,0.4)',
+            },
+          }
+        );
 
-        if (!hasNotifiedRef.current) {
-          hasNotifiedRef.current = true;
-          toast(
-            `New commit pushed: "${result.commit_message || result.remote_sha}"`,
-            {
-              icon: '\uD83D\uDD04',
-              duration: 8000,
-              style: {
-                background: '#1a1520',
-                color: '#fde68a',
-                border: '1px solid rgba(201,168,76,0.4)',
-              },
-            }
-          );
+        // Auto-pull after a short delay
+        if (!autoPullingRef.current) {
+          autoPullingRef.current = true;
+          setTimeout(() => {
+            pullUpdatesRef.current();
+          }, AUTO_PULL_DELAY);
         }
       } else {
         setHasUpdate(false);
-        setUpdateInfo(result); // keep info (local_ahead, has_local_changes) even when no update
+        setUpdateInfo(result);
         setDiffPreview(null);
         setConflictInfo(null);
-        hasNotifiedRef.current = false;
       }
     } catch (err) {
       console.warn('[dev-sync] git check failed:', err);
     } finally {
       checkingRef.current = false;
     }
-  }, [fetchDiffPreview, fetchConflictInfo]);
+  }, []);
 
   const pullUpdates = useCallback(async () => {
     setPulling(true);
-
-    // Capture current diff preview before pulling (to check for .rs changes after)
-    let previewBeforePull = diffPreview;
-    if (!previewBeforePull) {
-      try {
-        previewBeforePull = await invoke('dev_preview_incoming');
-      } catch {
-        // ignore
-      }
-    }
 
     try {
       const result = await invoke('pull_git_updates');
@@ -127,57 +94,24 @@ export function useDevUpdateCheck() {
       // Pull succeeded — record timestamp for rollback window
       localStorage.setItem('dev-last-pull-timestamp', String(Date.now()));
 
-      // Clear the update banner
-      setHasUpdate(false);
-      setUpdateInfo(null);
-      setDiffPreview(null);
-      setConflictInfo(null);
-      hasNotifiedRef.current = false;
-      setPulling(false);
-
-      // Broadcast to other devs that new code was pulled (they should check too)
-      try {
-        await invoke('broadcast_dev_update', { commitMessage: updateInfo?.commit_message || null });
-      } catch { /* ignore if presence not running */ }
-
       // Build success message
       let message = 'Update pulled successfully!';
       if (result.stash_warning) {
         message += ` ${result.stash_warning}`;
       }
 
-      // Check if Rust files changed — need tauri dev restart
-      const hasRustChanges = previewBeforePull?.has_rust_changes || false;
-      if (hasRustChanges) {
-        message += ' Rust files changed \u2014 restart `tauri dev` needed.';
-      }
-
       // Store result in localStorage so notification survives the reload
       localStorage.setItem('dev-update-result', JSON.stringify({
         success: true,
         message,
-        hasRustChanges,
       }));
 
-      if (hasRustChanges) {
-        // Don't auto-reload if Rust files changed — user needs to restart tauri dev
-        toast.success(message, {
-          duration: 12000,
-          style: {
-            background: '#064e3b',
-            color: '#a7f3d0',
-            border: '1px solid rgba(52,211,153,0.4)',
-            fontWeight: 600,
-          },
-        });
-      } else {
-        // HMR reload for frontend-only changes
-        window.location.reload();
-      }
+      // Always reload — tauri dev auto-recompiles Rust changes
+      window.location.reload();
     } catch (err) {
-      // Pull failed — keep the banner showing so they can retry
       setPulling(false);
-      toast.error(`Update failed: ${err}`, {
+      autoPullingRef.current = false;
+      toast.error(`Auto-pull failed: ${err}`, {
         duration: 8000,
         style: {
           background: '#450a0a',
@@ -187,7 +121,10 @@ export function useDevUpdateCheck() {
         },
       });
     }
-  }, [updateInfo, diffPreview]);
+  }, []);
+
+  // Keep ref in sync so setTimeout callback always uses latest pullUpdates
+  pullUpdatesRef.current = pullUpdates;
 
   const rollbackUpdate = useCallback(async () => {
     try {
@@ -261,40 +198,17 @@ export function useDevUpdateCheck() {
     startPresence();
 
     // Listen for Tauri event when another dev broadcasts an update_pushed
-    // This triggers an IMMEDIATE git check instead of waiting for the 60s poll
+    // Triggers an immediate git check + auto-pull
     let unlistenUpdate = null;
     listen('dev-update-pushed', (event) => {
       if (!mountedRef.current) return;
       const { dev_name, commit_message } = event.payload;
 
-      // If auto-pull is enabled, pull immediately without user interaction
-      if (isEnabled('auto-pull')) {
-        toast(
-          `Auto-pulling update from ${dev_name || 'a dev'}: "${commit_message || 'new code'}"`,
-          {
-            icon: '\u2B07\uFE0F',
-            duration: 3000,
-            style: {
-              background: '#1a1520',
-              color: '#fde68a',
-              border: '1px solid rgba(201,168,76,0.4)',
-            },
-          }
-        );
-        // Small delay to let the fetch happen first
-        setTimeout(() => {
-          checkForUpdates().then(() => {
-            pullUpdates();
-          });
-        }, 1000);
-        return;
-      }
-
       toast(
-        `${dev_name || 'A dev'} pushed: "${commit_message || 'new code'}"`,
+        `${dev_name || 'A dev'} pushed: "${commit_message || 'new code'}" — auto-pulling...`,
         {
           icon: '\uD83D\uDCE1',
-          duration: 5000,
+          duration: 3000,
           style: {
             background: '#1a1520',
             color: '#fde68a',
@@ -302,7 +216,7 @@ export function useDevUpdateCheck() {
           },
         }
       );
-      // Immediately check for updates instead of waiting for the poll
+      // Immediately check — auto-pull happens inside checkForUpdates
       checkForUpdates();
     }).then(fn => { unlistenUpdate = fn; });
 
@@ -337,7 +251,7 @@ export function useDevUpdateCheck() {
       clearInterval(gitInterval);
       if (unlistenUpdate) unlistenUpdate();
     };
-  }, [checkForUpdates, pullUpdates]);
+  }, [checkForUpdates]);
 
   const setActiveSection = useCallback(async (section) => {
     try {
