@@ -39,7 +39,11 @@ fn repo_root() -> Result<PathBuf, String> {
 
     if let Ok(output) = output {
         if output.status.success() {
-            let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            // Only trim newlines, NOT spaces — directory names can have trailing spaces
+            let path = String::from_utf8_lossy(&output.stdout)
+                .trim_end_matches('\n')
+                .trim_end_matches('\r')
+                .to_string();
             if !path.is_empty() {
                 return Ok(PathBuf::from(path));
             }
