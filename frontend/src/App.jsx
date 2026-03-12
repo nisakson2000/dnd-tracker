@@ -364,60 +364,60 @@ export default function App() {
         </Suspense>
       )}
 
-      {/* Dev Settings overlay — opened from wrench icon in banner */}
-      {import.meta.env.DEV && (
-        <AnimatePresence>
-          {showDevSettings && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              style={{
-                position: 'fixed', inset: 0, zIndex: 99998,
-                top: 'var(--dev-banner-h, 24px)',
-                background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
-              }}
-              onClick={e => e.target === e.currentTarget && setShowDevSettings(false)}
-            >
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 20, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                style={{ height: '100%', overflow: 'auto' }}
-              >
-                {/* Close button */}
-                <button
-                  onClick={() => setShowDevSettings(false)}
-                  style={{
-                    position: 'fixed', top: 'calc(var(--dev-banner-h, 24px) + 12px)', right: '16px',
-                    zIndex: 99999, width: 32, height: 32, borderRadius: 8,
-                    background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
-                    color: 'rgba(255,255,255,0.7)', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '16px',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                >
-                  &#x2715;
-                </button>
-                <Suspense fallback={
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-heading)' }}>
-                    Loading Dev Settings...
-                  </div>
-                }>
-                  <DevDashboard />
-                </Suspense>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      )}
-
       <ErrorBoundary>
         <ModeProvider>
+          {/* Dev Settings overlay — opened from wrench icon in banner */}
+          {import.meta.env.DEV && (
+            <AnimatePresence>
+              {showDevSettings && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  style={{
+                    position: 'fixed', inset: 0, zIndex: 99998,
+                    top: 'var(--dev-banner-h, 24px)',
+                    background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+                  }}
+                  onClick={e => e.target === e.currentTarget && setShowDevSettings(false)}
+                >
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 20, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ height: '100%', overflow: 'auto' }}
+                  >
+                    {/* Close button */}
+                    <button
+                      onClick={() => setShowDevSettings(false)}
+                      style={{
+                        position: 'fixed', top: 'calc(var(--dev-banner-h, 24px) + 12px)', right: '16px',
+                        zIndex: 99999, width: 32, height: 32, borderRadius: 8,
+                        background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+                        color: 'rgba(255,255,255,0.7)', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '16px',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                    >
+                      &#x2715;
+                    </button>
+                    <Suspense fallback={
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-heading)' }}>
+                        Loading Dev Settings...
+                      </div>
+                    }>
+                      <DevDashboard />
+                    </Suspense>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
+
           <AppContent />
         </ModeProvider>
       </ErrorBoundary>
