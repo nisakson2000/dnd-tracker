@@ -117,7 +117,7 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - Arcane Encyclopedia — 1,200+ article searchable wiki with FTS5
 - Party Connect — LAN sync with room codes, auto-reconnect, DM party stats overview, persistent connection across navigation
 - Dev Build Banner — "DEV BUILD" indicator with live dev count, hidden in production
-- GitHub Auto-Update — dev builds poll for new commits every 60s, one-click Pull & Reload with auto-stash, rebase fallback, instant peer push notifications
+- GitHub Auto-Update — dev builds poll for new commits every 5s, one-click Pull & Reload with auto-stash, rebase fallback, instant peer push notifications
 - Dev Tools Panel (Ctrl+Shift+D) — DB inspector, IPC logger, performance overlay, log viewer, environment check, schema migration runner, feature flags, enhanced bug reports, test character generator
 - LAN Dev Presence — UDP broadcast peer discovery, version-aware, instant update push notifications between devs
 - Rest Mechanics (Long/Short Rest with proper D&D rules)
@@ -211,6 +211,19 @@ npm run tauri build
 - Auto-save (debounced 800ms), auto-backup every 5 minutes
 
 ## Changelog Summary
+
+### V0.3.5 — Wiki Bestiary Expansion
+- 266 new monster entries — full SRD 5.1 bestiary (total 1,235 wiki articles, 315 monsters)
+- All 10 chromatic & metallic dragon age chains, complete CR 0–30 coverage
+- 114 new cross-references, legendary creatures, corrected Incapacitated condition
+
+### V0.3.4 — Dev Presence Reliability Fix
+- Direct unicast to known peers — bypasses firewalls/routers that drop 255.255.255.255 broadcast
+- Subnet-directed broadcast, faster 3s heartbeat, 20s peer timeout
+- Instance UUID self-filter — prevents false filtering when machines share same hostname
+- Presence diagnostics command for debugging peer detection issues
+- Git polling reduced to 5s, pre-commit hook auto-updates README + MASTERUPDATELIST
+- Dev Settings dashboard with 13 sections, "builds synced" indicator
 
 ### V0.3.3 — Arcane Advisor Overhaul
 - All Ollama communication routed through Rust backend via reqwest + Tauri Channel streaming (fixes WebKitGTK CSP)
