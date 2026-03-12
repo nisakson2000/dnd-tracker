@@ -341,9 +341,27 @@ impl DevPresence {
 }
 
 fn get_local_ip_sync() -> Option<String> {
-    let socket = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
-    socket.connect("8.8.8.8:80").ok()?;
-    socket.local_addr().ok().map(|a| a.ip().to_string())
+    // Primary: probe a public DNS to discover which local interface is used
+    if let Ok(socket) = std::net::UdpSocket::bind("0.0.0.0:0") {
+        if socket.connect("8.8.8.8:80").is_ok() {
+            if let Ok(addr) = socket.local_addr() {
+                let ip = addr.ip().to_string();
+                if ip != "127.0.0.1" {
+                    return Some(ip);
+                }
+            }
+        }
+    }
+
+    // Fallback: use hostname to get an IP (works without internet)
+    if let Ok(host) = hostname::get() {
+        let host_str = host.to_string_lossy().to_string();
+        // Use the hostname as a unique identifier even if we can't get the IP
+        // This prevents two devs from both getting 127.0.0.1 and filtering each other
+        return Some(format!("host-{}", host_str));
+    }
+
+    None
 }
 
 // ─── Tauri Commands ──────────────────────────────────────────────────────────

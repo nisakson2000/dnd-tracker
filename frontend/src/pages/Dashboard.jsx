@@ -13,6 +13,11 @@ import { RULESET_OPTIONS, getRuleset } from '../data/rulesets';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { APP_VERSION } from '../version';
 import { useAppMode } from '../contexts/ModeContext';
+import { lazy, Suspense } from 'react';
+
+const DevDashboard = import.meta.env.DEV
+  ? lazy(() => import('./DevDashboard'))
+  : () => null;
 
 // ─── Class definitions ──────────────────────────────────────────────────────
 
@@ -1118,6 +1123,15 @@ function EmptyState({ onOpen, onImport, isDM }) {
 
 export default function Dashboard() {
   const { mode: appMode, clearMode } = useAppMode();
+
+  if (appMode === 'dev') {
+    return (
+      <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-deep)', color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-heading)' }}>Loading Dev Settings...</div>}>
+        <DevDashboard />
+      </Suspense>
+    );
+  }
+
   const isDM = appMode === 'dm';
   const [characters, setCharacters] = useState([]);
   const [loading, setLoading]       = useState(true);
@@ -1429,13 +1443,13 @@ export default function Dashboard() {
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '6px 14px', borderRadius: 99,
-          background: appMode === 'dm' ? 'rgba(155,89,182,0.1)' : 'rgba(201,168,76,0.08)',
-          border: `1px solid ${appMode === 'dm' ? 'rgba(155,89,182,0.25)' : 'rgba(201,168,76,0.18)'}`,
+          background: appMode === 'dm' ? 'rgba(155,89,182,0.1)' : appMode === 'dev' ? 'rgba(124,58,237,0.1)' : 'rgba(201,168,76,0.08)',
+          border: `1px solid ${appMode === 'dm' ? 'rgba(155,89,182,0.25)' : appMode === 'dev' ? 'rgba(124,58,237,0.3)' : 'rgba(201,168,76,0.18)'}`,
           fontFamily: 'var(--font-heading)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
-          color: appMode === 'dm' ? 'rgba(155,89,182,0.7)' : 'rgba(201,168,76,0.55)',
+          color: appMode === 'dm' ? 'rgba(155,89,182,0.7)' : appMode === 'dev' ? 'rgba(124,58,237,0.7)' : 'rgba(201,168,76,0.55)',
         }}>
-          <span>{appMode === 'dm' ? '📖' : '⚔'}</span>
-          {appMode === 'dm' ? 'DM Mode' : 'Player Mode'}
+          <span>{appMode === 'dm' ? '📖' : appMode === 'dev' ? '🛠' : '⚔'}</span>
+          {appMode === 'dm' ? 'DM Mode' : appMode === 'dev' ? 'Dev Mode' : 'Player Mode'}
         </div>
         <button
           onClick={clearMode}

@@ -4,7 +4,7 @@ import { listen } from '@tauri-apps/api/event';
 import toast from 'react-hot-toast';
 import { isEnabled } from '../dev/featureFlags';
 
-const GIT_POLL_INTERVAL = 60_000; // 60 seconds for git polling
+const GIT_POLL_INTERVAL = 15_000; // 15 seconds for git polling
 const PEER_POLL_INTERVAL = 3_000; // 3 seconds for peer list refresh
 const ROLLBACK_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
 
