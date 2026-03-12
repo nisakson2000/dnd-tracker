@@ -4,6 +4,40 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.3.3 — Arcane Advisor Overhaul
+**Released:** March 12, 2026
+
+### Rust-Side Ollama Proxy
+- **All Ollama communication routed through Rust backend** — WebKitGTK CSP blocks frontend `fetch()` to localhost on Linux; moved all HTTP calls to three new Rust commands (`check_ollama`, `ollama_chat`, `ollama_pull`) using `reqwest` with `rustls-tls`
+- **Streaming via Tauri Channel API** — `ollama_chat` and `ollama_pull` use `tauri::ipc::Channel<T>` to stream NDJSON chunks to the frontend in real-time
+- **Async generator pattern on frontend** — `streamChat()` bridges Channel callbacks to an `async function*` using a queue + resolveWait pattern for clean token-by-token rendering
+
+### Wiki-Powered Responses
+- **SRD context injection** — every chat query first calls `wiki_search` to find up to 3 relevant wiki articles, injecting their summaries into the system prompt so the model gives accurate D&D 5e answers
+- **Grounded responses** — model answers are based on the app's 964-article encyclopedia rather than relying solely on its training data
+
+### Simplified AI Configuration
+- **Single hardcoded model (phi3.5)** — removed model selector dropdown; phi3.5 is the only supported model, chosen for its balance of D&D knowledge and speed
+- **Auto-download on enable** — toggling AI on in Settings automatically pulls phi3.5 if not already installed, with a progress bar
+- **Removed Test Connection button** — was unreliable due to WebKitGTK restrictions; status is now checked automatically
+- **Removed connection status panel** — simplified Settings AI tab to just an enable toggle and setup guide
+
+### Brief, Focused Responses
+- **Token cap (128) and low temperature (0.3)** — prevents long-winded responses; model answers in 1-3 sentences
+- **Minimal system prompt** — stripped to essential rules only, preventing the model from echoing instructions or outputting JSON
+- **Response cleaning** — `cleanResponse()` strips any JSON, code blocks, or action blocks from streamed output before display
+
+### Floating AI Widget (ArcaneWidget)
+- **Context-aware mini-chat** — floating widget available on all sections (CharacterView, WikiPage, WikiArticlePage), aware of current section context
+- **Smart auto-scroll** — only scrolls to bottom when user is already near the bottom of the chat
+
+### Removed Features
+- **Action blocks removed** — the model no longer attempts to add spells/features/items/NPCs via structured action blocks (was unreliable with small models)
+- **Model selection removed** — no more dropdown; single model simplifies setup and support
+- **Test Connection removed** — replaced by automatic status checking
+
+---
+
 ## V0.3.2 — Dev Sync System, Dev Tools Panel & Robust Auto-Update
 **Released:** March 11, 2026
 

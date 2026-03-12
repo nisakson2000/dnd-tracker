@@ -1,134 +1,1187 @@
 [
-  {"source_slug": "blinded", "target_slug": "invisible", "relationship_type": "related"},
-  {"source_slug": "blinded", "target_slug": "darkness", "relationship_type": "caused_by"},
-  {"source_slug": "charmed", "target_slug": "charm-person", "relationship_type": "caused_by"},
-  {"source_slug": "charmed", "target_slug": "frightened", "relationship_type": "related"},
-  {"source_slug": "frightened", "target_slug": "fear", "relationship_type": "caused_by"},
-  {"source_slug": "grappled", "target_slug": "restrained", "relationship_type": "related"},
-  {"source_slug": "grappled", "target_slug": "grappling-and-shoving", "relationship_type": "see_also"},
-  {"source_slug": "paralyzed", "target_slug": "incapacitated", "relationship_type": "includes"},
-  {"source_slug": "paralyzed", "target_slug": "stunned", "relationship_type": "related"},
-  {"source_slug": "petrified", "target_slug": "incapacitated", "relationship_type": "includes"},
-  {"source_slug": "poisoned", "target_slug": "protection-from-poison", "relationship_type": "cured_by"},
-  {"source_slug": "prone", "target_slug": "movement-and-position", "relationship_type": "see_also"},
-  {"source_slug": "restrained", "target_slug": "grappled", "relationship_type": "related"},
-  {"source_slug": "stunned", "target_slug": "incapacitated", "relationship_type": "includes"},
-  {"source_slug": "unconscious", "target_slug": "incapacitated", "relationship_type": "includes"},
-  {"source_slug": "unconscious", "target_slug": "prone", "relationship_type": "includes"},
-  {"source_slug": "exhaustion", "target_slug": "exhaustion-2024", "relationship_type": "variant"},
-  {"source_slug": "exhaustion-2024", "target_slug": "exhaustion", "relationship_type": "variant"},
-
-  {"source_slug": "ability-checks", "target_slug": "advantage-and-disadvantage", "relationship_type": "see_also"},
-  {"source_slug": "ability-checks", "target_slug": "ability-scores-overview", "relationship_type": "see_also"},
-  {"source_slug": "saving-throws", "target_slug": "ability-scores-overview", "relationship_type": "see_also"},
-  {"source_slug": "saving-throws", "target_slug": "proficiency-bonus", "relationship_type": "see_also"},
-  {"source_slug": "combat-turn", "target_slug": "actions-in-combat", "relationship_type": "see_also"},
-  {"source_slug": "combat-turn", "target_slug": "movement-and-position", "relationship_type": "see_also"},
-  {"source_slug": "combat-turn", "target_slug": "initiative", "relationship_type": "see_also"},
-  {"source_slug": "making-an-attack", "target_slug": "armor-class", "relationship_type": "see_also"},
-  {"source_slug": "making-an-attack", "target_slug": "advantage-and-disadvantage", "relationship_type": "see_also"},
-  {"source_slug": "making-an-attack", "target_slug": "damage-and-healing", "relationship_type": "see_also"},
-  {"source_slug": "damage-and-healing", "target_slug": "damage-types", "relationship_type": "see_also"},
-  {"source_slug": "damage-and-healing", "target_slug": "resting", "relationship_type": "see_also"},
-  {"source_slug": "resting", "target_slug": "exhaustion", "relationship_type": "related"},
-  {"source_slug": "spellcasting-rules", "target_slug": "cover", "relationship_type": "see_also"},
-  {"source_slug": "cover", "target_slug": "armor-class", "relationship_type": "see_also"},
-  {"source_slug": "opportunity-attacks", "target_slug": "movement-and-position", "relationship_type": "see_also"},
-  {"source_slug": "opportunity-attacks", "target_slug": "actions-in-combat", "relationship_type": "see_also"},
-  {"source_slug": "actions-in-combat", "target_slug": "making-an-attack", "relationship_type": "see_also"},
-  {"source_slug": "initiative", "target_slug": "combat-turn", "relationship_type": "see_also"},
-  {"source_slug": "proficiency-bonus", "target_slug": "ability-checks", "relationship_type": "see_also"},
-  {"source_slug": "grappling-and-shoving", "target_slug": "grappled", "relationship_type": "causes"},
-  {"source_slug": "grappling-and-shoving", "target_slug": "prone", "relationship_type": "causes"},
-
-  {"source_slug": "barbarian", "target_slug": "berserker", "relationship_type": "subclass"},
-  {"source_slug": "bard", "target_slug": "college-of-lore", "relationship_type": "subclass"},
-  {"source_slug": "cleric", "target_slug": "life-domain", "relationship_type": "subclass"},
-  {"source_slug": "druid", "target_slug": "circle-of-the-land", "relationship_type": "subclass"},
-  {"source_slug": "fighter", "target_slug": "champion", "relationship_type": "subclass"},
-  {"source_slug": "monk", "target_slug": "way-of-the-open-hand", "relationship_type": "subclass"},
-  {"source_slug": "paladin", "target_slug": "oath-of-devotion", "relationship_type": "subclass"},
-  {"source_slug": "ranger", "target_slug": "hunter", "relationship_type": "subclass"},
-  {"source_slug": "rogue", "target_slug": "thief", "relationship_type": "subclass"},
-  {"source_slug": "sorcerer", "target_slug": "draconic-bloodline", "relationship_type": "subclass"},
-  {"source_slug": "warlock", "target_slug": "the-fiend", "relationship_type": "subclass"},
-  {"source_slug": "wizard", "target_slug": "school-of-evocation", "relationship_type": "subclass"},
-
-  {"source_slug": "berserker", "target_slug": "barbarian", "relationship_type": "parent_class"},
-  {"source_slug": "college-of-lore", "target_slug": "bard", "relationship_type": "parent_class"},
-  {"source_slug": "life-domain", "target_slug": "cleric", "relationship_type": "parent_class"},
-  {"source_slug": "circle-of-the-land", "target_slug": "druid", "relationship_type": "parent_class"},
-  {"source_slug": "champion", "target_slug": "fighter", "relationship_type": "parent_class"},
-  {"source_slug": "way-of-the-open-hand", "target_slug": "monk", "relationship_type": "parent_class"},
-  {"source_slug": "oath-of-devotion", "target_slug": "paladin", "relationship_type": "parent_class"},
-  {"source_slug": "hunter", "target_slug": "ranger", "relationship_type": "parent_class"},
-  {"source_slug": "thief", "target_slug": "rogue", "relationship_type": "parent_class"},
-  {"source_slug": "draconic-bloodline", "target_slug": "sorcerer", "relationship_type": "parent_class"},
-  {"source_slug": "the-fiend", "target_slug": "warlock", "relationship_type": "parent_class"},
-  {"source_slug": "school-of-evocation", "target_slug": "wizard", "relationship_type": "parent_class"},
-
-  {"source_slug": "dwarf", "target_slug": "dwarf-hill", "relationship_type": "subrace"},
-  {"source_slug": "elf", "target_slug": "elf-high", "relationship_type": "subrace"},
-  {"source_slug": "halfling", "target_slug": "halfling-lightfoot", "relationship_type": "subrace"},
-  {"source_slug": "human", "target_slug": "fighter", "relationship_type": "related"},
-  {"source_slug": "gnome", "target_slug": "gnome-rock", "relationship_type": "subrace"},
-
-  {"source_slug": "fireball", "target_slug": "damage-types", "relationship_type": "see_also"},
-  {"source_slug": "fireball", "target_slug": "spellcasting-rules", "relationship_type": "see_also"},
-  {"source_slug": "cure-wounds", "target_slug": "damage-and-healing", "relationship_type": "see_also"},
-  {"source_slug": "healing-word", "target_slug": "damage-and-healing", "relationship_type": "see_also"},
-  {"source_slug": "shield", "target_slug": "armor-class", "relationship_type": "see_also"},
-  {"source_slug": "mage-armor", "target_slug": "armor-class", "relationship_type": "see_also"},
-  {"source_slug": "counterspell", "target_slug": "spellcasting-rules", "relationship_type": "see_also"},
-  {"source_slug": "revivify", "target_slug": "damage-and-healing", "relationship_type": "see_also"},
-  {"source_slug": "hold-person", "target_slug": "paralyzed", "relationship_type": "causes"},
-  {"source_slug": "sleep", "target_slug": "unconscious", "relationship_type": "causes"},
-  {"source_slug": "command", "target_slug": "prone", "relationship_type": "related"},
-  {"source_slug": "entangle", "target_slug": "restrained", "relationship_type": "causes"},
-  {"source_slug": "invisibility", "target_slug": "invisible", "relationship_type": "causes"},
-  {"source_slug": "greater-invisibility", "target_slug": "invisible", "relationship_type": "causes"},
-  {"source_slug": "haste", "target_slug": "slow", "relationship_type": "opposite"},
-  {"source_slug": "slow", "target_slug": "haste", "relationship_type": "opposite"},
-  {"source_slug": "polymorph", "target_slug": "true-polymorph", "relationship_type": "related"},
-  {"source_slug": "lesser-restoration", "target_slug": "greater-restoration", "relationship_type": "related"},
-  {"source_slug": "greater-restoration", "target_slug": "lesser-restoration", "relationship_type": "related"},
-  {"source_slug": "shield-of-faith", "target_slug": "armor-class", "relationship_type": "see_also"},
-  {"source_slug": "spiritual-weapon", "target_slug": "spirit-guardians", "relationship_type": "related"},
-  {"source_slug": "dispel-magic", "target_slug": "counterspell", "relationship_type": "related"},
-  {"source_slug": "magic-missile", "target_slug": "shield", "relationship_type": "countered_by"},
-
-  {"source_slug": "acolyte", "target_slug": "cleric", "relationship_type": "related"},
-  {"source_slug": "acolyte", "target_slug": "paladin", "relationship_type": "related"},
-  {"source_slug": "soldier", "target_slug": "fighter", "relationship_type": "related"},
-  {"source_slug": "criminal", "target_slug": "rogue", "relationship_type": "related"},
-  {"source_slug": "sage", "target_slug": "wizard", "relationship_type": "related"},
-  {"source_slug": "hermit", "target_slug": "druid", "relationship_type": "related"},
-  {"source_slug": "entertainer", "target_slug": "bard", "relationship_type": "related"},
-  {"source_slug": "noble", "target_slug": "paladin", "relationship_type": "related"},
-  {"source_slug": "outlander", "target_slug": "ranger", "relationship_type": "related"},
-
-  {"source_slug": "great-weapon-master", "target_slug": "fighter", "relationship_type": "related"},
-  {"source_slug": "sharpshooter", "target_slug": "ranger", "relationship_type": "related"},
-  {"source_slug": "war-caster", "target_slug": "spellcasting-rules", "relationship_type": "see_also"},
-  {"source_slug": "sentinel", "target_slug": "opportunity-attacks", "relationship_type": "see_also"},
-  {"source_slug": "polearm-master", "target_slug": "opportunity-attacks", "relationship_type": "see_also"},
-  {"source_slug": "lucky", "target_slug": "advantage-and-disadvantage", "relationship_type": "see_also"},
-  {"source_slug": "magic-initiate", "target_slug": "spellcasting-rules", "relationship_type": "see_also"},
-
-  {"source_slug": "longsword", "target_slug": "fighter", "relationship_type": "related"},
-  {"source_slug": "plate", "target_slug": "armor-class", "relationship_type": "see_also"},
-  {"source_slug": "shield-equipment", "target_slug": "armor-class", "relationship_type": "see_also"},
-
-  {"source_slug": "lich", "target_slug": "power-word-kill", "relationship_type": "related"},
-  {"source_slug": "adult-red-dragon", "target_slug": "adult-blue-dragon", "relationship_type": "related"},
-  {"source_slug": "adult-red-dragon", "target_slug": "young-red-dragon", "relationship_type": "related"},
-  {"source_slug": "goblin", "target_slug": "kobold", "relationship_type": "related"},
-  {"source_slug": "skeleton", "target_slug": "zombie", "relationship_type": "related"},
-  {"source_slug": "skeleton", "target_slug": "animate-dead", "relationship_type": "caused_by"},
-  {"source_slug": "zombie", "target_slug": "animate-dead", "relationship_type": "caused_by"},
-  {"source_slug": "vampire", "target_slug": "charmed", "relationship_type": "causes"},
-  {"source_slug": "vampire", "target_slug": "wight", "relationship_type": "related"},
-  {"source_slug": "ghost", "target_slug": "frightened", "relationship_type": "causes"},
-  {"source_slug": "basilisk", "target_slug": "petrified", "relationship_type": "causes"},
-  {"source_slug": "medusa", "target_slug": "petrified", "relationship_type": "causes"}
+  {
+    "source_slug": "blinded",
+    "target_slug": "invisible",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "blinded",
+    "target_slug": "darkness",
+    "relationship_type": "caused_by"
+  },
+  {
+    "source_slug": "charmed",
+    "target_slug": "charm-person",
+    "relationship_type": "caused_by"
+  },
+  {
+    "source_slug": "charmed",
+    "target_slug": "frightened",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "frightened",
+    "target_slug": "fear",
+    "relationship_type": "caused_by"
+  },
+  {
+    "source_slug": "grappled",
+    "target_slug": "restrained",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "grappled",
+    "target_slug": "grappling-and-shoving",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "paralyzed",
+    "target_slug": "incapacitated",
+    "relationship_type": "includes"
+  },
+  {
+    "source_slug": "paralyzed",
+    "target_slug": "stunned",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "petrified",
+    "target_slug": "incapacitated",
+    "relationship_type": "includes"
+  },
+  {
+    "source_slug": "poisoned",
+    "target_slug": "protection-from-poison",
+    "relationship_type": "cured_by"
+  },
+  {
+    "source_slug": "prone",
+    "target_slug": "movement-and-position",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "restrained",
+    "target_slug": "grappled",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "stunned",
+    "target_slug": "incapacitated",
+    "relationship_type": "includes"
+  },
+  {
+    "source_slug": "unconscious",
+    "target_slug": "incapacitated",
+    "relationship_type": "includes"
+  },
+  {
+    "source_slug": "unconscious",
+    "target_slug": "prone",
+    "relationship_type": "includes"
+  },
+  {
+    "source_slug": "exhaustion",
+    "target_slug": "exhaustion-2024",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "exhaustion-2024",
+    "target_slug": "exhaustion",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "ability-checks",
+    "target_slug": "advantage-and-disadvantage",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "ability-checks",
+    "target_slug": "ability-scores-overview",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "saving-throws",
+    "target_slug": "ability-scores-overview",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "saving-throws",
+    "target_slug": "proficiency-bonus",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "combat-turn",
+    "target_slug": "actions-in-combat",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "combat-turn",
+    "target_slug": "movement-and-position",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "combat-turn",
+    "target_slug": "initiative",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "making-an-attack",
+    "target_slug": "armor-class",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "making-an-attack",
+    "target_slug": "advantage-and-disadvantage",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "making-an-attack",
+    "target_slug": "damage-and-healing",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "damage-and-healing",
+    "target_slug": "damage-types",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "damage-and-healing",
+    "target_slug": "resting",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "resting",
+    "target_slug": "exhaustion",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "spellcasting-rules",
+    "target_slug": "cover",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "cover",
+    "target_slug": "armor-class",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "opportunity-attacks",
+    "target_slug": "movement-and-position",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "opportunity-attacks",
+    "target_slug": "actions-in-combat",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "actions-in-combat",
+    "target_slug": "making-an-attack",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "initiative",
+    "target_slug": "combat-turn",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "proficiency-bonus",
+    "target_slug": "ability-checks",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "grappling-and-shoving",
+    "target_slug": "grappled",
+    "relationship_type": "causes"
+  },
+  {
+    "source_slug": "grappling-and-shoving",
+    "target_slug": "prone",
+    "relationship_type": "causes"
+  },
+  {
+    "source_slug": "barbarian",
+    "target_slug": "berserker",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "bard",
+    "target_slug": "college-of-lore",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "cleric",
+    "target_slug": "life-domain",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "druid",
+    "target_slug": "circle-of-the-land",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "fighter",
+    "target_slug": "champion",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "monk",
+    "target_slug": "way-of-the-open-hand",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "paladin",
+    "target_slug": "oath-of-devotion",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "ranger",
+    "target_slug": "hunter",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "rogue",
+    "target_slug": "thief",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "sorcerer",
+    "target_slug": "draconic-bloodline",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "warlock",
+    "target_slug": "the-fiend",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "wizard",
+    "target_slug": "school-of-evocation",
+    "relationship_type": "subclass"
+  },
+  {
+    "source_slug": "berserker",
+    "target_slug": "barbarian",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "college-of-lore",
+    "target_slug": "bard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "life-domain",
+    "target_slug": "cleric",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "circle-of-the-land",
+    "target_slug": "druid",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "champion",
+    "target_slug": "fighter",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "way-of-the-open-hand",
+    "target_slug": "monk",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "oath-of-devotion",
+    "target_slug": "paladin",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "hunter",
+    "target_slug": "ranger",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "thief",
+    "target_slug": "rogue",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "draconic-bloodline",
+    "target_slug": "sorcerer",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "the-fiend",
+    "target_slug": "warlock",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "school-of-evocation",
+    "target_slug": "wizard",
+    "relationship_type": "parent_class"
+  },
+  {
+    "source_slug": "dwarf",
+    "target_slug": "dwarf-hill",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "elf",
+    "target_slug": "elf-high",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "halfling",
+    "target_slug": "halfling-lightfoot",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "human",
+    "target_slug": "fighter",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gnome",
+    "target_slug": "gnome-rock",
+    "relationship_type": "subrace"
+  },
+  {
+    "source_slug": "fireball",
+    "target_slug": "damage-types",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "fireball",
+    "target_slug": "spellcasting-rules",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "cure-wounds",
+    "target_slug": "damage-and-healing",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "healing-word",
+    "target_slug": "damage-and-healing",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "shield",
+    "target_slug": "armor-class",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "mage-armor",
+    "target_slug": "armor-class",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "counterspell",
+    "target_slug": "spellcasting-rules",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "revivify",
+    "target_slug": "damage-and-healing",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "hold-person",
+    "target_slug": "paralyzed",
+    "relationship_type": "causes"
+  },
+  {
+    "source_slug": "sleep",
+    "target_slug": "unconscious",
+    "relationship_type": "causes"
+  },
+  {
+    "source_slug": "command",
+    "target_slug": "prone",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "entangle",
+    "target_slug": "restrained",
+    "relationship_type": "causes"
+  },
+  {
+    "source_slug": "invisibility",
+    "target_slug": "invisible",
+    "relationship_type": "causes"
+  },
+  {
+    "source_slug": "greater-invisibility",
+    "target_slug": "invisible",
+    "relationship_type": "causes"
+  },
+  {
+    "source_slug": "haste",
+    "target_slug": "slow",
+    "relationship_type": "opposite"
+  },
+  {
+    "source_slug": "slow",
+    "target_slug": "haste",
+    "relationship_type": "opposite"
+  },
+  {
+    "source_slug": "polymorph",
+    "target_slug": "true-polymorph",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "lesser-restoration",
+    "target_slug": "greater-restoration",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "greater-restoration",
+    "target_slug": "lesser-restoration",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "shield-of-faith",
+    "target_slug": "armor-class",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "spiritual-weapon",
+    "target_slug": "spirit-guardians",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "dispel-magic",
+    "target_slug": "counterspell",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "magic-missile",
+    "target_slug": "shield",
+    "relationship_type": "countered_by"
+  },
+  {
+    "source_slug": "acolyte",
+    "target_slug": "cleric",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "acolyte",
+    "target_slug": "paladin",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "soldier",
+    "target_slug": "fighter",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "criminal",
+    "target_slug": "rogue",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "sage",
+    "target_slug": "wizard",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "hermit",
+    "target_slug": "druid",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "entertainer",
+    "target_slug": "bard",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "noble",
+    "target_slug": "paladin",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "outlander",
+    "target_slug": "ranger",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "great-weapon-master",
+    "target_slug": "fighter",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "sharpshooter",
+    "target_slug": "ranger",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "war-caster",
+    "target_slug": "spellcasting-rules",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "sentinel",
+    "target_slug": "opportunity-attacks",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "polearm-master",
+    "target_slug": "opportunity-attacks",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "lucky",
+    "target_slug": "advantage-and-disadvantage",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "magic-initiate",
+    "target_slug": "spellcasting-rules",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "longsword",
+    "target_slug": "fighter",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "plate",
+    "target_slug": "armor-class",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "shield-equipment",
+    "target_slug": "armor-class",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "lich",
+    "target_slug": "power-word-kill",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "adult-red-dragon",
+    "target_slug": "adult-blue-dragon",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "adult-red-dragon",
+    "target_slug": "young-red-dragon",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "goblin",
+    "target_slug": "kobold",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "skeleton",
+    "target_slug": "zombie",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "skeleton",
+    "target_slug": "animate-dead",
+    "relationship_type": "caused_by"
+  },
+  {
+    "source_slug": "zombie",
+    "target_slug": "animate-dead",
+    "relationship_type": "caused_by"
+  },
+  {
+    "source_slug": "vampire",
+    "target_slug": "charmed",
+    "relationship_type": "causes"
+  },
+  {
+    "source_slug": "vampire",
+    "target_slug": "wight",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ghost",
+    "target_slug": "frightened",
+    "relationship_type": "causes"
+  },
+  {
+    "source_slug": "basilisk",
+    "target_slug": "petrified",
+    "relationship_type": "causes"
+  },
+  {
+    "source_slug": "medusa",
+    "target_slug": "petrified",
+    "relationship_type": "causes"
+  },
+  {
+    "source_slug": "brass-dragon-wyrmling",
+    "target_slug": "young-brass-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "young-brass-dragon",
+    "target_slug": "adult-brass-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "adult-brass-dragon",
+    "target_slug": "ancient-brass-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "copper-dragon-wyrmling",
+    "target_slug": "young-copper-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "young-copper-dragon",
+    "target_slug": "adult-copper-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "adult-copper-dragon",
+    "target_slug": "ancient-copper-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "black-dragon-wyrmling",
+    "target_slug": "young-black-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "young-black-dragon",
+    "target_slug": "adult-black-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "adult-black-dragon",
+    "target_slug": "ancient-black-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "blue-dragon-wyrmling",
+    "target_slug": "young-blue-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "young-blue-dragon",
+    "target_slug": "adult-blue-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "adult-blue-dragon",
+    "target_slug": "ancient-blue-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "bronze-dragon-wyrmling",
+    "target_slug": "young-bronze-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "young-bronze-dragon",
+    "target_slug": "adult-bronze-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "adult-bronze-dragon",
+    "target_slug": "ancient-bronze-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "green-dragon-wyrmling",
+    "target_slug": "young-green-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "young-green-dragon",
+    "target_slug": "adult-green-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "adult-green-dragon",
+    "target_slug": "ancient-green-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "gold-dragon-wyrmling",
+    "target_slug": "young-gold-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "young-gold-dragon",
+    "target_slug": "adult-gold-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "adult-gold-dragon",
+    "target_slug": "ancient-gold-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "red-dragon-wyrmling",
+    "target_slug": "young-red-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "young-red-dragon",
+    "target_slug": "adult-red-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "adult-red-dragon",
+    "target_slug": "ancient-red-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "silver-dragon-wyrmling",
+    "target_slug": "young-silver-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "young-silver-dragon",
+    "target_slug": "adult-silver-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "adult-silver-dragon",
+    "target_slug": "ancient-silver-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "white-dragon-wyrmling",
+    "target_slug": "young-white-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "young-white-dragon",
+    "target_slug": "adult-white-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "adult-white-dragon",
+    "target_slug": "ancient-white-dragon",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "ogre",
+    "target_slug": "ogre-zombie",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "skeleton",
+    "target_slug": "minotaur-skeleton",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "minotaur-skeleton",
+    "target_slug": "warhorse-skeleton",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "wolf",
+    "target_slug": "dire-wolf",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "dire-wolf",
+    "target_slug": "winter-wolf",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "winter-wolf",
+    "target_slug": "worg",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "black-bear",
+    "target_slug": "brown-bear",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "brown-bear",
+    "target_slug": "polar-bear",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "spider",
+    "target_slug": "giant-spider",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "giant-spider",
+    "target_slug": "giant-wolf-spider",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "giant-wolf-spider",
+    "target_slug": "phase-spider",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "rat",
+    "target_slug": "giant-rat",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "bat",
+    "target_slug": "giant-bat",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "giant-bat",
+    "target_slug": "swarm-of-bats",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "poisonous-snake",
+    "target_slug": "giant-poisonous-snake",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "giant-poisonous-snake",
+    "target_slug": "constrictor-snake",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "constrictor-snake",
+    "target_slug": "giant-constrictor-snake",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "giant-constrictor-snake",
+    "target_slug": "swarm-of-poisonous-snakes",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "reef-shark",
+    "target_slug": "hunter-shark",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "hunter-shark",
+    "target_slug": "giant-shark",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "werewolf",
+    "target_slug": "wolf",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wererat",
+    "target_slug": "giant-rat",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wereboar",
+    "target_slug": "boar",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wereboar",
+    "target_slug": "giant-boar",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "werebear",
+    "target_slug": "black-bear",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "werebear",
+    "target_slug": "brown-bear",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "werebear",
+    "target_slug": "polar-bear",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "weretiger",
+    "target_slug": "tiger",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "zombie",
+    "target_slug": "ghoul",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ghoul",
+    "target_slug": "ghast",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ghast",
+    "target_slug": "wight",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wight",
+    "target_slug": "wraith",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "wraith",
+    "target_slug": "specter",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "specter",
+    "target_slug": "vampire-spawn",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "vampire-spawn",
+    "target_slug": "vampire",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "vampire",
+    "target_slug": "lich",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "air-elemental",
+    "target_slug": "dust-mephit",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "air-elemental",
+    "target_slug": "steam-mephit",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "air-elemental",
+    "target_slug": "invisible-stalker",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "air-elemental",
+    "target_slug": "djinni",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "earth-elemental",
+    "target_slug": "magma-mephit",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "earth-elemental",
+    "target_slug": "xorn",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "earth-elemental",
+    "target_slug": "gargoyle",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "fire-elemental",
+    "target_slug": "magma-mephit",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "fire-elemental",
+    "target_slug": "magmin",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "fire-elemental",
+    "target_slug": "salamander",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "fire-elemental",
+    "target_slug": "efreeti",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "fire-elemental",
+    "target_slug": "azer",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "water-elemental",
+    "target_slug": "ice-mephit",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "water-elemental",
+    "target_slug": "merrow",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "imp",
+    "target_slug": "bearded-devil",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "bearded-devil",
+    "target_slug": "barbed-devil",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "barbed-devil",
+    "target_slug": "chain-devil",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "chain-devil",
+    "target_slug": "bone-devil",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "bone-devil",
+    "target_slug": "horned-devil",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "horned-devil",
+    "target_slug": "ice-devil",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ice-devil",
+    "target_slug": "erinyes",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "erinyes",
+    "target_slug": "pit-fiend",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "dretch",
+    "target_slug": "vrock",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "vrock",
+    "target_slug": "hezrou",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "hezrou",
+    "target_slug": "glabrezu",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "glabrezu",
+    "target_slug": "nalfeshnee",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "nalfeshnee",
+    "target_slug": "marilith",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "marilith",
+    "target_slug": "balor",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "sea-hag",
+    "target_slug": "green-hag",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "green-hag",
+    "target_slug": "night-hag",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "ogre",
+    "target_slug": "hill-giant",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "hill-giant",
+    "target_slug": "stone-giant",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "stone-giant",
+    "target_slug": "frost-giant",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "frost-giant",
+    "target_slug": "fire-giant",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "fire-giant",
+    "target_slug": "cloud-giant",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cloud-giant",
+    "target_slug": "storm-giant",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "commoner",
+    "target_slug": "guard",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "guard",
+    "target_slug": "scout",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "scout",
+    "target_slug": "thug",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "thug",
+    "target_slug": "bandit",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "bandit",
+    "target_slug": "bandit-captain",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "acolyte",
+    "target_slug": "priest-npc",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "priest-npc",
+    "target_slug": "archmage",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "spy",
+    "target_slug": "assassin",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "flesh-golem",
+    "target_slug": "clay-golem",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "clay-golem",
+    "target_slug": "stone-golem",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "stone-golem",
+    "target_slug": "iron-golem",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "spirit-naga",
+    "target_slug": "guardian-naga",
+    "relationship_type": "related"
+  }
 ]

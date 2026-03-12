@@ -1,6 +1,6 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.3.2**
+**Current Version: V0.3.3**
 
 A native desktop application for managing D&D 5e characters with full ruleset support, a 964-article encyclopedia, real-time party sync, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
@@ -105,11 +105,13 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 
 ### AI Assistant (Optional)
 - **Arcane Advisor** — AI-powered D&D companion running entirely on your machine via Ollama
-- Answers D&D 5e rules questions with full character context
-- Can add spells, features, items, NPCs to your character sheet via natural language
-- Streaming responses with action confirmation before applying changes
+- **Wiki-powered responses** — searches the 964-article SRD encyclopedia before every query for accurate D&D 5e answers
+- **Brief and focused** — answers in 1-3 sentences with token cap and low temperature
+- **Floating ArcaneWidget** — context-aware mini-chat available on all sections, not just the AI tab
+- **All communication through Rust backend** — bypasses WebKitGTK CSP restrictions on Linux
+- Streaming responses with real-time token display via Tauri Channel API
 - Completely optional — disabled by default, zero performance impact when off
-- Supports any Ollama model (recommended: phi3.5 or qwen2.5:1.5b for lower-end hardware)
+- Uses phi3.5 model (~2.2GB) — auto-downloads when AI is enabled
 
 ### Additional Features
 - Arcane Encyclopedia — 964-article searchable wiki with FTS5
@@ -132,17 +134,19 @@ The app includes an optional AI assistant that runs entirely on your machine.
 ### Requirements
 - [Ollama](https://ollama.ai) installed and running
 - At least 4GB of free RAM
-- Recommended model: phi3.5 (~2.2GB RAM)
-  - Install with: `ollama pull phi3.5`
-- Fallback model for lower-end hardware: qwen2.5:1.5b
-  - Install with: `ollama pull qwen2.5:1.5b`
+- Model: phi3.5 (~2.2GB RAM) — auto-downloaded when you enable AI
 
 ### Setup
 1. Install Ollama from https://ollama.ai
 2. Start Ollama (it runs as a background service)
-3. Pull your chosen model: `ollama pull phi3.5`
-4. In the app, go to Settings → AI Assistant → Enable
-5. Select your model and click Test Connection
+3. In the app, go to Settings → AI Assistant → Enable
+4. The app will automatically download phi3.5 if not already installed
+
+### How It Works
+- All Ollama communication is routed through the Rust backend (required for Linux/WebKitGTK compatibility)
+- Before every query, the app searches its 964-article wiki for relevant D&D 5e content and includes it in the prompt
+- Responses are capped at 128 tokens with low temperature (0.3) for brief, accurate answers
+- A floating chat widget (ArcaneWidget) is available on all sections for quick questions
 
 ### Performance Note
 On CPU-only hardware (no dedicated GPU), expect response times of 5–15 seconds.
@@ -150,7 +154,7 @@ This is normal. The assistant runs fully offline — no data leaves your machine
 
 ### Privacy
 All conversation data stays on your machine. Nothing is sent to any external service.
-The assistant only knows about your character data and the app's built-in rules reference.
+The assistant uses the app's built-in wiki for D&D 5e reference.
 
 ## Installation
 
@@ -208,6 +212,20 @@ npm run tauri build
 
 ## Changelog Summary
 
+### V0.3.3 — Arcane Advisor Overhaul
+- All Ollama communication routed through Rust backend via reqwest + Tauri Channel streaming (fixes WebKitGTK CSP)
+- Wiki-powered responses — searches SRD encyclopedia before every query for grounded D&D 5e answers
+- Single hardcoded model (phi3.5) with auto-download on enable — no model selector, no Test Connection button
+- Brief responses: 128 token cap, temperature 0.3, minimal system prompt, response cleaning
+- Floating ArcaneWidget mini-chat available on all sections (CharacterView, Wiki pages)
+- Removed action blocks (add spells/items via AI) — unreliable with small models
+
+### V0.3.2 — Dev Sync System, Dev Tools Panel & Robust Auto-Update
+- Instant LAN peer notifications on push via UDP broadcast + Tauri events
+- Version-aware peer discovery, dev count in banner, unpushed commit indicator
+- Dynamic repo detection, async git operations with timeouts, rebase fallback
+- Dev Tools Panel (Ctrl+Shift+D): DB inspector, IPC logger, performance overlay, log viewer, schema migration, test character generator
+
 ### V0.3.1 — Party Connect Overhaul, Dev Build Banner & Auto-Update System
 - Party Connect moved from Settings tab to its own sidebar section under Tools (both modes)
 - Party session now persists across navigation — WebSocket connection lifted to React context
@@ -218,11 +236,9 @@ npm run tauri build
 - Version sync across all config files
 
 ### V0.3.0 — Arcane Advisor (AI Assistant)
-- Optional AI Assistant powered by local Ollama models — no internet, no API keys
-- Context-aware: knows your character's stats, spells, inventory, and D&D 5e rules
-- Can modify character data (add spells, features, items, NPCs) with confirmation
-- Streaming responses with markdown rendering
-- Setup guide and connection tester in Settings → AI Assistant tab
+- Optional AI Assistant powered by local Ollama (phi3.5) — no internet, no API keys
+- Wiki-powered: searches 964-article SRD encyclopedia for accurate D&D 5e answers
+- Streaming responses via Rust backend (Tauri Channel API)
 - Feature flag: completely invisible when disabled, zero overhead
 - Sidebar entry appears only when enabled
 
