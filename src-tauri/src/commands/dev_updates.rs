@@ -30,6 +30,9 @@ impl Drop for GitLockGuard {
 fn repo_root() -> Result<PathBuf, String> {
     // Ask git itself where the repo root is — works regardless of where the
     // binary is located, as long as the working directory is inside the repo.
+    if let Ok(cwd) = std::env::current_dir() {
+        eprintln!("[dev-sync] cwd for repo_root: {:?}", cwd);
+    }
     let output = std::process::Command::new("git")
         .args(["rev-parse", "--show-toplevel"])
         .output();
@@ -80,20 +83,31 @@ async fn run_git(root: &PathBuf, args: &[&str]) -> Result<(String, String, bool)
 
 #[tauri::command]
 pub async fn check_git_updates() -> Result<serde_json::Value, String> {
-    let _lock = GitLockGuard::acquire()?;
-    let root = repo_root()?;
+    let _lock = GitLockGuard::acquire().map_err(|e| {
+        eprintln!("[dev-sync] lock acquire failed: {}", e);
+        e
+    })?;
+    let root = repo_root().map_err(|e| {
+        eprintln!("[dev-sync] repo_root failed: {}", e);
+        e
+    })?;
+    eprintln!("[dev-sync] repo root: {:?}", root);
 
     // Check that origin remote exists
-    let (_, _, ok) = run_git(&root, &["remote", "get-url", "origin"]).await?;
+    let (remote_url, _, ok) = run_git(&root, &["remote", "get-url", "origin"]).await?;
     if !ok {
+        eprintln!("[dev-sync] no origin remote configured");
         return Err("No 'origin' remote configured".to_string());
     }
+    eprintln!("[dev-sync] origin url: {}", remote_url);
 
     // Detect default branch (main or master)
     let branch = detect_branch(&root).await?;
+    eprintln!("[dev-sync] branch: {}", branch);
 
     // git fetch origin
-    let (_, stderr, ok) = run_git(&root, &["fetch", "origin", &branch]).await?;
+    let (fetch_out, stderr, ok) = run_git(&root, &["fetch", "origin", &branch]).await?;
+    eprintln!("[dev-sync] fetch ok={}, stdout='{}', stderr='{}'", ok, fetch_out, stderr);
     if !ok {
         return Err(format!("git fetch failed: {}", stderr));
     }
@@ -105,15 +119,18 @@ pub async fn check_git_updates() -> Result<serde_json::Value, String> {
     if !ok {
         return Err(format!("Branch '{}' not found on origin", branch));
     }
+    eprintln!("[dev-sync] local_sha={} remote_sha={} match={}", short_sha(&local_sha), short_sha(&remote_sha), local_sha == remote_sha);
 
     // Check if remote is actually ahead of local (not the other way around)
     let (_, _, local_is_ahead_or_equal) = run_git(
         &root,
         &["merge-base", "--is-ancestor", &remote_sha, &local_sha],
     ).await.unwrap_or_default();
+    eprintln!("[dev-sync] local_is_ahead_or_equal={}", local_is_ahead_or_equal);
 
     // Only report an update if remote has commits we don't have
     let has_update = local_sha != remote_sha && !local_is_ahead_or_equal;
+    eprintln!("[dev-sync] => has_update={}", has_update);
 
     // Check if we have local unpushed commits
     let (_, _, _local_is_behind_or_equal) = run_git(

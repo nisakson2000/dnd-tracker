@@ -1,6 +1,6 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.3.5**
+**Current Version: V0.3.6**
 
 A native desktop application for managing D&D 5e characters with full ruleset support, a 1,200+ article encyclopedia, real-time party sync, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
@@ -211,6 +211,12 @@ npm run tauri build
 - Auto-save (debounced 800ms), auto-backup every 5 minutes
 
 ## Changelog Summary
+
+### V0.3.6 — Dev Sync Diagnostics & UX Fixes
+- Diagnostic logging in git update checker — prints local/remote SHA, fetch result, and update decision to terminal for debugging sync issues
+- Mode selection always shown on app open — no longer persists player/dm choice across reloads
+- Git polling reduced to 5s with visible error logging (was silent catch)
+- Dev settings accessible from gear icon in dev banner (moved out of dashboard)
 
 ### V0.3.5 — Wiki Bestiary Expansion
 - 266 new monster entries — full SRD 5.1 bestiary (total 1,235 wiki articles, 315 monsters)

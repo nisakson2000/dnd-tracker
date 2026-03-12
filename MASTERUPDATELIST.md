@@ -4,6 +4,28 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.3.6 — Dev Sync Diagnostics & UX Fixes
+**Released:** March 11, 2026
+
+### Git Sync Diagnostic Logging
+- **Verbose `check_git_updates` logging** — every 5s poll now prints to stderr: repo root path, origin URL, branch, fetch result, local SHA, remote SHA, whether they match, ancestor direction, and final `has_update` decision
+- **Lock contention visibility** — if `GitLockGuard` blocks a check, the error is logged instead of silently swallowed
+- **`repo_root()` CWD logging** — prints the working directory used to find the git repo, helping debug cases where the binary runs from a different directory
+- **Frontend `console.warn` on check failure** — `checkForUpdates` catch block now logs `[dev-sync] git check failed: <error>` to the browser console instead of silently ignoring
+
+### UX Improvements
+- **Mode selection on every app open** — `ModeContext` no longer reads persisted mode from localStorage; users always see the Player/DM picker on launch or reload
+- **Dev settings gear icon** — dev dashboard moved from a mode on the ModeSelect screen to a gear icon button in the top-left of the dev banner, opening as a fullscreen overlay
+- **Error message fix** — "Failed to load characters: undefined" fixed by using `err?.message || err` instead of `err.message` (Tauri IPC errors are strings, not Error objects)
+
+### Polling
+- **5-second git polling** — `GIT_POLL_INTERVAL` reduced from 15s to 5s for faster update detection between devs
+
+### Version Sync
+- All version files bumped to 0.3.6: VERSION, version.json, version.js, package.json (root + frontend), tauri.conf.json, Cargo.toml
+
+---
+
 ## V0.3.5 — Wiki Bestiary Expansion
 **Released:** March 12, 2026
 

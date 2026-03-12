@@ -101,8 +101,8 @@ export function useDevUpdateCheck() {
         setConflictInfo(null);
         hasNotifiedRef.current = false;
       }
-    } catch {
-      // Silently fail — git might not be available or no remote
+    } catch (err) {
+      console.warn('[dev-sync] git check failed:', err);
     } finally {
       checkingRef.current = false;
     }

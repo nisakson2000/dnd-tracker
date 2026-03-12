@@ -1130,7 +1130,7 @@ export default function Dashboard() {
 
   const load = async () => {
     try { const d = await listCharacters(); setCharacters(d); }
-    catch (err) { toast.error(`Failed to load characters: ${err.message}`); }
+    catch (err) { toast.error(`Failed to load characters: ${err?.message || err}`); }
     finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
