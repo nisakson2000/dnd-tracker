@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, Component, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ModeProvider, useAppMode } from './contexts/ModeContext';
 import { useDevUpdateCheck } from './hooks/useDevUpdateCheck';
 import { APP_VERSION } from './version';
@@ -19,6 +19,9 @@ const DevToolsPanel = import.meta.env.DEV
   : () => null;
 const HotReloadIndicator = import.meta.env.DEV
   ? lazy(() => import('./dev/HotReloadIndicator'))
+  : () => null;
+const DevDashboard = import.meta.env.DEV
+  ? lazy(() => import('./pages/DevDashboard'))
   : () => null;
 
 // ─── Error Boundary ──────────────────────────────────────────────────────────
@@ -91,7 +94,7 @@ class ErrorBoundary extends Component {
 const DEV_BANNER_HEIGHT = 24;
 const DEV_BANNER_HEIGHT_UPDATE = 36;
 
-function DevBanner() {
+function DevBanner({ onOpenDevSettings }) {
   const {
     hasUpdate, updateInfo, pulling, pullUpdates, peers,
     diffPreview, conflictInfo, canRollback, rollbackUpdate,
@@ -125,7 +128,26 @@ function DevBanner() {
       transition: 'all 0.3s ease',
       boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
     }}>
-      {/* Dev count + sync status — always visible */}
+      {/* Dev settings wrench icon — leftmost */}
+      <button
+        onClick={onOpenDevSettings}
+        style={{
+          position: 'absolute', left: '8px',
+          width: 20, height: 20, borderRadius: 4,
+          background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+          color: 'rgba(255,255,255,0.8)', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '11px', lineHeight: 1, padding: 0,
+          transition: 'background 0.15s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+        title="Dev Settings"
+      >
+        &#x2699;
+      </button>
+
+      {/* Dev count + sync status */}
       {(() => {
         const devCount = peers.length + 1;
         const allSynced = peers.length > 0 && peers.every(p => p.version === APP_VERSION.replace('V', ''));
@@ -133,7 +155,7 @@ function DevBanner() {
           <span
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
-              position: 'absolute', left: '12px', fontSize: '10px',
+              position: 'absolute', left: '36px', fontSize: '10px',
               cursor: peers.length > 0 ? 'help' : 'default',
             }}
             title={`You: v${APP_VERSION.replace('V', '')}` + (peers.length > 0
@@ -327,10 +349,12 @@ function AppContent() {
 }
 
 export default function App() {
+  const [showDevSettings, setShowDevSettings] = useState(false);
+
   return (
     <>
       {/* Dev banner — completely outside ErrorBoundary/ModeProvider so it always renders on every screen */}
-      <DevBanner />
+      <DevBanner onOpenDevSettings={() => setShowDevSettings(true)} />
 
       {/* Dev tools panel — Ctrl+Shift+D to toggle */}
       {import.meta.env.DEV && (
@@ -338,6 +362,58 @@ export default function App() {
           <DevToolsPanel />
           <HotReloadIndicator />
         </Suspense>
+      )}
+
+      {/* Dev Settings overlay — opened from wrench icon in banner */}
+      {import.meta.env.DEV && (
+        <AnimatePresence>
+          {showDevSettings && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              style={{
+                position: 'fixed', inset: 0, zIndex: 99998,
+                top: 'var(--dev-banner-h, 24px)',
+                background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+              }}
+              onClick={e => e.target === e.currentTarget && setShowDevSettings(false)}
+            >
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 20, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ height: '100%', overflow: 'auto' }}
+              >
+                {/* Close button */}
+                <button
+                  onClick={() => setShowDevSettings(false)}
+                  style={{
+                    position: 'fixed', top: 'calc(var(--dev-banner-h, 24px) + 12px)', right: '16px',
+                    zIndex: 99999, width: 32, height: 32, borderRadius: 8,
+                    background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+                    color: 'rgba(255,255,255,0.7)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '16px',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                >
+                  &#x2715;
+                </button>
+                <Suspense fallback={
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-heading)' }}>
+                    Loading Dev Settings...
+                  </div>
+                }>
+                  <DevDashboard />
+                </Suspense>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       )}
 
       <ErrorBoundary>

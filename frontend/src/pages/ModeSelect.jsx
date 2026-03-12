@@ -35,17 +35,7 @@ export default function ModeSelect() {
       color: '#9b59b6',
       bg: 'rgba(155,89,182,0.08)',
     },
-    // Dev mode — only visible in dev builds
-    ...(import.meta.env.DEV ? [{
-      id: 'dev',
-      icon: '🛠',
-      title: 'Dev Settings',
-      subtitle: 'The Architect',
-      desc: 'Access all developer tools, feature flags, git panel, LAN chat, and settings from both Player and DM modes in one place.',
-      features: ['Dev tools panel', 'Git & sync controls', 'Feature flags', 'All Player + DM settings'],
-      color: '#7c3aed',
-      bg: 'rgba(124,58,237,0.08)',
-    }] : []),
+    // Dev settings moved to wrench icon in dev banner (no longer a separate mode)
   ];
 
   return (
@@ -120,7 +110,7 @@ export default function ModeSelect() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 + i * 0.15, type: 'spring', damping: 20 }}
               whileHover={{ y: -8, boxShadow: `0 20px 60px rgba(0,0,0,0.6), 0 0 40px ${m.color}15` }}
-              onClick={() => m.id === 'dm' ? setShowBetaWarning(true) : setMode(m.id === 'dev' ? 'dev' : m.id)}
+              onClick={() => m.id === 'dm' ? setShowBetaWarning(true) : setMode(m.id)}
               style={{
                 borderRadius: 16, overflow: 'hidden', cursor: 'pointer',
                 background: 'rgba(11,9,20,0.9)',
