@@ -4,6 +4,50 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.3.2 — Dev Sync System, Dev Tools Panel & Robust Auto-Update
+**Released:** March 11, 2026
+
+### Dev Sync System
+- **Instant peer notifications** — when a dev pushes code, other devs on LAN get notified within seconds via UDP broadcast + Tauri events (no more waiting for 60s poll)
+- **Version-aware peer discovery** — beacon messages now include app version, shown when devs come online ("evan came online (v0.3.2)")
+- **Dev count in banner** — always shows "X devs in app" (including yourself) in the dev banner
+- **Unpushed commit indicator** — banner shows "(you have unpushed commits)" when local is ahead of remote
+- **Local changes warning** — shows "(local changes will be stashed)" before pulling when you have uncommitted work
+
+### Robust Auto-Update
+- **Dynamic repo detection** — `repo_root()` now uses `git rev-parse --show-toplevel` at runtime instead of hardcoded compile-time path — works on any dev's machine regardless of where they clone the repo
+- **Async git operations** — all git commands now use `tokio::process::Command` with 30-second timeouts, preventing UI freezes
+- **Git operation locking** — atomic lock prevents concurrent fetch/pull from corrupting state
+- **Rebase fallback** — if `--ff-only` fails (local commits diverge), automatically tries `pull --rebase` to put local commits on top; aborts cleanly on conflict
+- **Stash safety** — stash pop now runs before pull result check, with explicit conflict warnings if pop fails
+- **Post-reload notifications** — success/failure messages survive the page reload via localStorage
+- **Correct ahead/behind detection** — uses `git merge-base --is-ancestor` to distinguish "remote is ahead" from "local is ahead", preventing false update banners
+
+### Dev Tools Panel (Ctrl+Shift+D)
+- **DB Inspector** — browse all SQLite tables for any character or the wiki DB, run raw SELECT queries, see row counts and schema
+- **IPC Logger** — intercepts every `invoke()` call with timing, payload, response, and error tracking; shows avg/p95/max latency stats
+- **Performance Overlay** — FPS counter, JS heap usage, IPC latency stats
+- **Log Viewer** — streams both Rust backend log buffer and frontend console.log/warn output
+- **Environment Check** — shows app version, git SHA, branch, Node/Rust/npm versions, OS, arch, DB schema hash
+- **Schema Diff & Migration Runner** — compares character DB against expected schema, lists missing tables/columns, one-click migration
+- **Feature Flags** — toggle dev features on/off from the panel, stored in localStorage
+- **Enhanced Bug Report** — collects git state, system info, recent IPC calls, log buffer, and character summary into a copyable/savable JSON report
+
+### Test Character Generator
+- **One-click fully populated character** — random name, race, class, level, ability scores, spells, inventory, currency, features, attacks, NPCs, quests with objectives, journal entries, lore notes, backstory
+- Accessible from Dev Tools panel
+
+### Hot Reload Indicator
+- Shows green "HMR" flash on hot module replacement, orange "Full Reload" flash on full page reload
+- Bottom-left corner, auto-fades
+
+### Production Safety
+- All dev features gated behind `import.meta.env.DEV` — Vite tree-shakes them out of production builds
+- Dev components lazy-loaded so they don't affect production bundle size
+- Dev tools panel, banner, presence system, and all dev Rust commands are completely absent in release builds
+
+---
+
 ## V0.3.1 — Party Connect Overhaul, Dev Build Banner & Auto-Update System
 **Released:** March 11, 2026
 

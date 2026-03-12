@@ -1378,6 +1378,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
+name = "hostname"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c731c3e10504cc8ed35cfe2f1db4c9274c3d35fa486e3b31df46f068ef3e867"
+dependencies = [
+ "libc",
+ "match_cfg",
+ "winapi",
+]
+
+[[package]]
 name = "html5ever"
 version = "0.29.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1972,6 +1983,12 @@ dependencies = [
  "tendril",
  "web_atoms",
 ]
+
+[[package]]
+name = "match_cfg"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffbee8634e0d45d258acb448e7eaab3fce7a0a467395d4d9f228e3c1f01fb2e4"
 
 [[package]]
 name = "match_token"
@@ -3927,11 +3944,12 @@ dependencies = [
 
 [[package]]
 name = "the-codex"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "chrono",
  "dirs 5.0.1",
  "futures-util",
+ "hostname",
  "rusqlite",
  "serde",
  "serde_json",
@@ -4034,6 +4052,7 @@ dependencies = [
  "libc",
  "mio",
  "pin-project-lite",
+ "signal-hook-registry",
  "socket2 0.6.3",
  "tokio-macros",
  "windows-sys 0.61.2",

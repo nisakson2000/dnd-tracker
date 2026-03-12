@@ -1220,7 +1220,7 @@ export default function Dashboard() {
   })();
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', background: 'var(--bg-deep)' }}>
+    <div style={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', background: 'var(--bg-deep)', paddingTop: 'var(--dev-banner-h, 0px)' }}>
 
       {/* ── Atmosphere ── */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>

@@ -300,7 +300,7 @@ export default function CharacterView() {
   return (
     <RulesetProvider rulesetId={rulesetId}>
       <PartyProvider>
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', paddingTop: 'var(--dev-banner-h, 0px)' }}>
         <Sidebar
           character={character}
           activeSection={activeSection}

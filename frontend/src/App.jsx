@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, Component } from 'react';
+import { useState, useEffect, useCallback, Component, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
@@ -11,6 +11,14 @@ import WikiPage from './pages/WikiPage';
 import WikiArticlePage from './pages/WikiArticlePage';
 import UpdateScreen from './pages/UpdateScreen';
 import CharacterSetup from './pages/CharacterSetup';
+
+// Dev-only components — lazy loaded, tree-shaken in production
+const DevToolsPanel = import.meta.env.DEV
+  ? lazy(() => import('./dev/DevToolsPanel'))
+  : () => null;
+const HotReloadIndicator = import.meta.env.DEV
+  ? lazy(() => import('./dev/HotReloadIndicator'))
+  : () => null;
 
 // ─── Error Boundary ──────────────────────────────────────────────────────────
 
@@ -76,31 +84,34 @@ class ErrorBoundary extends Component {
 }
 
 // ─── Dev Banner ─────────────────────────────────────────────────────────────
+// Rendered as a top-level fixed element, completely independent of all other
+// screens (UpdateScreen, ModeSelect, Dashboard, CharacterView). Always on top.
 
 const DEV_BANNER_HEIGHT = 24;
 const DEV_BANNER_HEIGHT_UPDATE = 36;
 
-function DevBanner({ onHeightChange }) {
-  const { hasUpdate, updateInfo, pulling, pullUpdates } = useDevUpdateCheck();
-
-  // Notify parent of height changes so padding stays in sync
-  useEffect(() => {
-    if (onHeightChange) onHeightChange(hasUpdate ? DEV_BANNER_HEIGHT_UPDATE : DEV_BANNER_HEIGHT);
-  }, [hasUpdate, onHeightChange]);
+function DevBanner() {
+  const { hasUpdate, updateInfo, pulling, pullUpdates, peers } = useDevUpdateCheck();
 
   if (!import.meta.env.DEV) return null;
 
   const height = hasUpdate ? DEV_BANNER_HEIGHT_UPDATE : DEV_BANNER_HEIGHT;
 
+  // Set CSS variable so all fixed-position pages can offset themselves
+  useEffect(() => {
+    document.documentElement.style.setProperty('--dev-banner-h', `${height}px`);
+    return () => document.documentElement.style.setProperty('--dev-banner-h', '0px');
+  }, [height]);
+
   return (
     <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999,
       height: `${height}px`,
       background: hasUpdate
         ? 'linear-gradient(90deg, #b45309, #92400e)'
         : 'linear-gradient(90deg, #7c3aed, #6d28d9)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
-      fontFamily: 'var(--font-ui, "DM Sans", sans-serif)',
+      fontFamily: '"DM Sans", sans-serif',
       fontSize: hasUpdate ? '12px' : '10px',
       fontWeight: 600,
       color: 'rgba(255,255,255,0.9)',
@@ -108,12 +119,24 @@ function DevBanner({ onHeightChange }) {
       transition: 'all 0.3s ease',
       boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
     }}>
+      {/* Dev count — always visible, counts you + peers */}
+      <span style={{
+        display: 'flex', alignItems: 'center', gap: '4px',
+        position: 'absolute', left: '12px', fontSize: '10px', opacity: 0.8,
+      }}>
+        <span style={{ color: '#4ade80', fontSize: '8px' }}>&#x25CF;</span>
+        {peers.length + 1} dev{peers.length + 1 !== 1 ? 's' : ''} in app
+      </span>
+
       {hasUpdate ? (
         <>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '14px' }}>&#x26A1;</span>
             Update available: {updateInfo?.commit_message || updateInfo?.remote_sha}
           </span>
+          {updateInfo?.has_local_changes && (
+            <span style={{ opacity: 0.7, fontSize: '10px' }}>(local changes will be stashed)</span>
+          )}
           <button
             onClick={pullUpdates}
             disabled={pulling}
@@ -130,7 +153,14 @@ function DevBanner({ onHeightChange }) {
           </button>
         </>
       ) : (
-        <span style={{ opacity: 0.8 }}>DEV BUILD</span>
+        <>
+          <span style={{ opacity: 0.8 }}>DEV BUILD</span>
+          {updateInfo?.local_ahead && (
+            <span style={{ opacity: 0.6, fontSize: '9px', marginLeft: '4px' }}>
+              (you have unpushed commits)
+            </span>
+          )}
+        </>
       )}
     </div>
   );
@@ -141,13 +171,9 @@ function DevBanner({ onHeightChange }) {
 function AppContent() {
   const [updateDone, setUpdateDone] = useState(false);
   const { mode } = useAppMode();
-  const [bannerHeight, setBannerHeight] = useState(import.meta.env.DEV ? DEV_BANNER_HEIGHT : 0);
 
   return (
-    <div style={bannerHeight > 0 ? { paddingTop: `${bannerHeight}px` } : undefined}>
-      {/* Dev build banner */}
-      <DevBanner onHeightChange={setBannerHeight} />
-
+    <>
       {/* Ambient background effects */}
       <div className="ambient" />
       <div className="ambient-noise" />
@@ -194,16 +220,29 @@ function AppContent() {
           </Routes>
         </BrowserRouter>
       )}
-    </div>
+    </>
   );
 }
 
 export default function App() {
   return (
-    <ErrorBoundary>
-      <ModeProvider>
-        <AppContent />
-      </ModeProvider>
-    </ErrorBoundary>
+    <>
+      {/* Dev banner — completely outside ErrorBoundary/ModeProvider so it always renders on every screen */}
+      <DevBanner />
+
+      {/* Dev tools panel — Ctrl+Shift+D to toggle */}
+      {import.meta.env.DEV && (
+        <Suspense fallback={null}>
+          <DevToolsPanel />
+          <HotReloadIndicator />
+        </Suspense>
+      )}
+
+      <ErrorBoundary>
+        <ModeProvider>
+          <AppContent />
+        </ModeProvider>
+      </ErrorBoundary>
+    </>
   );
 }

@@ -3,6 +3,25 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.3.2',
+    date: '03/11/2026',
+    title: 'Dev Sync System, Dev Tools Panel & Robust Auto-Update',
+    changes: [
+      'Instant peer push notifications — devs on LAN get notified within seconds when someone pushes code via UDP broadcast + Tauri events',
+      'Version-aware peer discovery — beacon messages include app version, shown when devs come online',
+      'Dev count always shown in banner — "X devs in app" including yourself',
+      'Dynamic repo detection — git commands work on any dev machine regardless of clone location',
+      'Async git with 30-second timeouts — no more UI freezes on slow network',
+      'Git operation locking — prevents concurrent fetch/pull from corrupting repo state',
+      'Rebase fallback — if fast-forward fails due to local commits, tries pull --rebase automatically',
+      'Stash safety — pop always runs with explicit conflict warnings',
+      'Dev Tools Panel (Ctrl+Shift+D) — DB inspector, IPC logger, performance overlay, log viewer, environment check, schema migration, feature flags, enhanced bug reports',
+      'Test character generator — one-click fully populated character for testing',
+      'Hot reload indicator — shows HMR vs full reload flashes',
+      'All dev features tree-shaken from production builds',
+    ],
+  },
+  {
     version: 'V0.3.1',
     date: '03/11/2026',
     title: 'Party Connect Overhaul, Dev Build Banner & Auto-Update System',

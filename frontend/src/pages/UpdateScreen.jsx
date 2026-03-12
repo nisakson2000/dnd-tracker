@@ -360,7 +360,7 @@ export default function UpdateScreen({ onDone, asModal = false }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      style={{ position: 'fixed', inset: 0, zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}
+      style={{ position: 'fixed', top: 'var(--dev-banner-h, 0px)', left: 0, right: 0, bottom: 0, zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}
     >
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 70% 50% at 50% 40%, color-mix(in srgb,var(--accent) 18%,transparent) 0%,transparent 60%)' }} />
       <div style={{ position: 'relative', zIndex: 1 }}>

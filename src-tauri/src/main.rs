@@ -4,6 +4,7 @@
 mod commands;
 mod db;
 mod party;
+mod dev_presence;
 
 use db::AppState;
 use std::fs;
@@ -100,6 +101,8 @@ fn main() {
 
             app.manage(AppState::new(app_data_dir, wiki_conn));
             app.manage(party::PartyServer::new());
+            app.manage(dev_presence::DevPresence::new());
+            app.manage(commands::dev_tools::DevLogBuffer::new());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -189,6 +192,20 @@ fn main() {
             // Dev updates
             commands::dev_updates::check_git_updates,
             commands::dev_updates::pull_git_updates,
+            // Dev presence (LAN discovery)
+            dev_presence::start_dev_presence,
+            dev_presence::stop_dev_presence,
+            dev_presence::get_dev_peers,
+            dev_presence::broadcast_dev_update,
+            // Dev tools
+            commands::dev_tools::dev_list_tables,
+            commands::dev_tools::dev_query_db,
+            commands::dev_tools::dev_get_log_buffer,
+            commands::dev_tools::dev_check_environment,
+            commands::dev_tools::dev_generate_test_character,
+            commands::dev_tools::dev_collect_bug_report,
+            commands::dev_tools::dev_get_schema_diff,
+            commands::dev_tools::dev_run_migrations,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -39,7 +39,8 @@ export default function ModeSelect() {
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
+      position: 'fixed', top: 'var(--dev-banner-h, 0px)', left: 0, right: 0, bottom: 0,
+      display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       background: '#0d0d12', overflow: 'hidden',
     }}>
