@@ -2,11 +2,14 @@ import { useState, Component } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
+import { ModeProvider, useAppMode } from './contexts/ModeContext';
+import ModeSelect from './pages/ModeSelect';
 import Dashboard from './pages/Dashboard';
 import CharacterView from './pages/CharacterView';
 import WikiPage from './pages/WikiPage';
 import WikiArticlePage from './pages/WikiArticlePage';
 import UpdateScreen from './pages/UpdateScreen';
+import CharacterSetup from './pages/CharacterSetup';
 
 // ─── Error Boundary ──────────────────────────────────────────────────────────
 // Catches any unhandled React error and shows a recovery screen instead of
@@ -76,11 +79,12 @@ class ErrorBoundary extends Component {
 
 // ─── App ─────────────────────────────────────────────────────────────────────
 
-export default function App() {
+function AppContent() {
   const [updateDone, setUpdateDone] = useState(false);
+  const { mode } = useAppMode();
 
   return (
-    <ErrorBoundary>
+    <>
       {/* Ambient background effects */}
       <div className="ambient" />
       <div className="ambient-noise" />
@@ -101,7 +105,7 @@ export default function App() {
         }}
       />
 
-      {/* Update splash — shown before anything else on launch */}
+      {/* Step 1: Update splash */}
       <AnimatePresence>
         {!updateDone && (
           <UpdateScreen
@@ -112,17 +116,31 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Main app — rendered underneath, becomes visible after update check */}
-      {updateDone && (
+      {/* Step 2: Mode selection (if no mode chosen yet) */}
+      {updateDone && !mode && <ModeSelect />}
+
+      {/* Step 3: Main app (once mode is selected) */}
+      {updateDone && mode && (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/character/:characterId" element={<CharacterView />} />
+            <Route path="/character/:characterId/setup" element={<CharacterSetup />} />
             <Route path="/wiki" element={<WikiPage />} />
             <Route path="/wiki/:slug" element={<WikiArticlePage />} />
           </Routes>
         </BrowserRouter>
       )}
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <ModeProvider>
+        <AppContent />
+      </ModeProvider>
     </ErrorBoundary>
   );
 }

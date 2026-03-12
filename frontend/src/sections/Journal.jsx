@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Plus, Trash2, Edit2, BookMarked, Search, X, Download, BookOpen } from 'lucide-react';
+import { Plus, Trash2, Edit2, BookMarked, Search, X, Download, BookOpen, Star, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { getJournalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry } from '../api/journal';
@@ -33,6 +33,11 @@ function setMoodInTags(tags, moodValue) {
   return existing.join(', ');
 }
 
+function parseNpcs(npcsStr) {
+  if (!npcsStr) return [];
+  return npcsStr.split(',').map(s => s.trim()).filter(Boolean);
+}
+
 function exportJournal(entries) {
   const chronological = [...entries].sort((a, b) => {
     const sessionDiff = (a.session_number || 0) - (b.session_number || 0);
@@ -48,7 +53,9 @@ function exportJournal(entries) {
     const header = parts.join(' | ');
     const separator = '\u2500'.repeat(Math.max(header.length, 30));
     const body = entry.body || '';
-    return `${header}\n${separator}\n${body}${i < chronological.length - 1 ? '\n\n---\n' : ''}`;
+    const npcs = parseNpcs(entry.npcs_mentioned);
+    const npcLine = npcs.length > 0 ? `\nNPCs: ${npcs.join(', ')}` : '';
+    return `${header}\n${separator}\n${body}${npcLine}${i < chronological.length - 1 ? '\n\n---\n' : ''}`;
   }).join('\n');
 
   const blob = new Blob([lines], { type: 'text/plain;charset=utf-8' });
@@ -71,6 +78,7 @@ function ReadingOverlay({ entry, onClose }) {
   }, [onClose]);
 
   const mood = getMoodFromTags(entry.tags);
+  const npcs = parseNpcs(entry.npcs_mentioned);
 
   return (
     <div className="fixed inset-0 z-50 bg-[#14121c]/95 flex items-start justify-center overflow-y-auto" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -79,18 +87,62 @@ function ReadingOverlay({ entry, onClose }) {
           <X size={24} />
         </button>
         <div className="mb-8">
-          <h1 className="text-3xl font-display text-amber-100 mb-3">{entry.title}</h1>
-          <div className="text-sm text-amber-200/40 space-x-3">
+          <div className="flex items-center gap-2">
+            {entry.pinned === 1 && <Star size={16} className="text-gold fill-gold" />}
+            <h1 className="text-3xl font-display text-amber-100">{entry.title}</h1>
+          </div>
+          <div className="text-sm text-amber-200/40 space-x-3 mt-3">
             {entry.session_number > 0 && <span>Session {entry.session_number}</span>}
             {entry.real_date && <span>{entry.real_date}</span>}
             {entry.ingame_date && <span>In-game: {entry.ingame_date}</span>}
             {mood && <span>{mood.emoji} {mood.label}</span>}
           </div>
+          {npcs.length > 0 && (
+            <div className="flex items-center gap-1.5 mt-3 flex-wrap">
+              <Users size={12} className="text-amber-200/30" />
+              {npcs.map((npc, i) => (
+                <span key={`${npc}-${i}`} className="text-xs bg-blue-800/30 text-blue-300 px-2 py-0.5 rounded">
+                  {npc}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <div className="text-amber-200/70 text-base leading-relaxed whitespace-pre-wrap">
           {entry.body}
         </div>
       </div>
+    </div>
+  );
+}
+
+function SessionSummaryBar({ entries }) {
+  const stats = useMemo(() => {
+    const total = entries.length;
+    const sessions = new Set(entries.filter(e => e.session_number > 0).map(e => e.session_number));
+    const dates = entries.map(e => e.real_date).filter(Boolean).sort();
+    const earliest = dates[0] || null;
+    const latest = dates[dates.length - 1] || null;
+    return { total, sessionCount: sessions.size, earliest, latest };
+  }, [entries]);
+
+  if (stats.total === 0) return null;
+
+  return (
+    <div className="flex items-center gap-3 flex-wrap">
+      <span className="text-xs bg-amber-200/5 text-amber-200/50 px-2.5 py-1 rounded border border-amber-200/10">
+        {stats.total} {stats.total === 1 ? 'entry' : 'entries'}
+      </span>
+      {stats.sessionCount > 0 && (
+        <span className="text-xs bg-amber-200/5 text-amber-200/50 px-2.5 py-1 rounded border border-amber-200/10">
+          {stats.sessionCount} {stats.sessionCount === 1 ? 'session' : 'sessions'}
+        </span>
+      )}
+      {stats.earliest && stats.latest && (
+        <span className="text-xs bg-amber-200/5 text-amber-200/50 px-2.5 py-1 rounded border border-amber-200/10">
+          {stats.earliest === stats.latest ? stats.earliest : `${stats.earliest} \u2014 ${stats.latest}`}
+        </span>
+      )}
     </div>
   );
 }
@@ -142,18 +194,33 @@ export default function Journal({ characterId }) {
     } catch (err) { toast.error(err.message); }
   };
 
+  const togglePin = async (entry) => {
+    try {
+      const newPinned = entry.pinned === 1 ? 0 : 1;
+      await updateJournalEntry(characterId, entry.id, { ...entry, pinned: newPinned });
+      toast.success(newPinned ? 'Entry pinned' : 'Entry unpinned');
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
   const filtered = useMemo(() => entries.filter(e => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
-    return (e.title || '').toLowerCase().includes(q) || (e.body || '').toLowerCase().includes(q) || (e.tags || '').toLowerCase().includes(q);
+    return (e.title || '').toLowerCase().includes(q) || (e.body || '').toLowerCase().includes(q) || (e.tags || '').toLowerCase().includes(q) || (e.npcs_mentioned || '').toLowerCase().includes(q);
   }), [entries, searchQuery]);
 
-  const sorted = useMemo(() => [...filtered].sort((a, b) => {
-    if (sortBy === 'date') return (b.real_date || '').localeCompare(a.real_date || '');
-    if (sortBy === 'session') return (b.session_number || 0) - (a.session_number || 0);
-    if (sortBy === 'title') return (a.title || '').localeCompare(b.title || '');
-    return 0;
-  }), [filtered, sortBy]);
+  const sorted = useMemo(() => {
+    const base = [...filtered].sort((a, b) => {
+      if (sortBy === 'date') return (b.real_date || '').localeCompare(a.real_date || '');
+      if (sortBy === 'session') return (b.session_number || 0) - (a.session_number || 0);
+      if (sortBy === 'title') return (a.title || '').localeCompare(b.title || '');
+      return 0;
+    });
+    // Pinned entries always on top
+    const pinned = base.filter(e => e.pinned === 1);
+    const unpinned = base.filter(e => e.pinned !== 1);
+    return [...pinned, ...unpinned];
+  }, [filtered, sortBy]);
 
   if (loading) return <div className="text-amber-200/40">Loading journal...</div>;
 
@@ -178,6 +245,9 @@ export default function Journal({ characterId }) {
           </button>
         </div>
       </div>
+
+      {/* Session Summary Stats */}
+      <SessionSummaryBar entries={entries} />
 
       {/* Search + Sort */}
       <div className="flex items-center gap-3">
@@ -208,11 +278,13 @@ export default function Journal({ characterId }) {
           {sorted.map(entry => {
             const mood = getMoodFromTags(entry.tags);
             const displayTags = getDisplayTags(entry.tags);
+            const npcs = parseNpcs(entry.npcs_mentioned);
             return (
-              <div key={entry.id} className="card">
+              <div key={entry.id} className={`card ${entry.pinned === 1 ? 'border-gold/20' : ''}`}>
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <div className="flex items-center gap-2">
+                      {entry.pinned === 1 && <Star size={14} className="text-gold fill-gold shrink-0" />}
                       <h4 className="text-amber-100 font-display text-lg">{entry.title}</h4>
                       {mood && (
                         <span className="text-xs bg-amber-200/5 text-amber-200/50 px-1.5 py-0.5 rounded border border-amber-200/10" title={mood.label}>
@@ -232,6 +304,9 @@ export default function Journal({ characterId }) {
                     </div>
                   </div>
                   <div className="flex gap-1">
+                    <button onClick={() => togglePin(entry)} className={`${entry.pinned === 1 ? 'text-gold' : 'text-amber-200/40 hover:text-amber-200'}`} aria-label={entry.pinned === 1 ? 'Unpin entry' : 'Pin entry'} title={entry.pinned === 1 ? 'Unpin' : 'Pin'}>
+                      <Star size={14} className={entry.pinned === 1 ? 'fill-gold' : ''} />
+                    </button>
                     <button onClick={() => setReadingEntry(entry)} className="text-amber-200/40 hover:text-amber-200" aria-label={`Read ${entry.title || 'entry'}`} title="Reading mode">
                       <BookOpen size={14} />
                     </button>
@@ -244,9 +319,17 @@ export default function Journal({ characterId }) {
                   </div>
                 </div>
                 {displayTags.length > 0 && (
-                  <div className="flex gap-1 mb-2">
+                  <div className="flex gap-1 mb-2 flex-wrap">
                     {displayTags.map((tag, i) => (
                       <span key={`${tag}-${i}`} className="text-xs bg-purple-800/30 text-purple-300 px-2 py-0.5 rounded">{tag}</span>
+                    ))}
+                  </div>
+                )}
+                {npcs.length > 0 && (
+                  <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                    <Users size={12} className="text-amber-200/30 shrink-0" />
+                    {npcs.map((npc, i) => (
+                      <span key={`${npc}-${i}`} className="text-xs bg-blue-800/30 text-blue-300 px-2 py-0.5 rounded">{npc}</span>
                     ))}
                   </div>
                 )}
@@ -286,7 +369,7 @@ function JournalForm({ entry, nextSessionNumber = 1, onSubmit, onCancel }) {
   const [form, setForm] = useState(() => {
     const base = entry || {
       title: '', session_number: nextSessionNumber, real_date: new Date().toISOString().split('T')[0],
-      ingame_date: '', body: '', tags: '',
+      ingame_date: '', body: '', tags: '', npcs_mentioned: '', pinned: 0,
     };
     return { ...base, _mood: existingMood ? existingMood.value : '' };
   });
@@ -362,6 +445,10 @@ function JournalForm({ entry, nextSessionNumber = 1, onSubmit, onCancel }) {
             <MDEditor value={form.body} onChange={v => update('body', v || '')} height={200} preview="edit" />
           </div>
           <input className="input w-full" placeholder="Tags (comma separated)" value={displayTagsStr} onChange={e => update('tags', e.target.value)} />
+          <div>
+            <label className="label flex items-center gap-1"><Users size={12} /> NPCs Mentioned</label>
+            <input className="input w-full" placeholder="NPC names, comma separated (e.g. Gandalf, Elrond)" value={form.npcs_mentioned || ''} onChange={e => update('npcs_mentioned', e.target.value)} />
+          </div>
         </div>
         <div className="flex gap-3 justify-end mt-4">
           <span className="text-xs text-amber-200/30 self-center mr-auto">Ctrl+Enter to save</span>

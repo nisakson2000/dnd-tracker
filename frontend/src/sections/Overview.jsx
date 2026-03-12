@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { TrendingUp, TrendingDown, Heart, Shield, Zap, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles } from 'lucide-react';
+import { TrendingUp, TrendingDown, Heart, Shield, Zap, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles, Skull, Search, Brain, Swords, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOverview, updateOverview, updateAbilityScores, updateSavingThrows, updateSkills } from '../api/overview';
 import { longRest, shortRest } from '../api/rest';
@@ -86,6 +86,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const { trigger: triggerSkills } = useAutosave(saveSkills);
 
   const [showShortRest, setShowShortRest] = useState(false);
+  const prevHpRef = useRef(null);
   const [showSetup, setShowSetup] = useState(true);
   const [setupScores, setSetupScores] = useState(null);
   const [setupMethod, setSetupMethod] = useState(null);
@@ -98,6 +99,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     try {
       const result = await longRest(characterId);
       result.restored.forEach(msg => toast.success(msg, { duration: 3000 }));
+      toast("Don't forget to restore your feature charges!", { icon: '🔄', duration: 4000, style: { background: '#1a1025', color: '#fde68a', border: '1px solid rgba(201,168,76,0.3)' } });
       loadData();
     } catch (err) {
       toast.error(`Long rest failed: ${err.message}`);
@@ -108,6 +110,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     try {
       const result = await shortRest(characterId, hitDice);
       result.restored.forEach(msg => toast.success(msg, { duration: 3000 }));
+      toast("Don't forget to restore your feature charges!", { icon: '🔄', duration: 4000, style: { background: '#1a1025', color: '#fde68a', border: '1px solid rgba(201,168,76,0.3)' } });
       setShowShortRest(false);
       loadData();
     } catch (err) {
@@ -211,20 +214,36 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
 
   const profBonus = PROFICIENCY_BONUS[overview?.level] || 2;
 
-  const { dexMod, wisMod, percMod, passivePerc, initiative, effectiveSpeed } = useMemo(() => {
+  const { dexMod, wisMod, percMod, passivePerc, passiveInvestigation, passiveInsight, initiative, effectiveSpeed, encumbranceState } = useMemo(() => {
     const dex = calcMod(abilityMap.DEX || 10);
     const wis = calcMod(abilityMap.WIS || 10);
+    const intMod = calcMod(abilityMap.INT || 10);
+    const strScore = abilityMap.STR || 10;
     const percSkill = skills.find(s => s.name === 'Perception');
     const perc = wis + (percSkill?.expertise ? profBonus * 2 : percSkill?.proficient ? profBonus : 0);
+    const investSkill = skills.find(s => s.name === 'Investigation');
+    const invest = intMod + (investSkill?.expertise ? profBonus * 2 : investSkill?.proficient ? profBonus : 0);
+    const insightSkill = skills.find(s => s.name === 'Insight');
+    const insight = wis + (insightSkill?.expertise ? profBonus * 2 : insightSkill?.proficient ? profBonus : 0);
+    // Encumbrance: check carry_weight from overview
+    const carryWeight = overview?.carry_weight || 0;
+    const heavyThreshold = strScore * 10;
+    const encThreshold = strScore * 5;
+    let encState = 'normal';
+    if (carryWeight > heavyThreshold) encState = 'heavy';
+    else if (carryWeight > encThreshold) encState = 'encumbered';
     return {
       dexMod: dex,
       wisMod: wis,
       percMod: perc,
       passivePerc: 10 + perc,
+      passiveInvestigation: 10 + invest,
+      passiveInsight: 10 + insight,
       initiative: dex,
       effectiveSpeed: condEffects.speedOverride === 0 ? 0 : (overview?.speed || 30),
+      encumbranceState: encState,
     };
-  }, [abilityMap, skills, profBonus, condEffects, overview?.speed]);
+  }, [abilityMap, skills, profBonus, condEffects, overview?.speed, overview?.carry_weight]);
 
   // Spell Save DC: 8 + proficiency bonus + spellcasting ability modifier
   const spellSaveDC = useMemo(() => {
@@ -235,6 +254,33 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     const abilityMod = calcMod(abilityMap[spellAbility] || 10);
     return { dc: 8 + profBonus + abilityMod, ability: spellAbility };
   }, [overview?.primary_class, CLASSES, abilityMap, profBonus]);
+
+  // Death save outcome toasts
+  useEffect(() => {
+    if (!overview) return;
+    if (overview.death_save_successes >= 3) {
+      toast.success('Stabilized! Your character is unconscious but stable.', { duration: 5000, icon: '💚' });
+    }
+    if (overview.death_save_failures >= 3) {
+      toast.error('Your character has died.', { duration: 5000, icon: '💀' });
+    }
+  }, [overview?.death_save_successes, overview?.death_save_failures]);
+
+  // Concentration save helper: detect HP decrease and remind about concentration check
+  useEffect(() => {
+    if (overview && prevHpRef.current !== null && overview.current_hp < prevHpRef.current) {
+      const damageTaken = prevHpRef.current - overview.current_hp;
+      const dc = Math.max(10, Math.floor(damageTaken / 2));
+      toast('Concentration check! DC = ' + dc + ' (damage: ' + damageTaken + ')', {
+        icon: '🎯',
+        duration: 5000,
+        style: { background: '#1a1025', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' },
+      });
+    }
+    if (overview) {
+      prevHpRef.current = overview.current_hp;
+    }
+  }, [overview?.current_hp]);
 
   const sortedSkillEntries = useMemo(() => Object.entries(SKILLS).sort(([a], [b]) => a.localeCompare(b)), [SKILLS]);
 
@@ -938,25 +984,49 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
               })}
             </div>
           </div>
+
+          {/* Passive Skills */}
+          <div className="card">
+            <h3 className="font-display text-amber-100 mb-3">Passive Skills</h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 py-2 px-3 rounded-lg bg-[#0a0a10] border border-amber-200/8">
+                <Eye size={16} className="text-amber-200/50 flex-shrink-0" />
+                <span className="text-sm text-amber-200/60 flex-1">Passive Perception</span>
+                <span className="text-lg font-display text-amber-100 font-bold">{passivePerc}</span>
+              </div>
+              <div className="flex items-center gap-3 py-2 px-3 rounded-lg bg-[#0a0a10] border border-amber-200/8">
+                <Search size={16} className="text-amber-200/50 flex-shrink-0" />
+                <span className="text-sm text-amber-200/60 flex-1">Passive Investigation</span>
+                <span className="text-lg font-display text-amber-100 font-bold">{passiveInvestigation}</span>
+              </div>
+              <div className="flex items-center gap-3 py-2 px-3 rounded-lg bg-[#0a0a10] border border-amber-200/8">
+                <Brain size={16} className="text-amber-200/50 flex-shrink-0" />
+                <span className="text-sm text-amber-200/60 flex-1">Passive Insight</span>
+                <span className="text-lg font-display text-amber-100 font-bold">{passiveInsight}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Right column: HP, Core Stats, Hit Dice, Death Saves, Conditions */}
         <div className="space-y-6">
           {/* Proficiency + Core Stats */}
           <div className={`grid grid-cols-2 ${spellSaveDC ? 'md:grid-cols-6' : 'md:grid-cols-5'} gap-4`}>
-            <div className="card text-center" title={`Proficiency bonus: +${profBonus} (levels ${profBonus === 2 ? '1-4' : profBonus === 3 ? '5-8' : profBonus === 4 ? '9-12' : profBonus === 5 ? '13-16' : '17-20'})`}>
-              <div className="text-xs text-amber-200/50 mb-1">Proficiency<HelpTooltip text={HELP.proficiencyBonus} /></div>
-              <div className="text-2xl font-display text-gold">{modStr(profBonus)}</div>
+            <div className="card text-center border-gold/25 shadow-[0_0_12px_rgba(201,168,76,0.06)]" title={`Proficiency bonus: +${profBonus} (levels ${profBonus === 2 ? '1-4' : profBonus === 3 ? '5-8' : profBonus === 4 ? '9-12' : profBonus === 5 ? '13-16' : '17-20'})`}>
+              <div className="text-xs text-gold/70 mb-1 font-semibold">Proficiency<HelpTooltip text={HELP.proficiencyBonus} /></div>
+              <div className="text-3xl font-display text-gold font-bold">{modStr(profBonus)}</div>
+              <div className="text-[10px] text-gold/40 mt-0.5">Level {overview.level}</div>
             </div>
-            <div className="card text-center">
+            <div className="card text-center" title={`AC Breakdown: Base 10 + DEX mod (${modStr(dexMod)}) = ${10 + dexMod}. Current AC: ${overview.armor_class}${overview.armor_class !== 10 + dexMod ? ' (armor/shield/magic may apply)' : ''}`}>
               <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Shield size={12} /> AC<HelpTooltip text={HELP.ac} /></div>
               <input type="number" min={0} max={30} className="input text-center text-2xl font-display w-20 mx-auto" value={overview.armor_class} onChange={e => updateField('armor_class', parseInt(e.target.value) || 0)} />
             </div>
-            <div className="card text-center">
-              <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Zap size={12} /> Initiative<HelpTooltip text={HELP.initiative} /></div>
-              <div className="text-2xl font-display text-amber-100">{modStr(initiative)}</div>
+            <div className="card text-center" title={`Initiative = DEX modifier (${modStr(dexMod)})`}>
+              <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Swords size={12} /> Initiative<HelpTooltip text={HELP.initiative} /></div>
+              <div className="text-2xl font-display text-gold">{modStr(initiative)}</div>
+              <div className="text-[10px] text-amber-200/30 mt-0.5">DEX {modStr(dexMod)}</div>
             </div>
-            <div className={`card text-center ${condEffects.speedOverride === 0 ? 'border-2 border-red-500/40 bg-red-950/20' : ''}`}>
+            <div className={`card text-center ${condEffects.speedOverride === 0 ? 'border-2 border-red-500/40 bg-red-950/20' : encumbranceState !== 'normal' ? 'border-2 border-orange-500/30 bg-orange-950/10' : ''}`}>
               <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Footprints size={12} /> Speed</div>
               {condEffects.speedOverride === 0 ? (
                 <>
@@ -965,7 +1035,21 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                   <div className="text-[10px] text-red-400/70 mt-0.5">Condition</div>
                 </>
               ) : (
-                <input type="number" min={0} className="input text-center text-2xl font-display w-20 mx-auto" value={overview.speed} onChange={e => updateField('speed', Math.max(0, parseInt(e.target.value) || 0))} />
+                <>
+                  <input type="number" min={0} className="input text-center text-2xl font-display w-20 mx-auto" value={overview.speed} onChange={e => updateField('speed', Math.max(0, parseInt(e.target.value) || 0))} />
+                  {encumbranceState === 'heavy' && (
+                    <div className="flex items-center justify-center gap-1 mt-1">
+                      <AlertTriangle size={10} className="text-red-400" />
+                      <span className="text-[9px] text-red-400 font-semibold">Heavily Encumbered: -20 ft</span>
+                    </div>
+                  )}
+                  {encumbranceState === 'encumbered' && (
+                    <div className="flex items-center justify-center gap-1 mt-1">
+                      <AlertTriangle size={10} className="text-orange-400" />
+                      <span className="text-[9px] text-orange-400 font-semibold">Encumbered: -10 ft</span>
+                    </div>
+                  )}
+                </>
               )}
             </div>
             <div className="card text-center">
@@ -1039,6 +1123,58 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
               )}
             </div>
           </div>
+
+          {/* Prominent Death Saves - visible at 0 HP */}
+          {overview.current_hp === 0 && (
+            <div className="card border-2 border-red-500/40 bg-red-950/20 shadow-[0_0_24px_rgba(239,68,68,0.12)]">
+              <div className="flex items-center gap-2 mb-3">
+                <Skull size={18} className="text-red-400" />
+                <h3 className="font-display text-red-300 text-lg tracking-wide">DEATH SAVES</h3>
+                <span className="text-xs text-red-400/60 ml-auto">Your character is at 0 HP!</span>
+              </div>
+              <div className="flex gap-10 justify-center py-2">
+                <div className="text-center">
+                  <label className="label text-emerald-400/80 mb-2 text-sm font-display tracking-wider">Successes</label>
+                  <div className="flex gap-3">
+                    {[1,2,3].map(i => (
+                      <button key={i}
+                        onClick={() => updateField('death_save_successes', overview.death_save_successes === i ? i-1 : i)}
+                        className={`w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all ${
+                          i <= overview.death_save_successes
+                            ? 'bg-emerald-500 border-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.4)]'
+                            : 'border-emerald-400/30 hover:border-emerald-400/60 hover:bg-emerald-500/10'
+                        }`}
+                        title={i <= overview.death_save_successes ? 'Click to remove success' : 'Click to mark success'}
+                      >
+                        {i <= overview.death_save_successes && <Check size={16} className="text-white" strokeWidth={3} />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <label className="label text-red-400/80 mb-2 text-sm font-display tracking-wider">Failures</label>
+                  <div className="flex gap-3">
+                    {[1,2,3].map(i => (
+                      <button key={i}
+                        onClick={() => updateField('death_save_failures', overview.death_save_failures === i ? i-1 : i)}
+                        className={`w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all ${
+                          i <= overview.death_save_failures
+                            ? 'bg-red-500 border-red-400 shadow-[0_0_12px_rgba(239,68,68,0.4)]'
+                            : 'border-red-400/30 hover:border-red-400/60 hover:bg-red-500/10'
+                        }`}
+                        title={i <= overview.death_save_failures ? 'Click to remove failure' : 'Click to mark failure'}
+                      >
+                        {i <= overview.death_save_failures && <span className="text-white text-lg font-bold">&times;</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-red-300/40 text-center mt-2">
+                Roll d20 each turn: 10+ = success, 9- = failure. Nat 20 = regain 1 HP. Nat 1 = two failures.
+              </p>
+            </div>
+          )}
 
           {/* Hit Dice & Death Saves */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronRight, ChevronUp, Sparkles, RotateCcw, Search } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, ChevronUp, Sparkles, RotateCcw, Search, Lock, Coins, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getSpells, addSpell, updateSpell, deleteSpell, getSpellSlots, updateSpellSlots, resetSpellSlots } from '../api/spells';
 import { getOverview } from '../api/overview';
@@ -312,6 +312,22 @@ export default function Spellbook({ characterId }) {
               <SpellRow key={spell.id} spell={spell} level={0} spells={spells} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} />
             ))}
           </div>
+          {/* Cantrip Scaling Display */}
+          {(() => {
+            const charLevel = charData?.overview?.level || 1;
+            const tier = charLevel >= 17 ? 4 : charLevel >= 11 ? 3 : charLevel >= 5 ? 2 : 1;
+            return (
+              <div className="mt-3 flex items-center gap-2 text-xs text-amber-200/30 border-t border-amber-200/5 pt-3">
+                <Info size={12} className="text-purple-400/60 flex-shrink-0" />
+                <span>Cantrip damage scales at levels{' '}
+                  <span className={tier >= 2 ? 'text-purple-300 font-semibold' : ''}>5</span>,{' '}
+                  <span className={tier >= 3 ? 'text-purple-300 font-semibold' : ''}>11</span>,{' '}
+                  <span className={tier >= 4 ? 'text-purple-300 font-semibold' : ''}>17</span>
+                  {' '}<span className="text-amber-200/20">(current tier: {tier})</span>
+                </span>
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -362,8 +378,15 @@ export default function Spellbook({ characterId }) {
 }
 
 function SpellRow({ spell, level, spells, concentratingOn, setConcentratingOn, handleUpdateSpell, setConfirmDelete, expandedSpell, setExpandedSpell }) {
+  // Material component cost detection
+  const goldCost = useMemo(() => {
+    if (!spell.material) return null;
+    const match = spell.material.match(/(\d[\d,]*)\s*gp/i);
+    return match ? match[1] : null;
+  }, [spell.material]);
+
   return (
-    <div className="bg-[#0d0d12] rounded p-3 border border-gold/10">
+    <div className={`bg-[#0d0d12] rounded p-3 border border-gold/10 ${spell.ritual ? 'border-l-2 border-l-blue-500/40' : ''}`}>
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <span className="text-amber-100 font-medium">{spell.name}</span>
@@ -392,14 +415,27 @@ function SpellRow({ spell, level, spells, concentratingOn, setConcentratingOn, h
               C
             </button>
           )}
-          {spell.ritual && <span className="text-xs bg-blue-800/40 text-blue-300 px-1.5 py-0.5 rounded" title="Ritual: Can be cast in 10 extra minutes without using a spell slot.">R</span>}
-          {level > 0 && (
-            <button
-              onClick={() => handleUpdateSpell(spell.id, { ...spell, prepared: !spell.prepared })}
-              className={`text-xs px-1.5 py-0.5 rounded ${spell.prepared ? 'bg-emerald-800/40 text-emerald-300' : 'bg-gray-800/40 text-gray-400'}`}
+          {spell.ritual && (
+            <span
+              className="text-xs bg-blue-800/50 text-blue-200 px-2 py-0.5 rounded border border-blue-500/30 font-medium"
+              title="Ritual: Can be cast as a ritual in 10 extra minutes without using a spell slot."
             >
-              {spell.prepared ? 'Prepared' : 'Unprepared'}
-            </button>
+              Ritual
+            </span>
+          )}
+          {level > 0 && (
+            spell.always_prepared ? (
+              <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-800/40 text-emerald-300 flex items-center gap-1" title="Always prepared (domain/oath spell) — cannot be unprepared">
+                <Lock size={10} /> Prepared
+              </span>
+            ) : (
+              <button
+                onClick={() => handleUpdateSpell(spell.id, { ...spell, prepared: !spell.prepared })}
+                className={`text-xs px-1.5 py-0.5 rounded ${spell.prepared ? 'bg-emerald-800/40 text-emerald-300' : 'bg-gray-800/40 text-gray-400'}`}
+              >
+                {spell.prepared ? 'Prepared' : 'Unprepared'}
+              </button>
+            )
           )}
         </div>
         <button onClick={() => setConfirmDelete(spell)} className="text-red-400/50 hover:text-red-400" aria-label={`Delete spell ${spell.name}`}>
@@ -427,6 +463,11 @@ function SpellRow({ spell, level, spells, concentratingOn, setConcentratingOn, h
               </span>
             );
           })}
+          {goldCost && (
+            <span className="flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-yellow-900/30 text-yellow-400/90 ml-1" title={`Material cost: ${goldCost} gp — ${spell.material}`}>
+              <Coins size={10} className="text-yellow-500" /> {goldCost} gp
+            </span>
+          )}
         </div>
       )}
       {spell.description && (
@@ -449,7 +490,7 @@ function SpellForm({ spell, onSubmit, onCancel }) {
   const [form, setForm] = useState(spell || {
     name: '', level: 0, school: '', casting_time: '1 action',
     spell_range: '', components: '', material: '', duration: '',
-    concentration: false, ritual: false, description: '', upcast_notes: '', prepared: false,
+    concentration: false, ritual: false, description: '', upcast_notes: '', prepared: false, always_prepared: false,
   });
   const [nameError, setNameError] = useState(false);
 
@@ -515,6 +556,9 @@ function SpellForm({ spell, onSubmit, onCancel }) {
             </label>
             <label className="flex items-center gap-2 text-sm text-amber-200/60">
               <input type="checkbox" checked={form.prepared} onChange={e => update('prepared', e.target.checked)} /> Prepared
+            </label>
+            <label className="flex items-center gap-2 text-sm text-amber-200/60" title="Domain, oath, or subclass spells that are always prepared and cannot be swapped out">
+              <input type="checkbox" checked={form.always_prepared} onChange={e => { update('always_prepared', e.target.checked); if (e.target.checked) update('prepared', true); }} /> Always Prepared
             </label>
           </div>
         </div>

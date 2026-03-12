@@ -194,7 +194,7 @@ fn do_export(state: &AppState, character_id: &str) -> Result<serde_json::Value, 
         ).ok();
 
         let journal_entries = query_json_list(conn,
-            "SELECT title, session_number, real_date, ingame_date, body, tags, created_at, updated_at FROM journal_entries ORDER BY created_at DESC",
+            "SELECT title, session_number, real_date, ingame_date, body, tags, npcs_mentioned, pinned, created_at, updated_at FROM journal_entries ORDER BY created_at DESC",
             &[], |row| Ok(serde_json::json!({
                 "title": row.get::<_, String>(0)?,
                 "session_number": row.get::<_, i64>(1).unwrap_or(0),
@@ -202,8 +202,10 @@ fn do_export(state: &AppState, character_id: &str) -> Result<serde_json::Value, 
                 "ingame_date": row.get::<_, String>(3).unwrap_or_default(),
                 "body": row.get::<_, String>(4).unwrap_or_default(),
                 "tags": row.get::<_, String>(5).unwrap_or_default(),
-                "created_at": row.get::<_, Option<String>>(6).unwrap_or(None),
-                "updated_at": row.get::<_, Option<String>>(7).unwrap_or(None),
+                "npcs_mentioned": row.get::<_, String>(6).unwrap_or_default(),
+                "pinned": row.get::<_, i64>(7).unwrap_or(0),
+                "created_at": row.get::<_, Option<String>>(8).unwrap_or(None),
+                "updated_at": row.get::<_, Option<String>>(9).unwrap_or(None),
             })))?;
 
         let npcs = query_json_list(conn,
@@ -242,13 +244,14 @@ fn do_export(state: &AppState, character_id: &str) -> Result<serde_json::Value, 
         };
 
         let lore_notes = query_json_list(conn,
-            "SELECT title, category, body, created_at, updated_at FROM lore_notes",
+            "SELECT title, category, body, related_to, created_at, updated_at FROM lore_notes",
             &[], |row| Ok(serde_json::json!({
                 "title": row.get::<_, String>(0)?,
                 "category": row.get::<_, String>(1).unwrap_or_default(),
                 "body": row.get::<_, String>(2).unwrap_or_default(),
-                "created_at": row.get::<_, Option<String>>(3).unwrap_or(None),
-                "updated_at": row.get::<_, Option<String>>(4).unwrap_or(None),
+                "related_to": row.get::<_, String>(3).unwrap_or_default(),
+                "created_at": row.get::<_, Option<String>>(4).unwrap_or(None),
+                "updated_at": row.get::<_, Option<String>>(5).unwrap_or(None),
             })))?;
 
         Ok(serde_json::json!({

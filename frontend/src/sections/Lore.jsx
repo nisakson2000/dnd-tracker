@@ -1,9 +1,33 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Globe, Search } from 'lucide-react';
+import { Plus, Trash2, Edit2, Globe, Search, MapPin, Users, Star, Clock, Sparkles, Bug, Package, Tag, Link } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { getLoreNotes, addLoreNote, updateLoreNote, deleteLoreNote } from '../api/lore';
 import ConfirmDialog from '../components/ConfirmDialog';
+
+const CATEGORY_PRESETS = [
+  { label: 'Location', icon: MapPin },
+  { label: 'Faction', icon: Users },
+  { label: 'Deity', icon: Star },
+  { label: 'History', icon: Clock },
+  { label: 'Magic', icon: Sparkles },
+  { label: 'Creature', icon: Bug },
+  { label: 'Item', icon: Package },
+  { label: 'Custom', icon: Tag },
+];
+
+function getCategoryIcon(category) {
+  if (!category) return null;
+  const lower = category.toLowerCase();
+  if (lower === 'location' || lower === 'locations') return MapPin;
+  if (lower === 'faction' || lower === 'factions') return Users;
+  if (lower === 'deity' || lower === 'deities' || lower === 'god' || lower === 'gods') return Star;
+  if (lower === 'history' || lower === 'historical') return Clock;
+  if (lower === 'magic' || lower === 'magical' || lower === 'arcane') return Sparkles;
+  if (lower === 'creature' || lower === 'creatures' || lower === 'monster' || lower === 'monsters') return Bug;
+  if (lower === 'item' || lower === 'items' || lower === 'artifact' || lower === 'artifacts') return Package;
+  return Tag;
+}
 
 export default function Lore({ characterId }) {
   const [notes, setNotes] = useState([]);
@@ -52,7 +76,7 @@ export default function Lore({ characterId }) {
   const filtered = useMemo(() => notes.filter(n => {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      if (!(n.title || '').toLowerCase().includes(q) && !(n.body || '').toLowerCase().includes(q) && !(n.category || '').toLowerCase().includes(q)) return false;
+      if (!(n.title || '').toLowerCase().includes(q) && !(n.body || '').toLowerCase().includes(q) && !(n.category || '').toLowerCase().includes(q) && !(n.related_to || '').toLowerCase().includes(q)) return false;
     }
     if (categoryFilter !== 'all' && (n.category || '') !== categoryFilter) return false;
     return true;
@@ -104,12 +128,16 @@ export default function Lore({ characterId }) {
               className={`text-xs px-2.5 py-1 rounded-full border transition-all ${categoryFilter === 'all' ? 'bg-gold/15 border-gold/30 text-gold' : 'border-amber-200/10 text-amber-200/30 hover:text-amber-200/50'}`}>
               All
             </button>
-            {categories.map(cat => (
-              <button key={cat} onClick={() => setCategoryFilter(cat)}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-all ${categoryFilter === cat ? 'bg-gold/15 border-gold/30 text-gold' : 'border-amber-200/10 text-amber-200/30 hover:text-amber-200/50'}`}>
-                {cat}
-              </button>
-            ))}
+            {categories.map(cat => {
+              const CatIcon = getCategoryIcon(cat);
+              return (
+                <button key={cat} onClick={() => setCategoryFilter(cat)}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-all flex items-center gap-1 ${categoryFilter === cat ? 'bg-gold/15 border-gold/30 text-gold' : 'border-amber-200/10 text-amber-200/30 hover:text-amber-200/50'}`}>
+                  {CatIcon && <CatIcon size={10} />}
+                  {cat}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -122,32 +150,44 @@ export default function Lore({ characterId }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {sorted.map(note => (
-            <div key={note.id} className="card">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h4 className="text-amber-100 font-display">{note.title}</h4>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {note.category && <span className="text-xs bg-purple-800/30 text-purple-300 px-2 py-0.5 rounded">{note.category}</span>}
-                    {note.body && (() => {
-                      const words = note.body.trim().split(/\s+/).filter(Boolean).length;
-                      const mins = Math.ceil(words / 200);
-                      return <span className="text-[10px] text-amber-200/25">{words} words ~ {mins} min read</span>;
-                    })()}
+          {sorted.map(note => {
+            const CatIcon = getCategoryIcon(note.category);
+            return (
+              <div key={note.id} className="card">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      {CatIcon && <CatIcon size={14} className="text-amber-200/40 shrink-0" />}
+                      <h4 className="text-amber-100 font-display">{note.title}</h4>
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {note.category && <span className="text-xs bg-purple-800/30 text-purple-300 px-2 py-0.5 rounded">{note.category}</span>}
+                      {note.body && (() => {
+                        const words = note.body.trim().split(/\s+/).filter(Boolean).length;
+                        const mins = Math.ceil(words / 200);
+                        return <span className="text-[10px] text-amber-200/25">{words} words ~ {mins} min read</span>;
+                      })()}
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <button onClick={() => { setEditing(note); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200" aria-label={`Edit ${note.title || 'note'}`}><Edit2 size={14} /></button>
+                    <button onClick={() => setConfirmDelete(note)} className="text-red-400/50 hover:text-red-400" aria-label={`Delete ${note.title || 'note'}`}><Trash2 size={14} /></button>
                   </div>
                 </div>
-                <div className="flex gap-1">
-                  <button onClick={() => { setEditing(note); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200" aria-label={`Edit ${note.title || 'note'}`}><Edit2 size={14} /></button>
-                  <button onClick={() => setConfirmDelete(note)} className="text-red-400/50 hover:text-red-400" aria-label={`Delete ${note.title || 'note'}`}><Trash2 size={14} /></button>
-                </div>
+                {note.related_to && (
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Link size={11} className="text-amber-200/30 shrink-0" />
+                    <span className="text-xs text-amber-200/40 italic">Related to: <span className="text-amber-200/60">{note.related_to}</span></span>
+                  </div>
+                )}
+                {note.body && (
+                  <div className="text-sm text-amber-200/50 line-clamp-4 [&_.wmde-markdown]:!bg-transparent [&_.wmde-markdown]:!text-amber-200/50 [&_.wmde-markdown]:!font-sans [&_.wmde-markdown]:!text-sm" data-color-mode="dark">
+                    <MDEditor.Markdown source={note.body} />
+                  </div>
+                )}
               </div>
-              {note.body && (
-                <div className="text-sm text-amber-200/50 line-clamp-4 [&_.wmde-markdown]:!bg-transparent [&_.wmde-markdown]:!text-amber-200/50 [&_.wmde-markdown]:!font-sans [&_.wmde-markdown]:!text-sm" data-color-mode="dark">
-                  <MDEditor.Markdown source={note.body} />
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -167,7 +207,7 @@ export default function Lore({ characterId }) {
 }
 
 function LoreForm({ note, onSubmit, onCancel }) {
-  const [form, setForm] = useState(note || { title: '', category: '', body: '' });
+  const [form, setForm] = useState(note || { title: '', category: '', body: '', related_to: '' });
   const [titleError, setTitleError] = useState(false);
   const update = (f, v) => {
     if (f === 'title') setTitleError(false);
@@ -193,9 +233,35 @@ function LoreForm({ note, onSubmit, onCancel }) {
             <input className={`input w-full ${titleError ? 'border-red-500' : ''}`} placeholder="Title" value={form.title} onChange={e => update('title', e.target.value)} autoFocus />
             {titleError && <p className="text-red-400 text-xs mt-1">Title required</p>}
           </div>
-          <input className="input w-full" placeholder="Category (e.g. Factions, Locations, Deities)" value={form.category} onChange={e => update('category', e.target.value)} />
+          <div>
+            <input className="input w-full" placeholder="Category (e.g. Factions, Locations, Deities)" value={form.category} onChange={e => update('category', e.target.value)} />
+            <div className="flex gap-1.5 mt-2 flex-wrap">
+              {CATEGORY_PRESETS.filter(p => p.label !== 'Custom').map(preset => {
+                const PresetIcon = preset.icon;
+                return (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => update('category', preset.label)}
+                    className={`text-xs px-2 py-1 rounded flex items-center gap-1 transition-all ${
+                      form.category === preset.label
+                        ? 'bg-gold/20 text-gold border border-gold/30'
+                        : 'bg-amber-200/5 text-amber-200/40 border border-amber-200/10 hover:text-amber-200/60'
+                    }`}
+                  >
+                    <PresetIcon size={10} />
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div data-color-mode="dark">
             <MDEditor value={form.body} onChange={v => update('body', v || '')} height={250} preview="edit" />
+          </div>
+          <div>
+            <label className="label flex items-center gap-1"><Link size={12} /> Related To</label>
+            <input className="input w-full" placeholder="Reference another lore entry (e.g. The Silver Coast)" value={form.related_to || ''} onChange={e => update('related_to', e.target.value)} />
           </div>
         </div>
         <div className="flex gap-3 justify-end mt-4">

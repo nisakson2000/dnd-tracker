@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Users, Search, Copy } from 'lucide-react';
+import { Plus, Trash2, Edit2, Users, Search, Copy, ScrollText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { getNPCs, addNPC, updateNPC, deleteNPC } from '../api/npcs';
@@ -7,12 +7,22 @@ import ConfirmDialog from '../components/ConfirmDialog';
 
 const ROLES = ['ally', 'enemy', 'neutral', 'party'];
 const STATUSES = ['alive', 'dead', 'unknown'];
+const RELATIONSHIPS = ['Friendly', 'Neutral', 'Hostile', 'Rival', 'Patron', 'Unknown'];
 
 const ROLE_COLORS = {
   ally: { bg: 'bg-emerald-600', border: 'border-emerald-400', text: 'text-emerald-400', cardBorder: 'border-emerald-500/25', cardBg: 'bg-emerald-950/10', leftBorder: 'border-l-emerald-500' },
   enemy: { bg: 'bg-red-600', border: 'border-red-400', text: 'text-red-400', cardBorder: 'border-red-500/25', cardBg: 'bg-red-950/10', leftBorder: 'border-l-red-500' },
   neutral: { bg: 'bg-amber-600', border: 'border-amber-400', text: 'text-amber-200/60', cardBorder: 'border-gold/20', cardBg: '', leftBorder: 'border-l-amber-500' },
   party: { bg: 'bg-blue-600', border: 'border-blue-400', text: 'text-blue-400', cardBorder: 'border-blue-500/25', cardBg: 'bg-blue-950/10', leftBorder: 'border-l-blue-500' },
+};
+
+const RELATIONSHIP_COLORS = {
+  Friendly: { bg: 'bg-emerald-800/30', text: 'text-emerald-300', border: 'border-emerald-500/30' },
+  Neutral: { bg: 'bg-amber-800/30', text: 'text-amber-300', border: 'border-amber-500/30' },
+  Hostile: { bg: 'bg-red-800/30', text: 'text-red-300', border: 'border-red-500/30' },
+  Rival: { bg: 'bg-purple-800/30', text: 'text-purple-300', border: 'border-purple-500/30' },
+  Patron: { bg: 'bg-blue-800/30', text: 'text-blue-300', border: 'border-blue-500/30' },
+  Unknown: { bg: 'bg-gray-800/30', text: 'text-gray-300', border: 'border-gray-500/30' },
 };
 
 function getInitials(name) {
@@ -152,6 +162,7 @@ export default function NPCs({ characterId }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {sorted.map(npc => {
             const colors = ROLE_COLORS[npc.role] || ROLE_COLORS.neutral;
+            const relColors = RELATIONSHIP_COLORS[npc.relationship] || null;
             return (
               <div key={npc.id} className={`card ${colors.cardBg} border ${colors.cardBorder} border-l-3 ${colors.leftBorder}`}>
                 <div className="flex items-start gap-3">
@@ -164,7 +175,7 @@ export default function NPCs({ characterId }) {
                     <div className="flex items-start justify-between">
                       <div>
                         <h4 className="text-amber-100 font-medium">{npc.name}</h4>
-                        <div className="flex items-center gap-2 mt-0.5">
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                           <span className={`text-xs capitalize ${colors.text}`}>{npc.role}</span>
                           <span className="text-amber-200/20">·</span>
                           <span className={`text-xs ${
@@ -172,6 +183,14 @@ export default function NPCs({ characterId }) {
                             npc.status === 'dead' ? 'text-red-400 line-through' :
                             'text-amber-200/40'
                           }`}>{npc.status}</span>
+                          {relColors && (
+                            <>
+                              <span className="text-amber-200/20">·</span>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded border ${relColors.bg} ${relColors.text} ${relColors.border}`}>
+                                {npc.relationship}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-1 flex-shrink-0">
@@ -183,6 +202,12 @@ export default function NPCs({ characterId }) {
                     {npc.race && <p className="text-xs text-amber-200/40 mt-1">{[npc.race, npc.npc_class].filter(Boolean).join(' · ')}</p>}
                     {npc.location && <p className="text-xs text-amber-200/40 mt-0.5">Location: {npc.location}</p>}
                     {npc.description && <p className="text-sm text-amber-200/50 mt-2">{npc.description}</p>}
+                    {npc.quest_hook && (
+                      <div className="mt-2 flex items-start gap-1.5 bg-amber-800/10 border border-amber-500/15 rounded px-2 py-1.5">
+                        <ScrollText size={13} className="text-amber-400/60 flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-amber-300/60">{npc.quest_hook}</p>
+                      </div>
+                    )}
                     {npc.notes && (
                       <div className="mt-1 text-xs text-amber-200/40 [&_.wmde-markdown]:!bg-transparent [&_.wmde-markdown]:!text-amber-200/40 [&_.wmde-markdown]:!font-sans [&_.wmde-markdown]:!text-xs" data-color-mode="dark">
                         <MDEditor.Markdown source={npc.notes} />
@@ -213,7 +238,7 @@ export default function NPCs({ characterId }) {
 
 function NPCForm({ npc, onSubmit, onCancel }) {
   const [form, setForm] = useState(npc || {
-    name: '', role: 'neutral', race: '', npc_class: '', location: '', description: '', notes: '', status: 'alive',
+    name: '', role: 'neutral', race: '', npc_class: '', location: '', description: '', notes: '', status: 'alive', relationship: 'Unknown', quest_hook: '',
   });
   const [nameError, setNameError] = useState(false);
   const update = (f, v) => {
@@ -233,7 +258,7 @@ function NPCForm({ npc, onSubmit, onCancel }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={e => e.target === e.currentTarget && onCancel()}>
-      <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4">
+      <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
         <h3 className="font-display text-lg text-amber-100 mb-4">{npc ? 'Edit NPC' : 'Add NPC'}</h3>
         <div className="space-y-3">
           <div>
@@ -248,12 +273,16 @@ function NPCForm({ npc, onSubmit, onCancel }) {
               {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
+          <select className="input w-full" value={form.relationship || 'Unknown'} onChange={e => update('relationship', e.target.value)}>
+            {RELATIONSHIPS.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
           <div className="grid grid-cols-2 gap-3">
             <input className="input w-full" placeholder="Race" value={form.race} onChange={e => update('race', e.target.value)} />
             <input className="input w-full" placeholder="Class" value={form.npc_class} onChange={e => update('npc_class', e.target.value)} />
           </div>
           <input className="input w-full" placeholder="e.g. Waterdeep, The Rusty Anchor..." value={form.location} onChange={e => update('location', e.target.value)} />
           <textarea className="input w-full h-20 resize-none" placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} />
+          <input className="input w-full" placeholder="Quest hook (optional) e.g. Needs help finding a lost artifact..." value={form.quest_hook || ''} onChange={e => update('quest_hook', e.target.value)} />
           <div data-color-mode="dark">
             <MDEditor value={form.notes} onChange={v => update('notes', v || '')} height={120} preview="edit" />
           </div>

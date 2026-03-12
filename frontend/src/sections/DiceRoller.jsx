@@ -1,10 +1,23 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Dice5, Copy, ChevronDown, ChevronUp, BarChart3 } from 'lucide-react';
+import { Dice5, Copy, ChevronDown, ChevronUp, BarChart3, Save, X, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import HelpTooltip from '../components/HelpTooltip';
 import { HELP } from '../data/helpText';
 import { computeConditionEffects } from '../data/conditionEffects';
+
+const MACROS_KEY = 'codex_dice_macros';
+const MAX_MACROS = 20;
+
+function loadMacros() {
+  try {
+    return JSON.parse(localStorage.getItem(MACROS_KEY)) || [];
+  } catch { return []; }
+}
+
+function saveMacrosToStorage(macros) {
+  try { localStorage.setItem(MACROS_KEY, JSON.stringify(macros)); } catch {}
+}
 
 const DICE = [4, 6, 8, 10, 12, 20, 100];
 
@@ -63,7 +76,36 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
   const [statBlockResult, setStatBlockResult] = useState(null);
   const [showStatBlock, setShowStatBlock] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [macros, setMacros] = useState(loadMacros);
   const condEffects = computeConditionEffects(activeConditions);
+
+  const handleSaveMacro = () => {
+    if (!lastRoll) { toast.error('Roll something first'); return; }
+    if (macros.length >= MAX_MACROS) { toast.error(`Maximum ${MAX_MACROS} macros reached — delete one first`); return; }
+    const name = prompt('Name this roll macro:');
+    if (!name || !name.trim()) return;
+    const expr = lastRoll.expr.replace(/ \(ADV\)$/, '').replace(/ \(DIS\)$/, '');
+    const newMacros = [...macros, { id: Date.now().toString(36), name: name.trim(), expr }];
+    setMacros(newMacros);
+    saveMacrosToStorage(newMacros);
+    toast.success(`Saved "${name.trim()}"`);
+  };
+
+  const handleDeleteMacro = (id) => {
+    const newMacros = macros.filter(m => m.id !== id);
+    setMacros(newMacros);
+    saveMacrosToStorage(newMacros);
+  };
+
+  const handleRunMacro = (macro) => {
+    const parsed = parseRoll(macro.expr);
+    if (parsed) {
+      setRollLabel(macro.name);
+      doRoll(parsed.count, parsed.sides, parsed.modifier, macro.name);
+    } else {
+      toast.error(`Invalid macro expression: ${macro.expr}`);
+    }
+  };
 
   // #208 — Compute roll statistics per die type
   const rollStats = useMemo(() => {
@@ -275,6 +317,49 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
         </div>
       </div>
 
+      {/* Saved Roll Macros */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-display text-amber-100">Saved Rolls</h3>
+          {lastRoll && (
+            <button onClick={handleSaveMacro} className="text-xs text-amber-200/30 hover:text-amber-200/60 transition-colors flex items-center gap-1" title="Save the last rolled expression as a macro">
+              <Save size={12} /> Save Current
+            </button>
+          )}
+        </div>
+        <p className="text-xs text-amber-200/30 mb-3">Save frequently used rolls as quick-access macros. Click to roll, X to delete.</p>
+        {macros.length === 0 ? (
+          <p className="text-sm text-amber-200/20">No saved rolls yet. Roll something and click "Save Current" to add one.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {macros.map(macro => (
+              <div key={macro.id} className="group relative flex items-center gap-1.5 bg-[#0d0d12] border border-gold/15 rounded-lg px-3 py-2 hover:border-gold/40 transition-all">
+                <button
+                  onClick={() => handleRunMacro(macro)}
+                  className="flex items-center gap-2 text-sm"
+                  title={`Roll ${macro.expr}`}
+                >
+                  <Play size={10} className="text-gold/50" />
+                  <span className="text-amber-100 font-medium">{macro.name}</span>
+                  <span className="text-amber-200/30 text-xs">{macro.expr}</span>
+                </button>
+                <button
+                  onClick={() => handleDeleteMacro(macro.id)}
+                  className="text-amber-200/20 hover:text-red-400 transition-colors ml-1"
+                  title="Delete macro"
+                  aria-label={`Delete macro ${macro.name}`}
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {macros.length > 0 && (
+          <div className="text-xs text-amber-200/20 mt-2">{macros.length}/{MAX_MACROS} macros</div>
+        )}
+      </div>
+
       {/* #202 — Stat Block Result */}
       <AnimatePresence>
         {showStatBlock && statBlockResult && (
@@ -338,21 +423,49 @@ export default function DiceRoller({ activeConditions = [], diceHistory, onDiceH
             key={lastRoll.id}
             aria-live="polite"
             aria-label={`Roll result: ${lastRoll.expr} = ${lastRoll.total}${lastRoll.isNat20 ? ', Natural 20!' : ''}${lastRoll.isNat1 ? ', Natural 1' : ''}`}
-            className={`card text-center ${lastRoll.isNat20 ? 'border-gold shadow-[0_0_30px_rgba(201,168,76,0.3)]' : lastRoll.isNat1 ? 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.3)]' : ''}`}
+            className={`card text-center overflow-hidden ${lastRoll.isNat20 ? 'border-gold shadow-[0_0_40px_rgba(201,168,76,0.4)]' : lastRoll.isNat1 ? 'border-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)]' : ''}`}
             initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+            animate={lastRoll.isNat20 || lastRoll.isNat1 ? {
+              scale: 1, opacity: 1,
+              x: [0, -3, 3, -2, 2, 0],
+            } : { scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ type: 'spring', damping: 15 }}
+            transition={lastRoll.isNat20 || lastRoll.isNat1 ? {
+              type: 'spring', damping: 15,
+              x: { duration: 0.4, delay: 0.1 },
+            } : { type: 'spring', damping: 15 }}
           >
             {lastRoll.isNat20 && (
-              <div className="text-4xl mb-2" style={{ animation: 'glow-pulse 1s ease-in-out infinite' }}>
-                NAT 20!
-              </div>
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', damping: 8, delay: 0.15 }}
+              >
+                <div className="text-5xl font-display font-bold mb-1" style={{
+                  color: '#ffd700',
+                  textShadow: '0 0 20px rgba(255,215,0,0.6), 0 0 40px rgba(255,215,0,0.3), 0 0 60px rgba(255,215,0,0.15)',
+                  animation: 'crit-glow 1.2s ease-in-out infinite',
+                }}>
+                  CRITICAL HIT!
+                </div>
+                <div className="text-sm text-gold/60 mb-2">Natural 20</div>
+              </motion.div>
             )}
             {lastRoll.isNat1 && (
-              <div className="text-4xl mb-2 text-red-400" style={{ animation: 'glow-pulse 1s ease-in-out infinite' }}>
-                NAT 1
-              </div>
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', damping: 8, delay: 0.15 }}
+              >
+                <div className="text-5xl font-display font-bold mb-1" style={{
+                  color: '#ef4444',
+                  textShadow: '0 0 20px rgba(239,68,68,0.6), 0 0 40px rgba(239,68,68,0.3), 0 0 60px rgba(239,68,68,0.15)',
+                  animation: 'crit-miss-glow 1.2s ease-in-out infinite',
+                }}>
+                  CRITICAL MISS!
+                </div>
+                <div className="text-sm text-red-400/60 mb-2">Natural 1</div>
+              </motion.div>
             )}
             {lastRoll.label && <div className="text-xs text-gold/60 mb-1">{lastRoll.label}</div>}
             <div className="text-sm text-amber-200/50 mb-2">{lastRoll.expr}</div>

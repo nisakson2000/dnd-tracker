@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Users, Wifi, WifiOff, Copy, Check, LogIn, LogOut, Crown, Heart, Shield, RefreshCw, Signal } from 'lucide-react';
+import { Users, Wifi, WifiOff, Copy, Check, LogIn, LogOut, Crown, Heart, Shield, RefreshCw, Signal, AlertTriangle, Activity } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { useAppMode } from '../contexts/ModeContext';
 
 const PARTY_PORT = 8787;
 const CONNECT_TIMEOUT_MS = 8000;
@@ -251,9 +252,83 @@ function StatusDot({ status }) {
   );
 }
 
+// ─── Party Stats Overview (DM Host) ──────────────────────────────────────
+
+function PartyStatsOverview({ members }) {
+  if (!members || members.length === 0) return null;
+
+  const withHp = members.filter(m => m.character && m.character.max_hp > 0);
+  const totalSize = members.length;
+
+  if (withHp.length === 0) return null;
+
+  const hpPercentages = withHp.map(m => (m.character.hp / m.character.max_hp) * 100);
+  const avgHpPct = Math.round(hpPercentages.reduce((a, b) => a + b, 0) / hpPercentages.length);
+
+  // Find lowest HP member
+  let lowestMember = withHp[0];
+  let lowestPct = 100;
+  withHp.forEach(m => {
+    const pct = (m.character.hp / m.character.max_hp) * 100;
+    if (pct < lowestPct) { lowestPct = pct; lowestMember = m; }
+  });
+  lowestPct = Math.round(lowestPct);
+
+  // Level range
+  const levels = members.filter(m => m.character?.level).map(m => m.character.level);
+  const minLevel = levels.length > 0 ? Math.min(...levels) : '?';
+  const maxLevel = levels.length > 0 ? Math.max(...levels) : '?';
+  const levelRange = minLevel === maxLevel ? `${minLevel}` : `${minLevel}–${maxLevel}`;
+
+  // Danger colors
+  const avgColor = avgHpPct <= 25 ? '#ef4444' : avgHpPct <= 50 ? '#eab308' : '#4ade80';
+  const lowestColor = lowestPct <= 0 ? '#ef4444' : lowestPct <= 25 ? '#f87171' : lowestPct <= 50 ? '#eab308' : '#4ade80';
+
+  const statCardStyle = {
+    borderRadius: 8, padding: '10px 12px',
+    background: 'rgba(11,9,20,0.6)', border: '1px solid rgba(255,255,255,0.06)',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 0,
+  };
+
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <h3 style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(201,168,76,0.5)', marginBottom: 8, fontFamily: 'var(--font-ui, Outfit, sans-serif)' }}>
+        Party Overview
+      </h3>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+        <div style={statCardStyle}>
+          <Activity size={14} style={{ color: avgColor }} />
+          <div style={{ fontSize: 16, fontWeight: 700, color: avgColor, fontFamily: 'Cinzel, Georgia, serif', lineHeight: 1 }}>{avgHpPct}%</div>
+          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>Avg HP</div>
+        </div>
+        <div style={statCardStyle}>
+          <AlertTriangle size={14} style={{ color: lowestColor }} />
+          <div style={{ fontSize: 11, fontWeight: 700, color: lowestColor, fontFamily: 'Cinzel, Georgia, serif', lineHeight: 1.2, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+            {lowestMember.character?.name?.split(' ')[0] || '?'}
+          </div>
+          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>
+            Lowest ({lowestPct}%)
+          </div>
+        </div>
+        <div style={statCardStyle}>
+          <Shield size={14} style={{ color: 'rgba(147,197,253,0.7)' }} />
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'rgba(147,197,253,0.9)', fontFamily: 'Cinzel, Georgia, serif', lineHeight: 1 }}>{levelRange}</div>
+          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>Level Range</div>
+        </div>
+        <div style={statCardStyle}>
+          <Users size={14} style={{ color: 'rgba(201,168,76,0.7)' }} />
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'rgba(201,168,76,0.9)', fontFamily: 'Cinzel, Georgia, serif', lineHeight: 1 }}>{totalSize}</div>
+          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>Party Size</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 export default function Party({ characterId, character, onBugReport }) {
+  const { mode: appMode } = useAppMode();
   const [mode, setMode] = useState(null);
   const [roomCode, setRoomCode] = useState('');
   const [hostIp, setHostIp] = useState('');
@@ -366,6 +441,9 @@ export default function Party({ characterId, character, onBugReport }) {
   };
 
   // ── Lobby ─────────────────────────────────────────────────────────────────
+  const isDM = appMode === 'dm';
+  const isPlayer = appMode === 'player';
+
   if (!mode) {
     return (
       <div className="max-w-2xl space-y-6">
@@ -374,7 +452,9 @@ export default function Party({ characterId, character, onBugReport }) {
             <Users size={20} /> Party Connect
           </h2>
           <p className="text-sm text-amber-200/40 mt-1.5">
-            See your whole party's HP, AC, and status live — over your local network. No internet needed.
+            {isDM
+              ? 'Host a session so your players can join and sync their characters in real-time.'
+              : 'Join your DM\'s party session to sync your character live — over your local network.'}
           </p>
         </div>
 
@@ -382,8 +462,8 @@ export default function Party({ characterId, character, onBugReport }) {
           <h3 className="text-xs font-semibold uppercase tracking-widest text-gold/60">How it works</h3>
           <div className="grid grid-cols-3 gap-4 text-center">
             {[
-              { icon: Crown, label: 'Host creates a room', sub: 'Gets a code + IP' },
-              { icon: Users, label: 'Players join with IP & code', sub: 'On the same WiFi' },
+              { icon: Crown, label: isDM ? 'You host a room' : 'DM hosts a room', sub: isDM ? 'You get a code + IP' : 'Gets a code + IP' },
+              { icon: Users, label: isDM ? 'Players join with your code' : 'You join with IP & code', sub: 'On the same WiFi' },
               { icon: Signal, label: 'Stats sync live', sub: 'HP & AC update in real time' },
             ].map(({ icon: Icon, label, sub }, i) => (
               <div key={i} className="space-y-2">
@@ -397,30 +477,34 @@ export default function Party({ characterId, character, onBugReport }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <button onClick={handleHost} className="card border-gold/20 hover:border-gold/40 hover:bg-gold/5 transition-all text-left group cursor-pointer">
+        {/* DM Mode: Host only */}
+        {isDM && (
+          <button onClick={handleHost} className="card border-gold/20 hover:border-gold/40 hover:bg-gold/5 transition-all text-left group cursor-pointer w-full">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
                 <Crown size={18} className="text-gold" />
               </div>
               <div>
                 <div className="font-display text-amber-100 group-hover:text-gold transition-colors">Host a Session</div>
-                <div className="text-xs text-amber-200/40">Create a new room</div>
+                <div className="text-xs text-amber-200/40">Create a new room for your players</div>
               </div>
             </div>
             <p className="text-xs text-amber-200/40 leading-relaxed">
               Start a party room. Share your IP and room code with your players. Everyone on the same WiFi can join instantly.
             </p>
           </button>
+        )}
 
+        {/* Player Mode: Join only */}
+        {isPlayer && (
           <div className="card border-amber-200/10 hover:border-amber-200/20 transition-all">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-blue-400/10 flex items-center justify-center">
                 <LogIn size={18} className="text-blue-400" />
               </div>
               <div>
-                <div className="font-display text-amber-100">Join a Session</div>
-                <div className="text-xs text-amber-200/40">Enter host IP & code</div>
+                <div className="font-display text-amber-100">Join Your DM's Session</div>
+                <div className="text-xs text-amber-200/40">Enter the IP and room code your DM gave you</div>
               </div>
             </div>
             <div className="space-y-2">
@@ -445,7 +529,7 @@ export default function Party({ characterId, character, onBugReport }) {
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="flex items-start gap-2 text-xs text-amber-200/25 border border-amber-200/8 rounded p-3">
           <Wifi size={13} className="shrink-0 mt-0.5" />
@@ -512,6 +596,11 @@ export default function Party({ characterId, character, onBugReport }) {
           <div className="flex items-center gap-2 text-sm text-red-400/80"><WifiOff size={16} /> Connection lost</div>
           <button onClick={connect} className="btn-secondary text-xs border-red-400/30 text-red-400">Reconnect</button>
         </div>
+      )}
+
+      {/* Party Stats Overview — DM host only, when there are connected members */}
+      {mode === 'host' && isDM && status === 'connected' && members.length > 1 && (
+        <PartyStatsOverview members={otherMembers} />
       )}
 
       {me && (

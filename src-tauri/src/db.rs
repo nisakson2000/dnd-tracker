@@ -269,6 +269,8 @@ pub fn init_character_tables(conn: &Connection) -> SqlResult<()> {
             ingame_date TEXT DEFAULT '',
             body TEXT DEFAULT '',
             tags TEXT DEFAULT '',
+            npcs_mentioned TEXT DEFAULT '',
+            pinned INTEGER DEFAULT 0,
             created_at TEXT DEFAULT '',
             updated_at TEXT DEFAULT ''
         );
@@ -306,6 +308,7 @@ pub fn init_character_tables(conn: &Connection) -> SqlResult<()> {
             title TEXT NOT NULL,
             category TEXT DEFAULT '',
             body TEXT DEFAULT '',
+            related_to TEXT DEFAULT '',
             created_at TEXT DEFAULT '',
             updated_at TEXT DEFAULT ''
         );"
@@ -362,6 +365,27 @@ pub fn migrate_character_db(conn: &Connection) -> SqlResult<()> {
     if !conditions_sql.contains("duration_rounds") {
         let _ = conn.execute("ALTER TABLE conditions ADD COLUMN duration_rounds INTEGER DEFAULT 0", []);
         let _ = conn.execute("ALTER TABLE conditions ADD COLUMN rounds_remaining INTEGER DEFAULT 0", []);
+    }
+
+    // Migrate journal_entries: add npcs_mentioned, pinned
+    let journal_sql: String = conn
+        .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='journal_entries'")
+        .and_then(|mut s| s.query_row([], |row| row.get(0)))
+        .unwrap_or_default();
+    if !journal_sql.contains("npcs_mentioned") {
+        let _ = conn.execute("ALTER TABLE journal_entries ADD COLUMN npcs_mentioned TEXT DEFAULT ''", []);
+    }
+    if !journal_sql.contains("pinned") {
+        let _ = conn.execute("ALTER TABLE journal_entries ADD COLUMN pinned INTEGER DEFAULT 0", []);
+    }
+
+    // Migrate lore_notes: add related_to
+    let lore_sql: String = conn
+        .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='lore_notes'")
+        .and_then(|mut s| s.query_row([], |row| row.get(0)))
+        .unwrap_or_default();
+    if !lore_sql.contains("related_to") {
+        let _ = conn.execute("ALTER TABLE lore_notes ADD COLUMN related_to TEXT DEFAULT ''", []);
     }
 
     Ok(())

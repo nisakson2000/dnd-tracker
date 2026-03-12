@@ -321,7 +321,7 @@ pub fn import_character(
                 if title.is_empty() { continue; }
                 let now = chrono::Utc::now().to_rfc3339();
                 conn.execute(
-                    "INSERT INTO journal_entries (title, session_number, real_date, ingame_date, body, tags, created_at, updated_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8)",
+                    "INSERT INTO journal_entries (title, session_number, real_date, ingame_date, body, tags, npcs_mentioned, pinned, created_at, updated_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)",
                     rusqlite::params![
                         title,
                         safe_i64(j.get("session_number").unwrap_or(&serde_json::json!(0)), 0),
@@ -329,6 +329,8 @@ pub fn import_character(
                         safe_str(j.get("ingame_date").unwrap_or(&serde_json::json!("")), ""),
                         safe_str(j.get("body").unwrap_or(&serde_json::json!("")), ""),
                         safe_str(j.get("tags").unwrap_or(&serde_json::json!("")), ""),
+                        safe_str(j.get("npcs_mentioned").unwrap_or(&serde_json::json!("")), ""),
+                        safe_i64(j.get("pinned").unwrap_or(&serde_json::json!(0)), 0),
                         safe_str(j.get("created_at").unwrap_or(&serde_json::Value::String(now.clone())), &now),
                         safe_str(j.get("updated_at").unwrap_or(&serde_json::Value::String(now.clone())), &now),
                     ],
@@ -408,11 +410,12 @@ pub fn import_character(
                 if title.is_empty() { continue; }
                 let now = chrono::Utc::now().to_rfc3339();
                 conn.execute(
-                    "INSERT INTO lore_notes (title, category, body, created_at, updated_at) VALUES (?1,?2,?3,?4,?5)",
+                    "INSERT INTO lore_notes (title, category, body, related_to, created_at, updated_at) VALUES (?1,?2,?3,?4,?5,?6)",
                     rusqlite::params![
                         title,
                         safe_str(l.get("category").unwrap_or(&serde_json::json!("")), ""),
                         safe_str(l.get("body").unwrap_or(&serde_json::json!("")), ""),
+                        safe_str(l.get("related_to").unwrap_or(&serde_json::json!("")), ""),
                         safe_str(l.get("created_at").unwrap_or(&serde_json::Value::String(now.clone())), &now),
                         safe_str(l.get("updated_at").unwrap_or(&serde_json::Value::String(now.clone())), &now),
                     ],

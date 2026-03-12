@@ -1,63 +1,115 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.2.3**
+**Current Version: V0.2.8**
 
-A native desktop application for managing D&D 5e characters with full ruleset support, a 964-article encyclopedia, real-time party sync, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
+A native desktop application for managing D&D 5e characters with full ruleset support, a 964-article encyclopedia, real-time party sync, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
 ## Features
 
+### Player/DM Mode System
+- **Mode Selection** — choose Player or DM mode on launch with animated role picker
+- **DM Campaign Hub** — dedicated overview with session/NPC/quest/lore stats and quick-start actions
+- **DM Quick Reference** — DC guidelines, damage by level, cover, lighting, travel pace
+- **Encounter Difficulty Calculator** — XP thresholds by party size and level
+- **Session Planning Checklist** — prep items with checkboxes
+- **Campaign creation** — DMs create campaigns (not characters) with simplified flow
+
 ### Character Sheet
 - Ability Scores, Saving Throws, Skills (proficiency + expertise), HP tracking with color-coded bar
-- Death Saves, Inspiration, Exhaustion (ruleset-aware: 6 or 10 levels)
-- **XP Progress Bar** — visual progress to next level with D&D 5e XP thresholds
-- **Multiclass Display** — shows all classes/subclasses/levels from multiclass_data
-- Proficiencies (armor, weapons, tools, languages), Movement, Senses
+- **Death Saving Throw UI** — visual tracker with 3 success/3 failure clickable circles
+- **Proficiency Bonus Display** — prominent gold-accented card
+- **Passive Skills** — Perception, Investigation, Insight (10 + skill mod)
+- **Initiative Modifier** — DEX mod shown with breakdown tooltip
+- **AC Breakdown** — hover to see base 10 + DEX mod calculation
+- **Concentration Save Helper** — auto-reminds DC when HP drops while concentrating
+- **Encumbrance Speed Warning** — -10 ft / -20 ft badges on speed display
+- Inspiration, Exhaustion (ruleset-aware: 6 or 10 levels), XP Progress Bar, Multiclass Display
 - Automatic Condition Effects — active conditions auto-apply speed, save, and attack penalties
 
+### Character Setup Wizard
+- Guided post-creation setup: Ability Scores (Point Buy / Standard Array / Roll), Background, Auto-Apply, Skills, Review
+- Supports both 5e-2014 and 5e-2024 rulesets
+
 ### Spellbook
-- Spell Slot Tracking with visual circles, Prepared Spells, Spellcasting Stats auto-calculated
-- **Concentration Tracking** — click C badge to concentrate, warns on switch, shows CON save reminder banner
+- Spell Slot Tracking, Prepared Spells, Spellcasting Stats auto-calculated
+- **Concentration Tracking** — click C badge to concentrate, warns on switch, CON save reminder
+- **Ritual Casting** — prominent badge with tooltip, blue-tinted border on ritual spells
+- **Always-Prepared Spells** — lock icon for domain/oath spells that can't be unprepared
+- **Cantrip Scaling Display** — damage scaling tiers with current tier highlighted
+- **Material Component Costs** — gold coin icon for expensive material components
 - Third-Caster Support (Eldritch Knight, Arcane Trickster), Warlock Pact Magic
-- Search, ritual/concentration badges, upcasting notes
 
 ### Combat Tracker
-- **Attack Roll Buttons** — click dice icon to instantly roll d20 + bonus and damage with crit detection
-- **Condition Duration Timers** — set rounds on conditions, "Next Round" auto-decrements and auto-expires
-- 15 D&D conditions with automatic mechanical effects (speed, saves, attacks, checks)
-- Action Economy Reference, Combat Notes (Actions/Bonus/Reactions/Legendary)
+- **Full Initiative Round Manager** — round counter, current turn highlighting, Next/Previous Turn
+- **Action Economy Tracker** — Action, Bonus Action, Reaction checkboxes (reset each turn)
+- **Attack Roll Buttons** — instant d20 + bonus + damage with crit detection and gold/red animations
+- **Flanking Toggle** — +2 to attack rolls when enabled
+- **Combat Log** — auto-logs attacks, conditions, rounds; 50 entries, color-coded
+- **Condition Duration Timers** — "Next Round" auto-decrements and auto-expires
+- 15 D&D conditions with automatic mechanical effects
 
 ### Features & Traits
-- **Uses/Charges Tracking** — visual charge circles for limited-use abilities (Rage 2/day, Action Surge, etc.)
-- Recharge type (Short Rest, Long Rest, Dawn, Manual), one-click restore
-- Class Features, Racial Traits, Feats with filtering
+- **Uses/Charges Tracking** — visual charge circles with recharge types
+- **Rest-Based Restore** — separate Short Rest / Long Rest restore with feature counts
+- **Category Summary** — class features, racial traits, feats, and charges at a glance
+- **Low Charges Warning** — amber pulsing border at 1 use remaining
 
 ### Dice Roller
-- **Roll Labels** — add context ("Stealth check", "Longsword attack") that appears in history
-- **Persistent History** — roll history survives tab switches (no more lost rolls)
-- Quick-roll buttons (d4–d100), custom expressions, advantage/disadvantage, nat 20/1 detection
+- **Saved Roll Macros** — save up to 20 frequently used rolls, one-click re-roll
+- **Enhanced Crit Visuals** — "CRITICAL HIT!" / "CRITICAL MISS!" with glow and shake
+- Quick-roll buttons (d4–d100), custom expressions, advantage/disadvantage
+- Roll labels, persistent history, 4d6kh3 stat roller, statistics panel
 
 ### NPCs
-- **Role-Colored Avatars** — colored circle avatars with initials (green=ally, red=enemy, amber=neutral, blue=party)
-- Role-colored card borders and backgrounds for instant visual scanning
-- Status tracking (alive/dead/unknown), descriptions, notes, locations
+- **Relationship Tracker** — Friendly/Neutral/Hostile/Rival/Patron/Unknown with colored badges
+- **Quest Hooks** — optional quest hook field with scroll icon
+- Role-colored avatars with initials, status tracking, descriptions, notes, locations
+
+### Quests
+- **Reward Tracking** — XP, Gold, Item rewards with icons and active-quest totals
+- **Quest Giver & Location** — displayed with user/map-pin icons
+- **Priority System** — Low/Medium/High/Critical with color-coded indicators
+- Objectives with progress bars, difficulty ratings, failed quest section
 
 ### Inventory
-- 40+ preloaded weapons/armor with full stats, currency tracking, encumbrance, attunement
+- **Currency Auto-Conversion** — consolidate all denominations to GP
+- **Encumbrance Speed Penalties** — detailed penalty display below carry weight
+- **Consumable Warnings** — red "LOW" indicator at quantity ≤ 3
+- 40+ preloaded weapons/armor, currency tracking, attunement (max 3)
+
+### Journal
+- **Session Summary Stats** — entry count, session count, date range
+- **NPC Mentions** — tag NPCs in entries, shown as blue badges
+- **Pin Important Entries** — star toggle to pin entries to top
+- Markdown editor, mood tagging, fullscreen reading mode, export to TXT
+
+### Lore & World Notes
+- **Category Presets** — Location, Faction, Deity, History, Magic, Creature, Item
+- **Related Entries** — cross-references between lore entries
+- **Entry Type Icons** — category-aware icons (MapPin, Users, Star, etc.)
+
+### Sidebar & Navigation
+- **Pinned Sections** — star up to 5 favorite sections to top of sidebar
+- **Section Search** — filter sidebar sections by typing
+- Mode-aware navigation (Player vs DM section groups)
+
+### Dashboard
+- **Character Duplicate** — copy a character as a template
+- **Quick Stats Bar** — total characters, average level, most played class
+- **Character Search** — filter by name, race, or class
 
 ### Backstory
 - **Portrait Upload** — drag-and-drop character portrait (PNG/JPEG/WebP/GIF, max 2 MB)
 - Personality Traits, Bonds, Flaws, Ideals, Physical Description, Goals, Allies
 
 ### Additional Features
-- Campaign Journal with markdown editor, full-text search, tags
-- Quest Tracker with objectives, progress bars, status
-- Lore & World Notes with categories
 - Arcane Encyclopedia — 964-article searchable wiki with FTS5
-- Party Connect — LAN sync with room codes, auto-reconnect, zombie cleanup
+- Party Connect — LAN sync with room codes, auto-reconnect, DM party stats overview
 - Rest Mechanics (Long/Short Rest with proper D&D rules)
 - Level-Up System with animated overlay and class-specific gains
 - 6 UI Themes, font/density controls, auto-save, auto-backup, crash recovery
 - Beginner Tutorial Wizard, contextual help tooltips
+- DevTools with Find Improvements audit (Player + DM mode-aware)
 
 ## Installation
 
@@ -114,6 +166,27 @@ npm run tauri build
 - Auto-save (debounced 800ms), auto-backup every 5 minutes
 
 ## Changelog Summary
+
+### V0.2.8 — The Big 50: Comprehensive Feature & QOL Overhaul
+- 50 improvements across every section of the app
+- Death Saves UI, Proficiency Bonus, Passive Skills, Initiative, AC Breakdown on Overview
+- Full Initiative Round Manager, Action Economy Tracker, Combat Log, Flanking Toggle
+- Saved Roll Macros, Enhanced Crit Visuals on Dice Roller
+- Ritual/Always-Prepared/Cantrip Scaling/Material Costs on Spellbook
+- Currency Conversion, Encumbrance Penalties on Inventory
+- Rest-Based Restore, Category Summary, Low Charges Warning on Features
+- NPC Relationships, Quest Hooks, Quest Rewards/Priority/Location/Giver
+- Journal Pinning, NPC Mentions, Session Stats; Lore Presets, Related Entries, Type Icons
+- Sidebar Pinned Sections + Search; Dashboard Duplicate, Stats Bar, Search
+- DM Quick Reference, Encounter Calculator, Session Checklist, Party Stats Overview
+
+### V0.2.7 — Player/DM Mode System & Character Setup
+- Player/DM mode selection with persistent localStorage
+- DM Beta Warning modal, Campaign Hub, DM-specific sidebar
+- Campaign creation flow (DMs create campaigns, not characters)
+- Character Setup wizard with ability scores, skills, auto-apply, review
+- Find Improvements audit tab in DevTools (mode-aware)
+- Fixed Character Setup save bug (nested overview data)
 
 ### V0.2.3 — The Big 10
 - **Attack Roll Buttons** — click the dice icon on any weapon to instantly roll d20 + attack bonus and damage with crit detection (nat 20 doubles damage dice)

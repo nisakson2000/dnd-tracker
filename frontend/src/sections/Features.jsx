@@ -87,6 +87,47 @@ export default function Features({ characterId }) {
     } catch (err) { toast.error(err.message); load(); }
   };
 
+  const shortRestRestore = async () => {
+    const targets = features.filter(f =>
+      (f.uses_total ?? 0) > 0 &&
+      (f.uses_remaining ?? 0) < (f.uses_total ?? 0) &&
+      (f.recharge === 'short_rest' || f.recharge === 'long_rest')
+    );
+    if (targets.length === 0) { toast('No features to restore on short rest', { icon: '\u2139\uFE0F' }); return; }
+    setFeatures(prev => prev.map(f =>
+      (f.uses_total ?? 0) > 0 && (f.recharge === 'short_rest' || f.recharge === 'long_rest')
+        ? { ...f, uses_remaining: f.uses_total } : f
+    ));
+    try {
+      await Promise.all(targets.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total })));
+      toast.success(`Short rest: ${targets.length} feature${targets.length > 1 ? 's' : ''} restored`);
+    } catch (err) { toast.error(err.message); load(); }
+  };
+
+  const longRestRestore = async () => {
+    const targets = features.filter(f =>
+      (f.uses_total ?? 0) > 0 &&
+      (f.uses_remaining ?? 0) < (f.uses_total ?? 0) &&
+      f.recharge
+    );
+    if (targets.length === 0) { toast('No features to restore on long rest', { icon: '\u2139\uFE0F' }); return; }
+    setFeatures(prev => prev.map(f =>
+      (f.uses_total ?? 0) > 0 && f.recharge ? { ...f, uses_remaining: f.uses_total } : f
+    ));
+    try {
+      await Promise.all(targets.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total })));
+      toast.success(`Long rest: ${targets.length} feature${targets.length > 1 ? 's' : ''} restored`);
+    } catch (err) { toast.error(err.message); load(); }
+  };
+
+  const shortRestCount = features.filter(f =>
+    (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0) &&
+    (f.recharge === 'short_rest' || f.recharge === 'long_rest')
+  ).length;
+  const longRestCount = features.filter(f =>
+    (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0) && f.recharge
+  ).length;
+
   const useAllFeatures = async () => {
     const targets = features.filter(f => (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) > 0);
     if (targets.length === 0) return;
@@ -133,6 +174,12 @@ export default function Features({ characterId }) {
         <div className="flex items-center gap-2">
           {hasChargeFeatures && (
             <>
+              <button onClick={shortRestRestore} className="btn-secondary text-xs flex items-center gap-1" title="Restore features that recharge on short or long rest">
+                <RotateCcw size={11} /> Short Rest{shortRestCount > 0 ? ` (${shortRestCount})` : ''}
+              </button>
+              <button onClick={longRestRestore} className="btn-secondary text-xs flex items-center gap-1" title="Restore all features with any recharge type">
+                <RotateCcw size={11} /> Long Rest{longRestCount > 0 ? ` (${longRestCount})` : ''}
+              </button>
               <button onClick={restoreAllFeatures} className="btn-secondary text-xs flex items-center gap-1">
                 <RotateCcw size={11} /> Restore All
               </button>
@@ -146,6 +193,24 @@ export default function Features({ characterId }) {
           </button>
         </div>
       </div>
+
+      {/* Category Summary */}
+      {features.length > 0 && (
+        <div className="flex items-center gap-3 flex-wrap text-xs">
+          <span className="text-blue-300 bg-blue-500/10 border border-blue-400/20 px-2.5 py-1 rounded">
+            {features.filter(f => f.feature_type === 'class').length} Class Features
+          </span>
+          <span className="text-emerald-300 bg-emerald-500/10 border border-emerald-400/20 px-2.5 py-1 rounded">
+            {features.filter(f => f.feature_type === 'racial').length} Racial Traits
+          </span>
+          <span className="text-purple-300 bg-purple-500/10 border border-purple-400/20 px-2.5 py-1 rounded">
+            {features.filter(f => f.feature_type === 'feat').length} Feats
+          </span>
+          <span className="text-gold bg-gold/10 border border-gold/20 px-2.5 py-1 rounded">
+            {features.filter(f => (f.uses_total ?? 0) > 0).length} with charges
+          </span>
+        </div>
+      )}
 
       {/* Search + Filter + Sort */}
       <div className="flex items-center gap-4 flex-wrap">
@@ -188,7 +253,7 @@ export default function Features({ characterId }) {
       ) : (
         <div className="space-y-3">
           {sorted.map(f => (
-            <div key={f.id} className="card">
+            <div key={f.id} className={`card ${(f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) === 1 ? 'animate-amber-pulse' : ''}`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">

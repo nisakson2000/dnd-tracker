@@ -34,6 +34,15 @@ const BODY_FONTS = [
   { family: 'Fraunces', fallback: 'serif' },
 ];
 
+const TEXT_FONTS = [
+  { family: 'DM Sans', fallback: 'sans-serif' },
+  { family: 'Outfit', fallback: 'sans-serif' },
+  { family: 'Lora', fallback: 'serif' },
+  { family: 'Merriweather', fallback: 'serif' },
+  { family: 'Source Sans 3', fallback: 'sans-serif', label: 'Source Sans' },
+  { family: 'Literata', fallback: 'serif' },
+];
+
 const SETTINGS_KEY = 'codex-v3-settings';
 
 function lighten(hex) {
@@ -48,6 +57,7 @@ const DEFAULTS = {
   bg: '#04040b',
   displayFont: 'Syne',
   bodyFont: 'DM Sans',
+  textFont: 'DM Sans',
   fontScale: 100,
   density: 1,
   sidebarWidth: 214,
@@ -92,6 +102,8 @@ function applyV3Settings(s) {
   // Fonts
   root.style.setProperty('--font-display', `'${s.displayFont}', sans-serif`);
   root.style.setProperty('--font-ui', `'${s.bodyFont}', sans-serif`);
+  const textFontEntry = TEXT_FONTS.find(f => f.family === s.textFont) || TEXT_FONTS[0];
+  root.style.setProperty('--font-text', `'${textFontEntry.family}', ${textFontEntry.fallback}`);
   root.style.setProperty('--font-scale', s.fontScale / 100);
   // Layout
   root.style.setProperty('--density', s.density);
@@ -295,6 +307,24 @@ export default function Settings({ characterId, character, onBugReport }) {
               >
                 <div className="fpick-name" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>{f.label || f.family}</div>
                 <div className="fpick-sample" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>Character Sheet</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="sp-sec">Text Font</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '16px' }}>
+            {TEXT_FONTS.map(f => (
+              <div
+                key={f.family}
+                className={`fpick ${settings.textFont === f.family ? 'on' : ''}`}
+                onClick={() => update({ textFont: f.family })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ textFont: f.family }); } }}
+                tabIndex={0}
+                role="button"
+                aria-pressed={settings.textFont === f.family}
+              >
+                <div className="fpick-name" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>{f.label || f.family}</div>
+                <div className="fpick-sample" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>The quick brown fox jumps over the lazy dog.</div>
               </div>
             ))}
           </div>

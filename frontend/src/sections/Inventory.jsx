@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Package, Coins, Search } from 'lucide-react';
+import { Plus, Trash2, Package, Coins, Search, ArrowRightLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getItems, addItem, updateItem, deleteItem, getCurrency, updateCurrency } from '../api/inventory';
 import { getOverview } from '../api/overview';
@@ -96,6 +96,15 @@ export default function Inventory({ characterId, character }) {
     triggerCurrency(updated);
   };
 
+  const convertAllToGP = () => {
+    const totalGP = (currency.cp / 100) + (currency.sp / 10) + (currency.ep / 2) + currency.gp + (currency.pp * 10);
+    const rounded = Math.floor(totalGP * 100) / 100;
+    const updated = { cp: 0, sp: 0, ep: 0, gp: rounded, pp: 0 };
+    setCurrency(updated);
+    triggerCurrency(updated);
+    toast.success(`Converted all currency to ${rounded.toFixed(2)} GP`);
+  };
+
   const attunedCount = items.filter(i => i.attuned).length;
   const totalWeight = items.reduce((sum, i) => sum + (i.weight * i.quantity), 0);
   const carryCapacity = strScore * 15;
@@ -162,6 +171,13 @@ export default function Inventory({ characterId, character }) {
           <Coins size={16} className="text-gold" />
           <h3 className="font-display text-amber-100">Currency<HelpTooltip text={HELP.currency} /></h3>
           <SaveIndicator saving={savingCurrency} lastSaved={currencySaved} />
+          <button
+            onClick={convertAllToGP}
+            className="ml-auto btn-secondary text-xs flex items-center gap-1"
+            title="Convert all currency to gold pieces"
+          >
+            <ArrowRightLeft size={11} /> Convert All to GP
+          </button>
         </div>
         <div className="grid grid-cols-5 gap-3">
           {[
@@ -202,6 +218,17 @@ export default function Inventory({ characterId, character }) {
         <div className="flex justify-between text-xs text-amber-200/30 mt-1">
           <span>Attunement: {attunedCount}/3<HelpTooltip text={HELP.attunement} size={12} /></span>
         </div>
+        {encumbered && (
+          <div className={`mt-2 text-xs font-medium px-3 py-1.5 rounded border ${
+            heavilyEncumbered
+              ? 'bg-red-900/20 text-red-400 border-red-500/20'
+              : 'bg-yellow-900/20 text-yellow-400 border-yellow-500/20'
+          }`}>
+            {heavilyEncumbered
+              ? 'Speed -20 ft, Disadvantage on ability checks, attack rolls, and STR/DEX/CON saving throws'
+              : 'Speed -10 ft'}
+          </div>
+        )}
       </div>
 
       {/* Items */}
@@ -231,7 +258,10 @@ export default function Inventory({ characterId, character }) {
                     <span className="text-amber-100 font-medium">{item.name}</span>
                     {item.quantity > 1 && <span className="text-xs text-amber-200/40">x{item.quantity}</span>}
                     {item.quantity > 0 && item.quantity <= 5 && (item.item_type === 'consumable') && (
-                      <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" title={`Low stock: ${item.quantity} remaining`} />
+                      <span className="flex items-center gap-1">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${item.quantity <= 3 ? 'bg-red-500' : 'bg-amber-400'}`} title={`Low stock: ${item.quantity} remaining`} />
+                        {item.quantity <= 3 && <span className="text-[10px] font-bold text-red-400">LOW</span>}
+                      </span>
                     )}
                     <span className="text-xs text-amber-200/30 capitalize">{item.item_type}</span>
                     {item.rarity && <span className="text-xs text-amber-200/30 capitalize">{item.rarity}</span>}
@@ -251,7 +281,7 @@ export default function Inventory({ characterId, character }) {
                     )}
                   </div>
                   {item.description && (
-                    <p className="text-xs text-amber-200/30 italic mt-1 truncate">{item.description}</p>
+                    <p className={`text-xs text-amber-200/30 italic mt-1 ${item.equipped ? '' : 'truncate'}`}>{item.description}</p>
                   )}
                 </div>
                 <div className="flex gap-1">

@@ -4,6 +4,119 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.2.8 — The Big 50: Comprehensive Feature & QOL Overhaul
+**Released:** March 11, 2026
+
+### Overview / Character Sheet
+- Death Saving Throw UI — visual tracker with 3 success/3 failure clickable circles, auto-stabilize/death toasts
+- Proficiency Bonus display — prominent gold-accented card showing calculated proficiency bonus
+- Passive Skills display — shows Passive Perception, Investigation, and Insight (10 + skill mod)
+- Initiative Modifier display — DEX mod shown prominently with breakdown tooltip
+- AC Breakdown tooltip — hover AC to see base 10 + DEX mod calculation
+- Concentration Save helper — toast reminder with DC calculation when HP drops while concentrating
+- Feature restore reminder — toast after short/long rest reminding to restore feature charges
+- Encumbrance Speed warning — badges showing -10 ft (encumbered) or -20 ft (heavily encumbered) on speed display
+
+### Combat
+- Full Initiative Round Manager — round counter, current turn highlighting, Next/Previous Turn buttons, auto-round increment
+- Action Economy Tracker — Action, Bonus Action, Reaction checkboxes that reset each turn
+- Enhanced Crit Detection — gold shimmer animation on nat 20, red flash on nat 1 with CSS keyframes
+- Flanking Bonus toggle — +2 to all attack rolls when enabled, persisted to sessionStorage
+- Combat Log — auto-logs attacks, condition changes, round/turn changes; last 50 entries, color-coded by type
+
+### Spellbook
+- Ritual Casting enhancement — prominent "Ritual" badge with tooltip, blue-tinted left border on ritual spells
+- Always-Prepared Spells — lock icon, cannot be unprepared, for domain/oath spells
+- Cantrip Scaling display — shows damage scaling tiers (levels 5, 11, 17) with current tier highlighted
+- Material Component Cost warning — gold coin icon with cost for spells requiring expensive materials
+
+### Dice Roller
+- Saved Roll Macros — save up to 20 frequently used rolls (stored in localStorage), one-click re-roll
+- Enhanced Crit visuals — "CRITICAL HIT!" / "CRITICAL MISS!" with glow animations and shake effects
+
+### Inventory
+- Currency Auto-Conversion — "Convert All to GP" button consolidates all denominations
+- Encumbrance Speed Penalties — detailed penalty display below carry weight bar
+- Enhanced Consumable Tracking — red "LOW" warning for items with quantity ≤ 3
+- Item description always visible for equipped items (no truncation)
+
+### Features & Traits
+- Rest-Based Restore — separate "Short Rest" and "Long Rest" restore buttons with feature counts
+- Feature Category Summary — stat pills showing class features, racial traits, feats, and charge counts
+- Low Charges Warning — amber pulsing border on features with only 1 use remaining
+
+### NPCs
+- NPC Relationship Tracker — Friendly/Neutral/Hostile/Rival/Patron/Unknown with colored badges
+- NPC Quest Hooks — optional quest hook field with scroll icon display
+- NPC initials avatars already present, enhanced with relationship display
+
+### Quests
+- Quest Reward Tracking — XP, Gold, and Item rewards with icons; summary bar showing totals across active quests
+- Quest Giver field — displayed with user icon
+- Quest Location field — displayed with map-pin icon
+- Quest Priority — Low/Medium/High/Critical with color-coded dots (Critical pulses red)
+
+### Journal
+- Session Summary Stats — entry count, session count, date range pills at top
+- NPC Mentions — tag NPCs in journal entries, shown as blue badges
+- Pin Important Entries — star toggle to pin entries to top of list regardless of sort
+
+### Lore & World Notes
+- Category Presets — clickable chips (Location, Faction, Deity, History, Magic, Creature, Item)
+- Related Entries — link-style cross-references between lore entries
+- Entry Type Icons — category-aware icons (MapPin, Users, Star, Clock, Sparkles, etc.)
+
+### Sidebar
+- Pinned Sections — star icon to pin up to 5 favorite sections to top of sidebar
+- Section Search — filter sidebar sections by typing
+
+### Dashboard
+- Character Duplicate — copy a character with same race/class/ruleset as a template
+- Quick Stats Bar — total characters, average level, most played class
+- Character Search — filter characters by name, race, or class
+
+### DM Mode — Campaign Hub
+- DM Quick Reference — collapsible card with DC guidelines, damage by level, cover rules, lighting, travel pace
+- Encounter Difficulty Calculator — input party size/level, see Easy/Medium/Hard/Deadly XP thresholds
+- Session Planning Checklist — 6 common prep items with checkboxes (sessionStorage)
+
+### DM Mode — Party
+- Party Stats Overview — aggregate HP %, lowest HP member, level range, party size for DM hosts
+
+### Backend
+- Journal entries: added `npcs_mentioned`, `pinned` columns with migration
+- Lore notes: added `related_to` column with migration
+- Export/Import updated to include new fields with backward compatibility
+
+---
+
+## V0.2.7 — Player/DM Mode System & Character Setup
+**Released:** March 11, 2026
+
+### Added
+- **Player/DM Mode System** — choose Player or DM mode on launch; mode persists across sessions via localStorage
+- **Mode Select screen** — full-screen role picker with animated rune particles, gold Player card and purple DM card
+- **DM Beta Warning modal** — warns users that DM Mode is V0.0.1 BETA before entering
+- **DM Campaign Hub** — dedicated campaign overview section with session/NPC/quest/lore stats and quick-start actions
+- **DM-specific sidebar** — separate navigation groups for Campaign, Combat, Party, and Tools when in DM mode
+- **Campaign creation flow** — DMs create "campaigns" instead of "characters" with simplified 2-step modal (name + ruleset)
+- **Campaign cards on Dashboard** — purple-themed cards with campaign badge instead of HP/class display
+- **Character Setup wizard** — new full-screen post-creation setup at `/character/:id/setup` with step-by-step flow:
+  - Ability Scores (Point Buy / Standard Array / Roll 4d6 drop lowest)
+  - Background selection (2024 edition only)
+  - Auto-apply race/class defaults (HP, speed, AC, saves, proficiencies)
+  - Skill selection with class choices and background skill locks
+  - Full review card before finishing
+- **Find Improvements tab in DevTools** — mode-aware audit: Player mode checks 12 character completeness areas, DM mode suggests useful tools and feature improvements
+- **ModeContext** — React Context providing `mode`, `setMode`, `clearMode` app-wide
+
+### Fixed
+- **Character Setup save bug** — `get_overview` returns nested `{ overview: {...} }` but setup was reading flat; now correctly extracts `.overview` so name, race, class, and ability scores all save properly
+- Mode-aware default sections — CharacterView defaults to `campaign-hub` for DM, `overview` for Player
+- Party Connect is mode-aware — DM sees "Host a Session", Player sees "Join Your DM's Session"
+
+---
+
 ## V0.2.6 — Code Review Fixes: Security, Stability & Bug Fixes
 **Released:** March 11, 2026
 

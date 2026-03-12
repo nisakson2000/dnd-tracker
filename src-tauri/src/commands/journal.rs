@@ -12,6 +12,8 @@ pub struct JournalEntryData {
     pub ingame_date: String,
     pub body: String,
     pub tags: String,
+    pub npcs_mentioned: String,
+    pub pinned: i64,
     pub created_at: Option<String>,
     pub updated_at: Option<String>,
 }
@@ -24,7 +26,7 @@ pub fn get_journal_entries(
     state.with_char_conn(&character_id, |conn| {
         let mut stmt = conn
             .prepare(
-                "SELECT id, title, session_number, real_date, ingame_date, body, tags, created_at, updated_at
+                "SELECT id, title, session_number, real_date, ingame_date, body, tags, npcs_mentioned, pinned, created_at, updated_at
                  FROM journal_entries ORDER BY created_at DESC",
             )
             .map_err(|e| e.to_string())?;
@@ -38,8 +40,10 @@ pub fn get_journal_entries(
                     ingame_date: row.get(4).unwrap_or_default(),
                     body: row.get(5).unwrap_or_default(),
                     tags: row.get(6).unwrap_or_default(),
-                    created_at: row.get(7).ok(),
-                    updated_at: row.get(8).ok(),
+                    npcs_mentioned: row.get(7).unwrap_or_default(),
+                    pinned: row.get(8).unwrap_or(0),
+                    created_at: row.get(9).ok(),
+                    updated_at: row.get(10).ok(),
                 })
             })
             .map_err(|e| e.to_string())?
@@ -58,11 +62,11 @@ pub fn add_journal_entry(
     state.with_char_conn(&character_id, |conn| {
         let now = chrono::Utc::now().to_rfc3339();
         conn.execute(
-            "INSERT INTO journal_entries (title, session_number, real_date, ingame_date, body, tags, created_at, updated_at)
-             VALUES (?1,?2,?3,?4,?5,?6,?7,?8)",
+            "INSERT INTO journal_entries (title, session_number, real_date, ingame_date, body, tags, npcs_mentioned, pinned, created_at, updated_at)
+             VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)",
             rusqlite::params![
                 payload.title, payload.session_number, payload.real_date,
-                payload.ingame_date, payload.body, payload.tags, now, now,
+                payload.ingame_date, payload.body, payload.tags, payload.npcs_mentioned, payload.pinned, now, now,
             ],
         )
         .map_err(|e| e.to_string())?;
@@ -88,11 +92,11 @@ pub fn update_journal_entry(
         let updated = conn
             .execute(
                 "UPDATE journal_entries SET title=?1, session_number=?2, real_date=?3,
-                    ingame_date=?4, body=?5, tags=?6, updated_at=?7
-                 WHERE id=?8",
+                    ingame_date=?4, body=?5, tags=?6, npcs_mentioned=?7, pinned=?8, updated_at=?9
+                 WHERE id=?10",
                 rusqlite::params![
                     payload.title, payload.session_number, payload.real_date,
-                    payload.ingame_date, payload.body, payload.tags, now, entry_id,
+                    payload.ingame_date, payload.body, payload.tags, payload.npcs_mentioned, payload.pinned, now, entry_id,
                 ],
             )
             .map_err(|e| e.to_string())?;

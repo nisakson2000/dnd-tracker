@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Heart, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOverview } from '../api/overview';
@@ -16,6 +16,7 @@ import { useUpdateCheck } from '../hooks/useUpdateCheck';
 import { useErrorLog, setErrorContext } from '../hooks/useErrorLog';
 import { invoke } from '@tauri-apps/api/core';
 import { APP_VERSION } from '../version';
+import { useAppMode } from '../contexts/ModeContext';
 
 const Overview = lazy(() => import('../sections/Overview'));
 const Backstory = lazy(() => import('../sections/Backstory'));
@@ -33,6 +34,9 @@ const Journal = lazy(() => import('../sections/Journal'));
 const Lore = lazy(() => import('../sections/Lore'));
 const RulesReference = lazy(() => import('../sections/RulesReference'));
 const ExportImport = lazy(() => import('../sections/ExportImport'));
+const CampaignHub = lazy(() => import('../sections/CampaignHub'));
+const Party = lazy(() => import('../sections/Party'));
+const DevTools = import.meta.env.DEV ? lazy(() => import('../sections/DevTools')) : null;
 
 class SectionErrorBoundary extends React.Component {
   state = { hasError: false, error: null };
@@ -68,6 +72,11 @@ const SECTIONS = {
   export: ExportImport,
   bugreport: BugReport,
   updates: Updates,
+  // DM-mode sections
+  'campaign-hub': CampaignHub,
+  'encounter': Combat,
+  'party-overview': Party,
+  ...(DevTools ? { devtools: DevTools } : {}),
 };
 
 const SECTION_LABELS = {
@@ -87,6 +96,10 @@ const SECTION_LABELS = {
   export: 'Export & Import',
   bugreport: 'Bug Report',
   updates: 'Updates',
+  devtools: 'Dev Tools',
+  'campaign-hub': 'Campaign Hub',
+  'encounter': 'Encounter Runner',
+  'party-overview': 'Party Overview',
 };
 
 const SHORTCUT_SECTIONS = ['overview','backstory','spellbook','inventory','features','combat','journal','npcs','quests'];
@@ -94,10 +107,14 @@ const SHORTCUT_SECTIONS = ['overview','backstory','spellbook','inventory','featu
 export default function CharacterView() {
   const { characterId } = useParams();
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('overview');
+  const location = useLocation();
+  const { mode: appMode } = useAppMode();
+  const [activeSection, setActiveSection] = useState(
+    location.state?.section || (appMode === 'dm' ? 'campaign-hub' : 'overview')
+  );
   const [character, setCharacter] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showWizard, setShowWizard] = useState(false);
+  const [showWizard, setShowWizard] = useState(location.state?.showGuide === true);
   const [activeConditionCount, setActiveConditionCount] = useState(0);
   const [activeConditions, setActiveConditions] = useState([]);
   const [portrait, setPortrait] = useState('');
@@ -374,13 +391,15 @@ export default function CharacterView() {
           </main>
         </div>
 
-        {/* Beginner Guide floating button */}
+        {/* D&D Help floating button */}
         <button
           onClick={() => setShowWizard(true)}
-          className="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-gold/20 border border-gold/40 text-gold hover:bg-gold/30 transition-all shadow-lg flex items-center justify-center"
-          title="New to D&D? Click for a beginner's guide!"
+          className="fixed bottom-6 right-6 z-40 rounded-full bg-gold/15 border border-gold/30 text-gold hover:bg-gold/25 hover:border-gold/50 transition-all shadow-lg flex items-center gap-2 group"
+          style={{ padding: '10px 18px', fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.05em', cursor: 'pointer' }}
+          title="Learn the basics of D&D — ability scores, combat, spells, dice & more"
         >
-          ?
+          <span style={{ fontSize: 16, lineHeight: 1 }}>?</span>
+          <span className="hidden group-hover:inline" style={{ fontSize: 11, color: 'rgba(201,168,76,0.8)' }}>D&D Help</span>
         </button>
 
         {showWizard && <BeginnerWizard onClose={() => setShowWizard(false)} />}
