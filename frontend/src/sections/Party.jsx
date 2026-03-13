@@ -333,8 +333,10 @@ export default function Party({ characterId, character, onBugReport }) {
   }
 
   // ── Active session ────────────────────────────────────────────────────────
-  const otherMembers = members.filter(m => m.client_id !== myClientId);
-  const me = members.find(m => m.client_id === myClientId);
+  // DM host shouldn't appear as a party member — they're the DM, not a player
+  const isHostDM = isDM && mode === 'host';
+  const otherMembers = members.filter(m => isHostDM ? m.client_id !== myClientId : m.client_id !== myClientId);
+  const me = isHostDM ? null : members.find(m => m.client_id === myClientId);
 
   return (
     <div className="max-w-3xl space-y-5">
@@ -347,7 +349,7 @@ export default function Party({ characterId, character, onBugReport }) {
           <StatusDot status={status} />
         </div>
         <div className="flex items-center gap-2">
-          {status === 'connected' && (
+          {status === 'connected' && !isHostDM && (
             <button onClick={() => sendUpdate(charSnapshot)} className="btn-secondary text-xs flex items-center gap-1.5 px-2.5 py-1.5">
               <RefreshCw size={12} /> Sync
             </button>
@@ -366,7 +368,7 @@ export default function Party({ characterId, character, onBugReport }) {
               <span className="font-mono text-2xl font-bold text-gold tracking-[0.25em]">{roomCode}</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-amber-200/30">{members.length} player{members.length !== 1 ? 's' : ''}</span>
+              <span className="text-xs text-amber-200/30">{isHostDM ? otherMembers.length : members.length} player{(isHostDM ? otherMembers.length : members.length) !== 1 ? 's' : ''}</span>
               <button onClick={copyCode} className="flex items-center gap-1.5 text-xs text-amber-200/50 hover:text-amber-200 border border-amber-200/15 hover:border-amber-200/30 rounded px-2.5 py-1.5 transition-colors" aria-label="Copy room code and IP">
                 {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
                 {copied ? 'Copied!' : 'Copy'}
@@ -391,8 +393,8 @@ export default function Party({ characterId, character, onBugReport }) {
         </div>
       )}
 
-      {/* Party Stats Overview — DM host only, when there are connected members */}
-      {mode === 'host' && isDM && status === 'connected' && members.length > 1 && (
+      {/* Party Stats Overview — DM host only, when there are connected players */}
+      {isHostDM && status === 'connected' && otherMembers.length > 0 && (
         <PartyStatsOverview members={otherMembers} />
       )}
 
@@ -418,7 +420,7 @@ export default function Party({ characterId, character, onBugReport }) {
         </div>
       ) : null}
 
-      {status === 'connected' && (
+      {status === 'connected' && !isHostDM && (
         <div className="flex items-center justify-between text-xs text-amber-200/30 pt-1 border-t border-amber-200/8">
           <span>Auto-sync HP/AC when you take damage</span>
           <div
