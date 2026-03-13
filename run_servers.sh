@@ -1,5 +1,9 @@
 #!/bin/bash
-cd /home/nisakson/dnd-tracker
+# The Codex — dev server launcher
+# Primary: `cargo tauri dev` (Tauri/Rust backend + Vite frontend)
+# Legacy:  tmux sessions for Python FastAPI backend + Vite frontend
+
+cd "$(dirname "$0")"
 
 # Start backend
 tmux new-session -d -s dnd-backend "python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload" 2>/dev/null

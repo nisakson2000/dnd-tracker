@@ -4,6 +4,49 @@ All updates relevant to **Player Mode**. For DM-specific changes, see `MASTERUPD
 
 ---
 
+## V0.4.6 — Arcane Encyclopedia Redesign Phase 3: Article Experience
+**Released:** March 12, 2026
+
+### Article Reading Experience
+- **Reading Progress Bar** — gold gradient bar at the top fills as you scroll
+- **Active Table of Contents** — scroll-spy highlights current section in sidebar
+- **Inline Cross-Reference Links** — article text auto-links related articles with category-colored underlines
+- **Next/Previous Navigation** — arrows to navigate between articles in a category
+- **Article Footer** — word count, reading time, source book
+- **Copy Link Button** — copy article URL to clipboard
+- **Enhanced Related Articles** — cards with category icons, colored borders, badge labels
+
+---
+
+## V0.4.5 — Arcane Encyclopedia Redesign Phase 2: Search & Discovery
+**Released:** March 12, 2026
+
+### Search & Discovery
+- **Command Palette Search** — press `/` for instant search with keyboard navigation
+- **Search Filters** — category pills, ruleset toggle, sort options
+- **Bookmarks** — star articles, bookmark rail on landing page
+- **Reading History** — auto-tracked recently viewed with time-ago display
+- **Recent Searches** — last 8 searches remembered
+
+---
+
+## V0.4.4 — Arcane Encyclopedia Redesign Phase 1: Foundation & Visual Impact
+**Released:** March 12, 2026
+
+### Wiki Landing Page
+- **Hero Section** — animated count-up stat counters with gold shimmer title
+- **Category Cards** — 31 categories with unique colors, icons, descriptions, hover glow
+- **Discover Rail** — 6 random featured articles per visit
+- **Subcategory Tabs** — filter pills within categories
+
+### Article Detail Page
+- **Stat Blocks** — Spell, Monster, Class, Equipment, Race category-specific renderers
+- **Table of Contents** — auto-generated sticky sidebar
+- **Breadcrumb Navigation** — proper linked breadcrumbs
+- **Skeleton Loading** — animated placeholders during fetch
+
+---
+
 ## V0.1.5 BETA — Update System Overhaul, Campaign Map Fix, Dev Tools Cleanup
 **Released:** March 12, 2026
 
