@@ -537,6 +537,13 @@ export const CLASSES = [
     armorProficiencies: ['Light armor', 'Medium armor', 'Shields'],
     weaponProficiencies: ['Simple weapons', 'Martial weapons'],
     skillChoices: { count: 2, from: ['Animal Handling', 'Athletics', 'Intimidation', 'Nature', 'Perception', 'Survival'] },
+    startingEquipment: [
+      { name: 'Greataxe', item_type: 'weapon', weight: 7, value_gp: 30, quantity: 1 },
+      { name: 'Handaxe', item_type: 'weapon', weight: 2, value_gp: 5, quantity: 2 },
+      { name: 'Javelin', item_type: 'weapon', weight: 2, value_gp: 0.5, quantity: 4 },
+      { name: "Explorer's Pack", item_type: 'gear', weight: 59, value_gp: 10, quantity: 1 },
+    ],
+    startingGold: 10,
     subclasses: ['Path of the Berserker', 'Path of the Totem Warrior', 'Path of the Ancestral Guardian', 'Path of the Storm Herald', 'Path of the Zealot', 'Path of the Beast', 'Path of Wild Magic', 'Path of the Battlerager'],
     spellcasting: null,
     features: [
@@ -560,6 +567,14 @@ export const CLASSES = [
     armorProficiencies: ['Light armor'],
     weaponProficiencies: ['Simple weapons', 'Hand crossbows', 'Longswords', 'Rapiers', 'Shortswords'],
     skillChoices: { count: 3, from: Object.keys(SKILLS) },
+    startingEquipment: [
+      { name: 'Rapier', item_type: 'weapon', weight: 2, value_gp: 25, quantity: 1 },
+      { name: 'Leather Armor', item_type: 'armor', weight: 10, value_gp: 10, quantity: 1 },
+      { name: 'Dagger', item_type: 'weapon', weight: 1, value_gp: 2, quantity: 1 },
+      { name: "Entertainer's Pack", item_type: 'gear', weight: 38, value_gp: 40, quantity: 1 },
+      { name: 'Lute', item_type: 'gear', weight: 2, value_gp: 35, quantity: 1 },
+    ],
+    startingGold: 10,
     subclasses: ['College of Lore', 'College of Valor', 'College of Glamour', 'College of Swords', 'College of Whispers', 'College of Creation', 'College of Eloquence'],
     spellcasting: { ability: 'CHA', type: 'full' },
     features: [
@@ -580,6 +595,16 @@ export const CLASSES = [
     armorProficiencies: ['Light armor', 'Medium armor', 'Shields'],
     weaponProficiencies: ['Simple weapons'],
     skillChoices: { count: 2, from: ['History', 'Insight', 'Medicine', 'Persuasion', 'Religion'] },
+    startingEquipment: [
+      { name: 'Mace', item_type: 'weapon', weight: 4, value_gp: 5, quantity: 1 },
+      { name: 'Scale Mail', item_type: 'armor', weight: 45, value_gp: 50, quantity: 1 },
+      { name: 'Shield', item_type: 'armor', weight: 6, value_gp: 10, quantity: 1 },
+      { name: 'Light Crossbow', item_type: 'weapon', weight: 5, value_gp: 25, quantity: 1 },
+      { name: 'Bolt', item_type: 'ammunition', weight: 0.075, value_gp: 0.05, quantity: 20 },
+      { name: "Priest's Pack", item_type: 'gear', weight: 24, value_gp: 19, quantity: 1 },
+      { name: 'Holy Symbol', item_type: 'gear', weight: 0, value_gp: 5, quantity: 1 },
+    ],
+    startingGold: 10,
     subclasses: ['Knowledge', 'Life', 'Light', 'Nature', 'Tempest', 'Trickery', 'War', 'Arcana', 'Forge', 'Grave', 'Order', 'Peace', 'Twilight'],
     spellcasting: { ability: 'WIS', type: 'full' },
     features: [
@@ -596,6 +621,14 @@ export const CLASSES = [
     armorProficiencies: ['Light armor (nonmetal)', 'Medium armor (nonmetal)', 'Shields (nonmetal)'],
     weaponProficiencies: ['Clubs', 'Daggers', 'Darts', 'Javelins', 'Maces', 'Quarterstaffs', 'Scimitars', 'Sickles', 'Slings', 'Spears'],
     skillChoices: { count: 2, from: ['Arcana', 'Animal Handling', 'Insight', 'Medicine', 'Nature', 'Perception', 'Religion', 'Survival'] },
+    startingEquipment: [
+      { name: 'Wooden Shield', item_type: 'armor', weight: 6, value_gp: 10, quantity: 1 },
+      { name: 'Scimitar', item_type: 'weapon', weight: 3, value_gp: 25, quantity: 1 },
+      { name: 'Leather Armor', item_type: 'armor', weight: 10, value_gp: 10, quantity: 1 },
+      { name: "Explorer's Pack", item_type: 'gear', weight: 59, value_gp: 10, quantity: 1 },
+      { name: 'Druidic Focus', item_type: 'gear', weight: 0, value_gp: 1, quantity: 1 },
+    ],
+    startingGold: 10,
     subclasses: ['Circle of the Land', 'Circle of the Moon', 'Circle of Dreams', 'Circle of the Shepherd', 'Circle of Spores', 'Circle of Stars', 'Circle of Wildfire'],
     spellcasting: { ability: 'WIS', type: 'full' },
     features: [
@@ -613,6 +646,15 @@ export const CLASSES = [
     armorProficiencies: ['All armor', 'Shields'],
     weaponProficiencies: ['Simple weapons', 'Martial weapons'],
     skillChoices: { count: 2, from: ['Acrobatics', 'Animal Handling', 'Athletics', 'History', 'Insight', 'Intimidation', 'Perception', 'Survival'] },
+    startingEquipment: [
+      { name: 'Chain Mail', item_type: 'armor', weight: 55, value_gp: 75, quantity: 1 },
+      { name: 'Longsword', item_type: 'weapon', weight: 3, value_gp: 15, quantity: 1 },
+      { name: 'Shield', item_type: 'armor', weight: 6, value_gp: 10, quantity: 1 },
+      { name: 'Light Crossbow', item_type: 'weapon', weight: 5, value_gp: 25, quantity: 1 },
+      { name: 'Bolt', item_type: 'ammunition', weight: 0.075, value_gp: 0.05, quantity: 20 },
+      { name: "Explorer's Pack", item_type: 'gear', weight: 59, value_gp: 10, quantity: 1 },
+    ],
+    startingGold: 10,
     subclasses: ['Battle Master', 'Champion', 'Eldritch Knight', 'Arcane Archer', 'Cavalier', 'Samurai', 'Echo Knight', 'Psi Warrior', 'Rune Knight'],
     spellcasting: null,
     features: [
@@ -629,6 +671,12 @@ export const CLASSES = [
     armorProficiencies: [],
     weaponProficiencies: ['Simple weapons', 'Shortswords'],
     skillChoices: { count: 2, from: ['Acrobatics', 'Athletics', 'History', 'Insight', 'Religion', 'Stealth'] },
+    startingEquipment: [
+      { name: 'Shortsword', item_type: 'weapon', weight: 2, value_gp: 10, quantity: 1 },
+      { name: 'Dart', item_type: 'weapon', weight: 0.25, value_gp: 0.05, quantity: 10 },
+      { name: "Explorer's Pack", item_type: 'gear', weight: 59, value_gp: 10, quantity: 1 },
+    ],
+    startingGold: 5,
     subclasses: ['Way of the Open Hand', 'Way of Shadow', 'Way of the Four Elements', 'Way of the Kensei', 'Way of the Drunken Master', 'Way of the Sun Soul', 'Way of Mercy', 'Way of the Astral Self'],
     spellcasting: null,
     features: [
@@ -657,6 +705,15 @@ export const CLASSES = [
     armorProficiencies: ['All armor', 'Shields'],
     weaponProficiencies: ['Simple weapons', 'Martial weapons'],
     skillChoices: { count: 2, from: ['Athletics', 'Insight', 'Intimidation', 'Medicine', 'Persuasion', 'Religion'] },
+    startingEquipment: [
+      { name: 'Chain Mail', item_type: 'armor', weight: 55, value_gp: 75, quantity: 1 },
+      { name: 'Longsword', item_type: 'weapon', weight: 3, value_gp: 15, quantity: 1 },
+      { name: 'Shield', item_type: 'armor', weight: 6, value_gp: 10, quantity: 1 },
+      { name: 'Javelin', item_type: 'weapon', weight: 2, value_gp: 0.5, quantity: 5 },
+      { name: "Priest's Pack", item_type: 'gear', weight: 24, value_gp: 19, quantity: 1 },
+      { name: 'Holy Symbol', item_type: 'gear', weight: 0, value_gp: 5, quantity: 1 },
+    ],
+    startingGold: 10,
     subclasses: ['Oath of Devotion', 'Oath of the Ancients', 'Oath of Vengeance', 'Oath of Conquest', 'Oath of Redemption', 'Oath of the Crown', 'Oath of Glory', 'Oath of the Watchers', 'Oathbreaker'],
     spellcasting: { ability: 'CHA', type: 'half' },
     features: [
@@ -679,6 +736,14 @@ export const CLASSES = [
     armorProficiencies: ['Light armor', 'Medium armor', 'Shields'],
     weaponProficiencies: ['Simple weapons', 'Martial weapons'],
     skillChoices: { count: 3, from: ['Animal Handling', 'Athletics', 'Insight', 'Investigation', 'Nature', 'Perception', 'Stealth', 'Survival'] },
+    startingEquipment: [
+      { name: 'Scale Mail', item_type: 'armor', weight: 45, value_gp: 50, quantity: 1 },
+      { name: 'Longbow', item_type: 'weapon', weight: 2, value_gp: 50, quantity: 1 },
+      { name: 'Arrow', item_type: 'ammunition', weight: 0.05, value_gp: 0.05, quantity: 20 },
+      { name: 'Shortsword', item_type: 'weapon', weight: 2, value_gp: 10, quantity: 2 },
+      { name: "Explorer's Pack", item_type: 'gear', weight: 59, value_gp: 10, quantity: 1 },
+    ],
+    startingGold: 10,
     subclasses: ['Hunter', 'Beast Master', 'Gloom Stalker', 'Horizon Walker', 'Monster Slayer', 'Fey Wanderer', 'Swarmkeeper', 'Drakewarden'],
     spellcasting: { ability: 'WIS', type: 'half' },
     features: [
@@ -701,6 +766,16 @@ export const CLASSES = [
     armorProficiencies: ['Light armor'],
     weaponProficiencies: ['Simple weapons', 'Hand crossbows', 'Longswords', 'Rapiers', 'Shortswords'],
     skillChoices: { count: 4, from: ['Acrobatics', 'Athletics', 'Deception', 'Insight', 'Intimidation', 'Investigation', 'Perception', 'Performance', 'Persuasion', 'Sleight of Hand', 'Stealth'] },
+    startingEquipment: [
+      { name: 'Rapier', item_type: 'weapon', weight: 2, value_gp: 25, quantity: 1 },
+      { name: 'Shortbow', item_type: 'weapon', weight: 2, value_gp: 25, quantity: 1 },
+      { name: 'Arrow', item_type: 'ammunition', weight: 0.05, value_gp: 0.05, quantity: 20 },
+      { name: 'Leather Armor', item_type: 'armor', weight: 10, value_gp: 10, quantity: 1 },
+      { name: 'Dagger', item_type: 'weapon', weight: 1, value_gp: 2, quantity: 2 },
+      { name: "Burglar's Pack", item_type: 'gear', weight: 44, value_gp: 16, quantity: 1 },
+      { name: "Thieves' Tools", item_type: 'gear', weight: 1, value_gp: 25, quantity: 1 },
+    ],
+    startingGold: 10,
     subclasses: ['Thief', 'Assassin', 'Arcane Trickster', 'Inquisitive', 'Mastermind', 'Scout', 'Swashbuckler', 'Phantom', 'Soulknife'],
     spellcasting: null,
     features: [
@@ -723,6 +798,14 @@ export const CLASSES = [
     armorProficiencies: [],
     weaponProficiencies: ['Daggers', 'Darts', 'Slings', 'Quarterstaffs', 'Light crossbows'],
     skillChoices: { count: 2, from: ['Arcana', 'Deception', 'Insight', 'Intimidation', 'Persuasion', 'Religion'] },
+    startingEquipment: [
+      { name: 'Light Crossbow', item_type: 'weapon', weight: 5, value_gp: 25, quantity: 1 },
+      { name: 'Bolt', item_type: 'ammunition', weight: 0.075, value_gp: 0.05, quantity: 20 },
+      { name: 'Arcane Focus', item_type: 'gear', weight: 1, value_gp: 10, quantity: 1 },
+      { name: "Dungeoneer's Pack", item_type: 'gear', weight: 61, value_gp: 12, quantity: 1 },
+      { name: 'Dagger', item_type: 'weapon', weight: 1, value_gp: 2, quantity: 2 },
+    ],
+    startingGold: 10,
     subclasses: ['Draconic Bloodline', 'Wild Magic', 'Divine Soul', 'Shadow Magic', 'Storm Sorcery', 'Aberrant Mind', 'Clockwork Soul'],
     spellcasting: { ability: 'CHA', type: 'full' },
     features: [
@@ -739,6 +822,15 @@ export const CLASSES = [
     armorProficiencies: ['Light armor'],
     weaponProficiencies: ['Simple weapons'],
     skillChoices: { count: 2, from: ['Arcana', 'Deception', 'History', 'Intimidation', 'Investigation', 'Nature', 'Religion'] },
+    startingEquipment: [
+      { name: 'Light Crossbow', item_type: 'weapon', weight: 5, value_gp: 25, quantity: 1 },
+      { name: 'Bolt', item_type: 'ammunition', weight: 0.075, value_gp: 0.05, quantity: 20 },
+      { name: 'Arcane Focus', item_type: 'gear', weight: 1, value_gp: 10, quantity: 1 },
+      { name: 'Leather Armor', item_type: 'armor', weight: 10, value_gp: 10, quantity: 1 },
+      { name: "Scholar's Pack", item_type: 'gear', weight: 22, value_gp: 40, quantity: 1 },
+      { name: 'Dagger', item_type: 'weapon', weight: 1, value_gp: 2, quantity: 2 },
+    ],
+    startingGold: 10,
     subclasses: ['The Archfey', 'The Fiend', 'The Great Old One', 'The Celestial', 'The Hexblade', 'The Fathomless', 'The Genie', 'The Undead', 'The Undying'],
     spellcasting: { ability: 'CHA', type: 'pact' },
     features: [
@@ -756,6 +848,13 @@ export const CLASSES = [
     armorProficiencies: [],
     weaponProficiencies: ['Daggers', 'Darts', 'Slings', 'Quarterstaffs', 'Light crossbows'],
     skillChoices: { count: 2, from: ['Arcana', 'History', 'Insight', 'Investigation', 'Medicine', 'Religion'] },
+    startingEquipment: [
+      { name: 'Quarterstaff', item_type: 'weapon', weight: 4, value_gp: 0.2, quantity: 1 },
+      { name: 'Arcane Focus', item_type: 'gear', weight: 1, value_gp: 10, quantity: 1 },
+      { name: "Scholar's Pack", item_type: 'gear', weight: 22, value_gp: 40, quantity: 1 },
+      { name: 'Spellbook', item_type: 'gear', weight: 3, value_gp: 50, quantity: 1 },
+    ],
+    startingGold: 10,
     subclasses: ['Abjuration', 'Conjuration', 'Divination', 'Enchantment', 'Evocation', 'Illusion', 'Necromancy', 'Transmutation', 'Bladesinging', 'War Magic', 'Chronurgy Magic', 'Graviturgy Magic', 'Order of Scribes'],
     spellcasting: { ability: 'INT', type: 'full' },
     features: [

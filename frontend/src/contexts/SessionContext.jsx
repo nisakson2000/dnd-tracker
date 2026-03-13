@@ -7,6 +7,7 @@ const SessionContext = createContext(null);
 const initialState = {
   campaignId: null,
   campaignName: '',
+  campaignType: 'homebrew', // 'homebrew' | 'premade'
   sessionId: null,
   sessionActive: false,
   connectedPlayers: [],
@@ -32,6 +33,7 @@ function sessionReducer(state, action) {
         ...state,
         campaignId: action.payload.id,
         campaignName: action.payload.name,
+        campaignType: action.payload.campaign_type || 'homebrew',
       };
     case 'START_SESSION':
       return {

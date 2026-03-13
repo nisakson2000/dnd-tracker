@@ -99,11 +99,11 @@ export default function DMLobby() {
     try {
       const data = await invoke('select_campaign', { campaignId });
       setCampaign(data);
-      dispatch({ type: 'SET_CAMPAIGN', payload: { id: data.id, name: data.name } });
+      dispatch({ type: 'SET_CAMPAIGN', payload: { id: data.id, name: data.name, campaign_type: data.campaign_type } });
     } catch (e) {
       toast.error('Failed to load campaign');
       console.error(e);
-      navigate('/dm/campaigns');
+      navigate('/');
     }
   }, [campaignId, dispatch, navigate]);
 
@@ -343,7 +343,7 @@ export default function DMLobby() {
       <div style={{ maxWidth: '960px', margin: '0 auto' }}>
         {/* Back button */}
         <button
-          onClick={() => navigate('/dm/campaigns')}
+          onClick={() => navigate('/')}
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
             background: 'none', border: 'none', cursor: 'pointer',

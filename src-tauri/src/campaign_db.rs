@@ -15,6 +15,7 @@ pub fn init_campaign_db(app_data_dir: &Path) -> Result<Connection, String> {
             name TEXT NOT NULL,
             description TEXT DEFAULT '',
             ruleset TEXT DEFAULT 'dnd5e-2024',
+            campaign_type TEXT DEFAULT 'homebrew',
             created_at INTEGER NOT NULL,
             updated_at INTEGER,
             last_session INTEGER,
@@ -193,6 +194,7 @@ pub fn init_campaign_db(app_data_dir: &Path) -> Result<Connection, String> {
         "ALTER TABLE scenes ADD COLUMN player_visible INTEGER DEFAULT 0",
         "ALTER TABLE scenes ADD COLUMN player_description TEXT DEFAULT ''",
         "ALTER TABLE scenes ADD COLUMN mood TEXT DEFAULT ''",
+        "ALTER TABLE campaigns ADD COLUMN campaign_type TEXT DEFAULT 'homebrew'",
     ];
     for stmt in &alter_statements {
         let _ = conn.execute(stmt, []);

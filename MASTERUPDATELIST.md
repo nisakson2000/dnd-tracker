@@ -4,6 +4,44 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.5.2 — Character Sheet UX, Floating Dice & Campaign Management
+**Released:** March 13, 2026
+
+### Dice Rolling Visibility
+- **Ability score cards** — hover reveals dice icon, click any ability to roll a check
+- **Saving throw rows** — dice button appears on hover, rolls the save
+- **Skill rows** — dice icon on hover, click skill name or icon to roll
+- **Dismissible hint banner** — "Click any stat to roll!" shown once, persists via localStorage
+
+### Floating Dice Roller
+- **Floating panel** — dice roller removed from sidebar, now a floating gold button (bottom-right) accessible from any page
+- **Minimize/expand** — panel state persisted to localStorage
+- Standalone roller kept for custom expressions (2d6+3, 4d8), damage rolls, and macros
+
+### Starting Equipment
+- **Auto-equip on character creation** — each of the 12 PHB classes now has starting equipment and starting gold defined in `rules5e.js`
+- Equipment auto-added to inventory during `finishSetup()` along with class-appropriate starting gold
+
+### Campaign Type System
+- **Homebrew vs Premade** — new campaign type selector on creation (stored in DB with migration)
+- **Sidebar filtering** — Homebrew Builder and Fantasy Calendar only show for homebrew campaigns
+- **Campaign type badge** — displayed on campaign cards in the dashboard
+
+### Campaign Export, Import & Archive
+- **Export campaign** — download full campaign (scenes, NPCs, quests, handouts) as JSON
+- **Import campaign** — upload exported JSON to create a new campaign with fresh UUIDs
+- **Archive/unarchive** — soft-archive campaigns without deleting; toggle archived visibility on dashboard
+- **Import card** — dashed-border import button in DM campaign grid
+
+### Campaign Manager Consolidation
+- Removed standalone Campaign Manager page — all campaign CRUD now lives on the Dashboard
+- `/dm/campaigns` route redirects to `/`
+
+### Expertise Color Fix
+- Fixed mismatch between legend (purple) and actual diamond (was teal) — unified to purple
+
+---
+
 ## V0.5.0 — Multiplayer Campaign Engine & Party Tools
 **Released:** March 13, 2026
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, Component, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion';
@@ -1011,7 +1011,7 @@ function AppContent() {
                   <Route path="/wiki" element={<WikiPage />} />
                   <Route path="/wiki/:slug" element={<WikiArticlePage />} />
                   <Route path="/updates" element={<UpdatesPage />} />
-                  <Route path="/dm/campaigns" element={<DMCampaignList />} />
+                  <Route path="/dm/campaigns" element={<Navigate to="/" replace />} />
                   <Route path="/dm/lobby/:id" element={<DMLobby />} />
                   <Route path="/dm/session/:id" element={<DMSession />} />
                   <Route path="/player/join" element={<PlayerJoin />} />

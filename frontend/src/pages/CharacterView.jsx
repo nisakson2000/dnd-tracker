@@ -16,6 +16,7 @@ import Sidebar from '../components/Sidebar';
 import LevelUpOverlay from '../components/LevelUpOverlay';
 import BeginnerWizard from '../components/BeginnerWizard';
 import ArcaneWidget from '../components/ArcaneWidget';
+import FloatingDiceRoller from '../components/FloatingDiceRoller';
 import { useLevelUp } from '../hooks/useLevelUp';
 import { useCrashRecovery } from '../hooks/useCrashRecovery';
 import { useAutoBackup } from '../hooks/useAutoBackup';
@@ -1465,6 +1466,15 @@ export default function CharacterView() {
             section={activeSection}
           />
         )}
+
+        {/* Floating Dice Roller */}
+        <FloatingDiceRoller
+          characterId={characterId}
+          activeConditions={activeConditions}
+          diceHistory={diceHistory}
+          onDiceHistoryChange={setDiceHistory}
+          isDM={appMode === 'dm'}
+        />
 
         {/* D&D Help button (bottom-left, out of widget's way) */}
         <button

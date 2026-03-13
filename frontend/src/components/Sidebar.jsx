@@ -8,6 +8,7 @@ import {
   Calendar, Hammer, Clock, Package,
 } from 'lucide-react';
 import { useAppMode } from '../contexts/ModeContext';
+import { useSession } from '../contexts/SessionContext';
 
 function isAssistantEnabled() {
   try {
@@ -33,23 +34,14 @@ const PLAYER_SECTION_GROUPS = [
     items: [
       { id: 'campaign-map', label: 'Campaign Map',      icon: MapPin },
       { id: 'journal',    label: 'Campaign Journal',   icon: BookMarked },
-      { id: 'npcs',       label: 'NPCs',               icon: Users },
-      { id: 'quests',     label: 'Quests',             icon: Map },
-      { id: 'lore',       label: 'Lore & World',       icon: Globe },
       { id: 'downtime',   label: 'Downtime',           icon: Clock },
-      { id: 'party-loot', label: 'Party Loot',         icon: Package },
     ],
   },
   {
     label: 'Tools',
     items: [
-      { id: 'dice',       label: 'Dice Roller',        icon: Dice5 },
-      { id: 'homebrew',   label: 'Homebrew Builder',   icon: Hammer },
-      { id: 'calendar',   label: 'Fantasy Calendar',   icon: Calendar },
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
       { id: 'party-connect', label: 'Party Connect',   icon: Wifi },
-      { id: 'party-analyzer', label: 'Party Analyzer',  icon: PieChart },
-      { id: 'soundboard', label: 'Soundboard',         icon: Music },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
       { id: 'export',     label: 'Export & Import',    icon: Download },
@@ -75,8 +67,8 @@ const DM_SECTION_GROUPS = [
     label: 'World Building',
     items: [
       { id: 'npcs',         label: 'NPCs',             icon: Users },
-      { id: 'homebrew',     label: 'Homebrew Builder',  icon: Hammer },
-      { id: 'calendar',     label: 'Fantasy Calendar',  icon: Calendar },
+      { id: 'homebrew',     label: 'Homebrew Builder',  icon: Hammer, campaignTypes: ['homebrew'] },
+      { id: 'calendar',     label: 'Fantasy Calendar',  icon: Calendar, campaignTypes: ['homebrew'] },
     ],
   },
   {
@@ -97,7 +89,6 @@ const DM_SECTION_GROUPS = [
   {
     label: 'Tools',
     items: [
-      { id: 'dice',       label: 'Dice Roller',        icon: Dice5 },
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
       { id: 'soundboard', label: 'Soundboard',         icon: Music },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
@@ -135,6 +126,7 @@ function loadPinned() {
 
 export default function Sidebar({ character, activeSection, onSelect, onBack, activeConditionCount = 0, portrait = '', updateAvailable = false }) {
   const { mode: appMode } = useAppMode();
+  const { campaignType } = useSession();
   const [, forceUpdate] = useState(0);
 
   // Re-render when AI settings change so the Arcane Advisor item appears/disappears
@@ -145,7 +137,14 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
   }, []);
 
   const isDM = appMode === 'dm';
-  const sectionGroups = isDM ? DM_SECTION_GROUPS : PLAYER_SECTION_GROUPS;
+  // Filter DM sidebar items based on campaign type
+  const rawGroups = isDM ? DM_SECTION_GROUPS : PLAYER_SECTION_GROUPS;
+  const sectionGroups = isDM
+    ? rawGroups.map(g => ({
+        ...g,
+        items: g.items.filter(item => !item.campaignTypes || item.campaignTypes.includes(campaignType)),
+      })).filter(g => g.items.length > 0)
+    : rawGroups;
 
   const hp = character?.current_hp ?? 0;
   const maxHp = character?.max_hp ?? 0;
@@ -432,17 +431,6 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
             <BookOpen size={14} />
             Arcane Encyclopedia
           </Link>
-          {isDM && (
-            <Link
-              to="/dm/campaigns"
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 16px', fontSize: '13px', color: 'rgba(155,89,182,0.6)', textDecoration: 'none', fontFamily: 'Outfit, sans-serif', transition: 'color 0.15s' }}
-              onMouseEnter={e => e.currentTarget.style.color = 'rgba(192,132,252,0.9)'}
-              onMouseLeave={e => e.currentTarget.style.color = 'rgba(155,89,182,0.6)'}
-            >
-              <Radio size={14} />
-              Campaign Manager
-            </Link>
-          )}
         </div>
       </nav>
     </aside>

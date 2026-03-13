@@ -7,7 +7,7 @@ import {
   Library, ChevronRight, ChevronLeft, Scroll, Check, X,
   Search, Users, Upload, ClipboardList, Flag, FileJson,
   Sparkles, Coins, BookOpen, AlertTriangle, Moon,
-  Clock, CheckCircle, XCircle, Zap, Save,
+  Clock, CheckCircle, XCircle, Zap, Save, Download, Archive,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
@@ -496,9 +496,9 @@ function DDBImportCard({ index, onClick }) {
 
 // ─── DM Campaign Card ────────────────────────────────────────────────────────
 
-function CampaignCard({ char, index, onEnter, onDelete }) {
+function CampaignCard({ char, index, onEnter, onDelete, onExport, onArchive }) {
   const [hovered, setHovered] = useState(false);
-  const color = '#9b59b6';
+  const color = char.status === 'archived' ? '#6b7280' : '#9b59b6';
 
   return (
     <motion.div
@@ -543,21 +543,65 @@ function CampaignCard({ char, index, onEnter, onDelete }) {
           {char.name?.[0] || '?'}
         </motion.div>
 
-        {/* Delete */}
-        <motion.button
+        {/* Card actions (top-left on hover) */}
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: hovered ? 1 : 0 }}
-          style={{
-            position: 'absolute', top: 8, left: 8, border: 'none', cursor: 'pointer',
-            width: 28, height: 28, borderRadius: 8, fontSize: 12,
-            background: 'rgba(0,0,0,0.45)', color: 'rgba(220,80,80,0.45)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-          whileHover={{ color: '#e74c3c', background: 'rgba(139,34,50,0.45)' }}
-          onClick={e => { e.stopPropagation(); onDelete(char); }}
+          style={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 4 }}
         >
-          <Trash2 size={12} />
-        </motion.button>
+          <button
+            style={{
+              border: 'none', cursor: 'pointer', width: 28, height: 28, borderRadius: 8,
+              background: 'rgba(0,0,0,0.45)', color: 'rgba(200,175,130,0.45)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
+            }}
+            title="Export campaign"
+            onMouseEnter={e => { e.currentTarget.style.color = '#c9a84c'; e.currentTarget.style.background = 'rgba(201,168,76,0.2)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(200,175,130,0.45)'; e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; }}
+            onClick={e => { e.stopPropagation(); onExport?.(char); }}
+          >
+            <Download size={12} />
+          </button>
+          <button
+            style={{
+              border: 'none', cursor: 'pointer', width: 28, height: 28, borderRadius: 8,
+              background: 'rgba(0,0,0,0.45)', color: char.status === 'archived' ? 'rgba(74,222,128,0.5)' : 'rgba(200,175,130,0.45)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
+            }}
+            title={char.status === 'archived' ? 'Unarchive campaign' : 'Archive campaign'}
+            onMouseEnter={e => { e.currentTarget.style.color = char.status === 'archived' ? '#4ade80' : '#fbbf24'; e.currentTarget.style.background = 'rgba(0,0,0,0.55)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = char.status === 'archived' ? 'rgba(74,222,128,0.5)' : 'rgba(200,175,130,0.45)'; e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; }}
+            onClick={e => { e.stopPropagation(); onArchive?.(char); }}
+          >
+            <Archive size={12} />
+          </button>
+          <button
+            style={{
+              border: 'none', cursor: 'pointer', width: 28, height: 28, borderRadius: 8,
+              background: 'rgba(0,0,0,0.45)', color: 'rgba(220,80,80,0.45)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
+            }}
+            title="Delete campaign"
+            onMouseEnter={e => { e.currentTarget.style.color = '#e74c3c'; e.currentTarget.style.background = 'rgba(139,34,50,0.45)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(220,80,80,0.45)'; e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; }}
+            onClick={e => { e.stopPropagation(); onDelete(char); }}
+          >
+            <Trash2 size={12} />
+          </button>
+        </motion.div>
+
+        {/* Archived badge */}
+        {char.status === 'archived' && (
+          <div style={{
+            position: 'absolute', top: 8, right: 10,
+            fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.08em',
+            color: '#6b7280', background: 'rgba(107,114,128,0.18)',
+            border: '1px solid rgba(107,114,128,0.3)',
+            padding: '2px 8px', borderRadius: 99, textTransform: 'uppercase',
+          }}>
+            Archived
+          </div>
+        )}
       </div>
 
       {/* Body */}
@@ -2108,6 +2152,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const [charSearch, setCharSearch] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
   const [showDDBImport, setShowDDBImport] = useState(false);
   const [sessionPrepChar, setSessionPrepChar] = useState(null);
   const [postSessionChar, setPostSessionChar] = useState(null);
@@ -2226,15 +2271,70 @@ export default function Dashboard() {
   };
 
 
+  // ── Campaign export/archive (DM mode) ──
+  const handleExportCampaign = async (campaign) => {
+    try {
+      const data = await invoke('export_campaign', { campaignId: campaign.id });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(campaign.name || 'campaign').replace(/[^a-zA-Z0-9]/g, '_')}_export.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`"${campaign.name}" exported!`);
+    } catch (err) {
+      toast.error(`Export failed: ${err.message || err}`);
+    }
+  };
+
+  const handleArchiveCampaign = async (campaign) => {
+    const isArchived = campaign.status === 'archived';
+    try {
+      await invoke('archive_campaign', { campaignId: campaign.id, archived: !isArchived });
+      toast.success(isArchived ? `"${campaign.name}" restored!` : `"${campaign.name}" archived!`);
+      load();
+    } catch (err) {
+      toast.error(`Failed: ${err.message || err}`);
+    }
+  };
+
+  const handleImportCampaign = async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (data._format !== 'codex-campaign-export') {
+          toast.error('Invalid campaign file format');
+          return;
+        }
+        const result = await invoke('import_campaign', { payload: data });
+        toast.success(`Campaign "${result.name}" imported!`);
+        load();
+      } catch (err) {
+        toast.error(`Import failed: ${err.message || err}`);
+      }
+    };
+    input.click();
+  };
+
   // ── Derived stats for quick stats bar ──
-  const filteredCharacters = charSearch.trim()
-    ? characters.filter(c => {
-        const q = charSearch.trim().toLowerCase();
-        return (c.name || '').toLowerCase().includes(q)
-          || (c.race || '').toLowerCase().includes(q)
-          || (c.primary_class || '').toLowerCase().includes(q);
-      })
-    : characters;
+  const archivedCount = isDM ? characters.filter(c => c.status === 'archived').length : 0;
+  const filteredCharacters = characters
+    .filter(c => {
+      // Hide archived campaigns unless toggled
+      if (isDM && c.status === 'archived' && !showArchived) return false;
+      if (!charSearch.trim()) return true;
+      const q = charSearch.trim().toLowerCase();
+      return (c.name || '').toLowerCase().includes(q)
+        || (c.race || '').toLowerCase().includes(q)
+        || (c.primary_class || '').toLowerCase().includes(q);
+    });
 
   const avgLevel = characters.length > 0
     ? (characters.reduce((sum, c) => sum + (c.level || 0), 0) / characters.length).toFixed(1)
@@ -2499,6 +2599,25 @@ export default function Dashboard() {
                 {filteredCharacters.length} {filteredCharacters.length === 1 ? 'result' : 'results'}
               </div>
             )}
+            {isDM && archivedCount > 0 && (
+              <div style={{ textAlign: 'center', marginTop: 6 }}>
+                <button
+                  onClick={() => setShowArchived(v => !v)}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: showArchived ? 'rgba(201,168,76,0.7)' : 'rgba(200,175,130,0.3)',
+                    fontSize: 11, fontFamily: 'var(--font-heading)', letterSpacing: '0.08em',
+                    display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 8px',
+                    borderRadius: 6, transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={e => e.target.style.color = 'rgba(201,168,76,0.7)'}
+                  onMouseLeave={e => { if (!showArchived) e.target.style.color = 'rgba(200,175,130,0.3)'; }}
+                >
+                  <Archive size={11} />
+                  {showArchived ? 'Hide' : 'Show'} archived ({archivedCount})
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -2516,6 +2635,8 @@ export default function Dashboard() {
                 key={c.id} char={c} index={i}
                 onEnter={id => navigate(`/character/${id}`)}
                 onDelete={setDeleteTarget}
+                onExport={handleExportCampaign}
+                onArchive={handleArchiveCampaign}
               />
             ) : (
               <CharacterCard
@@ -2527,6 +2648,29 @@ export default function Dashboard() {
             {!charSearch.trim() && (
               <>
                 <NewCharCard index={filteredCharacters.length} onClick={() => setShowCreate(true)} isDM={isDM} />
+                {isDM && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: (filteredCharacters.length + 1) * 0.08, type: 'spring', damping: 22, stiffness: 200 }}
+                    whileHover={{ y: -4, borderColor: 'rgba(96,165,250,0.4)' }}
+                    onClick={handleImportCampaign}
+                    style={{
+                      borderRadius: 14, cursor: 'pointer', minHeight: 160,
+                      background: 'rgba(11,9,20,0.6)', border: '1px dashed rgba(96,165,250,0.2)',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      gap: 10, transition: 'all 0.2s',
+                    }}
+                  >
+                    <Upload size={28} style={{ color: 'rgba(96,165,250,0.35)' }} />
+                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: 13, color: 'rgba(96,165,250,0.5)', letterSpacing: '0.04em' }}>
+                      Import Campaign
+                    </div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
+                      Load a .json campaign file
+                    </div>
+                  </motion.div>
+                )}
                 {!isDM && <ImportCharCard index={filteredCharacters.length + 1} onImport={handleImport} />}
                 {!isDM && <DDBImportCard index={filteredCharacters.length + 2} onClick={() => setShowDDBImport(true)} />}
               </>

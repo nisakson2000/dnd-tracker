@@ -1326,6 +1326,37 @@ export default function CharacterSetup() {
         },
       });
 
+      // 5. Add starting equipment from class
+      if (classData?.startingEquipment) {
+        for (const item of classData.startingEquipment) {
+          await invoke('add_item', {
+            characterId,
+            payload: {
+              name: item.name,
+              item_type: item.item_type,
+              weight: item.weight,
+              value_gp: item.value_gp,
+              quantity: item.quantity,
+              description: '',
+              attunement: false,
+              attuned: false,
+              equipped: false,
+              equipment_slot: '',
+              stat_modifiers: null,
+              rarity: null,
+            },
+          });
+        }
+      }
+
+      // 6. Set starting gold from class
+      if (classData?.startingGold) {
+        await invoke('update_currency', {
+          characterId,
+          payload: { cp: 0, sp: 0, ep: 0, gp: classData.startingGold, pp: 0 },
+        });
+      }
+
       toast.success(`${overview.name} is ready for adventure!`);
       navigate(`/character/${characterId}`);
     } catch (err) {

@@ -72,6 +72,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const [itemStatBonuses, setItemStatBonuses] = useState({});
   const [showSubclassModal, setShowSubclassModal] = useState(false);
   const [showLevelConfirm, setShowLevelConfirm] = useState(null);
+  const [diceHintDismissed, setDiceHintDismissed] = useState(() => !!localStorage.getItem('codex-dice-hint-dismissed'));
   const prevLevelRef = useRef(null);
   const subclassTimeoutRef = useRef(null);
 
@@ -967,6 +968,20 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Left column: Ability Scores, Saving Throws, Skills */}
         <div className="space-y-6">
+          {/* Dice roll hint banner */}
+          {!diceHintDismissed && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gold/[0.06] border border-gold/15 text-xs text-gold/70">
+              <Dices size={14} className="flex-shrink-0 text-gold/50" />
+              <span className="flex-1">Click any modifier, saving throw, or skill to roll a d20 check!</span>
+              <button
+                onClick={() => { localStorage.setItem('codex-dice-hint-dismissed', '1'); setDiceHintDismissed(true); }}
+                className="text-gold/30 hover:text-gold/60 transition-colors p-0.5"
+                title="Dismiss"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
           {/* Ability Scores */}
           <div className="card">
             <h3 className="font-display text-amber-100 mb-4">Ability Scores<HelpTooltip text={HELP.modifier} /></h3>
@@ -977,15 +992,19 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 const effectiveScore = score + itemBonus;
                 const mod = calcMod(effectiveScore);
                 return (
-                  <div key={ab} className={`text-center p-4 rounded-lg bg-[#0a0a10] border ${itemBonus ? 'border-green-500/25' : 'border-gold/15'} hover:border-gold/30 transition-all`}>
+                  <div key={ab} className={`text-center p-4 rounded-lg bg-[#0a0a10] border ${itemBonus ? 'border-green-500/25' : 'border-gold/15'} hover:border-gold/30 transition-all group/ab cursor-pointer`} onClick={() => rollAbilityCheck(ab, mod)} title={`Click to roll ${ABILITY_NAMES[ab]} check${itemBonus ? ` (includes ${itemBonus > 0 ? '+' : ''}${itemBonus} from items)` : ''}`}>
                     <div className="text-[11px] text-amber-200/50 font-display tracking-widest mb-2">{ab}</div>
-                    <div className="text-3xl font-bold text-gold mb-1 cursor-pointer hover:text-amber-300 hover:scale-110 transition-all" onClick={() => rollAbilityCheck(ab, mod)} title={`Click to roll ${ABILITY_NAMES[ab]} check${itemBonus ? ` (includes ${itemBonus > 0 ? '+' : ''}${itemBonus} from items)` : ''}`}>{modStr(mod)}</div>
+                    <div className="text-3xl font-bold text-gold mb-1 hover:text-amber-300 hover:scale-110 transition-all relative">
+                      {modStr(mod)}
+                      <Dices size={12} className="absolute -top-1 -right-1 text-gold/0 group-hover/ab:text-gold/70 transition-all duration-200 group-hover/ab:animate-pulse" />
+                    </div>
                     <input
                       type="number" min={1} max={30}
                       className="input text-center w-16 mx-auto text-sm"
                       aria-label={`${ABILITY_NAMES[ab]} score`}
                       style={{ border: 'none', background: 'transparent', outline: 'none', boxShadow: 'none' }}
                       value={localAbilities[ab] ?? score}
+                      onClick={e => e.stopPropagation()}
                       onChange={e => setLocalAbilities(prev => ({ ...prev, [ab]: e.target.value }))}
                       onBlur={e => {
                         const val = Math.max(1, Math.min(30, parseInt(e.target.value.trim()) || 10));
@@ -1091,6 +1110,13 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                     {prof && !isAutoFail && !hasDis && (
                       <span className="text-[10px] font-display tracking-wider text-gold bg-gold/15 border border-gold/20 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">PROF</span>
                     )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); rollSavingThrow(ab, mod, isAutoFail, hasDis); }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gold/10 text-gold/50 hover:text-gold"
+                      title={`Roll ${ABILITY_NAMES[ab]} save`}
+                    >
+                      <Dices size={13} />
+                    </button>
                   </div>
                 );
               })}
@@ -1156,6 +1182,13 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                       title={`Click to roll ${skillName} check`}
                     >{skillName}</span>
                     <span className="text-[10px] font-display tracking-wider text-amber-200/[0.18] w-[26px] text-right">{ability}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); rollSkillCheck(skillName, ability, mod); }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-gold/10 text-gold/40 hover:text-gold flex-shrink-0"
+                      title={`Roll ${skillName}`}
+                    >
+                      <Dices size={12} />
+                    </button>
                   </div>
                 );
               })}

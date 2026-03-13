@@ -3,6 +3,20 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.5.2',
+    date: '03/13/2026',
+    title: 'Character Sheet UX, Floating Dice & Campaign Management',
+    changes: [
+      'Dice rolling visible on character sheet — hover ability scores, saving throws, and skills to see dice icons and roll checks',
+      'Floating dice roller — removed from sidebar, now a floating panel accessible from any page via bottom-right button',
+      'Starting equipment — new characters auto-receive class-appropriate gear and starting gold',
+      'Campaign type system — choose Homebrew or Premade on creation; sidebar filters features accordingly',
+      'Campaign export/import/archive — download campaigns as JSON, import them back, or soft-archive without deleting',
+      'Removed standalone Campaign Manager — all campaign management consolidated into Dashboard',
+      'Fixed expertise diamond color mismatch (was teal, now matches purple legend)',
+    ],
+  },
+  {
     version: 'V0.5.0',
     date: '03/13/2026',
     title: 'Multiplayer Campaign Engine & Party Tools',

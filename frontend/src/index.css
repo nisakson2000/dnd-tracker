@@ -576,8 +576,8 @@ button:disabled, button[disabled] {
   border: 1.5px solid rgba(255,255,255,0.09); background: transparent;
   cursor: pointer; transition: all .15s; border-radius: 2px;
 }
-.expertise-diamond:hover { border-color: rgba(45,212,191,0.5); }
-.expertise-diamond.active { background: #0f766e; border-color: var(--teal); box-shadow: 0 0 5px rgba(45,212,191,0.35); }
+.expertise-diamond:hover { border-color: rgba(167,139,250,0.5); }
+.expertise-diamond.active { background: #7c3aed; border-color: #a78bfa; box-shadow: 0 0 5px rgba(167,139,250,0.35); }
 
 /* ── Sidebar HP pill ── */
 .sidebar-hp-pill {

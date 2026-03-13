@@ -249,6 +249,9 @@ fn main() {
             commands::campaigns::get_active_campaign,
             commands::campaigns::delete_campaign,
             commands::campaigns::update_campaign,
+            commands::campaigns::archive_campaign,
+            commands::campaigns::export_campaign,
+            commands::campaigns::import_campaign,
             // Scenes
             commands::scenes::create_scene,
             commands::scenes::list_scenes,

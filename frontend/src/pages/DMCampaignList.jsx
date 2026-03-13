@@ -32,6 +32,7 @@ export default function DMCampaignList() {
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newRuleset, setNewRuleset] = useState('dnd5e-2024');
+  const [newCampaignType, setNewCampaignType] = useState('homebrew');
   const [creating, setCreating] = useState(false);
 
   const fetchCampaigns = useCallback(async () => {
@@ -59,12 +60,14 @@ export default function DMCampaignList() {
         name: newName.trim(),
         description: newDesc.trim(),
         ruleset: newRuleset,
+        campaignType: newCampaignType,
       });
       toast.success('Campaign created!');
       setShowCreateModal(false);
       setNewName('');
       setNewDesc('');
       setNewRuleset('dnd5e-2024');
+      setNewCampaignType('homebrew');
       fetchCampaigns();
     } catch (e) {
       toast.error('Failed to create campaign');
@@ -259,6 +262,13 @@ export default function DMCampaignList() {
                       }}>
                         <Clock size={10} /> {c.last_session ? formatDate(c.last_session) : 'No sessions'}
                       </span>
+                      <span style={{
+                        fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em',
+                        color: c.campaign_type === 'premade' ? 'rgba(96,165,250,0.7)' : 'rgba(192,132,252,0.6)',
+                        textTransform: 'uppercase',
+                      }}>
+                        {c.campaign_type === 'premade' ? 'Premade' : 'Homebrew'}
+                      </span>
                     </div>
                   </div>
 
@@ -417,6 +427,43 @@ export default function DMCampaignList() {
                   ))}
                 </select>
               </label>
+
+              {/* Campaign Type */}
+              <div style={{ marginBottom: '24px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-dim)', display: 'block', marginBottom: '8px' }}>
+                  Campaign Type
+                </span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {[
+                    { value: 'homebrew', label: 'Homebrew', desc: 'Build your own world from scratch' },
+                    { value: 'premade', label: 'Premade', desc: 'Run a published or community adventure' },
+                  ].map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setNewCampaignType(opt.value)}
+                      style={{
+                        padding: '12px 14px', borderRadius: '10px', textAlign: 'left',
+                        background: newCampaignType === opt.value
+                          ? 'rgba(155,89,182,0.15)'
+                          : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${newCampaignType === opt.value ? 'rgba(155,89,182,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                        cursor: 'pointer', transition: 'all 0.15s',
+                      }}
+                    >
+                      <div style={{
+                        fontSize: '13px', fontWeight: 600,
+                        color: newCampaignType === opt.value ? '#c084fc' : 'var(--text, rgba(255,255,255,0.8))',
+                        marginBottom: '2px',
+                      }}>
+                        {opt.label}
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-dim, rgba(255,255,255,0.35))' }}>
+                        {opt.desc}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               {/* Actions */}
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
