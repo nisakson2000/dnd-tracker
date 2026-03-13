@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 # ── App version constant ──────────────────────────────────────────────
-APP_VERSION: str = "0.4.6"
+APP_VERSION: str = "0.4.7"
 
 # ── Session state (module-level singletons) ───────────────────────────
 
