@@ -85,10 +85,15 @@ SEED_FILES = [
     # 5e 2024 rules
     "rules_2024.json",
     "options_2024.json",
+    # Lore and NPCs
+    "notable_npcs.json",
+    "adventures.json",
+    "edition_history.json",
     # Adventuring and DM tools
     "adventuring.json",
     "adventuring_combat.json",
     "dm_tools.json",
+    "dm_reference_expanded.json",
     # Cross-references (must be last)
     "cross_references.json",
 ]

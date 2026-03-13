@@ -4,6 +4,34 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.4.3 — Wiki Phase 7: NPCs, Adventures, Edition History & DM Reference
+**Released:** March 12, 2026
+
+### Arcane Encyclopedia — 2,000+ Articles Milestone!
+- **70 new articles** — total now **2,018** (up from 1,950) — surpassing 2,000 articles!
+- **1,204 cross-references** linking articles across categories
+- Wiki expansion complete: from 964 → 2,018 articles across 7 phases
+
+### Notable NPCs & Villains (30)
+- **Villains** (16): Strahd von Zarovich, Acererak, Vecna, Tiamat, Demogorgon, Orcus, Lolth, Asmodeus, Xanathar, Halaster Blackcloak, Manshoon, Szass Tam, Iggwilv/Tasha, Lord Soth, Azalin Rex, Arkhan the Cruel
+- **Heroes & Neutral** (14): Elminster, Drizzt Do'Urden, Mordenkainen, Volo, Minsc & Boo, Jarlaxle, Bruenor Battlehammer, Laeral Silverhand, Fizban, Bigby, Tenser, Raistlin Majere, Tasslehoff Burrfoot, Acquisitions Inc.
+
+### Famous Adventures (20)
+- **Classic**: Tomb of Horrors, Keep on the Borderlands, Ravenloft, Temple of Elemental Evil, Against the Giants, Queen of the Demonweb Pits, White Plume Mountain, Expedition to the Barrier Peaks, Red Hand of Doom
+- **5e**: Lost Mine of Phandelver, Curse of Strahd, Storm King's Thunder, Tomb of Annihilation, Dragon Heist, Dungeon of the Mad Mage, Descent into Avernus, Rime of the Frostmaiden, Wild Beyond the Witchlight, Vecna: Eve of Ruin, Shattered Obelisk
+
+### Edition History & Adaptation Guides (10)
+- Complete D&D edition history (OD&D through 5e 2024)
+- Cross-edition adaptation guides: 1e/2e→5e, 3e→5e, 4e→5e, magic items across editions, monster design evolution
+
+### DM Reference (10)
+- Encounter Building, Treasure Hoards, Random Encounters, NPC Generation, Trap Design, Downtime Activities, Travel & Exploration, Social Interaction, Magic Item Pricing, Session Zero Guide
+
+### Version Sync
+- All version files bumped to 0.4.3: VERSION, version.json, version.js, package.json (root + frontend), tauri.conf.json, Cargo.toml
+
+---
+
 ## V0.4.2 — Wiki 5e 2024 Edition Rules
 **Released:** March 12, 2026
 

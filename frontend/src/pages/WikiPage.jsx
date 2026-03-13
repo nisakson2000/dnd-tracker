@@ -197,7 +197,7 @@ export default function WikiPage() {
         </h1>
         <p className="text-amber-200/40 mt-2 flex items-center justify-center gap-2">
           <BookOpen size={16} />
-          1,950+ articles of D&D knowledge
+          2,000+ articles of D&D knowledge
         </p>
       </motion.div>
 
