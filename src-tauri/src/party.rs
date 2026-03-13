@@ -715,22 +715,36 @@ pub async fn party_ipc_join(
     *ipc_client.client_id.lock().await = Some(client_id.clone());
     *ipc_client.is_host.lock().await = true;
 
-    // Join the room
+    // Join the room — this sends a "welcome" message to the channel
     party.handle_join(&client_id, &room, character).await;
 
-    // Spawn a task to forward server messages to the frontend via Tauri events
+    // Drain the welcome message so we can return it directly to the frontend
+    let welcome = if let Some(msg) = rx.recv().await {
+        if let Ok(text) = msg.to_str() {
+            serde_json::from_str::<Value>(text).unwrap_or(json!({ "type": "welcome" }))
+        } else {
+            json!({ "type": "welcome" })
+        }
+    } else {
+        json!({ "type": "welcome" })
+    };
+
+    // Spawn a task to forward subsequent server messages to the frontend via Tauri events
     let app_clone = app.clone();
     let cid = client_id.clone();
     tokio::spawn(async move {
         while let Some(msg) = rx.recv().await {
             if let Ok(text) = msg.to_str() {
-                let _ = app_clone.emit("party-message", text.to_string());
+                // Emit as parsed JSON Value to avoid double-serialization
+                if let Ok(parsed) = serde_json::from_str::<Value>(text) {
+                    let _ = app_clone.emit("party-message", parsed);
+                }
             }
         }
         eprintln!("[party-ipc] Host client {} channel closed", cid);
     });
 
-    Ok(json!({ "client_id": client_id, "status": "connected" }))
+    Ok(json!({ "client_id": client_id, "status": "connected", "welcome": welcome }))
 }
 
 /// Player connects to a remote DM's party server via Rust WebSocket client.
@@ -773,7 +787,12 @@ pub async fn party_ipc_connect(
                 msg = read.next() => {
                     match msg {
                         Some(Ok(tokio_tungstenite::tungstenite::Message::Text(text))) => {
-                            let _ = app.emit("party-message", text);
+                            // Emit as parsed JSON Value to avoid double-serialization
+                            if let Ok(parsed) = serde_json::from_str::<Value>(&text) {
+                                let _ = app.emit("party-message", parsed);
+                            } else {
+                                let _ = app.emit("party-message", text);
+                            }
                         }
                         Some(Ok(tokio_tungstenite::tungstenite::Message::Close(_))) | None => {
                             eprintln!("[party-ipc] Remote connection closed");

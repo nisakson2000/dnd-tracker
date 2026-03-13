@@ -136,6 +136,10 @@ export function PartyProvider({ children }) {
         console.log('[Party] Joining own server via IPC, room:', code);
         const result = await invoke('party_ipc_join', { room: code, character: snap || {} });
         console.log('[Party] Host joined:', result);
+        // Process the welcome message directly from the invoke result
+        if (result?.welcome) {
+          handleMessage(result.welcome);
+        }
       } else {
         // Player: connect to remote DM server via Rust WebSocket client
         console.log('[Party] Connecting to remote server via IPC:', jip, code);
