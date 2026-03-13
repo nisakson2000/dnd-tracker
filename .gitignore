@@ -9,6 +9,7 @@ dist/
 !frontend/dist.zip
 .vite/
 wiki.db
+!src-tauri/resources/wiki.db
 target/
 videoplayback.mp4
 .claude/
