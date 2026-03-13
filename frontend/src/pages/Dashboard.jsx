@@ -2431,9 +2431,9 @@ export default function Dashboard() {
                 : '#fde68a',
             }}>
               {autoUpdateStatus === 'updated'
-                ? 'Updated to latest build — reloading...'
+                ? 'Updated & rebuilt — reloading...'
                 : autoUpdateStatus === 'pulling'
-                  ? 'Pulling latest updates...'
+                  ? 'Pulling & rebuilding latest updates...'
                   : autoUpdateStatus === 'failed'
                     ? 'Auto-update failed — will retry in 30s'
                     : `Update available: ${latestVersion} (you have ${currentVersion})`

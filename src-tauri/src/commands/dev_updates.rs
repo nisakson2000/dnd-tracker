@@ -261,9 +261,42 @@ pub async fn pull_git_updates() -> Result<serde_json::Value, String> {
         return Err(format!("git pull failed: {}{}", stderr, stash_warning));
     }
 
+    // Rebuild the frontend so updated source files take effect
+    let frontend_dir = root.join("frontend");
+    let mut rebuild_msg = String::new();
+    if frontend_dir.is_dir() {
+        eprintln!("[dev-sync] Rebuilding frontend in {:?}", frontend_dir);
+        let rebuild = Command::new("npx")
+            .args(["vite", "build"])
+            .current_dir(&frontend_dir)
+            .output();
+
+        match tokio::time::timeout(Duration::from_secs(60), rebuild).await {
+            Ok(Ok(output)) => {
+                if output.status.success() {
+                    eprintln!("[dev-sync] Frontend rebuild succeeded");
+                    rebuild_msg = "Frontend rebuilt successfully".to_string();
+                } else {
+                    let err = String::from_utf8_lossy(&output.stderr).trim().to_string();
+                    eprintln!("[dev-sync] Frontend rebuild failed: {}", err);
+                    rebuild_msg = format!("Frontend rebuild failed: {}", err);
+                }
+            }
+            Ok(Err(e)) => {
+                eprintln!("[dev-sync] Frontend rebuild error: {}", e);
+                rebuild_msg = format!("Frontend rebuild error: {}", e);
+            }
+            Err(_) => {
+                eprintln!("[dev-sync] Frontend rebuild timed out");
+                rebuild_msg = "Frontend rebuild timed out after 60s".to_string();
+            }
+        }
+    }
+
     Ok(serde_json::json!({
         "success": true,
         "output": stdout,
+        "rebuild": rebuild_msg,
         "stash_warning": if stash_warning.is_empty() { None } else { Some(stash_warning) },
     }))
 }

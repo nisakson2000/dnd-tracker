@@ -1,91 +1,47 @@
 use rusqlite::params;
 use std::fs;
 use std::path::PathBuf;
-use std::process::Command;
 use tauri::State;
 
 use crate::db::AppState;
 
-const REPO: &str = "nisakson2000/dnd-tracker";
-
-/// Find the repo root directory by looking for the `bugs/` folder.
-/// Works in both dev (cwd is repo) and production (exe is inside src-tauri/target/).
-fn find_repo_root() -> Option<PathBuf> {
-    // Try current working directory first
-    if let Ok(cwd) = std::env::current_dir() {
-        if cwd.join("bugs").is_dir() {
-            return Some(cwd);
-        }
-        // Walk up from cwd
-        let mut dir = cwd.as_path();
-        while let Some(parent) = dir.parent() {
-            if parent.join("bugs").is_dir() {
-                return Some(parent.to_path_buf());
-            }
-            dir = parent;
-        }
-    }
-    // Try from the executable location (production builds)
-    if let Ok(exe) = std::env::current_exe() {
-        let mut dir = exe.as_path();
-        while let Some(parent) = dir.parent() {
-            if parent.join("bugs").is_dir() {
-                return Some(parent.to_path_buf());
-            }
-            dir = parent;
-        }
-    }
-    None
+/// Get the reports directory inside the app data folder.
+fn reports_dir(data_dir: &std::path::Path, report_type: &str) -> PathBuf {
+    let folder = if report_type == "bug" { "bugs" } else { "feature-requests" };
+    data_dir.join("reports").join(folder)
 }
 
-/// Write a report as a markdown file in the repo's bugs/ or feature-requests/ folder.
-fn write_report_file(report_type: &str, title: &str, body: &str) {
-    let Some(repo_root) = find_repo_root() else {
-        eprintln!("[reports] Could not find repo root — skipping file write");
-        return;
-    };
-
-    let folder = if report_type == "bug" { "bugs" } else { "feature-requests" };
-    let dir = repo_root.join(folder);
+/// Write a report as a text file in the app data reports folder.
+/// Filename: "March 13 2026 11-45 PM.txt"
+fn write_report_file(data_dir: &std::path::Path, report_type: &str, title: &str, body: &str) -> Result<PathBuf, String> {
+    let dir = reports_dir(data_dir, report_type);
     if !dir.is_dir() {
-        if let Err(e) = fs::create_dir_all(&dir) {
-            eprintln!("[reports] Failed to create {} dir: {}", folder, e);
-            return;
-        }
+        fs::create_dir_all(&dir)
+            .map_err(|e| format!("Failed to create reports dir: {}", e))?;
     }
 
-    // Generate filename: YYYY-MM-DD_HH-MM-SS_slug.md
     let now = chrono::Local::now();
-    let date_str = now.format("%Y-%m-%d_%H-%M-%S").to_string();
-    let slug: String = title
-        .chars()
-        .filter(|c| c.is_alphanumeric() || *c == ' ' || *c == '-')
-        .collect::<String>()
-        .trim()
-        .replace(' ', "-")
-        .to_lowercase()
-        .chars()
-        .take(50)
-        .collect();
-    let slug = if slug.is_empty() { "report".to_string() } else { slug };
-    let filename = format!("{}_{}.md", date_str, slug);
+    // Filename: "March 13 2026 11-45 PM.txt"
+    let filename = format!("{}.txt", now.format("%B %d %Y %I-%M %p"));
     let filepath = dir.join(&filename);
 
-    let content = format!("# {}\n\n**Date:** {}\n**Type:** {}\n\n---\n\n{}\n",
+    let type_label = if report_type == "bug" { "Bug Report" } else { "Feature Request" };
+    let content = format!(
+        "{}\nTitle: {}\nDate: {}\n\n{}\n",
+        type_label,
         title,
-        now.format("%Y-%m-%d %H:%M:%S"),
-        if report_type == "bug" { "Bug Report" } else { "Feature Request" },
+        now.format("%B %d, %Y at %I:%M %p"),
         body,
     );
 
-    match fs::write(&filepath, &content) {
-        Ok(_) => eprintln!("[reports] Wrote {} to {}", report_type, filepath.display()),
-        Err(e) => eprintln!("[reports] Failed to write {}: {}", filepath.display(), e),
-    }
+    fs::write(&filepath, &content)
+        .map_err(|e| format!("Failed to write report: {}", e))?;
+
+    eprintln!("[reports] Saved {} report to {}", report_type, filepath.display());
+    Ok(filepath)
 }
 
-/// Ensure the reports queue table exists in campaign DB (or a standalone DB).
-/// We use the app data dir to store a reports.db for pending offline reports.
+/// Ensure the reports queue table exists.
 fn ensure_reports_db(data_dir: &std::path::Path) -> Result<rusqlite::Connection, String> {
     let db_path = data_dir.join("reports.db");
     let conn = crate::db::open_connection(&db_path)
@@ -102,38 +58,7 @@ fn ensure_reports_db(data_dir: &std::path::Path) -> Result<rusqlite::Connection,
     Ok(conn)
 }
 
-/// Check if gh CLI is available and authenticated.
-fn gh_available() -> bool {
-    Command::new("gh")
-        .args(["auth", "status"])
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
-}
-
-/// Create a GitHub issue using gh CLI.
-fn create_gh_issue(title: &str, body: &str, label: &str) -> Result<String, String> {
-    let output = Command::new("gh")
-        .args([
-            "issue", "create",
-            "--repo", REPO,
-            "--title", title,
-            "--body", body,
-            "--label", label,
-        ])
-        .output()
-        .map_err(|e| format!("Failed to run gh CLI: {}", e))?;
-
-    if output.status.success() {
-        let url = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        Ok(url)
-    } else {
-        let err = String::from_utf8_lossy(&output.stderr).trim().to_string();
-        Err(format!("gh issue create failed: {}", err))
-    }
-}
-
-/// Submit a bug report — creates a GitHub issue or queues for later.
+/// Submit a bug report — saves to local file and queues for GitHub.
 #[tauri::command]
 pub fn submit_bug_report(
     title: String,
@@ -142,25 +67,18 @@ pub fn submit_bug_report(
 ) -> Result<serde_json::Value, String> {
     // Write to local log file (keep existing behavior)
     let _ = super::bug_report::write_bug_report(body.clone());
-    // Write as markdown file to repo bugs/ folder
-    write_report_file("bug", &title, &body);
+    // Write as markdown file to app data reports folder
+    let path = write_report_file(&state.data_dir, "bug", &title, &body)?;
+    // Also queue in DB for potential future GitHub submission
+    let _ = queue_report(&state.data_dir, "bug", &title, &body);
 
-    if gh_available() {
-        match create_gh_issue(&title, &body, "bug") {
-            Ok(url) => Ok(serde_json::json!({ "status": "submitted", "url": url })),
-            Err(_) => {
-                // Queue for later
-                queue_report(&state.data_dir, "bug", &title, &body)?;
-                Ok(serde_json::json!({ "status": "queued", "reason": "GitHub API failed, will retry later" }))
-            }
-        }
-    } else {
-        queue_report(&state.data_dir, "bug", &title, &body)?;
-        Ok(serde_json::json!({ "status": "queued", "reason": "No internet connection, will submit when online" }))
-    }
+    Ok(serde_json::json!({
+        "status": "submitted",
+        "path": path.display().to_string()
+    }))
 }
 
-/// Submit a feature request — creates a GitHub issue or queues for later.
+/// Submit a feature request — saves to local file and queues for GitHub.
 #[tauri::command]
 pub fn submit_feature_request(
     title: String,
@@ -169,21 +87,15 @@ pub fn submit_feature_request(
 ) -> Result<serde_json::Value, String> {
     // Write to local log file (keep existing behavior)
     let _ = super::feature_request::write_feature_request(body.clone());
-    // Write as markdown file to repo feature-requests/ folder
-    write_report_file("feature", &title, &body);
+    // Write as markdown file to app data reports folder
+    let path = write_report_file(&state.data_dir, "feature", &title, &body)?;
+    // Also queue in DB for potential future GitHub submission
+    let _ = queue_report(&state.data_dir, "feature", &title, &body);
 
-    if gh_available() {
-        match create_gh_issue(&title, &body, "enhancement") {
-            Ok(url) => Ok(serde_json::json!({ "status": "submitted", "url": url })),
-            Err(_) => {
-                queue_report(&state.data_dir, "feature", &title, &body)?;
-                Ok(serde_json::json!({ "status": "queued", "reason": "GitHub API failed, will retry later" }))
-            }
-        }
-    } else {
-        queue_report(&state.data_dir, "feature", &title, &body)?;
-        Ok(serde_json::json!({ "status": "queued", "reason": "No internet connection, will submit when online" }))
-    }
+    Ok(serde_json::json!({
+        "status": "submitted",
+        "path": path.display().to_string()
+    }))
 }
 
 /// Queue a report for later submission.
@@ -202,36 +114,13 @@ fn queue_report(data_dir: &std::path::Path, report_type: &str, title: &str, body
 pub fn flush_pending_reports(
     state: State<'_, AppState>,
 ) -> Result<serde_json::Value, String> {
-    if !gh_available() {
-        return Ok(serde_json::json!({ "flushed": 0, "reason": "gh CLI not available" }));
-    }
-
+    // For now, just report the count — GitHub submission requires gh CLI or a token
     let conn = ensure_reports_db(&state.data_dir)?;
-    let mut stmt = conn.prepare(
-        "SELECT id, report_type, title, body FROM pending_reports ORDER BY created_at ASC"
-    ).map_err(|e| format!("Failed to query pending reports: {}", e))?;
+    let count: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM pending_reports", [], |row| row.get(0),
+    ).map_err(|e| format!("Failed to count pending reports: {}", e))?;
 
-    let rows: Vec<(i64, String, String, String)> = stmt.query_map([], |row| {
-        Ok((
-            row.get(0)?,
-            row.get(1)?,
-            row.get(2)?,
-            row.get(3)?,
-        ))
-    }).map_err(|e| format!("Failed to read pending reports: {}", e))?
-    .filter_map(|r| r.ok())
-    .collect();
-
-    let mut flushed = 0;
-    for (id, report_type, title, body) in &rows {
-        let label = if report_type == "bug" { "bug" } else { "enhancement" };
-        if create_gh_issue(title, body, label).is_ok() {
-            let _ = conn.execute("DELETE FROM pending_reports WHERE id = ?1", params![id]);
-            flushed += 1;
-        }
-    }
-
-    Ok(serde_json::json!({ "flushed": flushed, "remaining": rows.len() - flushed }))
+    Ok(serde_json::json!({ "flushed": 0, "remaining": count }))
 }
 
 /// Get count of pending (queued) reports.
@@ -245,4 +134,13 @@ pub fn get_pending_report_count(
         [],
         |row| row.get(0),
     ).map_err(|e| format!("Failed to count pending reports: {}", e))
+}
+
+/// Get the path to the reports folder so the frontend can show it.
+#[tauri::command]
+pub fn get_reports_path(
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    let dir = state.data_dir.join("reports");
+    Ok(dir.display().to_string())
 }

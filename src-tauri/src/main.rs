@@ -353,6 +353,7 @@ fn main() {
             commands::github_reports::submit_feature_request,
             commands::github_reports::flush_pending_reports,
             commands::github_reports::get_pending_report_count,
+            commands::github_reports::get_reports_path,
         ])
         .run(tauri::generate_context!())
         .expect("Fatal: failed to start Tauri application");
