@@ -1,6 +1,6 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.5.0**
+**Current Version: V0.5.4**
 
 A native desktop application for managing D&D 5e characters with full ruleset support, a 2,000+ article encyclopedia, real-time multiplayer sessions, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
@@ -9,7 +9,8 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 ### Player/DM Mode System
 - **Mode Selection** — choose Player or DM mode on launch with animated role picker
 - **DM Campaign Engine** — create campaigns, manage scenes, run live sessions with WebSocket multiplayer sync
-- **DM Campaign List** — create, list, delete campaigns with ruleset selection (D&D 5e 2024/2014, PF2e, homebrew)
+- **Campaign Type System** — choose Homebrew or Premade on creation; sidebar filters tools accordingly
+- **Campaign Export/Import/Archive** — download campaigns as JSON, import them back, or soft-archive without deleting
 - **DM Lobby** — campaign HQ with scenes, session recap, handouts, quest generator, player connections
 - **DM Live Session** — initiative tracker, round manager, action log, chat, timer, scene management
 - **Player Join Flow** — enter DM IP + room code, select character, wait for approval
@@ -25,6 +26,8 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - **World State Manager** — track world state by category (politics, geography, events, factions)
 
 ### Character Sheet
+- **Dice Rolling on Stats** — hover any ability score, saving throw, or skill to reveal dice icon; click to roll
+- **Floating Dice Roller** — accessible from any page via floating button (bottom-right), no longer a sidebar section
 - Ability Scores, Saving Throws, Skills (proficiency + expertise), HP tracking with color-coded bar
 - **Death Saving Throw UI** — visual tracker with 3 success/3 failure clickable circles
 - **Proficiency Bonus Display** — prominent gold-accented card
@@ -38,6 +41,7 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 
 ### Character Setup Wizard
 - Guided post-creation setup: Ability Scores (Point Buy / Standard Array / Roll), Background, Auto-Apply, Skills, Review
+- **Starting Equipment** — auto-adds class-appropriate gear and starting gold to inventory on character creation
 - Supports both 5e-2014 and 5e-2024 rulesets
 
 ### Spellbook
@@ -71,11 +75,16 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - Roll labels, persistent history, 4d6kh3 stat roller, statistics panel
 
 ### NPCs
+- **Quick-Create Templates** — 6 archetype presets (Tavern Keeper, Wise Sage, Shady Merchant, etc.)
+- **Random Name Generator** — one-click fantasy name picker from 26 names
+- **Race & Class Dropdowns** — autocomplete suggestions for 16 races and 20 classes/occupations
 - **Relationship Tracker** — Friendly/Neutral/Hostile/Rival/Patron/Unknown with colored badges
 - **Quest Hooks** — optional quest hook field with scroll icon
 - Role-colored avatars with initials, status tracking, descriptions, notes, locations
 
 ### Quests
+- **Quick Templates** — 8 presets (Bounty Hunt, Rescue Mission, Dungeon Delve, Investigation, etc.) with pre-filled objectives
+- **Suggested Objectives** — clickable chips for common quest objectives
 - **Reward Tracking** — XP, Gold, Item rewards with icons and active-quest totals
 - **Quest Giver & Location** — displayed with user/map-pin icons
 - **Priority System** — Low/Medium/High/Critical with color-coded indicators
@@ -94,6 +103,7 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - Markdown editor, mood tagging, fullscreen reading mode, export to TXT
 
 ### Lore & World Notes
+- **Quick Templates** — 6 structured note templates (Town/City, Dungeon, Faction, Legend/Myth, etc.) with markdown sections
 - **Category Presets** — Location, Faction, Deity, History, Magic, Creature, Item
 - **Related Entries** — cross-references between lore entries
 - **Entry Type Icons** — category-aware icons (MapPin, Users, Star, etc.)
@@ -163,11 +173,18 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 ### Feature Request
 - **In-App Feedback** — submit structured feature requests with category, title, description, and auto-generated request IDs
 
+### Session Monitor (Background Error Reporter)
+- **Automatic crash reporting** — captures uncaught errors, promise rejections, and console errors in the background
+- **Batched GitHub uploads** — errors queued and submitted as GitHub Issues every 5 minutes
+- **Rate-limited & deduplicated** — max 1 auto-report per 10 minutes, identical errors merged
+- **Session context** — reports include app version, OS, screen size, stack traces, and timestamps
+
 ### Additional Features
 - Arcane Encyclopedia — 2,000+ article searchable wiki with FTS5, grid/list views, keyboard shortcuts, cross-ref hover previews, drop cap typography
+- Community Campaigns — browse and import adventures from the 5etools homebrew repository
 - Party Connect — LAN sync with room codes, auto-reconnect, DM party stats overview, persistent connection across navigation
 - LAN Dev Presence — UDP broadcast peer discovery with version-aware sync, instant update push notifications between devs, "builds synced" indicator
-- GitHub Auto-Update — dev builds poll for new commits every 5s, one-click Pull & Reload with auto-stash, rebase fallback, instant peer push notifications
+- Update Detection — checks for updates on launch, banner with one-click "UPDATE NOW" and reload
 - Rest Mechanics (Long/Short Rest with proper D&D rules)
 - Level-Up System with animated overlay and class-specific gains
 - Frontend error logging — console errors, unhandled exceptions, and promise rejections captured to log file
