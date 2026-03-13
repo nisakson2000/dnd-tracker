@@ -14,7 +14,7 @@ import Dashboard from './pages/Dashboard';
 import CharacterView from './pages/CharacterView';
 import WikiPage from './pages/WikiPage';
 import WikiArticlePage from './pages/WikiArticlePage';
-import UpdateScreen from './pages/UpdateScreen';
+// UpdateScreen removed — Tauri native updater handles updates via Dashboard banner
 import CharacterSetup from './pages/CharacterSetup';
 import BootupVideo from './components/BootupVideo';
 import SessionMonitor from './components/SessionMonitor';
@@ -931,7 +931,7 @@ function DevSyncGate({ onReady }) {
 function AppContent() {
   const [bootupDone, setBootupDone] = useState(false);
   const [syncDone, setSyncDone] = useState(!import.meta.env.DEV);
-  const [updateDone, setUpdateDone] = useState(false);
+  const [updateDone, setUpdateDone] = useState(true); // Tauri updater handles updates via Dashboard banner now
   const { mode } = useAppMode();
   const handleSyncReady = useCallback(() => setSyncDone(true), []);
 
@@ -986,18 +986,7 @@ function AppContent() {
       {/* Step 0.5: Dev sync gate — force pull if behind remote (dev builds only) */}
       {import.meta.env.DEV && bootupDone && !syncDone && <DevSyncGate onReady={handleSyncReady} />}
 
-      {/* Step 1: Update splash */}
-      <AnimatePresence>
-        {bootupDone && syncDone && !updateDone && (
-          <UpdateScreen
-            key="update-splash"
-            onDone={() => setUpdateDone(true)}
-            asModal={false}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Step 2: Mode selection (if no mode chosen yet) */}
+      {/* Mode selection (if no mode chosen yet) */}
       {syncDone && updateDone && !mode && <ModeSelect />}
 
       {/* Step 3: Main app (once mode is selected) */}

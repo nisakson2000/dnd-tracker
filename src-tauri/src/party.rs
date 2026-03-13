@@ -796,7 +796,7 @@ pub async fn party_ipc_connect(
                         }
                         Some(Ok(tokio_tungstenite::tungstenite::Message::Close(_))) | None => {
                             eprintln!("[party-ipc] Remote connection closed");
-                            let _ = app.emit("party-message", json!({"type":"connection_closed"}).to_string());
+                            let _ = app.emit("party-message", json!({"type":"connection_closed"}));
                             break;
                         }
                         _ => {}

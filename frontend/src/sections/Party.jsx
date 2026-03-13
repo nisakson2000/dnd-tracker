@@ -193,9 +193,10 @@ export default function Party({ characterId, character, onBugReport }) {
   }), [characterId, character?.name, character?.race, character?.primary_class, character?.level, character?.current_hp, character?.max_hp, character?.armor_class]);
 
   // Connect when room code + mode are ready
+  // Pass params directly to avoid connRef race condition (child effects fire before parent effects)
   useEffect(() => {
-    if (roomCode && mode) connect(charSnapshot);
-  }, [roomCode, mode, connect, charSnapshot]);
+    if (roomCode && mode) connect(charSnapshot, { mode, roomCode, joinIp });
+  }, [roomCode, mode, joinIp, connect, charSnapshot]);
 
   // Auto-sync when any tracked character stat changes
   const prevStatsRef = useRef(null);

@@ -313,7 +313,7 @@ export default function BugReport({ characterId, character, errors = [], onClear
 
       const result = await invoke('submit_bug_report', { title: issueTitle, body: issueBody });
 
-      toast.success('Submitted successfully!', { duration: 4000 });
+      toast.success(result.url ? 'Bug report submitted to GitHub!' : 'Report saved — will submit when online', { duration: 4000 });
       setRecentReports(prev => [{ ...report, status: result.status, url: result.url }, ...prev].slice(0, 20));
       setDescription('');
       setExpected('');
@@ -587,7 +587,7 @@ export default function BugReport({ characterId, character, errors = [], onClear
 
       <div className="flex items-start gap-2 text-xs text-amber-200/25 border border-amber-200/8 rounded p-3">
         <Bug size={13} className="shrink-0 mt-0.5" />
-        <span>Bug reports are saved locally and sent to the development team for review.</span>
+        <span>Bug reports are submitted as GitHub issues for tracking. If offline, they're saved locally and submitted automatically next time.</span>
       </div>
     </div>
   );

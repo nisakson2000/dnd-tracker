@@ -45,6 +45,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
+          CODEX_REPORTS_TOKEN: ${{ secrets.CODEX_REPORTS_TOKEN }}
         with:
           tagName: v__VERSION__
           releaseName: 'The Codex v__VERSION__'

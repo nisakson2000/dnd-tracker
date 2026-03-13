@@ -108,9 +108,9 @@ export function PartyProvider({ children }) {
     }
   }, [clearTimers]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const connect = useCallback(async (charSnapshot) => {
+  const connect = useCallback(async (charSnapshot, overrideParams) => {
     if (connectingRef.current || connectedRef.current) return;
-    const { mode: m, roomCode: code, joinIp: jip } = connRef.current;
+    const { mode: m, roomCode: code, joinIp: jip } = overrideParams || connRef.current;
     if (!code || !m) return;
 
     if (charSnapshot) charSnapshotRef.current = charSnapshot;
@@ -224,6 +224,9 @@ export function PartyProvider({ children }) {
       console.log('[Party] Room created:', code);
       setRoomCode(code);
       setMode('host');
+      // Sync ref immediately so connect() doesn't read stale values
+      // (child useEffects fire before parent useEffects)
+      connRef.current = { hostIp: ip, roomCode: code, joinIp: '', mode: 'host' };
     } catch (err) {
       console.error('[Party] Host failed:', err);
       toast.error(`Could not start party server: ${err?.message || err}`, { duration: 6000 });
