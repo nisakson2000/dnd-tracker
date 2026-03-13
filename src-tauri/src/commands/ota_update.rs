@@ -6,10 +6,10 @@ use tauri::State;
 use crate::db::AppState;
 
 const DIST_ZIP_URL: &str =
-    "https://raw.githubusercontent.com/ArsenalRX/Dnd-tracker/main/frontend/dist.zip";
+    "https://raw.githubusercontent.com/nisakson2000/dnd-tracker/main/frontend/dist.zip";
 
 const VERSION_MANIFEST_URL: &str =
-    "https://raw.githubusercontent.com/ArsenalRX/Dnd-tracker/main/version.json";
+    "https://raw.githubusercontent.com/nisakson2000/dnd-tracker/main/version.json";
 
 /// Get the directory where OTA frontend updates are stored.
 fn ota_dist_dir(data_dir: &std::path::Path) -> PathBuf {

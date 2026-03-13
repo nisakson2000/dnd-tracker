@@ -50,13 +50,13 @@ export default function UpdatesPanel({ show, onClose }) {
                   </p>
                 </div>
                 <a
-                  href="https://github.com/ArsenalRX/Dnd-tracker"
+                  href="https://github.com/nisakson2000/dnd-tracker"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors"
                   onClick={(e) => {
                     e.preventDefault();
-                    try { invoke('plugin:shell|open', { path: 'https://github.com/ArsenalRX/Dnd-tracker' }); } catch { /* ignore shell open failure */ }
+                    try { invoke('plugin:shell|open', { path: 'https://github.com/nisakson2000/dnd-tracker' }); } catch { /* ignore shell open failure */ }
                   }}
                 >
                   <ExternalLink size={12} /> View

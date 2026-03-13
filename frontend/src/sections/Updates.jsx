@@ -69,7 +69,7 @@ export default function Updates() {
 
       // Fetch manifest for download URL
       const res = await fetch(
-        'https://raw.githubusercontent.com/ArsenalRX/Dnd-tracker/main/version.json',
+        'https://raw.githubusercontent.com/nisakson2000/dnd-tracker/main/version.json',
         { cache: 'no-store' },
       );
       if (!res.ok) throw new Error('Failed to fetch update manifest');
@@ -475,7 +475,7 @@ export default function Updates() {
         <h3 className="text-[10px] font-mono tracking-widest uppercase text-amber-200/25">What's New</h3>
         <button
           onClick={() => {
-            try { invoke('plugin:shell|open', { path: 'https://github.com/ArsenalRX/Dnd-tracker/blob/main/MASTERUPDATELIST.md' }); } catch { /* non-critical */ }
+            try { invoke('plugin:shell|open', { path: 'https://github.com/nisakson2000/dnd-tracker/blob/main/MASTERUPDATELIST.md' }); } catch { /* non-critical */ }
           }}
           className="flex items-center gap-1 text-[10px] text-amber-200/30 hover:text-amber-200/60 transition-colors bg-transparent border-none cursor-pointer"
           style={{ fontFamily: 'inherit' }}
