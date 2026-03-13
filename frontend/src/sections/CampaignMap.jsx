@@ -503,6 +503,9 @@ export default function CampaignMap({ characterId }) {
   const [fogOfWar, setFogOfWar] = useState(false);
   const [showLegend, setShowLegend] = useState(true);
   const [customMapImage, setCustomMapImage] = useState(null); // user-uploaded map image
+  const [devWarningDismissed, setDevWarningDismissed] = useState(() => {
+    try { return sessionStorage.getItem('codex-map-dev-warning') === '1'; } catch { return false; }
+  });
   const fileInputRef = useRef(null);
   const [revealedLocations, setRevealedLocations] = useState(new Set()); // DM reveals locations for players
 
@@ -920,6 +923,29 @@ export default function CampaignMap({ characterId }) {
     const hasCampaignData = npcs.length > 0 || quests.length > 0 || lore.length > 0;
     return (
       <div style={styles.container}>
+        {!devWarningDismissed && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '10px',
+            padding: '8px 14px', marginBottom: '12px',
+            background: 'rgba(251,191,36,0.06)',
+            border: '1px solid rgba(251,191,36,0.15)',
+            borderRadius: '8px',
+          }}>
+            <AlertCircle size={14} style={{ color: '#fbbf24', flexShrink: 0 }} />
+            <span style={{ flex: 1, fontSize: '11px', color: 'rgba(251,191,36,0.7)' }}>
+              Campaign Map is in early development and may have bugs or missing features.
+            </span>
+            <button
+              onClick={() => {
+                setDevWarningDismissed(true);
+                try { sessionStorage.setItem('codex-map-dev-warning', '1'); } catch { /* ignore */ }
+              }}
+              style={{ background: 'none', border: 'none', color: 'rgba(251,191,36,0.4)', cursor: 'pointer', fontSize: '14px', padding: '2px', flexShrink: 0 }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
         <div style={styles.emptyState}>
           <MapPin size={48} style={{ color: '#4b5563', marginBottom: 4 }} />
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: '#c084fc', marginBottom: 8 }}>
@@ -955,6 +981,36 @@ export default function CampaignMap({ characterId }) {
 
   return (
     <div style={styles.container}>
+      {/* ── Early development warning ─────────── */}
+      {!devWarningDismissed && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '10px',
+          padding: '8px 14px',
+          background: 'rgba(251,191,36,0.06)',
+          border: '1px solid rgba(251,191,36,0.15)',
+          borderRadius: '8px',
+          marginBottom: '8px',
+        }}>
+          <AlertCircle size={14} style={{ color: '#fbbf24', flexShrink: 0 }} />
+          <span style={{ flex: 1, fontSize: '11px', color: 'rgba(251,191,36,0.7)', lineHeight: 1.4 }}>
+            Campaign Map is in early development and may have bugs or missing features.
+          </span>
+          <button
+            onClick={() => {
+              setDevWarningDismissed(true);
+              try { sessionStorage.setItem('codex-map-dev-warning', '1'); } catch { /* ignore */ }
+            }}
+            style={{
+              background: 'none', border: 'none', color: 'rgba(251,191,36,0.4)',
+              cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: '2px',
+              flexShrink: 0,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* ── Toolbar ─────────────────────────────── */}
       <div style={styles.toolbar}>
         <div style={styles.searchBox}>

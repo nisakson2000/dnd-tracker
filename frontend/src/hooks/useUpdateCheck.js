@@ -60,15 +60,11 @@ export function useUpdateCheck() {
     }
   }, []);
 
-  // Check on mount, then every 30 minutes
+  // Check once on mount — no auto-polling (user triggers manually or from Updates page)
   useEffect(() => {
     mountedRef.current = true;
     checkForUpdates();
-    const interval = setInterval(checkForUpdates, 30 * 60 * 1000);
-    return () => {
-      mountedRef.current = false;
-      clearInterval(interval);
-    };
+    return () => { mountedRef.current = false; };
   }, [checkForUpdates]);
 
   return { updateAvailable, latestVersion, checking, lastChecked, checkResult, checkForUpdates, currentVersion: APP_VERSION };

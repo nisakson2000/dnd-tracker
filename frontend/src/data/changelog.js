@@ -3,6 +3,61 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.1.5 BETA',
+    date: '03/12/2026',
+    title: 'Campaign Map, Update System Overhaul & Dev Tools',
+    changes: [
+      'Campaign Map — early development warning banner, custom map image upload for homebrew campaigns',
+      'Campaign Map — bundled 6 CC-licensed map backgrounds for all premade starter campaigns',
+      'Campaign Map — registered as proper section (fixes black screen when navigating to it)',
+      'Updates — dedicated /updates page accessible from dashboard bell icon',
+      'Updates — polished download & patching flow with progress bar and phase transitions',
+      'Updates — removed auto-polling, checks happen on launch and manually only',
+      'Premade Campaigns — all 6 starter adventures now bundled and importable',
+      'Dev Tools — removed from player/DM sidebar, only accessible via top-left wrench icon',
+      'Dev Chat — fixed duplicate message bug (messages appeared 3-4 times)',
+      'Changelog — now auto-updated when version is bumped',
+      'Version reset to V0.1.5 BETA for public release track',
+    ],
+  },
+  {
+    version: 'V0.4.3',
+    date: '03/12/2026',
+    title: 'Wiki Phase 7, Campaign Map & Update System',
+    changes: [
+      'Wiki — NPCs, Adventures, Edition History & DM Reference articles added to the Arcane Encyclopedia',
+      'Campaign Map — early development warning banner, custom map image upload for homebrew campaigns',
+      'Campaign Map — bundled 6 CC-licensed map backgrounds for all premade starter campaigns',
+      'Campaign Map — auto-detect premade campaign from imported NPC/Lore data',
+      'Updates — dedicated /updates page accessible from dashboard, polished download & patching flow',
+      'Updates — removed auto-polling, update checks are now manual or on app launch only',
+      'Premade Campaigns — all 6 starter adventures now bundled (was 3), campaign_name auto-set on import',
+      'Community Campaigns — on-demand adventure preview with description and content counts',
+      'Smart Pull — dev update system detects conflicts and auto-resolves when possible',
+      'Character Sheet — removed redundant setup assistant (character creation wizard handles this)',
+      'DM Sidebar — removed duplicate Party Connect entry',
+    ],
+  },
+  {
+    version: 'V0.4.2',
+    date: '03/12/2026',
+    title: 'Wiki Phase 6 — 5e 2024 Edition Rules',
+    changes: [
+      'Arcane Encyclopedia — comprehensive 5e 2024 (One D&D) edition rules coverage',
+      'Updated rule references and mechanical comparisons between 2014 and 2024 editions',
+      'Wiki search and navigation improvements for new content',
+    ],
+  },
+  {
+    version: 'V0.4.1',
+    date: '03/12/2026',
+    title: 'Wiki Phase 5 — Homebrew, Cross-Edition & Settings',
+    changes: [
+      'Arcane Encyclopedia — homebrew creation guides, cross-edition compatibility notes, campaign settings lore',
+      'Wiki article quality improvements and expanded cross-references',
+    ],
+  },
+  {
     version: 'V0.4.0',
     date: '03/12/2026',
     title: 'The Adventurer\'s Forge — Comprehensive Player Mode Overhaul',

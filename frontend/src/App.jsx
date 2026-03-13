@@ -17,6 +17,9 @@ import UpdateScreen from './pages/UpdateScreen';
 import CharacterSetup from './pages/CharacterSetup';
 import BootupVideo from './components/BootupVideo';
 
+// Lazy-loaded standalone pages
+const UpdatesPage = lazy(() => import('./pages/UpdatesPage'));
+
 // Dev-only components — lazy loaded, tree-shaken in production
 const DevToolsPanel = import.meta.env.DEV
   ? lazy(() => import('./dev/DevToolsPanel'))
@@ -766,7 +769,7 @@ function CommandPalette({ characterId }) {
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 function AppContent() {
-  const [bootupDone, setBootupDone] = useState(false);
+  const [bootupDone, setBootupDone] = useState(import.meta.env.DEV ? false : true);
   const [updateDone, setUpdateDone] = useState(false);
   const { mode } = useAppMode();
 
@@ -803,8 +806,8 @@ function AppContent() {
         }}
       />
 
-      {/* Step 0: Bootup video */}
-      {!bootupDone && <BootupVideo onDone={() => setBootupDone(true)} />}
+      {/* Step 0: Bootup video (dev builds only) */}
+      {import.meta.env.DEV && !bootupDone && <BootupVideo onDone={() => setBootupDone(true)} />}
 
       {/* Step 1: Update splash */}
       <AnimatePresence>
@@ -830,6 +833,7 @@ function AppContent() {
             <Route path="/character/:characterId/setup" element={<CharacterSetup />} />
             <Route path="/wiki" element={<WikiPage />} />
             <Route path="/wiki/:slug" element={<WikiArticlePage />} />
+            <Route path="/updates" element={<Suspense fallback={null}><UpdatesPage /></Suspense>} />
           </Routes>
         </BrowserRouter>
       )}

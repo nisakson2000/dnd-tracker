@@ -45,6 +45,7 @@ const CampaignHub = lazy(() => import('../sections/CampaignHub'));
 const Party = lazy(() => import('../sections/Party'));
 const AiAssistant = lazy(() => import('../sections/AiAssistant'));
 const PremadeCampaigns = lazy(() => import('../sections/PremadeCampaigns'));
+const CampaignMap = lazy(() => import('../sections/CampaignMap'));
 const DevTools = import.meta.env.DEV ? lazy(() => import('../sections/DevTools')) : null;
 
 class SectionErrorBoundary extends React.Component {
@@ -87,6 +88,7 @@ const SECTIONS = {
   'party-overview': Party,
   'party-connect': Party,
   'ai-assistant': AiAssistant,
+  'campaign-map': CampaignMap,
   'premade-campaigns': PremadeCampaigns,
   ...(DevTools ? { devtools: DevTools } : {}),
 };
@@ -109,6 +111,7 @@ const SECTION_LABELS = {
   bugreport: 'Bug Report',
   updates: 'Updates',
   devtools: 'Dev Tools',
+  'campaign-map': 'Campaign Map',
   'campaign-hub': 'Campaign Hub',
   'encounter': 'Encounter Runner',
   'party-overview': 'Party Overview',

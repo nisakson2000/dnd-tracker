@@ -2320,11 +2320,7 @@ export default function Dashboard() {
               <Library size={13} /> Arcane Encyclopedia
             </motion.button>
             <motion.button
-              onClick={() => {
-                // Navigate to first character's updates if available, otherwise just show toast
-                if (characters.length > 0) navigate(`/character/${characters[0].id}`, { state: { section: 'updates' } });
-                else toast('Create a character first', { icon: '📜' });
-              }}
+              onClick={() => navigate('/updates')}
               whileHover={{ borderColor: 'rgba(201,168,76,0.6)', color: '#c9a84c', boxShadow: '0 0 20px rgba(201,168,76,0.12), 0 4px 16px rgba(0,0,0,0.4)' }}
               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 22px', borderRadius: 99, border: '1px solid rgba(201,168,76,0.22)', background: 'rgba(201,168,76,0.06)', color: 'rgba(200,175,130,0.6)', fontFamily: 'var(--font-heading)', fontSize: 11, letterSpacing: '0.1em', cursor: 'pointer', textTransform: 'uppercase' }}
             >

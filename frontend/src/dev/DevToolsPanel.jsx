@@ -710,10 +710,26 @@ function ChatPanel() {
   const [sending, setSending] = useState(false);
   const [peers, setPeers] = useState([]);
   const messagesEndRef = useRef(null);
+  const seenIdsRef = useRef(new Set());
+
+  // Deduplication helper — prevents the same message from appearing multiple times
+  // (UDP broadcasts can arrive on multiple network interfaces)
+  const addMessageDeduped = useCallback((msg) => {
+    // Create a fingerprint from dev_name + timestamp + message content
+    const id = `${msg.dev_name}:${msg.timestamp}:${msg.message}`;
+    if (seenIdsRef.current.has(id)) return;
+    seenIdsRef.current.add(id);
+    setMessages(prev => [...prev, msg]);
+  }, []);
 
   // Load initial messages and poll peers
   useEffect(() => {
-    invoke('dev_get_chat_messages').then(setMessages).catch(() => {});
+    invoke('dev_get_chat_messages').then(msgs => {
+      // Seed the seen-IDs set from backend history
+      const seen = seenIdsRef.current;
+      (msgs || []).forEach(m => seen.add(`${m.dev_name}:${m.timestamp}:${m.message}`));
+      setMessages(msgs || []);
+    }).catch(() => {});
     invoke('get_dev_peers').then(setPeers).catch(() => {});
 
     const peerInterval = setInterval(() => {
@@ -723,15 +739,15 @@ function ChatPanel() {
     return () => clearInterval(peerInterval);
   }, []);
 
-  // Listen for real-time chat messages
+  // Listen for real-time chat messages (deduped)
   useEffect(() => {
     let unlisten = null;
     listen('dev-chat-message', (event) => {
-      setMessages(prev => [...prev, event.payload]);
+      addMessageDeduped(event.payload);
     }).then(fn => { unlisten = fn; });
 
     return () => { if (unlisten) unlisten(); };
-  }, []);
+  }, [addMessageDeduped]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -744,9 +760,8 @@ function ChatPanel() {
     try {
       await invoke('dev_send_chat', { message: input });
       setInput('');
-      // Refresh to get our own message
-      const msgs = await invoke('dev_get_chat_messages');
-      setMessages(msgs);
+      // Don't re-fetch from backend — the event listener handles incoming messages
+      // and our own message will come back through the broadcast
     } catch (err) {
       console.warn('Chat send failed:', err);
     }

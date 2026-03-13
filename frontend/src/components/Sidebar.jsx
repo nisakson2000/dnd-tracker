@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   ScrollText, BookOpen, Shield, Sparkles, Swords,
   BookMarked, Users, Map, Globe, Dice5, ArrowLeft, User, Download,
-  Library, Settings2, Heart, Bell, Bug, Terminal, Crown, LayoutDashboard,
+  Library, Settings2, Heart, Bell, Bug, Crown, LayoutDashboard,
   Star, Search, X, Zap, Wifi, BookCopy, MapPin,
 } from 'lucide-react';
 import { useAppMode } from '../contexts/ModeContext';
@@ -50,12 +50,6 @@ const PLAYER_SECTION_GROUPS = [
       { id: 'updates',    label: 'Updates',            icon: Bell },
     ],
   },
-  ...(import.meta.env.DEV ? [{
-    label: 'Developer',
-    items: [
-      { id: 'devtools', label: 'Dev Tools', icon: Terminal },
-    ],
-  }] : []),
 ];
 
 const DM_SECTION_GROUPS = [
@@ -94,12 +88,6 @@ const DM_SECTION_GROUPS = [
       { id: 'updates',    label: 'Updates',            icon: Bell },
     ],
   },
-  ...(import.meta.env.DEV ? [{
-    label: 'Developer',
-    items: [
-      { id: 'devtools', label: 'Dev Tools', icon: Terminal },
-    ],
-  }] : []),
 ];
 
 function hpColor(hp, maxHp) {

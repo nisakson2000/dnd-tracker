@@ -15,8 +15,14 @@ import { getOverview, updateOverview } from '../api/overview';
 import goblinMine from '../data/campaigns/goblin-mine.json';
 import cursedVillage from '../data/campaigns/cursed-village.json';
 import dragonCoast from '../data/campaigns/dragon-coast.json';
+import feywildCrossing from '../data/campaigns/feywild-crossing.json';
+import shadowAcademy from '../data/campaigns/shadow-academy.json';
+import siegeOfIronhold from '../data/campaigns/siege-of-ironhold.json';
 
-const BUNDLED_CAMPAIGNS = [goblinMine, cursedVillage, dragonCoast];
+const BUNDLED_CAMPAIGNS = [
+  goblinMine, cursedVillage, dragonCoast,
+  feywildCrossing, shadowAcademy, siegeOfIronhold,
+];
 
 const LEVEL_COLORS = {
   '1-3': { bg: 'rgba(74,222,128,0.12)', text: '#4ade80', border: 'rgba(74,222,128,0.25)' },
