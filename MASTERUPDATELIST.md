@@ -4,6 +4,26 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.5.4 — Session Monitor, Community Campaigns Fix & Feature Request
+**Released:** March 13, 2026
+
+### Session Monitor (Background Error Reporter)
+- **Automatic crash reporting** — captures uncaught errors, unhandled promise rejections, and console errors in the background
+- **Batched uploads** — errors are queued and submitted to GitHub Issues every 5 minutes or when 50+ errors accumulate
+- **Rate limiting** — max 1 auto-report per 10 minutes to avoid spam
+- **Deduplication** — identical errors within 30 seconds are merged
+- **Session tracking** — each report includes session ID, app version, OS, screen size, and timestamps
+- Reports are submitted via the existing `submit_bug_report` system (uses `gh` CLI or offline queue)
+
+### Community Campaigns Fix
+- **CSP policy updated** — added `api.github.com` and `raw.githubusercontent.com` to allowed origins
+- Community/premade campaigns from 5etools homebrew repository now load correctly in production builds
+
+### Feature Request
+- Feature Request section is available in both Player and DM sidebar under Tools (was already there — confirmed working)
+
+---
+
 ## V0.5.3 — DM Content Creation Tools & Update System
 **Released:** March 13, 2026
 

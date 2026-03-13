@@ -3,6 +3,17 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.5.4',
+    date: '03/13/2026',
+    title: 'Session Monitor, Community Campaigns Fix',
+    changes: [
+      'Session Monitor — background error reporter that auto-captures crashes and submits bug reports to GitHub',
+      'Fixed community campaigns failing to load in production (CSP policy now allows GitHub API)',
+      'Error reports include session ID, version, OS, stack traces, and timestamps',
+      'Rate-limited and deduplicated — max 1 auto-report every 10 minutes',
+    ],
+  },
+  {
     version: 'V0.5.3',
     date: '03/13/2026',
     title: 'DM Content Creation Tools & Update System',

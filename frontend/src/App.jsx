@@ -17,6 +17,7 @@ import WikiArticlePage from './pages/WikiArticlePage';
 import UpdateScreen from './pages/UpdateScreen';
 import CharacterSetup from './pages/CharacterSetup';
 import BootupVideo from './components/BootupVideo';
+import SessionMonitor from './components/SessionMonitor';
 
 // Lazy-loaded standalone pages
 const UpdatesPage = lazy(() => import('./pages/UpdatesPage'));
@@ -945,6 +946,9 @@ function AppContent() {
 
   return (
     <>
+      {/* Background error monitor — auto-reports crashes to GitHub */}
+      <SessionMonitor />
+
       {/* Ambient background effects */}
       <div className="ambient" />
       <div className="ambient-noise" />
