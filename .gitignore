@@ -9,6 +9,6 @@ dist/
 .vite/
 wiki.db
 target/
-frontend/public/bootup.mp4
+videoplayback.mp4
 .claude/
 SYNC_PROTOCOL.md
