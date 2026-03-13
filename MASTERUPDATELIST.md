@@ -14,7 +14,6 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ### Campaign Map
 - Fixed black screen when clicking character (CampaignMap missing from SECTIONS registry)
-- Added early development warning banner (dismissible, persists via sessionStorage)
 
 ### Updates Page
 - Dashboard bell now navigates to dedicated `/updates` route instead of last-selected character
