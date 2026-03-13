@@ -37,3 +37,4 @@ pub mod campaign_npcs;
 pub mod campaign_quests;
 pub mod character_arcs;
 pub mod github_reports;
+pub mod ota_update;

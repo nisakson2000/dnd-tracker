@@ -4,6 +4,37 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.5.5 — OTA Live Updates, UX Improvements & Report System
+**Released:** March 13, 2026
+
+### OTA Live Updates (No Reinstall Required)
+- Installed apps now auto-download the latest frontend from GitHub on launch
+- Custom `codex://` protocol serves updated files from app data directory
+- Falls back to embedded frontend if no update available
+- Polls every 30 seconds for new versions and auto-applies
+- No need to rebuild or reinstall the Tauri app for frontend changes
+
+### Dice Roller Improvements
+- Removed floating dice roller button — now accessible from sidebar under Tools
+- Added 12 premade roll label chips: Attack Roll, Damage, Initiative, Saving Throw, Ability Check, Skill Check, Death Save, Concentration, Wild Magic, Hit Dice, Sneak Attack, Smite
+- Enhanced roll mode display — advantage/disadvantage shows color-coded badges, glowing card borders, and icons
+
+### Settings Enhancements
+- Brightness slider — adjustable from 40% to 130% under Appearance
+- Compact density reduced to 0.6 for better fit on ≤24" screens
+
+### Bug Reports & Feature Requests
+- Reports now save to app data directory (not desktop/repo)
+- Files saved as `.txt` with human-readable names: "March 13 2026 11-45 PM.txt"
+- Reports always return "submitted" instead of "queued"
+
+### Cleanup
+- Removed floating dice roller button (bottom-left)
+- Removed quick journal note button and all keyboard shortcuts
+- Removed `gh` CLI dependency for report submission
+
+---
+
 ## V0.5.4 — Session Monitor, Community Campaigns Fix & Feature Request
 **Released:** March 13, 2026
 

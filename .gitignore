@@ -6,6 +6,7 @@ __pycache__/
 *.db-wal
 *.db-shm
 dist/
+!frontend/dist.zip
 .vite/
 wiki.db
 target/

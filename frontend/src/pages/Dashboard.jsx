@@ -2160,46 +2160,55 @@ export default function Dashboard() {
   const [updateBannerDismissed, setUpdateBannerDismissed] = useState(false);
   const { updateAvailable, latestVersion, currentVersion } = useUpdateCheck();
 
-  // Auto-pull git updates on launch + poll every 30s in production
+  // Auto-update: download latest frontend via OTA on launch + poll every 30s
   useEffect(() => {
     let cancelled = false;
     let intervalId = null;
 
-    const checkAndPull = async (isInitial = false) => {
+    const checkAndUpdate = async (isInitial = false) => {
       if (cancelled) return;
       try {
         if (isInitial) setAutoUpdateStatus('checking');
-        const result = await invoke('check_git_updates');
+        const result = await invoke('ota_download_update');
         if (cancelled) return;
-        if (result.has_update) {
-          setAutoUpdateStatus('pulling');
-          try {
+        if (result.status === 'updated') {
+          setAutoUpdateStatus('updated');
+          // OTA files downloaded — reload to pick them up via codex:// protocol
+          setTimeout(() => { if (!cancelled) window.location.reload(); }, 2500);
+        } else if (isInitial) {
+          setAutoUpdateStatus('up_to_date');
+        }
+      } catch (err) {
+        // OTA failed — try git-based update as fallback (dev environment)
+        try {
+          if (isInitial) setAutoUpdateStatus('checking');
+          const gitResult = await invoke('check_git_updates');
+          if (cancelled) return;
+          if (gitResult.has_update) {
+            setAutoUpdateStatus('pulling');
             const pullResult = await invoke('pull_git_updates');
             if (cancelled) return;
             if (pullResult.success) {
               setAutoUpdateStatus('updated');
-              // Auto-reload after a brief delay so the user sees the banner
               setTimeout(() => { if (!cancelled) window.location.reload(); }, 2500);
             } else {
               setAutoUpdateStatus('failed');
             }
-          } catch {
-            if (!cancelled) setAutoUpdateStatus('failed');
+          } else if (isInitial) {
+            setAutoUpdateStatus('up_to_date');
           }
-        } else if (isInitial) {
-          setAutoUpdateStatus('up_to_date');
+        } catch {
+          // Neither OTA nor git available — skip silently
+          if (isInitial && !cancelled) setAutoUpdateStatus(null);
         }
-      } catch {
-        // Git not available — skip silently
-        if (isInitial && !cancelled) setAutoUpdateStatus(null);
       }
     };
 
-    // Initial auto-pull on launch
-    checkAndPull(true);
+    // Initial check on launch
+    checkAndUpdate(true);
 
-    // Poll every 30 seconds for new updates
-    intervalId = setInterval(() => checkAndPull(false), 30_000);
+    // Poll every 30 seconds
+    intervalId = setInterval(() => checkAndUpdate(false), 30_000);
 
     return () => {
       cancelled = true;
@@ -2431,9 +2440,9 @@ export default function Dashboard() {
                 : '#fde68a',
             }}>
               {autoUpdateStatus === 'updated'
-                ? 'Updated & rebuilt — reloading...'
+                ? 'Update downloaded — reloading...'
                 : autoUpdateStatus === 'pulling'
-                  ? 'Pulling & rebuilding latest updates...'
+                  ? 'Downloading latest update...'
                   : autoUpdateStatus === 'failed'
                     ? 'Auto-update failed — will retry in 30s'
                     : `Update available: ${latestVersion} (you have ${currentVersion})`

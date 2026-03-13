@@ -3,6 +3,22 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.5.5',
+    date: '03/13/2026',
+    time: '11:45 PM',
+    title: 'OTA Live Updates, UX Improvements & Report System',
+    changes: [
+      'OTA live updates — installed apps now auto-download and apply frontend updates without rebuilding or reinstalling',
+      'Dice Roller moved to sidebar — removed floating button, added to Tools section with premade roll labels (Attack Roll, Damage, Initiative, etc.)',
+      'Enhanced roll mode — advantage/disadvantage now shows prominent color-coded badges and glowing card borders',
+      'Brightness slider — new setting in Appearance to adjust overall app brightness (40%-130%)',
+      'Compact density improved — tighter spacing for screens 24" and under',
+      'Bug reports & feature requests now save as dated text files to app data (not desktop)',
+      'Removed floating dice roller button and quick journal note button',
+      'Auto-update polls every 30 seconds for new versions',
+    ],
+  },
+  {
     version: 'V0.5.4',
     date: '03/13/2026',
     time: '11:30 PM',

@@ -15,8 +15,45 @@ use tauri::Manager;
 use tokio::sync::Mutex;
 
 fn main() {
+    // Compute the OTA dist override path for the custom protocol.
+    // This must match Tauri's app_data_dir: %APPDATA%/{identifier}/
+    let ota_dist_path = dirs::data_dir()
+        .unwrap_or_default()
+        .join("com.codex.dndtracker")
+        .join("dist_update");
+
+    let ota_path_clone = ota_dist_path.clone();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        // Register "codex://" protocol to serve OTA-updated frontend files
+        .register_uri_scheme_protocol("codex", move |_app, request| {
+            let path = request.uri().path();
+            let path = if path == "/" || path.is_empty() {
+                "index.html"
+            } else {
+                path.trim_start_matches('/')
+            };
+            // Also strip any query string
+            let path = path.split('?').next().unwrap_or(path);
+            let file_path = ota_path_clone.join(path);
+
+            if file_path.exists() && file_path.is_file() {
+                let content = std::fs::read(&file_path).unwrap_or_default();
+                let mime = commands::ota_update::guess_mime(&file_path);
+                tauri::http::Response::builder()
+                    .header("content-type", mime)
+                    .header("access-control-allow-origin", "*")
+                    .body(content)
+                    .unwrap()
+            } else {
+                eprintln!("[codex://] 404: {}", file_path.display());
+                tauri::http::Response::builder()
+                    .status(404)
+                    .body(Vec::new())
+                    .unwrap()
+            }
+        })
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir().map_err(|e| {
                 eprintln!("[init] Failed to get app data dir: {}", e);
@@ -103,13 +140,24 @@ fn main() {
                 conn
             };
 
-            app.manage(AppState::new(app_data_dir, wiki_conn));
+            app.manage(AppState::new(app_data_dir.clone(), wiki_conn));
             app.manage(party::PartyServer::new());
             app.manage(dev_presence::DevPresence::new());
             app.manage(commands::dev_tools::DevLogBuffer::new());
             // Session WebSocket state (DM server + player client)
             app.manage(Arc::new(Mutex::new(None::<session_ws::SessionServer>)) as commands::session_ws_cmds::SessionServerState);
             app.manage(Arc::new(Mutex::new(None::<session_ws::ClientConnection>)) as commands::session_ws_cmds::SessionClientState);
+
+            // If OTA frontend update exists, navigate the main window to codex:// protocol
+            let ota_index = app_data_dir.join("dist_update").join("index.html");
+            if ota_index.exists() {
+                eprintln!("[init] OTA frontend update found, navigating to codex://localhost/");
+                if let Some(window) = app.get_webview_window("main") {
+                    let url: tauri::Url = "codex://localhost/".parse().unwrap();
+                    let _ = window.navigate(url);
+                }
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -354,6 +402,10 @@ fn main() {
             commands::github_reports::flush_pending_reports,
             commands::github_reports::get_pending_report_count,
             commands::github_reports::get_reports_path,
+            // OTA frontend updates
+            commands::ota_update::ota_has_update,
+            commands::ota_update::ota_download_update,
+            commands::ota_update::ota_clear_update,
         ])
         .run(tauri::generate_context!())
         .expect("Fatal: failed to start Tauri application");
