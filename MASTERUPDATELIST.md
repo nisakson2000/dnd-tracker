@@ -4,6 +4,39 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.4.1 — Wiki Homebrew, Cross-Edition & Settings Expansion
+**Released:** March 12, 2026
+
+### Arcane Encyclopedia — Homebrew, Cross-Edition & Settings Update
+- **58 new articles** — total now 1,912 (up from 1,854)
+- 19 popular homebrew rules with full implementation details
+- 30 cross-edition creatures (1e/2e/3.5e) with 5e adaptation guides
+- 9 new campaign settings (Mystara, Birthright, Al-Qadim, Blackmoor, and more)
+
+### New Homebrew Rules (19)
+- **Combat**: Flanking Bonus, Powerful Crits, Lingering Injuries, Hidden Death Saves, Bonus Action Potions, Exhaustion from 0 HP, Crit/Fumble Tables
+- **Character**: Free Feat at Level 1, Critical Skill Checks, Help Requires Proficiency, Point Buy Above 15, Revised Ranger (UA)
+- **Magic**: Expanded Reincarnation Table, Resurrection Rituals (Mercer-style), Spell Point Variant
+- **Other**: Rule of Cool, Gritty Realism Resting, Milestone Leveling, Buying Magic Items (with price tables)
+
+### Cross-Edition Creatures (30)
+- Creatures from AD&D 1e/2e/3.5e not in 5e, each with lore and practical 5e adaptation notes
+- Celestials: Archons, Guardinal, Lillend
+- Fiends: Bebilith, Hellcat, Mohrg
+- Aberrations: Aranea, Chaos Beast, Destrachan, Delver, Digester
+- Elementals: Arrowhawk, Belker, Rast, Thoqqua, Tojanida
+- Fey: Grig, Nixie | Giants: Athach, Formian, Jann
+- Beasts: Dragonne, Krenshar, Shocker Lizard, Spider Eater
+- Undead: Nightcrawler, Ravid | Plants: Tendriculos, Phasm
+
+### New Campaign Settings (9)
+- Mystara, Birthright, Al-Qadim, Kara-Tur, Council of Wyrms, Blackmoor, Nentir Vale, Strixhaven, Radiant Citadel
+
+### Version Sync
+- All version files bumped to 0.4.1: VERSION, version.json, version.js, package.json (root + frontend), tauri.conf.json, Cargo.toml
+
+---
+
 ## V0.4.0 — Wiki Deities & Pantheons Expansion
 **Released:** March 12, 2026
 

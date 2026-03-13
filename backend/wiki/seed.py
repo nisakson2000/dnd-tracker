@@ -65,6 +65,7 @@ SEED_FILES = [
     "monsters_cr8_10.json",
     "monsters_cr11_17.json",
     "monsters_cr19_30.json",
+    "creatures_cross_edition.json",
     # World and lore
     "gods.json",
     "gods_expanded.json",
@@ -75,6 +76,9 @@ SEED_FILES = [
     "planes.json",
     "languages.json",
     "settings.json",
+    "campaign_settings.json",
+    # Homebrew
+    "homebrew_rules.json",
     # Hazards
     "poisons.json",
     "diseases.json",
