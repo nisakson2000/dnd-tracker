@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { TrendingUp, TrendingDown, Heart, Shield, Zap, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles, Skull, Search, Brain, Swords, AlertTriangle, ChevronDown, ChevronUp, StickyNote, Flame, Waves, Wind, Target, Wand2, Calculator, Package, Dices } from 'lucide-react';
+import { TrendingUp, TrendingDown, Heart, Shield, ShieldOff, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles, Skull, Search, Brain, Swords, AlertTriangle, ChevronDown, ChevronUp, StickyNote, Flame, Waves, Wind, Target, Wand2, Calculator, Package, Dices, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOverview, updateOverview, updateAbilityScores, updateSavingThrows, updateSkills } from '../api/overview';
+import { getItems } from '../api/inventory';
 import { longRest, shortRest } from '../api/rest';
 import { getFeatures, updateFeature } from '../api/features';
 import { getSpells } from '../api/spells';
@@ -15,6 +16,12 @@ import ModalPortal from '../components/ModalPortal';
 import { computeConditionEffects, CONDITION_EFFECTS } from '../data/conditionEffects';
 
 const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+
+const DAMAGE_TYPES = [
+  'Acid', 'Bludgeoning', 'Cold', 'Fire', 'Force', 'Lightning', 'Necrotic',
+  'Piercing', 'Poison', 'Psychic', 'Radiant', 'Slashing', 'Thunder',
+  'Nonmagical Bludgeoning', 'Nonmagical Piercing', 'Nonmagical Slashing',
+];
 const ABILITY_NAMES = { STR: 'Strength', DEX: 'Dexterity', CON: 'Constitution', INT: 'Intelligence', WIS: 'Wisdom', CHA: 'Charisma' };
 
 function calcMod(score) {
@@ -37,14 +44,6 @@ function calcProfBonus(level) {
   return 2;
 }
 
-/** Spellcasting ability abbreviation for a given class */
-const CLASS_SPELL_ABILITY = {
-  Bard: 'CHA', Cleric: 'WIS', Druid: 'WIS', Paladin: 'CHA',
-  Ranger: 'WIS', Sorcerer: 'CHA', Warlock: 'CHA', Wizard: 'INT',
-  // Eldritch Knight (Fighter) and Arcane Trickster (Rogue) subclass casters:
-  Fighter: 'INT', Rogue: 'INT',
-};
-
 /** Standard hit die size per class */
 const CLASS_HIT_DIE = {
   Barbarian: 12, Bard: 8, Cleric: 8, Druid: 8, Fighter: 10,
@@ -62,15 +61,6 @@ function calcAutoHP(className, level, conMod) {
   return Math.max(1, hpAtOne + hpAfterOne);
 }
 
-/** Skill-to-ability mapping (D&D 5e) */
-const SKILL_ABILITY_MAP = {
-  'Acrobatics': 'DEX', 'Animal Handling': 'WIS', 'Arcana': 'INT', 'Athletics': 'STR',
-  'Deception': 'CHA', 'History': 'INT', 'Insight': 'WIS', 'Intimidation': 'CHA',
-  'Investigation': 'INT', 'Medicine': 'WIS', 'Nature': 'INT', 'Perception': 'WIS',
-  'Performance': 'CHA', 'Persuasion': 'CHA', 'Religion': 'INT', 'Sleight of Hand': 'DEX',
-  'Stealth': 'DEX', 'Survival': 'WIS',
-};
-
 export default function Overview({ characterId, character, onCharacterUpdate, onLevelUp, activeConditions = [] }) {
   const { PROFICIENCY_BONUS, SKILLS, RACES, CLASSES, CONDITIONS, EXHAUSTION_LEVELS, ancestryLabel } = useRuleset();
   const [overview, setOverview] = useState(null);
@@ -79,6 +69,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [localAbilities, setLocalAbilities] = useState({});
+  const [itemStatBonuses, setItemStatBonuses] = useState({});
   const [showSubclassModal, setShowSubclassModal] = useState(false);
   const [showLevelConfirm, setShowLevelConfirm] = useState(null);
   const prevLevelRef = useRef(null);
@@ -96,6 +87,25 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
       data.ability_scores.forEach(a => { localAb[a.ability] = String(a.score); });
       setLocalAbilities(localAb);
       prevLevelRef.current = data.overview.level;
+      // Load equipped item stat bonuses
+      try {
+        const allItems = await getItems(characterId);
+        const bonuses = {};
+        for (const item of allItems.filter(i => i.equipped)) {
+          try {
+            const mods = typeof item.stat_modifiers === 'string'
+              ? JSON.parse(item.stat_modifiers || '{}')
+              : (item.stat_modifiers || {});
+            for (const [stat, value] of Object.entries(mods)) {
+              const key = stat.toUpperCase();
+              if (typeof value === 'number' && value !== 0) {
+                bonuses[key] = (bonuses[key] || 0) + value;
+              }
+            }
+          } catch (err) { if (import.meta.env.DEV) console.warn('Failed to parse item stat_modifiers:', err); }
+        }
+        setItemStatBonuses(bonuses);
+      } catch (err) { if (import.meta.env.DEV) console.warn('Failed to load item stat bonuses:', err); }
     } catch (err) {
       toast.error(`Failed to load: ${err.message}`);
     } finally {
@@ -142,21 +152,14 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const [healAmount, setHealAmount] = useState('');
   const [tempHpAmount, setTempHpAmount] = useState('');
   const [damageModifier, setDamageModifier] = useState('normal'); // 'normal' | 'resistant' | 'vulnerable'
+  const [damageType, setDamageType] = useState(''); // selected damage type for auto-modifier detection
   const prevHpRef = useRef(null);
   const smartDamageAppliedRef = useRef(false);
-  const [showSetup, setShowSetup] = useState(true);
-  const [setupScores, setSetupScores] = useState(null);
-  const [setupMethod, setSetupMethod] = useState(null);
-  const [setupAssignment, setSetupAssignment] = useState({ STR: 0, DEX: 1, CON: 2, INT: 3, WIS: 4, CHA: 5 });
-  const [pointBuyScores, setPointBuyScores] = useState({ STR: 8, DEX: 8, CON: 8, INT: 8, WIS: 8, CHA: 8 });
-  const [pointBuyRemaining, setPointBuyRemaining] = useState(27);
-  const [skillPicks, setSkillPicks] = useState([]);
 
   // ── Automation Engine State ──
   const [showHPCalc, setShowHPCalc] = useState(false);
   const [showLevelUpSummary, setShowLevelUpSummary] = useState(null); // { level, gains }
   const [hpRollResult, setHpRollResult] = useState(null);
-  // prevConModRef reserved for future CON modifier tracking
 
   // Concentration tracker (session-only, stored in localStorage per character)
   const [concentrationSpell, setConcentrationSpell] = useState('');
@@ -164,18 +167,61 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     try {
       const stored = localStorage.getItem(`codex_concentration_${characterId}`);
       if (stored) setConcentrationSpell(stored);
-    } catch { /* ignore */ }
+    } catch (err) { if (import.meta.env.DEV) console.warn('Failed to read concentration from localStorage:', err); }
   }, [characterId]);
   const updateConcentration = (val) => {
     setConcentrationSpell(val);
     try {
       if (val) localStorage.setItem(`codex_concentration_${characterId}`, val);
       else localStorage.removeItem(`codex_concentration_${characterId}`);
-    } catch { /* ignore */ }
+    } catch (err) { if (import.meta.env.DEV) console.warn('Failed to save concentration to localStorage:', err); }
   };
 
   // Speed variants (climb, swim, fly) — stored in overview fields
   const [showSpeedVariants, setShowSpeedVariants] = useState(false);
+
+  // Damage modifiers (resistances, immunities, vulnerabilities)
+  const [dmAddCategory, setDmAddCategory] = useState('resistances'); // which category the dropdown targets
+  const [dmAddType, setDmAddType] = useState('');
+  const parsedDamageModifiers = useMemo(() => {
+    if (!overview?.damage_modifiers) return { resistances: [], immunities: [], vulnerabilities: [] };
+    try {
+      const parsed = typeof overview.damage_modifiers === 'string'
+        ? JSON.parse(overview.damage_modifiers)
+        : overview.damage_modifiers;
+      return {
+        resistances: parsed.resistances || [],
+        immunities: parsed.immunities || [],
+        vulnerabilities: parsed.vulnerabilities || [],
+      };
+    } catch (err) { if (import.meta.env.DEV) console.warn('Failed to parse damage_modifiers:', err); return { resistances: [], immunities: [], vulnerabilities: [] }; }
+  }, [overview?.damage_modifiers]);
+
+  const updateDamageModifiers = (newMods) => {
+    const json = JSON.stringify(newMods);
+    const updated = { ...overview, damage_modifiers: json };
+    setOverview(updated);
+    triggerOverview(updated);
+  };
+
+  const addDamageModifier = (category, type) => {
+    if (!type) return;
+    const mods = { ...parsedDamageModifiers };
+    if (mods[category].includes(type)) return;
+    // Remove from other categories (a type can only be in one category)
+    mods.resistances = mods.resistances.filter(t => t !== type);
+    mods.immunities = mods.immunities.filter(t => t !== type);
+    mods.vulnerabilities = mods.vulnerabilities.filter(t => t !== type);
+    mods[category] = [...mods[category], type];
+    updateDamageModifiers(mods);
+    setDmAddType('');
+  };
+
+  const removeDamageModifier = (category, type) => {
+    const mods = { ...parsedDamageModifiers };
+    mods[category] = mods[category].filter(t => t !== type);
+    updateDamageModifiers(mods);
+  };
 
   const handleLongRest = async () => {
     try {
@@ -189,7 +235,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           await Promise.all(targets.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total })));
           toast.success(`${targets.length} feature${targets.length > 1 ? 's' : ''} restored`, { duration: 3000 });
         }
-      } catch { /* features restore is best-effort */ }
+      } catch (err) { if (import.meta.env.DEV) console.warn('Failed to restore features on long rest:', err); }
       loadData();
     } catch (err) {
       toast.error(`Long rest failed: ${err.message}`);
@@ -208,7 +254,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           await Promise.all(targets.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total })));
           toast.success(`${targets.length} feature${targets.length > 1 ? 's' : ''} restored`, { duration: 3000 });
         }
-      } catch { /* features restore is best-effort */ }
+      } catch (err) { if (import.meta.env.DEV) console.warn('Failed to restore features on short rest:', err); }
       setShowShortRest(false);
       loadData();
     } catch (err) {
@@ -219,10 +265,20 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const applyDamage = () => {
     const rawDmg = parseInt(damageAmount) || 0;
     if (rawDmg <= 0) return;
-    // Apply resistance/vulnerability
+    // Auto-detect modifier from damage modifiers if a damage type is selected and modifier is 'normal'
+    let effectiveModifier = damageModifier;
+    let autoDetected = false;
+    if (damageType && damageModifier === 'normal') {
+      const mods = parsedDamageModifiers;
+      if (mods.immunities.includes(damageType)) { effectiveModifier = 'immune'; autoDetected = true; }
+      else if (mods.resistances.includes(damageType)) { effectiveModifier = 'resistant'; autoDetected = true; }
+      else if (mods.vulnerabilities.includes(damageType)) { effectiveModifier = 'vulnerable'; autoDetected = true; }
+    }
+    // Apply resistance/vulnerability/immunity
     let dmg = rawDmg;
-    if (damageModifier === 'resistant') dmg = Math.floor(rawDmg / 2);
-    else if (damageModifier === 'vulnerable') dmg = rawDmg * 2;
+    if (effectiveModifier === 'immune') dmg = 0;
+    else if (effectiveModifier === 'resistant') dmg = Math.floor(rawDmg / 2);
+    else if (effectiveModifier === 'vulnerable') dmg = rawDmg * 2;
 
     let remaining = dmg;
     let newTemp = overview.temp_hp || 0;
@@ -249,12 +305,21 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
 
     // Build summary toast
     const parts = [];
-    if (damageModifier === 'resistant') parts.push(`${rawDmg} halved to ${dmg}`);
-    else if (damageModifier === 'vulnerable') parts.push(`${rawDmg} doubled to ${dmg}`);
-    else parts.push(`Took ${dmg} damage`);
+    const typeLabel = damageType ? `${damageType} damage` : 'damage';
+    if (effectiveModifier === 'immune') {
+      parts.push(`${typeLabel} negated by immunity!`);
+    } else if (effectiveModifier === 'resistant') {
+      parts.push(`${rawDmg} ${typeLabel} halved to ${dmg}${autoDetected ? ' (resistance)' : ''}`);
+    } else if (effectiveModifier === 'vulnerable') {
+      parts.push(`${rawDmg} ${typeLabel} doubled to ${dmg}${autoDetected ? ' (vulnerability)' : ''}`);
+    } else {
+      parts.push(`Took ${dmg} ${typeLabel}`);
+    }
     if (tempAbsorbed > 0) parts.push(`${tempAbsorbed} absorbed by temp HP`);
     parts.push(`HP: ${newCurrent}/${overview.max_hp}`);
-    toast(parts.join('. ') + '.', { icon: '⚔️', duration: 4000, style: { background: '#1a1520', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' } });
+    const toastColor = effectiveModifier === 'immune' ? { background: '#0a1a1a', color: '#fde68a', border: '1px solid rgba(234,179,8,0.3)' }
+      : { background: '#1a1520', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' };
+    toast(parts.join('. ') + '.', { icon: effectiveModifier === 'immune' ? '\u{1F6E1}' : '\u2694\uFE0F', duration: 4000, style: toastColor });
 
     // Unconscious warning
     if (newCurrent === 0 && overview.current_hp > 0) {
@@ -299,11 +364,12 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             { icon: '✨', duration: 5000, style: { background: '#1a1a25', color: '#93c5fd', border: '1px solid rgba(96,165,250,0.3)' } }
           );
         }
-      }).catch(() => { /* best-effort */ });
+      }).catch((err) => { if (import.meta.env.DEV) console.warn('Failed to fetch reaction spells:', err); });
     }
 
     setDamageAmount('');
     setDamageModifier('normal');
+    setDamageType('');
     setShowDamage(false);
   };
 
@@ -375,6 +441,63 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     rollDice(`${skillName} (${ability})`, mod, { disadvantage: hasDis });
   };
 
+  /** Shared helper: apply all cascading effects of a level change to `updated` object (mutates it). */
+  const applyLevelChange = (oldLevel, newLevel, updated) => {
+    const classData = CLASSES.find(c => c.name === overview.primary_class);
+    const conMod = calcMod(abilityMap.CON || 10);
+
+    // Hit dice update
+    if (classData?.hitDie) {
+      updated.hit_dice_total = `${newLevel}d${classData.hitDie}`;
+    }
+
+    if (newLevel > oldLevel) {
+      // ── Level-up ──
+      onLevelUp(overview.name, newLevel, overview.primary_class);
+
+      // Subclass prompt
+      if (classData && classData.subclassLevel && newLevel >= classData.subclassLevel && !overview.primary_subclass) {
+        subclassTimeoutRef.current = setTimeout(() => setShowSubclassModal(true), 2000);
+      }
+
+      // Auto HP for level up
+      if (classData?.hitDie && overview.hp_calc_method !== 'manual') {
+        const avgRoll = Math.floor(classData.hitDie / 2) + 1;
+        const hpGain = avgRoll + conMod;
+        updated.max_hp = Math.max(1, (overview.max_hp || 0) + Math.max(1, hpGain));
+        updated.current_hp = updated.max_hp;
+        toast.success(`Level ${newLevel}! HP +${Math.max(1, hpGain)} (d${classData.hitDie} avg + CON ${modStr(conMod)}) = ${updated.max_hp} Max HP`, { duration: 4000 });
+      }
+
+      // Level-up summary (proficiency, features, ASI)
+      const newProf = calcProfBonus(newLevel);
+      const oldProf = calcProfBonus(newLevel - 1);
+      const gains = { level: newLevel };
+      if (newProf > oldProf) {
+        gains.profBonusChange = { old: oldProf, new: newProf };
+      }
+      if (classData?.features) {
+        gains.newFeatures = classData.features.filter(f => f.level === newLevel);
+      }
+      const asiLevels = overview.primary_class === 'Fighter' ? [4,6,8,12,14,16,19] : overview.primary_class === 'Rogue' ? [4,8,10,12,16,19] : [4,8,12,16,19];
+      if (asiLevels.includes(newLevel)) {
+        gains.isASI = true;
+      }
+      if (gains.profBonusChange || (gains.newFeatures && gains.newFeatures.length > 0) || gains.isASI) {
+        setShowLevelUpSummary(gains);
+      }
+    } else {
+      // ── Level-down ──
+      if (classData?.hitDie && overview.hp_calc_method !== 'manual') {
+        const autoHP = calcAutoHP(overview.primary_class, newLevel, conMod);
+        if (autoHP !== null) {
+          updated.max_hp = autoHP;
+          updated.current_hp = Math.min(overview.current_hp, autoHP);
+        }
+      }
+    }
+  };
+
   const updateField = (field, value) => {
     let v = value;
     // Level clamping
@@ -406,63 +529,8 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     const updated = { ...overview, [field]: v };
     setOverview(updated);
 
-    if (field === 'level' && prevLevelRef.current !== null && v > prevLevelRef.current) {
-      onLevelUp(overview.name, v, overview.primary_class);
-      // Check if this level triggers subclass selection
-      const classData = CLASSES.find(c => c.name === overview.primary_class);
-      if (classData && classData.subclassLevel && v >= classData.subclassLevel && !overview.primary_subclass) {
-        subclassTimeoutRef.current = setTimeout(() => setShowSubclassModal(true), 2000);
-      }
-      // ── Level-up cascading: auto-update hit dice and suggest HP ──
-      if (classData?.hitDie) {
-        updated.hit_dice_total = `${v}d${classData.hitDie}`;
-      }
-      // Auto-suggest HP for level up
-      const conMod = calcMod(abilityMap.CON || 10);
-      if (classData?.hitDie && overview.hp_calc_method !== 'manual') {
-        const avgRoll = Math.floor(classData.hitDie / 2) + 1;
-        const hpGain = avgRoll + conMod;
-        updated.max_hp = Math.max(1, (overview.max_hp || 0) + Math.max(1, hpGain));
-        updated.current_hp = updated.max_hp; // Full HP on level up
-        toast.success(`Level ${v}! HP +${Math.max(1, hpGain)} (${classData.hitDie > 0 ? `d${classData.hitDie} avg` : ''} + CON ${modStr(conMod)}) = ${updated.max_hp} Max HP`, { duration: 4000 });
-      }
-      // Show level-up summary with features/spell slots
-      const newProf = calcProfBonus(v);
-      const oldProf = calcProfBonus(v - 1);
-      const gains = { level: v };
-      if (newProf > oldProf) {
-        gains.profBonusChange = { old: oldProf, new: newProf };
-      }
-      // Detect new features from CLASS data
-      if (classData?.features) {
-        gains.newFeatures = classData.features.filter(f => f.level === v);
-      }
-      // ASI levels (standard: 4, 8, 12, 16, 19; Fighter adds 6, 14; Rogue adds 10)
-      const asiLevels = overview.primary_class === 'Fighter' ? [4,6,8,12,14,16,19] : overview.primary_class === 'Rogue' ? [4,8,10,12,16,19] : [4,8,12,16,19];
-      if (asiLevels.includes(v)) {
-        gains.isASI = true;
-      }
-      if (gains.profBonusChange || (gains.newFeatures && gains.newFeatures.length > 0) || gains.isASI) {
-        setShowLevelUpSummary(gains);
-      }
-    }
-    // ── Level-down cascading ──
-    if (field === 'level' && prevLevelRef.current !== null && v < prevLevelRef.current) {
-      const classData = CLASSES.find(c => c.name === overview.primary_class);
-      if (classData?.hitDie) {
-        updated.hit_dice_total = `${v}d${classData.hitDie}`;
-      }
-      // Recalculate HP on level down if auto mode
-      if (classData?.hitDie && overview.hp_calc_method !== 'manual') {
-        const conMod = calcMod(abilityMap.CON || 10);
-        const autoHP = calcAutoHP(overview.primary_class, v, conMod);
-        if (autoHP !== null) {
-          updated.max_hp = autoHP;
-          updated.current_hp = Math.min(overview.current_hp, autoHP);
-        }
-      }
-    }
-    if (field === 'level') {
+    if (field === 'level' && prevLevelRef.current !== null && v !== prevLevelRef.current) {
+      applyLevelChange(prevLevelRef.current, v, updated);
       prevLevelRef.current = v;
     }
 
@@ -470,40 +538,8 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     if (field === 'experience_points') {
       const newLevel = getLevelFromXP(v);
       if (newLevel !== overview.level) {
-        const isLevelUp = newLevel > overview.level;
         updated.level = newLevel;
-        if (isLevelUp) {
-          onLevelUp(overview.name, newLevel, overview.primary_class);
-          const classData = CLASSES.find(c => c.name === overview.primary_class);
-          if (classData && classData.subclassLevel && newLevel >= classData.subclassLevel && !overview.primary_subclass) {
-            subclassTimeoutRef.current = setTimeout(() => setShowSubclassModal(true), 2000);
-          }
-          if (classData?.hitDie) {
-            updated.hit_dice_total = `${newLevel}d${classData.hitDie}`;
-          }
-          const conMod = calcMod(abilityMap.CON || 10);
-          if (classData?.hitDie && overview.hp_calc_method !== 'manual') {
-            const avgRoll = Math.floor(classData.hitDie / 2) + 1;
-            const hpGain = avgRoll + conMod;
-            updated.max_hp = Math.max(1, (overview.max_hp || 0) + Math.max(1, hpGain));
-            updated.current_hp = updated.max_hp;
-            toast.success(`Level ${newLevel}! HP +${Math.max(1, hpGain)} (d${classData.hitDie} avg + CON ${modStr(conMod)}) = ${updated.max_hp} Max HP`, { duration: 4000 });
-          }
-        } else {
-          // Level down from XP loss
-          const classData = CLASSES.find(c => c.name === overview.primary_class);
-          if (classData?.hitDie) {
-            updated.hit_dice_total = `${newLevel}d${classData.hitDie}`;
-          }
-          if (classData?.hitDie && overview.hp_calc_method !== 'manual') {
-            const conMod = calcMod(abilityMap.CON || 10);
-            const autoHP = calcAutoHP(overview.primary_class, newLevel, conMod);
-            if (autoHP !== null) {
-              updated.max_hp = autoHP;
-              updated.current_hp = Math.min(overview.current_hp, autoHP);
-            }
-          }
-        }
+        applyLevelChange(overview.level, newLevel, updated);
         prevLevelRef.current = newLevel;
         setOverview(updated);
       }
@@ -621,16 +657,13 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     else if (carryWeight > encThreshold) encState = 'encumbered';
     return {
       dexMod: dex,
-      wisMod: wis,
-      percMod: perc,
       passivePerc: 10 + perc,
       passiveInvestigation: 10 + invest,
       passiveInsight: 10 + insight,
       initiative: dex,
-      effectiveSpeed: condEffects.speedOverride === 0 ? 0 : (overview?.speed || 30),
       encumbranceState: encState,
     };
-  }, [abilityMap, skills, profBonus, condEffects, overview?.speed, overview?.carry_weight]);
+  }, [abilityMap, skills, profBonus, overview?.carry_weight]);
 
   // Spell Save DC: 8 + proficiency bonus + spellcasting ability modifier
   const spellSaveDC = useMemo(() => {
@@ -691,109 +724,6 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
 
   const sortedSkillEntries = useMemo(() => Object.entries(SKILLS).sort(([a], [b]) => a.localeCompare(b)), [SKILLS]);
 
-  const isNewCharacter = overview?.level === 1 && abilities.every(a => a.score === 10);
-
-  function roll4d6DropLowest() {
-    const dice = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
-    dice.sort((a, b) => a - b);
-    return { total: dice[1] + dice[2] + dice[3], dice };
-  }
-
-  function generateRolledScores() {
-    return Array.from({ length: 6 }, () => roll4d6DropLowest());
-  }
-
-  function getPointBuyCost(from, to) {
-    let cost = 0;
-    const dir = to > from ? 1 : -1;
-    for (let v = from; v !== to; v += dir) {
-      const c = v >= 13 ? 2 : 1;
-      cost += c * dir;
-    }
-    return cost;
-  }
-
-  function handlePointBuyChange(ab, delta) {
-    const cur = pointBuyScores[ab];
-    const next = cur + delta;
-    if (next < 8 || next > 15) return;
-    const cost = getPointBuyCost(cur, next);
-    if (pointBuyRemaining - cost < 0) return;
-    setPointBuyScores(prev => ({ ...prev, [ab]: next }));
-    setPointBuyRemaining(prev => prev - cost);
-  }
-
-  function applyScores() {
-    let newScoreMap = {};
-    if (setupMethod === 'pointbuy') {
-      ABILITIES.forEach(ab => { newScoreMap[ab] = pointBuyScores[ab]; });
-    } else if (setupScores) {
-      ABILITIES.forEach(ab => {
-        const scoreIdx = setupAssignment[ab];
-        newScoreMap[ab] = setupScores[scoreIdx].total;
-      });
-    } else {
-      return;
-    }
-    // Bulk update all abilities at once to avoid stale closure issues
-    const updated = abilities.map(a => ({ ...a, score: newScoreMap[a.ability] ?? a.score }));
-    setAbilities(updated);
-    const localAb = {};
-    updated.forEach(a => { localAb[a.ability] = String(a.score); });
-    setLocalAbilities(localAb);
-    triggerAbilities(updated);
-    toast.success('Ability scores applied!');
-  }
-
-  function applyClassRaceDefaults() {
-    const classData = CLASSES.find(c => c.name === overview.primary_class);
-    const raceData = RACES.find(r => {
-      const val = r.subrace ? `${r.name} (${r.subrace})` : r.name;
-      return val === overview.race;
-    });
-    const updates = {};
-    if (classData) {
-      // Saving throws — bulk update to avoid stale closure
-      if (classData.savingThrows) {
-        const updatedSaves = saves.map(s =>
-          classData.savingThrows.includes(s.ability) ? { ...s, proficient: true } : s
-        );
-        setSaves(updatedSaves);
-        triggerSaves(updatedSaves);
-      }
-      // Armor & weapon proficiencies
-      if (classData.armorProficiencies) updates.proficiencies_armor = classData.armorProficiencies.join(', ');
-      if (classData.weaponProficiencies) updates.proficiencies_weapons = classData.weaponProficiencies.join(', ');
-      // Starting HP: hitDie max + CON modifier
-      const conMod = calcMod(abilityMap.CON || 10);
-      updates.max_hp = classData.hitDie + conMod;
-      updates.current_hp = classData.hitDie + conMod;
-      updates.hit_dice_total = `1d${classData.hitDie}`;
-    }
-    if (raceData) {
-      if (raceData.speed) updates.speed = raceData.speed;
-      if (raceData.languages) updates.languages = raceData.languages.join(', ');
-      if (raceData.darkvision > 0) updates.senses = `Darkvision ${raceData.darkvision}ft`;
-    }
-    // Bulk-apply all overview field updates at once to avoid stale closure
-    if (Object.keys(updates).length > 0) {
-      const updated = { ...overview, ...updates };
-      setOverview(updated);
-      triggerOverview(updated);
-    }
-    toast.success(`${overview.primary_class || 'Class'} & ${overview.race || 'Race'} defaults applied!`);
-  }
-
-  function applySkillPicks() {
-    // Bulk update to avoid stale closure issues
-    const updatedSkills = skills.map(s =>
-      skillPicks.includes(s.name) ? { ...s, proficient: true } : s
-    );
-    setSkills(updatedSkills);
-    triggerSkills(updatedSkills);
-    toast.success(`${skillPicks.length} skill proficiencies applied!`);
-    setSkillPicks([]);
-  }
 
   if (loading || !overview) {
     return <div className="text-amber-200/40">Loading character sheet...</div>;
@@ -1016,7 +946,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         {/* Multiclass Display */}
         {(() => {
           let mc = [];
-          try { mc = JSON.parse(overview.multiclass_data || '[]'); } catch { mc = []; }
+          try { mc = JSON.parse(overview.multiclass_data || '[]'); } catch (err) { if (import.meta.env.DEV) console.warn('Failed to parse multiclass_data:', err); mc = []; }
           if (!Array.isArray(mc) || mc.length === 0) return null;
           return (
             <div className="mt-4 pt-4 border-t border-gold/10">
@@ -1033,241 +963,6 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         })()}
       </div>
 
-      {/* Character Setup Assistant */}
-      {isNewCharacter && showSetup && (
-        <div className="card border-gold/25 shadow-[0_0_30px_rgba(201,168,76,0.08)]">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gold/15 border border-gold/30 flex items-center justify-center">
-                <Sparkles size={18} className="text-gold" />
-              </div>
-              <div>
-                <h3 className="font-display text-amber-100 text-lg">Character Setup</h3>
-                <p className="text-xs text-amber-200/40">Quick-start your new character with guided setup</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Step 1: Generate Ability Scores */}
-          <div className="mb-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-7 h-7 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center text-sm font-display text-gold font-bold">1</div>
-              <h4 className="font-display text-amber-100 text-sm tracking-wide">Generate Ability Scores</h4>
-            </div>
-            <div className="flex gap-2 mb-3 flex-wrap">
-              <button
-                onClick={() => { setSetupMethod('roll'); setSetupScores(generateRolledScores()); setSetupAssignment({ STR: 0, DEX: 1, CON: 2, INT: 3, WIS: 4, CHA: 5 }); }}
-                className={`text-xs px-3 py-2 rounded font-medium transition-all ${setupMethod === 'roll' ? 'bg-gold/20 text-gold border border-gold/40' : 'bg-white/[0.04] text-amber-200/60 border border-amber-200/10 hover:border-amber-200/25'}`}
-              >
-                Roll 4d6 Drop Lowest
-              </button>
-              <button
-                onClick={() => { setSetupMethod('standard'); setSetupScores([{ total: 15 }, { total: 14 }, { total: 13 }, { total: 12 }, { total: 10 }, { total: 8 }]); setSetupAssignment({ STR: 0, DEX: 1, CON: 2, INT: 3, WIS: 4, CHA: 5 }); }}
-                className={`text-xs px-3 py-2 rounded font-medium transition-all ${setupMethod === 'standard' ? 'bg-gold/20 text-gold border border-gold/40' : 'bg-white/[0.04] text-amber-200/60 border border-amber-200/10 hover:border-amber-200/25'}`}
-              >
-                Standard Array
-              </button>
-              <button
-                onClick={() => { setSetupMethod('pointbuy'); setSetupScores(null); setPointBuyScores({ STR: 8, DEX: 8, CON: 8, INT: 8, WIS: 8, CHA: 8 }); setPointBuyRemaining(27); }}
-                className={`text-xs px-3 py-2 rounded font-medium transition-all ${setupMethod === 'pointbuy' ? 'bg-gold/20 text-gold border border-gold/40' : 'bg-white/[0.04] text-amber-200/60 border border-amber-200/10 hover:border-amber-200/25'}`}
-              >
-                Point Buy
-              </button>
-            </div>
-
-            {/* Roll / Standard Array assignment */}
-            {setupMethod && setupMethod !== 'pointbuy' && setupScores && (
-              <div className="bg-[#0a0a10] rounded-lg p-4 border border-amber-200/8">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xs text-amber-200/50">Generated scores:</span>
-                  <div className="flex gap-1.5">
-                    {setupScores.map((s, i) => (
-                      <span key={i} className="text-sm font-bold text-gold bg-gold/10 px-2 py-0.5 rounded border border-gold/20">
-                        {s.total}
-                        {s.dice && <span className="text-[9px] text-amber-200/30 ml-1">({s.dice.join(',')})</span>}
-                      </span>
-                    ))}
-                  </div>
-                  {setupMethod === 'roll' && (
-                    <button
-                      onClick={() => { setSetupScores(generateRolledScores()); setSetupAssignment({ STR: 0, DEX: 1, CON: 2, INT: 3, WIS: 4, CHA: 5 }); }}
-                      className="text-[10px] text-amber-200/50 hover:text-gold transition-colors ml-auto underline"
-                    >
-                      Reroll
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                  {ABILITIES.map(ab => (
-                    <div key={ab} className="text-center">
-                      <div className="text-[10px] text-amber-200/40 font-display tracking-widest mb-1">{ab}</div>
-                      <select
-                        className="input w-full text-center text-sm"
-                        value={setupAssignment[ab]}
-                        onChange={e => {
-                          const newIdx = parseInt(e.target.value);
-                          const oldIdx = setupAssignment[ab];
-                          // Find which ability currently has newIdx and swap
-                          const swapAb = Object.entries(setupAssignment).find(([, v]) => v === newIdx)?.[0];
-                          setSetupAssignment(prev => ({
-                            ...prev,
-                            [ab]: newIdx,
-                            ...(swapAb ? { [swapAb]: oldIdx } : {}),
-                          }));
-                        }}
-                      >
-                        {setupScores.map((s, i) => (
-                          <option key={i} value={i}>{s.total}</option>
-                        ))}
-                      </select>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={applyScores}
-                  className="mt-3 text-xs px-4 py-2 rounded font-medium bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-all"
-                >
-                  Apply Scores
-                </button>
-              </div>
-            )}
-
-            {/* Point Buy */}
-            {setupMethod === 'pointbuy' && (
-              <div className="bg-[#0a0a10] rounded-lg p-4 border border-amber-200/8">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs text-amber-200/50">Assign points (8-15 per ability)</span>
-                  <span className={`text-sm font-display font-bold ${pointBuyRemaining > 0 ? 'text-gold' : pointBuyRemaining === 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {pointBuyRemaining} points left
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                  {ABILITIES.map(ab => (
-                    <div key={ab} className="text-center">
-                      <div className="text-[10px] text-amber-200/40 font-display tracking-widest mb-1">{ab}</div>
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          onClick={() => handlePointBuyChange(ab, -1)}
-                          disabled={pointBuyScores[ab] <= 8}
-                          className="w-6 h-6 rounded text-xs font-bold bg-white/[0.06] text-amber-200/60 border border-amber-200/10 hover:border-amber-200/30 disabled:opacity-30 transition-all"
-                        >
-                          -
-                        </button>
-                        <span className="text-lg font-bold text-gold w-8">{pointBuyScores[ab]}</span>
-                        <button
-                          onClick={() => handlePointBuyChange(ab, 1)}
-                          disabled={pointBuyScores[ab] >= 15 || pointBuyRemaining <= 0}
-                          className="w-6 h-6 rounded text-xs font-bold bg-white/[0.06] text-amber-200/60 border border-amber-200/10 hover:border-amber-200/30 disabled:opacity-30 transition-all"
-                        >
-                          +
-                        </button>
-                      </div>
-                      <div className="text-[10px] text-amber-200/25 mt-0.5">mod {modStr(calcMod(pointBuyScores[ab]))}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="text-[10px] text-amber-200/30 mt-2">Cost: 8-13 = 1pt each, 14-15 = 2pt each</div>
-                <button
-                  onClick={applyScores}
-                  disabled={pointBuyRemaining < 0}
-                  className="mt-3 text-xs px-4 py-2 rounded font-medium bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-all disabled:opacity-40"
-                >
-                  Apply Scores
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Step 2: Apply Class & Race Defaults */}
-          <div className="mb-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-7 h-7 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center text-sm font-display text-gold font-bold">2</div>
-              <h4 className="font-display text-amber-100 text-sm tracking-wide">Apply Class & {ancestryLabel} Defaults</h4>
-            </div>
-            <p className="text-xs text-amber-200/40 mb-3 ml-10">
-              Sets saving throws, speed, languages, senses, proficiencies, starting HP, and hit dice based on your class and {ancestryLabel.toLowerCase()}.
-            </p>
-            <div className="ml-10">
-              <button
-                onClick={applyClassRaceDefaults}
-                disabled={!overview.primary_class && !overview.race}
-                className="text-xs px-4 py-2 rounded font-medium bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-all disabled:opacity-40"
-              >
-                Apply {overview.primary_class || 'Class'} & {overview.race || ancestryLabel} Defaults
-              </button>
-            </div>
-          </div>
-
-          {/* Step 3: Choose Skill Proficiencies */}
-          {(() => {
-            const classData = CLASSES.find(c => c.name === overview.primary_class);
-            const sc = classData?.skillChoices;
-            if (!sc) return null;
-            return (
-              <div className="mb-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-7 h-7 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center text-sm font-display text-gold font-bold">3</div>
-                  <h4 className="font-display text-amber-100 text-sm tracking-wide">
-                    Choose Skill Proficiencies
-                    <span className="text-xs text-amber-200/40 font-normal ml-2">Pick {sc.count} from {overview.primary_class}</span>
-                  </h4>
-                </div>
-                <div className="flex flex-wrap gap-2 ml-10 mb-3">
-                  {sc.from.map(sk => {
-                    const selected = skillPicks.includes(sk);
-                    const atMax = skillPicks.length >= sc.count && !selected;
-                    return (
-                      <button
-                        key={sk}
-                        onClick={() => {
-                          if (selected) {
-                            setSkillPicks(prev => prev.filter(s => s !== sk));
-                          } else if (!atMax) {
-                            setSkillPicks(prev => [...prev, sk]);
-                          }
-                        }}
-                        disabled={atMax}
-                        className={`text-xs px-3 py-1.5 rounded font-medium transition-all ${
-                          selected
-                            ? 'bg-gold/20 text-gold border border-gold/40 shadow-[0_0_8px_rgba(201,168,76,0.15)]'
-                            : atMax
-                            ? 'bg-white/[0.02] text-amber-200/25 border border-amber-200/5 cursor-not-allowed'
-                            : 'bg-white/[0.04] text-amber-200/60 border border-amber-200/10 hover:border-amber-200/25'
-                        }`}
-                      >
-                        {sk}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="ml-10 flex items-center gap-3">
-                  <button
-                    onClick={applySkillPicks}
-                    disabled={skillPicks.length !== sc.count}
-                    className="text-xs px-4 py-2 rounded font-medium bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-all disabled:opacity-40"
-                  >
-                    Confirm {skillPicks.length}/{sc.count} Skills
-                  </button>
-                  {skillPicks.length > 0 && skillPicks.length !== sc.count && (
-                    <span className="text-[10px] text-amber-200/35">Pick {sc.count - skillPicks.length} more</span>
-                  )}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Dismiss */}
-          <div className="pt-3 border-t border-gold/10 text-center">
-            <button
-              onClick={() => setShowSetup(false)}
-              className="text-xs text-amber-200/30 hover:text-amber-200/60 transition-colors"
-            >
-              Dismiss setup assistant
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Two-column layout for wide screens */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Left column: Ability Scores, Saving Throws, Skills */}
@@ -1278,11 +973,13 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
               {ABILITIES.map(ab => {
                 const score = abilityMap[ab] || 10;
-                const mod = calcMod(score);
+                const itemBonus = itemStatBonuses[ab] || 0;
+                const effectiveScore = score + itemBonus;
+                const mod = calcMod(effectiveScore);
                 return (
-                  <div key={ab} className="text-center p-4 rounded-lg bg-[#0a0a10] border border-gold/15 hover:border-gold/30 transition-all">
+                  <div key={ab} className={`text-center p-4 rounded-lg bg-[#0a0a10] border ${itemBonus ? 'border-green-500/25' : 'border-gold/15'} hover:border-gold/30 transition-all`}>
                     <div className="text-[11px] text-amber-200/50 font-display tracking-widest mb-2">{ab}</div>
-                    <div className="text-3xl font-bold text-gold mb-1 cursor-pointer hover:text-amber-300 hover:scale-110 transition-all" onClick={() => rollAbilityCheck(ab, mod)} title={`Click to roll ${ABILITY_NAMES[ab]} check`}>{modStr(mod)}</div>
+                    <div className="text-3xl font-bold text-gold mb-1 cursor-pointer hover:text-amber-300 hover:scale-110 transition-all" onClick={() => rollAbilityCheck(ab, mod)} title={`Click to roll ${ABILITY_NAMES[ab]} check${itemBonus ? ` (includes ${itemBonus > 0 ? '+' : ''}${itemBonus} from items)` : ''}`}>{modStr(mod)}</div>
                     <input
                       type="number" min={1} max={30}
                       className="input text-center w-16 mx-auto text-sm"
@@ -1296,7 +993,13 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                         updateAbility(ab, val);
                       }}
                     />
-                    <div className="text-[10px] text-amber-200/30 mt-1">{ABILITY_NAMES[ab]}</div>
+                    {itemBonus ? (
+                      <div className="text-[10px] text-green-400/70 mt-1" title="Bonus from equipped items">
+                        {ABILITY_NAMES[ab]} +{itemBonus}
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-amber-200/30 mt-1">{ABILITY_NAMES[ab]}</div>
+                    )}
                   </div>
                 );
               })}
@@ -1305,10 +1008,11 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             <div className="mt-3 py-2 px-3 rounded-lg bg-[#0a0a10] border border-amber-200/8">
               <div className="flex items-center justify-center gap-1 flex-wrap text-xs font-mono">
                 {ABILITIES.map((ab, i) => {
-                  const mod = calcMod(abilityMap[ab] || 10);
+                  const effectiveScore = (abilityMap[ab] || 10) + (itemStatBonuses[ab] || 0);
+                  const mod = calcMod(effectiveScore);
                   return (
                     <span key={ab} className="inline-flex items-center">
-                      <span className="text-amber-200/40 font-display tracking-wider">{ab}</span>
+                      <span className={`font-display tracking-wider ${itemStatBonuses[ab] ? 'text-green-400/60' : 'text-amber-200/40'}`}>{ab}</span>
                       <span className={`ml-1 font-semibold ${mod >= 0 ? 'text-gold' : 'text-red-400'}`}>{modStr(mod)}</span>
                       {i < ABILITIES.length - 1 && <span className="mx-2 text-amber-200/15">|</span>}
                     </span>
@@ -1795,10 +1499,41 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                   <input type="number" min={1} autoFocus className="input w-24 text-center text-red-300" placeholder="Amount"
                     value={damageAmount} onChange={e => setDamageAmount(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && applyDamage()} />
+                  <select
+                    value={damageType}
+                    onChange={e => setDamageType(e.target.value)}
+                    className="input text-[11px] text-red-300/80"
+                    style={{ width: '120px', padding: '5px 6px' }}
+                  >
+                    <option value="">Type (any)</option>
+                    {DAMAGE_TYPES.map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
                   <button onClick={applyDamage} className="text-xs font-medium py-1.5 px-4 rounded-lg bg-red-600/20 border border-red-500/30 text-red-300 hover:bg-red-600/30 transition-colors">
                     Apply
                   </button>
                 </div>
+                {/* Auto-detection indicator */}
+                {damageType && damageModifier === 'normal' && (() => {
+                  const mods = parsedDamageModifiers;
+                  if (mods.immunities.includes(damageType)) return (
+                    <span className="text-[10px] font-medium text-yellow-300/80" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <ShieldOff size={10} /> Immune to {damageType} — damage will be negated
+                    </span>
+                  );
+                  if (mods.resistances.includes(damageType)) return (
+                    <span className="text-[10px] font-medium text-blue-300/80" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Shield size={10} /> Resistant to {damageType} — damage will be halved
+                    </span>
+                  );
+                  if (mods.vulnerabilities.includes(damageType)) return (
+                    <span className="text-[10px] font-medium text-red-300/80" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <AlertTriangle size={10} /> Vulnerable to {damageType} — damage will be doubled
+                    </span>
+                  );
+                  return null;
+                })()}
                 <div className="flex gap-1.5 items-center">
                   {['normal', 'resistant', 'vulnerable'].map(mod => (
                     <button key={mod} onClick={() => setDamageModifier(mod)}
@@ -1812,6 +1547,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                       {mod === 'normal' ? 'Normal' : mod === 'resistant' ? 'Resist (x0.5)' : 'Vuln (x2)'}
                     </button>
                   ))}
+                  <span className="text-[10px] text-amber-200/30 ml-0.5">Override</span>
                   {damageAmount && damageModifier !== 'normal' && (
                     <span className="text-[10px] text-amber-200/40 ml-1">
                       = {damageModifier === 'resistant' ? Math.floor((parseInt(damageAmount) || 0) / 2) : (parseInt(damageAmount) || 0) * 2} dmg
@@ -2237,6 +1973,77 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             <label className="label">Tool Proficiencies</label>
             <input className="input w-full" value={overview.proficiencies_tools} onChange={e => updateField('proficiencies_tools', e.target.value)} />
           </div>
+        </div>
+      </div>
+
+      {/* Damage Modifiers (Resistances, Immunities, Vulnerabilities) */}
+      <div className="card">
+        <h3 className="font-display text-amber-100 mb-1">Damage Modifiers</h3>
+        <p className="text-xs text-amber-200/30 mb-3">Track resistances, immunities, and vulnerabilities from your race, class, or magic items.</p>
+
+        {/* Category display */}
+        {[
+          { key: 'resistances', label: 'Resistances', desc: 'Half damage', icon: <Shield size={14} />, color: 'blue', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.25)', text: 'rgb(147,197,253)', chipBg: 'rgba(59,130,246,0.15)', chipBorder: 'rgba(59,130,246,0.3)' },
+          { key: 'immunities', label: 'Immunities', desc: 'No damage', icon: <ShieldOff size={14} />, color: 'gold', bg: 'rgba(234,179,8,0.08)', border: 'rgba(234,179,8,0.25)', text: 'rgb(253,224,71)', chipBg: 'rgba(234,179,8,0.15)', chipBorder: 'rgba(234,179,8,0.3)' },
+          { key: 'vulnerabilities', label: 'Vulnerabilities', desc: 'Double damage', icon: <AlertTriangle size={14} />, color: 'red', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)', text: 'rgb(252,165,165)', chipBg: 'rgba(239,68,68,0.15)', chipBorder: 'rgba(239,68,68,0.3)' },
+        ].map(cat => (
+          <div key={cat.key} style={{ background: cat.bg, border: `1px solid ${cat.border}`, borderRadius: '8px', padding: '10px 12px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: parsedDamageModifiers[cat.key].length > 0 ? '8px' : '0' }}>
+              <span style={{ color: cat.text, display: 'flex', alignItems: 'center' }}>{cat.icon}</span>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: '13px', color: cat.text, fontWeight: 600 }}>{cat.label}</span>
+              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginLeft: '4px' }}>{cat.desc}</span>
+            </div>
+            {parsedDamageModifiers[cat.key].length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {parsedDamageModifiers[cat.key].map(type => (
+                  <span key={type} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '4px',
+                    background: cat.chipBg, border: `1px solid ${cat.chipBorder}`, borderRadius: '6px',
+                    padding: '3px 8px', fontSize: '11px', color: cat.text, fontFamily: 'var(--font-ui)',
+                  }}>
+                    {type}
+                    <button
+                      onClick={() => removeDamageModifier(cat.key, type)}
+                      style={{ background: 'none', border: 'none', color: cat.text, cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center', opacity: 0.6 }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                      onMouseLeave={e => e.currentTarget.style.opacity = '0.6'}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Add damage modifier control */}
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '8px' }}>
+          <select
+            value={dmAddCategory}
+            onChange={e => setDmAddCategory(e.target.value)}
+            className="input"
+            style={{ width: '140px', fontSize: '11px', padding: '5px 8px' }}
+          >
+            <option value="resistances">Resistance</option>
+            <option value="immunities">Immunity</option>
+            <option value="vulnerabilities">Vulnerability</option>
+          </select>
+          <select
+            value={dmAddType}
+            onChange={e => {
+              if (e.target.value) {
+                addDamageModifier(dmAddCategory, e.target.value);
+              }
+            }}
+            className="input"
+            style={{ flex: 1, fontSize: '11px', padding: '5px 8px' }}
+          >
+            <option value="">Select damage type...</option>
+            {DAMAGE_TYPES.filter(t => !parsedDamageModifiers[dmAddCategory]?.includes(t)).map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Plus, Trash2, Swords, Dice5, Timer, MinusCircle, X, Search, Minus, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ScrollText, ArrowRight, Filter, Heart, Shield, Skull, Activity, TrendingUp, Zap } from 'lucide-react';
+import { Plus, Trash2, Swords, Dice5, Timer, X, Search, Minus, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ScrollText, ArrowRight, Filter, Heart, Shield, ShieldOff, Skull, Activity, Zap, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAttacks, addAttack, deleteAttack, getConditions, updateConditions, getCombatNotes, updateCombatNotes } from '../api/combat';
 import { useAutosave } from '../hooks/useAutosave';
@@ -34,22 +34,129 @@ function parseDamage(expr) {
   return { count: parseInt(match[1]) || 1, sides: parseInt(match[2]), mod: parseInt(match[3]) || 0 };
 }
 
-// --- Combat Log helpers ---
-function getCombatLog(characterId) {
-  try {
-    const stored = sessionStorage.getItem(`codex_combatlog_${characterId}`);
-    return stored ? JSON.parse(stored) : [];
-  } catch { return []; }
+// --- Custom hook: consolidates all combat sessionStorage state ---
+const COMBAT_SESSION_DEFAULTS = {
+  combatants: [],
+  roundCounter: 1,
+  currentTurn: 0,
+  combatStats: { totalDamageDealt: 0, totalDamageTaken: 0, totalHealing: 0, attackCount: 0 },
+  actionEcon: { action: false, bonusAction: false, reaction: false },
+  flankingEnabled: false,
+  legendaryActions: { used: 0, max: 3 },
+  combatLog: [],
+};
+
+function useCombatSession(characterId) {
+  const storageKey = `codex_combat_session_${characterId}`;
+
+  // Read all combat state from sessionStorage (with migration from old keys)
+  const readSession = useCallback((charId) => {
+    const key = `codex_combat_session_${charId}`;
+    try {
+      const stored = sessionStorage.getItem(key);
+      if (stored) return { ...COMBAT_SESSION_DEFAULTS, ...JSON.parse(stored) };
+    } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession read error:', err); }
+
+    // Migrate from legacy per-key storage
+    const migrated = { ...COMBAT_SESSION_DEFAULTS };
+    try {
+      const init = sessionStorage.getItem(`codex_initiative_${charId}`);
+      if (init) migrated.combatants = JSON.parse(init);
+    } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate initiative:', err); }
+    try {
+      const r = sessionStorage.getItem(`codex_round_${charId}`);
+      if (r) migrated.roundCounter = parseInt(r) || 1;
+    } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate round:', err); }
+    try {
+      const t = sessionStorage.getItem(`codex_turn_${charId}`);
+      if (t) migrated.currentTurn = parseInt(t) || 0;
+    } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate turn:', err); }
+    try {
+      const s = sessionStorage.getItem(`codex_combatstats_${charId}`);
+      if (s) migrated.combatStats = { ...COMBAT_SESSION_DEFAULTS.combatStats, ...JSON.parse(s) };
+    } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate stats:', err); }
+    try {
+      const a = sessionStorage.getItem(`codex_actionecon_${charId}`);
+      if (a) migrated.actionEcon = { ...COMBAT_SESSION_DEFAULTS.actionEcon, ...JSON.parse(a) };
+    } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate actionEcon:', err); }
+    try {
+      const f = sessionStorage.getItem(`codex_flanking_${charId}`);
+      if (f) migrated.flankingEnabled = f === 'true';
+    } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate flanking:', err); }
+    try {
+      const l = sessionStorage.getItem(`codex_legendary_${charId}`);
+      if (l) migrated.legendaryActions = { ...COMBAT_SESSION_DEFAULTS.legendaryActions, ...JSON.parse(l) };
+    } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate legendary:', err); }
+    try {
+      const log = sessionStorage.getItem(`codex_combatlog_${charId}`);
+      if (log) migrated.combatLog = JSON.parse(log);
+    } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate combatLog:', err); }
+
+    return migrated;
+  }, []);
+
+  const [session, setSessionRaw] = useState(() => readSession(characterId));
+
+  // Persist whenever session changes
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify(session));
+    } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession persist error:', err); }
+  }, [session, storageKey]);
+
+  // Re-read when characterId changes
+  useEffect(() => {
+    setSessionRaw(readSession(characterId));
+  }, [characterId, readSession]);
+
+  // Field-level setters that mirror useState setter API
+  const setCombatants = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, combatants: typeof updater === 'function' ? updater(prev.combatants) : updater }));
+  }, []);
+  const setRoundCounter = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, roundCounter: typeof updater === 'function' ? updater(prev.roundCounter) : updater }));
+  }, []);
+  const setCurrentTurn = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, currentTurn: typeof updater === 'function' ? updater(prev.currentTurn) : updater }));
+  }, []);
+  const setCombatStats = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, combatStats: typeof updater === 'function' ? updater(prev.combatStats) : updater }));
+  }, []);
+  const setActionEcon = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, actionEcon: typeof updater === 'function' ? updater(prev.actionEcon) : updater }));
+  }, []);
+  const setFlankingEnabled = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, flankingEnabled: typeof updater === 'function' ? updater(prev.flankingEnabled) : updater }));
+  }, []);
+  const setLegendaryActions = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, legendaryActions: typeof updater === 'function' ? updater(prev.legendaryActions) : updater }));
+  }, []);
+  const setCombatLog = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, combatLog: typeof updater === 'function' ? updater(prev.combatLog) : updater }));
+  }, []);
+
+  return {
+    combatants: session.combatants, setCombatants,
+    roundCounter: session.roundCounter, setRoundCounter,
+    currentTurn: session.currentTurn, setCurrentTurn,
+    combatStats: session.combatStats, setCombatStats,
+    actionEcon: session.actionEcon, setActionEcon,
+    flankingEnabled: session.flankingEnabled, setFlankingEnabled,
+    legendaryActions: session.legendaryActions, setLegendaryActions,
+    combatLog: session.combatLog, setCombatLog,
+  };
 }
 
-function addCombatLogEntry(characterId, type, message, setLog) {
+function addCombatLogEntry(type, message, setLog) {
   const entry = { ts: Date.now(), type, message };
-  setLog(prev => {
-    const updated = [entry, ...prev].slice(0, 50);
-    sessionStorage.setItem(`codex_combatlog_${characterId}`, JSON.stringify(updated));
-    return updated;
-  });
+  setLog(prev => [entry, ...prev].slice(0, 50));
 }
+
+const DAMAGE_TYPES = [
+  'Acid', 'Bludgeoning', 'Cold', 'Fire', 'Force', 'Lightning', 'Necrotic',
+  'Piercing', 'Poison', 'Psychic', 'Radiant', 'Slashing', 'Thunder',
+  'Nonmagical Bludgeoning', 'Nonmagical Piercing', 'Nonmagical Slashing',
+];
 
 export default function Combat({ characterId, character, onConditionsChange }) {
   const { CONDITIONS } = useRuleset();
@@ -58,131 +165,63 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   const [notes, setNotes] = useState({ actions: '', bonus_actions: '', reactions: '', legendary_actions: '' });
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  const [_showConditionInfo, _setShowConditionInfo] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [rollResults, setRollResults] = useState({});
   const [dmgModifiers, setDmgModifiers] = useState({}); // 'resist' | 'vuln' | null per attack id
   const rollTimeoutRefs = useRef({});
 
-  // --- Combat Log state ---
-  const [combatLog, setCombatLog] = useState(() => getCombatLog(characterId));
+  // --- All combat sessionStorage state consolidated into one hook ---
+  const {
+    combatants, setCombatants,
+    roundCounter, setRoundCounter,
+    currentTurn, setCurrentTurn,
+    combatStats, setCombatStats,
+    actionEcon, setActionEcon,
+    flankingEnabled, setFlankingEnabled,
+    legendaryActions, setLegendaryActions,
+    combatLog, setCombatLog,
+  } = useCombatSession(characterId);
+
   const [combatLogOpen, setCombatLogOpen] = useState(false);
 
-  useEffect(() => {
-    setCombatLog(getCombatLog(characterId));
-  }, [characterId]);
-
   const logEvent = useCallback((type, message) => {
-    addCombatLogEntry(characterId, type, message, setCombatLog);
-  }, [characterId]);
+    addCombatLogEntry(type, message, setCombatLog);
+  }, [setCombatLog]);
 
-  // Initiative/combatant tracker persisted to sessionStorage
-  const initiativeKey = `codex_initiative_${characterId}`;
-  const [combatants, setCombatants] = useState(() => {
-    try {
-      const stored = sessionStorage.getItem(initiativeKey);
-      return stored ? JSON.parse(stored) : [];
-    } catch { return []; }
-  });
   const [newCombatantName, setNewCombatantName] = useState('');
   const [newCombatantInit, setNewCombatantInit] = useState('');
   const [newCombatantHP, setNewCombatantHP] = useState('');
   const [newCombatantIsEnemy, setNewCombatantIsEnemy] = useState(false);
 
-  // --- Round counter & current turn (persisted) ---
-  const roundKey = `codex_round_${characterId}`;
-  const turnKey = `codex_turn_${characterId}`;
-  const [roundCounter, setRoundCounter] = useState(() => {
-    try { const v = sessionStorage.getItem(roundKey); return v ? parseInt(v) : 1; } catch { return 1; }
-  });
-  const [currentTurn, setCurrentTurn] = useState(() => {
-    try { const v = sessionStorage.getItem(turnKey); return v ? parseInt(v) : 0; } catch { return 0; }
-  });
-
-  useEffect(() => { sessionStorage.setItem(roundKey, String(roundCounter)); }, [roundCounter, roundKey]);
-  useEffect(() => { sessionStorage.setItem(turnKey, String(currentTurn)); }, [currentTurn, turnKey]);
-
-  useEffect(() => {
-    sessionStorage.setItem(initiativeKey, JSON.stringify(combatants));
-  }, [combatants, initiativeKey]);
-
-  useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(`codex_initiative_${characterId}`);
-      setCombatants(stored ? JSON.parse(stored) : []);
-    } catch { setCombatants([]); }
-    try { const v = sessionStorage.getItem(`codex_round_${characterId}`); setRoundCounter(v ? parseInt(v) : 1); } catch { setRoundCounter(1); }
-    try { const v = sessionStorage.getItem(`codex_turn_${characterId}`); setCurrentTurn(v ? parseInt(v) : 0); } catch { setCurrentTurn(0); }
-  }, [characterId]);
-
-  // --- Combat Stats Tracker (persisted to sessionStorage) ---
-  const statsKey = `codex_combatstats_${characterId}`;
-  const [combatStats, setCombatStats] = useState(() => {
-    try {
-      const stored = sessionStorage.getItem(statsKey);
-      return stored ? JSON.parse(stored) : { totalDamageDealt: 0, totalDamageTaken: 0, totalHealing: 0, attackCount: 0 };
-    } catch { return { totalDamageDealt: 0, totalDamageTaken: 0, totalHealing: 0, attackCount: 0 }; }
-  });
-
-  useEffect(() => {
-    sessionStorage.setItem(statsKey, JSON.stringify(combatStats));
-  }, [combatStats, statsKey]);
-
-  useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(`codex_combatstats_${characterId}`);
-      setCombatStats(stored ? JSON.parse(stored) : { totalDamageDealt: 0, totalDamageTaken: 0, totalHealing: 0, attackCount: 0 });
-    } catch { setCombatStats({ totalDamageDealt: 0, totalDamageTaken: 0, totalHealing: 0, attackCount: 0 }); }
-  }, [characterId]);
+  const resetActionEconomy = useCallback(() => {
+    setActionEcon({ action: false, bonusAction: false, reaction: false });
+  }, [setActionEcon]);
 
   // --- Damage/Healing Calculator state ---
   const [calcTarget, setCalcTarget] = useState(null); // combatant id
   const [calcAmount, setCalcAmount] = useState('');
   const [calcMode, setCalcMode] = useState('damage'); // 'damage' | 'healing'
   const [calcModifier, setCalcModifier] = useState('normal'); // 'normal' | 'resist' | 'vuln'
+  const [calcDamageType, setCalcDamageType] = useState(''); // damage type for auto-modifier detection
 
-  // --- Action Economy Tracker state (persisted) ---
-  const actionEconKey = `codex_actionecon_${characterId}`;
-  const [actionEcon, setActionEcon] = useState(() => {
+  // Parse character damage modifiers for auto-detection
+  const charDamageModifiers = useMemo(() => {
+    if (!character?.damage_modifiers) return { resistances: [], immunities: [], vulnerabilities: [] };
     try {
-      const stored = sessionStorage.getItem(actionEconKey);
-      return stored ? JSON.parse(stored) : { action: false, bonusAction: false, reaction: false };
-    } catch { return { action: false, bonusAction: false, reaction: false }; }
-  });
-
-  useEffect(() => {
-    sessionStorage.setItem(actionEconKey, JSON.stringify(actionEcon));
-  }, [actionEcon, actionEconKey]);
-
-  useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(`codex_actionecon_${characterId}`);
-      setActionEcon(stored ? JSON.parse(stored) : { action: false, bonusAction: false, reaction: false });
-    } catch { setActionEcon({ action: false, bonusAction: false, reaction: false }); }
-  }, [characterId]);
-
-  const resetActionEconomy = useCallback(() => {
-    setActionEcon({ action: false, bonusAction: false, reaction: false });
-  }, []);
-
-  // --- Flanking toggle (persisted) ---
-  const flankingKey = `codex_flanking_${characterId}`;
-  const [flankingEnabled, setFlankingEnabled] = useState(() => {
-    return sessionStorage.getItem(flankingKey) === 'true';
-  });
-
-  useEffect(() => {
-    sessionStorage.setItem(flankingKey, String(flankingEnabled));
-  }, [flankingEnabled, flankingKey]);
-
-  useEffect(() => {
-    setFlankingEnabled(sessionStorage.getItem(`codex_flanking_${characterId}`) === 'true');
-  }, [characterId]);
+      const parsed = typeof character.damage_modifiers === 'string'
+        ? JSON.parse(character.damage_modifiers)
+        : character.damage_modifiers;
+      return {
+        resistances: parsed.resistances || [],
+        immunities: parsed.immunities || [],
+        vulnerabilities: parsed.vulnerabilities || [],
+      };
+    } catch (err) { if (import.meta.env.DEV) console.warn('charDamageModifiers parse error:', err); return { resistances: [], immunities: [], vulnerabilities: [] }; }
+  }, [character?.damage_modifiers]);
 
   // --- Next/Previous Turn ---
   const nextTurn = () => {
     if (combatants.length === 0) return;
-    const _prevName = combatants[currentTurn % combatants.length]?.name || '?';
     setCurrentTurn(prev => {
       const next = prev + 1;
       if (next >= combatants.length) {
@@ -254,12 +293,24 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   };
 
   // --- Apply Damage/Healing to Combatant ---
-  const applyDamageHealing = (combatantId, amount, mode, modifier) => {
+  const applyDamageHealing = (combatantId, amount, mode, modifier, damageTypeArg) => {
     if (!amount || amount <= 0) return;
+    let effectiveModifier = modifier;
+    let autoDetected = false;
+    // Auto-detect modifier from character's damage modifiers if combatant matches character name
+    const target = combatants.find(c => c.id === combatantId);
+    if (mode === 'damage' && damageTypeArg && modifier === 'normal' && target && character?.name &&
+        target.name.toLowerCase() === character.name.toLowerCase()) {
+      const mods = charDamageModifiers;
+      if (mods.immunities.includes(damageTypeArg)) { effectiveModifier = 'immune'; autoDetected = true; }
+      else if (mods.resistances.includes(damageTypeArg)) { effectiveModifier = 'resist'; autoDetected = true; }
+      else if (mods.vulnerabilities.includes(damageTypeArg)) { effectiveModifier = 'vuln'; autoDetected = true; }
+    }
     let effectiveAmount = amount;
     if (mode === 'damage') {
-      if (modifier === 'resist') effectiveAmount = Math.floor(amount / 2);
-      else if (modifier === 'vuln') effectiveAmount = amount * 2;
+      if (effectiveModifier === 'immune') effectiveAmount = 0;
+      else if (effectiveModifier === 'resist') effectiveAmount = Math.floor(amount / 2);
+      else if (effectiveModifier === 'vuln') effectiveAmount = amount * 2;
     }
 
     setCombatants(prev => prev.map(c => {
@@ -273,17 +324,26 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       }
     }));
 
-    const target = combatants.find(c => c.id === combatantId);
     if (mode === 'damage') {
       setCombatStats(prev => ({
         ...prev,
         totalDamageDealt: prev.totalDamageDealt + effectiveAmount,
         attackCount: prev.attackCount + 1,
       }));
-      logEvent('damage', `${target?.name || '?'} took ${effectiveAmount} damage${modifier !== 'normal' ? ` (${modifier})` : ''}`);
-      toast(`${target?.name || '?'} took ${effectiveAmount} damage${modifier !== 'normal' ? ` (${modifier})` : ''}`, {
-        icon: '\u2694\uFE0F', duration: 2000,
-        style: { background: '#1a0a0a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' },
+      const modLabel = autoDetected
+        ? (effectiveModifier === 'immune' ? 'immune' : effectiveModifier === 'resist' ? 'resistance' : 'vulnerability')
+        : (effectiveModifier !== 'normal' && effectiveModifier !== 'immune' ? effectiveModifier : '');
+      const modSuffix = modLabel ? ` (${modLabel}${damageTypeArg ? ` - ${damageTypeArg}` : ''})` : '';
+      const dmgMsg = effectiveModifier === 'immune'
+        ? `${target?.name || '?'} is immune to ${damageTypeArg || 'this damage'}!`
+        : `${target?.name || '?'} took ${effectiveAmount} damage${modSuffix}`;
+      logEvent('damage', dmgMsg);
+      const toastStyle = effectiveModifier === 'immune'
+        ? { background: '#0a1a1a', color: '#fde68a', border: '1px solid rgba(234,179,8,0.3)' }
+        : { background: '#1a0a0a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' };
+      toast(dmgMsg, {
+        icon: effectiveModifier === 'immune' ? '\u{1F6E1}' : '\u2694\uFE0F', duration: 2000,
+        style: toastStyle,
       });
     } else {
       setCombatStats(prev => ({
@@ -297,41 +357,11 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       });
     }
     setCalcAmount('');
+    setCalcDamageType('');
   };
 
-  // Legendary action counter persisted to sessionStorage
-  const legendaryKey = `codex_legendary_${characterId}`;
-  const [legendaryActions, setLegendaryActions] = useState(() => {
-    try {
-      const stored = sessionStorage.getItem(legendaryKey);
-      return stored ? JSON.parse(stored) : { used: 0, max: 3 };
-    } catch { return { used: 0, max: 3 }; }
-  });
-
-  useEffect(() => {
-    sessionStorage.setItem(legendaryKey, JSON.stringify(legendaryActions));
-  }, [legendaryActions, legendaryKey]);
-
-  useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(`codex_legendary_${characterId}`);
-      setLegendaryActions(stored ? JSON.parse(stored) : { used: 0, max: 3 });
-    } catch { setLegendaryActions({ used: 0, max: 3 }); }
-  }, [characterId]);
-
-  // Reaction tracker
-  const reactionKey = `codex_reaction_${characterId}`;
-  const [_reactionUsed, setReactionUsed] = useState(() => sessionStorage.getItem(reactionKey) === 'used');
-  const _toggleReaction = () => {
-    setReactionUsed(prev => {
-      const next = !prev;
-      sessionStorage.setItem(reactionKey, next ? 'used' : 'available');
-      return next;
-    });
-  };
-  useEffect(() => {
-    setReactionUsed(sessionStorage.getItem(reactionKey) === 'used');
-  }, [characterId]);
+  // Reaction used state (driven by action economy toggle in TurnActionTracker)
+  const [reactionUsed, setReactionUsed] = useState(false);
 
   // Clean up pending roll timeouts on unmount
   useEffect(() => {
@@ -797,7 +827,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                     {/* HP display with click-to-edit */}
                     {c.maxHp > 0 && (
                       <button
-                        onClick={() => { setCalcTarget(isCalcTarget ? null : c.id); setCalcAmount(''); setCalcMode('damage'); setCalcModifier('normal'); }}
+                        onClick={() => { setCalcTarget(isCalcTarget ? null : c.id); setCalcAmount(''); setCalcMode('damage'); setCalcModifier('normal'); setCalcDamageType(''); }}
                         className={`flex items-center gap-1.5 px-2 py-0.5 rounded text-xs transition-all ${
                           isCalcTarget ? 'bg-gold/15 border border-gold/40' : 'hover:bg-white/5'
                         }`}
@@ -867,6 +897,36 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                           </>
                         )}
                       </div>
+                      {/* Damage type selector for auto-modifier detection */}
+                      {calcMode === 'damage' && (
+                        <div className="flex items-center gap-2 mb-1">
+                          <select
+                            value={calcDamageType}
+                            onChange={e => setCalcDamageType(e.target.value)}
+                            className="input text-[11px]"
+                            style={{ width: '140px', padding: '3px 6px' }}
+                          >
+                            <option value="">Type (any)</option>
+                            {DAMAGE_TYPES.map(t => (
+                              <option key={t} value={t}>{t}</option>
+                            ))}
+                          </select>
+                          {/* Auto-detection hint for player character */}
+                          {calcDamageType && character?.name && c.name.toLowerCase() === character.name.toLowerCase() && calcModifier === 'normal' && (() => {
+                            const mods = charDamageModifiers;
+                            if (mods.immunities.includes(calcDamageType)) return (
+                              <span className="text-[10px] text-yellow-300/80 flex items-center gap-1"><ShieldOff size={10} /> Immune</span>
+                            );
+                            if (mods.resistances.includes(calcDamageType)) return (
+                              <span className="text-[10px] text-blue-300/80 flex items-center gap-1"><Shield size={10} /> Resistant</span>
+                            );
+                            if (mods.vulnerabilities.includes(calcDamageType)) return (
+                              <span className="text-[10px] text-red-300/80 flex items-center gap-1"><AlertTriangle size={10} /> Vulnerable</span>
+                            );
+                            return null;
+                          })()}
+                        </div>
+                      )}
                       <div className="flex items-center gap-2">
                         <input
                           type="number"
@@ -876,7 +936,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                           onChange={e => setCalcAmount(e.target.value)}
                           onKeyDown={e => {
                             if (e.key === 'Enter') {
-                              applyDamageHealing(c.id, parseInt(calcAmount) || 0, calcMode, calcModifier);
+                              applyDamageHealing(c.id, parseInt(calcAmount) || 0, calcMode, calcModifier, calcDamageType);
                               setCalcTarget(null);
                             }
                           }}
@@ -884,7 +944,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                         />
                         <button
                           onClick={() => {
-                            applyDamageHealing(c.id, parseInt(calcAmount) || 0, calcMode, calcModifier);
+                            applyDamageHealing(c.id, parseInt(calcAmount) || 0, calcMode, calcModifier, calcDamageType);
                             setCalcTarget(null);
                           }}
                           className={`btn-primary text-xs px-3 py-1.5 ${calcMode === 'healing' ? '!bg-emerald-600/30 !border-emerald-500/40 !text-emerald-300' : '!bg-red-600/30 !border-red-500/40 !text-red-300'}`}
@@ -911,9 +971,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         actionEcon={actionEcon}
         setActionEcon={setActionEcon}
         setReactionUsed={setReactionUsed}
-        reactionKey={reactionKey}
         resetActionEconomy={resetActionEconomy}
-        roundCounter={roundCounter}
         setRoundCounter={setRoundCounter}
         logEvent={logEvent}
         character={character}
@@ -1296,7 +1354,7 @@ const TOKEN_STYLES = {
   },
 };
 
-function TurnActionTracker({ actionEcon, setActionEcon, setReactionUsed, reactionKey, resetActionEconomy, setRoundCounter, logEvent, character }) {
+function TurnActionTracker({ actionEcon, setActionEcon, setReactionUsed, resetActionEconomy, setRoundCounter, logEvent, character }) {
   const [collapsed, setCollapsed] = useState(false);
   const [hoveredToken, setHoveredToken] = useState(null);
 
@@ -1313,11 +1371,7 @@ function TurnActionTracker({ actionEcon, setActionEcon, setReactionUsed, reactio
   const handleTokenClick = (key) => {
     setActionEcon(prev => ({ ...prev, [key]: !prev[key] }));
     if (key === 'reaction') {
-      setReactionUsed(prev => {
-        const next = !prev;
-        sessionStorage.setItem(reactionKey, next ? 'used' : 'available');
-        return next;
-      });
+      setReactionUsed(prev => !prev);
     }
   };
 
@@ -1851,7 +1905,6 @@ function CombatLog({ combatLog, combatLogOpen, setCombatLogOpen, setCombatLog, c
                 <button
                   onClick={() => {
                     setCombatLog([]);
-                    sessionStorage.setItem(`codex_combatlog_${characterId}`, '[]');
                   }}
                   className="text-xs text-red-400/70 hover:text-red-400 transition-colors"
                 >

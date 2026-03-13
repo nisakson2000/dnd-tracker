@@ -37,6 +37,7 @@ const DiceRoller = lazy(() => import('../sections/DiceRoller'));
 const Settings = lazy(() => import('../sections/Settings'));
 const Updates = lazy(() => import('../sections/Updates'));
 const BugReport = lazy(() => import('../sections/BugReport'));
+const FeatureRequest = lazy(() => import('../sections/FeatureRequest'));
 const Journal = lazy(() => import('../sections/Journal'));
 const Lore = lazy(() => import('../sections/Lore'));
 const RulesReference = lazy(() => import('../sections/RulesReference'));
@@ -46,6 +47,14 @@ const Party = lazy(() => import('../sections/Party'));
 const AiAssistant = lazy(() => import('../sections/AiAssistant'));
 const PremadeCampaigns = lazy(() => import('../sections/PremadeCampaigns'));
 const CampaignMap = lazy(() => import('../sections/CampaignMap'));
+const PartyAnalyzer = lazy(() => import('../sections/PartyAnalyzer'));
+const EncounterBuilder = lazy(() => import('../sections/EncounterBuilder'));
+const BattleMap = lazy(() => import('../sections/BattleMap'));
+const Soundboard = lazy(() => import('../sections/Soundboard'));
+const FantasyCalendar = lazy(() => import('../sections/Calendar'));
+const HomebrewBuilder = lazy(() => import('../sections/HomebrewBuilder'));
+const Downtime = lazy(() => import('../sections/Downtime'));
+const PartyLoot = lazy(() => import('../sections/PartyLoot'));
 const DevTools = import.meta.env.DEV ? lazy(() => import('../sections/DevTools')) : null;
 
 class SectionErrorBoundary extends React.Component {
@@ -81,6 +90,7 @@ const SECTIONS = {
   settings: Settings,
   export: ExportImport,
   bugreport: BugReport,
+  featurerequest: FeatureRequest,
   updates: Updates,
   // DM-mode sections
   'campaign-hub': CampaignHub,
@@ -89,7 +99,15 @@ const SECTIONS = {
   'party-connect': Party,
   'ai-assistant': AiAssistant,
   'campaign-map': CampaignMap,
+  'party-analyzer': PartyAnalyzer,
   'premade-campaigns': PremadeCampaigns,
+  'encounter-builder': EncounterBuilder,
+  'battle-map': BattleMap,
+  'soundboard': Soundboard,
+  'calendar': FantasyCalendar,
+  'homebrew': HomebrewBuilder,
+  'downtime': Downtime,
+  'party-loot': PartyLoot,
   ...(DevTools ? { devtools: DevTools } : {}),
 };
 
@@ -109,6 +127,7 @@ const SECTION_LABELS = {
   settings: 'Settings',
   export: 'Export & Import',
   bugreport: 'Bug Report',
+  featurerequest: 'Feature Request',
   updates: 'Updates',
   devtools: 'Dev Tools',
   'campaign-map': 'Campaign Map',
@@ -116,8 +135,16 @@ const SECTION_LABELS = {
   'encounter': 'Encounter Runner',
   'party-overview': 'Party Overview',
   'party-connect': 'Party Connect',
+  'party-analyzer': 'Party Analyzer',
   'ai-assistant': 'Arcane Advisor',
   'premade-campaigns': 'Premade Campaigns',
+  'encounter-builder': 'Encounter Builder',
+  'battle-map': 'Battle Map',
+  'soundboard': 'Soundboard',
+  'calendar': 'Fantasy Calendar',
+  'homebrew': 'Homebrew Builder',
+  'downtime': 'Downtime',
+  'party-loot': 'Party Loot',
 };
 
 const SHORTCUT_SECTIONS = ['overview','backstory','spellbook','inventory','features','combat','journal','npcs','quests'];
@@ -906,6 +933,13 @@ export default function CharacterView() {
 
   useEffect(() => {
     loadCharacter();
+  }, [characterId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reload character data when import/export triggers a refresh (avoids full page reload)
+  useEffect(() => {
+    const handler = () => { loadCharacter(); };
+    window.addEventListener('codex-character-reload', handler);
+    return () => window.removeEventListener('codex-character-reload', handler);
   }, [characterId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load spell slots for top-bar indicator

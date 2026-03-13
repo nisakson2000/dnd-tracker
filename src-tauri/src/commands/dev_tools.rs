@@ -72,6 +72,11 @@ fn list_tables_from_conn(conn: &rusqlite::Connection) -> Result<serde_json::Valu
         .map_err(|e| e.to_string())?
         .filter_map(|r| r.ok())
         .map(|table_name| {
+            // Validate table name: only allow alphanumeric and underscores to prevent SQL injection
+            if !table_name.chars().all(|c| c.is_alphanumeric() || c == '_') {
+                return json!({ "name": table_name, "columns": [], "row_count": 0, "error": "invalid table name" });
+            }
+
             // Get column info
             let cols: Vec<serde_json::Value> = conn
                 .prepare(&format!("PRAGMA table_info(\"{}\")", table_name))

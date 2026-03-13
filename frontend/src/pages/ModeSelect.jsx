@@ -1,9 +1,8 @@
 import { useState } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
-import { invoke } from '@tauri-apps/api/core';
 import { useAppMode } from '../contexts/ModeContext';
-import { APP_VERSION } from '../version';
+import { APP_VERSION, DM_MODE_VERSION } from '../version';
 
 const RUNE_CHARS = ['ᚠ','ᚢ','ᚦ','ᚨ','ᚱ','ᚲ','ᚷ','ᚹ','ᚺ','ᚾ','ᛁ','ᛃ','ᛇ','ᛈ','ᛉ','ᛊ','ᛏ','ᛒ','ᛖ','ᛗ'];
 const PARTICLES = Array.from({ length: 12 }, (_, i) => ({
@@ -16,21 +15,6 @@ const PARTICLES = Array.from({ length: 12 }, (_, i) => ({
 export default function ModeSelect() {
   const { setMode } = useAppMode();
   const [showBetaWarning, setShowBetaWarning] = useState(false);
-  const [devChecking, setDevChecking] = useState(false);
-  const [isDev, setIsDev] = useState(null); // null = unchecked, true/false
-
-  const verifyDevAccess = async () => {
-    setDevChecking(true);
-    try {
-      // If user has git repo access (can fetch from origin), they're a dev
-      await invoke('check_git_updates');
-      // If the command succeeds and we can reach origin, they have repo access
-      setIsDev(true);
-    } catch {
-      setIsDev(false);
-    }
-    setDevChecking(false);
-  };
 
   const modes = [
     {
@@ -53,7 +37,6 @@ export default function ModeSelect() {
       color: '#9b59b6',
       bg: 'rgba(155,89,182,0.08)',
     },
-    // Dev settings moved to wrench icon in dev banner (no longer a separate mode)
   ];
 
   return (
@@ -131,8 +114,6 @@ export default function ModeSelect() {
               onClick={() => {
                 if (m.id === 'dm') {
                   setShowBetaWarning(true);
-                  setIsDev(null);
-                  verifyDevAccess();
                 } else {
                   setMode(m.id);
                 }
@@ -218,7 +199,7 @@ export default function ModeSelect() {
         {APP_VERSION}
       </div>
 
-      {/* DM Beta Warning */}
+      {/* DM Early Access Notice */}
       <AnimatePresence>
         {showBetaWarning && (
           <motion.div
@@ -262,47 +243,22 @@ export default function ModeSelect() {
                   letterSpacing: '0.15em', textTransform: 'uppercase',
                   color: '#fbbf24',
                 }}>
-                  V0.0.1 BETA
+                  {DM_MODE_VERSION}
                 </div>
 
                 <h3 style={{
                   fontFamily: 'var(--font-heading, "Cinzel", serif)', fontSize: 18,
                   color: '#efe0c0', marginBottom: 10, fontWeight: 700,
                 }}>
-                  DM Mode is in Early Beta
+                  DM Mode — Early Access
                 </h3>
 
                 <p style={{
                   fontSize: 13, color: 'rgba(200,175,130,0.45)', lineHeight: 1.7,
-                  marginBottom: 14, fontFamily: 'var(--font-text, var(--font-ui, sans-serif))',
+                  marginBottom: 24, fontFamily: 'var(--font-text, var(--font-ui, sans-serif))',
                 }}>
-                  DM Mode is currently in early development and restricted to project contributors only. Some features may not exist yet or work as expected.
+                  DM Mode is still in active development. Some features may be incomplete or behave unexpectedly. Your feedback helps us improve!
                 </p>
-
-                {/* Dev verification status */}
-                {devChecking && (
-                  <div style={{ fontSize: 12, color: 'rgba(155,89,182,0.6)', marginBottom: 16, fontStyle: 'italic' }}>
-                    Verifying developer access...
-                  </div>
-                )}
-                {isDev === false && !devChecking && (
-                  <div style={{
-                    padding: '10px 16px', borderRadius: 8, marginBottom: 16,
-                    background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
-                    fontSize: 12, color: '#fca5a5', lineHeight: 1.6,
-                  }}>
-                    Access denied — DM Mode is only available to developers with access to the project repository. If you're a contributor, make sure you're running from the cloned repo.
-                  </div>
-                )}
-                {isDev === true && !devChecking && (
-                  <div style={{
-                    padding: '10px 16px', borderRadius: 8, marginBottom: 16,
-                    background: 'rgba(39,174,96,0.08)', border: '1px solid rgba(39,174,96,0.2)',
-                    fontSize: 12, color: '#86efac', lineHeight: 1.6,
-                  }}>
-                    Developer access verified — you may enter DM Mode.
-                  </div>
-                )}
 
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
                   <button
@@ -318,22 +274,17 @@ export default function ModeSelect() {
                     Go Back
                   </button>
                   <button
-                    onClick={() => isDev && setMode('dm')}
-                    disabled={!isDev || devChecking}
+                    onClick={() => setMode('dm')}
                     style={{
-                      padding: '10px 24px', borderRadius: 9, border: 'none',
-                      cursor: isDev ? 'pointer' : 'not-allowed',
-                      background: isDev
-                        ? 'linear-gradient(135deg, #9b59b6, #c084fc)'
-                        : 'rgba(155,89,182,0.15)',
-                      color: isDev ? '#fff' : 'rgba(155,89,182,0.4)',
+                      padding: '10px 24px', borderRadius: 9, border: 'none', cursor: 'pointer',
+                      background: 'linear-gradient(135deg, #9b59b6, #c084fc)',
+                      color: '#fff',
                       fontFamily: 'var(--font-heading, "Cinzel", serif)',
                       fontSize: 11, letterSpacing: '0.08em', fontWeight: 700,
-                      opacity: devChecking ? 0.5 : 1,
                       transition: 'all 0.3s',
                     }}
                   >
-                    {devChecking ? 'Verifying...' : isDev ? 'Enter DM Mode' : 'Dev Access Required'}
+                    Enter DM Mode
                   </button>
                 </div>
               </div>

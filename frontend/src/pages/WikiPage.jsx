@@ -85,7 +85,7 @@ export default function WikiPage() {
   useEffect(() => {
     getCategories()
       .then(setCategories)
-      .catch(err => toast.error(`Failed to load categories: ${err.message}`));
+      .catch(err => toast.error(`Failed to load categories: ${err?.message || err}`));
     getWikiStats()
       .then(setStats)
       .catch(() => {});
@@ -224,7 +224,7 @@ export default function WikiPage() {
       {/* Back button */}
       <div className="w-full flex items-center gap-4 mb-4">
         <button
-          onClick={() => window.history.back()}
+          onClick={() => navigate('/')}
           className="flex items-center gap-2 text-sm text-amber-200/60 hover:text-amber-200 transition-colors"
         >
           <ArrowLeft size={16} />

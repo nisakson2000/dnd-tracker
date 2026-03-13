@@ -2,6 +2,11 @@ use tauri::State;
 
 use crate::db::{self, AppState};
 
+/// Validate that a field name contains only safe SQL identifier characters.
+fn is_safe_identifier(s: &str) -> bool {
+    !s.is_empty() && s.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
 fn safe_str(val: &serde_json::Value, default: &str) -> String {
     match val {
         serde_json::Value::String(s) => s.clone(),
@@ -70,11 +75,11 @@ pub fn import_character(
             // Ensure row exists
             conn.execute("INSERT OR IGNORE INTO character_overview (id, name) VALUES (1, 'New Character')", []).map_err(|e| e.to_string())?;
 
-            // SAFETY: field names are from hardcoded arrays below, not user input — no injection risk.
             let str_fields = ["name", "race", "subrace", "primary_class", "primary_subclass",
                 "background", "alignment", "senses", "languages", "proficiencies_armor",
                 "proficiencies_weapons", "proficiencies_tools", "campaign_name", "hit_dice_total", "multiclass_data"];
             for field in &str_fields {
+                debug_assert!(is_safe_identifier(field), "Invalid field name in str_fields: {}", field);
                 if let Some(val) = ov.get(*field) {
                     let sql = format!("UPDATE character_overview SET {} = ?1 WHERE id=1", field);
                     conn.execute(&sql, [safe_str(val, "")]).map_err(|e| format!("Failed to import field '{}': {}", field, e))?;
@@ -84,6 +89,7 @@ pub fn import_character(
                 "armor_class", "speed", "hit_dice_used", "death_save_successes",
                 "death_save_failures", "exhaustion_level"];
             for field in &int_fields {
+                debug_assert!(is_safe_identifier(field), "Invalid field name in int_fields: {}", field);
                 if let Some(val) = ov.get(*field) {
                     let sql = format!("UPDATE character_overview SET {} = ?1 WHERE id=1", field);
                     conn.execute(&sql, [safe_i64(val, 0)]).map_err(|e| format!("Failed to import field '{}': {}", field, e))?;
@@ -147,11 +153,11 @@ pub fn import_character(
         // Backstory
         if let Some(bs) = payload.get("backstory").and_then(|v| v.as_object()) {
             conn.execute("INSERT OR IGNORE INTO backstory (id) VALUES (1)", []).map_err(|e| e.to_string())?;
-            // SAFETY: field names are from hardcoded array below, not user input.
             let fields = ["backstory_text", "personality_traits", "ideals", "bonds", "flaws",
                 "age", "height", "weight", "eyes", "hair", "skin",
                 "allies_organizations", "appearance_notes", "goals_motivations", "portrait_data"];
             for field in &fields {
+                debug_assert!(is_safe_identifier(field), "Invalid field name in backstory fields: {}", field);
                 if let Some(val) = bs.get(*field) {
                     let sql = format!("UPDATE backstory SET {} = ?1 WHERE id=1", field);
                     conn.execute(&sql, [safe_str(val, "")]).map_err(|e| format!("Failed to import backstory field '{}': {}", field, e))?;

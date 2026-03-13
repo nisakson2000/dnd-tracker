@@ -16,6 +16,8 @@ pub struct ItemData {
     pub attuned: bool,
     pub equipped: bool,
     pub equipment_slot: String,
+    pub stat_modifiers: Option<String>,
+    pub rarity: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -36,7 +38,8 @@ pub fn get_items(
         let mut stmt = conn
             .prepare(
                 "SELECT id, name, item_type, weight, value_gp, quantity, description,
-                        attunement, attuned, equipped, equipment_slot
+                        attunement, attuned, equipped, equipment_slot,
+                        stat_modifiers, rarity
                  FROM items",
             )
             .map_err(|e| e.to_string())?;
@@ -54,6 +57,8 @@ pub fn get_items(
                     attuned: row.get::<_, i64>(8).unwrap_or(0) != 0,
                     equipped: row.get::<_, i64>(9).unwrap_or(0) != 0,
                     equipment_slot: row.get(10).unwrap_or_default(),
+                    stat_modifiers: row.get::<_, Option<String>>(11).unwrap_or(Some("{}".to_string())),
+                    rarity: row.get::<_, Option<String>>(12).unwrap_or(Some("common".to_string())),
                 })
             })
             .map_err(|e| e.to_string())?
@@ -72,12 +77,15 @@ pub fn add_item(
     state.with_char_conn(&character_id, |conn| {
         conn.execute(
             "INSERT INTO items (name, item_type, weight, value_gp, quantity, description,
-                                attunement, attuned, equipped, equipment_slot)
-             VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)",
+                                attunement, attuned, equipped, equipment_slot,
+                                stat_modifiers, rarity)
+             VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)",
             rusqlite::params![
                 payload.name, payload.item_type, payload.weight, payload.value_gp,
                 payload.quantity, payload.description, payload.attunement as i64,
                 payload.attuned as i64, payload.equipped as i64, payload.equipment_slot,
+                payload.stat_modifiers.clone().unwrap_or_else(|| "{}".to_string()),
+                payload.rarity.clone().unwrap_or_else(|| "common".to_string()),
             ],
         )
         .map_err(|e| e.to_string())?;
@@ -98,12 +106,15 @@ pub fn update_item(
             .execute(
                 "UPDATE items SET name=?1, item_type=?2, weight=?3, value_gp=?4,
                     quantity=?5, description=?6, attunement=?7, attuned=?8,
-                    equipped=?9, equipment_slot=?10
-                 WHERE id=?11",
+                    equipped=?9, equipment_slot=?10,
+                    stat_modifiers=?11, rarity=?12
+                 WHERE id=?13",
                 rusqlite::params![
                     payload.name, payload.item_type, payload.weight, payload.value_gp,
                     payload.quantity, payload.description, payload.attunement as i64,
                     payload.attuned as i64, payload.equipped as i64, payload.equipment_slot,
+                    payload.stat_modifiers.clone().unwrap_or_else(|| "{}".to_string()),
+                    payload.rarity.clone().unwrap_or_else(|| "common".to_string()),
                     item_id,
                 ],
             )

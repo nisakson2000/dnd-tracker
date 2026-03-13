@@ -1,18 +1,28 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.4.7**
+**Current Version: V0.5.0**
 
-A native desktop application for managing D&D 5e characters with full ruleset support, a 2,000+ article encyclopedia, real-time party sync, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
+A native desktop application for managing D&D 5e characters with full ruleset support, a 2,000+ article encyclopedia, real-time multiplayer sessions, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
 ## Features
 
 ### Player/DM Mode System
 - **Mode Selection** — choose Player or DM mode on launch with animated role picker
-- **DM Campaign Hub** — dedicated overview with session/NPC/quest/lore stats and quick-start actions
-- **DM Quick Reference** — DC guidelines, damage by level, cover, lighting, travel pace
-- **Encounter Difficulty Calculator** — XP thresholds by party size and level
-- **Session Planning Checklist** — prep items with checkboxes
-- **Campaign creation** — DMs create campaigns (not characters) with simplified flow
+- **DM Campaign Engine** — create campaigns, manage scenes, run live sessions with WebSocket multiplayer sync
+- **DM Campaign List** — create, list, delete campaigns with ruleset selection (D&D 5e 2024/2014, PF2e, homebrew)
+- **DM Lobby** — campaign HQ with scenes, session recap, handouts, quest generator, player connections
+- **DM Live Session** — initiative tracker, round manager, action log, chat, timer, scene management
+- **Player Join Flow** — enter DM IP + room code, select character, wait for approval
+- **Player Session View** — see active scene, initiative, chat, roll dice, receive handouts, take actions
+- **D&D Beyond Import** — multi-step import wizard for D&D Beyond JSON character exports
+
+### DM Session Tools
+- **Character Arc Manager** — track character arcs (hooks, development, complications, climax, resolution)
+- **Handouts Manager** — create and reveal handouts to players with visibility toggle
+- **Monster Panel** — search SRD monsters, add to encounter, track HP/damage/conditions
+- **Quest Generator** — AI-powered quest generation via Ollama (party level, setting, theme)
+- **Session Recap** — AI-powered session summary generator
+- **World State Manager** — track world state by category (politics, geography, events, factions)
 
 ### Character Sheet
 - Ability Scores, Saving Throws, Skills (proficiency + expertise), HP tracking with color-coded bar
@@ -125,6 +135,33 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - **Log Viewer** — frontend error log stream
 - **Bug Report Generator** — collect system info, logs, and DB state into a report
 - **Test Character Generator** — create pre-filled characters for testing
+
+### Battle Map
+- **Interactive Tactical Grid** — grid-based map with token placement, conditions, and environmental drawing tools
+
+### Calendar (Harptos)
+- **Fantasy Calendar** — full Forgotten Realms Harptos calendar with festivals, seasons, and day/year tracking
+
+### Downtime Activities
+- **Activity Tracker** — crafting, training, research, business operations, and carousing with skill checks and gold tracking
+
+### Encounter Builder
+- **Balanced Encounters** — design encounters by CR, party level, and difficulty using XP thresholds and monster stat tables
+
+### Homebrew Builder
+- **Custom Content** — create and manage custom monsters, spells, and magic items with full stat blocks and validation
+
+### Party Analyzer
+- **Composition Analysis** — analyze party roles, abilities, darkvision, AC, HP, and encounter difficulty recommendations
+
+### Party Loot
+- **Shared Treasure** — track party gold, distribute coins/items, rarity sorting, and audit log
+
+### Soundboard
+- **Procedural Ambient Audio** — Web Audio API ambient channels: tavern, combat, forest, dungeon, storm, ocean, camp, and city
+
+### Feature Request
+- **In-App Feedback** — submit structured feature requests with category, title, description, and auto-generated request IDs
 
 ### Additional Features
 - Arcane Encyclopedia — 2,000+ article searchable wiki with FTS5, grid/list views, keyboard shortcuts, cross-ref hover previews, drop cap typography
@@ -285,9 +322,11 @@ npm run tauri build
 ## Architecture
 
 - Per-character SQLite databases with auto-migration
-- Shared wiki.db (1,900+ articles, FTS5 full-text search)
+- Campaign database (campaigns.db) — scenes, encounters, monsters, handouts, character arcs, world state
+- Shared wiki.db (2,000+ articles, FTS5 full-text search)
 - Frontend: React 19 + Vite 7 + TailwindCSS v4 + Framer Motion
 - Backend: Tauri 2 (Rust) + rusqlite via IPC commands
+- WebSocket multiplayer sync (port 7878) for real-time DM↔Player sessions
 - LAN Dev Sync: UDP broadcast presence + chat on port 8799
 - Pluggable rulesets (5e-2014 / 5e-2024) via React Context
 - Auto-save (debounced 800ms), auto-backup every 5 minutes
@@ -298,6 +337,6 @@ npm run tauri build
 |---|---|
 | Frontend | React 19, Vite 7, TailwindCSS v4, Framer Motion |
 | Backend | Tauri 2 (Rust), rusqlite, warp, tokio |
-| Database | SQLite (per-character) + wiki.db (FTS5) |
-| Networking | LAN party sync (WebSocket/warp), UDP dev presence |
+| Database | SQLite (per-character) + campaigns.db + wiki.db (FTS5) |
+| Networking | WebSocket multiplayer sessions (warp), LAN party sync, UDP dev presence |
 | AI (optional) | Ollama (phi3.5), reqwest streaming |

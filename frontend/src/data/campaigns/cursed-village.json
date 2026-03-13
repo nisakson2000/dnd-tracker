@@ -1,7 +1,9 @@
 {
   "name": "The Cursed Village",
-  "description": "The once-thriving village of Hollowmere has fallen under a mysterious curse. Crops wither overnight, livestock sicken, and villagers report nightmares of a shadowy figure in the old cemetery. The party must investigate the source of the curse before the village is abandoned entirely.",
+  "summary": "A dark mystery investigation in a dying village plagued by nightmares, withered crops, and an ancient curse rooted in the old cemetery. Heavy on roleplay and detective work.",
+  "description": "The once-thriving village of Hollowmere has fallen under a mysterious curse. Crops wither overnight, livestock sicken, and villagers report nightmares of a shadowy figure in the old cemetery. The party must investigate the source of the curse before the village is abandoned entirely. The truth is buried — literally — beneath the cemetery's oldest mausoleum, where a betrayed cleric's vengeful spirit has been slowly poisoning the land. Unraveling the mystery requires interviewing suspicious villagers, deciphering old church records, and surviving encounters with undead that grow bolder each night. But the curse is not as straightforward as it seems: the spirit believes it is protecting the village from a far worse threat sealed beneath the crypt. Includes a branching investigation with multiple resolution paths, moral dilemmas with real consequences, and a climactic encounter that can be solved through combat, negotiation, or ritual.",
   "level": "3-5",
+  "ruleset": "5e 2014",
   "author": "The Codex",
   "tags": ["mystery", "undead", "investigation"],
   "npcs": [
@@ -152,5 +154,63 @@
     "body": "## Campaign Introduction\n\nThe party arrives at Hollowmere village following rumors of a mysterious affliction. The village looks sickly - gardens are brown and wilted, the air smells faintly of decay, and the few people outdoors move quickly with haunted expressions.\n\nAt The Sleeping Fox inn, the innkeeper warns the party not to sleep too deeply and offers them rooms with protective herb bundles hung over the beds. Mayor Cordelia Thorne soon arrives, having heard that adventurers have come to town.\n\n**Starting Hook:** Mayor Thorne offers 200 gold to anyone who can end the curse. She claims not to know its source but suggests starting the investigation at the cemetery where the shadowy figure has been spotted.\n\n**Key NPCs to introduce:** Mayor Thorne, Sergeant Kara Ironwood, Fennwick Bramble, Old Marga\n\n**DM Notes:** Let the party investigate freely. The key clues are: (1) the curse started after a minor earthquake three weeks ago, (2) it is strongest near the cemetery, (3) the Thorne mausoleum is at the epicenter. Fennwick and Old Marga can provide magical insights.",
     "tags": "introduction,mystery,curse,hollowmere",
     "npcs_mentioned": "Mayor Cordelia Thorne,Sergeant Kara Ironwood,Fennwick Bramble,Old Marga"
-  }
+  },
+  "items": [
+    {
+      "name": "Father Clement's Holy Symbol",
+      "item_type": "misc",
+      "weight": 0.5,
+      "value_gp": 350.0,
+      "quantity": 1,
+      "description": "A tarnished silver sunburst holy symbol that once belonged to Father Clement, the priest who placed the protective wards on Hollowmere Cemetery over a century ago. It still radiates faint divine energy, sharpening the spiritual awareness of its bearer.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "neck",
+      "stat_modifiers": "{\"wis\": 1}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Duskwalker's Amulet",
+      "item_type": "misc",
+      "weight": 0.5,
+      "value_gp": 800.0,
+      "quantity": 1,
+      "description": "A tarnished silver amulet set with a cracked obsidian stone, recovered from the hidden crypt of Silas Duskwalker. It pulses with dark charisma-enhancing magic that amplifies the wearer's force of personality, though it carries an unsettling chill and whispers faintly in quiet rooms.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "neck",
+      "stat_modifiers": "{\"cha\": 2}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Silver-Tipped Mace",
+      "item_type": "weapon",
+      "weight": 4.0,
+      "value_gp": 300.0,
+      "quantity": 1,
+      "description": "A sturdy mace whose striking head has been plated in consecrated silver by Father Clement's successors. It was forged specifically for combating the undead of Hollowmere Cemetery and deals an additional 1d4 radiant damage against undead creatures.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Marga's Herbal Poultice",
+      "item_type": "consumable",
+      "weight": 0.5,
+      "value_gp": 30.0,
+      "quantity": 1,
+      "description": "A carefully wrapped bundle of pungent healing herbs prepared by Old Marga, the village hedge witch. When applied to wounds, it restores 2d6+3 hit points and grants advantage on saving throws against disease and poison for 1 hour.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "common"
+    }
+  ]
 }

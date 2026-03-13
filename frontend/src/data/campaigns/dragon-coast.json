@@ -1,7 +1,9 @@
 {
   "name": "The Dragon Coast",
-  "description": "The port city of Dragontide is under threat. A young blue dragon named Stormscar has claimed the coastal cliffs as her territory, demanding tribute from passing ships. Meanwhile, a shadowy smuggling ring is exploiting the chaos to move forbidden cargo through the city. The party must navigate political intrigue, naval combat, and a dragon's lair to save the coast.",
+  "summary": "Political intrigue, naval combat, and a blue dragon's lair collide in this coastal city adventure. Balances social encounters, ship-based combat, and a climactic dragon confrontation.",
+  "description": "The port city of Dragontide is under threat. A young blue dragon named Stormscar has claimed the coastal cliffs as her territory, demanding tribute from passing ships. Meanwhile, a shadowy smuggling ring is exploiting the chaos to move forbidden cargo through the city. The party must navigate political intrigue, naval combat, and a dragon's lair to save the coast. The smuggling ring and the dragon are connected — Stormscar is being manipulated by a consortium of merchants who profit from the trade disruption, using an enchanted artifact to agitate her territorial instincts. Players will attend high-society galas to gather intelligence, lead a naval strike against smuggler ships, infiltrate a cliff-side dragon lair rigged with lightning traps, and ultimately decide whether Stormscar is a villain to slay or a victim to free. Features faction reputation tracking, naval combat rules, and a multi-stage final encounter with branching outcomes.",
   "level": "5-8",
+  "ruleset": "5e 2014",
   "author": "The Codex",
   "tags": ["dragon", "coastal", "intrigue", "naval"],
   "npcs": [
@@ -141,5 +143,63 @@
     "body": "## Campaign Introduction\n\nThe party arrives in Dragontide by ship, immediately noticing that the normally busy port is half-empty. Many merchant vessels are anchored in the harbor rather than risking the coastal waters. Scorch marks on the harbor breakwater tell the story of a recent dragon attack.\n\nHarbormaster Vex Callowan meets the party at the docks, having heard they are capable adventurers. He wastes no time explaining the situation: a young blue dragon has claimed the nearby cliffs, trade is dying, and the city council is paralyzed by indecision.\n\n**Starting Hook:** Callowan offers 500 gold for resolving the dragon problem and mentions he also suspects a smuggling operation is exploiting the crisis. He suggests the party start by gathering intelligence - Zara Emberheart at the Arcane Consortium knows about dragons, and Captain Stormwind at The Siren's Rest has firsthand experience with the beast.\n\n**Key NPCs to introduce:** Harbormaster Callowan, Zara Emberheart, Captain Stormwind\n\n**DM Notes:** This adventure has two main threads (dragon and smuggling) that intertwine. The dragon negotiation works best if the party discovers the smuggling ring's treasure first, as they can offer it to Stormscar as tribute. Let players tackle the threads in any order.",
     "tags": "introduction,dragon,smuggling,dragontide",
     "npcs_mentioned": "Harbormaster Vex Callowan,Stormscar,Captain Lyra Stormwind,Zara Emberheart,Councilor Drest Blackwater"
-  }
+  },
+  "items": [
+    {
+      "name": "Stormbreaker Cutlass",
+      "item_type": "weapon",
+      "weight": 3.0,
+      "value_gp": 1500.0,
+      "quantity": 1,
+      "description": "A curved cutlass forged from storm-tempered steel, its blade crackling with faint arcs of static electricity. Recovered from a shipwreck in Stormscar's lair, the weapon channels the fury of coastal storms and empowers the wielder's strikes with raw physical force.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{\"str\": 1}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Cloak of the Sapphire Coast",
+      "item_type": "armor",
+      "weight": 2.0,
+      "value_gp": 1200.0,
+      "quantity": 1,
+      "description": "A flowing cloak woven from sea-silk and dyed a deep sapphire blue, enchanted by the Arcane Consortium of Dragontide. It shifts and billows as if caught in an ocean breeze, granting the wearer uncanny agility and reflexes.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{\"dex\": 1}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Lightning Ward Amulet",
+      "item_type": "misc",
+      "weight": 0.5,
+      "value_gp": 1800.0,
+      "quantity": 1,
+      "description": "A thick bronze amulet inlaid with a shard of blue dragonscale, crafted by Zara Emberheart to protect against Stormscar's lightning breath. The dragonscale core fortifies the wearer's constitution and grants resistance to lightning damage.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "neck",
+      "stat_modifiers": "{\"con\": 2}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Blackwater's Ledger",
+      "item_type": "misc",
+      "weight": 2.0,
+      "value_gp": 0.0,
+      "quantity": 1,
+      "description": "A leather-bound accounting ledger recovered from Councilor Drest Blackwater's warehouse on Pier 13. It contains detailed records of the Undertow smuggling ring's operations, including shipment manifests, bribed officials, and hidden cache locations. Critical evidence for exposing the conspiracy to the Dragontide city council.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "common"
+    }
+  ]
 }

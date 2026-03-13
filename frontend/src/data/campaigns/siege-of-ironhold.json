@@ -1,7 +1,9 @@
 {
   "name": "The Siege of Ironhold",
+  "summary": "A dwarven fortress besieged by an orc horde above and an ancient horror stirring below. Combines large-scale tactical warfare with dungeon delving, leveraging 2024 martial abilities and revised monster stat blocks.",
   "description": "The dwarven fortress-city of Ironhold has stood unconquered for eight hundred years, its walls carved from the living rock of Mount Anvilspire. But now a massive orc horde under the banner of Warlord Grashak Bloodtide has encircled the fortress, cutting off supply lines and bombarding the outer walls with siege engines. The dwarves are holding, but barely — provisions grow thin, morale wavers, and cracks are forming in more than just the stonework. King Durin Ironmantle has sent word to allied nations requesting aid, and your party has answered the call. But the siege is only the surface threat. Deep beneath Ironhold, in tunnels sealed centuries ago, something ancient has begun to stir — something that the orcs' relentless bombardment has inadvertently awakened. The defenders face war above and horror below, and only your party stands at the crossroads of both threats. Built for the 2024 rules, this campaign leverages updated martial abilities, tactical combat options, and the revised monster stat blocks for a satisfying mid-tier experience.",
   "level": "5-8",
+  "ruleset": "5e 2024",
   "author": "The Codex",
   "tags": ["war", "siege", "dungeon crawl", "dwarven", "political", "underdark", "5e 2024"],
   "npcs": [
@@ -142,5 +144,77 @@
     "body": "## Campaign Introduction\n\nYou see the smoke before you see the fortress. Great columns of black and grey rise from the base of Mount Anvilspire, where siege engines hurl flaming pitch against walls that have stood for eight centuries. Even from a distance, the scale of the conflict is staggering — thousands of orc tents spread across the plains like a dark tide, their war drums a constant low thunder that you feel in your chest.\n\nYour approach has not been easy. The main roads are controlled by the Bloodtide Horde, forcing you through mountain goat trails and abandoned mine shafts to reach Ironhold's hidden eastern postern gate. A dwarven scout named Corporal Halvek meets you at the tunnel entrance, his face grim beneath a soot-stained helm.\n\n*\"You're the reinforcements? All of you?\"* He looks your party over, then shrugs. *\"Well. The king asked for heroes, not an army. Suppose we'll see which one we needed.\"*\n\nInside Ironhold, the mood is tense but defiant. Dwarven soldiers march with purpose along the upper battlements while civilians keep the forges burning and the supply chains moving. But you notice the signs of strain — rationing notices posted on every corner, children too quiet, and soldiers whose eyes carry the hollow look of too many sleepless nights.\n\n**King Durin Ironmantle** awaits you in the Throne Hall. The briefing will be direct — he is not a dwarf who wastes words.\n\n### Key Details\n- **Setting**: Ironhold, a dwarven fortress-city under siege\n- **Level Range**: 5-8 (2024 Rules)\n- **Tone**: War drama with dungeon crawl and political intrigue\n- **Theme**: Enemies above, horrors below, and betrayal within\n- **Starting Hook**: King Durin's war briefing in the Throne Hall",
     "tags": "introduction,session-zero,siege,dwarven,war",
     "npcs_mentioned": "King Durin Ironmantle,Warlord Grashak Bloodtide,Thane Brenna Coalvein,Advisor Rikard Stoneweaver,Ruuga the Hollow-Touched"
-  }
+  },
+  "items": [
+    {
+      "name": "Oathkeeper Shard",
+      "item_type": "weapon",
+      "weight": 3.0,
+      "value_gp": 2000.0,
+      "quantity": 1,
+      "description": "A broken shard of King Durin's ancestral warhammer Oathkeeper, separated during a fierce bombardment of the Throne Hall. Even as a fragment, the shard pulses with the ancient martial power of the Ironmantle bloodline, dramatically enhancing the wielder's raw physical strength. It can be wielded as a short sword or mounted on a new haft.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{\"str\": 2}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Ironmantle War Shield",
+      "item_type": "armor",
+      "weight": 8.0,
+      "value_gp": 1500.0,
+      "quantity": 1,
+      "description": "A heavy dwarven tower shield forged in the Anvilspire foundries and engraved with the Ironmantle clan crest. Runic wards hammered into the steel bolster the bearer's endurance and resilience, allowing them to hold the line against overwhelming force.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "offhand",
+      "stat_modifiers": "{\"con\": 1}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Runesmith's Gauntlets",
+      "item_type": "armor",
+      "weight": 2.0,
+      "value_gp": 400.0,
+      "quantity": 1,
+      "description": "A pair of finely crafted dwarven gauntlets etched with intricate runic patterns that glow faintly blue when near active magic. Worn by Ironhold's runesmiths during ward maintenance, they sharpen the wearer's analytical mind and enhance their ability to understand complex arcane systems.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{\"int\": 1}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Deepwatch Lantern",
+      "item_type": "misc",
+      "weight": 2.0,
+      "value_gp": 150.0,
+      "quantity": 1,
+      "description": "A battered brass lantern carried by members of the Deepwatch, Ironhold's specialized Underdark patrol unit. It burns with a cold blue flame that does not require oil, casts bright light in a 30-foot radius, and reveals invisible creatures within 10 feet. Essential for navigating the sealed tunnels beneath Mount Anvilspire.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Anvilspire Iron Rations",
+      "item_type": "consumable",
+      "weight": 1.5,
+      "value_gp": 15.0,
+      "quantity": 1,
+      "description": "A sealed tin of dense, heavily salted dwarven field rations packed with dried meat, stone-ground bread, and a small flask of fortifying spirits. Consuming a tin provides enough sustenance for a full day and grants 1d6+2 temporary hit points for 8 hours. Tastes like iron and determination.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "common"
+    }
+  ]
 }

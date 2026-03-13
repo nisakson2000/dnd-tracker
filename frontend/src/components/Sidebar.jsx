@@ -4,7 +4,8 @@ import {
   ScrollText, BookOpen, Shield, Sparkles, Swords,
   BookMarked, Users, Map, Globe, Dice5, ArrowLeft, User, Download,
   Library, Settings2, Heart, Bell, Bug, Crown, LayoutDashboard,
-  Star, Search, X, Zap, Wifi, BookCopy, MapPin,
+  Star, Search, X, Zap, Wifi, BookCopy, MapPin, Radio, Lightbulb, PieChart, Music, Grid3X3,
+  Calendar, Hammer, Clock, Package,
 } from 'lucide-react';
 import { useAppMode } from '../contexts/ModeContext';
 
@@ -35,18 +36,25 @@ const PLAYER_SECTION_GROUPS = [
       { id: 'npcs',       label: 'NPCs',               icon: Users },
       { id: 'quests',     label: 'Quests',             icon: Map },
       { id: 'lore',       label: 'Lore & World',       icon: Globe },
+      { id: 'downtime',   label: 'Downtime',           icon: Clock },
+      { id: 'party-loot', label: 'Party Loot',         icon: Package },
     ],
   },
   {
     label: 'Tools',
     items: [
       { id: 'dice',       label: 'Dice Roller',        icon: Dice5 },
+      { id: 'homebrew',   label: 'Homebrew Builder',   icon: Hammer },
+      { id: 'calendar',   label: 'Fantasy Calendar',   icon: Calendar },
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
       { id: 'party-connect', label: 'Party Connect',   icon: Wifi },
+      { id: 'party-analyzer', label: 'Party Analyzer',  icon: PieChart },
+      { id: 'soundboard', label: 'Soundboard',         icon: Music },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
       { id: 'export',     label: 'Export & Import',    icon: Download },
       { id: 'bugreport', label: 'Bug Report',         icon: Bug },
+      { id: 'featurerequest', label: 'Feature Request', icon: Lightbulb },
       { id: 'updates',    label: 'Updates',            icon: Bell },
     ],
   },
@@ -59,21 +67,31 @@ const DM_SECTION_GROUPS = [
       { id: 'campaign-hub', label: 'Campaign Hub',     icon: LayoutDashboard },
       { id: 'campaign-map', label: 'Campaign Map',     icon: MapPin },
       { id: 'journal',      label: 'Session Notes',    icon: BookMarked },
-      { id: 'npcs',         label: 'NPCs',             icon: Users },
       { id: 'quests',       label: 'Quests & Plot',    icon: Map },
       { id: 'lore',         label: 'Lore & Locations', icon: Globe },
     ],
   },
   {
+    label: 'World Building',
+    items: [
+      { id: 'npcs',         label: 'NPCs',             icon: Users },
+      { id: 'homebrew',     label: 'Homebrew Builder',  icon: Hammer },
+      { id: 'calendar',     label: 'Fantasy Calendar',  icon: Calendar },
+    ],
+  },
+  {
     label: 'Combat',
     items: [
-      { id: 'encounter',   label: 'Encounter Runner',  icon: Swords },
+      { id: 'encounter',          label: 'Encounter Runner',  icon: Swords },
+      { id: 'encounter-builder',  label: 'Encounter Builder', icon: Swords },
+      { id: 'battle-map',         label: 'Battle Map',        icon: Grid3X3 },
     ],
   },
   {
     label: 'Party',
     items: [
       { id: 'party-overview', label: 'Party Overview', icon: Crown },
+      { id: 'party-loot',     label: 'Party Loot',     icon: Package },
     ],
   },
   {
@@ -81,10 +99,12 @@ const DM_SECTION_GROUPS = [
     items: [
       { id: 'dice',       label: 'Dice Roller',        icon: Dice5 },
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
+      { id: 'soundboard', label: 'Soundboard',         icon: Music },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
       { id: 'export',     label: 'Export & Import',    icon: Download },
       { id: 'bugreport', label: 'Bug Report',         icon: Bug },
+      { id: 'featurerequest', label: 'Feature Request', icon: Lightbulb },
       { id: 'updates',    label: 'Updates',            icon: Bell },
     ],
   },
@@ -412,6 +432,17 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
             <BookOpen size={14} />
             Arcane Encyclopedia
           </Link>
+          {isDM && (
+            <Link
+              to="/dm/campaigns"
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 16px', fontSize: '13px', color: 'rgba(155,89,182,0.6)', textDecoration: 'none', fontFamily: 'Outfit, sans-serif', transition: 'color 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'rgba(192,132,252,0.9)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'rgba(155,89,182,0.6)'}
+            >
+              <Radio size={14} />
+              Campaign Manager
+            </Link>
+          )}
         </div>
       </nav>
     </aside>

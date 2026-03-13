@@ -308,7 +308,8 @@ export default function ExportImport({ characterId, character }) {
       await invoke('import_character', { characterId, payload: pendingImport });
       toast.success('Character imported successfully!');
       setPendingImport(null);
-      window.location.reload();
+      // Dispatch event so CharacterView reloads data without a full page reload
+      window.dispatchEvent(new CustomEvent('codex-character-reload'));
     } catch (err) {
       toast.error(`Import failed: ${err.message}`);
     } finally {

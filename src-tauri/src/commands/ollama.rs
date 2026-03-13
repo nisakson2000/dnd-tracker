@@ -186,3 +186,50 @@ pub async fn ollama_pull(
 
     Ok(())
 }
+
+// ── M-20: AI Quest Generation ──
+
+#[tauri::command]
+pub async fn generate_quest(
+    prompt: String,
+    party_level: i32,
+    setting: String,
+) -> Result<String, String> {
+    let system_prompt = format!(
+        "You are a D&D Dungeon Master's assistant. Generate a quest scaffold in markdown format for a party of level {} characters in a {} setting. \
+        Include: Quest Title, Hook, Objectives (numbered), Key NPCs, Potential Encounters, Rewards, and Complications. \
+        Keep it concise but evocative.",
+        party_level,
+        if setting.is_empty() { "fantasy" } else { &setting }
+    );
+
+    let url = format!("{}/api/generate", OLLAMA_URL);
+
+    let resp = client(120)?
+        .post(&url)
+        .json(&serde_json::json!({
+            "model": "llama3.2",
+            "prompt": format!("{}\n\nQuest theme/concept: {}", system_prompt, prompt),
+            "stream": false,
+            "options": {
+                "num_predict": 1024,
+                "temperature": 0.8,
+            },
+        }))
+        .send()
+        .await
+        .map_err(|e| format!("Failed to reach Ollama: {}", e))?;
+
+    if !resp.status().is_success() {
+        let text = resp.text().await.unwrap_or_default();
+        return Err(format!("Ollama error: {}", text));
+    }
+
+    let body: serde_json::Value = resp.json().await.map_err(|e| format!("Failed to parse response: {}", e))?;
+    let response_text = body["response"]
+        .as_str()
+        .unwrap_or("*Failed to generate quest. Make sure Ollama is running with a model installed.*")
+        .to_string();
+
+    Ok(response_text)
+}

@@ -56,6 +56,7 @@ const RACE_TOOLTIPS = {
 // ─── Quick Start Presets ─────────────────────────────────────────────────────
 
 const QUICK_START_PRESETS = [
+  // --- Core class/race combos ---
   {
     name: 'Classic Fighter',
     icon: '⚔',
@@ -116,7 +117,120 @@ const QUICK_START_PRESETS = [
     skills: ['Athletics', 'Intimidation'],
     background: 'Outlander',
   },
+  // --- Expanded race/class templates ---
+  {
+    name: 'Gnome Artificer',
+    icon: '🔧',
+    desc: 'A brilliant inventor who infuses objects with magical power.',
+    targetClass: 'Wizard',
+    targetRace: 'Gnome',
+    scores: { STR: 8, DEX: 13, CON: 14, INT: 16, WIS: 12, CHA: 10 },
+    skills: ['Arcana', 'Investigation'],
+    background: 'Guild Artisan',
+  },
+  {
+    name: 'Dragonborn Paladin',
+    icon: '🐉',
+    desc: 'A holy knight with draconic heritage, smiting evil with divine fury.',
+    targetClass: 'Paladin',
+    targetRace: 'Dragonborn',
+    scores: { STR: 16, DEX: 10, CON: 12, INT: 8, WIS: 13, CHA: 14 },
+    skills: ['Athletics', 'Persuasion'],
+    background: 'Noble',
+  },
+  {
+    name: 'Wood Elf Ranger',
+    icon: '🏹',
+    desc: 'A wilderness tracker who strikes from the shadows of the forest.',
+    targetClass: 'Ranger',
+    targetRace: 'Elf',
+    scores: { STR: 12, DEX: 16, CON: 13, INT: 10, WIS: 14, CHA: 8 },
+    skills: ['Stealth', 'Survival', 'Perception'],
+    background: 'Outlander',
+  },
+  {
+    name: 'Half-Elf Bard',
+    icon: '🎵',
+    desc: 'A silver-tongued performer who charms allies and confounds foes.',
+    targetClass: 'Bard',
+    targetRace: 'Half-Elf',
+    scores: { STR: 8, DEX: 14, CON: 12, INT: 10, WIS: 13, CHA: 16 },
+    skills: ['Persuasion', 'Performance', 'Deception'],
+    background: 'Entertainer',
+  },
+  {
+    name: 'Human Monk',
+    icon: '👊',
+    desc: 'A disciplined martial artist who channels ki into devastating strikes.',
+    targetClass: 'Monk',
+    targetRace: 'Human',
+    scores: { STR: 10, DEX: 16, CON: 13, INT: 8, WIS: 14, CHA: 12 },
+    skills: ['Acrobatics', 'Stealth'],
+    background: 'Hermit',
+  },
+  {
+    name: 'Elven Druid',
+    icon: '🌿',
+    desc: 'A guardian of the wild who shapeshifts into beasts and commands nature.',
+    targetClass: 'Druid',
+    targetRace: 'Elf',
+    scores: { STR: 10, DEX: 14, CON: 13, INT: 12, WIS: 16, CHA: 8 },
+    skills: ['Nature', 'Perception'],
+    background: 'Hermit',
+  },
+  {
+    name: 'Tiefling Sorcerer',
+    icon: '✨',
+    desc: 'Born with innate magical power fueled by infernal blood.',
+    targetClass: 'Sorcerer',
+    targetRace: 'Tiefling',
+    scores: { STR: 8, DEX: 13, CON: 14, INT: 10, WIS: 12, CHA: 16 },
+    skills: ['Arcana', 'Persuasion'],
+    background: 'Sage',
+  },
+  {
+    name: 'Dwarven Fighter',
+    icon: '🪖',
+    desc: 'An iron-willed defender wielding axe and shield with dwarven tenacity.',
+    targetClass: 'Fighter',
+    targetRace: 'Dwarf',
+    scores: { STR: 16, DEX: 10, CON: 14, INT: 12, WIS: 13, CHA: 8 },
+    skills: ['Athletics', 'Intimidation'],
+    background: 'Soldier',
+  },
+  {
+    name: 'Halfling Bard',
+    icon: '🪕',
+    desc: 'A cheerful storyteller whose music inspires courage and mends wounds.',
+    targetClass: 'Bard',
+    targetRace: 'Halfling',
+    scores: { STR: 8, DEX: 14, CON: 12, INT: 10, WIS: 13, CHA: 16 },
+    skills: ['Performance', 'Persuasion', 'Insight'],
+    background: 'Entertainer',
+  },
+  {
+    name: 'Human Paladin',
+    icon: '⚜',
+    desc: 'A righteous champion bound by a sacred oath to defend the innocent.',
+    targetClass: 'Paladin',
+    targetRace: 'Human',
+    scores: { STR: 16, DEX: 10, CON: 13, INT: 8, WIS: 12, CHA: 14 },
+    skills: ['Athletics', 'Persuasion'],
+    background: 'Acolyte',
+  },
+  {
+    name: 'Gnome Rogue',
+    icon: '🔍',
+    desc: 'A tiny master of misdirection — what you can\'t see can definitely hurt you.',
+    targetClass: 'Rogue',
+    targetRace: 'Gnome',
+    scores: { STR: 8, DEX: 16, CON: 12, INT: 14, WIS: 10, CHA: 13 },
+    skills: ['Stealth', 'Investigation', 'Sleight of Hand', 'Perception'],
+    background: 'Urchin',
+  },
 ];
+
+const MAX_REROLLS = 3; // Common house rule: 3 rerolls for 4d6 method
 
 function mod(score) {
   return Math.floor((score - 10) / 2);
@@ -436,19 +550,26 @@ function StepAbilities({ setScores, raceData }) {
   const [method, setMethod] = useState(null);
   const [rolls, setRolls] = useState(null);
   const [assignments, setAssignments] = useState({});
+  const [rerollCount, setRerollCount] = useState(0);
   const [pointBuyScores, setPointBuyScores] = useState(
     Object.fromEntries(ABILITIES.map(a => [a, 8]))
   );
 
   const pointsSpent = Object.values(pointBuyScores).reduce((sum, v) => sum + (POINT_BUY_COSTS[v] || 0), 0);
   const pointsLeft = POINT_BUY_TOTAL - pointsSpent;
+  const rerollsLeft = MAX_REROLLS - rerollCount;
 
   const racialBonuses = useMemo(() => raceData?.abilityBonuses || {}, [raceData?.abilityBonuses]);
 
   const doRoll = () => {
+    if (rolls && rerollCount >= MAX_REROLLS) {
+      toast('No rerolls remaining! Assign the scores you have.', { icon: '🎲' });
+      return;
+    }
     const r = ABILITIES.map(() => roll4d6DropLowest());
     setRolls(r);
     setAssignments({});
+    if (rolls) setRerollCount(prev => prev + 1); // Don't count the initial roll
   };
 
   const applyMethod = useCallback(() => {
@@ -509,7 +630,7 @@ function StepAbilities({ setScores, raceData }) {
   const scorePool = method === 'standard' ? STANDARD_ARRAY : method === 'roll' && rolls ? rolls.map(r => r.total) : [];
 
   const methods = [
-    { id: 'pointbuy', label: 'Point Buy', desc: '27 points to spend. Most balanced.', icon: '⚖' },
+    { id: 'pointbuy', label: 'Point Buy', desc: '27 points to spend (scores start at 8, max 15). Most balanced.', icon: '⚖' },
     { id: 'standard', label: 'Standard Array', desc: '15, 14, 13, 12, 10, 8. Quick & fair.', icon: '📋' },
     { id: 'roll', label: 'Roll 4d6', desc: 'Roll 4d6, drop lowest. Classic!', icon: '🎲' },
   ];
@@ -605,13 +726,17 @@ function StepAbilities({ setScores, raceData }) {
       {(method === 'standard' || method === 'roll') && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <button onClick={() => { setMethod(null); setRolls(null); clearAssignments(); }} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'rgba(200,175,130,0.4)', fontFamily: 'var(--font-heading)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button onClick={() => { setMethod(null); setRolls(null); clearAssignments(); setRerollCount(0); }} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'rgba(200,175,130,0.4)', fontFamily: 'var(--font-heading)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
               <ChevronLeft size={14} /> Change Method
             </button>
             <div style={{ display: 'flex', gap: 6 }}>
               {method === 'roll' && (
-                <button onClick={doRoll} style={{ display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', color: accent, fontFamily: 'var(--font-heading)', fontSize: 11 }}>
-                  <RefreshCw size={12} /> Re-roll
+                <button
+                  onClick={doRoll}
+                  disabled={rerollsLeft <= 0}
+                  style={{ display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: rerollsLeft > 0 ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)', borderRadius: 6, padding: '4px 10px', cursor: rerollsLeft > 0 ? 'pointer' : 'not-allowed', color: rerollsLeft > 0 ? accent : 'rgba(200,175,130,0.25)', fontFamily: 'var(--font-heading)', fontSize: 11 }}
+                >
+                  <RefreshCw size={12} /> Re-roll ({rerollsLeft}/{MAX_REROLLS})
                 </button>
               )}
               {Object.keys(assignments).length > 0 && (

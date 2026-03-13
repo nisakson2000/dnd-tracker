@@ -428,7 +428,7 @@ pub async fn dev_smart_pull() -> Result<serde_json::Value, String> {
             }
         }
 
-        let (stdout, stderr, ok) = run_git(
+        let (_stdout, stderr, ok) = run_git(
             &root,
             &["pull", "origin", &branch, "--ff-only"],
         ).await?;

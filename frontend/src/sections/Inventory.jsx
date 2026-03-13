@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Minus, Trash2, Package, Coins, Search, ArrowRightLeft, FlaskConical, ArrowDownAZ, ArrowDownWideNarrow, Shield, Swords, Sparkles, AlertTriangle, ChevronUp, ChevronDown, Zap } from 'lucide-react';
+import { Plus, Minus, Trash2, Package, Coins, Search, ArrowRightLeft, FlaskConical, ArrowDownAZ, ArrowDownWideNarrow, Shield, Swords, Sparkles, AlertTriangle, ChevronUp, ChevronDown, Zap, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getItems, addItem, updateItem, deleteItem, getCurrency, updateCurrency } from '../api/inventory';
 import { getOverview } from '../api/overview';
@@ -106,6 +106,7 @@ export default function Inventory({ characterId, character }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
   const [showConverter, setShowConverter] = useState(false);
   const [convertFrom, setConvertFrom] = useState('gp');
   const [convertTo, setConvertTo] = useState('sp');
@@ -268,6 +269,29 @@ export default function Inventory({ characterId, character }) {
     return { total: baseAC + shieldBonus, base: baseAC, shield: shieldBonus, hasArmor: armorFound, hasShield: shieldBonus > 0 };
   }, [items, dexScore]);
 
+  // --- Aggregate stat modifiers from all equipped items ---
+  const equippedStatBonuses = useMemo(() => {
+    const bonuses = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+    const sources = []; // track which items contribute
+    for (const item of items.filter(i => i.equipped)) {
+      try {
+        const mods = typeof item.stat_modifiers === 'string'
+          ? JSON.parse(item.stat_modifiers || '{}')
+          : (item.stat_modifiers || {});
+        let hasBonus = false;
+        for (const [stat, value] of Object.entries(mods)) {
+          const key = stat.toLowerCase();
+          if (key in bonuses && typeof value === 'number' && value !== 0) {
+            bonuses[key] += value;
+            hasBonus = true;
+          }
+        }
+        if (hasBonus) sources.push(item.name);
+      } catch { /* ignore bad JSON */ }
+    }
+    return { bonuses, sources, hasAny: sources.length > 0 };
+  }, [items]);
+
   // --- Equipment Slots Visual ---
   const equippedSlots = useMemo(() => {
     const equippedItems = items.filter(i => i.equipped);
@@ -307,6 +331,20 @@ export default function Inventory({ characterId, character }) {
       await addItem(characterId, itemData);
       toast.success('Item added');
       setShowAdd(false);
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
+  const handleEditSubmit = async (itemData) => {
+    if (!editingItem) return;
+    try {
+      await updateItem(characterId, editingItem.id, {
+        ...itemData,
+        equipped: editingItem.equipped,
+        attuned: editingItem.attuned,
+      });
+      toast.success('Item updated');
+      setEditingItem(null);
       load();
     } catch (err) { toast.error(err.message); }
   };
@@ -474,6 +512,27 @@ export default function Inventory({ characterId, character }) {
             </div>
           )}
         </div>
+        {/* Equipped Item Stat Bonuses */}
+        {equippedStatBonuses.hasAny && (
+          <div className="mt-3 pt-3 border-t border-amber-200/10">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap size={12} className="text-green-400/60" />
+              <span className="text-xs text-amber-200/50">Item Stat Bonuses</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(equippedStatBonuses.bonuses)
+                .filter(([, v]) => v !== 0)
+                .map(([stat, value]) => (
+                  <span key={stat} className="text-xs bg-green-900/20 text-green-300 px-2 py-1 rounded border border-green-500/20 font-mono">
+                    {stat.toUpperCase()} {value > 0 ? '+' : ''}{value}
+                  </span>
+                ))}
+            </div>
+            <div className="text-[10px] text-amber-200/30 mt-1.5">
+              From: {equippedStatBonuses.sources.join(', ')}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Search + Sort */}
@@ -711,6 +770,25 @@ export default function Inventory({ characterId, character }) {
                       <FlaskConical size={10} /> {consumableEffect}
                     </p>
                   )}
+                  {/* Stat modifier tags */}
+                  {(() => {
+                    try {
+                      const mods = typeof item.stat_modifiers === 'string'
+                        ? JSON.parse(item.stat_modifiers || '{}')
+                        : (item.stat_modifiers || {});
+                      const entries = Object.entries(mods).filter(([, v]) => v !== 0);
+                      if (entries.length === 0) return null;
+                      return (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {entries.map(([stat, value]) => (
+                            <span key={stat} className="text-[10px] bg-green-900/20 text-green-400/70 px-1.5 py-0.5 rounded font-mono">
+                              {stat.toUpperCase()} {value > 0 ? '+' : ''}{value}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    } catch { return null; }
+                  })()}
                 </div>
                 <div className="flex flex-col gap-1 items-end">
                   <div className="flex gap-1">
@@ -727,6 +805,9 @@ export default function Inventory({ characterId, character }) {
                         {item.attuned ? 'Unattune' : 'Attune'}
                       </button>
                     )}
+                    <button onClick={() => setEditingItem(item)} className="text-amber-200/40 hover:text-amber-200 p-1" aria-label={`Edit ${item.name || 'item'}`} title="Edit item">
+                      <Pencil size={14} />
+                    </button>
                     <button onClick={() => setConfirmDelete(item)} className="text-red-400/50 hover:text-red-400 p-1" aria-label={`Delete ${item.name || 'item'}`}>
                       <Trash2 size={14} />
                     </button>
@@ -753,6 +834,9 @@ export default function Inventory({ characterId, character }) {
       {/* Add Modal */}
       {showAdd && <ItemForm onSubmit={handleAdd} onCancel={() => setShowAdd(false)} character={character} />}
 
+      {/* Edit Modal */}
+      {editingItem && <ItemForm onSubmit={handleEditSubmit} onCancel={() => setEditingItem(null)} character={character} initialData={editingItem} />}
+
       <ConfirmDialog
         show={!!confirmDelete}
         title="Delete Item?"
@@ -764,10 +848,30 @@ export default function Inventory({ characterId, character }) {
   );
 }
 
-function ItemForm({ onSubmit, onCancel, character }) {
-  const [form, setForm] = useState({
-    name: '', item_type: 'misc', weight: 0, value_gp: 0,
-    quantity: 1, description: '', attunement: false, equipment_slot: '',
+function ItemForm({ onSubmit, onCancel, character, initialData }) {
+  const isEditing = !!initialData;
+  const [form, setForm] = useState(() => {
+    if (initialData) {
+      return {
+        name: initialData.name || '',
+        item_type: initialData.item_type || 'misc',
+        weight: initialData.weight || 0,
+        value_gp: initialData.value_gp || 0,
+        quantity: initialData.quantity || 1,
+        description: initialData.description || '',
+        attunement: initialData.attunement || false,
+        equipment_slot: initialData.equipment_slot || '',
+        rarity: initialData.rarity || 'common',
+        stat_modifiers: typeof initialData.stat_modifiers === 'string'
+          ? initialData.stat_modifiers
+          : JSON.stringify(initialData.stat_modifiers || {}),
+      };
+    }
+    return {
+      name: '', item_type: 'misc', weight: 0, value_gp: 0,
+      quantity: 1, description: '', attunement: false, equipment_slot: '',
+      rarity: 'common', stat_modifiers: '{}',
+    };
   });
   const [selectedCatalogItem, setSelectedCatalogItem] = useState('');
   const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
@@ -814,7 +918,7 @@ function ItemForm({ onSubmit, onCancel, character }) {
     <ModalPortal>
       <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onCancel()}>
       <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="font-display text-lg text-amber-100 mb-4">Add Item</h3>
+        <h3 className="font-display text-lg text-amber-100 mb-4">{isEditing ? 'Edit Item' : 'Add Item'}</h3>
         <div className="space-y-3">
           <select className="input w-full" value={form.item_type} onChange={e => { update('item_type', e.target.value); setSelectedCatalogItem(''); }}>
             {['weapon','armor','wondrous','consumable','misc'].map(t => (
@@ -895,13 +999,55 @@ function ItemForm({ onSubmit, onCancel, character }) {
             <div><label className="label">Qty</label><input type="number" className="input w-full" min={1} value={form.quantity} onChange={e => update('quantity', parseInt(e.target.value) || 1)} /></div>
           </div>
           <textarea className="input w-full h-16 resize-none" placeholder="Description / properties" value={form.description} onChange={e => update('description', e.target.value)} />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Rarity</label>
+              <select className="input w-full" value={form.rarity} onChange={e => update('rarity', e.target.value)}>
+                {['common', 'uncommon', 'rare', 'very rare', 'legendary'].map(r => (
+                  <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="label">Stat Bonuses</label>
+              {(() => {
+                let mods = {};
+                try { mods = JSON.parse(form.stat_modifiers || '{}'); } catch {}
+                const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+                const updateMods = (newMods) => {
+                  const cleaned = Object.fromEntries(Object.entries(newMods).filter(([, v]) => v !== 0 && v !== ''));
+                  update('stat_modifiers', Object.keys(cleaned).length ? JSON.stringify(cleaned) : '{}');
+                };
+                return (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {ABILITIES.map(ab => (
+                      <div key={ab} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <span style={{ fontSize: 10, color: 'rgba(200,175,130,0.5)', textTransform: 'uppercase', width: 24 }}>{ab}</span>
+                        <input
+                          type="number"
+                          className="input"
+                          style={{ width: 48, padding: '2px 4px', fontSize: 12, textAlign: 'center' }}
+                          value={mods[ab] || ''}
+                          placeholder="0"
+                          onChange={e => {
+                            const val = e.target.value === '' ? '' : parseInt(e.target.value) || 0;
+                            updateMods({ ...mods, [ab]: val });
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
           <label className="flex items-center gap-2 text-sm text-amber-200/60">
             <input type="checkbox" checked={form.attunement} onChange={e => update('attunement', e.target.checked)} /> Requires Attunement
           </label>
         </div>
         <div className="flex gap-3 justify-end mt-4">
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
-          <button onClick={() => form.name && onSubmit({ ...form, attuned: false, equipped: false })} className="btn-primary text-sm">Add Item</button>
+          <button onClick={() => form.name && onSubmit(isEditing ? { ...form } : { ...form, attuned: false, equipped: false })} className="btn-primary text-sm">{isEditing ? 'Save Changes' : 'Add Item'}</button>
         </div>
       </div>
       </div>

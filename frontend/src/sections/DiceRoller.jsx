@@ -1,8 +1,9 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Dice5, Copy, ChevronDown, ChevronUp, BarChart3, Save, X, Play, Pencil, Check, Trash2, Clock, ClipboardCopy, RotateCcw } from 'lucide-react';
+import { Dice5, Copy, ChevronDown, ChevronUp, BarChart3, Save, X, Play, Pencil, Check, Trash2, Clock, ClipboardCopy, RotateCcw, Radio, EyeOff } from 'lucide-react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { invoke } from '@tauri-apps/api/core';
 import HelpTooltip from '../components/HelpTooltip';
 import { HELP } from '../data/helpText';
 import { computeConditionEffects } from '../data/conditionEffects';
@@ -208,7 +209,7 @@ function formatTimeAgo(ts) {
 }
 
 
-export default function DiceRoller({ characterId, activeConditions = [], diceHistory, onDiceHistoryChange }) {
+export default function DiceRoller({ characterId, activeConditions = [], diceHistory, onDiceHistoryChange, sessionActive = false, playerUuid = '', isDM = false }) {
   // Use lifted state if provided, else local state (fallback)
   const [localHistory, setLocalHistory] = useState([]);
   const history = diceHistory || localHistory;
@@ -219,6 +220,8 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
   const [lastRoll, setLastRoll] = useState(null);
   const [rolling, setRolling] = useState(false);
   const [rollMode, setRollMode] = useState('normal');
+  const [broadcastOn, setBroadcastOn] = useState(false);
+  const [dmSecretRoll, setDmSecretRoll] = useState(false);
   const [statBlockResult, setStatBlockResult] = useState(null);
   const [showStatBlock, setShowStatBlock] = useState(false);
   const [statMode, setStatMode] = useState('roll'); // 'roll' | 'standard' | 'pointbuy'
@@ -356,9 +359,26 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
       setLastRoll(entry);
       setHistory(prev => [entry, ...prev].slice(0, MAX_HISTORY));
       setRolling(false);
+
+      // Broadcast roll to session if toggle is on and not a DM secret roll
+      if (broadcastOn && sessionActive && !(isDM && dmSecretRoll)) {
+        try {
+          invoke('ws_broadcast_event', {
+            eventJson: JSON.stringify({
+              type: 'RollBroadcast',
+              player_uuid: playerUuid,
+              expression: entry.expr,
+              result: entry.rolls || [],
+              total: entry.total,
+              label: entry.label || '',
+            }),
+          }).catch(() => {});
+        } catch { /* ignore broadcast errors */ }
+      }
+
       if (rollLabel) setRollLabel('');
     }, 300);
-  }, [rollMode, rollLabel, setHistory]);
+  }, [rollMode, rollLabel, setHistory, broadcastOn, sessionActive, isDM, dmSecretRoll, playerUuid]);
 
   /**
    * Legacy simple roll for quick buttons.
@@ -522,6 +542,54 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
           <p className="text-xs text-amber-200/40 font-normal mt-0.5">Roll any combination of dice. Supports advanced expressions like &quot;2d6+1d8+5&quot;, &quot;4d6kh3&quot; (keep highest), &quot;2d20kl1&quot; (keep lowest).</p>
         </div>
       </h2>
+
+      {/* Broadcast Toggle (only shown in active session) */}
+      {sessionActive && (
+        <div className="card">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Radio size={14} className={broadcastOn ? 'text-emerald-400' : 'text-amber-200/30'} />
+              <span className="font-display text-amber-100 text-sm">Broadcast Rolls</span>
+              <span className="text-xs text-amber-200/30">
+                {broadcastOn ? 'Rolls are shared with the session' : 'Rolls are private'}
+              </span>
+            </div>
+            <button
+              onClick={() => setBroadcastOn(b => !b)}
+              className={`relative w-10 h-5 rounded-full transition-colors ${
+                broadcastOn ? 'bg-emerald-600' : 'bg-amber-200/10'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                  broadcastOn ? 'left-5.5 translate-x-0.5' : 'left-0.5'
+                }`}
+                style={{ left: broadcastOn ? '22px' : '2px' }}
+              />
+            </button>
+          </div>
+          {isDM && broadcastOn && (
+            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-amber-200/10">
+              <EyeOff size={12} className={dmSecretRoll ? 'text-purple-400' : 'text-amber-200/20'} />
+              <span className="text-xs text-amber-200/40">DM Secret Roll</span>
+              <button
+                onClick={() => setDmSecretRoll(s => !s)}
+                className={`relative w-8 h-4 rounded-full transition-colors ${
+                  dmSecretRoll ? 'bg-purple-600' : 'bg-amber-200/10'
+                }`}
+              >
+                <span
+                  className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform"
+                  style={{ left: dmSecretRoll ? '16px' : '2px' }}
+                />
+              </button>
+              <span className="text-xs text-amber-200/20">
+                {dmSecretRoll ? 'Next roll stays hidden' : 'Off'}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Roll Label */}
       <div className="card">

@@ -11,6 +11,10 @@ pub struct AppState {
     pub connections: Mutex<HashMap<String, Mutex<Connection>>>,
     /// Wiki connection
     pub wiki_conn: Mutex<Connection>,
+    /// Campaign database connection (DM side)
+    pub campaign_conn: Mutex<Option<Connection>>,
+    /// Currently active campaign ID
+    pub active_campaign: Mutex<Option<String>>,
 }
 
 impl AppState {
@@ -19,6 +23,8 @@ impl AppState {
             data_dir,
             connections: Mutex::new(HashMap::new()),
             wiki_conn: Mutex::new(wiki_conn),
+            campaign_conn: Mutex::new(None),
+            active_campaign: Mutex::new(None),
         }
     }
 
@@ -225,7 +231,9 @@ pub fn init_character_tables(conn: &Connection) -> SqlResult<()> {
             attunement INTEGER DEFAULT 0,
             attuned INTEGER DEFAULT 0,
             equipped INTEGER DEFAULT 0,
-            equipment_slot TEXT DEFAULT ''
+            equipment_slot TEXT DEFAULT '',
+            stat_modifiers TEXT DEFAULT '{}',
+            rarity TEXT DEFAULT 'common'
         );
 
         CREATE TABLE IF NOT EXISTS currency (
@@ -383,15 +391,20 @@ pub fn migrate_character_db(conn: &Connection) -> SqlResult<()> {
 
     // ── items columns ──
     add_column_if_missing(conn, "items", "equipment_slot", "TEXT", "''");
+    add_column_if_missing(conn, "items", "stat_modifiers", "TEXT", "'{}'");
+    add_column_if_missing(conn, "items", "rarity", "TEXT", "'common'");
 
     // ── Automation engine columns ──
     add_column_if_missing(conn, "character_overview", "hp_calc_method", "TEXT", "'auto'");
     add_column_if_missing(conn, "character_overview", "initiative_bonus", "INTEGER", "0");
     add_column_if_missing(conn, "character_overview", "spell_attack_bonus", "INTEGER", "0");
 
+    // ── Damage modifiers (resistances, immunities, vulnerabilities) ──
+    add_column_if_missing(conn, "character_overview", "damage_modifiers", "TEXT", "'{}'");
+
     // ── Update schema version ──
     conn.execute(
-        "INSERT OR REPLACE INTO schema_meta (key, value) VALUES ('schema_version', '4')",
+        "INSERT OR REPLACE INTO schema_meta (key, value) VALUES ('schema_version', '5')",
         [],
     )?;
 

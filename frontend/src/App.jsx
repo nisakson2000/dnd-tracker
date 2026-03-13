@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { invoke } from '@tauri-apps/api/core';
 import { Search, Wand2, Sword, Users, ScrollText, BookOpen, Sparkles, Clock, ArrowRight } from 'lucide-react';
 import { ModeProvider, useAppMode } from './contexts/ModeContext';
+import { SessionProvider } from './contexts/SessionContext';
 import { useDevUpdateCheck } from './hooks/useDevUpdateCheck';
 import { APP_VERSION } from './version';
 import ModeSelect from './pages/ModeSelect';
@@ -19,6 +20,12 @@ import BootupVideo from './components/BootupVideo';
 
 // Lazy-loaded standalone pages
 const UpdatesPage = lazy(() => import('./pages/UpdatesPage'));
+// DM & Player session pages — lazy loaded
+const DMCampaignList = lazy(() => import('./pages/DMCampaignList'));
+const DMLobby = lazy(() => import('./pages/DMLobby'));
+const DMSession = lazy(() => import('./pages/DMSession'));
+const PlayerJoin = lazy(() => import('./pages/PlayerJoin'));
+const PlayerSession = lazy(() => import('./pages/PlayerSession'));
 
 // Dev-only components — lazy loaded, tree-shaken in production
 const DevToolsPanel = import.meta.env.DEV
@@ -53,26 +60,31 @@ class ErrorBoundary extends Component {
         <div style={{
           position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: '#04040b', fontFamily: 'var(--font-ui, "DM Sans", sans-serif)',
+          border: '3px solid #ef4444',
         }}>
           <div style={{ textAlign: 'center', maxWidth: '420px', padding: '0 24px' }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📖</div>
             <h1 style={{
-              fontFamily: 'var(--font-display, "Cinzel", serif)', fontSize: '24px', fontWeight: 700,
-              color: '#e8d9b5', marginBottom: '8px',
+              fontFamily: 'var(--font-display, "Cinzel", serif)', fontSize: '28px', fontWeight: 700,
+              color: '#fca5a5', marginBottom: '8px',
+              textShadow: '0 0 20px rgba(239,68,68,0.3)',
             }}>
               Something went wrong
             </h1>
-            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: '24px' }}>
+            <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: '24px' }}>
               The Codex encountered an unexpected error. Your character data is safe — click below to reload.
             </p>
             {this.state.error && (
               <pre style={{
-                fontSize: '11px', color: 'rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '12px',
-                marginBottom: '20px', textAlign: 'left', overflow: 'auto', maxHeight: '120px',
+                fontSize: '12px', color: '#fca5a5', background: 'rgba(239,68,68,0.08)',
+                border: '1px solid rgba(239,68,68,0.25)', borderRadius: '8px', padding: '12px',
+                marginBottom: '20px', textAlign: 'left', overflow: 'auto', maxHeight: '160px',
                 fontFamily: 'var(--font-mono, monospace)',
               }}>
                 {this.state.error.message || 'Unknown error'}
+                {this.state.error.stack && (
+                  '\n\n' + this.state.error.stack
+                )}
               </pre>
             )}
             <button
@@ -766,12 +778,170 @@ function CommandPalette({ characterId }) {
   );
 }
 
+
+// ─── Navigation Bridge ──────────────────────────────────────────────────────
+// Registers react-router navigate with ModeContext so mode changes can trigger navigation
+function NavigationBridge() {
+  const navigate = useNavigate();
+  const { mode, registerNavigate } = useAppMode();
+  const didInitialNav = useRef(false);
+
+  useEffect(() => {
+    registerNavigate(navigate);
+  }, [navigate, registerNavigate]);
+
+  // On first mount, always navigate to the correct starting route for the mode
+  useEffect(() => {
+    if (didInitialNav.current) return;
+    didInitialNav.current = true;
+    // Both modes start at Dashboard — DM accesses campaigns via sidebar
+    navigate('/', { replace: true });
+  }, [mode, navigate]);
+
+  return null;
+}
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 
+// ─── Dev Sync Gate ──────────────────────────────────────────────────────────
+// On dev startup, checks git for upstream changes and forces a pull before
+// the app can proceed. Prevents 2 devs from diverging.
+
+function DevSyncGate({ onReady }) {
+  const [status, setStatus] = useState('checking'); // checking | pulling | conflict | ready
+  const [info, setInfo] = useState(null);
+  const triedRef = useRef(false);
+
+  useEffect(() => {
+    if (triedRef.current) return;
+    triedRef.current = true;
+
+    (async () => {
+      try {
+        const result = await invoke('check_git_updates');
+        if (!result.has_update) {
+          setStatus('ready');
+          onReady();
+          return;
+        }
+
+        setInfo(result);
+        setStatus('pulling');
+
+        const pullResult = await invoke('dev_smart_pull');
+        if (!pullResult.success) {
+          setStatus('conflict');
+          setInfo(pullResult);
+          return;
+        }
+
+        // Store success for post-reload toast
+        localStorage.setItem('dev-update-result', JSON.stringify({
+          success: true,
+          message: `Startup sync: ${pullResult.message || 'Pulled latest changes'}`,
+          action: pullResult.action || 'clean_rebase',
+        }));
+        window.location.reload();
+      } catch (err) {
+        console.warn('[dev-sync-gate] Check failed, proceeding anyway:', err);
+        setStatus('ready');
+        onReady();
+      }
+    })();
+  }, [onReady]);
+
+  if (status === 'ready') return null;
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 99990,
+      background: 'var(--bg, #04040b)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', gap: '16px',
+      fontFamily: 'var(--font-ui, "DM Sans", sans-serif)',
+      paddingTop: 'var(--dev-banner-h, 0px)',
+    }}>
+      {status === 'checking' && (
+        <>
+          <div style={{ fontSize: '14px', color: 'var(--text-dim, #aaa)' }}>
+            Checking for upstream changes...
+          </div>
+        </>
+      )}
+      {status === 'pulling' && (
+        <>
+          <div style={{
+            width: '32px', height: '32px', borderRadius: '50%',
+            border: '3px solid rgba(124,58,237,0.2)',
+            borderTopColor: '#7c3aed',
+            animation: 'spin 0.8s linear infinite',
+          }} />
+          <div style={{ fontSize: '14px', color: '#c084fc', fontWeight: 600 }}>
+            Syncing with remote...
+          </div>
+          {info?.commit_message && (
+            <div style={{ fontSize: '12px', color: 'var(--text-mute, #666)', maxWidth: '400px', textAlign: 'center' }}>
+              Pulling: &ldquo;{info.commit_message}&rdquo;
+            </div>
+          )}
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </>
+      )}
+      {status === 'conflict' && (
+        <>
+          <div style={{ fontSize: '16px', color: '#ef4444', fontWeight: 700 }}>
+            Merge Conflict
+          </div>
+          <div style={{
+            fontSize: '12px', color: 'var(--text-dim, #aaa)',
+            maxWidth: '480px', textAlign: 'center', lineHeight: 1.6,
+          }}>
+            Could not auto-merge upstream changes. Conflicting files:
+          </div>
+          <div style={{
+            background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+            borderRadius: '8px', padding: '12px 16px', maxWidth: '480px',
+            fontFamily: 'var(--font-mono, monospace)', fontSize: '11px', color: '#fca5a5',
+          }}>
+            {(info?.conflict_files || info?.overlapping_files || []).map((f, i) => (
+              <div key={i}>{f}</div>
+            ))}
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--text-mute)', marginTop: '8px' }}>
+            Resolve conflicts in your terminal, then restart.
+          </div>
+          <button
+            onClick={() => { setStatus('ready'); onReady(); }}
+            style={{
+              marginTop: '8px', padding: '8px 20px', borderRadius: '8px',
+              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+              color: 'var(--text-dim)', fontSize: '12px', fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'var(--font-ui)',
+            }}
+          >
+            Skip & Continue Anyway
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 function AppContent() {
-  const [bootupDone, setBootupDone] = useState(import.meta.env.DEV ? false : true);
+  const [bootupDone, setBootupDone] = useState(false);
+  const [syncDone, setSyncDone] = useState(!import.meta.env.DEV);
   const [updateDone, setUpdateDone] = useState(false);
   const { mode } = useAppMode();
+  const handleSyncReady = useCallback(() => setSyncDone(true), []);
+
+  // Flush any queued bug reports / feature requests on startup
+  useEffect(() => {
+    invoke('flush_pending_reports').then(result => {
+      if (result?.flushed > 0) {
+        console.log(`[Reports] Flushed ${result.flushed} queued report(s) to GitHub`);
+      }
+    }).catch(() => {}); // Silent — no internet is fine
+  }, []);
 
   return (
     <>
@@ -806,12 +976,15 @@ function AppContent() {
         }}
       />
 
-      {/* Step 0: Bootup video (dev builds only) */}
-      {import.meta.env.DEV && !bootupDone && <BootupVideo onDone={() => setBootupDone(true)} />}
+      {/* Step 0: Bootup video */}
+      {!bootupDone && <BootupVideo onDone={() => setBootupDone(true)} />}
+
+      {/* Step 0.5: Dev sync gate — force pull if behind remote (dev builds only) */}
+      {import.meta.env.DEV && bootupDone && !syncDone && <DevSyncGate onReady={handleSyncReady} />}
 
       {/* Step 1: Update splash */}
       <AnimatePresence>
-        {bootupDone && !updateDone && (
+        {bootupDone && syncDone && !updateDone && (
           <UpdateScreen
             key="update-splash"
             onDone={() => setUpdateDone(true)}
@@ -821,20 +994,32 @@ function AppContent() {
       </AnimatePresence>
 
       {/* Step 2: Mode selection (if no mode chosen yet) */}
-      {updateDone && !mode && <ModeSelect />}
+      {syncDone && updateDone && !mode && <ModeSelect />}
 
       {/* Step 3: Main app (once mode is selected) */}
-      {updateDone && mode && (
+      {syncDone && updateDone && mode && (
         <BrowserRouter>
-          <CommandPalette />
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/character/:characterId" element={<CharacterView />} />
-            <Route path="/character/:characterId/setup" element={<CharacterSetup />} />
-            <Route path="/wiki" element={<WikiPage />} />
-            <Route path="/wiki/:slug" element={<WikiArticlePage />} />
-            <Route path="/updates" element={<Suspense fallback={null}><UpdatesPage /></Suspense>} />
-          </Routes>
+          <NavigationBridge />
+          <SessionProvider>
+            <CommandPalette />
+            <ErrorBoundary>
+              <Suspense fallback={null}>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/character/:characterId" element={<CharacterView />} />
+                  <Route path="/character/:characterId/setup" element={<CharacterSetup />} />
+                  <Route path="/wiki" element={<WikiPage />} />
+                  <Route path="/wiki/:slug" element={<WikiArticlePage />} />
+                  <Route path="/updates" element={<UpdatesPage />} />
+                  <Route path="/dm/campaigns" element={<DMCampaignList />} />
+                  <Route path="/dm/lobby/:id" element={<DMLobby />} />
+                  <Route path="/dm/session/:id" element={<DMSession />} />
+                  <Route path="/player/join" element={<PlayerJoin />} />
+                  <Route path="/player/session" element={<PlayerSession />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
+          </SessionProvider>
         </BrowserRouter>
       )}
     </>
@@ -847,7 +1032,7 @@ export default function App() {
   return (
     <>
       {/* Dev banner — completely outside ErrorBoundary/ModeProvider so it always renders on every screen */}
-      <DevBanner onOpenDevSettings={() => setShowDevSettings(true)} />
+      {import.meta.env.DEV && <DevBanner onOpenDevSettings={() => setShowDevSettings(true)} />}
 
       {/* Dev tools panel — Ctrl+Shift+D to toggle */}
       {import.meta.env.DEV && (

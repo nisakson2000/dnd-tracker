@@ -47,6 +47,12 @@ pub struct OverviewData {
     pub initiative_bonus: i64,
     #[serde(default)]
     pub spell_attack_bonus: i64,
+    #[serde(default = "default_damage_modifiers")]
+    pub damage_modifiers: String,
+}
+
+fn default_damage_modifiers() -> String {
+    "{}".to_string()
 }
 
 fn default_hp_calc_method() -> String {
@@ -95,7 +101,8 @@ pub fn get_overview(
                         senses, languages, proficiencies_armor, proficiencies_weapons,
                         proficiencies_tools, campaign_name, exhaustion_level, ruleset,
                         multiclass_data, notes, climb_speed, swim_speed, fly_speed,
-                        hp_calc_method, initiative_bonus, spell_attack_bonus
+                        hp_calc_method, initiative_bonus, spell_attack_bonus,
+                        damage_modifiers
                  FROM character_overview LIMIT 1",
                 [],
                 |row| {
@@ -135,6 +142,7 @@ pub fn get_overview(
                         hp_calc_method: row.get(32).unwrap_or_else(|_| "auto".to_string()),
                         initiative_bonus: row.get(33).unwrap_or(0),
                         spell_attack_bonus: row.get(34).unwrap_or(0),
+                        damage_modifiers: row.get(35).unwrap_or_else(|_| "{}".to_string()),
                     })
                 },
             )
@@ -226,7 +234,8 @@ pub fn update_overview(
                 proficiencies_armor=?22, proficiencies_weapons=?23, proficiencies_tools=?24,
                 campaign_name=?25, exhaustion_level=?26, ruleset=?27, multiclass_data=?28,
                 updated_at=?29, notes=?30, climb_speed=?31, swim_speed=?32, fly_speed=?33,
-                hp_calc_method=?34, initiative_bonus=?35, spell_attack_bonus=?36
+                hp_calc_method=?34, initiative_bonus=?35, spell_attack_bonus=?36,
+                damage_modifiers=?37
              WHERE id=1",
             rusqlite::params![
                 payload.name, payload.race, payload.subrace, payload.primary_class,
@@ -240,6 +249,7 @@ pub fn update_overview(
                 payload.ruleset, payload.multiclass_data, now,
                 payload.notes, payload.climb_speed, payload.swim_speed, payload.fly_speed,
                 payload.hp_calc_method, payload.initiative_bonus, payload.spell_attack_bonus,
+                payload.damage_modifiers,
             ],
         )
         .map_err(|e| format!("Failed to save character overview: {}", e))?;

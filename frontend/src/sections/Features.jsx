@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Plus, Trash2, ScrollText, RotateCcw, RefreshCw, Search, ChevronDown, ChevronUp, Pin, PinOff, Zap, ChevronsDown, ChevronsUp, Coffee, Moon, Clock, ArrowRight, Star, Eye, Shield, Lock, Filter } from 'lucide-react';
+import { Plus, Trash2, ScrollText, RotateCcw, RefreshCw, Search, ChevronDown, ChevronUp, Pin, PinOff, Zap, ChevronsDown, ChevronsUp, Coffee, Moon, Clock, ArrowRight, Star, Eye, Shield, Lock, Filter, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { getFeatures, addFeature, updateFeature, deleteFeature } from '../api/features';
@@ -8,6 +8,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
 import { HELP } from '../data/helpText';
 import { CLASS_FEATURES } from '../data/classFeatures';
+import { useAppMode } from '../contexts/ModeContext';
 
 const RECHARGE_OPTIONS = ['', 'short_rest', 'long_rest', 'dawn', 'manual'];
 const RECHARGE_LABELS = { '': 'None', 'short_rest': 'Short Rest', 'long_rest': 'Long Rest', 'dawn': 'At Dawn', 'manual': 'Manual' };
@@ -57,9 +58,12 @@ function classifyFeature(f) {
 }
 
 export default function Features({ characterId, character }) {
+  const { mode: appMode } = useAppMode();
+  const isDM = appMode === 'dm';
   const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [editingFeature, setEditingFeature] = useState(null);
   const [filter, setFilter] = useState('all');
   const [activationFilter, setActivationFilter] = useState('all');
   const [rechargeFilter, setRechargeFilter] = useState('all');
@@ -132,6 +136,30 @@ export default function Features({ characterId, character }) {
     } catch (err) { toast.error(err.message); }
   };
 
+  const handleEdit = async (data) => {
+    if (!editingFeature) return;
+    try {
+      // Preserve uses_remaining and pinned state — only update editable fields
+      const updated = {
+        ...editingFeature,
+        name: data.name,
+        source: data.source,
+        source_level: data.source_level,
+        feature_type: data.feature_type,
+        description: data.description,
+        uses_total: data.uses_total,
+        recharge: data.recharge,
+        activation: data.activation,
+        // If uses_total decreased below current remaining, clamp remaining
+        uses_remaining: Math.min(editingFeature.uses_remaining ?? 0, data.uses_total ?? 0),
+      };
+      await updateFeature(characterId, editingFeature.id, updated);
+      toast.success('Feature updated');
+      setEditingFeature(null);
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
   const spendCharge = async (feature) => {
     if ((feature.uses_remaining ?? 0) <= 0) {
       toast.error(`No uses left for ${feature.name || 'this feature'}`);
@@ -184,16 +212,16 @@ export default function Features({ characterId, character }) {
   };
 
   const shortRestRestore = async () => {
-    // Short rest restores features with recharge "short_rest" or "long_rest" (short or long rest)
+    // Short rest only restores features with recharge "short_rest" — long_rest features wait for long rest
     const targets = features.filter(f =>
       (f.uses_total ?? 0) > 0 &&
       (f.uses_remaining ?? 0) < (f.uses_total ?? 0) &&
-      (f.recharge === 'short_rest' || f.recharge === 'long_rest')
+      f.recharge === 'short_rest'
     );
     if (targets.length === 0) { toast('No features to restore on short rest', { icon: '\u2139\uFE0F' }); return; }
     const names = targets.map(f => f.name).filter(Boolean);
     setFeatures(prev => prev.map(f =>
-      (f.uses_total ?? 0) > 0 && (f.recharge === 'short_rest' || f.recharge === 'long_rest')
+      (f.uses_total ?? 0) > 0 && f.recharge === 'short_rest'
         ? { ...f, uses_remaining: f.uses_total } : f
     ));
     flashRestored(targets.map(f => f.id));
@@ -225,7 +253,7 @@ export default function Features({ characterId, character }) {
 
   const shortRestCount = features.filter(f =>
     (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0) &&
-    (f.recharge === 'short_rest' || f.recharge === 'long_rest')
+    f.recharge === 'short_rest'
   ).length;
   const longRestCount = features.filter(f =>
     (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0)
@@ -360,9 +388,11 @@ export default function Features({ characterId, character }) {
           </div>
         </h2>
         <div className="flex items-center gap-2">
-          <button onClick={() => setShowAdd(true)} className="btn-primary text-xs flex items-center gap-1">
-            <Plus size={12} /> Add Feature
-          </button>
+          {isDM && (
+            <button onClick={() => setShowAdd(true)} className="btn-primary text-xs flex items-center gap-1">
+              <Plus size={12} /> Add Feature
+            </button>
+          )}
         </div>
       </div>
 
@@ -618,7 +648,8 @@ export default function Features({ characterId, character }) {
                       onUseCharge={() => spendCharge(f)}
                       onRestoreCharge={() => restoreCharge(f)}
                       onRestoreAll={() => restoreAll(f)}
-                      onDelete={() => setConfirmDelete(f)}
+                      onEdit={isDM ? () => setEditingFeature(f) : undefined}
+                      onDelete={isDM ? () => setConfirmDelete(f) : undefined}
                       allExpanded={allExpanded}
                       lastUsed={usageHistory[f.id]?.slice(-1)[0]?.ts}
                     />
@@ -631,6 +662,7 @@ export default function Features({ characterId, character }) {
       )}
 
       {showAdd && <FeatureForm onSubmit={handleAdd} onCancel={() => setShowAdd(false)} />}
+      {editingFeature && <FeatureForm initialData={editingFeature} onSubmit={handleEdit} onCancel={() => setEditingFeature(null)} />}
 
       <ConfirmDialog
         show={!!confirmDelete}
@@ -644,7 +676,7 @@ export default function Features({ characterId, character }) {
 }
 
 /* --- Feature Card --- */
-function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharge, onRestoreCharge, onRestoreAll, onDelete, allExpanded, lastUsed }) {
+function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharge, onRestoreCharge, onRestoreAll, onEdit, onDelete, allExpanded, lastUsed }) {
   const hasCharges = (f.uses_total ?? 0) > 0;
   const remaining = f.uses_remaining ?? 0;
   const total = f.uses_total ?? 0;
@@ -750,9 +782,18 @@ function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharg
             }`}>{f.feature_type}</span>
           </div>
         </div>
-        <button onClick={onDelete} className="text-red-400/50 hover:text-red-400 flex-shrink-0" aria-label={`Delete ${f.name || 'feature'}`}>
-          <Trash2 size={14} />
-        </button>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {onEdit && (
+            <button onClick={onEdit} className="text-amber-200/30 hover:text-amber-200/70 transition-colors" aria-label={`Edit ${f.name || 'feature'}`} title="Edit feature">
+              <Pencil size={13} />
+            </button>
+          )}
+          {onDelete && (
+            <button onClick={onDelete} className="text-red-400/50 hover:text-red-400 transition-colors" aria-label={`Delete ${f.name || 'feature'}`}>
+              <Trash2 size={14} />
+            </button>
+          )}
+        </div>
       </div>
 
       {f.description && <FeatureDescription text={f.description} allExpanded={allExpanded} />}
@@ -908,10 +949,13 @@ function FeatureDescription({ text, allExpanded }) {
 }
 
 /* --- Feature Form --- */
-function FeatureForm({ onSubmit, onCancel }) {
+function FeatureForm({ onSubmit, onCancel, initialData }) {
+  const isEditing = !!initialData;
   const [form, setForm] = useState({
-    name: '', source: '', source_level: 0, feature_type: 'class', description: '',
-    uses_total: 0, uses_remaining: 0, recharge: '', activation: '',
+    name: initialData?.name || '', source: initialData?.source || '', source_level: initialData?.source_level || 0,
+    feature_type: initialData?.feature_type || 'class', description: initialData?.description || '',
+    uses_total: initialData?.uses_total || 0, uses_remaining: initialData?.uses_remaining || 0,
+    recharge: initialData?.recharge || '', activation: initialData?.activation || '',
   });
   const [nameError, setNameError] = useState(false);
   const update = (f, v) => {
@@ -933,7 +977,7 @@ function FeatureForm({ onSubmit, onCancel }) {
     <ModalPortal>
       <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onCancel()}>
       <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="font-display text-lg text-amber-100 mb-4">Add Feature</h3>
+        <h3 className="font-display text-lg text-amber-100 mb-4">{isEditing ? 'Edit Feature' : 'Add Feature'}</h3>
         <div className="space-y-3">
           <div>
             <input className={`input w-full ${nameError ? 'border-red-500' : ''}`} placeholder="e.g. Action Surge, Sneak Attack, Lucky..." value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
@@ -983,7 +1027,7 @@ function FeatureForm({ onSubmit, onCancel }) {
         </div>
         <div className="flex gap-3 justify-end mt-4">
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
-          <button onClick={handleSubmit} className="btn-primary text-sm">Add</button>
+          <button onClick={handleSubmit} className="btn-primary text-sm">{isEditing ? 'Save' : 'Add'}</button>
         </div>
       </div>
       </div>

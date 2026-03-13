@@ -290,18 +290,39 @@ export default function BugReport({ characterId, character, errors = [], onClear
         autoErrors: errors.slice(0, 10),
       };
 
-      const path = await writeToDesktop(report);
+      // Build GitHub issue
+      const issueTitle = `[Bug] ${description.trim().slice(0, 80)}`;
+      const stepsText = formatSteps(steps);
+      const issueBody = [
+        `**Severity:** ${severity.toUpperCase()}`,
+        `**App Version:** ${APP_VERSION}`,
+        `**OS:** ${env.os} | **Screen:** ${env.screen}`,
+        character?.name ? `**Character:** ${character.name} (${character.primary_class || '?'} Lv${character.level || '?'})` : '',
+        '',
+        '## Description',
+        description.trim(),
+        '',
+        '## Expected Behavior',
+        expected.trim(),
+        stepsText ? `\n## Steps to Reproduce\n${stepsText}` : '',
+        recentAutoErrors.length > 0 ? `\n## Auto-Captured Errors (${recentAutoErrors.length})\n${recentAutoErrors.map(e => `- \`${e.message}\``).join('\n')}` : '',
+        '',
+        '---',
+        `*Report ID: ${reportId} | Submitted: ${new Date().toISOString()}*`,
+      ].filter(Boolean).join('\n');
 
-      if (path) {
-        toast.success(`Bug report ${reportId} saved to Desktop!`, { duration: 4000 });
-        setRecentReports(prev => [{ ...report, path }, ...prev].slice(0, 20));
-        setDescription('');
-        setExpected('');
-        setSteps(['']);
-        setSeverity('medium');
+      const result = await invoke('submit_bug_report', { title: issueTitle, body: issueBody });
+
+      if (result.status === 'submitted') {
+        toast.success(`Bug report submitted to GitHub!`, { duration: 4000 });
       } else {
-        toast.error('Failed to write bug report');
+        toast.success(`Bug report saved — will submit when online`, { duration: 4000 });
       }
+      setRecentReports(prev => [{ ...report, status: result.status, url: result.url }, ...prev].slice(0, 20));
+      setDescription('');
+      setExpected('');
+      setSteps(['']);
+      setSeverity('medium');
     } catch (err) {
       toast.error(`Error: ${err.message || err}`);
     } finally {
@@ -319,7 +340,7 @@ export default function BugReport({ characterId, character, errors = [], onClear
           <Bug size={20} /> Bug Report
         </h2>
         <p className="text-sm text-amber-200/40 mt-1.5">
-          Report issues you encounter during gameplay. Reports are saved to <code className="text-amber-200/60 bg-amber-200/5 px-1 rounded text-xs">codex-bug-reports.log</code> on your Desktop.
+          Report issues you encounter during gameplay. Reports are submitted directly to the development team via GitHub. If you're offline, they'll be submitted automatically next time you connect.
         </p>
         {IS_DEV && (
           <div className="flex items-center gap-2 mt-2 text-xs text-emerald-400/70 bg-emerald-400/5 border border-emerald-400/15 rounded px-3 py-1.5">
@@ -560,7 +581,9 @@ export default function BugReport({ characterId, character, errors = [], onClear
                   {formatTimestamp(r.timestamp)} · {r.severity}
                 </div>
               </div>
-              <span className="text-[10px] text-emerald-400/50 flex-shrink-0 ml-3">Saved</span>
+              <span className={`text-[10px] flex-shrink-0 ml-3 ${r.status === 'submitted' ? 'text-emerald-400/50' : 'text-amber-400/50'}`}>
+                {r.status === 'submitted' ? 'Submitted' : 'Queued'}
+              </span>
             </div>
           ))}
         </div>
@@ -568,7 +591,7 @@ export default function BugReport({ characterId, character, errors = [], onClear
 
       <div className="flex items-start gap-2 text-xs text-amber-200/25 border border-amber-200/8 rounded p-3">
         <Bug size={13} className="shrink-0 mt-0.5" />
-        <span>Bug reports are appended to <strong className="text-amber-200/40">codex-bug-reports.log</strong> on your Desktop. Each report includes a unique ID, character context, environment info, severity, auto-captured errors, and your description.</span>
+        <span>Bug reports are submitted as GitHub Issues on the project repository. A local backup is also saved to <strong className="text-amber-200/40">codex-bug-reports.log</strong> on your Desktop. If you're offline, reports are queued and submitted automatically on next launch.</span>
       </div>
     </div>
   );

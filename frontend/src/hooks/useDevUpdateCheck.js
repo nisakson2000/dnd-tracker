@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 const GIT_POLL_INTERVAL = 5_000; // 5 seconds for git polling
 const PEER_POLL_INTERVAL = 3_000; // 3 seconds for peer list refresh
 const ROLLBACK_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
-const AUTO_PULL_DELAY = 2_000; // 2s delay before auto-pulling (let fetch settle)
+// Auto-pull disabled — devs pull manually to avoid overwriting unpushed local commits
 
 export function useDevUpdateCheck() {
   const [hasUpdate, setHasUpdate] = useState(false);
@@ -18,9 +18,8 @@ export function useDevUpdateCheck() {
   const mountedRef = useRef(true);
   const presenceStartedRef = useRef(false);
   const checkingRef = useRef(false); // prevent concurrent git checks
-  const autoPullingRef = useRef(false); // prevent concurrent auto-pulls
   const pullUpdatesRef = useRef(null); // stable ref to latest pullUpdates
-  const autoPullTimerRef = useRef(null); // track auto-pull setTimeout for cleanup
+  const toastShownRef = useRef(false); // only show update toast once per session
 
   // Check rollback eligibility on mount
   useEffect(() => {
@@ -42,8 +41,8 @@ export function useDevUpdateCheck() {
   }, []);
 
   const checkForUpdates = useCallback(async () => {
-    // Skip if already checking (git lock) or already auto-pulling
-    if (checkingRef.current || autoPullingRef.current) return;
+    // Skip if already checking (git lock)
+    if (checkingRef.current) return;
     checkingRef.current = true;
     try {
       const result = await invoke('check_git_updates');
@@ -52,28 +51,23 @@ export function useDevUpdateCheck() {
         setHasUpdate(true);
         setUpdateInfo(result);
 
-        // Show toast and auto-pull
-        const hasLocalCommits = result.local_ahead;
-        const msg = hasLocalCommits
-          ? `Incoming update + you have unpushed commits — smart-merging: "${result.commit_message || result.remote_sha}"`
-          : `Auto-pulling update: "${result.commit_message || result.remote_sha}"`;
+        // Notify once per session — no auto-pull (devs may have unpushed local commits)
+        if (!toastShownRef.current) {
+          toastShownRef.current = true;
+          const hasLocalCommits = result.local_ahead;
+          const msg = hasLocalCommits
+            ? `Update available (you have unpushed commits): "${result.commit_message || result.remote_sha}"`
+            : `Update available: "${result.commit_message || result.remote_sha}"`;
 
-        toast(msg, {
-          icon: hasLocalCommits ? '\uD83D\uDD00' : '\u2B07\uFE0F',
-          duration: 3000,
-          style: {
-            background: '#1a1520',
-            color: hasLocalCommits ? '#fbbf24' : '#fde68a',
-            border: `1px solid ${hasLocalCommits ? 'rgba(251,191,36,0.5)' : 'rgba(201,168,76,0.4)'}`,
-          },
-        });
-
-        // Auto-pull after a short delay
-        if (!autoPullingRef.current) {
-          autoPullingRef.current = true;
-          autoPullTimerRef.current = setTimeout(() => {
-            if (mountedRef.current) pullUpdatesRef.current();
-          }, AUTO_PULL_DELAY);
+          toast(msg, {
+            icon: hasLocalCommits ? '⚠️' : '📦',
+            duration: 5000,
+            style: {
+              background: '#1a1520',
+              color: hasLocalCommits ? '#fbbf24' : '#fde68a',
+              border: `1px solid ${hasLocalCommits ? 'rgba(251,191,36,0.5)' : 'rgba(201,168,76,0.4)'}`,
+            },
+          });
         }
       } else {
         setHasUpdate(false);
@@ -103,7 +97,6 @@ export function useDevUpdateCheck() {
       if (!result.success) {
         // Smart pull detected unresolvable conflicts — don't reload
         setPulling(false);
-        autoPullingRef.current = false;
         setConflictInfo(result);
 
         const conflictFiles = result.conflict_files || result.overlapping_files || [];
@@ -149,7 +142,6 @@ export function useDevUpdateCheck() {
       window.location.reload();
     } catch (err) {
       setPulling(false);
-      autoPullingRef.current = false;
       toast.error(`Smart pull failed: ${err}`, {
         duration: 8000,
         style: {
@@ -244,10 +236,10 @@ export function useDevUpdateCheck() {
       const { dev_name, commit_message } = event.payload;
 
       toast(
-        `${dev_name || 'A dev'} pushed: "${commit_message || 'new code'}" — auto-pulling...`,
+        `${dev_name || 'A dev'} pushed: "${commit_message || 'new code'}" — pull manually when ready`,
         {
-          icon: '\uD83D\uDCE1',
-          duration: 3000,
+          icon: '📡',
+          duration: 5000,
           style: {
             background: '#1a1520',
             color: '#fde68a',
@@ -255,7 +247,7 @@ export function useDevUpdateCheck() {
           },
         }
       );
-      // Immediately check — auto-pull happens inside checkForUpdates
+      // Check for updates but don't auto-pull
       checkForUpdates();
     }).then(fn => { unlistenUpdate = fn; });
 
@@ -288,7 +280,6 @@ export function useDevUpdateCheck() {
       mountedRef.current = false;
       clearInterval(peerInterval);
       clearInterval(gitInterval);
-      if (autoPullTimerRef.current) clearTimeout(autoPullTimerRef.current);
       if (unlistenUpdate) unlistenUpdate();
     };
   }, [checkForUpdates]);

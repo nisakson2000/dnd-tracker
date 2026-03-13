@@ -4,6 +4,41 @@ All updates relevant to **DM Mode**. For Player-specific changes, see `MASTERUPD
 
 ---
 
+## V0.5.0 — Multiplayer Campaign Engine & Party Tools
+**Released:** March 13, 2026
+
+### DM Campaign Engine
+- **Campaign List** — create, list, delete campaigns with ruleset selection (D&D 5e 2024/2014, PF2e, homebrew)
+- **DM Lobby** — campaign HQ with scene management, session recap, handouts, quest generator, player connections
+- **Live Session Runner** — initiative tracker, round counter, action log, real-time chat, timer, scene management
+- **WebSocket Multiplayer** — real-time DM↔Player sync; handles rolls, character updates, concentration, action approval
+
+### DM Session Tools
+- **Character Arc Manager** — track player character arcs (hooks, development, complications, climax, resolution)
+- **Handouts Manager** — create and reveal handouts to players with visibility toggle
+- **Monster Panel** — search SRD monsters, add to encounters, track HP/damage/conditions/kills
+- **Quest Generator** — AI-powered quest generation via Ollama (party level, setting, theme)
+- **Session Recap** — AI-powered session summary generation
+- **World State Manager** — track world state by category (politics, geography, events, factions)
+
+### Campaign Database
+- Dedicated `campaigns.db` with tables for campaigns, scenes, encounters, monsters, handouts, character arcs, world state
+- 25+ new Rust backend commands for full campaign lifecycle management
+
+### New DM Sections
+- **Encounter Builder** — design balanced encounters by CR and party level
+- **Battle Map** — interactive grid-based tactical map with token placement and drawing tools
+- **World Building** — NPCs, Homebrew Builder, Calendar grouped under new sidebar category
+
+### Premade Campaigns
+- 6 starter campaigns updated with scene/encounter structure (Cursed Village, Dragon Coast, Feywild Crossing, Goblin Mine, Shadow Academy, Siege of Ironhold)
+
+### Multiplayer
+- **Player Join** — players connect via DM IP + room code, select character, await approval
+- **Player Session** — players see scenes, initiative, chat, roll dice, receive handouts, submit actions
+
+---
+
 ## V0.1.5 BETA — Update System Overhaul, Campaign Map Fix, Dev Tools Cleanup
 **Released:** March 12, 2026
 

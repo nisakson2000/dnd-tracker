@@ -3,12 +3,16 @@
 
 mod commands;
 mod db;
+mod campaign_db;
 mod party;
 mod dev_presence;
+mod session_ws;
 
 use db::AppState;
 use std::fs;
+use std::sync::Arc;
 use tauri::Manager;
+use tokio::sync::Mutex;
 
 fn main() {
     tauri::Builder::default()
@@ -103,6 +107,9 @@ fn main() {
             app.manage(party::PartyServer::new());
             app.manage(dev_presence::DevPresence::new());
             app.manage(commands::dev_tools::DevLogBuffer::new());
+            // Session WebSocket state (DM server + player client)
+            app.manage(Arc::new(Mutex::new(None::<session_ws::SessionServer>)) as commands::session_ws_cmds::SessionServerState);
+            app.manage(Arc::new(Mutex::new(None::<session_ws::ClientConnection>)) as commands::session_ws_cmds::SessionClientState);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -185,8 +192,9 @@ fn main() {
             commands::wiki::wiki_subcategories,
             commands::wiki::wiki_random_articles,
             commands::wiki::wiki_adjacent_articles,
-            // Bug Report
+            // Bug Report & Feature Request
             commands::bug_report::write_bug_report,
+            commands::feature_request::write_feature_request,
             // Frontend logging
             commands::frontend_log::frontend_log,
             // Ollama
@@ -234,7 +242,114 @@ fn main() {
             commands::dev_tools::dev_git_log_detailed,
             commands::dev_tools::dev_git_stash,
             commands::dev_tools::dev_git_session_summary,
+            // Campaigns
+            commands::campaigns::create_campaign,
+            commands::campaigns::list_campaigns,
+            commands::campaigns::select_campaign,
+            commands::campaigns::get_active_campaign,
+            commands::campaigns::delete_campaign,
+            commands::campaigns::update_campaign,
+            // Scenes
+            commands::scenes::create_scene,
+            commands::scenes::list_scenes,
+            commands::scenes::update_scene,
+            commands::scenes::delete_scene,
+            commands::scenes::reorder_scenes,
+            commands::scenes::advance_scene,
+            // Encounters
+            commands::encounters::create_encounter,
+            commands::encounters::get_encounter,
+            commands::encounters::start_encounter,
+            commands::encounters::end_encounter,
+            commands::encounters::advance_turn,
+            commands::encounters::update_initiative,
+            // Session management
+            commands::session_mgmt::start_session,
+            commands::session_mgmt::end_session,
+            commands::session_mgmt::get_session_log,
+            // Session WebSocket (DM server + player client)
+            commands::session_ws_cmds::ws_start_server,
+            commands::session_ws_cmds::ws_stop_server,
+            commands::session_ws_cmds::ws_approve_player,
+            commands::session_ws_cmds::ws_reject_player,
+            commands::session_ws_cmds::ws_broadcast_event,
+            commands::session_ws_cmds::ws_send_to_player,
+            commands::session_ws_cmds::ws_get_connected,
+            commands::session_ws_cmds::ws_connect_to_dm,
+            commands::session_ws_cmds::ws_disconnect_from_dm,
+            commands::session_ws_cmds::ws_send_to_dm,
+            // Campaign Rest
+            commands::campaign_rest::campaign_long_rest,
+            commands::campaign_rest::campaign_short_rest,
+            // Campaign Conditions
+            commands::campaign_conditions::campaign_apply_condition,
+            commands::campaign_conditions::campaign_remove_condition,
+            commands::campaign_conditions::campaign_tick_conditions,
+            // Concentration
+            commands::concentration::set_concentration,
+            commands::concentration::check_concentration_save,
+            // Monsters
+            commands::monsters::add_monster_to_encounter,
+            commands::monsters::remove_monster,
+            commands::monsters::update_monster_hp,
+            commands::monsters::kill_monster,
+            commands::monsters::get_encounter_monsters,
+            commands::monsters::search_srd_monsters,
+            // Session recap (M-12)
+            commands::session_mgmt::generate_session_recap,
+            // Handouts (M-13)
+            commands::handouts::create_handout,
+            commands::handouts::list_handouts,
+            commands::handouts::reveal_handout,
+            commands::handouts::delete_handout,
+            // XP tracking (M-14)
+            commands::xp::award_xp,
+            commands::xp::get_player_xp,
+            // Level up (M-15)
+            commands::level_up::campaign_level_up,
+            // Inspiration (M-16)
+            commands::campaign_extras::toggle_inspiration,
+            // Campaign settings (M-19)
+            commands::campaign_extras::get_campaign_setting,
+            commands::campaign_extras::set_campaign_setting,
+            // AI Quest generation (M-20)
+            commands::ollama::generate_quest,
+            // World State
+            commands::world_state::set_world_state,
+            commands::world_state::get_world_state,
+            commands::world_state::get_world_state_player,
+            commands::world_state::reveal_world_state,
+            commands::world_state::delete_world_state,
+            // Campaign NPCs
+            commands::campaign_npcs::create_campaign_npc,
+            commands::campaign_npcs::list_campaign_npcs,
+            commands::campaign_npcs::list_campaign_npcs_player,
+            commands::campaign_npcs::update_campaign_npc,
+            commands::campaign_npcs::delete_campaign_npc,
+            commands::campaign_npcs::discover_npc,
+            commands::campaign_npcs::share_npc_info,
+            // Campaign Quests
+            commands::campaign_quests::create_campaign_quest,
+            commands::campaign_quests::list_campaign_quests,
+            commands::campaign_quests::list_campaign_quests_player,
+            commands::campaign_quests::update_campaign_quest,
+            commands::campaign_quests::delete_campaign_quest,
+            commands::campaign_quests::complete_quest_objective,
+            // Character Arcs
+            commands::character_arcs::create_character_arc,
+            commands::character_arcs::list_character_arcs,
+            commands::character_arcs::add_arc_entry,
+            commands::character_arcs::get_arc_entries,
+            commands::character_arcs::resolve_arc,
+            commands::character_arcs::delete_character_arc,
+            // Scene (new player command)
+            commands::scenes::list_scenes_player,
+            // GitHub reports (bug reports + feature requests → GitHub Issues)
+            commands::github_reports::submit_bug_report,
+            commands::github_reports::submit_feature_request,
+            commands::github_reports::flush_pending_reports,
+            commands::github_reports::get_pending_report_count,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("Fatal: failed to start Tauri application");
 }

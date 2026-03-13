@@ -1,9 +1,12 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowLeft, BookOpen, ExternalLink, Tag, Bookmark, Copy, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, BookOpen, ExternalLink, Tag, Bookmark, Copy, Check, UserPlus, ChevronDown, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getArticle, getAdjacentArticles } from '../api/wiki';
+import { listCharacters } from '../api/characters';
+import { addSpell } from '../api/spells';
+import { addItem } from '../api/inventory';
 import { getCategoryConfig } from '../data/wikiCategoryConfig';
 import ArcaneWidget from '../components/ArcaneWidget';
 import StatBlockRouter from '../components/wiki/statblocks/StatBlockRouter';
@@ -260,6 +263,98 @@ function extractHeadings(content) {
     });
 }
 
+const BRIDGEABLE_CATEGORIES = new Set(['spell', 'equipment', 'magic-item']);
+
+/**
+ * Parse wiki article metadata into a spell payload for addSpell.
+ */
+function buildSpellPayload(article, metadata) {
+  const components = (() => {
+    const c = metadata.components;
+    if (!c) return '';
+    if (typeof c === 'string') return c;
+    if (typeof c === 'object') {
+      const parts = [];
+      if (c.verbal || c.V) parts.push('V');
+      if (c.somatic || c.S) parts.push('S');
+      if (c.material || c.M) parts.push('M');
+      return parts.join(', ');
+    }
+    return String(c);
+  })();
+
+  const material = (() => {
+    const c = metadata.components;
+    if (!c || typeof c !== 'object') return metadata.material || '';
+    const mat = c.material || c.M;
+    return typeof mat === 'string' && mat.length > 1 ? mat : '';
+  })();
+
+  const level = (() => {
+    const l = metadata.level;
+    if (l === 'cantrip' || l === 'Cantrip') return 0;
+    return Number(l) || 0;
+  })();
+
+  return {
+    name: article.title,
+    level,
+    school: metadata.school || '',
+    casting_time: metadata.casting_time || '',
+    spell_range: metadata.range || '',
+    components,
+    material,
+    duration: metadata.duration || '',
+    concentration: Boolean(metadata.concentration),
+    ritual: Boolean(metadata.ritual),
+    description: article.summary || '',
+    upcast_notes: metadata.higher_levels || metadata.at_higher_levels || '',
+    prepared: false,
+    source: article.source || 'Wiki',
+  };
+}
+
+/**
+ * Parse wiki article metadata into an item payload for addItem.
+ */
+function buildItemPayload(article, metadata) {
+  const weight = (() => {
+    const w = metadata.weight;
+    if (typeof w === 'number') return w;
+    if (typeof w === 'string') return parseFloat(w) || 0;
+    return 0;
+  })();
+
+  const valueGp = (() => {
+    const c = metadata.cost || metadata.price || metadata.value_gp;
+    if (typeof c === 'number') return c;
+    if (typeof c === 'string') {
+      const match = c.match(/([\d,.]+)\s*gp/i);
+      if (match) return parseFloat(match[1].replace(',', '')) || 0;
+      return parseFloat(c) || 0;
+    }
+    return 0;
+  })();
+
+  const itemType = metadata.type || metadata.equipment_type || metadata.item_type ||
+    (article.category === 'magic-item' ? 'wondrous item' : 'equipment');
+
+  return {
+    name: article.title,
+    item_type: itemType,
+    weight,
+    value_gp: valueGp,
+    quantity: 1,
+    description: article.summary || '',
+    attunement: Boolean(metadata.attunement),
+    attuned: false,
+    equipped: false,
+    equipment_slot: '',
+    stat_modifiers: metadata.stat_modifiers ? JSON.stringify(metadata.stat_modifiers) : '{}',
+    rarity: metadata.rarity || (article.category === 'magic-item' ? 'uncommon' : 'common'),
+  };
+}
+
 export default function WikiArticlePage() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -269,6 +364,12 @@ export default function WikiArticlePage() {
   const [copied, setCopied] = useState(false);
   const { toggleBookmark, isBookmarked } = useWikiBookmarks();
   const { recordVisit } = useWikiHistory();
+
+  // Wiki-to-Sheet Bridge state
+  const [showCharPicker, setShowCharPicker] = useState(false);
+  const [characters, setCharacters] = useState([]);
+  const [addingToChar, setAddingToChar] = useState(null); // characterId while in progress
+  const charPickerRef = useRef(null);
 
   useEffect(() => {
     setLoading(true);
@@ -329,6 +430,68 @@ export default function WikiArticlePage() {
     }).catch(() => {
       toast.error('Failed to copy link');
     });
+  };
+
+  // Close character picker on outside click
+  useEffect(() => {
+    if (!showCharPicker) return;
+    const handleClick = (e) => {
+      if (charPickerRef.current && !charPickerRef.current.contains(e.target)) {
+        setShowCharPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showCharPicker]);
+
+  const isBridgeable = article && BRIDGEABLE_CATEGORIES.has(article.category);
+
+  const handleOpenCharPicker = async () => {
+    if (showCharPicker) {
+      setShowCharPicker(false);
+      return;
+    }
+    try {
+      const chars = await listCharacters();
+      if (!chars || chars.length === 0) {
+        toast.error('No characters found. Create a character first.');
+        return;
+      }
+      setCharacters(chars);
+      setShowCharPicker(true);
+    } catch (err) {
+      toast.error('Failed to load characters');
+    }
+  };
+
+  const handleAddToCharacter = async (characterId, characterName) => {
+    if (!article) return;
+    setAddingToChar(characterId);
+
+    try {
+      let metadata = {};
+      try {
+        metadata = typeof article.metadata_json === 'string'
+          ? JSON.parse(article.metadata_json)
+          : article.metadata_json || {};
+      } catch { metadata = {}; }
+
+      if (article.category === 'spell') {
+        const payload = buildSpellPayload(article, metadata);
+        await addSpell(characterId, payload);
+        toast.success(`Added "${article.title}" to ${characterName}'s spellbook`);
+      } else {
+        // equipment or magic-item
+        const payload = buildItemPayload(article, metadata);
+        await addItem(characterId, payload);
+        toast.success(`Added "${article.title}" to ${characterName}'s inventory`);
+      }
+      setShowCharPicker(false);
+    } catch (err) {
+      toast.error(`Failed to add: ${err.message || err}`);
+    } finally {
+      setAddingToChar(null);
+    }
   };
 
   if (loading) {
@@ -406,6 +569,63 @@ export default function WikiArticlePage() {
                   {article.title}
                 </h1>
                 <div className="flex items-center gap-1 shrink-0 mt-1">
+                  {/* Wiki-to-Sheet Bridge button */}
+                  {isBridgeable && (
+                    <div className="relative" ref={charPickerRef}>
+                      <button
+                        onClick={handleOpenCharPicker}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all bg-purple-500/20 border border-purple-500/30 text-purple-300 hover:bg-purple-500/30 hover:border-purple-500/50 hover:text-purple-200"
+                        title="Add to Character"
+                      >
+                        <UserPlus size={14} />
+                        <span className="hidden sm:inline">Add to Character</span>
+                        <ChevronDown size={12} className={`transition-transform ${showCharPicker ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      <AnimatePresence>
+                        {showCharPicker && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute right-0 top-full mt-2 w-64 z-50 rounded-xl border border-purple-500/20 bg-[#1a1425] shadow-xl shadow-black/40 overflow-hidden"
+                          >
+                            <div className="px-3 py-2 border-b border-purple-500/10">
+                              <p className="text-xs text-purple-300/60 uppercase tracking-wider font-medium">
+                                {article.category === 'spell' ? 'Add spell to...' : 'Add item to...'}
+                              </p>
+                            </div>
+                            <div className="max-h-60 overflow-y-auto py-1">
+                              {characters.map(char => (
+                                <button
+                                  key={char.id}
+                                  onClick={() => handleAddToCharacter(char.id, char.name)}
+                                  disabled={addingToChar !== null}
+                                  className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-purple-500/10 transition-colors disabled:opacity-50"
+                                >
+                                  <div className="w-7 h-7 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0">
+                                    <span className="text-xs font-display text-purple-300">
+                                      {char.name?.charAt(0)?.toUpperCase() || '?'}
+                                    </span>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm text-amber-100 truncate">{char.name}</p>
+                                    {char.primary_class && (
+                                      <p className="text-[10px] text-amber-200/40 truncate">{char.primary_class}</p>
+                                    )}
+                                  </div>
+                                  {addingToChar === char.id && (
+                                    <Loader2 size={14} className="text-purple-400 animate-spin shrink-0" />
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
                   <button
                     onClick={handleCopyLink}
                     className="p-1.5 rounded-lg text-amber-200/30 hover:text-amber-200/60 hover:bg-white/5 transition-colors"

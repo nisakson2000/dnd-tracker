@@ -1,11 +1,14 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Users, Search, Copy, ScrollText, Pin, ChevronDown, ChevronRight, MapPin, Clock, MessageSquare, Shield } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Plus, Trash2, Edit2, Users, Search, Copy, ScrollText, Pin, ChevronDown, ChevronRight, MapPin, Clock, MessageSquare, Shield, MessageCircle, Send, Bot, User, X, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { getNPCs, addNPC, updateNPC, deleteNPC } from '../api/npcs';
 import { getQuests } from '../api/quests';
+import { checkOllamaStatus, streamChat } from '../api/assistant';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
+import { useAppMode } from '../contexts/ModeContext';
 
 const ROLES = ['ally', 'enemy', 'neutral', 'party'];
 const STATUSES = ['alive', 'dead', 'unknown'];
@@ -97,6 +100,8 @@ function prepareNpcPayload(form) {
 }
 
 export default function NPCs({ characterId }) {
+  const { mode: appMode } = useAppMode();
+  const isDM = appMode === 'dm';
   const [npcs, setNpcs] = useState([]);
   const [quests, setQuests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -109,20 +114,21 @@ export default function NPCs({ characterId }) {
   const [groupBy, setGroupBy] = useState('none'); // none | faction | role
   const [collapsedGroups, setCollapsedGroups] = useState(new Set());
   const [conversationNpc, setConversationNpc] = useState(null);
+  const [aiChatNpc, setAiChatNpc] = useState(null);
   const [dispositionFilter, setDispositionFilter] = useState('all');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try { setNpcs((await getNPCs(characterId)).map(enrichNpc)); }
-    catch (err) { toast.error(err.message); }
+    catch (err) { toast.error(err.message); if (import.meta.env.DEV) console.warn('NPCs load:', err); }
     finally { setLoading(false); }
-  };
+  }, [characterId]);
 
-  const loadQuests = async () => {
+  const loadQuests = useCallback(async () => {
     try { setQuests(await getQuests(characterId)); }
-    catch { /* silently ignore */ }
-  };
+    catch (err) { if (import.meta.env.DEV) console.warn('NPCs loadQuests:', err); }
+  }, [characterId]);
 
-  useEffect(() => { load(); loadQuests(); }, [characterId]);
+  useEffect(() => { load(); loadQuests(); }, [load, loadQuests]);
 
   const getRelatedQuests = (npc) => {
     if (!npc.name || quests.length === 0) return [];
@@ -190,6 +196,40 @@ export default function NPCs({ characterId }) {
       toast.success('Conversation logged');
       load();
     } catch (err) { toast.error(err.message); }
+  };
+
+  const handleOpenAiChat = async (npc) => {
+    try {
+      const status = await checkOllamaStatus();
+      if (!status.available) {
+        toast.error('Ollama is not running. Please start Ollama to talk to NPCs.');
+        return;
+      }
+      if (!status.modelInstalled) {
+        toast.error(`AI model "${status.model}" is not installed. Open Arcane Advisor to set it up.`);
+        return;
+      }
+      setAiChatNpc(npc);
+    } catch (err) {
+      toast.error('Could not connect to Ollama: ' + (err.message || String(err)));
+    }
+  };
+
+  const saveAiConversation = async (npc, userMsg, npcResponse) => {
+    const log = [...(npc.conversation_log || [])];
+    log.push({
+      text: `[AI Chat] You: "${userMsg}" — ${npc.name}: "${npcResponse.length > 200 ? npcResponse.slice(0, 200) + '...' : npcResponse}"`,
+      date: new Date().toISOString().split('T')[0],
+      timestamp: new Date().toISOString(),
+    });
+    const updated = { ...npc, conversation_log: log };
+    try {
+      await updateNPC(characterId, npc.id, prepareNpcPayload(updated));
+      setAiChatNpc(prev => prev && prev.id === npc.id ? { ...prev, conversation_log: log } : prev);
+      load();
+    } catch (err) {
+      toast.error('Failed to save conversation: ' + err.message);
+    }
   };
 
   const filtered = useMemo(() => npcs.filter(n => {
@@ -336,9 +376,12 @@ export default function NPCs({ characterId }) {
                 <button onClick={() => setConversationNpc(npc)} className="text-amber-200/40 hover:text-amber-200" title="Log conversation">
                   <MessageSquare size={14} />
                 </button>
-                <button onClick={() => handleDuplicate(npc)} className="text-amber-200/40 hover:text-amber-200" title="Duplicate"><Copy size={14} /></button>
-                <button onClick={() => { setEditing(npc); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>
-                <button onClick={() => setConfirmDelete(npc)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>
+                <button onClick={() => handleOpenAiChat(npc)} className="text-purple-400/50 hover:text-purple-300" title="Talk to NPC (AI)">
+                  <MessageCircle size={14} />
+                </button>
+                {isDM && <button onClick={() => handleDuplicate(npc)} className="text-amber-200/40 hover:text-amber-200" title="Duplicate"><Copy size={14} /></button>}
+                {isDM && <button onClick={() => { setEditing(npc); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>}
+                {isDM && <button onClick={() => setConfirmDelete(npc)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>}
               </div>
             </div>
 
@@ -448,9 +491,11 @@ export default function NPCs({ characterId }) {
             <p className="text-xs text-amber-200/40 font-normal mt-0.5">Track the people your character meets. Record allies, enemies, factions, and conversation history so you never forget a name or promise.</p>
           </div>
         </h2>
-        <button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
-          <Plus size={12} /> Add NPC
-        </button>
+        {isDM && (
+          <button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
+            <Plus size={12} /> Add NPC
+          </button>
+        )}
       </div>
 
       {npcs.length > 0 && (
@@ -558,6 +603,17 @@ export default function NPCs({ characterId }) {
         <ConversationModal npc={conversationNpc} onSubmit={(text) => { addConversationEntry(conversationNpc, text); setConversationNpc(null); }} onCancel={() => setConversationNpc(null)} />
       )}
 
+      {/* AI NPC Chat modal */}
+      <AnimatePresence>
+        {aiChatNpc && (
+          <AIChatModal
+            npc={aiChatNpc}
+            onSaveExchange={saveAiConversation}
+            onClose={() => setAiChatNpc(null)}
+          />
+        )}
+      </AnimatePresence>
+
       <ConfirmDialog
         show={!!confirmDelete}
         title="Delete NPC?"
@@ -566,6 +622,421 @@ export default function NPCs({ characterId }) {
         onCancel={() => setConfirmDelete(null)}
       />
     </div>
+  );
+}
+
+function buildNpcSystemPrompt(npc) {
+  const race = npc.race || 'unknown race';
+  const classProfession = npc.npc_class || 'unknown profession';
+  const role = npc.role || 'neutral figure';
+  const description = npc.description || 'No description available.';
+  const notesText = npc.notes_text || '';
+  const relationship = npc.relationship || 'Unknown';
+  const disposition = npc.disposition || 'Neutral';
+  const location = npc.last_seen_location || npc.location || 'unknown location';
+  const faction = npc.faction || 'none';
+  const questHook = npc.quest_hook || '';
+  const status = npc.status || 'alive';
+
+  let prompt = `You are roleplaying as ${npc.name}, a ${race} ${classProfession} who is a ${role}.
+Personality: ${description}${notesText ? '\nAdditional details: ' + notesText : ''}
+Current disposition toward the party: ${relationship} (${disposition})
+Location: ${location}
+Faction: ${faction}
+Status: ${status}`;
+
+  if (questHook) {
+    prompt += `\n\n[DM CONTEXT - use this to inform your responses but do NOT reveal these secrets directly]: ${questHook}`;
+  }
+
+  prompt += `\n\nStay in character at all times. Respond as ${npc.name} would based on their personality and relationship with the party. Keep responses concise (2-4 sentences). Use appropriate speech patterns for a ${race} ${classProfession}. Do not break character or mention that you are an AI.`;
+
+  return prompt;
+}
+
+function AIChatModal({ npc, onSaveExchange, onClose }) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [streaming, setStreaming] = useState(false);
+  const [streamingText, setStreamingText] = useState('');
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+  const abortRef = useRef(false);
+
+  // Load previous conversation context from conversation_log
+  const previousContext = useMemo(() => {
+    const log = npc.conversation_log || [];
+    if (log.length === 0) return '';
+    const recent = log.slice(-5);
+    return '\n\n[Previous conversation context with the party]:\n' +
+      recent.map(e => `- ${e.date}: ${e.text}`).join('\n');
+  }, [npc.conversation_log]);
+
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  useEffect(() => { scrollToBottom(); }, [messages, streamingText, scrollToBottom]);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    const handler = (e) => { if (e.key === 'Escape' && !streaming) onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose, streaming]);
+
+  const handleSend = async () => {
+    const text = input.trim();
+    if (!text || streaming) return;
+
+    const userMessage = { role: 'user', content: text };
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
+    setInput('');
+    setStreaming(true);
+    setStreamingText('');
+    abortRef.current = false;
+
+    const systemPrompt = buildNpcSystemPrompt(npc) + previousContext;
+    const apiMessages = [
+      { role: 'system', content: systemPrompt },
+      ...newMessages.map(m => ({ role: m.role, content: m.content })),
+    ];
+
+    let fullResponse = '';
+    try {
+      for await (const chunk of streamChat(apiMessages)) {
+        if (abortRef.current) break;
+        fullResponse += chunk;
+        setStreamingText(fullResponse);
+      }
+
+      if (!abortRef.current && fullResponse) {
+        const assistantMessage = { role: 'assistant', content: fullResponse };
+        setMessages(prev => [...prev, assistantMessage]);
+        setStreamingText('');
+        // Auto-save this exchange
+        onSaveExchange(npc, text, fullResponse);
+      }
+    } catch (err) {
+      toast.error('AI response failed: ' + (err.message || String(err)));
+    } finally {
+      setStreaming(false);
+      setStreamingText('');
+    }
+  };
+
+  return (
+    <ModalPortal>
+      <motion.div
+        className="modal-overlay"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={e => { if (e.target === e.currentTarget && !streaming) onClose(); }}
+      >
+        <motion.div
+          initial={{ opacity: 0, x: 60, scale: 0.97 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{ opacity: 0, x: 60, scale: 0.97 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          style={{
+            background: '#14121c',
+            border: '1px solid rgba(212,175,55,0.3)',
+            borderRadius: 12,
+            width: '100%',
+            maxWidth: 520,
+            height: '80vh',
+            maxHeight: 700,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            margin: '0 16px',
+          }}
+        >
+          {/* Header */}
+          <div style={{
+            padding: '16px 20px',
+            borderBottom: '1px solid rgba(212,175,55,0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            flexShrink: 0,
+          }}>
+            <div style={{
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              background: 'rgba(155,89,182,0.25)',
+              border: '2px solid rgba(155,89,182,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <span style={{ color: '#d4af37', fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700 }}>
+                {getInitials(npc.name)}
+              </span>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h3 style={{ fontFamily: 'var(--font-display)', color: '#fef3c7', fontSize: 16, margin: 0 }}>
+                {npc.name}
+              </h3>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'rgba(253,230,138,0.4)', margin: 0 }}>
+                {[npc.race, npc.npc_class, npc.disposition].filter(Boolean).join(' \u00b7 ')}
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Bot size={14} style={{ color: 'rgba(155,89,182,0.6)' }} />
+              <span style={{ fontSize: 10, color: 'rgba(155,89,182,0.6)', fontFamily: 'var(--font-ui)' }}>AI Chat</span>
+            </div>
+            <button
+              onClick={() => { if (!streaming) { abortRef.current = true; onClose(); } }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'rgba(253,230,138,0.4)',
+                cursor: streaming ? 'not-allowed' : 'pointer',
+                padding: 4,
+                display: 'flex',
+              }}
+              title="Close"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Messages area */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '16px 20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+          }}>
+            {/* Previous conversation context hint */}
+            {(npc.conversation_log || []).length > 0 && messages.length === 0 && !streaming && (
+              <div style={{
+                textAlign: 'center',
+                padding: '8px 12px',
+                background: 'rgba(255,255,255,0.02)',
+                borderRadius: 8,
+                border: '1px solid rgba(255,255,255,0.05)',
+              }}>
+                <span style={{ fontSize: 11, color: 'rgba(253,230,138,0.25)', fontFamily: 'var(--font-ui)' }}>
+                  {npc.name} remembers {npc.conversation_log.length} previous conversation{npc.conversation_log.length !== 1 ? 's' : ''} with you
+                </span>
+              </div>
+            )}
+
+            {/* Welcome message */}
+            {messages.length === 0 && !streaming && (
+              <div style={{ textAlign: 'center', padding: '32px 16px' }}>
+                <MessageCircle size={32} style={{ color: 'rgba(155,89,182,0.2)', margin: '0 auto 12px' }} />
+                <p style={{ fontSize: 13, color: 'rgba(253,230,138,0.3)', fontFamily: 'var(--font-ui)', margin: 0 }}>
+                  Start a conversation with {npc.name}
+                </p>
+                <p style={{ fontSize: 11, color: 'rgba(253,230,138,0.15)', fontFamily: 'var(--font-ui)', marginTop: 4 }}>
+                  The AI will stay in character based on this NPC's personality and relationship
+                </p>
+              </div>
+            )}
+
+            {/* Chat messages */}
+            {messages.map((msg, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{
+                  display: 'flex',
+                  justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                  gap: 8,
+                }}
+              >
+                {msg.role === 'assistant' && (
+                  <div style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    background: 'rgba(155,89,182,0.2)',
+                    border: '1px solid rgba(155,89,182,0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    marginTop: 2,
+                  }}>
+                    <Bot size={14} style={{ color: 'rgba(155,89,182,0.7)' }} />
+                  </div>
+                )}
+                <div style={{
+                  maxWidth: '75%',
+                  padding: '10px 14px',
+                  borderRadius: msg.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                  background: msg.role === 'user' ? 'rgba(155,89,182,0.15)' : 'rgba(255,255,255,0.04)',
+                  border: msg.role === 'user' ? '1px solid rgba(155,89,182,0.25)' : '1px solid rgba(255,255,255,0.06)',
+                }}>
+                  <p style={{
+                    fontFamily: 'var(--font-ui)',
+                    fontSize: 13,
+                    color: msg.role === 'user' ? 'rgba(253,230,138,0.8)' : 'rgba(253,230,138,0.65)',
+                    margin: 0,
+                    lineHeight: 1.5,
+                    whiteSpace: 'pre-wrap',
+                  }}>{msg.content}</p>
+                </div>
+                {msg.role === 'user' && (
+                  <div style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    background: 'rgba(155,89,182,0.15)',
+                    border: '1px solid rgba(155,89,182,0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    marginTop: 2,
+                  }}>
+                    <User size={14} style={{ color: 'rgba(253,230,138,0.5)' }} />
+                  </div>
+                )}
+              </motion.div>
+            ))}
+
+            {/* Streaming response */}
+            {streaming && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{ display: 'flex', justifyContent: 'flex-start', gap: 8 }}
+              >
+                <div style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  background: 'rgba(155,89,182,0.2)',
+                  border: '1px solid rgba(155,89,182,0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  marginTop: 2,
+                }}>
+                  <Bot size={14} style={{ color: 'rgba(155,89,182,0.7)' }} />
+                </div>
+                <div style={{
+                  maxWidth: '75%',
+                  padding: '10px 14px',
+                  borderRadius: '14px 14px 14px 4px',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                }}>
+                  <p style={{
+                    fontFamily: 'var(--font-ui)',
+                    fontSize: 13,
+                    color: 'rgba(253,230,138,0.65)',
+                    margin: 0,
+                    lineHeight: 1.5,
+                    whiteSpace: 'pre-wrap',
+                  }}>
+                    {streamingText || '\u00a0'}
+                    <span style={{
+                      display: 'inline-block',
+                      width: 2,
+                      height: 14,
+                      background: 'rgba(155,89,182,0.7)',
+                      marginLeft: 2,
+                      verticalAlign: 'text-bottom',
+                      animation: 'npcCursorBlink 0.8s step-end infinite',
+                    }} />
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input area */}
+          <div style={{
+            padding: '12px 20px 16px',
+            borderTop: '1px solid rgba(212,175,55,0.1)',
+            flexShrink: 0,
+          }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder={`Say something to ${npc.name}...`}
+                disabled={streaming}
+                rows={1}
+                style={{
+                  flex: 1,
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: 13,
+                  color: '#fef3c7',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(212,175,55,0.15)',
+                  borderRadius: 10,
+                  padding: '10px 14px',
+                  resize: 'none',
+                  outline: 'none',
+                  minHeight: 40,
+                  maxHeight: 100,
+                  lineHeight: 1.4,
+                }}
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || streaming}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: input.trim() && !streaming ? 'rgba(155,89,182,0.3)' : 'rgba(255,255,255,0.04)',
+                  border: input.trim() && !streaming ? '1px solid rgba(155,89,182,0.4)' : '1px solid rgba(255,255,255,0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: input.trim() && !streaming ? 'pointer' : 'not-allowed',
+                  flexShrink: 0,
+                  transition: 'all 0.15s',
+                }}
+                title="Send message"
+              >
+                {streaming ? (
+                  <Loader2 size={16} style={{ color: 'rgba(155,89,182,0.5)', animation: 'spin 1s linear infinite' }} />
+                ) : (
+                  <Send size={16} style={{ color: input.trim() ? 'rgba(155,89,182,0.8)' : 'rgba(253,230,138,0.2)' }} />
+                )}
+              </button>
+            </div>
+            <p style={{ fontSize: 10, color: 'rgba(253,230,138,0.15)', fontFamily: 'var(--font-ui)', marginTop: 6, textAlign: 'center' }}>
+              Enter to send \u00b7 Shift+Enter for new line \u00b7 Powered by Arcane Advisor (Ollama)
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Cursor blink animation */}
+        <style>{`
+          @keyframes npcCursorBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+          }
+        `}</style>
+      </motion.div>
+    </ModalPortal>
   );
 }
 

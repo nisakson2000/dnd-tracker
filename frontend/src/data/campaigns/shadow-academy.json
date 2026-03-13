@@ -1,7 +1,9 @@
 {
   "name": "The Shadow Academy",
+  "summary": "Students are vanishing from a prestigious arcane academy, and dark magic lurks in the restricted wing. A mystery-horror campaign built for investigation, social intrigue, and creeping dread using 2024 spellcasting rules.",
   "description": "Valdris Academy has stood for centuries as one of the premier institutions of arcane learning in the realm. But this semester, something is terribly wrong. Students have begun vanishing from their dormitories without a trace — no signs of struggle, no farewell notes, just empty beds and cold meals. The faculty insists it is merely homesickness driving students to leave, but whispered rumors speak of shadowy figures in the restricted library wing, strange glyphs appearing on dormitory walls at midnight, and a new professor whose lectures delve into magic that makes even senior wizards uncomfortable. You have arrived at Valdris Academy as new enrollees, transfer students, or hired investigators. Whatever your cover, your true mission is clear: find the missing students before the next one disappears. The 2024 rules bring updated spellcasting and investigation mechanics that make this mystery-driven campaign shine, with plenty of opportunities for social interaction, arcane research, and creeping horror.",
   "level": "1-4",
+  "ruleset": "5e 2024",
   "author": "The Codex",
   "tags": ["mystery", "horror", "investigation", "arcane", "social intrigue", "school", "5e 2024"],
   "npcs": [
@@ -136,5 +138,63 @@
     "body": "## Campaign Introduction\n\nThe road to Valdris Academy winds up through the Silvermist Valley, where morning fog clings to the hillsides like cobwebs. The academy itself emerges from the mist like a crown of stone towers — ancient, imposing, and alive with the faint hum of arcane energy. Banners of deep blue and silver snap in the mountain wind.\n\nBut something feels off. The courtyard, which should be bustling with students between lectures, is quieter than expected. Small clusters of students whisper nervously to each other, glancing over their shoulders. A notice board near the main gate is covered in missing-person flyers — seven of them, each bearing the face of a young student.\n\n**Headmaster Elara Nighthollow** has summoned you here under the guise of new enrollment, transfer paperwork, or a faculty consulting contract. Whatever your cover story, she has made one thing clear in her private correspondence: students are vanishing, the faculty cannot agree on why, and she needs outside eyes.\n\nYour first meeting with her is tonight, after the welcoming feast. Until then, you are free to explore the campus, attend a lecture, visit the Grand Archive, or simply listen to what the students and faculty are saying.\n\n### Key Details\n- **Setting**: Valdris Academy, a cliff-top school of magic\n- **Level Range**: 1-4 (2024 Rules)\n- **Tone**: Mystery and investigation with creeping arcane horror\n- **Theme**: Knowledge has a cost, and some shadows have teeth\n- **Starting Hook**: Headmaster Nighthollow's private briefing after the welcoming feast",
     "tags": "introduction,session-zero,mystery,academy",
     "npcs_mentioned": "Headmaster Elara Nighthollow,Professor Malachar Voss,Tomas Brightwick,Librarian Saeth,Yenra Duskmantle"
-  }
+  },
+  "items": [
+    {
+      "name": "Penumbral Focus",
+      "item_type": "misc",
+      "weight": 1.0,
+      "value_gp": 350.0,
+      "quantity": 1,
+      "description": "A dark crystal orb mounted on a short obsidian handle, recovered from Professor Voss's shadow studies classroom. It absorbs ambient light in a six-inch radius and sharpens the wielder's arcane intellect, serving as both a spellcasting focus and a tool for studying shadow magic.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{\"int\": 1}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Codex Umbral Page",
+      "item_type": "misc",
+      "weight": 0.1,
+      "value_gp": 900.0,
+      "quantity": 1,
+      "description": "A single loose page from the ancient Codex Umbral, found in the hidden reading room of the restricted wing. The text shifts and rearranges in dim light, revealing fragments of planar lore that deepen the reader's spiritual insight. The page is warm to the touch and smells faintly of old parchment and ozone.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{\"wis\": 1}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Shadow-Stitched Robes",
+      "item_type": "armor",
+      "weight": 4.0,
+      "value_gp": 400.0,
+      "quantity": 1,
+      "description": "Academy robes that have been subtly altered by exposure to the Hollow's shadow energy. The fabric seems to ripple and shift at the edges, and the wearer finds their reflexes sharpened as the robes anticipate and flow with their movements, enhancing their ability to dodge and evade.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "armor",
+      "stat_modifiers": "{\"dex\": 1}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Saeth's Archive Pass",
+      "item_type": "misc",
+      "weight": 0.1,
+      "value_gp": 0.0,
+      "quantity": 1,
+      "description": "A small bronze token stamped with the Grand Archive's seal, issued by Librarian Saeth to trusted individuals. It grants authorized access to the restricted wing of the Grand Archive without triggering the ward alarms. The token is warm when near active magical wards.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "common"
+    }
+  ]
 }

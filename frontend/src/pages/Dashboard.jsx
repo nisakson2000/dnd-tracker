@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Plus, Trash2, Heart, Shield, Bell,
+  Plus, Trash2, Heart, Shield, Bell, ArrowLeft,
   Library, ChevronRight, ChevronLeft, Scroll, Check, X,
-  Search, Users, Upload, ClipboardList, Flag,
+  Search, Users, Upload, ClipboardList, Flag, FileJson,
   Sparkles, Coins, BookOpen, AlertTriangle, Moon,
   Clock, CheckCircle, XCircle, Zap, Save,
 } from 'lucide-react';
@@ -21,6 +21,7 @@ import { getCurrency, updateCurrency } from '../api/inventory';
 import { longRest } from '../api/rest';
 import { RULESET_OPTIONS, getRuleset } from '../data/rulesets';
 import ConfirmDialog from '../components/ConfirmDialog';
+import DDBImportModal from '../components/DDBImportModal';
 import { APP_VERSION } from '../version';
 import { useAppMode } from '../contexts/ModeContext';
 import { useUpdateCheck } from '../hooks/useUpdateCheck';
@@ -416,6 +417,66 @@ function ImportCharCard({ index, onImport }) {
         </div>
         <div style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 12, color: hovered ? 'rgba(100,180,230,0.4)' : 'rgba(100,180,230,0.18)', transition: 'color 0.3s' }}>
           From exported JSON file
+        </div>
+      </div>
+
+      {/* Bottom sweep */}
+      <motion.div
+        animate={{ width: hovered ? '100%' : '0%' }}
+        transition={{ duration: 0.45 }}
+        style={{
+          position: 'absolute', bottom: 0, left: 0,
+          height: 2,
+          background: `linear-gradient(90deg, transparent, ${accent}0.5), transparent)`,
+        }}
+      />
+    </motion.div>
+  );
+}
+
+// ─── D&D Beyond Import card ─────────────────────────────────────────────────
+
+function DDBImportCard({ index, onClick }) {
+  const [hovered, setHovered] = useState(false);
+  const accent = 'rgba(59,130,246,';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.08 }}
+      whileHover={{ y: -6, borderColor: `${accent}0.4)`, background: `${accent}0.04)`, boxShadow: `0 14px 50px rgba(0,0,0,0.7), 0 0 30px ${accent}0.06)` }}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      onClick={onClick}
+      style={{
+        borderRadius: 14, minHeight: 240, cursor: 'pointer', position: 'relative', overflow: 'hidden',
+        border: `1px dashed ${accent}0.18)`,
+        background: 'rgba(11,9,20,0.45)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: 12,
+        boxShadow: '0 4px 30px rgba(0,0,0,0.4)',
+      }}
+    >
+      <motion.div
+        animate={hovered ? { scale: 1.1, boxShadow: `0 0 20px ${accent}0.2), inset 0 0 12px ${accent}0.08)` } : { scale: 1, boxShadow: 'none' }}
+        transition={{ type: 'spring', stiffness: 320 }}
+        style={{
+          width: 64, height: 64, borderRadius: '50%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: `${accent}0.05)`,
+          border: `1px dashed ${accent}0.3)`,
+          fontSize: 22, color: `${accent}0.45)`,
+        }}
+      >
+        <FileJson size={22} />
+      </motion.div>
+      <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.2em', textTransform: 'uppercase', color: hovered ? 'rgba(96,165,250,0.7)' : 'rgba(96,165,250,0.38)', transition: 'color 0.3s' }}>
+          D&D Beyond Import
+        </div>
+        <div style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 12, color: hovered ? 'rgba(96,165,250,0.4)' : 'rgba(96,165,250,0.18)', transition: 'color 0.3s' }}>
+          Import from D&D Beyond JSON
         </div>
       </div>
 
@@ -1435,7 +1496,7 @@ function Divider() {
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
-function EmptyState({ onOpen, onImport, isDM }) {
+function EmptyState({ onOpen, onImport, onDDBImport, isDM }) {
   const fileInputRef = useRef(null);
 
   const handleFileSelect = async (e) => {
@@ -1484,6 +1545,13 @@ function EmptyState({ onOpen, onImport, isDM }) {
               style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: '1px solid rgba(52,152,219,0.3)', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: 'rgba(52,152,219,0.1)', color: 'rgba(100,180,230,0.85)' }}
             >
               <Upload size={16} /> Import Existing Character
+            </motion.button>
+            <motion.button
+              onClick={onDDBImport}
+              whileHover={{ y: -2, boxShadow: '0 8px 28px rgba(59,130,246,0.25)' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: '1px solid rgba(59,130,246,0.3)', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: 'rgba(59,130,246,0.1)', color: 'rgba(96,165,250,0.85)' }}
+            >
+              <FileJson size={16} /> D&D Beyond Import
             </motion.button>
           </>
         )}
@@ -2040,13 +2108,15 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const [charSearch, setCharSearch] = useState('');
+  const [showDDBImport, setShowDDBImport] = useState(false);
   const [sessionPrepChar, setSessionPrepChar] = useState(null);
   const [postSessionChar, setPostSessionChar] = useState(null);
   const [autoUpdateStatus, setAutoUpdateStatus] = useState(null); // null | 'checking' | 'pulling' | 'updated' | 'up_to_date' | 'failed'
   const { updateAvailable, latestVersion, currentVersion } = useUpdateCheck();
 
-  // Auto-pull from GitHub on first launch of the day
+  // Auto-pull from GitHub on first launch of the day (dev only)
   useEffect(() => {
+    if (!import.meta.env.DEV) return;
     const today = new Date().toISOString().split('T')[0];
     const lastAutoUpdate = localStorage.getItem('codex_last_auto_update');
     if (lastAutoUpdate === today) return; // Already checked today
@@ -2061,7 +2131,6 @@ export default function Dashboard() {
           if (pullResult.success) {
             localStorage.setItem('codex_last_auto_update', today);
             setAutoUpdateStatus('updated');
-            toast.success('Auto-updated to latest build! Restart for changes to take effect.', { duration: 8000, icon: '🔄' });
           } else {
             localStorage.setItem('codex_last_auto_update', today);
             setAutoUpdateStatus('failed');
@@ -2439,7 +2508,7 @@ export default function Dashboard() {
             Consulting the ancient texts…
           </div>
         ) : characters.length === 0 ? (
-          <EmptyState onOpen={() => setShowCreate(true)} onImport={handleImport} isDM={isDM} />
+          <EmptyState onOpen={() => setShowCreate(true)} onImport={handleImport} onDDBImport={() => setShowDDBImport(true)} isDM={isDM} />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 20 }}>
             {filteredCharacters.map((c, i) => isDM ? (
@@ -2459,43 +2528,46 @@ export default function Dashboard() {
               <>
                 <NewCharCard index={filteredCharacters.length} onClick={() => setShowCreate(true)} isDM={isDM} />
                 {!isDM && <ImportCharCard index={filteredCharacters.length + 1} onImport={handleImport} />}
+                {!isDM && <DDBImportCard index={filteredCharacters.length + 2} onClick={() => setShowDDBImport(true)} />}
               </>
             )}
           </div>
         )}
       </div>
 
-      {/* Mode badge + switch (top-right) */}
+      {/* Switch Mode button (top-left, matches DM mode style) */}
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
+        initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.5 }}
-        style={{ position: 'fixed', top: 16, right: 16, zIndex: 20, display: 'flex', alignItems: 'center', gap: 8 }}
+        style={{ position: 'fixed', top: 16, left: 16, zIndex: 20 }}
       >
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '6px 14px', borderRadius: 99,
-          background: isDM ? 'rgba(155,89,182,0.1)' : 'rgba(201,168,76,0.08)',
-          border: `1px solid ${isDM ? 'rgba(155,89,182,0.25)' : 'rgba(201,168,76,0.18)'}`,
-          fontFamily: 'var(--font-heading)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
-          color: isDM ? 'rgba(155,89,182,0.7)' : 'rgba(201,168,76,0.55)',
-        }}>
-          <span>{isDM ? '📖' : '⚔'}</span>
-          {isDM ? 'DM Mode' : 'Player Mode'}
-        </div>
         <button
           onClick={clearMode}
+          title="Back to mode selection"
           style={{
-            padding: '5px 10px', borderRadius: 99, border: 'none', cursor: 'pointer',
-            background: 'rgba(255,255,255,0.04)', color: 'rgba(200,175,130,0.3)',
-            fontFamily: 'var(--font-heading)', fontSize: 9, letterSpacing: '0.08em',
-            transition: 'all 0.2s',
+            display: 'flex', alignItems: 'center', gap: '6px',
+            padding: '8px 14px', borderRadius: '8px',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            color: 'var(--text-dim, rgba(255,255,255,0.5))',
+            fontSize: '13px', fontWeight: 500,
+            cursor: 'pointer', fontFamily: 'var(--font-ui)',
+            transition: 'all 0.15s',
           }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'rgba(200,175,130,0.6)'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(200,175,130,0.3)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
-          title="Switch between DM and Player mode"
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+            e.currentTarget.style.color = 'var(--text, rgba(255,255,255,0.9))';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+            e.currentTarget.style.color = 'var(--text-dim, rgba(255,255,255,0.5))';
+          }}
         >
-          Switch
+          <ArrowLeft size={14} />
+          Switch Mode
         </button>
       </motion.div>
 
@@ -2540,6 +2612,13 @@ export default function Dashboard() {
           />
         )}
       </AnimatePresence>
+
+      {/* D&D Beyond Import Modal */}
+      <DDBImportModal
+        show={showDDBImport}
+        onClose={() => setShowDDBImport(false)}
+        onSuccess={() => { setShowDDBImport(false); load(); }}
+      />
 
       {/* Delete confirm */}
       <ConfirmDialog

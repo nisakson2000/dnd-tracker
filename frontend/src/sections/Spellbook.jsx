@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronRight, ChevronUp, Sparkles, RotateCcw, Search, Lock, Coins, Info, CheckSquare, Square, Wand2, Coffee, Moon, BookOpen, Filter, Zap, Crosshair, CircleDot, ShieldAlert } from 'lucide-react';
+import { Plus, Trash2, Pencil, ChevronDown, ChevronRight, ChevronUp, Sparkles, RotateCcw, Search, Lock, Coins, Info, CheckSquare, Square, Wand2, Coffee, Moon, BookOpen, Filter, Zap, Crosshair, CircleDot, ShieldAlert } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getSpells, addSpell, updateSpell, deleteSpell, getSpellSlots, updateSpellSlots, resetSpellSlots } from '../api/spells';
 import { getOverview } from '../api/overview';
@@ -37,7 +37,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
   const [loading, setLoading] = useState(true);
   const [expandedLevel, setExpandedLevel] = useState(0);
   const [showAdd, setShowAdd] = useState(false);
-  const [_editingSpell, _setEditingSpell] = useState(null);
+  const [editingSpell, setEditingSpell] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [levelFilter, setLevelFilter] = useState(() => {
     try { return sessionStorage.getItem(`codex_spellfilter_${characterId}`) || 'all'; } catch { return 'all'; }
@@ -59,7 +59,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
 
   // Persist quick cast open state
   useEffect(() => {
-    try { sessionStorage.setItem(`codex_quickcast_${characterId}`, quickCastOpen ? 'open' : 'closed'); } catch { /* ignore */ }
+    try { sessionStorage.setItem(`codex_quickcast_${characterId}`, quickCastOpen ? 'open' : 'closed'); } catch (err) { if (import.meta.env.DEV) console.warn('QuickCast persist:', err); }
   }, [quickCastOpen, characterId]);
 
   // Daily spell tracking (session-based)
@@ -176,6 +176,16 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
   const handleUpdateSpell = async (spellId, spellData) => {
     try {
       await updateSpell(characterId, spellId, spellData);
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
+  const handleEditSpell = async (spellData) => {
+    if (!editingSpell) return;
+    try {
+      await updateSpell(characterId, editingSpell.id, spellData);
+      toast.success('Spell updated');
+      setEditingSpell(null);
       load();
     } catch (err) { toast.error(err.message); }
   };
@@ -927,7 +937,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
           </div>
           <div className="space-y-2">
             {spellsByLevel[0].map(spell => (
-              <SpellRow key={spell.id} spell={spell} level={0} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} />
+              <SpellRow key={spell.id} spell={spell} level={0} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} setEditingSpell={setEditingSpell} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} />
             ))}
           </div>
           {/* Cantrip Scaling Display */}
@@ -973,7 +983,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
             {isExpanded && (
               <div className="mt-3 space-y-2">
                 {levelSpells.map(spell => (
-                  <SpellRow key={spell.id} spell={spell} level={level} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} />
+                  <SpellRow key={spell.id} spell={spell} level={level} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} setEditingSpell={setEditingSpell} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} />
                 ))}
               </div>
             )}
@@ -983,6 +993,9 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
 
       {/* Add Spell Modal */}
       {showAdd && <SpellForm onSubmit={handleAddSpell} onCancel={() => setShowAdd(false)} />}
+
+      {/* Edit Spell Modal */}
+      {editingSpell && <SpellForm spell={editingSpell} onSubmit={handleEditSpell} onCancel={() => setEditingSpell(null)} />}
 
       <ConfirmDialog
         show={!!confirmDelete}
@@ -995,7 +1008,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
   );
 }
 
-function SpellRow({ spell, level, spells, slots, concentratingOn, setConcentratingOn, handleUpdateSpell, setConfirmDelete, expandedSpell, setExpandedSpell, castSpell }) {
+function SpellRow({ spell, level, spells, slots, concentratingOn, setConcentratingOn, handleUpdateSpell, setConfirmDelete, setEditingSpell, expandedSpell, setExpandedSpell, castSpell }) {
   const [showUpcast, setShowUpcast] = useState(false);
 
   // Material component cost detection
@@ -1094,9 +1107,14 @@ function SpellRow({ spell, level, spells, slots, concentratingOn, setConcentrati
             )
           )}
         </div>
-        <button onClick={() => setConfirmDelete(spell)} className="text-red-400/50 hover:text-red-400" aria-label={`Delete spell ${spell.name}`}>
-          <Trash2 size={14} />
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => setEditingSpell(spell)} className="text-amber-200/30 hover:text-amber-200/70 transition-colors" aria-label={`Edit spell ${spell.name}`} title="Edit spell">
+            <Pencil size={13} />
+          </button>
+          <button onClick={() => setConfirmDelete(spell)} className="text-red-400/50 hover:text-red-400 transition-colors" aria-label={`Delete spell ${spell.name}`} title="Delete spell">
+            <Trash2 size={14} />
+          </button>
+        </div>
       </div>
 
       {/* Upcast Level Selector */}
@@ -1269,7 +1287,7 @@ function SpellForm({ spell, onSubmit, onCancel }) {
     <ModalPortal>
       <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onCancel()}>
       <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
-        <h3 className="font-display text-lg text-amber-100 mb-4">Add Spell</h3>
+        <h3 className="font-display text-lg text-amber-100 mb-4">{spell ? 'Edit Spell' : 'Add Spell'}</h3>
         <div className="space-y-3">
           <div>
             <input className={`input w-full ${nameError ? 'border-red-500' : ''}`} placeholder="Spell name" value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
@@ -1320,7 +1338,7 @@ function SpellForm({ spell, onSubmit, onCancel }) {
         </div>
         <div className="flex gap-3 justify-end mt-4">
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
-          <button onClick={handleSubmit} className="btn-primary text-sm">Add Spell</button>
+          <button onClick={handleSubmit} className="btn-primary text-sm">{spell ? 'Save Changes' : 'Add Spell'}</button>
         </div>
       </div>
       </div>

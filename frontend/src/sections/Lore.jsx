@@ -7,6 +7,7 @@ import { getNPCs } from '../api/npcs';
 import { getQuests } from '../api/quests';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
+import { useAppMode } from '../contexts/ModeContext';
 
 const CATEGORY_PRESETS = [
   { label: 'Location', icon: MapPin, color: 'bg-blue-800/30 text-blue-300 border-blue-500/30', borderLeft: 'border-l-blue-400' },
@@ -124,6 +125,8 @@ function prepareLorePayload(form) {
 }
 
 export default function Lore({ characterId }) {
+  const { mode: appMode } = useAppMode();
+  const isDM = appMode === 'dm';
   const [notes, setNotes] = useState([]);
   const [npcs, setNpcs] = useState([]);
   const [quests, setQuests] = useState([]);
@@ -146,8 +149,8 @@ export default function Lore({ characterId }) {
   };
 
   const loadCrossRefs = async () => {
-    try { setNpcs(await getNPCs(characterId)); } catch { /* non-critical */ }
-    try { setQuests(await getQuests(characterId)); } catch { /* non-critical */ }
+    try { setNpcs(await getNPCs(characterId)); } catch (err) { if (import.meta.env.DEV) console.warn('Lore cross-ref NPCs:', err); }
+    try { setQuests(await getQuests(characterId)); } catch (err) { if (import.meta.env.DEV) console.warn('Lore cross-ref quests:', err); }
   };
 
   useEffect(() => { load(); loadCrossRefs(); }, [characterId]);
@@ -363,8 +366,8 @@ export default function Lore({ characterId }) {
             >
               {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
-            <button onClick={() => { setEditing(note); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>
-            <button onClick={() => setConfirmDelete(note)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>
+            {isDM && <button onClick={() => { setEditing(note); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>}
+            {isDM && <button onClick={() => setConfirmDelete(note)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>}
           </div>
         </div>
 
@@ -467,9 +470,11 @@ export default function Lore({ characterId }) {
             <p className="text-xs text-amber-200/40 font-normal mt-0.5">Your campaign knowledge base. Categorize world-building details, track sources, and mark what's confirmed vs. rumor.</p>
           </div>
         </h2>
-        <button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
-          <Plus size={12} /> New Note
-        </button>
+        {isDM && (
+          <button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
+            <Plus size={12} /> New Note
+          </button>
+        )}
       </div>
 
       {/* Stats bar */}

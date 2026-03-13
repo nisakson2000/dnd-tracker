@@ -4,6 +4,33 @@ All updates relevant to **Player Mode**. For DM-specific changes, see `MASTERUPD
 
 ---
 
+## V0.5.0 — Multiplayer Campaign Engine & Party Tools
+**Released:** March 13, 2026
+
+### Player Session (Multiplayer)
+- **Player Join Flow** — enter DM's IP + room code, select character, wait for DM approval
+- **Player Session View** — see active scene, initiative order, chat, roll dice, receive handouts, submit actions
+
+### D&D Beyond Import
+- **DDBImportModal** — multi-step import wizard for D&D Beyond JSON character exports
+- Import button available on Dashboard empty state and character view
+
+### New Sections (9)
+- **Battle Map** — interactive grid-based tactical map with tokens, conditions, and drawing tools
+- **Calendar (Harptos)** — full Forgotten Realms calendar with festivals, seasons, and day/year tracking
+- **Downtime Activities** — crafting, training, research, business operations with skill checks and gold tracking
+- **Encounter Builder** — design balanced encounters by CR, party level, and difficulty
+- **Feature Request** — submit structured in-app feature requests with auto-generated IDs
+- **Homebrew Builder** — create custom monsters, spells, and magic items with full stat blocks
+- **Party Analyzer** — analyze party composition, roles, abilities, and encounter difficulty
+- **Party Loot** — track shared treasure, distribute coins/items, rarity sorting, audit log
+- **Soundboard** — procedural ambient audio: tavern, combat, forest, dungeon, storm, ocean, camp, city
+
+### Sidebar
+- New sections added: Downtime, Party Loot, Homebrew Builder, Calendar, Party Analyzer, Soundboard, Feature Request
+
+---
+
 ## V0.1.5 BETA — Update System Overhaul, Campaign Map Fix, Dev Tools Cleanup
 **Released:** March 12, 2026
 

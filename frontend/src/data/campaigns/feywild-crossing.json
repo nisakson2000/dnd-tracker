@@ -1,7 +1,9 @@
 {
   "name": "The Feywild Crossing",
+  "summary": "A whimsical yet dangerous adventure where the Feywild bleeds into a farming village through a growing rift. Navigate fey politics, solve enchantment puzzles, and decide the crossing's fate using 2024 updated charm and illusion mechanics.",
   "description": "The farming village of Havenbrook has always been unremarkable — a quiet community of wheat fields, apple orchards, and honest folk who want nothing more than a good harvest and a warm hearth. That changed three days ago when a shimmering rift tore open in Farmer Aldric's north field, and the Feywild came spilling through. Now sunflowers grow to twenty feet tall overnight, the village well produces honey-sweet water that makes people giggle uncontrollably, and a traveling merchant swears his cart was stolen by a fox wearing a waistcoat. The rift is growing, and with it, the Feywild's influence is spreading — rewriting the rules of reality one acre at a time. Some villagers find it delightful. Others are terrified. And the fey creatures emerging from the crossing have agendas of their own. Your party has arrived to investigate the rift, manage the growing chaos, and ultimately decide the fate of the crossing before Havenbrook is swallowed entirely by the Feywild. The 2024 rules provide updated fey creature stat blocks and expanded charm and illusion mechanics that bring this whimsical-yet-dangerous setting to life.",
   "level": "3-6",
+  "ruleset": "5e 2024",
   "author": "The Codex",
   "tags": ["feywild", "fey", "puzzles", "whimsy", "nature", "portal", "social", "5e 2024"],
   "npcs": [
@@ -138,5 +140,77 @@
     "body": "## Campaign Introduction\n\nThe road to Havenbrook is supposed to be boring. Every traveler you have spoken with described it the same way: flat, straight, dusty, and lined with wheat fields as far as the eye can see. So when the wheat on the left side of the road turns luminescent purple and a rabbit with antlers bounds across your path, you know something has gone sideways.\n\nThe village itself is in a state of cheerful panic. A group of children are chasing — or being chased by — a swarm of butterflies that leave trails of glitter in the air. A woman stands outside her cottage shouting at a rosebush that appears to be growing through her front door in real time. Two old men sit on a bench outside the Bushel and Barrel tavern, watching a field of sunflowers slowly rotate to face a sun that is not in the sky.\n\n*\"Oh good, you must be the adventurers,\"* says a weathered woman striding toward you with purpose. **Elder Maren Ashwood** looks like she has not slept in three days but has compensated with sheer stubbornness. *\"Welcome to Havenbrook. As you can see, we have a bit of a situation.\"*\n\nShe gestures north, where the sky above Farmer Aldric's field shimmers with an amber light that does not belong to this world. Even from here, you can feel it — a tingling warmth on your skin, a faint melody just below the threshold of hearing, and the unmistakable sensation that the world is slightly thinner here than it ought to be.\n\n### Key Details\n- **Setting**: Havenbrook, a farming village affected by a Feywild crossing\n- **Level Range**: 3-6 (2024 Rules)\n- **Tone**: Whimsy and wonder balanced with genuine danger\n- **Theme**: Not all magic is malicious, but all magic has a cost\n- **Starting Hook**: Elder Maren's briefing at the Village Hall, followed by a visit to Aldric's field",
     "tags": "introduction,session-zero,feywild,fey,whimsy",
     "npcs_mentioned": "Elder Maren Ashwood,Thistle,Lord Oberon of the Amber Court,Brambleheart,Farmer Aldric Wynn"
-  }
+  },
+  "items": [
+    {
+      "name": "Thistle's Lucky Charm",
+      "item_type": "misc",
+      "weight": 0.1,
+      "value_gp": 300.0,
+      "quantity": 1,
+      "description": "A tiny braided bracelet of spider silk and flower petals gifted by the fairy Thistle to a trusted ally. It shimmers with fey glamour and subtly enhances the wearer's charm and social grace, making their words more persuasive and their smile more disarming.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{\"cha\": 1}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Briarwood Staff",
+      "item_type": "weapon",
+      "weight": 4.0,
+      "value_gp": 400.0,
+      "quantity": 1,
+      "description": "A quarterstaff carved from a living briarwood branch that was freely given by Brambleheart the treant. It is warm to the touch and occasionally sprouts tiny leaves. The staff heightens the wielder's spiritual perception and connection to the natural world.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{\"wis\": 1}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Cloak of Autumn Leaves",
+      "item_type": "armor",
+      "weight": 1.5,
+      "value_gp": 350.0,
+      "quantity": 1,
+      "description": "A cloak woven from enchanted autumn leaves that never wither or crumble. The leaves shift between gold, crimson, and amber as the wearer moves, and the cloak grants fey-touched agility that makes the wearer lighter on their feet.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{\"dex\": 1}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Amber Court Token",
+      "item_type": "misc",
+      "weight": 0.2,
+      "value_gp": 0.0,
+      "quantity": 1,
+      "description": "A smooth amber disc inscribed with the sigil of Lord Oberon's court, given as a mark of safe passage through Amber Court territory. It serves as proof of diplomatic standing and grants the bearer audience with fey nobles without needing an invitation. Useful but politically loaded — carrying it implies a debt to the Amber Court.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Fey-Touched Honey",
+      "item_type": "consumable",
+      "weight": 0.5,
+      "value_gp": 50.0,
+      "quantity": 1,
+      "description": "A small crystal vial of golden honey harvested from bees that feed on Feywild flowers. Consuming it restores 2d8+4 hit points and causes the drinker to faintly glow with amber light for 10 minutes, granting advantage on Charisma checks with fey creatures during that time.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    }
+  ]
 }

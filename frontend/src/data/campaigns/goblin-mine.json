@@ -1,7 +1,9 @@
 {
   "name": "The Goblin Mine",
-  "description": "A band of goblins has overtaken an abandoned iron mine near the village of Brindlewood. Merchant caravans are being raided, and strange noises echo from the tunnels at night. The village elder seeks brave adventurers to clear the mine and restore peace to the trade road.",
+  "summary": "A classic starter dungeon crawl through goblin-infested mine tunnels. Perfect for new players learning the ropes of combat, exploration, and teamwork.",
+  "description": "A band of goblins has overtaken an abandoned iron mine near the village of Brindlewood. Merchant caravans are being raided, and strange noises echo from the tunnels at night. The village elder seeks brave adventurers to clear the mine and restore peace to the trade road. The mine's winding tunnels hold more than just goblins — a bugbear chieftain has united the scattered tribes under his banner, and rumors suggest he answers to something even darker lurking in the mine's deepest chamber. Players will navigate trapped corridors, negotiate with a goblin deserter who wants out, and face a final confrontation that tests both sword and strategy. Includes 3 fully-mapped dungeon levels, 6 NPCs with distinct personalities, and multiple quest hooks that can launch a longer campaign.",
   "level": "1-3",
+  "ruleset": "5e 2014",
   "author": "The Codex",
   "tags": ["starter", "dungeon crawl", "goblins"],
   "npcs": [
@@ -139,5 +141,63 @@
     "body": "## Campaign Introduction\n\nThe adventurers arrive in the village of Brindlewood after a long journey along the North Trade Road. The village is quieter than expected - many shops are closed, and the few villagers on the streets look worried.\n\nAt The Dusty Flagon Inn, the innkeeper Hilda mentions that merchant caravans have been raided by goblins operating from the old Iron Fang Mine. Elder Maeven is looking for capable adventurers to deal with the problem.\n\n**Starting Hook:** The party can seek out Elder Maeven at the village hall, investigate the trade road themselves, or ask around town for more information about the goblin raids.\n\n**Key NPCs to introduce:** Elder Maeven, Tomas Brightwater, Brother Aldric",
     "tags": "introduction,session-zero,brindlewood",
     "npcs_mentioned": "Elder Maeven Ashford,Tomas Brightwater,Brother Aldric,Hilda Copperkeg"
-  }
+  },
+  "items": [
+    {
+      "name": "Durgan's Blade",
+      "item_type": "weapon",
+      "weight": 1.0,
+      "value_gp": 200.0,
+      "quantity": 1,
+      "description": "A finely crafted dwarven dagger found in the sealed tomb of Durgan Stonepick deep within the Iron Fang Mine. The blade emits a faint silvery glow and is etched with dwarven runes along the fuller. It strikes with supernatural precision, functioning as a +1 dagger.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Goblin Warchief's Helm",
+      "item_type": "armor",
+      "weight": 3.0,
+      "value_gp": 250.0,
+      "quantity": 1,
+      "description": "A crudely fashioned iron helm adorned with jagged teeth and tufts of red-dyed fur, taken from the goblin warchief Grukk the Toothless. Despite its rough appearance, it radiates a menacing aura that bolsters the wearer's commanding presence.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "armor",
+      "stat_modifiers": "{\"cha\": 1}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Amulet of Minor Fortitude",
+      "item_type": "misc",
+      "weight": 0.5,
+      "value_gp": 300.0,
+      "quantity": 1,
+      "description": "A small stone amulet on a leather cord, carved with a dwarven rune meaning 'endurance.' It was found among the burial offerings in Durgan's tomb and hums with faint protective magic that bolsters the wearer's vitality.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "neck",
+      "stat_modifiers": "{\"con\": 1}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Brindlewood Apple Cider",
+      "item_type": "consumable",
+      "weight": 1.0,
+      "value_gp": 25.0,
+      "quantity": 1,
+      "description": "A stoppered clay jug of Brindlewood's famous apple cider, specially brewed by Hilda Copperkeg with a dash of healing herbs from Brother Aldric's shrine. Drinking it restores 2d4+2 hit points and leaves a warm, pleasant apple taste.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "common"
+    }
+  ]
 }

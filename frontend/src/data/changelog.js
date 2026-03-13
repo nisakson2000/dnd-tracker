@@ -3,6 +3,29 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.5.0',
+    date: '03/13/2026',
+    title: 'Multiplayer Campaign Engine & Party Tools',
+    changes: [
+      'DM Campaign Engine — create campaigns, manage scenes, and run live sessions with real-time WebSocket multiplayer sync',
+      'DM Live Session — initiative tracker, round manager, action log, chat, scene management, and player connections',
+      'Player Session — join DM sessions via IP + room code, view scenes, roll dice, receive handouts, and take actions',
+      'D&D Beyond Import — multi-step import wizard for D&D Beyond JSON character exports',
+      'DM Session Tools — character arc manager, handouts, monster panel, AI quest generator, session recap, world state tracker',
+      'Battle Map — interactive grid-based tactical map with token placement, conditions, and drawing tools',
+      'Calendar — full Forgotten Realms Harptos calendar with festivals, seasons, and day/year tracking',
+      'Downtime Activities — track crafting, training, research, and business operations with skill checks and gold',
+      'Encounter Builder — design balanced encounters by CR, party level, and difficulty using XP thresholds',
+      'Homebrew Builder — create custom monsters, spells, and magic items with full stat blocks',
+      'Party Analyzer — analyze party composition, roles, abilities, and encounter difficulty recommendations',
+      'Party Loot — track shared treasure, distribute coins/items, rarity sorting, and audit log',
+      'Soundboard — procedural ambient audio with tavern, combat, forest, dungeon, storm, ocean, camp, and city channels',
+      'Feature Request — submit structured in-app feature requests with category, title, and auto-generated IDs',
+      'Campaign Database — dedicated campaigns.db with tables for scenes, encounters, monsters, handouts, character arcs, and world state',
+      '25+ new Rust backend commands for campaign management, sessions, encounters, and multiplayer sync',
+    ],
+  },
+  {
     version: 'V0.4.7',
     date: '03/12/2026',
     title: 'Arcane Encyclopedia Redesign — Phase 4: Power Features & Polish',

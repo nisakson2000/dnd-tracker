@@ -4,6 +4,68 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.5.0 — Multiplayer Campaign Engine & Party Tools
+**Released:** March 13, 2026
+
+### DM Campaign Engine
+- **Campaign List** — create, list, delete campaigns with ruleset selection (D&D 5e 2024/2014, PF2e, homebrew)
+- **DM Lobby** — campaign headquarters with scene management, session recap, handouts, quest generator, and player connections
+- **Live Session Runner** — initiative tracker, round counter, action log, real-time chat, session timer, and scene management
+- **WebSocket Multiplayer** — real-time DM↔Player sync on port 7878; handles player rolls, character updates, concentration, and action approval
+
+### Player Session
+- **Player Join Flow** — enter DM's IP address + room code, select character, wait for DM approval
+- **Player Session View** — see active scene, initiative order, chat, roll dice, receive handouts, and submit actions for DM approval
+
+### DM Session Tools
+- **Character Arc Manager** — track player character arcs through hooks, development, complications, climax, and resolution phases
+- **Handouts Manager** — create handouts and reveal them to players with visibility toggle
+- **Monster Panel** — search SRD monster database, add to encounters, track HP/damage/conditions/kills
+- **Quest Generator** — AI-powered quest generation via Ollama based on party level, setting, and theme
+- **Session Recap** — AI-powered session summary generation
+- **World State Manager** — track world state entries by category (general, politics, geography, events, factions)
+
+### D&D Beyond Import
+- **DDBImportModal** — multi-step import wizard (input → preview → importing → done) for D&D Beyond JSON character exports
+- **ddbImport parser** — converts D&D Beyond character export format to Codex internal format
+
+### New Player Sections (9)
+- **Battle Map** — interactive grid-based tactical map with token placement, conditions, and environmental drawing tools
+- **Calendar (Harptos)** — full Forgotten Realms calendar with festivals, seasons, and day/year tracking
+- **Downtime Activities** — track crafting, training, research, business operations, and carousing with skill checks and gold
+- **Encounter Builder** — design balanced encounters by CR, party level, and difficulty using XP thresholds and SRD monster stat tables
+- **Feature Request** — submit structured feature requests with category, title, description, and auto-generated request IDs
+- **Homebrew Builder** — create and manage custom monsters, spells, and magic items with full stat blocks and validation
+- **Party Analyzer** — analyze party composition for roles, abilities, darkvision, AC, HP, and encounter difficulty recommendations
+- **Party Loot** — track shared party treasure, distribute coins/items, rarity sorting, and audit log
+- **Soundboard** — procedural ambient audio (Web Audio API) with tavern, combat, forest, dungeon, storm, ocean, camp, and city channels
+
+### Campaign Database (Rust)
+- **campaign_db.rs** — dedicated campaigns.db with tables for campaigns, scenes, encounters, monsters, handouts, character arcs, and world state
+- **session_ws.rs** — WebSocket server for real-time multiplayer sync with GameEvent enum handling
+- **25+ new Tauri commands** — campaign management, session management, encounters, monsters, handouts, character arcs, world state, concentration, XP, level-up, rest, conditions, scenes, and WebSocket control
+
+### Premade Campaigns
+- 6 premade campaigns updated with new scene/encounter structure for DM mode (Cursed Village, Dragon Coast, Feywild Crossing, Goblin Mine, Shadow Academy, Siege of Ironhold)
+
+### Sidebar & Navigation
+- Player mode: new sections — Downtime, Party Loot, Homebrew Builder, Calendar, Party Analyzer, Soundboard, Feature Request
+- DM mode: new sections — World Building (NPCs, Homebrew, Calendar), Encounter Builder, Battle Map
+- New routes: `/dm/campaigns`, `/dm/campaigns/:id`, `/dm/campaigns/:id/session`, `/player/join`, `/player/session`
+
+### Resources
+- **SRD Monsters** — bundled `srd_monsters.json` (SRD monster stat blocks for encounter builder)
+- **Multi-resolution icons** — added `icon_128.png`, `icon_256.png`, `icon_512.png`
+
+### Technical
+- **SessionContext** — Redux-style reducer for real-time session state (initiative, players, chat, action queue)
+- **CampaignOverview** — campaign info display for player sessions
+- Mode selection no longer persists — always shows ModeSelect on launch
+- **NavigationBridge** — connects react-router navigate to ModeContext for cross-context routing
+- Lazy-loaded DM/Player routes to keep main bundle lean
+
+---
+
 ## V0.4.7 — Arcane Encyclopedia Redesign Phase 4: Power Features & Polish
 **Released:** March 12, 2026
 

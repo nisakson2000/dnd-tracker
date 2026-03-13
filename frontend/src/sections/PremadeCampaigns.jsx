@@ -2,13 +2,14 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   BookOpen, Download, Globe, Users, Map, Scroll, Search,
   ChevronDown, ChevronUp, Loader2, CheckCircle2, AlertTriangle,
-  ExternalLink, Package, RefreshCw, Sparkles,
+  ExternalLink, Package, RefreshCw, Sparkles, Shield,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { addNPC } from '../api/npcs';
 import { addQuest } from '../api/quests';
 import { addLoreNote } from '../api/lore';
 import { addJournalEntry } from '../api/journal';
+import { addItem } from '../api/inventory';
 import { getOverview, updateOverview } from '../api/overview';
 
 // Bundled starter adventures
@@ -219,11 +220,12 @@ function extractFluffText(entries) {
 // ── Import logic ──
 
 async function importCampaignData(characterId, campaign, onProgress) {
-  const results = { npcs: 0, quests: 0, lore: 0, journal: 0, errors: [] };
+  const results = { npcs: 0, quests: 0, lore: 0, journal: 0, items: 0, errors: [] };
   const total =
     (campaign.npcs?.length || 0) +
     (campaign.quests?.length || 0) +
     (campaign.lore?.length || 0) +
+    (campaign.items?.length || 0) +
     (campaign.journal ? 1 : campaign.journals?.length || 0);
   let done = 0;
 
@@ -310,6 +312,32 @@ async function importCampaignData(characterId, campaign, onProgress) {
     tick();
   }
 
+  // Import items
+  for (const item of campaign.items || []) {
+    try {
+      await addItem(characterId, {
+        name: item.name,
+        item_type: item.item_type || 'misc',
+        weight: item.weight || 0,
+        value_gp: item.value_gp || 0,
+        quantity: item.quantity || 1,
+        description: item.description || '',
+        attunement: item.attunement || false,
+        attuned: false,
+        equipped: false,
+        equipment_slot: item.equipment_slot || 'misc',
+        stat_modifiers: typeof item.stat_modifiers === 'object'
+          ? JSON.stringify(item.stat_modifiers)
+          : item.stat_modifiers || '{}',
+        rarity: item.rarity || 'common',
+      });
+      results.items++;
+    } catch (err) {
+      results.errors.push(`Item "${item.name}": ${err.message || err}`);
+    }
+    tick();
+  }
+
   // Set campaign_name on the character overview so the Campaign Map can match premade maps
   if (campaign.name) {
     try {
@@ -378,6 +406,27 @@ function CampaignCard({ campaign, onLoad, loading, isBundled }) {
               }}>
                 Lv {campaign.level}
               </span>
+              {campaign.ruleset && (
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  fontSize: '10px',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 600,
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  background: campaign.ruleset === '5e 2024'
+                    ? 'rgba(96,165,250,0.12)' : 'rgba(251,191,36,0.12)',
+                  color: campaign.ruleset === '5e 2024' ? '#60a5fa' : '#fbbf24',
+                  border: `1px solid ${campaign.ruleset === '5e 2024'
+                    ? 'rgba(96,165,250,0.25)' : 'rgba(251,191,36,0.25)'}`,
+                  whiteSpace: 'nowrap',
+                }}>
+                  <Shield size={9} />
+                  {campaign.ruleset}
+                </span>
+              )}
               {isBundled && (
                 <span style={{
                   fontSize: '9px',
@@ -413,7 +462,7 @@ function CampaignCard({ campaign, onLoad, loading, isBundled }) {
               lineHeight: 1.5,
               margin: 0,
             }}>
-              {expanded ? campaign.description : (campaign.description?.substring(0, 150) + (campaign.description?.length > 150 ? '...' : ''))}
+              {expanded ? campaign.description : (campaign.summary || campaign.description?.substring(0, 150) + (campaign.description?.length > 150 ? '...' : ''))}
             </p>
           </div>
         </div>
@@ -597,6 +646,11 @@ function ImportSummary({ results, onDismiss }) {
         <span style={{ fontSize: '12px', color: 'var(--text-dim)', fontFamily: 'var(--font-ui)' }}>
           <strong>{results.journal}</strong> Journal entries
         </span>
+        {results.items > 0 && (
+          <span style={{ fontSize: '12px', color: 'var(--text-dim)', fontFamily: 'var(--font-ui)' }}>
+            <strong>{results.items}</strong> Items
+          </span>
+        )}
       </div>
 
       {hasErrors && (
@@ -621,8 +675,15 @@ function ImportSummary({ results, onDismiss }) {
 
 // ── Main section ──
 
+const RULESET_FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: '5e 2014', label: '5e 2014' },
+  { id: '5e 2024', label: '5e 2024' },
+];
+
 export default function PremadeCampaigns({ characterId }) {
   const [tab, setTab] = useState('bundled'); // 'bundled' | 'community'
+  const [rulesetFilter, setRulesetFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [importingId, setImportingId] = useState(null);
   const [progress, setProgress] = useState(0);
@@ -775,12 +836,18 @@ export default function PremadeCampaigns({ characterId }) {
     }
   };
 
-  const filteredBundled = BUNDLED_CAMPAIGNS.filter(c =>
-    !searchQuery.trim() ||
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.tags?.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredBundled = BUNDLED_CAMPAIGNS.filter(c => {
+    // Ruleset filter
+    if (rulesetFilter !== 'all' && c.ruleset !== rulesetFilter) return false;
+    // Search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return c.name.toLowerCase().includes(q) ||
+        c.description.toLowerCase().includes(q) ||
+        c.tags?.some(t => t.toLowerCase().includes(q));
+    }
+    return true;
+  });
 
   const filteredCommunity = communityList.filter(c =>
     !searchQuery.trim() ||
@@ -881,6 +948,42 @@ export default function PremadeCampaigns({ characterId }) {
             </button>
           ))}
         </div>
+
+        {/* Ruleset filter — only shown on bundled tab */}
+        {tab === 'bundled' && (
+          <div style={{
+            display: 'flex',
+            background: 'rgba(255,255,255,0.03)',
+            borderRadius: '8px',
+            border: '1px solid var(--border)',
+            overflow: 'hidden',
+          }}>
+            {RULESET_FILTERS.map((rf, idx) => (
+              <button
+                key={rf.id}
+                onClick={() => setRulesetFilter(rf.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '6px 12px',
+                  border: 'none',
+                  background: rulesetFilter === rf.id ? 'rgba(201,168,76,0.12)' : 'transparent',
+                  color: rulesetFilter === rf.id ? '#c9a84c' : 'var(--text-mute)',
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: '11px',
+                  fontWeight: rulesetFilter === rf.id ? 600 : 400,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  borderRight: idx < RULESET_FILTERS.length - 1 ? '1px solid var(--border)' : 'none',
+                }}
+              >
+                {rf.id !== 'all' && <Shield size={10} />}
+                {rf.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div style={{ position: 'relative', flex: 1, minWidth: '180px' }}>
           <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-mute)', pointerEvents: 'none' }} />

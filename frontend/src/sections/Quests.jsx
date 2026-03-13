@@ -7,6 +7,7 @@ import { getNPCs } from '../api/npcs';
 import { getOverview, updateOverview } from '../api/overview';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
+import { useAppMode } from '../contexts/ModeContext';
 
 const DIFFICULTIES = ['trivial', 'easy', 'medium', 'hard', 'deadly'];
 const DIFFICULTY_COLORS = {
@@ -38,7 +39,7 @@ const TIMELINE_LABELS = { received: 'Received', in_progress: 'In Progress', comp
 
 // Pack extra fields into the notes JSON blob so they persist
 function packQuestNotes(data) {
-  const { notes_text, quest_giver, location, priority, difficulty, xp_reward, gold_reward, item_rewards, rewards_received, quest_type, timeline, session_notes, sub_objectives, secret_objectives, session_counter } = data;
+  const { notes_text, quest_giver, location, priority, difficulty, xp_reward, gold_reward, item_rewards, rewards_received, quest_type, timeline, session_notes, sub_objectives, secret_objectives, session_counter, xp_awarded } = data;
   return JSON.stringify({
     _v: 3,
     notes_text: notes_text || '',
@@ -56,11 +57,12 @@ function packQuestNotes(data) {
     sub_objectives: sub_objectives || {},
     secret_objectives: secret_objectives || [],
     session_counter: session_counter || 0,
+    xp_awarded: xp_awarded || false,
   });
 }
 
 function unpackQuestNotes(notesStr) {
-  const defaults = { notes_text: '', quest_giver: '', location: '', priority: '', difficulty: '', xp_reward: '', gold_reward: '', item_rewards: '', rewards_received: false, quest_type: '', timeline: [], session_notes: [], sub_objectives: {}, secret_objectives: [], session_counter: 0 };
+  const defaults = { notes_text: '', quest_giver: '', location: '', priority: '', difficulty: '', xp_reward: '', gold_reward: '', item_rewards: '', rewards_received: false, quest_type: '', timeline: [], session_notes: [], sub_objectives: {}, secret_objectives: [], session_counter: 0, xp_awarded: false };
   if (!notesStr) return defaults;
   try {
     const parsed = JSON.parse(notesStr);
@@ -88,6 +90,7 @@ function enrichQuest(q) {
     sub_objectives: extra.sub_objectives || {},
     secret_objectives: extra.secret_objectives || [],
     session_counter: extra.session_counter || 0,
+    xp_awarded: extra.xp_awarded || false,
   };
 }
 
@@ -104,6 +107,8 @@ function prepareQuestPayload(form) {
 }
 
 export default function Quests({ characterId }) {
+  const { mode: appMode } = useAppMode();
+  const isDM = appMode === 'dm';
   const [quests, setQuests] = useState([]);
   const [npcs, setNpcs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -124,7 +129,7 @@ export default function Quests({ characterId }) {
 
   const loadNPCs = async () => {
     try { setNpcs(await getNPCs(characterId)); }
-    catch { /* silently ignore */ }
+    catch (err) { if (import.meta.env.DEV) console.warn('Failed to load NPCs for quest cross-refs:', err); }
   };
 
   useEffect(() => { load(); loadNPCs(); }, [characterId]);
@@ -146,6 +151,20 @@ export default function Quests({ characterId }) {
     });
   };
 
+  // Consolidated XP award helper — guards against double-awarding
+  const awardQuestXP = async (questId, questData, xpReward) => {
+    if (!xpReward || questData.xp_awarded) return;
+    try {
+      const overview = await getOverview(characterId);
+      const newXP = (overview.experience_points || 0) + xpReward;
+      await updateOverview(characterId, { ...overview, experience_points: newXP });
+      // Mark quest as xp_awarded so it can't be awarded again
+      const marked = { ...questData, xp_awarded: true };
+      await updateQuest(characterId, questId, prepareQuestPayload(marked));
+      toast.success(`+${xpReward.toLocaleString()} XP awarded!`, { icon: '⭐' });
+    } catch (err) { if (import.meta.env.DEV) console.warn('XP award failed:', err); }
+  };
+
   const handleSave = async (formData) => {
     try {
       const payload = prepareQuestPayload(formData);
@@ -153,15 +172,9 @@ export default function Quests({ characterId }) {
         await updateQuest(characterId, editing.id, payload);
         if (formData.status === 'completed' && editing.status !== 'completed') {
           toast.success('Quest completed!');
-          // Auto-award XP if quest has an XP reward
           const xpReward = Number(formData.xp_reward) || 0;
           if (xpReward > 0) {
-            try {
-              const overview = await getOverview(characterId);
-              const newXP = (overview.experience_points || 0) + xpReward;
-              await updateOverview(characterId, { ...overview, experience_points: newXP });
-              toast.success(`+${xpReward.toLocaleString()} XP awarded!`, { icon: '⭐' });
-            } catch { /* XP award is best-effort */ }
+            await awardQuestXP(editing.id, formData, xpReward);
           }
         } else {
           toast.success('Quest updated');
@@ -290,15 +303,9 @@ export default function Quests({ characterId }) {
       await updateQuest(characterId, quest.id, prepareQuestPayload(updated));
       if (newStatus === 'completed') {
         toast.success(`Quest "${quest.title}" completed!`);
-        // Auto-award XP if quest has an XP reward
         const xpReward = Number(quest.xp_reward) || 0;
         if (xpReward > 0) {
-          try {
-            const overview = await getOverview(characterId);
-            const newXP = (overview.experience_points || 0) + xpReward;
-            await updateOverview(characterId, { ...overview, experience_points: newXP });
-            toast.success(`+${xpReward.toLocaleString()} XP awarded!`, { icon: '⭐' });
-          } catch { /* XP award is best-effort */ }
+          await awardQuestXP(quest.id, updated, xpReward);
         }
       }
       else if (newStatus === 'failed') toast(`Quest "${quest.title}" failed`);
@@ -441,8 +448,8 @@ export default function Quests({ characterId }) {
               <button onClick={() => changeStatus(quest, 'active')} className="text-amber-200/40 hover:text-amber-200" title="Reactivate quest"><Map size={14} /></button>
             )}
             <button onClick={() => setSessionNoteQuest(quest)} className="text-amber-200/40 hover:text-amber-200" title="Add session note"><MessageSquarePlus size={14} /></button>
-            <button onClick={() => { setEditing(quest); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>
-            <button onClick={() => setConfirmDelete(quest)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>
+            {isDM && <button onClick={() => { setEditing(quest); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>}
+            {isDM && <button onClick={() => setConfirmDelete(quest)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>}
           </div>
         </div>
 
@@ -677,9 +684,11 @@ export default function Quests({ characterId }) {
             <p className="text-xs text-amber-200/40 font-normal mt-0.5">Track your active quests, objectives, and rewards. Check off goals as you complete them and keep session notes on progress.</p>
           </div>
         </h2>
-        <button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
-          <Plus size={12} /> New Quest
-        </button>
+        {isDM && (
+          <button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
+            <Plus size={12} /> New Quest
+          </button>
+        )}
       </div>
 
       {/* Reward Summary Bar */}

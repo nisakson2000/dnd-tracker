@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { BookOpen, Search } from 'lucide-react';
+import { BookOpen, Search, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { GLOSSARY, ACTION_ECONOMY } from '../data/helpText';
 
 const CATEGORIES = [...new Set(GLOSSARY.map(g => g.category))];
@@ -14,6 +15,7 @@ function highlightText(text, query) {
 }
 
 export default function RulesReference() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
@@ -31,15 +33,25 @@ export default function RulesReference() {
         <BookOpen size={20} /> Rules Reference
       </h2>
 
-      {/* Search */}
-      <div className="relative">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-200/30" />
-        <input
-          className="input w-full pl-10"
-          placeholder="Search rules (e.g. 'advantage', 'spell slot', 'grappled')..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+      {/* Search + Wiki link */}
+      <div className="flex gap-3 items-center">
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-200/30" />
+          <input
+            className="input w-full pl-10"
+            placeholder="Search rules (e.g. 'advantage', 'spell slot', 'grappled')..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <button
+          onClick={() => navigate('/wiki')}
+          className="flex items-center gap-1.5 text-xs px-3 py-2 rounded border border-purple-400/20 text-purple-300/60 hover:text-purple-300 hover:border-purple-400/40 transition-colors whitespace-nowrap"
+          title="Browse the full Arcane Encyclopedia for detailed rules, spells, monsters, and more"
+        >
+          <ExternalLink size={12} />
+          Arcane Encyclopedia
+        </button>
       </div>
 
       {/* Category Filter */}
@@ -94,7 +106,16 @@ export default function RulesReference() {
                   <h4 className="text-amber-100 font-medium text-sm">{highlightText(entry.term, search)}</h4>
                   <p className="text-xs text-amber-200/60 mt-1 leading-relaxed">{highlightText(entry.definition, search)}</p>
                 </div>
-                <span className="text-xs text-purple-300/40 whitespace-nowrap">{entry.category}</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-purple-300/40 whitespace-nowrap">{entry.category}</span>
+                  <button
+                    onClick={() => navigate(`/wiki?search=${encodeURIComponent(entry.term)}`)}
+                    className="text-purple-400/30 hover:text-purple-300 transition-colors"
+                    title={`Search "${entry.term}" in Arcane Encyclopedia`}
+                  >
+                    <BookOpen size={12} />
+                  </button>
+                </div>
               </div>
             </div>
           ))

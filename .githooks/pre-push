@@ -1,0 +1,29 @@
+#!/bin/bash
+# Pre-push hook: fetch and check for upstream changes before allowing push.
+# If the remote has commits you don't have, abort and tell you to pull first.
+
+BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
+REMOTE="origin"
+
+echo "[pre-push] Checking for upstream changes on $REMOTE/$BRANCH..."
+
+git fetch "$REMOTE" "$BRANCH" --quiet 2>/dev/null
+
+LOCAL=$(git rev-parse HEAD)
+REMOTE_HEAD=$(git rev-parse "$REMOTE/$BRANCH" 2>/dev/null)
+BASE=$(git merge-base HEAD "$REMOTE/$BRANCH" 2>/dev/null)
+
+if [ "$LOCAL" = "$REMOTE_HEAD" ]; then
+    echo "[pre-push] Up to date. Push allowed."
+    exit 0
+elif [ "$BASE" = "$REMOTE_HEAD" ]; then
+    echo "[pre-push] You have new commits. Push allowed."
+    exit 0
+else
+    echo ""
+    echo "  PUSH BLOCKED: Remote has new commits you haven't pulled yet."
+    echo "  Run:  git pull --rebase origin $BRANCH"
+    echo "  Then try pushing again."
+    echo ""
+    exit 1
+fi

@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { Plus, Trash2, Edit2, BookMarked, Search, X, Download, BookOpen, Star, Users, Copy, Clock, Coins, Zap, Calendar, ChevronDown, ChevronRight, FileText, Tag, Filter, Swords, MessageCircle, Map, ShoppingBag, Coffee } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Plus, Trash2, Edit2, BookMarked, Search, X, Download, BookOpen, Star, Users, Copy, Clock, Coins, Zap, Calendar, ChevronDown, ChevronRight, FileText, Tag, Filter, Swords, MessageCircle, Map, ShoppingBag, Coffee, Sparkles, Wand2, Save, RefreshCw, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { getJournalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry } from '../api/journal';
 import { getNPCs } from '../api/npcs';
 import { getQuests } from '../api/quests';
+import { checkOllamaStatus, streamChat } from '../api/assistant';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
 
@@ -22,6 +24,7 @@ const QUICK_TAGS = [
   { value: 'Exploration', color: 'bg-cyan-800/30 text-cyan-300 border-cyan-500/20',    icon: Map },
   { value: 'Shopping',    color: 'bg-yellow-800/30 text-yellow-300 border-yellow-500/20', icon: ShoppingBag },
   { value: 'Downtime',    color: 'bg-green-800/30 text-green-300 border-green-500/20',  icon: Coffee },
+  { value: 'Recap',       color: 'bg-violet-800/30 text-violet-300 border-violet-500/20', icon: Sparkles },
 ];
 
 function getQuickTagColor(tag) {
@@ -299,6 +302,299 @@ function SessionSummaryBar({ entries }) {
   );
 }
 
+function RecapModal({ entries, npcs, quests, characterId, onClose, onSaveAsEntry }) {
+  const [recapText, setRecapText] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedCount, setSelectedCount] = useState(3);
+  const [hasGenerated, setHasGenerated] = useState(false);
+  const abortRef = useRef(false);
+
+  const recentEntries = useMemo(() => {
+    return [...entries]
+      .sort((a, b) => {
+        const sessionDiff = (b.session_number || 0) - (a.session_number || 0);
+        if (sessionDiff !== 0) return sessionDiff;
+        return (b.real_date || '').localeCompare(a.real_date || '');
+      })
+      .slice(0, Math.max(1, selectedCount));
+  }, [entries, selectedCount]);
+
+  const buildPrompt = useCallback(() => {
+    const journalContext = recentEntries.map(e => {
+      const parts = [];
+      if (e.session_number > 0) parts.push(`Session ${e.session_number}`);
+      if (e.real_date) parts.push(e.real_date);
+      parts.push(e.title || 'Untitled');
+      const header = parts.join(' | ');
+      const npcsLine = e.npcs_mentioned ? `NPCs: ${e.npcs_mentioned}` : '';
+      const tagsLine = getDisplayTags(e.tags).length > 0 ? `Tags: ${getDisplayTags(e.tags).join(', ')}` : '';
+      const xp = getXpFromTags(e.tags);
+      const gold = getGoldFromTags(e.tags);
+      const rewardsLine = (xp || gold) ? `Rewards: ${xp ? xp + ' XP' : ''}${xp && gold ? ', ' : ''}${gold ? gold + ' GP' : ''}` : '';
+      return [header, e.body || '', npcsLine, tagsLine, rewardsLine].filter(Boolean).join('\n');
+    }).join('\n\n---\n\n');
+
+    const activeQuestList = quests
+      .filter(q => q.status && q.status.toLowerCase() !== 'completed' && q.status.toLowerCase() !== 'failed')
+      .slice(0, 5)
+      .map(q => `- ${q.title}${q.status ? ` (${q.status})` : ''}${q.description ? `: ${q.description.slice(0, 100)}` : ''}`)
+      .join('\n');
+
+    const recentNpcList = npcs
+      .slice(0, 8)
+      .map(n => `- ${n.name}${n.role ? ` — ${n.role}` : ''}${n.status ? ` (${n.status})` : ''}`)
+      .join('\n');
+
+    let prompt = `You are a narrator for a Dungeons & Dragons campaign. Based on the following session notes, generate a dramatic "Last time on..." recap summary that can be read aloud at the start of the next session. Keep it 2-3 paragraphs. Use vivid language and build tension. Do not use headers or bullet points — write it as flowing narrative prose.\n\n`;
+    prompt += `## Session Notes\n${journalContext}\n\n`;
+    if (activeQuestList) prompt += `## Active Quests\n${activeQuestList}\n\n`;
+    if (recentNpcList) prompt += `## Known NPCs\n${recentNpcList}\n\n`;
+    prompt += `Now write the recap, starting with "Last time, in our tale..."`;
+    return prompt;
+  }, [recentEntries, quests, npcs]);
+
+  const generate = useCallback(async () => {
+    setIsGenerating(true);
+    setRecapText('');
+    setHasGenerated(false);
+    abortRef.current = false;
+
+    try {
+      const status = await checkOllamaStatus();
+      if (!status.available) {
+        toast.error('Ollama is not running. Start Ollama to use the Arcane Advisor.');
+        setIsGenerating(false);
+        return;
+      }
+      if (!status.modelInstalled) {
+        toast.error(`Model "${status.model}" is not installed. Install it from the Arcane Advisor tab.`);
+        setIsGenerating(false);
+        return;
+      }
+
+      const prompt = buildPrompt();
+      const messages = [
+        { role: 'system', content: 'You are a dramatic fantasy narrator who creates vivid D&D session recaps. Write in an evocative, cinematic style.' },
+        { role: 'user', content: prompt },
+      ];
+
+      let accumulated = '';
+      for await (const chunk of streamChat(messages)) {
+        if (abortRef.current) break;
+        accumulated += chunk;
+        setRecapText(accumulated);
+      }
+      setHasGenerated(true);
+    } catch (err) {
+      toast.error('Failed to generate recap: ' + (err.message || String(err)));
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [buildPrompt]);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(recapText).then(() => toast.success('Recap copied to clipboard')).catch(() => toast.error('Failed to copy'));
+  };
+
+  const handleSave = () => {
+    onSaveAsEntry(recapText, recentEntries);
+    onClose();
+  };
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') { abortRef.current = true; onClose(); } };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return (
+    <ModalPortal>
+      <AnimatePresence>
+        <motion.div
+          className="modal-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={e => { if (e.target === e.currentTarget) { abortRef.current = true; onClose(); } }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              background: '#14121c',
+              border: '1px solid rgba(192, 132, 252, 0.25)',
+              borderRadius: '12px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '680px',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              margin: '0 16px',
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Sparkles size={20} style={{ color: '#c084fc' }} />
+                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#e8d5b5', fontFamily: 'var(--font-display, serif)' }}>
+                  AI Session Recap
+                </h3>
+              </div>
+              <button onClick={() => { abortRef.current = true; onClose(); }} style={{ color: 'rgba(232, 213, 181, 0.4)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Entry count selector */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px',
+              padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}>
+              <Wand2 size={14} style={{ color: '#c084fc', flexShrink: 0 }} />
+              <span style={{ fontSize: '13px', color: 'rgba(232, 213, 181, 0.5)' }}>Recap from the last</span>
+              {[1, 2, 3].map(n => (
+                <button key={n} onClick={() => setSelectedCount(n)}
+                  style={{
+                    fontSize: '12px', padding: '3px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer',
+                    background: selectedCount === n ? 'rgba(192, 132, 252, 0.2)' : 'rgba(255,255,255,0.04)',
+                    color: selectedCount === n ? '#c084fc' : 'rgba(232, 213, 181, 0.4)',
+                    borderWidth: '1px', borderStyle: 'solid',
+                    borderColor: selectedCount === n ? 'rgba(192, 132, 252, 0.3)' : 'rgba(255,255,255,0.08)',
+                  }}>
+                  {n}
+                </button>
+              ))}
+              <span style={{ fontSize: '13px', color: 'rgba(232, 213, 181, 0.5)' }}>
+                {selectedCount === 1 ? 'entry' : 'entries'}
+              </span>
+              {entries.length === 0 && (
+                <span style={{ fontSize: '11px', color: 'rgba(239, 68, 68, 0.6)', marginLeft: '8px' }}>No entries available</span>
+              )}
+            </div>
+
+            {/* Generate / Regenerate button */}
+            {!isGenerating && (
+              <button onClick={generate} disabled={entries.length === 0}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  width: '100%', padding: '10px', borderRadius: '8px', border: 'none', cursor: entries.length === 0 ? 'not-allowed' : 'pointer',
+                  background: entries.length === 0 ? 'rgba(255,255,255,0.03)' : 'linear-gradient(135deg, rgba(192, 132, 252, 0.15), rgba(139, 92, 246, 0.15))',
+                  color: entries.length === 0 ? 'rgba(232, 213, 181, 0.2)' : '#c084fc',
+                  fontSize: '13px', fontWeight: 500,
+                  borderWidth: '1px', borderStyle: 'solid',
+                  borderColor: entries.length === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(192, 132, 252, 0.25)',
+                  marginBottom: '16px',
+                  transition: 'all 0.2s',
+                }}>
+                {hasGenerated ? <RefreshCw size={14} /> : <Sparkles size={14} />}
+                {hasGenerated ? 'Regenerate Recap' : 'Generate Recap'}
+              </button>
+            )}
+
+            {/* Loading state */}
+            {isGenerating && !recapText && (
+              <div style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                padding: '40px 20px', marginBottom: '16px',
+                background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)',
+              }}>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                >
+                  <Sparkles size={24} style={{ color: '#c084fc' }} />
+                </motion.div>
+                <p style={{ fontSize: '13px', color: 'rgba(232, 213, 181, 0.5)', marginTop: '12px' }}>
+                  The Arcane Advisor is weaving your tale...
+                </p>
+              </div>
+            )}
+
+            {/* Recap text */}
+            {recapText && (
+              <div style={{
+                background: 'rgba(255,255,255,0.03)', borderRadius: '8px',
+                border: '1px solid rgba(192, 132, 252, 0.12)', padding: '20px',
+                marginBottom: '16px', position: 'relative',
+              }}>
+                {isGenerating && (
+                  <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}>
+                      <Loader2 size={14} style={{ color: '#c084fc' }} />
+                    </motion.div>
+                  </div>
+                )}
+                <div style={{
+                  fontSize: '14px', lineHeight: '1.75', color: 'rgba(232, 213, 181, 0.75)',
+                  whiteSpace: 'pre-wrap', fontStyle: 'italic',
+                }}>
+                  {recapText}
+                </div>
+              </div>
+            )}
+
+            {/* Action buttons */}
+            {hasGenerated && recapText && !isGenerating && (
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button onClick={handleSave}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                    padding: '9px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, cursor: 'pointer',
+                    background: 'rgba(192, 132, 252, 0.15)', color: '#c084fc', border: '1px solid rgba(192, 132, 252, 0.25)',
+                  }}>
+                  <Save size={13} /> Save as Journal Entry
+                </button>
+                <button onClick={handleCopy}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                    padding: '9px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, cursor: 'pointer',
+                    background: 'rgba(255,255,255,0.04)', color: 'rgba(232, 213, 181, 0.6)', border: '1px solid rgba(255,255,255,0.08)',
+                  }}>
+                  <Copy size={13} /> Copy to Clipboard
+                </button>
+                <button onClick={generate}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                    padding: '9px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, cursor: 'pointer',
+                    background: 'rgba(255,255,255,0.04)', color: 'rgba(232, 213, 181, 0.6)', border: '1px solid rgba(255,255,255,0.08)',
+                  }}>
+                  <RefreshCw size={13} /> Regenerate
+                </button>
+              </div>
+            )}
+
+            {/* Included entries preview */}
+            {recentEntries.length > 0 && (
+              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize: '10px', color: 'rgba(232, 213, 181, 0.25)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Entries included in context
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
+                  {recentEntries.map(e => (
+                    <div key={e.id} style={{
+                      display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px',
+                      color: 'rgba(232, 213, 181, 0.4)', padding: '4px 8px',
+                      background: 'rgba(255,255,255,0.02)', borderRadius: '4px',
+                    }}>
+                      <FileText size={10} style={{ flexShrink: 0, color: 'rgba(192, 132, 252, 0.4)' }} />
+                      {e.session_number > 0 && <span style={{ color: 'rgba(192, 132, 252, 0.5)' }}>S{e.session_number}</span>}
+                      <span style={{ color: 'rgba(232, 213, 181, 0.5)' }}>{e.title}</span>
+                      {e.real_date && <span>{e.real_date}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    </ModalPortal>
+  );
+}
+
 export default function Journal({ characterId }) {
   const [entries, setEntries] = useState([]);
   const [npcs, setNpcs] = useState([]);
@@ -313,9 +609,10 @@ export default function Journal({ characterId }) {
   const [viewMode, setViewMode] = useState('list'); // list | timeline
   const [filterTag, setFilterTag] = useState('');
   const [recentSearches, setRecentSearches] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('journal_recent_searches') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem('journal_recent_searches') || '[]'); } catch (err) { if (import.meta.env.DEV) console.warn('Journal recent searches parse:', err); return []; }
   });
   const [showRecentSearches, setShowRecentSearches] = useState(false);
+  const [showRecap, setShowRecap] = useState(false);
   const searchInputRef = useRef(null);
 
   const addRecentSearch = (q) => {
@@ -325,20 +622,20 @@ export default function Journal({ characterId }) {
     localStorage.setItem('journal_recent_searches', JSON.stringify(updated));
   };
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const data = await getJournalEntries(characterId);
       setEntries(data);
-    } catch (err) { toast.error(err.message); }
+    } catch (err) { toast.error(err.message); if (import.meta.env.DEV) console.warn('Journal load:', err); }
     finally { setLoading(false); }
-  };
+  }, [characterId]);
 
-  const loadCrossRefs = async () => {
-    try { setNpcs(await getNPCs(characterId)); } catch { /* non-critical */ }
-    try { setQuests(await getQuests(characterId)); } catch { /* non-critical */ }
-  };
+  const loadCrossRefs = useCallback(async () => {
+    try { setNpcs(await getNPCs(characterId)); } catch (err) { if (import.meta.env.DEV) console.warn('Journal loadCrossRefs npcs:', err); }
+    try { setQuests(await getQuests(characterId)); } catch (err) { if (import.meta.env.DEV) console.warn('Journal loadCrossRefs quests:', err); }
+  }, [characterId]);
 
-  useEffect(() => { load(); loadCrossRefs(); }, [characterId]);
+  useEffect(() => { load(); loadCrossRefs(); }, [load, loadCrossRefs]);
 
   const npcNames = useMemo(() => npcs.map(n => n.name).filter(Boolean), [npcs]);
   const questTitles = useMemo(() => quests.map(q => q.title).filter(Boolean), [quests]);
@@ -393,6 +690,28 @@ export default function Journal({ characterId }) {
       const newPinned = entry.pinned === 1 ? 0 : 1;
       await updateJournalEntry(characterId, entry.id, { ...entry, pinned: newPinned });
       toast.success(newPinned ? 'Entry pinned' : 'Entry unpinned');
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
+  const handleSaveRecap = async (recapText, sourceEntries) => {
+    const sessionNums = sourceEntries.map(e => e.session_number).filter(Boolean).sort((a, b) => a - b);
+    const sessionLabel = sessionNums.length > 1
+      ? `Sessions ${sessionNums[0]}-${sessionNums[sessionNums.length - 1]}`
+      : sessionNums.length === 1 ? `Session ${sessionNums[0]}` : '';
+    const title = sessionLabel ? `Recap: ${sessionLabel}` : 'Session Recap';
+    try {
+      await addJournalEntry(characterId, {
+        title,
+        session_number: 0,
+        real_date: new Date().toISOString().split('T')[0],
+        ingame_date: '',
+        body: recapText,
+        tags: 'Recap',
+        npcs_mentioned: '',
+        pinned: 0,
+      });
+      toast.success('Recap saved as journal entry');
       load();
     } catch (err) { toast.error(err.message); }
   };
@@ -498,6 +817,16 @@ export default function Journal({ characterId }) {
               <Download size={12} /> Export
             </button>
           )}
+          <button onClick={() => setShowRecap(true)}
+            className="text-xs flex items-center gap-1"
+            style={{
+              padding: '5px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500,
+              background: 'linear-gradient(135deg, rgba(192, 132, 252, 0.12), rgba(139, 92, 246, 0.12))',
+              color: '#c084fc', border: '1px solid rgba(192, 132, 252, 0.25)',
+            }}
+            title="Generate an AI recap of recent sessions">
+            <Sparkles size={12} /> Recap
+          </button>
           <button onClick={() => setShowAdd(true)} className="btn-primary text-xs flex items-center gap-1">
             <Plus size={12} /> New Entry
           </button>
@@ -767,6 +1096,17 @@ export default function Journal({ characterId }) {
         onConfirm={() => handleDelete(confirmDelete.id)}
         onCancel={() => setConfirmDelete(null)}
       />
+
+      {showRecap && (
+        <RecapModal
+          entries={entries}
+          npcs={npcs}
+          quests={quests}
+          characterId={characterId}
+          onClose={() => setShowRecap(false)}
+          onSaveAsEntry={handleSaveRecap}
+        />
+      )}
     </div>
   );
 }

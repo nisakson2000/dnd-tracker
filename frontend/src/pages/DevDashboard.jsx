@@ -159,7 +159,7 @@ function HealthPanel() {
   useEffect(() => { _installFrontendCapture(); }, []);
 
   // Fetch environment info once
-  useEffect(() => { invoke('dev_check_environment').then(setEnv).catch(() => {}); }, []);
+  useEffect(() => { invoke('dev_check_environment').then(setEnv).catch(e => console.error('Environment check failed:', e)); }, []);
 
   // Health check ping — every 5s
   useEffect(() => {
@@ -693,8 +693,8 @@ function DbPanel() {
   const [results, setResults] = useState(null);
   const [history, setHistory] = useState([]);
 
-  useEffect(() => { invoke('list_characters').then(setCharacters).catch(() => {}); }, []);
-  useEffect(() => { invoke('dev_list_tables', { characterId: charId }).then(setTables).catch(() => {}); }, [charId]);
+  useEffect(() => { invoke('list_characters').then(setCharacters).catch(e => console.error('Failed to list characters:', e)); }, []);
+  useEffect(() => { invoke('dev_list_tables', { characterId: charId }).then(setTables).catch(e => console.error('Failed to list tables:', e)); }, [charId]);
 
   const run = async (q) => {
     const toRun = q || query;
@@ -1251,7 +1251,7 @@ function DiagnosticsPanel() {
   const [subPanel, setSubPanel] = useState('env'); // env, schema, flags
 
   useEffect(() => { invoke('dev_check_environment').then(setEnv).catch(err => setEnv({ error: String(err) })); }, []);
-  useEffect(() => { invoke('list_characters').then(setCharacters).catch(() => {}); }, []);
+  useEffect(() => { invoke('list_characters').then(setCharacters).catch(e => console.error('Failed to list characters:', e)); }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
