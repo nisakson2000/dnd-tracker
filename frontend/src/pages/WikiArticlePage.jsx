@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, BookOpen, ExternalLink, Tag } from 'lucide-react';
+import { ArrowLeft, BookOpen, ExternalLink, Tag, Bookmark } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getArticle } from '../api/wiki';
 import { getCategoryConfig } from '../data/wikiCategoryConfig';
 import ArcaneWidget from '../components/ArcaneWidget';
 import StatBlockRouter from '../components/wiki/statblocks/StatBlockRouter';
+import useWikiBookmarks from '../hooks/useWikiBookmarks';
+import useWikiHistory from '../hooks/useWikiHistory';
 
 const RELATIONSHIP_LABELS = {
   'related': 'Related',
@@ -157,17 +159,22 @@ export default function WikiArticlePage() {
   const navigate = useNavigate();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { toggleBookmark, isBookmarked } = useWikiBookmarks();
+  const { recordVisit } = useWikiHistory();
 
   useEffect(() => {
     setLoading(true);
     getArticle(slug)
-      .then(setArticle)
+      .then(data => {
+        setArticle(data);
+        recordVisit({ slug: data.slug, title: data.title, category: data.category });
+      })
       .catch(err => {
         toast.error(err.message);
         navigate('/wiki');
       })
       .finally(() => setLoading(false));
-  }, [slug, navigate]);
+  }, [slug, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -236,9 +243,22 @@ export default function WikiArticlePage() {
           <div className="panel-parchment">
             {/* Title and badges */}
             <div className="mb-6">
-              <h1 className="text-3xl md:text-4xl font-display font-bold text-amber-100 mb-3">
-                {article.title}
-              </h1>
+              <div className="flex items-start justify-between gap-3">
+                <h1 className="text-3xl md:text-4xl font-display font-bold text-amber-100 mb-3">
+                  {article.title}
+                </h1>
+                <button
+                  onClick={() => toggleBookmark(article)}
+                  className={`shrink-0 mt-1 p-1.5 rounded-lg transition-colors ${
+                    isBookmarked(slug)
+                      ? 'text-amber-400 bg-amber-400/10'
+                      : 'text-amber-200/30 hover:text-amber-200/60 hover:bg-white/5'
+                  }`}
+                  aria-label={isBookmarked(slug) ? 'Remove bookmark' : 'Bookmark article'}
+                >
+                  <Bookmark size={18} fill={isBookmarked(slug) ? 'currentColor' : 'none'} />
+                </button>
+              </div>
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <span
                   className="text-xs px-2 py-0.5 rounded font-medium"

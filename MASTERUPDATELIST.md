@@ -4,6 +4,44 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.4.5 — Arcane Encyclopedia Redesign Phase 2: Search & Discovery
+**Released:** March 12, 2026
+
+### Command Palette Search
+- **Instant Search Overlay** — press `/` anywhere to open a full command-palette with 200ms debounced search
+- **Keyboard Navigation** — ↑↓ to navigate results, Enter to select, Esc to close
+- **Recent Searches** — last 8 searches saved to localStorage for quick re-access
+- **Category-colored results** — each result displays its category icon in the matching accent color
+- **Keyboard hints footer** — visual guide for available shortcuts
+
+### Search Filters
+- **Category Filter Pills** — colored by `wikiCategoryConfig`, toggle multiple categories
+- **Ruleset Toggle** — filter by All / 2014 / 2024 / Universal editions
+- **Sort Options** — Relevance or Alphabetical ordering
+- **Active Filter Count** — badge shows number of active filters
+- **Clear All** — one-click reset of all active filters
+- **Collapsible Panel** — expand/collapse with smooth animation
+
+### Bookmarks
+- **Toggle Bookmark** — filled/unfilled star button on every article page
+- **Bookmarks Rail** — grid of bookmarked articles on wiki landing page with category-colored left borders
+- **Remove on Hover** — X button appears on hover to remove bookmarks
+- **50 bookmark limit** — localStorage-backed with `codex-wiki-bookmarks` key
+
+### Reading History
+- **Auto-record** — visiting any article automatically records it to history
+- **Recently Viewed Rail** — horizontal scroll of recent articles on landing page
+- **Time-ago Display** — "just now", "Xm ago", "Xh ago", "Xd ago" relative timestamps
+- **Category-colored top borders** — each card uses category accent colors
+- **20 entry limit** — deduplicates by slug, most recent first
+
+### Technical
+- **6 new component/hook files**: `WikiSearchPalette.jsx`, `SearchFilters.jsx`, `BookmarksList.jsx`, `RecentlyViewed.jsx`, `useWikiBookmarks.js`, `useWikiHistory.js`
+- **WikiPage.jsx** — integrated search palette, bookmarks rail, recently viewed rail, filter state management
+- **WikiArticlePage.jsx** — bookmark toggle button, auto-record reading history on load
+
+---
+
 ## V0.4.4 — Arcane Encyclopedia Redesign Phase 1
 **Released:** March 12, 2026
 

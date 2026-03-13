@@ -14,6 +14,12 @@ import ArcaneWidget from '../components/ArcaneWidget';
 import WikiHero from '../components/wiki/WikiHero';
 import CategoryCard from '../components/wiki/CategoryCard';
 import SubcategoryTabs from '../components/wiki/SubcategoryTabs';
+import WikiSearchPalette from '../components/wiki/WikiSearchPalette';
+import SearchFilters from '../components/wiki/SearchFilters';
+import BookmarksList from '../components/wiki/BookmarksList';
+import RecentlyViewed from '../components/wiki/RecentlyViewed';
+import useWikiBookmarks from '../hooks/useWikiBookmarks';
+import useWikiHistory from '../hooks/useWikiHistory';
 
 function formatCategoryName(str) {
   return (str || '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -52,6 +58,24 @@ export default function WikiPage() {
   const [featured, setFeatured] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [activeSubcategory, setActiveSubcategory] = useState(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [searchFilters, setSearchFilters] = useState({ category: null, ruleset: null, sort: 'relevance' });
+
+  // Hooks
+  const { bookmarks, removeBookmark } = useWikiBookmarks();
+  const { history } = useWikiHistory();
+
+  // Keyboard shortcut: "/" to open search palette
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === '/' && !e.ctrlKey && !e.metaKey && document.activeElement?.tagName !== 'INPUT') {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
 
   // Load stats, categories, and featured on mount
   useEffect(() => {
@@ -78,14 +102,17 @@ export default function WikiPage() {
       .catch(() => setSubcategories([]));
   }, [selectedCategory]);
 
-  // Search with debounce
-  const doSearch = useCallback((q, pg = 1) => {
+  // Search with debounce (uses filters)
+  const doSearch = useCallback((q, pg = 1, filters = {}) => {
     if (!q.trim()) {
       setSearchResults(null);
       return;
     }
     setLoading(true);
-    searchArticles(q, { page: pg, per_page: 20 })
+    const params = { page: pg, per_page: 20 };
+    if (filters.category) params.category = filters.category;
+    if (filters.ruleset) params.ruleset = filters.ruleset;
+    searchArticles(q, params)
       .then(data => {
         setSearchResults(data.items);
         setTotalPages(data.total_pages);
@@ -103,12 +130,20 @@ export default function WikiPage() {
     debounceRef.current = setTimeout(() => {
       if (value.trim()) {
         setSearchParams({ q: value }, { replace: true });
-        doSearch(value);
+        doSearch(value, 1, searchFilters);
       } else {
         setSearchParams({}, { replace: true });
         setSearchResults(null);
       }
     }, 300);
+  };
+
+  // Re-search when filters change
+  const handleFilterChange = (newFilters) => {
+    setSearchFilters(newFilters);
+    if (query.trim()) {
+      doSearch(query, 1, newFilters);
+    }
   };
 
   const clearSearch = () => {
@@ -165,7 +200,7 @@ export default function WikiPage() {
 
   const handlePageChange = (newPage) => {
     if (searchResults !== null && query.trim()) {
-      doSearch(query, newPage);
+      doSearch(query, newPage, searchFilters);
     } else if (selectedCategory) {
       browseCategory(selectedCategory, newPage, activeSubcategory);
     }
@@ -177,6 +212,9 @@ export default function WikiPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center py-6 px-4 max-w-6xl mx-auto">
+      {/* Search Palette Overlay */}
+      <WikiSearchPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+
       {/* Back button */}
       <div className="w-full flex items-center gap-4 mb-4">
         <button
@@ -199,19 +237,28 @@ export default function WikiPage() {
             type="search"
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
+            onFocus={() => { if (!query.trim()) setPaletteOpen(true); }}
             placeholder="Search spells, monsters, rules, items..."
-            className="input w-full pr-10 text-lg"
+            className="input w-full pr-20 text-lg"
             style={{ paddingLeft: '2.5rem', paddingTop: '0.75rem', paddingBottom: '0.75rem' }}
-            autoFocus
           />
-          {query && (
-            <button
-              onClick={clearSearch}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-200/40 hover:text-amber-200"
-            >
-              <X size={18} />
-            </button>
-          )}
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            {query ? (
+              <button
+                onClick={clearSearch}
+                className="text-amber-200/40 hover:text-amber-200"
+              >
+                <X size={18} />
+              </button>
+            ) : (
+              <kbd
+                onClick={() => setPaletteOpen(true)}
+                className="text-[10px] text-amber-200/25 border border-amber-200/10 rounded px-1.5 py-0.5 cursor-pointer hover:text-amber-200/40"
+              >
+                /
+              </kbd>
+            )}
+          </div>
         </div>
         {searchResults !== null && (
           <p className="text-sm text-amber-200/40 mt-2">
@@ -219,6 +266,13 @@ export default function WikiPage() {
           </p>
         )}
       </div>
+
+      {/* Search Filters (shown when searching) */}
+      {searchResults !== null && (
+        <div className="w-full max-w-2xl">
+          <SearchFilters filters={searchFilters} onChange={handleFilterChange} categories={categories} />
+        </div>
+      )}
 
       {/* Quick Actions */}
       {showHome && (
@@ -232,6 +286,12 @@ export default function WikiPage() {
           </button>
         </div>
       )}
+
+      {/* Bookmarks Rail */}
+      {showHome && <BookmarksList bookmarks={bookmarks} onRemove={removeBookmark} />}
+
+      {/* Recently Viewed Rail */}
+      {showHome && <RecentlyViewed history={history} />}
 
       {/* Featured Articles Rail */}
       {showHome && featured.length > 0 && (

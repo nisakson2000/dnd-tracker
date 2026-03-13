@@ -3,6 +3,21 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.4.5',
+    date: '03/12/2026',
+    title: 'Arcane Encyclopedia Redesign — Phase 2: Search & Discovery',
+    changes: [
+      'Command Palette Search — press "/" anywhere to open instant search overlay with keyboard navigation (↑↓ Enter Esc)',
+      'Search Filters — collapsible panel with category pills, ruleset toggle (All/2014/2024/Universal), sort options (Relevance/Alphabetical)',
+      'Bookmarks — star any article to save it, bookmark rail on wiki landing page, filled/unfilled star toggle on articles',
+      'Reading History — automatically tracks recently viewed articles with time-ago display (just now, Xm ago, Xh ago)',
+      'Recently Viewed Rail — horizontal scroll of recent articles on wiki landing with category-colored top borders',
+      'Recent Searches — command palette remembers last 8 searches for quick re-access',
+      'Category-colored search results — each result shows its category icon in the matching accent color',
+      'Filter persistence — active filters apply when re-searching, clear all button resets filters',
+    ],
+  },
+  {
     version: 'V0.4.4',
     date: '03/12/2026',
     title: 'Arcane Encyclopedia Redesign — Phase 1',
