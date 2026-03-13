@@ -3,7 +3,7 @@ import {
   MapPin, Search, Eye, EyeOff, Users, Scroll, Crosshair,
   Swords, Home, Castle, Skull, Church, Trees, Mountain,
   Building2, BookOpen, Shield, Compass, ZoomIn, ZoomOut,
-  X, ChevronRight, AlertCircle, Loader2, Layers,
+  X, ChevronRight, AlertCircle, Loader2, Layers, ImagePlus, Trash2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Wifi } from 'lucide-react';
@@ -502,6 +502,8 @@ export default function CampaignMap({ characterId }) {
   const [showQuests, setShowQuests] = useState(true);
   const [fogOfWar, setFogOfWar] = useState(false);
   const [showLegend, setShowLegend] = useState(true);
+  const [customMapImage, setCustomMapImage] = useState(null); // user-uploaded map image
+  const fileInputRef = useRef(null);
   const [revealedLocations, setRevealedLocations] = useState(new Set()); // DM reveals locations for players
 
   // Pan & zoom
@@ -512,6 +514,40 @@ export default function CampaignMap({ characterId }) {
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const mapRef = useRef(null);
   const containerRef = useRef(null);
+
+  // ── Load custom map image from localStorage ─────────
+  useEffect(() => {
+    if (!characterId) return;
+    const saved = localStorage.getItem(`codex-custom-map-${characterId}`);
+    if (saved) setCustomMapImage(saved);
+  }, [characterId]);
+
+  const handleMapUpload = useCallback((e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image too large (max 5MB)');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      setCustomMapImage(dataUrl);
+      localStorage.setItem(`codex-custom-map-${characterId}`, dataUrl);
+      toast.success('Custom map image set!');
+    };
+    reader.readAsDataURL(file);
+  }, [characterId]);
+
+  const clearCustomMap = useCallback(() => {
+    setCustomMapImage(null);
+    localStorage.removeItem(`codex-custom-map-${characterId}`);
+    toast.success('Custom map image removed');
+  }, [characterId]);
 
   // ── Data loading ────────────────────────────────────
   useEffect(() => {
@@ -976,6 +1012,23 @@ export default function CampaignMap({ characterId }) {
 
         <div style={{ flex: 1 }} />
 
+        {/* Custom map image upload */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={handleMapUpload}
+        />
+        <button
+          style={styles.toggleBtn(!!customMapImage)}
+          onClick={() => customMapImage ? clearCustomMap() : fileInputRef.current?.click()}
+          title={customMapImage ? 'Remove custom map background' : 'Upload a custom map background image'}
+        >
+          {customMapImage ? <Trash2 size={13} /> : <ImagePlus size={13} />}
+          {customMapImage ? 'Remove Map' : 'Upload Map'}
+        </button>
+
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           <button style={styles.zoomBtn} onClick={zoomOut} title="Zoom out"><ZoomOut size={14} /></button>
           <span style={{ fontSize: 11, color: '#6b7280', minWidth: 40, textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
@@ -1033,12 +1086,12 @@ export default function CampaignMap({ characterId }) {
 
           <rect x="0" y="0" width={bounds.width} height={bounds.height} fill="url(#parchment-bg)" rx="8" />
 
-          {/* Background map image */}
-          {mapData.backgroundImage && (
+          {/* Background map image (custom upload takes priority over premade) */}
+          {(customMapImage || mapData.backgroundImage) && (
             <>
               <clipPath id="map-clip"><rect x="0" y="0" width={bounds.width} height={bounds.height} rx="8" /></clipPath>
               <image
-                href={mapData.backgroundImage}
+                href={customMapImage || mapData.backgroundImage}
                 x="0" y="0"
                 width={bounds.width}
                 height={bounds.height}

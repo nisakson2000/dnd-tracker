@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   BookOpen, Download, Globe, Users, Map, Scroll, Search,
   ChevronDown, ChevronUp, Loader2, CheckCircle2, AlertTriangle,
@@ -9,6 +9,7 @@ import { addNPC } from '../api/npcs';
 import { addQuest } from '../api/quests';
 import { addLoreNote } from '../api/lore';
 import { addJournalEntry } from '../api/journal';
+import { getOverview, updateOverview } from '../api/overview';
 
 // Bundled starter adventures
 import goblinMine from '../data/campaigns/goblin-mine.json';
@@ -301,6 +302,21 @@ async function importCampaignData(characterId, campaign, onProgress) {
       results.errors.push(`Journal "${entry.title}": ${err.message || err}`);
     }
     tick();
+  }
+
+  // Set campaign_name on the character overview so the Campaign Map can match premade maps
+  if (campaign.name) {
+    try {
+      const overviewData = await getOverview(characterId);
+      if (overviewData?.overview) {
+        await updateOverview(characterId, {
+          ...overviewData.overview,
+          campaign_name: campaign.name,
+        });
+      }
+    } catch {
+      // Non-critical — map matching will fall back to homebrew extraction
+    }
   }
 
   return results;
@@ -610,6 +626,8 @@ export default function PremadeCampaigns({ characterId }) {
   const [communityList, setCommunityList] = useState([]);
   const [communityLoading, setCommunityLoading] = useState(false);
   const [communityError, setCommunityError] = useState(null);
+  const [previewData, setPreviewData] = useState({}); // { [fileName]: { summary, loading } }
+  const previewCacheRef = useRef({});
 
   const loadCommunityList = useCallback(async () => {
     setCommunityLoading(true);
@@ -629,6 +647,64 @@ export default function PremadeCampaigns({ characterId }) {
       loadCommunityList();
     }
   }, [tab]);
+
+  const fetchPreview = useCallback(async (adv) => {
+    if (previewCacheRef.current[adv.fileName]) {
+      setPreviewData(p => ({ ...p, [adv.fileName]: previewCacheRef.current[adv.fileName] }));
+      return;
+    }
+    setPreviewData(p => ({ ...p, [adv.fileName]: { loading: true } }));
+    try {
+      const data = await fetchAndParseAdventure(adv.downloadUrl);
+      // Extract a summary from the adventure data
+      const advEntry = data.adventure?.[0];
+      const advName = advEntry?.name || data.name || adv.name;
+      // Try to get description text
+      let desc = '';
+      if (advEntry?.entries) {
+        const first = advEntry.entries.find(e => typeof e === 'string' || e?.entries);
+        if (typeof first === 'string') desc = first;
+        else if (first?.entries) {
+          const inner = first.entries.find(e => typeof e === 'string');
+          if (inner) desc = inner;
+        }
+      }
+      if (!desc && data.adventure?.[0]?.id) {
+        // Try adventureData
+        const advData = data.adventureData?.[0];
+        if (advData?.data) {
+          for (const section of advData.data) {
+            if (section.entries) {
+              const txt = section.entries.find(e => typeof e === 'string');
+              if (txt) { desc = txt; break; }
+            }
+          }
+        }
+      }
+      // Count content
+      const monsters = data.monster?.length || 0;
+      const items = data.item?.length || 0;
+      const spells = data.spell?.length || 0;
+      const tables = data.table?.length || 0;
+      const counts = [
+        monsters && `${monsters} creatures`,
+        items && `${items} items`,
+        spells && `${spells} spells`,
+        tables && `${tables} tables`,
+      ].filter(Boolean).join(', ');
+
+      const summary = {
+        name: advName,
+        description: desc ? (desc.length > 200 ? desc.substring(0, 200) + '...' : desc) : '',
+        counts: counts || 'Adventure data available',
+        loading: false,
+      };
+      previewCacheRef.current[adv.fileName] = summary;
+      setPreviewData(p => ({ ...p, [adv.fileName]: summary }));
+    } catch {
+      setPreviewData(p => ({ ...p, [adv.fileName]: { description: 'Could not load preview.', counts: '', loading: false } }));
+    }
+  }, []);
 
   const handleLoadBundled = async (campaign) => {
     const key = campaign.name;
@@ -913,13 +989,13 @@ export default function PremadeCampaigns({ characterId }) {
                   {searchQuery ? 'No adventures match your search.' : 'No adventures found.'}
                 </div>
               ) : (
-                filteredCommunity.map(adv => (
+                filteredCommunity.map(adv => {
+                  const preview = previewData[adv.fileName];
+                  const isExpanded = !!preview && !preview.loading;
+                  return (
                   <div
                     key={adv.fileName}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
                       padding: '12px 16px',
                       background: 'rgba(255,255,255,0.02)',
                       border: '1px solid var(--border)',
@@ -929,57 +1005,125 @@ export default function PremadeCampaigns({ characterId }) {
                     onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(201,168,76,0.25)'}
                     onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
                   >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        fontFamily: 'var(--font-display)',
-                        fontSize: 'calc(13px * var(--font-scale, 1))',
-                        fontWeight: 600,
-                        color: 'var(--text)',
-                        textTransform: 'capitalize',
-                        marginBottom: '2px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}>
-                        {adv.name}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          fontFamily: 'var(--font-display)',
+                          fontSize: 'calc(13px * var(--font-scale, 1))',
+                          fontWeight: 600,
+                          color: 'var(--text)',
+                          textTransform: 'capitalize',
+                          marginBottom: '2px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {preview?.name || adv.name}
+                        </div>
+                        <div style={{
+                          fontSize: '10px',
+                          color: 'var(--text-mute)',
+                          fontFamily: 'var(--font-mono)',
+                        }}>
+                          {adv.fileName} {adv.size ? `(${Math.round(adv.size / 1024)}KB)` : ''}
+                        </div>
                       </div>
-                      <div style={{
-                        fontSize: '10px',
-                        color: 'var(--text-mute)',
-                        fontFamily: 'var(--font-mono)',
-                      }}>
-                        {adv.fileName} {adv.size ? `(${Math.round(adv.size / 1024)}KB)` : ''}
+
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+                        <button
+                          onClick={() => preview ? setPreviewData(p => { const n = { ...p }; delete n[adv.fileName]; return n; }) : fetchPreview(adv)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '5px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            background: 'rgba(255,255,255,0.03)',
+                            color: 'var(--text-dim)',
+                            fontFamily: 'var(--font-ui)',
+                            fontSize: '10px',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s',
+                          }}
+                          title={isExpanded ? 'Hide preview' : 'Load summary'}
+                        >
+                          {preview?.loading ? (
+                            <Loader2 size={10} className="animate-spin" />
+                          ) : isExpanded ? (
+                            <ChevronUp size={10} />
+                          ) : (
+                            <ChevronDown size={10} />
+                          )}
+                          {isExpanded ? 'Less' : 'Preview'}
+                        </button>
+
+                        <button
+                          onClick={() => handleLoadCommunity(adv)}
+                          disabled={!!importingId}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(201,168,76,0.3)',
+                            background: importingId === adv.fileName ? 'rgba(201,168,76,0.08)' : 'rgba(201,168,76,0.1)',
+                            color: importingId ? 'rgba(201,168,76,0.4)' : '#c9a84c',
+                            fontFamily: 'var(--font-ui)',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            cursor: importingId ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.15s',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {importingId === adv.fileName ? (
+                            <><Loader2 size={11} className="animate-spin" /> Importing...</>
+                          ) : (
+                            <><Download size={11} /> Import</>
+                          )}
+                        </button>
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => handleLoadCommunity(adv)}
-                      disabled={!!importingId}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        border: '1px solid rgba(201,168,76,0.3)',
-                        background: importingId === adv.fileName ? 'rgba(201,168,76,0.08)' : 'rgba(201,168,76,0.1)',
-                        color: importingId ? 'rgba(201,168,76,0.4)' : '#c9a84c',
-                        fontFamily: 'var(--font-ui)',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        cursor: importingId ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.15s',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {importingId === adv.fileName ? (
-                        <><Loader2 size={11} className="animate-spin" /> Importing...</>
-                      ) : (
-                        <><Download size={11} /> Import</>
-                      )}
-                    </button>
+                    {/* Expanded preview */}
+                    {isExpanded && (
+                      <div style={{
+                        marginTop: '10px',
+                        paddingTop: '10px',
+                        borderTop: '1px solid rgba(255,255,255,0.06)',
+                      }}>
+                        {preview.description && (
+                          <p style={{
+                            fontSize: '12px',
+                            color: 'var(--text-dim)',
+                            fontFamily: 'var(--font-ui)',
+                            lineHeight: 1.6,
+                            margin: '0 0 6px 0',
+                          }}>
+                            {preview.description}
+                          </p>
+                        )}
+                        {preview.counts && (
+                          <div style={{
+                            fontSize: '10px',
+                            color: 'var(--text-mute)',
+                            fontFamily: 'var(--font-mono)',
+                          }}>
+                            Contains: {preview.counts}
+                          </div>
+                        )}
+                        {!preview.description && !preview.counts && (
+                          <div style={{ fontSize: '11px', color: 'var(--text-mute)', fontStyle: 'italic' }}>
+                            No description available for this adventure.
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
           )}

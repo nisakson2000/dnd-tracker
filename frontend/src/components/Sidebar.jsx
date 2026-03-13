@@ -4,7 +4,7 @@ import {
   ScrollText, BookOpen, Shield, Sparkles, Swords,
   BookMarked, Users, Map, Globe, Dice5, ArrowLeft, User, Download,
   Library, Settings2, Heart, Bell, Bug, Terminal, Crown, LayoutDashboard,
-  Star, Search, X, Zap, Wifi, BookCopy,
+  Star, Search, X, Zap, Wifi, BookCopy, MapPin,
 } from 'lucide-react';
 import { useAppMode } from '../contexts/ModeContext';
 
@@ -30,6 +30,7 @@ const PLAYER_SECTION_GROUPS = [
   {
     label: 'Campaign',
     items: [
+      { id: 'campaign-map', label: 'Campaign Map',      icon: MapPin },
       { id: 'journal',    label: 'Campaign Journal',   icon: BookMarked },
       { id: 'npcs',       label: 'NPCs',               icon: Users },
       { id: 'quests',     label: 'Quests',             icon: Map },
@@ -62,6 +63,7 @@ const DM_SECTION_GROUPS = [
     label: 'Campaign',
     items: [
       { id: 'campaign-hub', label: 'Campaign Hub',     icon: LayoutDashboard },
+      { id: 'campaign-map', label: 'Campaign Map',     icon: MapPin },
       { id: 'journal',      label: 'Session Notes',    icon: BookMarked },
       { id: 'npcs',         label: 'NPCs',             icon: Users },
       { id: 'quests',       label: 'Quests & Plot',    icon: Map },
@@ -85,7 +87,6 @@ const DM_SECTION_GROUPS = [
     items: [
       { id: 'dice',       label: 'Dice Roller',        icon: Dice5 },
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
-      { id: 'party-connect', label: 'Party Connect',   icon: Wifi },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
       { id: 'export',     label: 'Export & Import',    icon: Download },
