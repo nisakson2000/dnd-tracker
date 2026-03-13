@@ -200,6 +200,7 @@ fn main() {
             commands::dev_updates::dev_rollback_update,
             commands::dev_updates::dev_check_build_health,
             commands::dev_updates::dev_check_conflicts,
+            commands::dev_updates::dev_smart_pull,
             // Dev presence (LAN discovery)
             dev_presence::start_dev_presence,
             dev_presence::stop_dev_presence,

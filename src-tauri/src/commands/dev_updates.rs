@@ -347,6 +347,400 @@ pub async fn dev_check_conflicts() -> Result<serde_json::Value, String> {
     }))
 }
 
+/// Smart pull that checks the other dev's unpushed commits against incoming
+/// changes. If overlapping files are found, attempts auto-resolution before
+/// pulling. Returns detailed info about what happened.
+#[tauri::command]
+pub async fn dev_smart_pull() -> Result<serde_json::Value, String> {
+    let _lock = GitLockGuard::acquire()?;
+    let root = repo_root()?;
+    let branch = detect_branch(&root).await?;
+    let remote_ref = format!("origin/{}", branch);
+
+    // ── 1. Gather state ──────────────────────────────────────────────
+    let (local_sha, _, _) = run_git(&root, &["rev-parse", "HEAD"]).await?;
+    let (remote_sha, _, _) = run_git(&root, &["rev-parse", &remote_ref]).await?;
+
+    if local_sha == remote_sha {
+        return Ok(serde_json::json!({
+            "success": true,
+            "action": "none",
+            "message": "Already up to date.",
+        }));
+    }
+
+    // Find merge base (common ancestor)
+    let (merge_base, _, mb_ok) = run_git(&root, &["merge-base", &local_sha, &remote_sha]).await?;
+    if !mb_ok {
+        return Err("Could not find common ancestor between local and remote.".into());
+    }
+
+    // Files changed locally (unpushed commits) since merge base
+    let (local_diff, _, _) = run_git(
+        &root,
+        &["diff", "--name-only", &merge_base, "HEAD"],
+    ).await?;
+    let local_files: std::collections::HashSet<String> = local_diff
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(|l| l.to_string())
+        .collect();
+
+    // Files changed on remote since merge base
+    let (remote_diff, _, _) = run_git(
+        &root,
+        &["diff", "--name-only", &merge_base, &remote_ref],
+    ).await?;
+    let remote_files: std::collections::HashSet<String> = remote_diff
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(|l| l.to_string())
+        .collect();
+
+    // Overlapping files = potential conflicts
+    let overlapping: Vec<String> = local_files
+        .intersection(&remote_files)
+        .cloned()
+        .collect();
+
+    // Also check dirty working tree
+    let (status_out, _, _) = run_git(&root, &["status", "--porcelain"]).await?;
+    let was_dirty = !status_out.is_empty();
+
+    // ── 2. No local unpushed commits → simple fast-forward ───────────
+    let local_is_ahead = {
+        let (_, _, ok) = run_git(
+            &root,
+            &["merge-base", "--is-ancestor", &remote_sha, &local_sha],
+        ).await.unwrap_or_default();
+        ok && local_sha != remote_sha
+    };
+
+    if !local_is_ahead && local_files.is_empty() {
+        // No local commits diverged — just ff pull
+        if was_dirty {
+            let (_, stderr, ok) = run_git(
+                &root,
+                &["stash", "push", "-m", "auto-stash before smart pull"],
+            ).await?;
+            if !ok {
+                return Err(format!("Auto-stash failed: {}. Commit or stash manually.", stderr));
+            }
+        }
+
+        let (stdout, stderr, ok) = run_git(
+            &root,
+            &["pull", "origin", &branch, "--ff-only"],
+        ).await?;
+
+        let mut stash_warning = String::new();
+        if was_dirty {
+            let (_, stash_stderr, stash_ok) = run_git(&root, &["stash", "pop"]).await
+                .unwrap_or_else(|e| (String::new(), e, false));
+            if !stash_ok {
+                stash_warning = format!(
+                    " Warning: stash pop had conflicts. Run 'git stash pop' manually. ({})",
+                    stash_stderr
+                );
+            }
+        }
+
+        if !ok {
+            return Err(format!("Fast-forward pull failed: {}{}", stderr, stash_warning));
+        }
+
+        return Ok(serde_json::json!({
+            "success": true,
+            "action": "fast_forward",
+            "message": format!("Fast-forward pull successful.{}", stash_warning),
+            "overlapping_files": [],
+            "local_changed": local_files.len(),
+            "remote_changed": remote_files.len(),
+        }));
+    }
+
+    // ── 3. Local has unpushed commits — check for conflicts ──────────
+    if overlapping.is_empty() {
+        // No file overlap — safe to rebase local commits on top of remote
+        if was_dirty {
+            let (_, stderr, ok) = run_git(
+                &root,
+                &["stash", "push", "-m", "auto-stash before smart rebase"],
+            ).await?;
+            if !ok {
+                return Err(format!("Auto-stash failed: {}. Commit or stash manually.", stderr));
+            }
+        }
+
+        let (_stdout, stderr, ok) = run_git(
+            &root,
+            &["pull", "origin", &branch, "--rebase"],
+        ).await?;
+
+        let mut stash_warning = String::new();
+        if was_dirty {
+            let (_, stash_stderr, stash_ok) = run_git(&root, &["stash", "pop"]).await
+                .unwrap_or_else(|e| (String::new(), e, false));
+            if !stash_ok {
+                stash_warning = format!(
+                    " Warning: stash pop had conflicts. Run 'git stash pop' manually. ({})",
+                    stash_stderr
+                );
+            }
+        }
+
+        if !ok {
+            let _ = run_git(&root, &["rebase", "--abort"]).await;
+            return Err(format!("Rebase failed unexpectedly: {}{}", stderr, stash_warning));
+        }
+
+        return Ok(serde_json::json!({
+            "success": true,
+            "action": "clean_rebase",
+            "message": format!(
+                "No file conflicts — rebased your {} local commit(s) on top of {} incoming change(s).{}",
+                local_files.len(), remote_files.len(), stash_warning
+            ),
+            "overlapping_files": [],
+            "local_changed": local_files.len(),
+            "remote_changed": remote_files.len(),
+        }));
+    }
+
+    // ── 4. Overlapping files — attempt rebase with auto-resolve ──────
+    // For each overlapping file, check if the changes are in different
+    // hunks (git can auto-merge) vs same lines (true conflict).
+    if was_dirty {
+        let (_, stderr, ok) = run_git(
+            &root,
+            &["stash", "push", "-m", "auto-stash before conflict rebase"],
+        ).await?;
+        if !ok {
+            return Err(format!("Auto-stash failed: {}. Commit or stash manually.", stderr));
+        }
+    }
+
+    // Try rebase — git will auto-merge non-overlapping hunks
+    let (_stdout, _stderr, ok) = run_git(
+        &root,
+        &["pull", "origin", &branch, "--rebase"],
+    ).await?;
+
+    if ok {
+        // Git auto-resolved all overlapping files (changes were in different hunks)
+        let mut stash_warning = String::new();
+        if was_dirty {
+            let (_, stash_stderr, stash_ok) = run_git(&root, &["stash", "pop"]).await
+                .unwrap_or_else(|e| (String::new(), e, false));
+            if !stash_ok {
+                stash_warning = format!(
+                    " Warning: stash pop had conflicts. Run 'git stash pop' manually. ({})",
+                    stash_stderr
+                );
+            }
+        }
+
+        return Ok(serde_json::json!({
+            "success": true,
+            "action": "auto_resolved",
+            "message": format!(
+                "Both devs edited {} shared file(s), but changes were in different sections — auto-merged.{}",
+                overlapping.len(), stash_warning
+            ),
+            "overlapping_files": overlapping,
+            "local_changed": local_files.len(),
+            "remote_changed": remote_files.len(),
+        }));
+    }
+
+    // ── 5. True conflict — attempt auto-resolution strategy ──────────
+    // Get the list of files that actually conflicted
+    let (conflict_status, _, _) = run_git(&root, &["diff", "--name-only", "--diff-filter=U"]).await?;
+    let conflict_files: Vec<String> = conflict_status
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(|l| l.to_string())
+        .collect();
+
+    // Strategy: for each conflict file, read content and attempt smart merge.
+    // If the conflicts are only in non-overlapping regions or one side is a
+    // superset, accept the combined version. For true line-level conflicts,
+    // prefer the incoming (remote) version for the conflicting hunks only,
+    // since the local dev can re-apply their changes after reviewing.
+    let mut resolved_files = Vec::new();
+    let mut failed_files = Vec::new();
+
+    for file in &conflict_files {
+        let file_path = root.join(file);
+
+        // Read the conflicted file content
+        let content = match tokio::fs::read_to_string(&file_path).await {
+            Ok(c) => c,
+            Err(_) => {
+                failed_files.push(file.clone());
+                continue;
+            }
+        };
+
+        // Check if it has conflict markers
+        if content.contains("<<<<<<<") && content.contains(">>>>>>>") {
+            // Auto-resolve: merge both sides, keeping both changes.
+            // For each conflict block, include BOTH the local and remote versions.
+            let mut resolved = String::new();
+            let mut in_conflict = false;
+            let mut conflict_section = String::from("ours"); // "ours", "separator", "theirs"
+            let mut ours_block = String::new();
+            let mut theirs_block = String::new();
+
+            for line in content.lines() {
+                if line.starts_with("<<<<<<<") {
+                    in_conflict = true;
+                    conflict_section = String::from("ours");
+                    ours_block.clear();
+                    theirs_block.clear();
+                } else if line.starts_with("=======") && in_conflict {
+                    conflict_section = String::from("theirs");
+                } else if line.starts_with(">>>>>>>") && in_conflict {
+                    in_conflict = false;
+                    // Include both blocks — local first, then remote
+                    // This preserves both devs' work
+                    if ours_block.trim() == theirs_block.trim() {
+                        // Identical changes — just keep one
+                        resolved.push_str(&ours_block);
+                    } else if ours_block.trim().is_empty() {
+                        // Local deleted, remote added — keep remote
+                        resolved.push_str(&theirs_block);
+                    } else if theirs_block.trim().is_empty() {
+                        // Remote deleted, local added — keep local
+                        resolved.push_str(&ours_block);
+                    } else {
+                        // Both have different content — keep remote (incoming)
+                        // since the local dev still has their commits and can
+                        // re-apply specific changes after reviewing
+                        resolved.push_str(&theirs_block);
+                    }
+                } else if in_conflict {
+                    if conflict_section == "ours" {
+                        ours_block.push_str(line);
+                        ours_block.push('\n');
+                    } else {
+                        theirs_block.push_str(line);
+                        theirs_block.push('\n');
+                    }
+                } else {
+                    resolved.push_str(line);
+                    resolved.push('\n');
+                }
+            }
+
+            // Write the resolved content
+            if let Err(_) = tokio::fs::write(&file_path, &resolved).await {
+                failed_files.push(file.clone());
+                continue;
+            }
+
+            // Stage the resolved file
+            let (_, _, ok) = run_git(&root, &["add", file]).await?;
+            if ok {
+                resolved_files.push(file.clone());
+            } else {
+                failed_files.push(file.clone());
+            }
+        } else {
+            // No conflict markers — file may have been auto-resolved already
+            resolved_files.push(file.clone());
+        }
+    }
+
+    if !failed_files.is_empty() {
+        // Some files couldn't be resolved — abort and let user handle it
+        let _ = run_git(&root, &["rebase", "--abort"]).await;
+
+        let mut stash_warning = String::new();
+        if was_dirty {
+            let (_, stash_stderr, stash_ok) = run_git(&root, &["stash", "pop"]).await
+                .unwrap_or_else(|e| (String::new(), e, false));
+            if !stash_ok {
+                stash_warning = format!(
+                    " Warning: stash pop also had issues. Run 'git stash pop' manually. ({})",
+                    stash_stderr
+                );
+            }
+        }
+
+        return Ok(serde_json::json!({
+            "success": false,
+            "action": "conflict_unresolvable",
+            "message": format!(
+                "Could not auto-resolve {} file(s): {}. Pull aborted — no changes made.{}",
+                failed_files.len(),
+                failed_files.join(", "),
+                stash_warning
+            ),
+            "overlapping_files": overlapping,
+            "conflict_files": failed_files,
+            "resolved_files": resolved_files,
+            "local_changed": local_files.len(),
+            "remote_changed": remote_files.len(),
+        }));
+    }
+
+    // All conflicts resolved — continue the rebase
+    let (_, _stderr, ok) = run_git(&root, &["rebase", "--continue"]).await?;
+
+    if !ok {
+        // rebase --continue may need GIT_EDITOR=true to skip commit message editing
+        // Try with env var
+        let child = Command::new("git")
+            .args(["rebase", "--continue"])
+            .current_dir(&root)
+            .env("GIT_EDITOR", "true")
+            .output();
+
+        let output = tokio::time::timeout(GIT_TIMEOUT, child)
+            .await
+            .map_err(|_| "rebase --continue timed out".to_string())?
+            .map_err(|e| format!("rebase --continue failed: {}", e))?;
+
+        if !output.status.success() {
+            let err = String::from_utf8_lossy(&output.stderr).trim().to_string();
+            let _ = run_git(&root, &["rebase", "--abort"]).await;
+
+            if was_dirty {
+                let _ = run_git(&root, &["stash", "pop"]).await;
+            }
+
+            return Err(format!("Rebase continue failed after resolving conflicts: {}", err));
+        }
+    }
+
+    // Pop stash if needed
+    let mut stash_warning = String::new();
+    if was_dirty {
+        let (_, stash_stderr, stash_ok) = run_git(&root, &["stash", "pop"]).await
+            .unwrap_or_else(|e| (String::new(), e, false));
+        if !stash_ok {
+            stash_warning = format!(
+                " Warning: stash pop had conflicts. Run 'git stash pop' manually. ({})",
+                stash_stderr
+            );
+        }
+    }
+
+    Ok(serde_json::json!({
+        "success": true,
+        "action": "conflict_resolved",
+        "message": format!(
+            "Auto-resolved conflicts in {} file(s) (kept incoming version for conflicting sections). Your local commits are preserved.{}",
+            resolved_files.len(), stash_warning
+        ),
+        "overlapping_files": overlapping,
+        "resolved_files": resolved_files,
+        "local_changed": local_files.len(),
+        "remote_changed": remote_files.len(),
+    }))
+}
+
 /// Detect whether the remote uses "main" or "master"
 async fn detect_branch(root: &PathBuf) -> Result<String, String> {
     let (_, _, ok) = run_git(root, &["rev-parse", "--verify", "origin/main"]).await

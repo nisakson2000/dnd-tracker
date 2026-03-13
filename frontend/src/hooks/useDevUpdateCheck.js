@@ -53,18 +53,20 @@ export function useDevUpdateCheck() {
         setUpdateInfo(result);
 
         // Show toast and auto-pull
-        toast(
-          `Auto-pulling update: "${result.commit_message || result.remote_sha}"`,
-          {
-            icon: '\u2B07\uFE0F',
-            duration: 3000,
-            style: {
-              background: '#1a1520',
-              color: '#fde68a',
-              border: '1px solid rgba(201,168,76,0.4)',
-            },
-          }
-        );
+        const hasLocalCommits = result.local_ahead;
+        const msg = hasLocalCommits
+          ? `Incoming update + you have unpushed commits — smart-merging: "${result.commit_message || result.remote_sha}"`
+          : `Auto-pulling update: "${result.commit_message || result.remote_sha}"`;
+
+        toast(msg, {
+          icon: hasLocalCommits ? '\uD83D\uDD00' : '\u2B07\uFE0F',
+          duration: 3000,
+          style: {
+            background: '#1a1520',
+            color: hasLocalCommits ? '#fbbf24' : '#fde68a',
+            border: `1px solid ${hasLocalCommits ? 'rgba(251,191,36,0.5)' : 'rgba(201,168,76,0.4)'}`,
+          },
+        });
 
         // Auto-pull after a short delay
         if (!autoPullingRef.current) {
@@ -90,29 +92,65 @@ export function useDevUpdateCheck() {
     setPulling(true);
 
     try {
-      const result = await invoke('pull_git_updates');
+      // Use smart pull — detects unpushed commits on this machine,
+      // checks for file overlap with incoming changes, and auto-resolves
+      // conflicts when possible before pulling.
+      const result = await invoke('dev_smart_pull');
 
-      // Pull succeeded — record timestamp for rollback window
+      // Record timestamp for rollback window
       localStorage.setItem('dev-last-pull-timestamp', String(Date.now()));
 
-      // Build success message
-      let message = 'Update pulled successfully!';
-      if (result.stash_warning) {
-        message += ` ${result.stash_warning}`;
+      if (!result.success) {
+        // Smart pull detected unresolvable conflicts — don't reload
+        setPulling(false);
+        autoPullingRef.current = false;
+        setConflictInfo(result);
+
+        const conflictFiles = result.conflict_files || result.overlapping_files || [];
+        toast.error(
+          `Conflict in ${conflictFiles.length} file(s): ${conflictFiles.join(', ')}. Pull aborted.`,
+          {
+            duration: 12000,
+            style: {
+              background: '#450a0a',
+              color: '#fca5a5',
+              border: '1px solid rgba(239,68,68,0.4)',
+              fontWeight: 600,
+            },
+          }
+        );
+        return;
       }
 
-      // Store result in localStorage so notification survives the reload
+      // Build success message based on what happened
+      let message = result.message || 'Update pulled successfully!';
+      const action = result.action || 'unknown';
+
+      // Color-code the toast based on action type
+      const toastStyle = action === 'auto_resolved' || action === 'conflict_resolved'
+        ? { background: '#1a1520', color: '#fde68a', border: '1px solid rgba(201,168,76,0.4)', fontWeight: 600 }
+        : { background: '#064e3b', color: '#a7f3d0', border: '1px solid rgba(52,211,153,0.4)', fontWeight: 600 };
+
+      const icon = action === 'conflict_resolved' ? '\u{1F527}' // wrench
+        : action === 'auto_resolved' ? '\u{1F500}' // shuffle
+        : action === 'clean_rebase' ? '\u{1F4E6}' // package
+        : '\u2705'; // checkmark
+
+      // Store result so notification survives the reload
       localStorage.setItem('dev-update-result', JSON.stringify({
         success: true,
-        message,
+        message: `${icon} ${message}`,
+        action,
+        resolvedFiles: result.resolved_files || [],
+        overlappingFiles: result.overlapping_files || [],
       }));
 
-      // Always reload — tauri dev auto-recompiles Rust changes
+      // Reload — tauri dev auto-recompiles Rust changes
       window.location.reload();
     } catch (err) {
       setPulling(false);
       autoPullingRef.current = false;
-      toast.error(`Auto-pull failed: ${err}`, {
+      toast.error(`Smart pull failed: ${err}`, {
         duration: 8000,
         style: {
           background: '#450a0a',
