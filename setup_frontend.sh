@@ -1,6 +1,5 @@
 #!/bin/bash
-# The Codex — one-time frontend scaffold (already run, kept for reference)
-cd "$(dirname "$0")"
+cd /home/nisakson/dnd-tracker
 
 # Create Vite React project in temp dir, then merge with existing frontend dir
 npx --yes create-vite@latest frontend-temp --template react

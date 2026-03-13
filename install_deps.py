@@ -1,5 +1,3 @@
-"""Install Python backend dependencies (legacy — Tauri/Rust is the primary backend)."""
-
 import subprocess
 import sys
 
@@ -7,7 +5,6 @@ packages = [
     "fastapi",
     "uvicorn[standard]",
     "sqlalchemy",
-    "pydantic",
     "python-multipart",
     "aiofiles",
 ]
