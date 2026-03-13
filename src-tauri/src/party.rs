@@ -3,6 +3,7 @@ use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
+use tauri::Emitter;
 use tokio::sync::{mpsc, oneshot, Mutex, RwLock};
 use warp::ws::{Message, WebSocket};
 use warp::Filter;
@@ -670,4 +671,200 @@ pub fn get_local_ip() -> String {
         })
         .map(|addr| addr.ip().to_string())
         .unwrap_or_else(|_| "127.0.0.1".to_string())
+}
+
+// ── IPC-based party connection (bypasses browser WebSocket restrictions) ─────
+
+/// State for the IPC party client (host or remote player).
+pub struct PartyIpcClient {
+    /// For host: a virtual client ID in the in-process server.
+    /// For player: the client ID assigned by the remote server.
+    pub client_id: Mutex<Option<String>>,
+    /// For player: a sender to forward messages to the remote WebSocket.
+    pub remote_tx: Mutex<Option<mpsc::Sender<String>>>,
+    /// Whether this is a host or player connection.
+    pub is_host: Mutex<bool>,
+}
+
+impl PartyIpcClient {
+    pub fn new() -> Self {
+        Self {
+            client_id: Mutex::new(None),
+            remote_tx: Mutex::new(None),
+            is_host: Mutex::new(false),
+        }
+    }
+}
+
+/// Host joins their own party server directly via IPC (no WebSocket needed).
+#[tauri::command]
+pub async fn party_ipc_join(
+    party: tauri::State<'_, Arc<PartyServer>>,
+    ipc_client: tauri::State<'_, PartyIpcClient>,
+    app: tauri::AppHandle,
+    room: String,
+    character: Value,
+) -> Result<Value, String> {
+    let client_id = uuid::Uuid::new_v4().to_string()[..8].to_string();
+
+    // Create a channel for this virtual client
+    let (tx, mut rx) = mpsc::channel::<Message>(CHANNEL_BUFFER_SIZE);
+    party.add_client(client_id.clone(), tx).await;
+
+    // Store client info
+    *ipc_client.client_id.lock().await = Some(client_id.clone());
+    *ipc_client.is_host.lock().await = true;
+
+    // Join the room
+    party.handle_join(&client_id, &room, character).await;
+
+    // Spawn a task to forward server messages to the frontend via Tauri events
+    let app_clone = app.clone();
+    let cid = client_id.clone();
+    tokio::spawn(async move {
+        while let Some(msg) = rx.recv().await {
+            if let Ok(text) = msg.to_str() {
+                let _ = app_clone.emit("party-message", text.to_string());
+            }
+        }
+        eprintln!("[party-ipc] Host client {} channel closed", cid);
+    });
+
+    Ok(json!({ "client_id": client_id, "status": "connected" }))
+}
+
+/// Player connects to a remote DM's party server via Rust WebSocket client.
+#[tauri::command]
+pub async fn party_ipc_connect(
+    ipc_client: tauri::State<'_, PartyIpcClient>,
+    app: tauri::AppHandle,
+    ip: String,
+    room: String,
+    character: Value,
+) -> Result<Value, String> {
+    use tokio_tungstenite::connect_async;
+    use futures_util::{SinkExt as _, StreamExt as _};
+
+    let url = format!("ws://{}:{}/party/ws", ip, PARTY_PORT);
+    eprintln!("[party-ipc] Connecting to remote server: {}", url);
+
+    let (ws_stream, _) = connect_async(&url)
+        .await
+        .map_err(|e| format!("Could not connect to {}: {}", url, e))?;
+
+    let (mut write, mut read) = ws_stream.split();
+
+    // Send join message
+    let join_msg = json!({ "type": "join", "room": room, "character": character }).to_string();
+    write.send(tokio_tungstenite::tungstenite::Message::Text(join_msg))
+        .await
+        .map_err(|e| format!("Failed to send join: {}", e))?;
+
+    // Create a channel for outgoing messages from the frontend
+    let (tx, mut out_rx) = mpsc::channel::<String>(CHANNEL_BUFFER_SIZE);
+    *ipc_client.remote_tx.lock().await = Some(tx);
+    *ipc_client.is_host.lock().await = false;
+
+    // Spawn task: forward frontend messages to the remote WebSocket
+    tokio::spawn(async move {
+        loop {
+            tokio::select! {
+                // Incoming from remote server → emit to frontend
+                msg = read.next() => {
+                    match msg {
+                        Some(Ok(tokio_tungstenite::tungstenite::Message::Text(text))) => {
+                            let _ = app.emit("party-message", text);
+                        }
+                        Some(Ok(tokio_tungstenite::tungstenite::Message::Close(_))) | None => {
+                            eprintln!("[party-ipc] Remote connection closed");
+                            let _ = app.emit("party-message", json!({"type":"connection_closed"}).to_string());
+                            break;
+                        }
+                        _ => {}
+                    }
+                }
+                // Outgoing from frontend → send to remote server
+                msg = out_rx.recv() => {
+                    match msg {
+                        Some(text) => {
+                            if let Err(e) = write.send(tokio_tungstenite::tungstenite::Message::Text(text)).await {
+                                eprintln!("[party-ipc] Failed to send to remote: {}", e);
+                                break;
+                            }
+                        }
+                        None => break, // Channel closed
+                    }
+                }
+            }
+        }
+    });
+
+    Ok(json!({ "status": "connected" }))
+}
+
+/// Send a message through the IPC party connection.
+#[tauri::command]
+pub async fn party_ipc_send(
+    party: tauri::State<'_, Arc<PartyServer>>,
+    ipc_client: tauri::State<'_, PartyIpcClient>,
+    message: String,
+) -> Result<(), String> {
+    let is_host = *ipc_client.is_host.lock().await;
+
+    if is_host {
+        // Host: process message directly in the server
+        let client_id = ipc_client.client_id.lock().await.clone()
+            .ok_or("Not connected")?;
+
+        let parsed: Value = serde_json::from_str(&message)
+            .map_err(|e| format!("Invalid JSON: {}", e))?;
+
+        match parsed.get("type").and_then(|t| t.as_str()) {
+            Some("update") => {
+                let character = parsed.get("character").cloned().unwrap_or(json!({}));
+                party.handle_update(&client_id, character).await;
+            }
+            Some("event") => {
+                party.handle_event(&client_id, &parsed).await;
+            }
+            Some("ping") => {
+                let mut clients = party.clients.write().await;
+                if let Some(client) = clients.get_mut(&client_id) {
+                    client.last_seen = std::time::Instant::now();
+                }
+            }
+            _ => {}
+        }
+    } else {
+        // Player: forward to remote WebSocket
+        let tx = ipc_client.remote_tx.lock().await;
+        if let Some(tx) = tx.as_ref() {
+            tx.send(message).await.map_err(|e| format!("Send failed: {}", e))?;
+        } else {
+            return Err("Not connected".to_string());
+        }
+    }
+
+    Ok(())
+}
+
+/// Disconnect the IPC party client.
+#[tauri::command]
+pub async fn party_ipc_disconnect(
+    party: tauri::State<'_, Arc<PartyServer>>,
+    ipc_client: tauri::State<'_, PartyIpcClient>,
+) -> Result<(), String> {
+    let is_host = *ipc_client.is_host.lock().await;
+
+    if is_host {
+        if let Some(client_id) = ipc_client.client_id.lock().await.take() {
+            party.remove_client(&client_id).await;
+        }
+    }
+
+    // Drop the remote tx to close the channel → kills the forwarding task
+    *ipc_client.remote_tx.lock().await = None;
+    *ipc_client.client_id.lock().await = None;
+
+    Ok(())
 }

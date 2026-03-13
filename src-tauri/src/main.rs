@@ -142,20 +142,21 @@ fn main() {
 
             app.manage(AppState::new(app_data_dir.clone(), wiki_conn));
             app.manage(party::PartyServer::new());
+            app.manage(party::PartyIpcClient::new());
             app.manage(dev_presence::DevPresence::new());
             app.manage(commands::dev_tools::DevLogBuffer::new());
             // Session WebSocket state (DM server + player client)
             app.manage(Arc::new(Mutex::new(None::<session_ws::SessionServer>)) as commands::session_ws_cmds::SessionServerState);
             app.manage(Arc::new(Mutex::new(None::<session_ws::ClientConnection>)) as commands::session_ws_cmds::SessionClientState);
 
-            // If OTA frontend update exists, navigate the main window to codex:// protocol
-            let ota_index = app_data_dir.join("dist_update").join("index.html");
-            if ota_index.exists() {
-                eprintln!("[init] OTA frontend update found, navigating to codex://localhost/");
-                if let Some(window) = app.get_webview_window("main") {
-                    let url: tauri::Url = "codex://localhost/".parse().unwrap();
-                    let _ = window.navigate(url);
-                }
+            // OTA frontend update — clear any stale dist_update to prevent black screen.
+            // The codex:// protocol approach is unreliable in production, so we disable it.
+            // Updates are detected via version.json and shown as a banner instead.
+            let ota_dir = app_data_dir.join("dist_update");
+            if ota_dir.exists() {
+                eprintln!("[init] Clearing stale OTA dist_update to prevent black screen");
+                let _ = fs::remove_dir_all(&ota_dir);
+                let _ = fs::remove_file(app_data_dir.join("ota_version.txt"));
             }
 
             Ok(())
@@ -254,6 +255,10 @@ fn main() {
             party::stop_party_server,
             party::create_party_room,
             party::get_local_ip,
+            party::party_ipc_join,
+            party::party_ipc_connect,
+            party::party_ipc_send,
+            party::party_ipc_disconnect,
             // Dev updates
             commands::dev_updates::check_git_updates,
             commands::dev_updates::pull_git_updates,

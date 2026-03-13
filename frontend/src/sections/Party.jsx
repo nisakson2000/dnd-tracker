@@ -377,7 +377,7 @@ export default function Party({ characterId, character, onBugReport }) {
               <Wifi size={12} className="text-amber-200/30" />
               <span className="text-xs text-amber-200/40">Your IP:</span>
               <span className="font-mono text-sm text-amber-100 font-semibold">{hostIp}</span>
-              <span className="text-xs text-amber-200/25">\u2014 share this with your players</span>
+              <span className="text-xs text-amber-200/25">{'\u2014'} share this with your players</span>
             </div>
           )}
         </div>

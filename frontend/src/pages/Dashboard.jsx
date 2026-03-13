@@ -2156,66 +2156,8 @@ export default function Dashboard() {
   const [showDDBImport, setShowDDBImport] = useState(false);
   const [sessionPrepChar, setSessionPrepChar] = useState(null);
   const [postSessionChar, setPostSessionChar] = useState(null);
-  const [autoUpdateStatus, setAutoUpdateStatus] = useState(null); // null | 'checking' | 'pulling' | 'updated' | 'available' | 'up_to_date' | 'failed'
   const [updateBannerDismissed, setUpdateBannerDismissed] = useState(false);
   const { updateAvailable, latestVersion, currentVersion } = useUpdateCheck();
-
-  // Auto-update: download latest frontend via OTA on launch + poll every 30s
-  // Downloads silently, then shows banner — user chooses when to apply
-  useEffect(() => {
-    let cancelled = false;
-    let intervalId = null;
-
-    const checkAndUpdate = async (isInitial = false) => {
-      if (cancelled) return;
-      // Don't re-check if an update is already downloaded and waiting
-      if (autoUpdateStatus === 'ready') return;
-      try {
-        if (isInitial) setAutoUpdateStatus('checking');
-        const result = await invoke('ota_download_update');
-        if (cancelled) return;
-        if (result.status === 'updated') {
-          // Update downloaded — show banner, let user decide when to apply
-          setAutoUpdateStatus('ready');
-        } else if (isInitial) {
-          setAutoUpdateStatus('up_to_date');
-        }
-      } catch {
-        // OTA failed — try git-based update as fallback (dev environment)
-        try {
-          if (isInitial) setAutoUpdateStatus('checking');
-          const gitResult = await invoke('check_git_updates');
-          if (cancelled) return;
-          if (gitResult.has_update) {
-            setAutoUpdateStatus('pulling');
-            const pullResult = await invoke('pull_git_updates');
-            if (cancelled) return;
-            if (pullResult.success) {
-              setAutoUpdateStatus('ready');
-            } else {
-              setAutoUpdateStatus('failed');
-            }
-          } else if (isInitial) {
-            setAutoUpdateStatus('up_to_date');
-          }
-        } catch {
-          // Neither OTA nor git available — skip silently
-          if (isInitial && !cancelled) setAutoUpdateStatus(null);
-        }
-      }
-    };
-
-    // Initial check on launch
-    checkAndUpdate(true);
-
-    // Poll every 30 seconds
-    intervalId = setInterval(() => checkAndUpdate(false), 30_000);
-
-    return () => {
-      cancelled = true;
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [autoUpdateStatus]);
 
   const load = async () => {
     try { const d = await listCharacters(); setCharacters(d); }
@@ -2391,7 +2333,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Update Banner ── */}
-      {!updateBannerDismissed && (updateAvailable || autoUpdateStatus === 'ready' || autoUpdateStatus === 'pulling' || autoUpdateStatus === 'failed') && (
+      {!updateBannerDismissed && updateAvailable && (
         <motion.div
           initial={{ y: -40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -2404,73 +2346,30 @@ export default function Dashboard() {
             position: 'relative',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
             padding: '10px 20px', borderRadius: 10,
-            background: autoUpdateStatus === 'ready'
-              ? 'rgba(39,174,96,0.12)'
-              : autoUpdateStatus === 'failed'
-                ? 'rgba(220,38,38,0.1)'
-                : 'rgba(201,168,76,0.1)',
-            border: autoUpdateStatus === 'ready'
-              ? '1px solid rgba(39,174,96,0.3)'
-              : autoUpdateStatus === 'failed'
-                ? '1px solid rgba(220,38,38,0.3)'
-                : '1px solid rgba(201,168,76,0.25)',
+            background: 'rgba(201,168,76,0.1)',
+            border: '1px solid rgba(201,168,76,0.25)',
             backdropFilter: 'blur(12px)',
           }}>
-            <span style={{ fontSize: 16 }}>
-              {autoUpdateStatus === 'ready' ? '✅' : autoUpdateStatus === 'failed' ? '⚠️' : '✨'}
-            </span>
+            <span style={{ fontSize: 16 }}>✨</span>
             <span style={{
               fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.05em',
-              color: autoUpdateStatus === 'ready' ? '#86efac'
-                : autoUpdateStatus === 'failed' ? '#fca5a5'
-                : '#fde68a',
+              color: '#fde68a',
             }}>
-              {autoUpdateStatus === 'ready'
-                ? 'Update ready — apply now or it will apply on next launch'
-                : autoUpdateStatus === 'pulling'
-                  ? 'Downloading latest update...'
-                  : autoUpdateStatus === 'failed'
-                    ? 'Auto-update failed — will retry in 30s'
-                    : `Update available: ${latestVersion} (you have ${currentVersion})`
-              }
+              {`Update available: ${latestVersion} (you have ${currentVersion})`}
             </span>
-            {autoUpdateStatus === 'ready' && (
-              <>
-                <button
-                  onClick={() => { window.location.reload(); }}
-                  style={{
-                    padding: '4px 14px', borderRadius: 6, fontSize: 11,
-                    fontFamily: 'var(--font-heading)', letterSpacing: '0.08em',
-                    background: 'rgba(39,174,96,0.2)', border: '1px solid rgba(39,174,96,0.4)',
-                    color: '#86efac', cursor: 'pointer',
-                  }}
-                >
-                  APPLY NOW
-                </button>
-                <button
-                  onClick={() => setUpdateBannerDismissed(true)}
-                  style={{
-                    padding: '4px 14px', borderRadius: 6, fontSize: 11,
-                    fontFamily: 'var(--font-heading)', letterSpacing: '0.08em',
-                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)',
-                    color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
-                  }}
-                >
-                  LATER
-                </button>
-              </>
-            )}
+            <button
+              onClick={() => setUpdateBannerDismissed(true)}
+              style={{
+                padding: '4px 14px', borderRadius: 6, fontSize: 11,
+                fontFamily: 'var(--font-heading)', letterSpacing: '0.08em',
+                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)',
+                color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+              }}
+            >
+              DISMISS
+            </button>
           </div>
         </motion.div>
-      )}
-
-      {/* Auto-update status indicator */}
-      {autoUpdateStatus === 'checking' && (
-        <div style={{ position: 'relative', zIndex: 20, textAlign: 'center', padding: '8px 0' }}>
-          <span style={{ fontFamily: 'var(--font-heading)', fontSize: 10, letterSpacing: '0.1em', color: 'rgba(201,168,76,0.4)' }}>
-            Checking for updates...
-          </span>
-        </div>
       )}
 
       {/* ── Content ── */}
