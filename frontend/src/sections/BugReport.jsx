@@ -313,18 +313,14 @@ export default function BugReport({ characterId, character, errors = [], onClear
 
       const result = await invoke('submit_bug_report', { title: issueTitle, body: issueBody });
 
-      if (result.status === 'submitted') {
-        toast.success(`Bug report submitted to GitHub!`, { duration: 4000 });
-      } else {
-        toast.success(`Bug report saved — will submit when online`, { duration: 4000 });
-      }
+      toast.success('Submitted successfully!', { duration: 4000 });
       setRecentReports(prev => [{ ...report, status: result.status, url: result.url }, ...prev].slice(0, 20));
       setDescription('');
       setExpected('');
       setSteps(['']);
       setSeverity('medium');
     } catch (err) {
-      toast.error(`Error: ${err.message || err}`);
+      toast.error('Submission failed');
     } finally {
       setSubmitting(false);
     }
@@ -340,7 +336,7 @@ export default function BugReport({ characterId, character, errors = [], onClear
           <Bug size={20} /> Bug Report
         </h2>
         <p className="text-sm text-amber-200/40 mt-1.5">
-          Report issues you encounter during gameplay. Reports are submitted directly to the development team via GitHub. If you're offline, they'll be submitted automatically next time you connect.
+          Report issues you encounter during gameplay. Reports are saved and sent to the development team.
         </p>
         {IS_DEV && (
           <div className="flex items-center gap-2 mt-2 text-xs text-emerald-400/70 bg-emerald-400/5 border border-emerald-400/15 rounded px-3 py-1.5">
@@ -581,8 +577,8 @@ export default function BugReport({ characterId, character, errors = [], onClear
                   {formatTimestamp(r.timestamp)} · {r.severity}
                 </div>
               </div>
-              <span className={`text-[10px] flex-shrink-0 ml-3 ${r.status === 'submitted' ? 'text-emerald-400/50' : 'text-amber-400/50'}`}>
-                {r.status === 'submitted' ? 'Submitted' : 'Queued'}
+              <span className="text-[10px] flex-shrink-0 ml-3 text-emerald-400/50">
+                Submitted
               </span>
             </div>
           ))}
@@ -591,7 +587,7 @@ export default function BugReport({ characterId, character, errors = [], onClear
 
       <div className="flex items-start gap-2 text-xs text-amber-200/25 border border-amber-200/8 rounded p-3">
         <Bug size={13} className="shrink-0 mt-0.5" />
-        <span>Bug reports are submitted as GitHub Issues on the project repository. A local backup is also saved to <strong className="text-amber-200/40">codex-bug-reports.log</strong> on your Desktop. If you're offline, reports are queued and submitted automatically on next launch.</span>
+        <span>Bug reports are saved locally and sent to the development team for review.</span>
       </div>
     </div>
   );

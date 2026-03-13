@@ -106,18 +106,14 @@ export default function FeatureRequest() {
 
       const result = await invoke('submit_feature_request', { title: issueTitle, body: issueBody });
 
-      if (result.status === 'submitted') {
-        toast.success('Feature request submitted to GitHub!', { duration: 4000 });
-      } else {
-        toast.success('Feature request saved — will submit when online', { duration: 4000 });
-      }
+      toast.success('Submitted successfully!', { duration: 4000 });
       setRecentRequests(prev => [{ ...req, status: result.status, url: result.url }, ...prev].slice(0, 20));
       setTitle('');
       setDescription('');
       setUseCase('');
       setCategory('gameplay');
     } catch (err) {
-      toast.error(`Error: ${err.message || err}`);
+      toast.error('Submission failed');
     } finally {
       setSubmitting(false);
     }
@@ -138,7 +134,7 @@ export default function FeatureRequest() {
           <Lightbulb size={20} /> Feature Request
         </h2>
         <p className="text-sm text-amber-200/40 mt-1.5">
-          Have an idea to make The Codex better? Submit it here! Requests are sent directly to the development team via GitHub. If you're offline, they'll be submitted automatically next time you connect.
+          Have an idea to make The Codex better? Submit it here and we'll review it.
         </p>
       </div>
 
@@ -239,8 +235,8 @@ export default function FeatureRequest() {
                   {formatTimestamp(r.timestamp)} · {r.category}
                 </div>
               </div>
-              <span className={`text-[10px] flex-shrink-0 ml-3 ${r.status === 'submitted' ? 'text-emerald-400/50' : 'text-amber-400/50'}`}>
-                {r.status === 'submitted' ? 'Submitted' : 'Queued'}
+              <span className="text-[10px] flex-shrink-0 ml-3 text-emerald-400/50">
+                Submitted
               </span>
             </div>
           ))}
@@ -249,7 +245,7 @@ export default function FeatureRequest() {
 
       <div className="flex items-start gap-2 text-xs text-amber-200/25 border border-amber-200/8 rounded p-3">
         <Lightbulb size={13} className="shrink-0 mt-0.5" />
-        <span>Feature requests are submitted as GitHub Issues on the project repository. A local backup is also saved to <strong className="text-amber-200/40">codex-feature-requests.log</strong> on your Desktop. If you're offline, requests are queued and submitted automatically on next launch.</span>
+        <span>Feature requests are saved locally and sent to the development team for review.</span>
       </div>
     </div>
   );
