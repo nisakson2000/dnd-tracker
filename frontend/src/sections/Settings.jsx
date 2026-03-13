@@ -73,6 +73,7 @@ const DEFAULTS = {
   glowIntensity: 60,
   panelBlur: 16,
   panelOpacity: 3,
+  brightness: 100,
 };
 
 function loadV3Settings() {
@@ -120,6 +121,9 @@ function applyV3Settings(s) {
   // Panel opacity
   root.style.setProperty('--bg-panel', `rgba(255,255,255,${s.panelOpacity / 100})`);
   root.style.setProperty('--bg-panel-h', `rgba(255,255,255,${(s.panelOpacity + 2) / 100})`);
+  // Brightness
+  const brightness = s.brightness != null ? s.brightness : 100;
+  root.style.filter = brightness !== 100 ? `brightness(${brightness / 100})` : '';
 }
 
 // Apply on load
@@ -526,7 +530,7 @@ export default function Settings() {
         <div>
           <div className="sp-sec">Density</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '16px' }}>
-            {[{ v: 0.8, label: 'Compact', icon: '▪▪▪' }, { v: 1, label: 'Normal', icon: '▪ ▪ ▪' }, { v: 1.2, label: 'Spacious', icon: '▪  ▪  ▪' }].map(d => (
+            {[{ v: 0.6, label: 'Compact', icon: '▪▪▪', desc: 'Best for smaller screens (≤24")' }, { v: 1, label: 'Normal', icon: '▪ ▪ ▪', desc: 'Default spacing' }, { v: 1.2, label: 'Spacious', icon: '▪  ▪  ▪', desc: 'Extra breathing room' }].map(d => (
               <div
                 key={d.v}
                 className={`dbtn ${settings.density === d.v ? 'on' : ''}`}
@@ -538,6 +542,7 @@ export default function Settings() {
               >
                 <div style={{ fontSize: '18px', marginBottom: '4px' }}>{d.icon}</div>
                 {d.label}
+                {d.desc && <div style={{ fontSize: '9px', color: 'var(--text-mute)', marginTop: '2px', lineHeight: 1.2 }}>{d.desc}</div>}
               </div>
             ))}
           </div>
@@ -588,6 +593,17 @@ export default function Settings() {
             <input type="range" min={1} max={15} value={settings.panelOpacity} step={1} onChange={e => update({ panelOpacity: +e.target.value })} />
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '10px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)' }}>
               <span>Ghost</span><span>Glass</span><span>Solid</span>
+            </div>
+          </div>
+
+          <div className="sl-row">
+            <div className="sl-header">
+              <span className="sl-label">Brightness</span>
+              <span className="sl-val">{settings.brightness ?? 100}%</span>
+            </div>
+            <input type="range" min={40} max={130} value={settings.brightness ?? 100} step={5} onChange={e => update({ brightness: +e.target.value })} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '10px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)' }}>
+              <span>Dim</span><span>Normal</span><span>Bright</span>
             </div>
           </div>
 

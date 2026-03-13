@@ -1,10 +1,88 @@
 use rusqlite::params;
+use std::fs;
+use std::path::PathBuf;
 use std::process::Command;
 use tauri::State;
 
 use crate::db::AppState;
 
 const REPO: &str = "nisakson2000/dnd-tracker";
+
+/// Find the repo root directory by looking for the `bugs/` folder.
+/// Works in both dev (cwd is repo) and production (exe is inside src-tauri/target/).
+fn find_repo_root() -> Option<PathBuf> {
+    // Try current working directory first
+    if let Ok(cwd) = std::env::current_dir() {
+        if cwd.join("bugs").is_dir() {
+            return Some(cwd);
+        }
+        // Walk up from cwd
+        let mut dir = cwd.as_path();
+        while let Some(parent) = dir.parent() {
+            if parent.join("bugs").is_dir() {
+                return Some(parent.to_path_buf());
+            }
+            dir = parent;
+        }
+    }
+    // Try from the executable location (production builds)
+    if let Ok(exe) = std::env::current_exe() {
+        let mut dir = exe.as_path();
+        while let Some(parent) = dir.parent() {
+            if parent.join("bugs").is_dir() {
+                return Some(parent.to_path_buf());
+            }
+            dir = parent;
+        }
+    }
+    None
+}
+
+/// Write a report as a markdown file in the repo's bugs/ or feature-requests/ folder.
+fn write_report_file(report_type: &str, title: &str, body: &str) {
+    let Some(repo_root) = find_repo_root() else {
+        eprintln!("[reports] Could not find repo root — skipping file write");
+        return;
+    };
+
+    let folder = if report_type == "bug" { "bugs" } else { "feature-requests" };
+    let dir = repo_root.join(folder);
+    if !dir.is_dir() {
+        if let Err(e) = fs::create_dir_all(&dir) {
+            eprintln!("[reports] Failed to create {} dir: {}", folder, e);
+            return;
+        }
+    }
+
+    // Generate filename: YYYY-MM-DD_HH-MM-SS_slug.md
+    let now = chrono::Local::now();
+    let date_str = now.format("%Y-%m-%d_%H-%M-%S").to_string();
+    let slug: String = title
+        .chars()
+        .filter(|c| c.is_alphanumeric() || *c == ' ' || *c == '-')
+        .collect::<String>()
+        .trim()
+        .replace(' ', "-")
+        .to_lowercase()
+        .chars()
+        .take(50)
+        .collect();
+    let slug = if slug.is_empty() { "report".to_string() } else { slug };
+    let filename = format!("{}_{}.md", date_str, slug);
+    let filepath = dir.join(&filename);
+
+    let content = format!("# {}\n\n**Date:** {}\n**Type:** {}\n\n---\n\n{}\n",
+        title,
+        now.format("%Y-%m-%d %H:%M:%S"),
+        if report_type == "bug" { "Bug Report" } else { "Feature Request" },
+        body,
+    );
+
+    match fs::write(&filepath, &content) {
+        Ok(_) => eprintln!("[reports] Wrote {} to {}", report_type, filepath.display()),
+        Err(e) => eprintln!("[reports] Failed to write {}: {}", filepath.display(), e),
+    }
+}
 
 /// Ensure the reports queue table exists in campaign DB (or a standalone DB).
 /// We use the app data dir to store a reports.db for pending offline reports.
@@ -62,8 +140,10 @@ pub fn submit_bug_report(
     body: String,
     state: State<'_, AppState>,
 ) -> Result<serde_json::Value, String> {
-    // Also write to local log file (keep existing behavior)
+    // Write to local log file (keep existing behavior)
     let _ = super::bug_report::write_bug_report(body.clone());
+    // Write as markdown file to repo bugs/ folder
+    write_report_file("bug", &title, &body);
 
     if gh_available() {
         match create_gh_issue(&title, &body, "bug") {
@@ -87,8 +167,10 @@ pub fn submit_feature_request(
     body: String,
     state: State<'_, AppState>,
 ) -> Result<serde_json::Value, String> {
-    // Also write to local log file (keep existing behavior)
+    // Write to local log file (keep existing behavior)
     let _ = super::feature_request::write_feature_request(body.clone());
+    // Write as markdown file to repo feature-requests/ folder
+    write_report_file("feature", &title, &body);
 
     if gh_available() {
         match create_gh_issue(&title, &body, "enhancement") {

@@ -6,7 +6,6 @@ import { getOverview } from '../api/overview';
 import { getConditions, getAttacks } from '../api/combat';
 import { getBackstory } from '../api/backstory';
 import { getSpells, getSpellSlots, resetSpellSlots } from '../api/spells';
-import { addJournalEntry } from '../api/journal';
 import { getFeatures, updateFeature } from '../api/features';
 import { getItems, updateItem } from '../api/inventory';
 import { longRest, shortRest } from '../api/rest';
@@ -16,7 +15,6 @@ import Sidebar from '../components/Sidebar';
 import LevelUpOverlay from '../components/LevelUpOverlay';
 import BeginnerWizard from '../components/BeginnerWizard';
 import ArcaneWidget from '../components/ArcaneWidget';
-import FloatingDiceRoller from '../components/FloatingDiceRoller';
 import { useLevelUp } from '../hooks/useLevelUp';
 import { useCrashRecovery } from '../hooks/useCrashRecovery';
 import { useAutoBackup } from '../hooks/useAutoBackup';
@@ -805,10 +803,6 @@ export default function CharacterView() {
   const [diceHistory, setDiceHistory] = useState([]);
   const [sessionElapsed, setSessionElapsed] = useState('0m');
   const [spellSlots, setSpellSlots] = useState([]);
-  const [showQuickJournal, setShowQuickJournal] = useState(false);
-  const [quickJournalTitle, setQuickJournalTitle] = useState('');
-  const [quickJournalBody, setQuickJournalBody] = useState('');
-  const [quickJournalSaving, setQuickJournalSaving] = useState(false);
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
   const [shortcutHintsSeen, setShortcutHintsSeen] = useState(() => {
     try { return localStorage.getItem('codex_shortcut_hints_seen') === '1'; } catch { return false; }
@@ -979,35 +973,6 @@ export default function CharacterView() {
   };
 
   // Quick Journal helpers
-  const openQuickJournal = () => {
-    const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    setQuickJournalTitle(`Session Note - ${today}`);
-    setQuickJournalBody('');
-    setShowQuickJournal(true);
-  };
-
-  const saveQuickJournal = async () => {
-    if (!quickJournalTitle.trim()) return;
-    setQuickJournalSaving(true);
-    try {
-      await addJournalEntry(characterId, {
-        title: quickJournalTitle.trim(),
-        body: quickJournalBody,
-        session_number: 0,
-        real_date: new Date().toISOString().split('T')[0],
-        ingame_date: '',
-        tags: 'quick-note',
-        npcs_mentioned: '',
-        pinned: 0,
-      });
-      toast.success('Journal note saved');
-      setShowQuickJournal(false);
-    } catch (err) {
-      toast.error(`Failed to save: ${err.message}`);
-    } finally {
-      setQuickJournalSaving(false);
-    }
-  };
 
   // Helper: check if event target is an input field (don't fire shortcuts while typing)
   const isTyping = useCallback((e) => {
@@ -1031,16 +996,11 @@ export default function CharacterView() {
 
   // Context-dependent "new entry" action for Ctrl+N
   const handleNewEntry = useCallback(() => {
-    if (activeSection === 'journal') {
-      openQuickJournal();
-    } else if (activeSection === 'npcs' || activeSection === 'quests' || activeSection === 'lore' || activeSection === 'inventory' || activeSection === 'spellbook' || activeSection === 'features') {
+    if (activeSection === 'journal' || activeSection === 'npcs' || activeSection === 'quests' || activeSection === 'lore' || activeSection === 'inventory' || activeSection === 'spellbook' || activeSection === 'features') {
       // Dispatch a custom event that the active section can listen for
       window.dispatchEvent(new CustomEvent('codex:new-entry', { detail: { section: activeSection } }));
-    } else {
-      // Default: open quick journal
-      openQuickJournal();
     }
-  }, [activeSection]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeSection]);
 
   // Comprehensive keyboard shortcuts
   useEffect(() => {
@@ -1050,7 +1010,6 @@ export default function CharacterView() {
       // ── Escape: close any open modal/overlay ──
       if (e.key === 'Escape') {
         if (showShortcutHelp) { setShowShortcutHelp(false); return; }
-        if (showQuickJournal) { setShowQuickJournal(false); return; }
         if (showRestModal) { setShowRestModal(false); return; }
         if (showWizard) { setShowWizard(false); return; }
         return;
@@ -1134,16 +1093,6 @@ export default function CharacterView() {
         return;
       }
 
-      // ── Ctrl+Shift+N: quick journal (legacy, still works) ──
-      if (e.ctrlKey && e.shiftKey && (e.key === 'N' || e.key === 'n')) {
-        e.preventDefault();
-        setShowQuickJournal(true);
-        const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        setQuickJournalTitle(`Session Note - ${today}`);
-        setQuickJournalBody('');
-        return;
-      }
-
       // ── Ctrl+1 through Ctrl+9: switch sections (works even while typing) ──
       if (e.ctrlKey && !e.shiftKey && e.key >= '1' && e.key <= '9') {
         e.preventDefault();
@@ -1161,7 +1110,7 @@ export default function CharacterView() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showShortcutHelp, showQuickJournal, showRestModal, showWizard, character, activeSection, isTyping, toggleShortcutHelp, handleNewEntry]);
+  }, [showShortcutHelp, showRestModal, showWizard, character, activeSection, isTyping, toggleShortcutHelp, handleNewEntry]);
 
   if (loading) {
     return (
@@ -1466,15 +1415,6 @@ export default function CharacterView() {
             section={activeSection}
           />
         )}
-
-        {/* Floating Dice Roller */}
-        <FloatingDiceRoller
-          characterId={characterId}
-          activeConditions={activeConditions}
-          diceHistory={diceHistory}
-          onDiceHistoryChange={setDiceHistory}
-          isDM={appMode === 'dm'}
-        />
 
         {/* D&D Help button (bottom-left, out of widget's way) */}
         <button

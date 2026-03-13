@@ -5,6 +5,7 @@ export const CHANGELOG = [
   {
     version: 'V0.5.4',
     date: '03/13/2026',
+    time: '11:30 PM',
     title: 'Session Monitor, Community Campaigns Fix',
     changes: [
       'Session Monitor — background error reporter that auto-captures crashes and submits bug reports to GitHub',
@@ -16,6 +17,7 @@ export const CHANGELOG = [
   {
     version: 'V0.5.3',
     date: '03/13/2026',
+    time: '10:45 PM',
     title: 'DM Content Creation Tools & Update System',
     changes: [
       'Quest templates — 8 quick-fill templates (Bounty Hunt, Rescue Mission, Dungeon Delve, etc.) with pre-filled objectives',
@@ -30,6 +32,7 @@ export const CHANGELOG = [
   {
     version: 'V0.5.2',
     date: '03/13/2026',
+    time: '9:15 PM',
     title: 'Character Sheet UX, Floating Dice & Campaign Management',
     changes: [
       'Dice rolling visible on character sheet — hover ability scores, saving throws, and skills to see dice icons and roll checks',
@@ -44,6 +47,7 @@ export const CHANGELOG = [
   {
     version: 'V0.5.0',
     date: '03/13/2026',
+    time: '4:00 PM',
     title: 'Multiplayer Campaign Engine & Party Tools',
     changes: [
       'DM Campaign Engine — create campaigns, manage scenes, and run live sessions with real-time WebSocket multiplayer sync',

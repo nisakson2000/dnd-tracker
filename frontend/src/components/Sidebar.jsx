@@ -40,6 +40,7 @@ const PLAYER_SECTION_GROUPS = [
   {
     label: 'Tools',
     items: [
+      { id: 'dice',       label: 'Dice Roller',        icon: Dice5 },
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
       { id: 'party-connect', label: 'Party Connect',   icon: Wifi },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },

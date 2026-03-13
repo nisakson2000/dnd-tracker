@@ -2160,29 +2160,51 @@ export default function Dashboard() {
   const [updateBannerDismissed, setUpdateBannerDismissed] = useState(false);
   const { updateAvailable, latestVersion, currentVersion } = useUpdateCheck();
 
-  // Auto-check for git updates on first launch of the day (check only, no auto-pull)
+  // Auto-pull git updates on launch + poll every 30s in production
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const lastCheck = localStorage.getItem('codex_last_update_check');
-    if (lastCheck === today) return;
+    let cancelled = false;
+    let intervalId = null;
 
-    const autoCheck = async () => {
-      setAutoUpdateStatus('checking');
+    const checkAndPull = async (isInitial = false) => {
+      if (cancelled) return;
       try {
+        if (isInitial) setAutoUpdateStatus('checking');
         const result = await invoke('check_git_updates');
-        localStorage.setItem('codex_last_update_check', today);
+        if (cancelled) return;
         if (result.has_update) {
-          setAutoUpdateStatus('available');
-        } else {
+          setAutoUpdateStatus('pulling');
+          try {
+            const pullResult = await invoke('pull_git_updates');
+            if (cancelled) return;
+            if (pullResult.success) {
+              setAutoUpdateStatus('updated');
+              // Auto-reload after a brief delay so the user sees the banner
+              setTimeout(() => { if (!cancelled) window.location.reload(); }, 2500);
+            } else {
+              setAutoUpdateStatus('failed');
+            }
+          } catch {
+            if (!cancelled) setAutoUpdateStatus('failed');
+          }
+        } else if (isInitial) {
           setAutoUpdateStatus('up_to_date');
         }
       } catch {
-        // Git not available or not a git repo — skip silently
-        localStorage.setItem('codex_last_update_check', today);
-        setAutoUpdateStatus(null);
+        // Git not available — skip silently
+        if (isInitial && !cancelled) setAutoUpdateStatus(null);
       }
     };
-    autoCheck();
+
+    // Initial auto-pull on launch
+    checkAndPull(true);
+
+    // Poll every 30 seconds for new updates
+    intervalId = setInterval(() => checkAndPull(false), 30_000);
+
+    return () => {
+      cancelled = true;
+      if (intervalId) clearInterval(intervalId);
+    };
   }, []);
 
   const load = async () => {
@@ -2409,11 +2431,11 @@ export default function Dashboard() {
                 : '#fde68a',
             }}>
               {autoUpdateStatus === 'updated'
-                ? 'Updated to latest build — reload for changes to take effect'
+                ? 'Updated to latest build — reloading...'
                 : autoUpdateStatus === 'pulling'
-                  ? 'Updating...'
+                  ? 'Pulling latest updates...'
                   : autoUpdateStatus === 'failed'
-                    ? 'Update failed — try again later'
+                    ? 'Auto-update failed — will retry in 30s'
                     : `Update available: ${latestVersion} (you have ${currentVersion})`
               }
             </span>
@@ -2428,34 +2450,6 @@ export default function Dashboard() {
                 }}
               >
                 RELOAD NOW
-              </button>
-            )}
-            {(updateAvailable || autoUpdateStatus === 'available') && autoUpdateStatus !== 'updated' && autoUpdateStatus !== 'pulling' && autoUpdateStatus !== 'failed' && (
-              <button
-                onClick={async () => {
-                  try {
-                    setAutoUpdateStatus('pulling');
-                    const result = await invoke('pull_git_updates');
-                    if (result.success) {
-                      setAutoUpdateStatus('updated');
-                      toast.success('Updated! Reload for changes.', { duration: 5000 });
-                    } else {
-                      setAutoUpdateStatus('failed');
-                      toast.error('Update failed — check Dev Tools for details');
-                    }
-                  } catch (err) {
-                    setAutoUpdateStatus('failed');
-                    toast.error(`Update failed: ${err}`);
-                  }
-                }}
-                style={{
-                  padding: '4px 14px', borderRadius: 6, fontSize: 11,
-                  fontFamily: 'var(--font-heading)', letterSpacing: '0.08em',
-                  background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.35)',
-                  color: '#fde68a', cursor: 'pointer',
-                }}
-              >
-                UPDATE NOW
               </button>
             )}
           </div>

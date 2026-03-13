@@ -513,7 +513,7 @@ export default function Updates() {
                       <span className="text-[9px] bg-amber-500/15 text-amber-400/70 px-1.5 py-0.5 rounded font-mono">CURRENT</span>
                     )}
                   </div>
-                  <p className="text-[11px] text-amber-200/25 mt-1">{entry.date}</p>
+                  <p className="text-[11px] text-amber-200/25 mt-1">{entry.date}{entry.time ? ` · ${entry.time}` : ''}</p>
                 </div>
                 {isExpanded ? (
                   <ChevronUp size={14} className="text-amber-200/30 flex-shrink-0" />

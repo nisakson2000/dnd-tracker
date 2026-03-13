@@ -596,46 +596,86 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
         <h3 className="font-display text-amber-100 mb-2">Roll Label</h3>
         <p className="text-xs text-amber-200/30 mb-2">Give your next roll context — appears in history so you know what it was for.</p>
         <input
-          className="input w-full"
+          className="input w-full mb-3"
           placeholder='e.g. "Attack — Longsword", "DEX save", "Stealth check"'
           value={rollLabel}
           onChange={e => setRollLabel(e.target.value)}
         />
-      </div>
-
-      {/* Advantage / Disadvantage Toggle */}
-      <div className="card">
-        <h3 className="font-display text-amber-100 mb-2">Roll Mode</h3>
-        <p className="text-xs text-amber-200/30 mb-3">Advantage/Disadvantage applies to d20 rolls only. Rolls 2d20 and takes the higher (ADV) or lower (DIS) result.</p>
-        {condEffects.netAttackMode !== 'normal' && (
-          <div className={`text-xs mb-3 px-3 py-2 rounded border ${
-            condEffects.netAttackMode === 'disadvantage'
-              ? 'bg-red-950/40 border-red-500/30 text-red-300'
-              : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
-          }`}>
-            Auto-set to <span className="font-semibold">{condEffects.netAttackMode}</span> from active conditions ({activeConditions.join(', ')}). You can override manually.
-          </div>
-        )}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {[
-            { mode: 'normal', label: 'Normal' },
-            { mode: 'advantage', label: 'Advantage' },
-            { mode: 'disadvantage', label: 'Disadvantage' },
-          ].map(({ mode, label }) => (
+            'Attack Roll', 'Damage', 'Initiative', 'Saving Throw',
+            'Ability Check', 'Skill Check', 'Death Save', 'Concentration',
+            'Wild Magic', 'Hit Dice', 'Sneak Attack', 'Smite',
+          ].map(label => (
             <button
-              key={mode}
-              onClick={() => setRollMode(mode)}
-              className={`px-4 py-2 rounded text-sm font-medium transition-all ${
-                rollMode === mode
-                  ? mode === 'advantage' ? 'bg-emerald-800/50 text-emerald-300 border border-emerald-500/40'
-                  : mode === 'disadvantage' ? 'bg-red-800/50 text-red-300 border border-red-500/40'
-                  : 'bg-gold/15 text-amber-100 border border-gold/40'
-                  : 'bg-[#0d0d12] text-amber-200/40 border border-amber-200/10 hover:text-amber-200/60'
+              key={label}
+              onClick={() => setRollLabel(label)}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
+                rollLabel === label
+                  ? 'bg-gold/20 text-amber-100 border border-gold/40'
+                  : 'bg-[#0d0d12] text-amber-200/40 border border-amber-200/10 hover:text-amber-200/60 hover:border-amber-200/25'
               }`}
             >
               {label}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Advantage / Disadvantage Toggle */}
+      <div className={`card relative overflow-hidden ${
+        rollMode === 'advantage' ? 'ring-1 ring-emerald-500/30' :
+        rollMode === 'disadvantage' ? 'ring-1 ring-red-500/30' : ''
+      }`}>
+        {rollMode !== 'normal' && (
+          <div className={`absolute inset-0 pointer-events-none ${
+            rollMode === 'advantage' ? 'bg-emerald-500/5' : 'bg-red-500/5'
+          }`} />
+        )}
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-display text-amber-100">Roll Mode</h3>
+            {rollMode !== 'normal' && (
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                rollMode === 'advantage'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                  : 'bg-red-500/20 text-red-300 border border-red-500/30'
+              }`}>
+                {rollMode === 'advantage' ? 'ADV' : 'DIS'} Active
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-amber-200/30 mb-3">Advantage/Disadvantage applies to d20 rolls only. Rolls 2d20 and takes the higher (ADV) or lower (DIS) result.</p>
+          {condEffects.netAttackMode !== 'normal' && (
+            <div className={`text-xs mb-3 px-3 py-2 rounded border ${
+              condEffects.netAttackMode === 'disadvantage'
+                ? 'bg-red-950/40 border-red-500/30 text-red-300'
+                : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+            }`}>
+              Auto-set to <span className="font-semibold">{condEffects.netAttackMode}</span> from active conditions ({activeConditions.join(', ')}). You can override manually.
+            </div>
+          )}
+          <div className="flex gap-2">
+            {[
+              { mode: 'normal', label: 'Normal', icon: '⚖' },
+              { mode: 'advantage', label: 'Advantage', icon: '↑' },
+              { mode: 'disadvantage', label: 'Disadvantage', icon: '↓' },
+            ].map(({ mode, label, icon }) => (
+              <button
+                key={mode}
+                onClick={() => setRollMode(mode)}
+                className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  rollMode === mode
+                    ? mode === 'advantage' ? 'bg-emerald-800/60 text-emerald-200 border-2 border-emerald-400/50 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+                    : mode === 'disadvantage' ? 'bg-red-800/60 text-red-200 border-2 border-red-400/50 shadow-[0_0_12px_rgba(239,68,68,0.15)]'
+                    : 'bg-gold/15 text-amber-100 border-2 border-gold/40'
+                    : 'bg-[#0d0d12] text-amber-200/40 border border-amber-200/10 hover:text-amber-200/60 hover:border-amber-200/25'
+                }`}
+              >
+                <span className="mr-1">{icon}</span> {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

@@ -28,40 +28,71 @@ impl Drop for GitLockGuard {
 /// location. Never uses CARGO_MANIFEST_DIR (compile-time path that breaks on
 /// other machines).
 fn repo_root() -> Result<PathBuf, String> {
-    // Ask git itself where the repo root is — works regardless of where the
-    // binary is located, as long as the working directory is inside the repo.
+    // Strategy 1: Ask git from the current working directory
     if let Ok(cwd) = std::env::current_dir() {
         eprintln!("[dev-sync] cwd for repo_root: {:?}", cwd);
-    }
-    let output = std::process::Command::new("git")
-        .args(["rev-parse", "--show-toplevel"])
-        .output();
-
-    if let Ok(output) = output {
-        if output.status.success() {
-            // Only trim newlines, NOT spaces — directory names can have trailing spaces
-            let path = String::from_utf8_lossy(&output.stdout)
-                .trim_end_matches('\n')
-                .trim_end_matches('\r')
-                .to_string();
-            if !path.is_empty() {
-                return Ok(PathBuf::from(path));
-            }
+        if let Some(root) = try_git_toplevel(Some(&cwd)) {
+            return Ok(root);
         }
     }
 
-    // Fallback: use the current exe's directory and walk up to find .git
+    // Strategy 2: Ask git from the executable's directory (production builds)
+    // In production, the exe is inside the repo at src-tauri/target/release/
     if let Ok(exe_path) = std::env::current_exe() {
-        let mut dir = exe_path.parent().map(|p| p.to_path_buf());
-        while let Some(d) = dir {
-            if d.join(".git").exists() {
-                return Ok(d);
+        eprintln!("[dev-sync] exe path: {:?}", exe_path);
+        if let Some(exe_dir) = exe_path.parent() {
+            if let Some(root) = try_git_toplevel(Some(exe_dir)) {
+                return Ok(root);
             }
-            dir = d.parent().map(|p| p.to_path_buf());
+            // Walk up from exe directory to find .git
+            let mut dir = Some(exe_dir.to_path_buf());
+            while let Some(d) = dir {
+                if d.join(".git").exists() {
+                    eprintln!("[dev-sync] Found .git at {:?}", d);
+                    return Ok(d);
+                }
+                dir = d.parent().map(|p| p.to_path_buf());
+            }
         }
     }
 
-    Err("Could not find git repository root".to_string())
+    // Strategy 3: Try common install locations (Windows)
+    #[cfg(target_os = "windows")]
+    {
+        if let Ok(userprofile) = std::env::var("USERPROFILE") {
+            let desktop_repo = PathBuf::from(&userprofile).join("Desktop").join("dnd-tracker-nick main");
+            if desktop_repo.join(".git").exists() {
+                return Ok(desktop_repo);
+            }
+            let desktop_repo2 = PathBuf::from(&userprofile).join("Desktop").join("dnd-tracker");
+            if desktop_repo2.join(".git").exists() {
+                return Ok(desktop_repo2);
+            }
+        }
+    }
+
+    Err("Could not find git repository root — make sure you're running from inside the repo".to_string())
+}
+
+/// Try to get the git toplevel from a specific directory.
+fn try_git_toplevel(dir: Option<&std::path::Path>) -> Option<PathBuf> {
+    let mut cmd = std::process::Command::new("git");
+    cmd.args(["rev-parse", "--show-toplevel"]);
+    if let Some(d) = dir {
+        cmd.current_dir(d);
+    }
+    let output = cmd.output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let path = String::from_utf8_lossy(&output.stdout)
+        .trim_end_matches('\n')
+        .trim_end_matches('\r')
+        .to_string();
+    if path.is_empty() {
+        return None;
+    }
+    Some(PathBuf::from(path))
 }
 
 fn short_sha(sha: &str) -> &str {
