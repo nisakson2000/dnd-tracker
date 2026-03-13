@@ -515,3 +515,66 @@ pub fn wiki_random_articles(
 
     Ok(items)
 }
+
+#[derive(Serialize, Clone)]
+pub struct AdjacentArticles {
+    pub prev: Option<WikiArticleSummary>,
+    pub next: Option<WikiArticleSummary>,
+}
+
+#[tauri::command]
+pub fn wiki_adjacent_articles(
+    state: State<'_, AppState>,
+    category: String,
+    slug: String,
+) -> Result<AdjacentArticles, String> {
+    let wiki = state.wiki_conn.lock().map_err(|e| e.to_string())?;
+
+    let prev = wiki
+        .query_row(
+            "SELECT id, slug, title, category, subcategory, ruleset, summary, tags, sort_order, source \
+             FROM wiki_articles WHERE category = ?1 AND title < (SELECT title FROM wiki_articles WHERE slug = ?2) \
+             ORDER BY title DESC LIMIT 1",
+            [&category, &slug],
+            |row| {
+                Ok(WikiArticleSummary {
+                    id: row.get(0)?,
+                    slug: row.get(1)?,
+                    title: row.get(2)?,
+                    category: row.get(3)?,
+                    subcategory: row.get(4).unwrap_or_default(),
+                    ruleset: row.get(5).unwrap_or_else(|_| "universal".to_string()),
+                    summary: row.get(6).unwrap_or_default(),
+                    tags: row.get(7).unwrap_or_default(),
+                    sort_order: row.get(8).unwrap_or(0),
+                    source: row.get(9).unwrap_or_else(|_| "SRD 5.1".to_string()),
+                })
+            },
+        )
+        .ok();
+
+    let next = wiki
+        .query_row(
+            "SELECT id, slug, title, category, subcategory, ruleset, summary, tags, sort_order, source \
+             FROM wiki_articles WHERE category = ?1 AND title > (SELECT title FROM wiki_articles WHERE slug = ?2) \
+             ORDER BY title ASC LIMIT 1",
+            [&category, &slug],
+            |row| {
+                Ok(WikiArticleSummary {
+                    id: row.get(0)?,
+                    slug: row.get(1)?,
+                    title: row.get(2)?,
+                    category: row.get(3)?,
+                    subcategory: row.get(4).unwrap_or_default(),
+                    ruleset: row.get(5).unwrap_or_else(|_| "universal".to_string()),
+                    summary: row.get(6).unwrap_or_default(),
+                    tags: row.get(7).unwrap_or_default(),
+                    sort_order: row.get(8).unwrap_or(0),
+                    source: row.get(9).unwrap_or_else(|_| "SRD 5.1".to_string()),
+                })
+            },
+        )
+        .ok();
+
+    Ok(AdjacentArticles { prev, next })
+}

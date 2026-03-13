@@ -23,3 +23,6 @@ export const getSubcategories = (category) =>
 
 export const getRandomArticles = (count = 5, category = null) =>
   invoke('wiki_random_articles', { count, category })
+
+export const getAdjacentArticles = (category, slug) =>
+  invoke('wiki_adjacent_articles', { category, slug })

@@ -3,6 +3,21 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.4.6',
+    date: '03/12/2026',
+    title: 'Arcane Encyclopedia Redesign — Phase 3: Article Experience',
+    changes: [
+      'Reading Progress Bar — gold gradient bar at the top of the viewport fills as you scroll through an article',
+      'Active Table of Contents — scroll-spy highlights the section you\'re currently reading with amber left border',
+      'Inline Cross-Reference Links — article text automatically links mentions of related articles with category-colored underlines',
+      'Next/Previous Navigation — arrows at the bottom of articles to navigate within a category',
+      'Article Footer — word count, estimated reading time, and source book displayed below content',
+      'Enhanced Related Articles — sidebar cards with colored left borders, category icons, and badge labels',
+      'Copy Link Button — click the copy icon next to article title to copy the URL to clipboard',
+      'Cross-Reference Count — sidebar indicator showing how many articles are linked within the text',
+    ],
+  },
+  {
     version: 'V0.4.5',
     date: '03/12/2026',
     title: 'Arcane Encyclopedia Redesign — Phase 2: Search & Discovery',

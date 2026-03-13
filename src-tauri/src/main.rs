@@ -184,6 +184,7 @@ fn main() {
             commands::wiki::wiki_stats,
             commands::wiki::wiki_subcategories,
             commands::wiki::wiki_random_articles,
+            commands::wiki::wiki_adjacent_articles,
             // Bug Report
             commands::bug_report::write_bug_report,
             // Frontend logging

@@ -1,12 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, BookOpen, ExternalLink, Tag, Bookmark } from 'lucide-react';
+import { ArrowLeft, BookOpen, ExternalLink, Tag, Bookmark, Copy, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getArticle } from '../api/wiki';
+import { getArticle, getAdjacentArticles } from '../api/wiki';
 import { getCategoryConfig } from '../data/wikiCategoryConfig';
 import ArcaneWidget from '../components/ArcaneWidget';
 import StatBlockRouter from '../components/wiki/statblocks/StatBlockRouter';
+import TableOfContents from '../components/wiki/TableOfContents';
+import ReadingProgress from '../components/wiki/ReadingProgress';
+import ArticleFooter from '../components/wiki/ArticleFooter';
+import ArticleNav from '../components/wiki/ArticleNav';
 import useWikiBookmarks from '../hooks/useWikiBookmarks';
 import useWikiHistory from '../hooks/useWikiHistory';
 
@@ -31,7 +35,102 @@ function formatCategoryName(str) {
     .replace(/\b\w/g, c => c.toUpperCase());
 }
 
-function formatContent(content) {
+/**
+ * Build a map of related article titles → slugs for inline linking.
+ * Uses case-insensitive matching. Only includes titles with 3+ characters
+ * to avoid false positives on short words.
+ */
+function buildCrossRefMap(relatedArticles) {
+  const map = new Map();
+  (relatedArticles || []).forEach(rel => {
+    if (rel.title && rel.title.length >= 3) {
+      map.set(rel.title.toLowerCase(), { slug: rel.slug, title: rel.title, category: rel.category });
+    }
+  });
+  return map;
+}
+
+/**
+ * Render inline formatting: bold, and cross-reference links.
+ * Cross-refs are detected by matching known related article titles in text.
+ */
+function renderInlineFormatting(text, crossRefMap) {
+  // First split by bold markers
+  const boldParts = text.split(/(\*\*[^*]+\*\*)/g);
+
+  return boldParts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      const inner = part.slice(2, -2);
+      // Check if the bold text itself is a cross-reference
+      const ref = crossRefMap.get(inner.toLowerCase());
+      if (ref) {
+        return (
+          <Link key={i} to={`/wiki/${ref.slug}`} className="font-semibold text-amber-300 hover:text-amber-200 underline decoration-amber-400/30 hover:decoration-amber-400/60 transition-colors">
+            {inner}
+          </Link>
+        );
+      }
+      return <strong key={i} className="text-amber-100 font-semibold">{inner}</strong>;
+    }
+
+    // For non-bold text, scan for cross-reference matches
+    if (crossRefMap.size === 0) return part;
+    return linkifyCrossRefs(part, crossRefMap, i);
+  });
+}
+
+/**
+ * Scan plain text for cross-reference matches and wrap them in Links.
+ * Uses a greedy approach: longest match first to avoid partial matches.
+ */
+function linkifyCrossRefs(text, crossRefMap, keyPrefix) {
+  if (!text || crossRefMap.size === 0) return text;
+
+  // Sort titles by length descending for greedy matching
+  const titles = Array.from(crossRefMap.keys()).sort((a, b) => b.length - a.length);
+
+  // Build a regex that matches any title (case-insensitive, word boundaries)
+  const escaped = titles.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const pattern = new RegExp(`\\b(${escaped.join('|')})\\b`, 'gi');
+
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = pattern.exec(text)) !== null) {
+    // Add text before match
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    const ref = crossRefMap.get(match[0].toLowerCase());
+    if (ref) {
+      const config = getCategoryConfig(ref.category);
+      parts.push(
+        <Link
+          key={`${keyPrefix}-xref-${match.index}`}
+          to={`/wiki/${ref.slug}`}
+          className="text-amber-300 hover:text-amber-200 underline decoration-dotted transition-colors"
+          style={{ textDecorationColor: `${config.color}60` }}
+          title={ref.title}
+        >
+          {match[0]}
+        </Link>
+      );
+    } else {
+      parts.push(match[0]);
+    }
+    lastIndex = pattern.lastIndex;
+  }
+
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : text;
+}
+
+function formatContent(content, crossRefMap) {
   if (!content) return null;
 
   const lines = content.split('\n');
@@ -113,7 +212,7 @@ function formatContent(content) {
       const text = line.replace(/^\s*[-*]\s/, '');
       elements.push(
         <li key={i} className="text-amber-200/70 ml-5 list-disc mb-1">
-          {renderInlineFormatting(text)}
+          {renderInlineFormatting(text, crossRefMap)}
         </li>
       );
     } else if (line.trim() === '') {
@@ -121,7 +220,7 @@ function formatContent(content) {
     } else {
       elements.push(
         <p key={i} className="text-amber-200/70 mb-2 leading-relaxed">
-          {renderInlineFormatting(line)}
+          {renderInlineFormatting(line, crossRefMap)}
         </p>
       );
     }
@@ -129,16 +228,6 @@ function formatContent(content) {
 
   if (inTable) flushTable();
   return elements;
-}
-
-function renderInlineFormatting(text) {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i} className="text-amber-100 font-semibold">{part.slice(2, -2)}</strong>;
-    }
-    return part;
-  });
 }
 
 /** Extract headings from content for table of contents */
@@ -159,15 +248,24 @@ export default function WikiArticlePage() {
   const navigate = useNavigate();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [adjacent, setAdjacent] = useState({ prev: null, next: null });
+  const [copied, setCopied] = useState(false);
   const { toggleBookmark, isBookmarked } = useWikiBookmarks();
   const { recordVisit } = useWikiHistory();
 
   useEffect(() => {
     setLoading(true);
+    setAdjacent({ prev: null, next: null });
+    window.scrollTo({ top: 0 });
+
     getArticle(slug)
       .then(data => {
         setArticle(data);
         recordVisit({ slug: data.slug, title: data.title, category: data.category });
+        // Fetch adjacent articles for navigation
+        getAdjacentArticles(data.category, data.slug)
+          .then(setAdjacent)
+          .catch(() => {});
       })
       .catch(err => {
         toast.error(err.message);
@@ -175,6 +273,25 @@ export default function WikiArticlePage() {
       })
       .finally(() => setLoading(false));
   }, [slug, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const crossRefMap = useMemo(
+    () => article ? buildCrossRefMap(article.related_articles) : new Map(),
+    [article]
+  );
+
+  const headings = useMemo(
+    () => article ? extractHeadings(article.content) : [],
+    [article]
+  );
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      toast.error('Failed to copy link');
+    });
+  };
 
   if (loading) {
     return (
@@ -194,7 +311,6 @@ export default function WikiArticlePage() {
 
   const config = getCategoryConfig(article.category);
   const Icon = config.icon;
-  const headings = extractHeadings(article.content);
   const relatedGroups = {};
   (article.related_articles || []).forEach(rel => {
     const type = rel.relationship_type || 'related';
@@ -204,7 +320,9 @@ export default function WikiArticlePage() {
 
   return (
     <div className="min-h-screen py-8 px-4 max-w-5xl mx-auto">
-      {/* Breadcrumb — proper links instead of navigate(-1) */}
+      <ReadingProgress />
+
+      {/* Breadcrumb */}
       <motion.div
         className="flex items-center gap-2 text-sm mb-6 flex-wrap"
         initial={{ opacity: 0 }}
@@ -247,17 +365,27 @@ export default function WikiArticlePage() {
                 <h1 className="text-3xl md:text-4xl font-display font-bold text-amber-100 mb-3">
                   {article.title}
                 </h1>
-                <button
-                  onClick={() => toggleBookmark(article)}
-                  className={`shrink-0 mt-1 p-1.5 rounded-lg transition-colors ${
-                    isBookmarked(slug)
-                      ? 'text-amber-400 bg-amber-400/10'
-                      : 'text-amber-200/30 hover:text-amber-200/60 hover:bg-white/5'
-                  }`}
-                  aria-label={isBookmarked(slug) ? 'Remove bookmark' : 'Bookmark article'}
-                >
-                  <Bookmark size={18} fill={isBookmarked(slug) ? 'currentColor' : 'none'} />
-                </button>
+                <div className="flex items-center gap-1 shrink-0 mt-1">
+                  <button
+                    onClick={handleCopyLink}
+                    className="p-1.5 rounded-lg text-amber-200/30 hover:text-amber-200/60 hover:bg-white/5 transition-colors"
+                    aria-label="Copy article link"
+                    title="Copy link"
+                  >
+                    {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                  </button>
+                  <button
+                    onClick={() => toggleBookmark(article)}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      isBookmarked(slug)
+                        ? 'text-amber-400 bg-amber-400/10'
+                        : 'text-amber-200/30 hover:text-amber-200/60 hover:bg-white/5'
+                    }`}
+                    aria-label={isBookmarked(slug) ? 'Remove bookmark' : 'Bookmark article'}
+                  >
+                    <Bookmark size={18} fill={isBookmarked(slug) ? 'currentColor' : 'none'} />
+                  </button>
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <span
@@ -289,14 +417,14 @@ export default function WikiArticlePage() {
               )}
             </div>
 
-            {/* Stat Block — category-specific metadata rendering */}
+            {/* Stat Block */}
             <StatBlockRouter category={article.category} metadata={article.metadata_json} />
 
             <hr className="divider-gold my-4" />
 
-            {/* Article content */}
+            {/* Article content with inline cross-reference links */}
             <div className="mt-4">
-              {formatContent(article.content)}
+              {formatContent(article.content, crossRefMap)}
             </div>
 
             {/* Tags */}
@@ -312,7 +440,17 @@ export default function WikiArticlePage() {
                 </div>
               </div>
             )}
+
+            {/* Article Footer — word count, reading time, source */}
+            <ArticleFooter
+              content={article.content}
+              source={article.source}
+              ruleset={article.ruleset}
+            />
           </div>
+
+          {/* Next / Previous navigation */}
+          <ArticleNav prev={adjacent.prev} next={adjacent.next} />
         </motion.div>
 
         {/* Sidebar */}
@@ -322,32 +460,10 @@ export default function WikiArticlePage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
         >
-          {/* Table of Contents */}
-          {headings.length > 2 && (
-            <div className="card-grimoire">
-              <h4 className="font-display text-sm text-amber-200/60 mb-3 uppercase tracking-wider">
-                Contents
-              </h4>
-              <nav className="space-y-1">
-                {headings.map((h, i) => (
-                  <a
-                    key={i}
-                    href={`#${h.id}`}
-                    className="block text-sm text-amber-200/60 hover:text-amber-100 transition-colors"
-                    style={{ paddingLeft: `${(h.level - 1) * 12}px` }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                  >
-                    {h.text}
-                  </a>
-                ))}
-              </nav>
-            </div>
-          )}
+          {/* Active scroll-spy Table of Contents */}
+          <TableOfContents headings={headings} />
 
-          {/* Related Articles */}
+          {/* Related Articles — enhanced cards */}
           {Object.keys(relatedGroups).length > 0 && (
             <div className="card-grimoire">
               <h4 className="font-display text-sm text-amber-200/60 mb-3 uppercase tracking-wider flex items-center gap-2">
@@ -357,28 +473,49 @@ export default function WikiArticlePage() {
               <div className="space-y-4">
                 {Object.entries(relatedGroups).map(([type, items]) => (
                   <div key={type}>
-                    <p className="text-xs text-amber-200/40 uppercase tracking-wide mb-1">
+                    <p className="text-xs text-amber-200/40 uppercase tracking-wide mb-2">
                       {RELATIONSHIP_LABELS[type] || type}
                     </p>
-                    <ul className="space-y-1">
+                    <div className="space-y-1.5">
                       {items.map(rel => {
                         const relConfig = getCategoryConfig(rel.category);
+                        const RelIcon = relConfig.icon;
                         return (
-                          <li key={rel.slug}>
-                            <Link
-                              to={`/wiki/${rel.slug}`}
-                              replace
-                              className="text-sm text-amber-200/70 hover:text-amber-100 transition-colors flex items-center gap-1.5"
+                          <Link
+                            key={rel.slug}
+                            to={`/wiki/${rel.slug}`}
+                            replace
+                            className="block p-2 rounded-lg border border-transparent hover:border-gold/20 hover:bg-white/[0.02] transition-all group"
+                            style={{ borderLeftWidth: '2px', borderLeftColor: `${relConfig.color}40` }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <RelIcon size={12} style={{ color: relConfig.color }} className="shrink-0" />
+                              <span className="text-sm text-amber-200/70 group-hover:text-amber-100 transition-colors truncate">
+                                {rel.title}
+                              </span>
+                            </div>
+                            <span
+                              className="text-[10px] mt-0.5 inline-block px-1.5 py-0.5 rounded"
+                              style={{ backgroundColor: `${relConfig.color}10`, color: `${relConfig.color}80` }}
                             >
-                              <BookOpen size={10} style={{ color: relConfig.color }} className="flex-shrink-0" />
-                              {rel.title}
-                            </Link>
-                          </li>
+                              {relConfig.label}
+                            </span>
+                          </Link>
                         );
                       })}
-                    </ul>
+                    </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Cross-reference count indicator */}
+          {crossRefMap.size > 0 && (
+            <div className="card-grimoire">
+              <div className="flex items-center gap-2 text-xs text-amber-200/40">
+                <BookOpen size={12} />
+                <span>{crossRefMap.size} linked article{crossRefMap.size !== 1 ? 's' : ''} in text</span>
               </div>
             </div>
           )}

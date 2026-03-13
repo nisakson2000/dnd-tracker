@@ -4,6 +4,51 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.4.6 — Arcane Encyclopedia Redesign Phase 3: Article Experience
+**Released:** March 12, 2026
+
+### Reading Progress
+- **Reading Progress Bar** — gold gradient bar fixed at the top of the viewport, fills as you scroll through an article
+- Positioned below the dev banner in dev builds via `--dev-banner-h` CSS variable
+- Amber glow shadow for visual impact, smooth width transitions
+
+### Active Table of Contents
+- **Scroll Spy** — IntersectionObserver tracks which heading is in view and highlights it in the sidebar TOC
+- Active heading gets amber left border and subtle background highlight
+- Inactive headings get hover effects with border reveal
+
+### Inline Cross-Reference Links
+- **Auto-linking** — article body text automatically detects mentions of related articles and renders them as clickable links
+- Bold text matching a cross-reference becomes a gold link; plain text matches get dotted underlines colored by category
+- Uses greedy longest-match-first algorithm to avoid partial matches on short titles
+- Only titles with 3+ characters are eligible to prevent false positives
+
+### Article Navigation
+- **Next/Previous** — navigation arrows at the bottom of each article to move to adjacent articles within the same category (alphabetical order)
+- Cards show article title and category badge
+- **New backend command** — `wiki_adjacent_articles(category, slug)` queries prev/next by title within category
+
+### Article Footer
+- **Metadata display** — word count, estimated reading time (225 wpm), source book, and ruleset shown below content
+- Uses lucide-react icons for visual consistency
+
+### Enhanced Related Articles
+- **Card layout** — related articles in sidebar rendered as cards with colored left borders instead of plain text links
+- Category icon and label badge on each card
+- Hover effects with border and background transitions
+
+### Utility
+- **Copy Link Button** — click the copy icon next to the article title to copy the URL; shows green checkmark for 2 seconds
+- **Cross-Reference Count** — small indicator in sidebar showing how many articles are linked within the text
+
+### Technical
+- **4 new components**: `TableOfContents.jsx`, `ReadingProgress.jsx`, `ArticleFooter.jsx`, `ArticleNav.jsx`
+- **1 new Rust command**: `wiki_adjacent_articles` registered in Tauri invoke handler
+- **1 new API function**: `getAdjacentArticles()` in `wiki.js`
+- **WikiArticlePage.jsx** — full rewrite integrating all new features, inline cross-reference engine
+
+---
+
 ## V0.4.5 — Arcane Encyclopedia Redesign Phase 2: Search & Discovery
 **Released:** March 12, 2026
 
