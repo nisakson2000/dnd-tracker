@@ -32,15 +32,24 @@
       "csp": "default-src 'self' codex:; style-src 'self' codex: 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' codex: https://fonts.gstatic.com; connect-src 'self' codex: ipc: http://ipc.localhost ws://localhost:* wss://localhost:* http://localhost:* https://localhost:* http://127.0.0.1:* ws://127.0.0.1:* ws://*:8787 wss://*:8787 https://gist.githubusercontent.com https://api.github.com https://raw.githubusercontent.com; img-src 'self' codex: data: blob:; object-src 'none'; script-src 'self' codex: 'unsafe-inline'"
     }
   },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/nisakson2000/dnd-tracker/releases/latest/download/latest.json"
+      ],
+      "pubkey": "REPLACE_WITH_PUBLIC_KEY"
+    }
+  },
   "bundle": {
-  "active": true,
-  "targets": "all",
-  "icon": [
-    "icons/icon.ico"
-  ],
-  "resources": [
-    "resources/wiki.db",
-    "resources/srd_monsters.json"
-  ]
-}
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/icon.ico"
+    ],
+    "resources": [
+      "resources/wiki.db",
+      "resources/srd_monsters.json"
+    ],
+    "createUpdaterArtifacts": true
+  }
 }

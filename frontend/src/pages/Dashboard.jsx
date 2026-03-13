@@ -2157,7 +2157,40 @@ export default function Dashboard() {
   const [sessionPrepChar, setSessionPrepChar] = useState(null);
   const [postSessionChar, setPostSessionChar] = useState(null);
   const [updateBannerDismissed, setUpdateBannerDismissed] = useState(false);
+  const [tauriUpdate, setTauriUpdate] = useState(null); // { available, version, body, update }
+  const [updateInstalling, setUpdateInstalling] = useState(false);
   const { updateAvailable, latestVersion, currentVersion } = useUpdateCheck();
+
+  // Tauri native updater — checks GitHub Releases for signed binary updates
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { check } = await import('@tauri-apps/plugin-updater');
+        const update = await check();
+        if (cancelled) return;
+        if (update?.available) {
+          setTauriUpdate({ available: true, version: update.version, body: update.body, update });
+        }
+      } catch (e) {
+        console.log('[updater] Check failed (expected in dev):', e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleTauriUpdate = async () => {
+    if (!tauriUpdate?.update) return;
+    setUpdateInstalling(true);
+    try {
+      await tauriUpdate.update.downloadAndInstall();
+      const { relaunch } = await import('@tauri-apps/plugin-process');
+      await relaunch();
+    } catch (e) {
+      toast.error(`Update failed: ${e?.message || e}`);
+      setUpdateInstalling(false);
+    }
+  };
 
   const load = async () => {
     try { const d = await listCharacters(); setCharacters(d); }
@@ -2332,8 +2365,8 @@ export default function Dashboard() {
         {PARTICLES.map(p => <RuneParticle key={p.id} {...p} />)}
       </div>
 
-      {/* ── Update Banner ── */}
-      {!updateBannerDismissed && updateAvailable && (
+      {/* ── Update Banner (Tauri native updater or version.json fallback) ── */}
+      {!updateBannerDismissed && (tauriUpdate?.available || updateAvailable) && (
         <motion.div
           initial={{ y: -40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -2346,17 +2379,35 @@ export default function Dashboard() {
             position: 'relative',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
             padding: '10px 20px', borderRadius: 10,
-            background: 'rgba(201,168,76,0.1)',
-            border: '1px solid rgba(201,168,76,0.25)',
+            background: tauriUpdate?.available ? 'rgba(39,174,96,0.12)' : 'rgba(201,168,76,0.1)',
+            border: tauriUpdate?.available ? '1px solid rgba(39,174,96,0.3)' : '1px solid rgba(201,168,76,0.25)',
             backdropFilter: 'blur(12px)',
           }}>
-            <span style={{ fontSize: 16 }}>✨</span>
+            <span style={{ fontSize: 16 }}>{tauriUpdate?.available ? '🔄' : '✨'}</span>
             <span style={{
               fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.05em',
-              color: '#fde68a',
+              color: tauriUpdate?.available ? '#86efac' : '#fde68a',
             }}>
-              {`Update available: ${latestVersion} (you have ${currentVersion})`}
+              {tauriUpdate?.available
+                ? `Update v${tauriUpdate.version} available — click UPDATE NOW to install`
+                : `Update available: ${latestVersion} (you have ${currentVersion})`
+              }
             </span>
+            {tauriUpdate?.available && (
+              <button
+                onClick={handleTauriUpdate}
+                disabled={updateInstalling}
+                style={{
+                  padding: '4px 14px', borderRadius: 6, fontSize: 11,
+                  fontFamily: 'var(--font-heading)', letterSpacing: '0.08em',
+                  background: 'rgba(39,174,96,0.2)', border: '1px solid rgba(39,174,96,0.4)',
+                  color: '#86efac', cursor: updateInstalling ? 'wait' : 'pointer',
+                  opacity: updateInstalling ? 0.6 : 1,
+                }}
+              >
+                {updateInstalling ? 'INSTALLING...' : 'UPDATE NOW'}
+              </button>
+            )}
             <button
               onClick={() => setUpdateBannerDismissed(true)}
               style={{
@@ -2366,7 +2417,7 @@ export default function Dashboard() {
                 color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
               }}
             >
-              DISMISS
+              LATER
             </button>
           </div>
         </motion.div>
