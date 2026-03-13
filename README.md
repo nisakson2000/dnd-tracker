@@ -1,6 +1,6 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.4.6**
+**Current Version: V0.4.7**
 
 A native desktop application for managing D&D 5e characters with full ruleset support, a 2,000+ article encyclopedia, real-time party sync, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
@@ -127,7 +127,7 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - **Test Character Generator** — create pre-filled characters for testing
 
 ### Additional Features
-- Arcane Encyclopedia — 1,900+ article searchable wiki with FTS5
+- Arcane Encyclopedia — 2,000+ article searchable wiki with FTS5, grid/list views, keyboard shortcuts, cross-ref hover previews, drop cap typography
 - Party Connect — LAN sync with room codes, auto-reconnect, DM party stats overview, persistent connection across navigation
 - LAN Dev Presence — UDP broadcast peer discovery with version-aware sync, instant update push notifications between devs, "builds synced" indicator
 - GitHub Auto-Update — dev builds poll for new commits every 5s, one-click Pull & Reload with auto-stash, rebase fallback, instant peer push notifications

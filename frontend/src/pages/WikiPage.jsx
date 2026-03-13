@@ -18,6 +18,9 @@ import WikiSearchPalette from '../components/wiki/WikiSearchPalette';
 import SearchFilters from '../components/wiki/SearchFilters';
 import BookmarksList from '../components/wiki/BookmarksList';
 import RecentlyViewed from '../components/wiki/RecentlyViewed';
+import ViewToggle from '../components/wiki/ViewToggle';
+import KeyboardShortcuts from '../components/wiki/KeyboardShortcuts';
+import BackToTop from '../components/wiki/BackToTop';
 import useWikiBookmarks from '../hooks/useWikiBookmarks';
 import useWikiHistory from '../hooks/useWikiHistory';
 
@@ -60,6 +63,7 @@ export default function WikiPage() {
   const [activeSubcategory, setActiveSubcategory] = useState(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [searchFilters, setSearchFilters] = useState({ category: null, ruleset: null, sort: 'relevance' });
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('codex-wiki-view') || 'list');
 
   // Hooks
   const { bookmarks, removeBookmark } = useWikiBookmarks();
@@ -212,8 +216,10 @@ export default function WikiPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center py-6 px-4 max-w-6xl mx-auto">
-      {/* Search Palette Overlay */}
+      {/* Global overlays */}
       <WikiSearchPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <KeyboardShortcuts />
+      <BackToTop />
 
       {/* Back button */}
       <div className="w-full flex items-center gap-4 mb-4">
@@ -375,8 +381,18 @@ export default function WikiPage() {
         </div>
       )}
 
-      {/* Results List */}
+      {/* Results header with view toggle */}
       {!loading && displayItems.length > 0 && (
+        <div className="w-full flex items-center justify-between mb-3">
+          <span className="text-xs text-amber-200/40">
+            {total} article{total !== 1 ? 's' : ''}
+          </span>
+          <ViewToggle mode={viewMode} onChange={(m) => { setViewMode(m); localStorage.setItem('codex-wiki-view', m); }} />
+        </div>
+      )}
+
+      {/* Results — List View */}
+      {!loading && displayItems.length > 0 && viewMode === 'list' && (
         <div className="w-full space-y-2">
           {displayItems.map((item, i) => {
             const config = getCategoryConfig(item.category);
@@ -425,6 +441,43 @@ export default function WikiPage() {
                     </div>
                   </div>
                 </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Results — Grid View */}
+      {!loading && displayItems.length > 0 && viewMode === 'grid' && (
+        <div className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {displayItems.map((item, i) => {
+            const config = getCategoryConfig(item.category);
+            const Icon = config.icon;
+            return (
+              <motion.div
+                key={item.id || item.slug}
+                className="card-grimoire cursor-pointer hover:border-gold/60 p-3 flex flex-col"
+                style={{ borderTop: `2px solid ${config.color}` }}
+                onClick={() => navigate(`/wiki/${item.slug}`)}
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.015 }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon size={14} style={{ color: config.color }} className="shrink-0" />
+                  <span
+                    className="text-[10px] px-1.5 py-0.5 rounded"
+                    style={{ backgroundColor: `${config.color}20`, color: `${config.color}cc` }}
+                  >
+                    {config.label}
+                  </span>
+                </div>
+                <h3 className="font-display text-sm text-amber-100 mb-1 line-clamp-2">
+                  {item.title}
+                </h3>
+                <p className="text-[11px] text-amber-200/50 line-clamp-2 mt-auto">
+                  {item.summary}
+                </p>
               </motion.div>
             );
           })}

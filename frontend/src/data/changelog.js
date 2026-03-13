@@ -3,6 +3,20 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.4.7',
+    date: '03/12/2026',
+    title: 'Arcane Encyclopedia Redesign — Phase 4: Power Features & Polish',
+    changes: [
+      'Grid/List View Toggle — switch between list and card grid layout when browsing articles, preference saved to localStorage',
+      'Keyboard Shortcuts — press "?" or click the floating button to see all wiki shortcuts (/, b, n, p, Esc, arrow keys)',
+      'Back to Top Button — floating scroll-to-top button appears after scrolling down, positioned above the AI assistant',
+      'Cross-Reference Hover Previews — hover over inline cross-ref links to see a tooltip with article title, category, and summary',
+      'Drop Cap Typography — first paragraph of each article uses a decorative large first letter',
+      'Ornamental Section Dividers — ## headings render with gradient lines on either side',
+      'Article Keyboard Navigation — press n/p for next/previous article, b to toggle bookmark',
+    ],
+  },
+  {
     version: 'V0.4.6',
     date: '03/12/2026',
     title: 'Arcane Encyclopedia Redesign — Phase 3: Article Experience',

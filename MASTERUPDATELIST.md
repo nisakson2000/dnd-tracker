@@ -4,6 +4,44 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.4.7 — Arcane Encyclopedia Redesign Phase 4: Power Features & Polish
+**Released:** March 12, 2026
+
+### Grid/List View Toggle
+- **ViewToggle component** — switch between list and card grid layout when browsing or searching articles
+- Grid view renders 2/3/4 column responsive cards with category-colored top borders, icons, and truncated summaries
+- Preference persisted to localStorage (`codex-wiki-view`) so it survives navigation
+
+### Keyboard Shortcuts
+- **KeyboardShortcuts overlay** — press `?` or click the floating `?` button (bottom-left) to see all wiki shortcuts
+- Shortcuts: `/` search, `?` help, `b` bookmark, `n` next article, `p` previous article, `Esc` close, `↑↓` navigate, `Enter` select
+- AnimatePresence entry/exit animations, click-outside to dismiss
+
+### Back to Top
+- **BackToTop button** — floating scroll-to-top button appears when scrollY > 400px
+- Positioned at `bottom-20 right-6` to avoid overlapping the ArcaneWidget AI assistant button
+
+### Cross-Reference Hover Previews
+- **CrossRefPreview component** — hover over any inline cross-reference link to see a tooltip card
+- 400ms hover delay to avoid accidental triggers, lazy-fetches article data on first hover
+- Shows article title, category badge, and summary (3-line clamp)
+
+### Typography Enhancements
+- **Drop Cap** — first paragraph of each article uses a decorative 4xl first letter in amber with float-left layout
+- **Ornamental Section Dividers** — `##` headings render centered with gradient lines on either side
+
+### Article Keyboard Navigation
+- `n` key navigates to next article in category, `p` to previous
+- `b` key toggles bookmark on current article
+- All shortcuts disabled when input/textarea is focused
+
+### Technical
+- **4 new components**: `KeyboardShortcuts.jsx`, `BackToTop.jsx`, `CrossRefPreview.jsx`, `ViewToggle.jsx`
+- **WikiPage.jsx** — added grid view, view toggle, keyboard shortcuts, back-to-top
+- **WikiArticlePage.jsx** — added cross-ref hover previews, keyboard nav, drop cap, ornamental dividers, back-to-top, keyboard shortcuts
+
+---
+
 ## V0.4.6 — Arcane Encyclopedia Redesign Phase 3: Article Experience
 **Released:** March 12, 2026
 

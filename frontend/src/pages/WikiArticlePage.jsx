@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, BookOpen, ExternalLink, Tag, Bookmark, Copy, Check } from 'lucide-react';
@@ -11,6 +11,9 @@ import TableOfContents from '../components/wiki/TableOfContents';
 import ReadingProgress from '../components/wiki/ReadingProgress';
 import ArticleFooter from '../components/wiki/ArticleFooter';
 import ArticleNav from '../components/wiki/ArticleNav';
+import BackToTop from '../components/wiki/BackToTop';
+import KeyboardShortcuts from '../components/wiki/KeyboardShortcuts';
+import CrossRefPreview from '../components/wiki/CrossRefPreview';
 import useWikiBookmarks from '../hooks/useWikiBookmarks';
 import useWikiHistory from '../hooks/useWikiHistory';
 
@@ -106,15 +109,15 @@ function linkifyCrossRefs(text, crossRefMap, keyPrefix) {
     if (ref) {
       const config = getCategoryConfig(ref.category);
       parts.push(
-        <Link
-          key={`${keyPrefix}-xref-${match.index}`}
-          to={`/wiki/${ref.slug}`}
-          className="text-amber-300 hover:text-amber-200 underline decoration-dotted transition-colors"
-          style={{ textDecorationColor: `${config.color}60` }}
-          title={ref.title}
-        >
-          {match[0]}
-        </Link>
+        <CrossRefPreview key={`${keyPrefix}-xref-${match.index}`} slug={ref.slug}>
+          <Link
+            to={`/wiki/${ref.slug}`}
+            className="text-amber-300 hover:text-amber-200 underline decoration-dotted transition-colors"
+            style={{ textDecorationColor: `${config.color}60` }}
+          >
+            {match[0]}
+          </Link>
+        </CrossRefPreview>
       );
     } else {
       parts.push(match[0]);
@@ -137,6 +140,7 @@ function formatContent(content, crossRefMap) {
   const elements = [];
   let inTable = false;
   let tableRows = [];
+  let isFirstParagraph = true;
 
   const flushTable = () => {
     if (tableRows.length === 0) return;
@@ -197,9 +201,13 @@ function formatContent(content, crossRefMap) {
     } else if (line.startsWith('## ')) {
       const id = `section-${line.slice(3).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
       elements.push(
-        <h3 key={i} id={id} className="font-display text-amber-100 mt-6 mb-2 scroll-mt-20">
-          {line.slice(3)}
-        </h3>
+        <div key={`divider-${i}`} className="flex items-center gap-3 mt-8 mb-3">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-700/30 to-transparent" />
+          <h3 id={id} className="font-display text-amber-100 scroll-mt-20 shrink-0">
+            {line.slice(3)}
+          </h3>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-700/30 to-transparent" />
+        </div>
       );
     } else if (line.startsWith('# ')) {
       const id = `section-${line.slice(2).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
@@ -218,11 +226,20 @@ function formatContent(content, crossRefMap) {
     } else if (line.trim() === '') {
       elements.push(<div key={i} className="h-3" />);
     } else {
-      elements.push(
-        <p key={i} className="text-amber-200/70 mb-2 leading-relaxed">
-          {renderInlineFormatting(line, crossRefMap)}
-        </p>
-      );
+      if (isFirstParagraph && line.trim().length > 0) {
+        isFirstParagraph = false;
+        elements.push(
+          <p key={i} className="text-amber-200/70 mb-2 leading-relaxed first-letter:text-4xl first-letter:font-display first-letter:text-amber-300 first-letter:float-left first-letter:mr-1.5 first-letter:mt-0.5 first-letter:leading-none">
+            {renderInlineFormatting(line, crossRefMap)}
+          </p>
+        );
+      } else {
+        elements.push(
+          <p key={i} className="text-amber-200/70 mb-2 leading-relaxed">
+            {renderInlineFormatting(line, crossRefMap)}
+          </p>
+        );
+      }
     }
   }
 
@@ -284,6 +301,27 @@ export default function WikiArticlePage() {
     [article]
   );
 
+  // Keyboard shortcuts: b=bookmark, n=next, p=prev
+  const handleKeyShortcut = useCallback((e) => {
+    if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'b' && article) {
+      e.preventDefault();
+      toggleBookmark(article);
+    } else if (e.key === 'n' && adjacent.next) {
+      e.preventDefault();
+      navigate(`/wiki/${adjacent.next.slug}`);
+    } else if (e.key === 'p' && adjacent.prev) {
+      e.preventDefault();
+      navigate(`/wiki/${adjacent.prev.slug}`);
+    }
+  }, [article, adjacent, toggleBookmark, navigate]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyShortcut);
+    return () => document.removeEventListener('keydown', handleKeyShortcut);
+  }, [handleKeyShortcut]);
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href).then(() => {
       setCopied(true);
@@ -321,6 +359,8 @@ export default function WikiArticlePage() {
   return (
     <div className="min-h-screen py-8 px-4 max-w-5xl mx-auto">
       <ReadingProgress />
+      <BackToTop />
+      <KeyboardShortcuts />
 
       {/* Breadcrumb */}
       <motion.div
