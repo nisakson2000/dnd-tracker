@@ -179,22 +179,35 @@ pub fn update_spell_slots(
     payload: Vec<SpellSlotData>,
 ) -> Result<serde_json::Value, String> {
     state.with_char_conn(&character_id, |conn| {
-        for item in &payload {
-            let updated = conn
-                .execute(
-                    "UPDATE spell_slots SET max_slots=?1, used_slots=?2 WHERE slot_level=?3",
-                    rusqlite::params![item.max_slots, item.used_slots, item.slot_level],
-                )
-                .map_err(|e| e.to_string())?;
-            if updated == 0 {
-                conn.execute(
-                    "INSERT INTO spell_slots (slot_level, max_slots, used_slots) VALUES (?1,?2,?3)",
-                    rusqlite::params![item.slot_level, item.max_slots, item.used_slots],
-                )
-                .map_err(|e| e.to_string())?;
+        conn.execute("BEGIN", []).map_err(|e| format!("Failed to begin transaction: {}", e))?;
+        let result = (|| -> Result<(), String> {
+            for item in &payload {
+                let updated = conn
+                    .execute(
+                        "UPDATE spell_slots SET max_slots=?1, used_slots=?2 WHERE slot_level=?3",
+                        rusqlite::params![item.max_slots, item.used_slots, item.slot_level],
+                    )
+                    .map_err(|e| format!("Failed to update spell slot level {}: {}", item.slot_level, e))?;
+                if updated == 0 {
+                    conn.execute(
+                        "INSERT INTO spell_slots (slot_level, max_slots, used_slots) VALUES (?1,?2,?3)",
+                        rusqlite::params![item.slot_level, item.max_slots, item.used_slots],
+                    )
+                    .map_err(|e| format!("Failed to insert spell slot level {}: {}", item.slot_level, e))?;
+                }
+            }
+            Ok(())
+        })();
+        match result {
+            Ok(()) => {
+                conn.execute("COMMIT", []).map_err(|e| format!("Failed to commit: {}", e))?;
+                Ok(serde_json::json!({"status": "saved"}))
+            }
+            Err(e) => {
+                let _ = conn.execute("ROLLBACK", []);
+                Err(e)
             }
         }
-        Ok(serde_json::json!({"status": "saved"}))
     })
 }
 

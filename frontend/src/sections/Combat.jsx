@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Plus, Trash2, Swords, Dice5, Timer, MinusCircle, X, Search, Minus, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ScrollText, ArrowRight } from 'lucide-react';
+import { Plus, Trash2, Swords, Dice5, Timer, MinusCircle, X, Search, Minus, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ScrollText, ArrowRight, Filter, Heart, Shield, Skull, Activity, TrendingUp, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAttacks, addAttack, deleteAttack, getConditions, updateConditions, getCombatNotes, updateCombatNotes } from '../api/combat';
 import { useAutosave } from '../hooks/useAutosave';
 import SaveIndicator from '../components/SaveIndicator';
 import HelpTooltip from '../components/HelpTooltip';
 import ConfirmDialog from '../components/ConfirmDialog';
+import ModalPortal from '../components/ModalPortal';
 import { useRuleset } from '../contexts/RulesetContext';
 import { HELP, ACTION_ECONOMY } from '../data/helpText';
 import { CONDITION_EFFECTS, computeConditionEffects } from '../data/conditionEffects';
@@ -57,10 +58,10 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   const [notes, setNotes] = useState({ actions: '', bonus_actions: '', reactions: '', legendary_actions: '' });
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  const [showConditionInfo, setShowConditionInfo] = useState(null);
+  const [_showConditionInfo, _setShowConditionInfo] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [rollResults, setRollResults] = useState({});
-  const [dmgModifiers, setDmgModifiers] = useState({}); // #111 — 'resist' | 'vuln' | null per attack id
+  const [dmgModifiers, setDmgModifiers] = useState({}); // 'resist' | 'vuln' | null per attack id
   const rollTimeoutRefs = useRef({});
 
   // --- Combat Log state ---
@@ -75,7 +76,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     addCombatLogEntry(characterId, type, message, setCombatLog);
   }, [characterId]);
 
-  // #113 — Initiative/combatant tracker persisted to sessionStorage
+  // Initiative/combatant tracker persisted to sessionStorage
   const initiativeKey = `codex_initiative_${characterId}`;
   const [combatants, setCombatants] = useState(() => {
     try {
@@ -85,6 +86,8 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   });
   const [newCombatantName, setNewCombatantName] = useState('');
   const [newCombatantInit, setNewCombatantInit] = useState('');
+  const [newCombatantHP, setNewCombatantHP] = useState('');
+  const [newCombatantIsEnemy, setNewCombatantIsEnemy] = useState(false);
 
   // --- Round counter & current turn (persisted) ---
   const roundKey = `codex_round_${characterId}`;
@@ -111,6 +114,32 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     try { const v = sessionStorage.getItem(`codex_round_${characterId}`); setRoundCounter(v ? parseInt(v) : 1); } catch { setRoundCounter(1); }
     try { const v = sessionStorage.getItem(`codex_turn_${characterId}`); setCurrentTurn(v ? parseInt(v) : 0); } catch { setCurrentTurn(0); }
   }, [characterId]);
+
+  // --- Combat Stats Tracker (persisted to sessionStorage) ---
+  const statsKey = `codex_combatstats_${characterId}`;
+  const [combatStats, setCombatStats] = useState(() => {
+    try {
+      const stored = sessionStorage.getItem(statsKey);
+      return stored ? JSON.parse(stored) : { totalDamageDealt: 0, totalDamageTaken: 0, totalHealing: 0, attackCount: 0 };
+    } catch { return { totalDamageDealt: 0, totalDamageTaken: 0, totalHealing: 0, attackCount: 0 }; }
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem(statsKey, JSON.stringify(combatStats));
+  }, [combatStats, statsKey]);
+
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(`codex_combatstats_${characterId}`);
+      setCombatStats(stored ? JSON.parse(stored) : { totalDamageDealt: 0, totalDamageTaken: 0, totalHealing: 0, attackCount: 0 });
+    } catch { setCombatStats({ totalDamageDealt: 0, totalDamageTaken: 0, totalHealing: 0, attackCount: 0 }); }
+  }, [characterId]);
+
+  // --- Damage/Healing Calculator state ---
+  const [calcTarget, setCalcTarget] = useState(null); // combatant id
+  const [calcAmount, setCalcAmount] = useState('');
+  const [calcMode, setCalcMode] = useState('damage'); // 'damage' | 'healing'
+  const [calcModifier, setCalcModifier] = useState('normal'); // 'normal' | 'resist' | 'vuln'
 
   // --- Action Economy Tracker state (persisted) ---
   const actionEconKey = `codex_actionecon_${characterId}`;
@@ -153,7 +182,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   // --- Next/Previous Turn ---
   const nextTurn = () => {
     if (combatants.length === 0) return;
-    const prevName = combatants[currentTurn % combatants.length]?.name || '?';
+    const _prevName = combatants[currentTurn % combatants.length]?.name || '?';
     setCurrentTurn(prev => {
       const next = prev + 1;
       if (next >= combatants.length) {
@@ -188,9 +217,19 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     const name = newCombatantName.trim();
     if (!name) return;
     const init = parseInt(newCombatantInit) || 0;
-    setCombatants(prev => [...prev, { id: Date.now(), name, initiative: init }].sort((a, b) => b.initiative - a.initiative));
+    const hp = parseInt(newCombatantHP) || 0;
+    setCombatants(prev => [...prev, {
+      id: Date.now(),
+      name,
+      initiative: init,
+      maxHp: hp,
+      currentHp: hp,
+      isEnemy: newCombatantIsEnemy,
+    }].sort((a, b) => b.initiative - a.initiative));
     setNewCombatantName('');
     setNewCombatantInit('');
+    setNewCombatantHP('');
+    setNewCombatantIsEnemy(false);
   };
 
   const removeCombatant = (id) => {
@@ -211,9 +250,56 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     setCombatants([]);
     setRoundCounter(1);
     setCurrentTurn(0);
+    setCombatStats({ totalDamageDealt: 0, totalDamageTaken: 0, totalHealing: 0, attackCount: 0 });
   };
 
-  // #115 — Legendary action counter persisted to sessionStorage
+  // --- Apply Damage/Healing to Combatant ---
+  const applyDamageHealing = (combatantId, amount, mode, modifier) => {
+    if (!amount || amount <= 0) return;
+    let effectiveAmount = amount;
+    if (mode === 'damage') {
+      if (modifier === 'resist') effectiveAmount = Math.floor(amount / 2);
+      else if (modifier === 'vuln') effectiveAmount = amount * 2;
+    }
+
+    setCombatants(prev => prev.map(c => {
+      if (c.id !== combatantId) return c;
+      if (mode === 'damage') {
+        const newHp = Math.max(0, (c.currentHp ?? c.maxHp ?? 0) - effectiveAmount);
+        return { ...c, currentHp: newHp };
+      } else {
+        const newHp = Math.min(c.maxHp || 9999, (c.currentHp ?? 0) + effectiveAmount);
+        return { ...c, currentHp: newHp };
+      }
+    }));
+
+    const target = combatants.find(c => c.id === combatantId);
+    if (mode === 'damage') {
+      setCombatStats(prev => ({
+        ...prev,
+        totalDamageDealt: prev.totalDamageDealt + effectiveAmount,
+        attackCount: prev.attackCount + 1,
+      }));
+      logEvent('damage', `${target?.name || '?'} took ${effectiveAmount} damage${modifier !== 'normal' ? ` (${modifier})` : ''}`);
+      toast(`${target?.name || '?'} took ${effectiveAmount} damage${modifier !== 'normal' ? ` (${modifier})` : ''}`, {
+        icon: '\u2694\uFE0F', duration: 2000,
+        style: { background: '#1a0a0a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' },
+      });
+    } else {
+      setCombatStats(prev => ({
+        ...prev,
+        totalHealing: prev.totalHealing + effectiveAmount,
+      }));
+      logEvent('healing', `${target?.name || '?'} healed ${effectiveAmount} HP`);
+      toast(`${target?.name || '?'} healed ${effectiveAmount} HP`, {
+        icon: '\u2764\uFE0F', duration: 2000,
+        style: { background: '#0a1a0a', color: '#86efac', border: '1px solid rgba(34,197,94,0.3)' },
+      });
+    }
+    setCalcAmount('');
+  };
+
+  // Legendary action counter persisted to sessionStorage
   const legendaryKey = `codex_legendary_${characterId}`;
   const [legendaryActions, setLegendaryActions] = useState(() => {
     try {
@@ -233,10 +319,10 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     } catch { setLegendaryActions({ used: 0, max: 3 }); }
   }, [characterId]);
 
-  // #116 — Reaction tracker
+  // Reaction tracker
   const reactionKey = `codex_reaction_${characterId}`;
-  const [reactionUsed, setReactionUsed] = useState(() => sessionStorage.getItem(reactionKey) === 'used');
-  const toggleReaction = () => {
+  const [_reactionUsed, setReactionUsed] = useState(() => sessionStorage.getItem(reactionKey) === 'used');
+  const _toggleReaction = () => {
     setReactionUsed(prev => {
       const next = !prev;
       sessionStorage.setItem(reactionKey, next ? 'used' : 'available');
@@ -362,7 +448,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   };
 
   // --- Crit animation state ---
-  const [critAnimations, setCritAnimations] = useState({}); // { [atkId]: 'nat20' | 'nat1' }
+  const [critAnimations, setCritAnimations] = useState({});
 
   // Inline attack roll (enhanced with flanking, combat log, crit animation)
   const rollAttack = (atk) => {
@@ -386,6 +472,15 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       ...prev,
       [atk.id]: { d20, bonus, flankBonus, total, isNat20, isNat1, damage: dmgResult, ts },
     }));
+
+    // Track combat stats
+    if (dmgResult) {
+      setCombatStats(prev => ({
+        ...prev,
+        totalDamageDealt: prev.totalDamageDealt + dmgResult.total,
+        attackCount: prev.attackCount + 1,
+      }));
+    }
 
     // Crit animation
     if (isNat20 || isNat1) {
@@ -438,7 +533,18 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     boxShadow: '0 0 30px rgba(239,68,68,0.5), inset 0 0 20px rgba(239,68,68,0.15)',
   };
 
-  if (loading) return <div className="text-amber-200/40">Loading combat...</div>;
+  // --- Combat Stats Summary ---
+  const avgDamagePerRound = roundCounter > 1 ? (combatStats.totalDamageDealt / (roundCounter - 1)).toFixed(1) : combatStats.totalDamageDealt.toFixed(1);
+  const combatActive = combatants.length > 0 || roundCounter > 1;
+
+  if (loading) return (
+    <div className="space-y-4">
+      <div className="skeleton-pulse" style={{ height: 32, width: '40%' }} />
+      <div className="skeleton-pulse" style={{ height: 120 }} />
+      <div className="skeleton-pulse" style={{ height: 80 }} />
+      <div className="skeleton-pulse" style={{ height: 80 }} />
+    </div>
+  );
 
   return (
     <div className="space-y-6 max-w-none">
@@ -471,7 +577,82 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         </div>
       </div>
 
-      {/* #112 — Temp HP bar */}
+      {/* Combat Stats Summary */}
+      {combatActive && (combatStats.totalDamageDealt > 0 || combatStats.totalHealing > 0 || combatStats.attackCount > 0) && (
+        <div className="card bg-gradient-to-r from-[#14121c] to-[#1a1520]">
+          <div className="flex items-center gap-2 mb-3">
+            <Activity size={16} className="text-gold" />
+            <h3 className="font-display text-amber-100">Combat Summary</h3>
+            <button
+              onClick={() => setCombatStats({ totalDamageDealt: 0, totalDamageTaken: 0, totalHealing: 0, attackCount: 0 })}
+              className="text-xs text-amber-200/40 hover:text-amber-200/70 transition-colors ml-auto flex items-center gap-1"
+            >
+              <RotateCcw size={10} /> Reset Stats
+            </button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-red-950/30 border border-red-500/15 rounded-lg p-3 text-center">
+              <div className="text-[10px] text-red-400/60 uppercase tracking-wider mb-1">Total Damage Dealt</div>
+              <div className="text-xl font-display text-red-300">{combatStats.totalDamageDealt}</div>
+            </div>
+            <div className="bg-emerald-950/30 border border-emerald-500/15 rounded-lg p-3 text-center">
+              <div className="text-[10px] text-emerald-400/60 uppercase tracking-wider mb-1">Total Healing</div>
+              <div className="text-xl font-display text-emerald-300">{combatStats.totalHealing}</div>
+            </div>
+            <div className="bg-gold/5 border border-gold/15 rounded-lg p-3 text-center">
+              <div className="text-[10px] text-gold/60 uppercase tracking-wider mb-1">Rounds Elapsed</div>
+              <div className="text-xl font-display text-gold">{roundCounter}</div>
+            </div>
+            <div className="bg-purple-950/30 border border-purple-500/15 rounded-lg p-3 text-center">
+              <div className="text-[10px] text-purple-400/60 uppercase tracking-wider mb-1">Avg Dmg/Round</div>
+              <div className="text-xl font-display text-purple-300">{avgDamagePerRound}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Standalone Round Counter */}
+      <div className="card flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Timer size={16} className="text-gold" />
+          <span className="font-display text-amber-100 text-sm">Round</span>
+          <span className="text-gold font-bold text-xl bg-gold/10 border border-gold/30 px-3 py-0.5 rounded-lg min-w-[3rem] text-center">
+            {roundCounter}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setRoundCounter(r => Math.max(1, r - 1))}
+            disabled={roundCounter <= 1}
+            className="w-8 h-8 rounded-lg bg-white/5 border border-amber-200/10 hover:border-amber-200/20 hover:bg-white/10 transition-all flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+            title="Previous round"
+          >
+            <Minus size={14} className="text-amber-200/60" />
+          </button>
+          <button
+            onClick={() => {
+              setRoundCounter(r => {
+                const newRound = r + 1;
+                logEvent('round', `Round ${newRound} started (manual)`);
+                return newRound;
+              });
+            }}
+            className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/30 hover:bg-gold/20 hover:border-gold/50 transition-all flex items-center justify-center"
+            title="Next round"
+          >
+            <Plus size={14} className="text-gold" />
+          </button>
+          <button
+            onClick={() => { setRoundCounter(1); logEvent('round', 'Round counter reset'); }}
+            className="text-xs text-amber-200/50 hover:text-amber-200/80 transition-colors flex items-center gap-1 ml-2"
+            title="Reset round counter to 1"
+          >
+            <RotateCcw size={11} /> Reset
+          </button>
+        </div>
+      </div>
+
+      {/* Temp HP bar */}
       {character?.max_hp > 0 && (
         <div className="card">
           <h3 className="font-display text-amber-100 mb-2">Hit Points</h3>
@@ -515,7 +696,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         </div>
       )}
 
-      {/* #113 — Initiative / Combatant Tracker (Enhanced with Round Manager) */}
+      {/* Initiative / Combatant Tracker (Enhanced with HP tracking & damage/healing) */}
       <div className="card">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
@@ -550,7 +731,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
             )}
           </div>
         </div>
-        <p className="text-xs text-amber-200/30 mb-3">Track turn order. Entries persist across tab switches.</p>
+        <p className="text-xs text-amber-200/30 mb-3">Track turn order with HP. Click a combatant's HP to apply damage or healing.</p>
         <div className="flex gap-2 mb-3">
           <input
             className="input flex-1"
@@ -567,6 +748,25 @@ export default function Combat({ characterId, character, onConditionsChange }) {
             onChange={e => setNewCombatantInit(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && addCombatant()}
           />
+          <input
+            type="number"
+            className="input w-20"
+            placeholder="HP"
+            value={newCombatantHP}
+            onChange={e => setNewCombatantHP(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addCombatant()}
+          />
+          <button
+            onClick={() => setNewCombatantIsEnemy(prev => !prev)}
+            className={`px-2 py-1 rounded text-xs font-medium border transition-all ${
+              newCombatantIsEnemy
+                ? 'bg-red-900/40 text-red-300 border-red-500/30'
+                : 'bg-blue-900/20 text-blue-300/60 border-blue-500/20'
+            }`}
+            title={newCombatantIsEnemy ? 'Enemy (click to toggle to ally)' : 'Ally (click to toggle to enemy)'}
+          >
+            {newCombatantIsEnemy ? <Skull size={14} /> : <Shield size={14} />}
+          </button>
           <button onClick={addCombatant} className="btn-primary text-xs flex items-center gap-1">
             <Plus size={12} /> Add
           </button>
@@ -575,20 +775,130 @@ export default function Combat({ characterId, character, onConditionsChange }) {
           <div className="space-y-1">
             {combatants.map((c, idx) => {
               const isCurrentTurn = idx === currentTurn;
+              const hpPct = c.maxHp > 0 ? Math.max(0, Math.min(100, ((c.currentHp ?? c.maxHp) / c.maxHp) * 100)) : -1;
+              const isDead = c.maxHp > 0 && (c.currentHp ?? c.maxHp) <= 0;
+              const isCalcTarget = calcTarget === c.id;
               return (
-                <div key={c.id} className={`flex items-center gap-3 px-3 py-1.5 rounded-lg border transition-all ${
-                  isCurrentTurn
-                    ? 'bg-gold/10 border-gold/40'
-                    : idx === 0 && !isCurrentTurn ? 'bg-gold/5 border-gold/10' : 'bg-[#0a0a10] border-gold/10'
-                }`} style={isCurrentTurn ? { borderLeft: '3px solid rgb(201,168,76)' } : {}}>
-                  {isCurrentTurn && (
-                    <ArrowRight size={14} className="text-gold flex-shrink-0" />
+                <div key={c.id}>
+                  <div className={`flex items-center gap-3 px-3 py-1.5 rounded-lg border transition-all ${
+                    isDead ? 'bg-red-950/30 border-red-500/20 opacity-60' :
+                    isCurrentTurn
+                      ? 'bg-gold/10 border-gold/40'
+                      : c.isEnemy ? 'bg-red-950/10 border-red-500/10' : 'bg-[#0a0a10] border-gold/10'
+                  }`} style={isCurrentTurn ? { borderLeft: '3px solid rgb(201,168,76)' } : {}}>
+                    {isCurrentTurn && (
+                      <ArrowRight size={14} className="text-gold flex-shrink-0" />
+                    )}
+                    <span className="text-gold font-bold text-sm w-8 text-center">{c.initiative}</span>
+                    <span className={`text-sm flex-1 ${isCurrentTurn ? 'text-amber-100 font-semibold' : 'text-amber-100'} ${isDead ? 'line-through' : ''}`}>
+                      {c.isEnemy && <Skull size={12} className="inline text-red-400/60 mr-1" />}
+                      {c.name}
+                    </span>
+                    {/* HP display with click-to-edit */}
+                    {c.maxHp > 0 && (
+                      <button
+                        onClick={() => { setCalcTarget(isCalcTarget ? null : c.id); setCalcAmount(''); setCalcMode('damage'); setCalcModifier('normal'); }}
+                        className={`flex items-center gap-1.5 px-2 py-0.5 rounded text-xs transition-all ${
+                          isCalcTarget ? 'bg-gold/15 border border-gold/40' : 'hover:bg-white/5'
+                        }`}
+                        title="Click to apply damage/healing"
+                      >
+                        <Heart size={11} className={`${
+                          hpPct > 50 ? 'text-emerald-400' : hpPct > 25 ? 'text-yellow-400' : 'text-red-400'
+                        }`} />
+                        <span className={`font-medium ${
+                          hpPct > 50 ? 'text-emerald-300' : hpPct > 25 ? 'text-yellow-300' : 'text-red-300'
+                        }`}>
+                          {c.currentHp ?? c.maxHp}/{c.maxHp}
+                        </span>
+                        {/* Mini HP bar */}
+                        <div className="w-12 h-1.5 bg-[#0a0a10] rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              hpPct > 50 ? 'bg-emerald-500' : hpPct > 25 ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${hpPct}%` }}
+                          />
+                        </div>
+                      </button>
+                    )}
+                    <button onClick={() => removeCombatant(c.id)} className="text-red-400/50 hover:text-red-400 transition-colors">
+                      <X size={14} />
+                    </button>
+                  </div>
+                  {/* Damage/Healing Calculator inline */}
+                  {isCalcTarget && (
+                    <div className="ml-11 mt-1 mb-2 p-3 bg-[#0d0d14] border border-gold/15 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <button
+                          onClick={() => setCalcMode('damage')}
+                          className={`text-xs px-2.5 py-1 rounded border transition-all ${
+                            calcMode === 'damage' ? 'bg-red-900/40 text-red-300 border-red-500/30' : 'bg-white/5 text-amber-200/40 border-amber-200/10'
+                          }`}
+                        >
+                          Damage
+                        </button>
+                        <button
+                          onClick={() => setCalcMode('healing')}
+                          className={`text-xs px-2.5 py-1 rounded border transition-all ${
+                            calcMode === 'healing' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/30' : 'bg-white/5 text-amber-200/40 border-amber-200/10'
+                          }`}
+                        >
+                          Healing
+                        </button>
+                        {calcMode === 'damage' && (
+                          <>
+                            <span className="text-amber-200/20">|</span>
+                            {['normal', 'resist', 'vuln'].map(mod => (
+                              <button
+                                key={mod}
+                                onClick={() => setCalcModifier(mod)}
+                                className={`text-[10px] px-2 py-0.5 rounded border transition-all ${
+                                  calcModifier === mod
+                                    ? mod === 'resist' ? 'bg-blue-900/50 text-blue-200 border-blue-500/40'
+                                      : mod === 'vuln' ? 'bg-red-900/50 text-red-200 border-red-500/40'
+                                      : 'bg-gold/15 text-gold border-gold/30'
+                                    : 'bg-white/5 text-amber-200/40 border-amber-200/10'
+                                }`}
+                              >
+                                {mod === 'normal' ? 'Normal' : mod === 'resist' ? '\u00BD Resist' : '\u00D72 Vuln'}
+                              </button>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          className="input w-24 text-sm"
+                          placeholder="Amount"
+                          value={calcAmount}
+                          onChange={e => setCalcAmount(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              applyDamageHealing(c.id, parseInt(calcAmount) || 0, calcMode, calcModifier);
+                              setCalcTarget(null);
+                            }
+                          }}
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => {
+                            applyDamageHealing(c.id, parseInt(calcAmount) || 0, calcMode, calcModifier);
+                            setCalcTarget(null);
+                          }}
+                          className={`btn-primary text-xs px-3 py-1.5 ${calcMode === 'healing' ? '!bg-emerald-600/30 !border-emerald-500/40 !text-emerald-300' : '!bg-red-600/30 !border-red-500/40 !text-red-300'}`}
+                        >
+                          {calcMode === 'damage' ? 'Apply Damage' : 'Apply Healing'}
+                        </button>
+                        {calcMode === 'damage' && calcAmount && calcModifier !== 'normal' && (
+                          <span className="text-xs text-amber-200/40">
+                            = {calcModifier === 'resist' ? Math.floor((parseInt(calcAmount) || 0) / 2) : (parseInt(calcAmount) || 0) * 2} effective
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   )}
-                  <span className="text-gold font-bold text-sm w-8 text-center">{c.initiative}</span>
-                  <span className={`text-sm flex-1 ${isCurrentTurn ? 'text-amber-100 font-semibold' : 'text-amber-100'}`}>{c.name}</span>
-                  <button onClick={() => removeCombatant(c.id)} className="text-red-400/50 hover:text-red-400 transition-colors">
-                    <X size={14} />
-                  </button>
                 </div>
               );
             })}
@@ -596,63 +906,20 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         )}
       </div>
 
-      {/* Action Economy Tracker */}
-      <div className="card">
-        <h3 className="font-display text-amber-100 mb-1">Action Economy</h3>
-        <p className="text-xs text-amber-200/30 mb-3">Track your available actions each turn. Resets automatically on Next Turn.</p>
-        <div className="flex items-center gap-4 flex-wrap">
-          {[
-            { key: 'action', label: 'Action', color: 'gold' },
-            { key: 'bonusAction', label: 'Bonus Action', color: 'amber' },
-            { key: 'reaction', label: 'Reaction', color: 'orange' },
-          ].map(({ key, label, color }) => {
-            const used = actionEcon[key];
-            return (
-              <button
-                key={key}
-                onClick={() => {
-                  setActionEcon(prev => ({ ...prev, [key]: !prev[key] }));
-                  // Keep legacy reaction tracker in sync
-                  if (key === 'reaction') {
-                    setReactionUsed(prev => {
-                      const next = !prev;
-                      sessionStorage.setItem(reactionKey, next ? 'used' : 'available');
-                      return next;
-                    });
-                  }
-                }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all select-none ${
-                  used
-                    ? 'bg-white/5 border-amber-200/10 opacity-50'
-                    : 'bg-gold/5 border-gold/30 hover:bg-gold/10'
-                }`}
-              >
-                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
-                  used
-                    ? 'border-amber-200/20 bg-amber-200/10'
-                    : 'border-gold/60 bg-gold/10'
-                }`}>
-                  {used && (
-                    <X size={10} className="text-amber-200/40" />
-                  )}
-                </div>
-                <span className={`text-sm font-medium ${used ? 'text-amber-200/30 line-through' : 'text-amber-100'}`}>
-                  {label}
-                </span>
-              </button>
-            );
-          })}
-          <button
-            onClick={resetActionEconomy}
-            className="text-xs text-amber-200/50 hover:text-amber-200/80 transition-colors flex items-center gap-1 ml-auto"
-            title="Reset all actions"
-          >
-            <RotateCcw size={11} /> Reset
-          </button>
-        </div>
-      </div>
+      {/* Turn Action Tracker */}
+      <TurnActionTracker
+        actionEcon={actionEcon}
+        setActionEcon={setActionEcon}
+        setReactionUsed={setReactionUsed}
+        reactionKey={reactionKey}
+        resetActionEconomy={resetActionEconomy}
+        roundCounter={roundCounter}
+        setRoundCounter={setRoundCounter}
+        logEvent={logEvent}
+        character={character}
+      />
 
-      {/* #115 — Legendary Action Counter */}
+      {/* Legendary Action Counter */}
       <div className="card">
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-display text-amber-100">Legendary Actions</h3>
@@ -752,7 +1019,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                       <div className="flex items-center gap-3">
                         <span className="text-amber-100 font-medium">{atk.name || 'Unnamed Attack'}</span>
                         <span className="text-gold text-sm">{atk.attack_bonus ?? '+0'}{flankingEnabled && <span className="text-gold/60 text-xs ml-0.5">(+2)</span>}</span>
-                        <span className="text-amber-200/60 text-sm">{atk.damage_dice ?? '—'} {atk.damage_type && <span className="text-amber-200/40">{atk.damage_type}</span>}</span>
+                        <span className="text-amber-200/60 text-sm">{atk.damage_dice ?? '\u2014'} {atk.damage_type && <span className="text-amber-200/40">{atk.damage_type}</span>}</span>
                         {atk.attack_range && <span className="text-amber-200/30 text-xs">{atk.attack_range}</span>}
                       </div>
                     </div>
@@ -809,7 +1076,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                               }`}
                               title="Half damage (resistance)"
                             >
-                              ½ Resist
+                              \u00BD Resist
                             </button>
                             <button
                               onClick={() => setDmgModifiers(prev => ({ ...prev, [atk.id]: prev[atk.id] === 'vuln' ? null : 'vuln' }))}
@@ -818,7 +1085,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                               }`}
                               title="Double damage (vulnerability)"
                             >
-                              ×2 Vuln
+                              \u00D72 Vuln
                             </button>
                           </div>
                         );
@@ -878,7 +1145,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
             <h4 className="text-xs text-gold font-semibold mb-1.5">{section.label}</h4>
             <ul className="space-y-1">
               {section.items.map((item, i) => (
-                <li key={i} className="text-xs text-amber-200/60 pl-3 relative before:content-['•'] before:absolute before:left-0 before:text-gold/40">
+                <li key={i} className="text-xs text-amber-200/60 pl-3 relative before:content-['\u2022'] before:absolute before:left-0 before:text-gold/40">
                   {item}
                 </li>
               ))}
@@ -888,67 +1155,13 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       </div>
 
       {/* Combat Log */}
-      <div className="card">
-        <button
-          onClick={() => setCombatLogOpen(prev => !prev)}
-          className="flex items-center justify-between w-full"
-        >
-          <div className="flex items-center gap-2">
-            <ScrollText size={16} className="text-gold" />
-            <h3 className="font-display text-amber-100">Combat Log</h3>
-            {combatLog.length > 0 && (
-              <span className="text-[10px] text-amber-200/40 bg-white/5 px-1.5 py-0.5 rounded">{combatLog.length}</span>
-            )}
-          </div>
-          {combatLogOpen ? <ChevronUp size={16} className="text-amber-200/40" /> : <ChevronDown size={16} className="text-amber-200/40" />}
-        </button>
-        {combatLogOpen && (
-          <div className="mt-3 space-y-1 max-h-64 overflow-y-auto">
-            {combatLog.length === 0 ? (
-              <p className="text-xs text-amber-200/30">No combat events logged yet. Attacks, condition changes, and round advances will appear here.</p>
-            ) : (
-              <>
-                <div className="flex justify-end mb-2">
-                  <button
-                    onClick={() => {
-                      setCombatLog([]);
-                      sessionStorage.setItem(`codex_combatlog_${characterId}`, '[]');
-                    }}
-                    className="text-xs text-red-400/70 hover:text-red-400 transition-colors"
-                  >
-                    Clear Log
-                  </button>
-                </div>
-                {combatLog.map((entry, i) => {
-                  const time = new Date(entry.ts);
-                  const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                  const typeColors = {
-                    attack: 'text-red-400/70',
-                    condition: 'text-purple-400/70',
-                    round: 'text-gold/70',
-                    turn: 'text-amber-200/70',
-                  };
-                  const typeBg = {
-                    attack: 'bg-red-900/20 border-red-500/10',
-                    condition: 'bg-purple-900/20 border-purple-500/10',
-                    round: 'bg-gold/5 border-gold/10',
-                    turn: 'bg-amber-900/10 border-amber-500/10',
-                  };
-                  return (
-                    <div key={`${entry.ts}-${i}`} className={`flex items-start gap-2 px-3 py-1.5 rounded border text-xs ${typeBg[entry.type] || 'bg-white/[0.02] border-gold/5'}`}>
-                      <span className="text-amber-200/20 font-mono flex-shrink-0 w-16">{timeStr}</span>
-                      <span className={`uppercase font-semibold tracking-wider flex-shrink-0 w-16 ${typeColors[entry.type] || 'text-amber-200/40'}`}>
-                        {entry.type}
-                      </span>
-                      <span className="text-amber-200/60">{entry.message}</span>
-                    </div>
-                  );
-                })}
-              </>
-            )}
-          </div>
-        )}
-      </div>
+      <CombatLog
+        combatLog={combatLog}
+        combatLogOpen={combatLogOpen}
+        setCombatLogOpen={setCombatLogOpen}
+        setCombatLog={setCombatLog}
+        characterId={characterId}
+      />
 
       {showAdd && <AttackForm onSubmit={handleAddAttack} onCancel={() => setShowAdd(false)} />}
 
@@ -959,6 +1172,304 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         onConfirm={() => handleDeleteAttack(confirmDelete.id)}
         onCancel={() => setConfirmDelete(null)}
       />
+    </div>
+  );
+}
+
+// --- Turn Action Tracker Component ---
+const ACTION_TOOLTIPS = {
+  action: {
+    label: 'ACTION',
+    general: [
+      'Attack (melee or ranged)',
+      'Cast a Spell (1 action)',
+      'Dash (double movement)',
+      'Dodge (attacks against you have disadvantage)',
+      'Disengage (no opportunity attacks)',
+      'Help (give an ally advantage)',
+      'Hide (make a Stealth check)',
+      'Ready (prepare a triggered action)',
+      'Use an Object',
+      'Search',
+      'Grapple / Shove (replaces one attack)',
+    ],
+    classSpecific: {
+      'Rogue': ['Cunning Action: Dash, Disengage, or Hide as action'],
+      'Fighter': ['Action Surge (extra action, 1/rest)', 'Second Wind (bonus action heal)'],
+      'Barbarian': ['Reckless Attack (advantage, enemies get advantage on you)'],
+      'Monk': ['Flurry of Blows (2 unarmed strikes after Attack)', 'Stunning Strike (spend ki on hit)'],
+      'Paladin': ['Divine Smite (add 2d8+ radiant on hit)', 'Lay on Hands (heal from pool)'],
+      'Ranger': ["Hunter's Mark (bonus action, but Attack action needed)"],
+      'Wizard': ['Arcane Recovery (restore spell slots, 1/day)'],
+      'Warlock': ["Eldritch Blast (cantrip, multiple beams at higher levels)"],
+      'Cleric': ['Turn Undead (Channel Divinity)'],
+      'Druid': ['Wild Shape (2/rest)'],
+      'Bard': ['Bardic Inspiration (give ally a die)'],
+      'Sorcerer': ['Metamagic (modify spells with sorcery points)'],
+    },
+  },
+  bonusAction: {
+    label: 'BONUS ACTION',
+    general: [
+      'Two-Weapon Fighting (offhand attack)',
+      'Cast a Spell (bonus action spells only)',
+      'Certain class features',
+    ],
+    classSpecific: {
+      'Rogue': ['Cunning Action: Dash, Disengage, or Hide'],
+      'Barbarian': ['Rage (enter rage)', 'Reckless Attack (declare with Attack action)'],
+      'Monk': ['Flurry of Blows (2 unarmed strikes, 1 ki)', 'Patient Defense (Dodge, 1 ki)', 'Step of the Wind (Dash/Disengage, 1 ki)'],
+      'Ranger': ["Hunter's Mark", 'Heal (Healing Spirit, Goodberry)'],
+      'Paladin': ['Smite spells (Thunderous, Wrathful, etc.)', 'Shield of Faith (+2 AC)'],
+      'Cleric': ['Healing Word', 'Spiritual Weapon (attack as bonus action)', 'Shield of Faith'],
+      'Wizard': ['Misty Step (teleport 30 ft)'],
+      'Warlock': ["Hex (curse a target, extra 1d6)", 'Misty Step'],
+      'Sorcerer': ['Quickened Spell (cast action spell as bonus)'],
+      'Bard': ['Healing Word', 'Bardic Inspiration'],
+      'Fighter': ['Second Wind (heal 1d10 + level)'],
+      'Druid': ['Wild Shape (can also be action)'],
+    },
+    spells: [
+      'Healing Word',
+      'Misty Step',
+      'Spiritual Weapon',
+      'Shield of Faith',
+      'Hex / Hunter\'s Mark',
+      'Sanctuary',
+      'Expeditious Retreat',
+    ],
+  },
+  reaction: {
+    label: 'REACTION',
+    general: [
+      'Opportunity Attack (enemy leaves your reach)',
+      'Readied Action (trigger from Ready action)',
+    ],
+    classSpecific: {
+      'Fighter': ['Riposte (Battle Master)', 'Protection fighting style (impose disadvantage)'],
+      'Paladin': ['Protection fighting style', 'Aura saves (passive, no reaction needed)'],
+      'Monk': ['Deflect Missiles (reduce ranged damage)', 'Slow Fall (reduce fall damage)'],
+      'Rogue': ['Uncanny Dodge (halve attack damage)'],
+      'Barbarian': ['Sentinel feat (if taken)'],
+    },
+    spells: [
+      'Shield (+5 AC until next turn)',
+      'Counterspell (negate a spell)',
+      'Absorb Elements (resist + extra damage)',
+      'Hellish Rebuke (fire damage on attacker)',
+      'Feather Fall (slow falling)',
+      'Silvery Barbs (force reroll)',
+    ],
+  },
+};
+
+const TOKEN_STYLES = {
+  action: {
+    active: 'bg-emerald-900/40 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.2)]',
+    used: 'bg-[#0a0a10] border-amber-200/10 opacity-40',
+    dot: 'bg-emerald-400',
+    dotUsed: 'bg-amber-200/20',
+    text: 'text-emerald-300',
+    textUsed: 'text-amber-200/30 line-through',
+    iconColor: 'text-emerald-400',
+    iconUsed: 'text-amber-200/20',
+  },
+  bonusAction: {
+    active: 'bg-blue-900/40 border-blue-500/50 shadow-[0_0_12px_rgba(59,130,246,0.2)]',
+    used: 'bg-[#0a0a10] border-amber-200/10 opacity-40',
+    dot: 'bg-blue-400',
+    dotUsed: 'bg-amber-200/20',
+    text: 'text-blue-300',
+    textUsed: 'text-amber-200/30 line-through',
+    iconColor: 'text-blue-400',
+    iconUsed: 'text-amber-200/20',
+  },
+  reaction: {
+    active: 'bg-amber-900/40 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.2)]',
+    used: 'bg-[#0a0a10] border-amber-200/10 opacity-40',
+    dot: 'bg-amber-400',
+    dotUsed: 'bg-amber-200/20',
+    text: 'text-amber-300',
+    textUsed: 'text-amber-200/30 line-through',
+    iconColor: 'text-amber-400',
+    iconUsed: 'text-amber-200/20',
+  },
+};
+
+function TurnActionTracker({ actionEcon, setActionEcon, setReactionUsed, reactionKey, resetActionEconomy, setRoundCounter, logEvent, character }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [hoveredToken, setHoveredToken] = useState(null);
+
+  const charClass = character?.class || '';
+  const extraAttacks = (() => {
+    const level = character?.level || 1;
+    const cls = charClass.toLowerCase();
+    if (cls === 'fighter' && level >= 20) return 4;
+    if (cls === 'fighter' && level >= 11) return 3;
+    if ((cls === 'fighter' || cls === 'paladin' || cls === 'ranger' || cls === 'barbarian' || cls === 'monk') && level >= 5) return 2;
+    return 1;
+  })();
+
+  const handleTokenClick = (key) => {
+    setActionEcon(prev => ({ ...prev, [key]: !prev[key] }));
+    if (key === 'reaction') {
+      setReactionUsed(prev => {
+        const next = !prev;
+        sessionStorage.setItem(reactionKey, next ? 'used' : 'available');
+        return next;
+      });
+    }
+  };
+
+  const handleNewTurn = () => {
+    resetActionEconomy();
+    logEvent('turn', 'New turn — actions reset');
+  };
+
+  const handleNewRound = () => {
+    resetActionEconomy();
+    setRoundCounter(r => {
+      const newRound = r + 1;
+      logEvent('round', `Round ${newRound} started (New Round)`);
+      return newRound;
+    });
+  };
+
+  const renderTooltip = (key) => {
+    const info = ACTION_TOOLTIPS[key];
+    const classActions = charClass && info.classSpecific?.[charClass];
+    return (
+      <div className="absolute z-40 bottom-full left-1/2 -translate-x-1/2 mb-3 p-4 bg-[#14121c] border border-gold/25 rounded-lg shadow-2xl w-72 pointer-events-none">
+        <div className="font-display text-amber-100 text-sm mb-2">{info.label}</div>
+        {key === 'action' && extraAttacks > 1 && (
+          <div className="mb-2 text-xs text-emerald-300 bg-emerald-900/30 border border-emerald-500/20 rounded px-2 py-1">
+            Extra Attack: {extraAttacks} attacks per Attack action
+          </div>
+        )}
+        <div className="text-[10px] uppercase tracking-wider text-amber-200/50 mb-1 font-semibold">Available Options</div>
+        <ul className="space-y-0.5 mb-2">
+          {info.general.map((item, i) => (
+            <li key={i} className="text-xs text-amber-200/60 pl-2 relative before:content-['\u2022'] before:absolute before:left-0 before:text-gold/40">{item}</li>
+          ))}
+        </ul>
+        {classActions && (
+          <>
+            <div className="text-[10px] uppercase tracking-wider text-gold/70 mb-1 font-semibold mt-2">{charClass} Features</div>
+            <ul className="space-y-0.5 mb-2">
+              {classActions.map((item, i) => (
+                <li key={i} className="text-xs text-gold/70 pl-2 relative before:content-['\u2022'] before:absolute before:left-0 before:text-gold/40">{item}</li>
+              ))}
+            </ul>
+          </>
+        )}
+        {info.spells && (
+          <>
+            <div className="text-[10px] uppercase tracking-wider text-purple-400/70 mb-1 font-semibold mt-2">Common Spells</div>
+            <ul className="space-y-0.5">
+              {info.spells.map((item, i) => (
+                <li key={i} className="text-xs text-purple-300/60 pl-2 relative before:content-['\u2022'] before:absolute before:left-0 before:text-purple-400/40">{item}</li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+    );
+  };
+
+  const tokens = [
+    { key: 'action', label: 'ACTION', icon: <Swords size={16} /> },
+    { key: 'bonusAction', label: 'BONUS', icon: <Zap size={16} /> },
+    { key: 'reaction', label: 'REACTION', icon: <Shield size={16} /> },
+  ];
+
+  return (
+    <div className="card">
+      <button
+        onClick={() => setCollapsed(prev => !prev)}
+        className="flex items-center justify-between w-full"
+      >
+        <div className="flex items-center gap-2">
+          <Swords size={16} className="text-gold" />
+          <h3 className="font-display text-amber-100">Turn Actions</h3>
+          {!collapsed && (
+            <span className="text-[10px] text-amber-200/30 ml-1">Click tokens to mark as used</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {collapsed && (
+            <div className="flex items-center gap-1.5 mr-2">
+              {tokens.map(({ key }) => {
+                const used = actionEcon[key];
+                const style = TOKEN_STYLES[key];
+                return (
+                  <div
+                    key={key}
+                    className={`w-2.5 h-2.5 rounded-full transition-all ${used ? style.dotUsed : style.dot}`}
+                  />
+                );
+              })}
+            </div>
+          )}
+          {collapsed ? <ChevronDown size={16} className="text-amber-200/40" /> : <ChevronUp size={16} className="text-amber-200/40" />}
+        </div>
+      </button>
+
+      {!collapsed && (
+        <div className="mt-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            {tokens.map(({ key, label, icon }) => {
+              const used = actionEcon[key];
+              const style = TOKEN_STYLES[key];
+              return (
+                <div
+                  key={key}
+                  className="relative"
+                  onMouseEnter={() => setHoveredToken(key)}
+                  onMouseLeave={() => setHoveredToken(null)}
+                >
+                  <button
+                    onClick={() => handleTokenClick(key)}
+                    className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full border-2 transition-all select-none ${
+                      used ? style.used : style.active
+                    }`}
+                  >
+                    <div className={`transition-all ${used ? style.iconUsed : style.iconColor}`}>
+                      {icon}
+                    </div>
+                    <span className={`text-sm font-bold tracking-wide ${used ? style.textUsed : style.text}`}>
+                      {label}
+                    </span>
+                    <div className={`w-3 h-3 rounded-full border-2 flex items-center justify-center transition-all ${
+                      used ? 'border-amber-200/20 bg-transparent' : 'border-current'
+                    }`}>
+                      {used && <X size={8} className="text-amber-200/30" />}
+                    </div>
+                  </button>
+                  {hoveredToken === key && renderTooltip(key)}
+                </div>
+              );
+            })}
+
+            {/* Spacer + buttons */}
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                onClick={handleNewTurn}
+                className="px-3 py-2 rounded-lg bg-gold/10 border border-gold/30 hover:bg-gold/20 hover:border-gold/50 transition-all flex items-center gap-1.5 text-xs text-gold font-medium"
+                title="Reset all action tokens for a new turn"
+              >
+                <RotateCcw size={12} /> New Turn
+              </button>
+              <button
+                onClick={handleNewRound}
+                className="px-3 py-2 rounded-lg bg-purple-900/30 border border-purple-500/30 hover:bg-purple-900/50 hover:border-purple-500/50 transition-all flex items-center gap-1.5 text-xs text-purple-300 font-medium"
+                title="Reset tokens and advance round counter"
+              >
+                <Plus size={12} /> New Round
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -984,7 +1495,8 @@ function AttackForm({ onSubmit, onCancel }) {
   }, [onCancel]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={e => e.target === e.currentTarget && onCancel()}>
+    <ModalPortal>
+      <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onCancel()}>
       <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="font-display text-lg text-amber-100 mb-4">Add Attack</h3>
         <div className="space-y-3">
@@ -1010,7 +1522,8 @@ function AttackForm({ onSubmit, onCancel }) {
           <button onClick={handleSubmit} className="btn-primary text-sm">Add</button>
         </div>
       </div>
-    </div>
+      </div>
+    </ModalPortal>
   );
 }
 
@@ -1018,6 +1531,7 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDur
   const [expanded, setExpanded] = useState(null);
   const [durationInput, setDurationInput] = useState({});
   const [conditionSearch, setConditionSearch] = useState('');
+  const [hoveredCondition, setHoveredCondition] = useState(null);
   const activeNames = useMemo(() => conditions.filter(c => c.active).map(c => c.name), [conditions]);
   const effects = useMemo(() => computeConditionEffects(activeNames), [activeNames]);
   const hasTimedConditions = conditions.some(c => c.active && c.rounds_remaining > 0);
@@ -1061,7 +1575,7 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDur
       </div>
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs text-amber-200/30">
-          Left-click to toggle on/off. Right-click for rule description. Set duration in rounds for auto-expiry.
+          Left-click to toggle on/off. Right-click or hover for rule description. Set duration in rounds for auto-expiry.
         </p>
         {activeNames.length >= 3 && (
           <button
@@ -1082,7 +1596,10 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDur
         {filteredConditions.map(cond => {
           const effect = CONDITION_EFFECTS[cond.name];
           return (
-            <div key={cond.name} className="relative">
+            <div key={cond.name} className="relative"
+              onMouseEnter={() => setHoveredCondition(cond.name)}
+              onMouseLeave={() => setHoveredCondition(null)}
+            >
               <button
                 onClick={() => handleConditionClick(cond.name)}
                 onContextMenu={(e) => handleContextMenu(e, cond.name)}
@@ -1102,7 +1619,16 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDur
                   )}
                 </span>
               </button>
-
+              {/* Quick hover tooltip showing mechanical effects */}
+              {hoveredCondition === cond.name && effect && expanded !== cond.name && (
+                <div className="absolute z-30 bottom-full left-1/2 -translate-x-1/2 mb-2 p-2.5 bg-[#14121c] border border-gold/20 rounded text-xs shadow-xl w-64 pointer-events-none">
+                  <div className="font-display text-amber-100 text-xs mb-1">{cond.name}</div>
+                  <p className="text-amber-200/60 leading-relaxed">{effect.summary}</p>
+                  {effect.shortTag && (
+                    <div className="mt-1.5 text-[10px] text-red-400/70 font-semibold">{effect.shortTag}</div>
+                  )}
+                </div>
+              )}
               {expanded === cond.name && (
                 <div className="absolute z-20 top-full left-0 mt-1 p-3 bg-[#14121c] border border-gold/20 rounded text-xs text-amber-200/60 w-72 shadow-xl">
                   <div className="flex justify-between items-start mb-1">
@@ -1164,10 +1690,16 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDur
           <div className="flex flex-wrap gap-1.5">
             <span className="text-xs text-red-400/60 font-semibold mr-1">Active:</span>
             {conditions.filter(c => c.active).map(c => (
-              <span key={c.name} className="text-xs text-red-200 bg-red-900/40 px-2 py-0.5 rounded border border-red-500/20">
+              <button
+                key={c.name}
+                onClick={() => onToggle(c.name)}
+                className="text-xs text-red-200 bg-red-900/40 px-2 py-0.5 rounded border border-red-500/20 hover:bg-red-800/50 hover:border-red-400/40 transition-all cursor-pointer group flex items-center gap-1"
+                title={`Click to remove ${c.name}`}
+              >
                 {CONDITION_ICONS[c.name] || ''} {c.name}
                 {c.rounds_remaining > 0 && <span className="ml-1 text-red-300/70">({c.rounds_remaining}r)</span>}
-              </span>
+                <X size={10} className="text-red-400/0 group-hover:text-red-400/80 transition-colors" />
+              </button>
             ))}
           </div>
 
@@ -1235,6 +1767,118 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDur
               </div>
             )}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CombatLog({ combatLog, combatLogOpen, setCombatLogOpen, setCombatLog, characterId }) {
+  const [logFilter, setLogFilter] = useState('all');
+
+  const typeColors = {
+    attack: 'text-red-400/70',
+    condition: 'text-purple-400/70',
+    round: 'text-gold/70',
+    turn: 'text-amber-200/70',
+    damage: 'text-orange-400/70',
+    healing: 'text-emerald-400/70',
+  };
+  const typeBg = {
+    attack: 'bg-red-900/20 border-red-500/10',
+    condition: 'bg-purple-900/20 border-purple-500/10',
+    round: 'bg-gold/5 border-gold/10',
+    turn: 'bg-amber-900/10 border-amber-500/10',
+    damage: 'bg-orange-900/20 border-orange-500/10',
+    healing: 'bg-emerald-900/20 border-emerald-500/10',
+  };
+
+  const filteredLog = logFilter === 'all' ? combatLog : combatLog.filter(e => e.type === logFilter);
+
+  // Latest entry preview when collapsed
+  const latestEntry = combatLog.length > 0 ? combatLog[0] : null;
+
+  return (
+    <div className="card">
+      <button
+        onClick={() => setCombatLogOpen(prev => !prev)}
+        className="flex items-center justify-between w-full"
+      >
+        <div className="flex items-center gap-2">
+          <ScrollText size={16} className="text-gold" />
+          <h3 className="font-display text-amber-100">Combat Log</h3>
+          {combatLog.length > 0 && (
+            <span className="text-[10px] text-amber-200/40 bg-white/5 px-1.5 py-0.5 rounded">{combatLog.length}</span>
+          )}
+        </div>
+        {combatLogOpen ? <ChevronUp size={16} className="text-amber-200/40" /> : <ChevronDown size={16} className="text-amber-200/40" />}
+      </button>
+
+      {/* Latest entry preview when collapsed */}
+      {!combatLogOpen && latestEntry && (
+        <div className="mt-2 flex items-center gap-2 text-xs text-amber-200/40 truncate">
+          <span className={`uppercase font-semibold tracking-wider ${typeColors[latestEntry.type] || 'text-amber-200/40'}`}>
+            {latestEntry.type}
+          </span>
+          <span className="text-amber-200/30 truncate">{latestEntry.message}</span>
+        </div>
+      )}
+
+      {combatLogOpen && (
+        <div className="mt-3 space-y-1">
+          {combatLog.length === 0 ? (
+            <p className="text-xs text-amber-200/30">No combat events logged yet. Attacks, condition changes, and round advances will appear here.</p>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                {/* Type filter buttons */}
+                <div className="flex items-center gap-1">
+                  <Filter size={11} className="text-amber-200/30 mr-1" />
+                  {['all', 'attack', 'damage', 'healing', 'condition', 'round', 'turn'].map(type => (
+                    <button
+                      key={type}
+                      onClick={() => setLogFilter(type)}
+                      className={`text-[10px] px-2 py-0.5 rounded border transition-all capitalize ${
+                        logFilter === type
+                          ? 'bg-gold/15 text-gold border-gold/40 font-medium'
+                          : 'bg-white/5 text-amber-200/40 border-amber-200/10 hover:text-amber-200/60 hover:border-amber-200/20'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    setCombatLog([]);
+                    sessionStorage.setItem(`codex_combatlog_${characterId}`, '[]');
+                  }}
+                  className="text-xs text-red-400/70 hover:text-red-400 transition-colors"
+                >
+                  Clear Log
+                </button>
+              </div>
+              <div className="max-h-64 overflow-y-auto space-y-1">
+                {filteredLog.length === 0 ? (
+                  <p className="text-xs text-amber-200/30 py-2 text-center">No {logFilter} entries yet.</p>
+                ) : (
+                  filteredLog.map((entry, i) => {
+                    const time = new Date(entry.ts);
+                    const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    return (
+                      <div key={`${entry.ts}-${i}`} className={`flex items-start gap-2 px-3 py-1.5 rounded border text-xs ${typeBg[entry.type] || 'bg-white/[0.02] border-gold/5'}`}>
+                        <span className="text-amber-200/20 font-mono flex-shrink-0 w-16">{timeStr}</span>
+                        <span className={`uppercase font-semibold tracking-wider flex-shrink-0 w-16 ${typeColors[entry.type] || 'text-amber-200/40'}`}>
+                          {entry.type}
+                        </span>
+                        <span className="text-amber-200/60">{entry.message}</span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

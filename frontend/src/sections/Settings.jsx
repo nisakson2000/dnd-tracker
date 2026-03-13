@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Settings2, Palette, Type, LayoutGrid, RotateCcw, Zap } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Settings2, Palette, Type, LayoutGrid, RotateCcw, Zap, Sliders } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { checkOllamaStatus, pullModel } from '../api/assistant';
@@ -85,7 +85,7 @@ function loadV3Settings() {
 function saveV3Settings(s) {
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
-  } catch (err) {
+  } catch {
     toast.error('Failed to save settings — localStorage may be full or disabled');
   }
 }
@@ -139,7 +139,68 @@ function saveAiSettings(s) {
   try {
     localStorage.setItem(AI_SETTINGS_KEY, JSON.stringify(s));
     window.dispatchEvent(new CustomEvent('codex-ai-settings-changed', { detail: s }));
-  } catch {}
+  } catch { /* ignore */ }
+}
+
+function PreferencesSection() {
+  const [diceAnimation, setDiceAnimation] = useState(() => {
+    try { return localStorage.getItem('codex_dice_animation') !== 'false'; } catch { return true; }
+  });
+  const [showSaveIndicator, setShowSaveIndicator] = useState(() => {
+    try { return localStorage.getItem('codex_show_save_indicator') !== 'false'; } catch { return true; }
+  });
+  const [showSessionTimer, setShowSessionTimer] = useState(() => {
+    try { return localStorage.getItem('codex_show_session_timer') !== 'false'; } catch { return true; }
+  });
+
+  const toggle = (key, value, setter) => {
+    const next = !value;
+    setter(next);
+    try { localStorage.setItem(key, String(next)); } catch { /* ignore */ }
+    window.dispatchEvent(new CustomEvent('codex-preference-changed', { detail: { key, value: next } }));
+  };
+
+  return (
+    <>
+      <div className="sp-sec" style={{ marginTop: '8px' }}>Preferences</div>
+      <div className="tog-row">
+        <div>
+          <div className="tog-label">Dice roll animation</div>
+          <div className="tog-desc">Show rolling animation for dice — disable for instant results</div>
+        </div>
+        <div
+          className={`toggle ${diceAnimation ? 'on' : ''}`}
+          onClick={() => toggle('codex_dice_animation', diceAnimation, setDiceAnimation)}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle('codex_dice_animation', diceAnimation, setDiceAnimation); } }}
+          tabIndex={0} role="switch" aria-checked={diceAnimation}
+        />
+      </div>
+      <div className="tog-row">
+        <div>
+          <div className="tog-label">Auto-save indicators</div>
+          <div className="tog-desc">Show brief confirmation when data is saved</div>
+        </div>
+        <div
+          className={`toggle ${showSaveIndicator ? 'on' : ''}`}
+          onClick={() => toggle('codex_show_save_indicator', showSaveIndicator, setShowSaveIndicator)}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle('codex_show_save_indicator', showSaveIndicator, setShowSaveIndicator); } }}
+          tabIndex={0} role="switch" aria-checked={showSaveIndicator}
+        />
+      </div>
+      <div className="tog-row">
+        <div>
+          <div className="tog-label">Session timer</div>
+          <div className="tog-desc">Show the session timer in the top bar</div>
+        </div>
+        <div
+          className={`toggle ${showSessionTimer ? 'on' : ''}`}
+          onClick={() => toggle('codex_show_session_timer', showSessionTimer, setShowSessionTimer)}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle('codex_show_session_timer', showSessionTimer, setShowSessionTimer); } }}
+          tabIndex={0} role="switch" aria-checked={showSessionTimer}
+        />
+      </div>
+    </>
+  );
 }
 
 function AiSettingsTab() {
@@ -241,7 +302,7 @@ function AiSettingsTab() {
   );
 }
 
-export default function Settings({ characterId, character, onBugReport }) {
+export default function Settings() {
   const [settings, setSettings] = useState(() => loadV3Settings());
   const [activeTab, setActiveTab] = useState('interface');
   const [customHex, setCustomHex] = useState(settings.accent);
@@ -282,7 +343,7 @@ export default function Settings({ characterId, character, onBugReport }) {
 
       {/* Tab bar */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '20px' }}>
-        {tabs.map(({ id, label, icon: Icon }) => (
+        {tabs.map(({ id, label, icon: Icon }) => ( // eslint-disable-line no-unused-vars
           <button
             key={id}
             onClick={() => setActiveTab(id)}
@@ -384,6 +445,8 @@ export default function Settings({ characterId, character, onBugReport }) {
             <div><div className="tog-label">Ability color accents</div><div className="tog-desc">Per-stat colors on ability cards</div></div>
             <div className={`toggle ${settings.abilityColors ? 'on' : ''}`} onClick={() => update({ abilityColors: !settings.abilityColors })} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ abilityColors: !settings.abilityColors }); } }} tabIndex={0} role="switch" aria-checked={settings.abilityColors} />
           </div>
+
+          <PreferencesSection />
         </div>
       )}
 

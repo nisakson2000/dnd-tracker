@@ -55,6 +55,19 @@ impl AppState {
         let conn = open_connection(&db_path).map_err(|e| {
             format!("Failed to open character database: {}", e)
         })?;
+        // Always ensure tables exist (handles DBs that exist but have no schema)
+        init_character_tables(&conn).map_err(|e| {
+            format!("Failed to initialize character tables: {}", e)
+        })?;
+        migrate_character_db(&conn).map_err(|e| {
+            format!("Failed to migrate character database: {}", e)
+        })?;
+        init_defaults(&conn).map_err(|e| {
+            format!("Failed to initialize defaults: {}", e)
+        })?;
+        ensure_conditions(&conn).map_err(|e| {
+            format!("Failed to initialize conditions: {}", e)
+        })?;
         conns.insert(character_id.to_string(), Mutex::new(conn));
         Ok(())
     }
@@ -134,7 +147,8 @@ pub fn init_character_tables(conn: &Connection) -> SqlResult<()> {
             exhaustion_level INTEGER DEFAULT 0,
             ruleset TEXT DEFAULT '5e-2014',
             multiclass_data TEXT DEFAULT '[]',
-            updated_at TEXT DEFAULT ''
+            updated_at TEXT DEFAULT '',
+            notes TEXT DEFAULT ''
         );
 
         CREATE TABLE IF NOT EXISTS ability_scores (
@@ -316,83 +330,82 @@ pub fn init_character_tables(conn: &Connection) -> SqlResult<()> {
     Ok(())
 }
 
-/// Migrate schema for older character databases
+/// Safely add a column if it doesn't exist (ALTER TABLE is a no-op when column exists in SQLite
+/// only if we catch the error, so we just ignore "duplicate column" errors)
+fn add_column_if_missing(conn: &Connection, table: &str, column: &str, col_type: &str, default: &str) {
+    let sql = format!(
+        "ALTER TABLE {} ADD COLUMN {} {} DEFAULT {}",
+        table, column, col_type, default
+    );
+    // SQLite returns "duplicate column name" error if already exists — safe to ignore
+    let _ = conn.execute(&sql, []);
+}
+
+/// Migrate schema for older character databases.
+/// This runs every time a connection is opened and is fully idempotent.
+/// Each migration safely adds missing columns — existing data is NEVER lost.
 pub fn migrate_character_db(conn: &Connection) -> SqlResult<()> {
-    // Check if ruleset column exists
-    let has_ruleset: bool = conn
-        .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='character_overview'")?
-        .query_row([], |row| row.get::<_, String>(0))
-        .map(|sql| sql.contains("ruleset"))
-        .unwrap_or(false);
+    // ── Schema version tracking ──
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS schema_meta (
+            key TEXT PRIMARY KEY,
+            value TEXT DEFAULT ''
+        );"
+    )?;
 
-    if !has_ruleset {
-        let _ = conn.execute(
-            "ALTER TABLE character_overview ADD COLUMN ruleset TEXT DEFAULT '5e-2014'",
-            [],
-        );
-    }
+    // ── character_overview columns ──
+    add_column_if_missing(conn, "character_overview", "ruleset", "TEXT", "'5e-2014'");
+    add_column_if_missing(conn, "character_overview", "multiclass_data", "TEXT", "'[]'");
+    add_column_if_missing(conn, "character_overview", "updated_at", "TEXT", "''");
+    add_column_if_missing(conn, "character_overview", "notes", "TEXT", "''");
+    add_column_if_missing(conn, "character_overview", "climb_speed", "INTEGER", "0");
+    add_column_if_missing(conn, "character_overview", "swim_speed", "INTEGER", "0");
+    add_column_if_missing(conn, "character_overview", "fly_speed", "INTEGER", "0");
 
-    // Check if multiclass_data column exists
-    let has_multiclass: bool = conn
-        .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='character_overview'")?
-        .query_row([], |row| row.get::<_, String>(0))
-        .map(|sql| sql.contains("multiclass_data"))
-        .unwrap_or(false);
+    // ── features columns ──
+    add_column_if_missing(conn, "features", "uses_total", "INTEGER", "0");
+    add_column_if_missing(conn, "features", "uses_remaining", "INTEGER", "0");
+    add_column_if_missing(conn, "features", "recharge", "TEXT", "''");
 
-    if !has_multiclass {
-        let _ = conn.execute(
-            "ALTER TABLE character_overview ADD COLUMN multiclass_data TEXT DEFAULT '[]'",
-            [],
-        );
-    }
+    // ── conditions columns ──
+    add_column_if_missing(conn, "conditions", "duration_rounds", "INTEGER", "0");
+    add_column_if_missing(conn, "conditions", "rounds_remaining", "INTEGER", "0");
 
-    // Migrate features table: add uses_total, uses_remaining, recharge
-    let features_sql: String = conn
-        .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='features'")
-        .and_then(|mut s| s.query_row([], |row| row.get(0)))
-        .unwrap_or_default();
-    if !features_sql.contains("uses_total") {
-        let _ = conn.execute("ALTER TABLE features ADD COLUMN uses_total INTEGER DEFAULT 0", []);
-        let _ = conn.execute("ALTER TABLE features ADD COLUMN uses_remaining INTEGER DEFAULT 0", []);
-        let _ = conn.execute("ALTER TABLE features ADD COLUMN recharge TEXT DEFAULT ''", []);
-    }
+    // ── journal_entries columns ──
+    add_column_if_missing(conn, "journal_entries", "npcs_mentioned", "TEXT", "''");
+    add_column_if_missing(conn, "journal_entries", "pinned", "INTEGER", "0");
 
-    // Migrate conditions table: add duration_rounds, rounds_remaining
-    let conditions_sql: String = conn
-        .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='conditions'")
-        .and_then(|mut s| s.query_row([], |row| row.get(0)))
-        .unwrap_or_default();
-    if !conditions_sql.contains("duration_rounds") {
-        let _ = conn.execute("ALTER TABLE conditions ADD COLUMN duration_rounds INTEGER DEFAULT 0", []);
-        let _ = conn.execute("ALTER TABLE conditions ADD COLUMN rounds_remaining INTEGER DEFAULT 0", []);
-    }
+    // ── lore_notes columns ──
+    add_column_if_missing(conn, "lore_notes", "related_to", "TEXT", "''");
 
-    // Migrate journal_entries: add npcs_mentioned, pinned
-    let journal_sql: String = conn
-        .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='journal_entries'")
-        .and_then(|mut s| s.query_row([], |row| row.get(0)))
-        .unwrap_or_default();
-    if !journal_sql.contains("npcs_mentioned") {
-        let _ = conn.execute("ALTER TABLE journal_entries ADD COLUMN npcs_mentioned TEXT DEFAULT ''", []);
-    }
-    if !journal_sql.contains("pinned") {
-        let _ = conn.execute("ALTER TABLE journal_entries ADD COLUMN pinned INTEGER DEFAULT 0", []);
-    }
+    // ── backstory columns (future-proofing) ──
+    add_column_if_missing(conn, "backstory", "goals_motivations", "TEXT", "''");
 
-    // Migrate lore_notes: add related_to
-    let lore_sql: String = conn
-        .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='lore_notes'")
-        .and_then(|mut s| s.query_row([], |row| row.get(0)))
-        .unwrap_or_default();
-    if !lore_sql.contains("related_to") {
-        let _ = conn.execute("ALTER TABLE lore_notes ADD COLUMN related_to TEXT DEFAULT ''", []);
-    }
+    // ── items columns ──
+    add_column_if_missing(conn, "items", "equipment_slot", "TEXT", "''");
+
+    // ── Automation engine columns ──
+    add_column_if_missing(conn, "character_overview", "hp_calc_method", "TEXT", "'auto'");
+    add_column_if_missing(conn, "character_overview", "initiative_bonus", "INTEGER", "0");
+    add_column_if_missing(conn, "character_overview", "spell_attack_bonus", "INTEGER", "0");
+
+    // ── Update schema version ──
+    conn.execute(
+        "INSERT OR REPLACE INTO schema_meta (key, value) VALUES ('schema_version', '4')",
+        [],
+    )?;
 
     Ok(())
 }
 
-/// Initialize default ability scores, saving throws, and skills
+/// Initialize default ability scores, saving throws, skills, and overview row
 pub fn init_defaults(conn: &Connection) -> SqlResult<()> {
+    // Ensure a default overview row exists (won't overwrite existing data)
+    conn.execute(
+        "INSERT OR IGNORE INTO character_overview (id) VALUES (1)",
+        [],
+    )?;
+
     let abilities = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
     for ab in &abilities {
         conn.execute(

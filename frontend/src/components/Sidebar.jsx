@@ -4,7 +4,7 @@ import {
   ScrollText, BookOpen, Shield, Sparkles, Swords,
   BookMarked, Users, Map, Globe, Dice5, ArrowLeft, User, Download,
   Library, Settings2, Heart, Bell, Bug, Terminal, Crown, LayoutDashboard,
-  Star, Search, X, Zap, Wifi,
+  Star, Search, X, Zap, Wifi, BookCopy,
 } from 'lucide-react';
 import { useAppMode } from '../contexts/ModeContext';
 
@@ -120,7 +120,7 @@ function loadPinned() {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) return parsed.slice(0, MAX_PINS);
     }
-  } catch {}
+  } catch { /* ignore parse errors */ }
   return [];
 }
 
@@ -298,7 +298,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
               <Star size={8} style={{ fill: '#c9a84c', color: '#c9a84c' }} />
               Pinned
             </div>
-            {pinnedItems.map(({ id, label, icon: Icon }) => {
+            {pinnedItems.map(({ id, label, icon: Icon }) => { // eslint-disable-line no-unused-vars
               const active = activeSection === id;
               return (
                 <div key={id} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -354,7 +354,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
             <div style={{ padding: '8px 14px 3px', fontFamily: 'var(--font-mono)', fontSize: '8px', fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--text-mute)' }}>
               {group.label}
             </div>
-            {group.items.filter(item => !item.conditional || item.conditional()).map(({ id, label, icon: Icon }) => {
+            {group.items.filter(item => !item.conditional || item.conditional()).map(({ id, label, icon: Icon }) => { // eslint-disable-line no-unused-vars
               const active = activeSection === id;
               const isPinned = pinnedIds.includes(id);
               return (

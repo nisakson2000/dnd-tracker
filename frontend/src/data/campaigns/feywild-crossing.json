@@ -1,0 +1,142 @@
+{
+  "name": "The Feywild Crossing",
+  "description": "The farming village of Havenbrook has always been unremarkable — a quiet community of wheat fields, apple orchards, and honest folk who want nothing more than a good harvest and a warm hearth. That changed three days ago when a shimmering rift tore open in Farmer Aldric's north field, and the Feywild came spilling through. Now sunflowers grow to twenty feet tall overnight, the village well produces honey-sweet water that makes people giggle uncontrollably, and a traveling merchant swears his cart was stolen by a fox wearing a waistcoat. The rift is growing, and with it, the Feywild's influence is spreading — rewriting the rules of reality one acre at a time. Some villagers find it delightful. Others are terrified. And the fey creatures emerging from the crossing have agendas of their own. Your party has arrived to investigate the rift, manage the growing chaos, and ultimately decide the fate of the crossing before Havenbrook is swallowed entirely by the Feywild. The 2024 rules provide updated fey creature stat blocks and expanded charm and illusion mechanics that bring this whimsical-yet-dangerous setting to life.",
+  "level": "3-6",
+  "author": "The Codex",
+  "tags": ["feywild", "fey", "puzzles", "whimsy", "nature", "portal", "social", "5e 2024"],
+  "npcs": [
+    {
+      "name": "Elder Maren Ashwood",
+      "role": "Quest Giver",
+      "race": "Human",
+      "npc_class": "Druid (Circle of the Land)",
+      "location": "Havenbrook — The Village Hall",
+      "description": "A sturdy woman in her early 60s with sun-weathered skin, calloused hands, and sharp green eyes that miss nothing. Maren has served as Havenbrook's elder and informal leader for fifteen years, guiding the village through droughts, bandit troubles, and a particularly aggressive owlbear incident. She wears practical homespun clothes and keeps her grey-streaked brown hair in a tight braid. A retired adventurer herself, she carries an old oak staff carved with druidic symbols and knows enough nature magic to recognize that what is happening to her village is deeply unnatural.",
+      "notes": "Maren is pragmatic and protective of her village. She does not want the crossing destroyed if it can be controlled — the magical effects could benefit Havenbrook enormously if managed. However, she will prioritize her people's safety above all else. She has basic druidic knowledge that helps the party understand the Feywild's influence (she can cast Detect Magic and Speak with Plants). She is also the only person in the village who has dealt with fey before, having encountered a satyr during her adventuring days, and knows the cardinal rule: never accept a gift without understanding the price.",
+      "status": "alive"
+    },
+    {
+      "name": "Thistle",
+      "role": "Ally / Trickster",
+      "race": "Fairy",
+      "npc_class": "Bard (College of Glamour)",
+      "location": "Havenbrook — Wherever Trouble Is",
+      "description": "A six-inch-tall fairy with iridescent dragonfly wings, wild violet hair that defies gravity, and an impish grin that is either endearing or infuriating depending on your patience level. Thistle wears an outfit stitched together from flower petals, spider silk, and what appears to be a tiny scarf stolen from a doll. They speak in a high, musical voice at roughly twice the speed of normal conversation and have a habit of finishing other people's sentences — usually incorrectly.",
+      "notes": "Thistle came through the crossing three days ago and has been having the time of their life causing minor chaos in Havenbrook. Despite their mischievous nature, Thistle is genuinely good-hearted and can become the party's most valuable guide to the Feywild — they know fey customs, can translate Sylvan, and understand the politics of the local fey court. Thistle's motivation is simple: they are a minor courtier who fled the Feywild to escape a debt to Lord Oberon, and they would prefer the crossing stays open so they do not have to go back. Earning Thistle's trust requires playing along with their games (3 successful DC 12 Charisma checks in social encounters).",
+      "status": "alive"
+    },
+    {
+      "name": "Lord Oberon of the Amber Court",
+      "role": "Antagonist / Neutral",
+      "race": "Eladrin",
+      "npc_class": "Warlock (Archfey Patron)",
+      "location": "The Feywild — The Amber Pavilion",
+      "description": "A breathtakingly beautiful eladrin lord standing seven feet tall with skin like polished copper, eyes of molten gold, and hair that shifts between autumn red and deep amber with his mood. He wears robes of living leaves that change color with the seasons and a crown of twisted antlers adorned with tiny glowing motes. His voice is warm honey poured over cold iron — pleasant on the surface, unyielding underneath. When he smiles, flowers bloom in a ten-foot radius. When he frowns, the temperature drops noticeably.",
+      "notes": "Lord Oberon is the archfey responsible for the crossing. He opened the rift deliberately as part of a centuries-old wager with a rival fey lord — if he can establish a permanent Feywild foothold in the Material Plane by the next solstice, he wins dominion over the rival's territory. He does not consider the villagers' concerns relevant to his plans, but he is not malicious — he simply views mortals the way mortals view ants. He can be bargained with (he respects cleverness and audacity) but never threatened. A deal with Oberon always has a catch. CR 8, but fighting him in his pavilion is nearly suicidal due to lair actions. The party should be guided toward negotiation, trickery, or finding leverage.",
+      "status": "alive"
+    },
+    {
+      "name": "Brambleheart",
+      "role": "Guardian / Obstacle",
+      "race": "Treant",
+      "npc_class": "Druid",
+      "location": "The Feywild Threshold — The Briar Gate",
+      "description": "An ancient treant of towering oak and twisted briar who has taken root at the threshold of the crossing, serving as its self-appointed guardian. Brambleheart stands eighteen feet tall, with a broad trunk-body covered in thick bark, mossy shoulders, and deep-set eyes that glow with soft green light. Their voice sounds like wind through a forest canopy — slow, resonant, and ancient. Birds nest in their branches, and small woodland creatures scurry about their roots. A crown of flowering briar thorns circles their head.",
+      "notes": "Brambleheart was placed at the crossing by Lord Oberon to guard the threshold, but the treant has developed their own opinions about the situation. Brambleheart has come to enjoy the unique ecosystem forming at the boundary between planes and wants to protect it — they will stop anyone from closing the rift OR from fully merging the planes. This makes them an obstacle to both the party and Oberon. Brambleheart can be reasoned with (they respond to arguments about ecological balance and harmony) or bypassed through the Briar Gate puzzle (rearranging living vines to form a specific druidic symbol, DC 15 Nature or DC 13 with Thistle's help). CR 9, and fighting them damages the crossing unpredictably.",
+      "status": "alive"
+    },
+    {
+      "name": "Farmer Aldric Wynn",
+      "role": "Victim / Comic Relief",
+      "race": "Human",
+      "npc_class": "Commoner",
+      "location": "Havenbrook — Wynn Farm (Ground Zero)",
+      "description": "A lanky, perpetually bewildered farmer in his 40s with straw-colored hair, a sunburned nose, and overalls that are always slightly too short. Aldric is the unlucky soul whose north field became the site of the Feywild crossing. His wheat has been replaced by luminescent mushrooms, his scarecrow came to life and now demands to be called Sir Reginald, his chickens lay eggs that hatch into tiny birds made of crystal, and his prize pig speaks fluent Elvish but refuses to say anything useful. Despite all this, Aldric maintains a stubborn farmer's practicality about the whole situation.",
+      "notes": "Aldric is primarily comic relief but also serves as the ground-zero witness. He was the first to see the rift open and can describe the exact sequence of events: a sound like a harp string breaking, a flash of golden light, and then the field was simply different. He also noticed that the rift appeared at the exact center of an old stone circle on his property — standing stones that he always assumed were just ancient field markers. These stones are actually a dormant fey waypoint that Lord Oberon activated. Aldric's animated scarecrow, Sir Reginald, is actually a fey spirit bound to the scarecrow and knows more about the crossing than it lets on (DC 14 Persuasion or offering it a fancy hat).",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "Something Wrong with the Wheat",
+      "giver": "Elder Maren Ashwood",
+      "description": "Elder Maren has sent word to the nearest adventuring guild requesting aid for an 'unusual agricultural situation' — her gift for understatement is legendary. Upon arrival, the party discovers that Havenbrook's problems go far beyond a bad harvest. The Feywild crossing in Farmer Aldric's north field is spreading its influence roughly one hundred feet per day, transforming the mundane landscape into a patchwork of Material Plane normalcy and Feywild wonder. The party must investigate the crossing, assess the threat level, manage the increasingly bizarre effects on the village, and make contact with whatever is on the other side. Along the way, they will encounter displaced fey creatures, enchanted wildlife, and the irrepressible Thistle.",
+      "status": "active",
+      "notes": "The introductory quest. Key encounters: a pack of blink dogs chasing pixie-enchanted chickens through the village (non-combat, DC 13 Animal Handling), an awakened shrub garden that demands the party solve a riddle before letting them pass (riddle: 'I have cities but no houses, forests but no trees, and water but no fish' — answer: a map), and the first approach to the crossing itself where they meet Thistle. The standing stones on Aldric's property detect as powerfully magical (Conjuration school). Sir Reginald the scarecrow can provide exposition about fey crossings if befriended.",
+      "objectives": [
+        { "text": "Arrive in Havenbrook and meet Elder Maren Ashwood", "completed": false },
+        { "text": "Investigate Farmer Aldric's north field and the Feywild crossing", "completed": false },
+        { "text": "Manage at least one Feywild-related disturbance in the village", "completed": false },
+        { "text": "Make contact with Thistle and learn about the fey presence", "completed": false },
+        { "text": "Examine the standing stones and determine the crossing's origin", "completed": false }
+      ]
+    },
+    {
+      "title": "Through the Briar Gate",
+      "giver": "Thistle",
+      "description": "To understand the crossing and find a way to control it, the party must pass through to the Feywild side. But the threshold is guarded by Brambleheart, a treant of immense power who will not allow passage without good reason — or clever trickery. Beyond the Briar Gate lies the Feywild version of Havenbrook's countryside: a landscape of impossible beauty where the sky is perpetually sunset amber, streams flow uphill, and distance is a suggestion rather than a rule. The party must navigate fey etiquette, survive enchanted terrain, and reach the Amber Pavilion where Lord Oberon holds court. Thistle can guide the way but is terrified of being discovered by Oberon's courtiers, to whom they owe a significant debt.",
+      "status": "active",
+      "notes": "A puzzle-and-social quest in the Feywild. Key encounters: the Briar Gate puzzle (rearranging living vines, DC 15 Nature), the Whimsy Wood (enchanted forest where the path changes based on the party's emotional state — Wisdom saves DC 13 or become lost for 1d4 hours), the Gossamer Bridge (a bridge of spider silk over a bottomless chasm that only supports those who are 'true of heart' — actually it supports anyone who walks across confidently without looking down, DC 12 Insight to figure out), and arrival at the Amber Pavilion. Fey etiquette is critical: never say 'thank you' (it implies debt), never give your full true name, never eat food offered by a fey you do not trust. Breaking these rules creates complications, not TPKs.",
+      "objectives": [
+        { "text": "Convince or bypass Brambleheart at the Briar Gate", "completed": false },
+        { "text": "Navigate the Feywild landscape with Thistle's guidance", "completed": false },
+        { "text": "Cross the Gossamer Bridge without falling", "completed": false },
+        { "text": "Reach Lord Oberon's Amber Pavilion", "completed": false },
+        { "text": "Learn the true purpose of the Feywild crossing", "completed": false }
+      ]
+    },
+    {
+      "title": "The Bargain at Amber Court",
+      "giver": "Lord Oberon of the Amber Court",
+      "description": "Lord Oberon reveals the truth: the crossing is part of a wager with his rival, Lady Seraphine of the Frost Court. If Oberon establishes a permanent foothold in the Material Plane by the summer solstice — now just five days away — he wins dominion over Seraphine's winter territory. He does not care about Havenbrook one way or another, but he will not close the crossing willingly. However, Oberon is bound by fey law: if someone can offer him a deal of equal or greater value, he must consider it. The party must find leverage — whether by discovering what Oberon truly desires, enlisting Lady Seraphine's aid, finding a loophole in the wager's terms, or offering something the archfey lord cannot refuse. The fate of Havenbrook rests not on swords but on wits, words, and the courage to bargain with a being who has been making deals since before human civilization existed.",
+      "status": "active",
+      "notes": "The climactic quest is primarily social and puzzle-based with potential combat. Paths to resolution: (1) Find Oberon's true desire — he wants a mortal musician to perform at his court for a year and a day; if a party bard or musician volunteers for a modified term, he will negotiate. (2) Contact Lady Seraphine through a frost mirror in the Amber Pavilion's garden (DC 16 Investigation to find, DC 14 Persuasion to convince her to void the wager). (3) Find the loophole — the wager says 'permanent foothold,' but if the party convinces Brambleheart to make the crossing seasonal (opening only during solstices), it is technically not permanent and the wager fails on its own terms. (4) Combat path — disrupting the standing stones on the Material Plane side (DC 18 Arcana or dealing 50 radiant damage to the central stone) forcibly closes the rift, but this angers Oberon who sends fey knights (2x CR 4 eladrin warriors) and animated trees (2x CR 2) to stop them. Each path has consequences for Havenbrook's future.",
+      "objectives": [
+        { "text": "Audience with Lord Oberon at the Amber Court", "completed": false },
+        { "text": "Discover what Lord Oberon truly values or find a weakness in the wager", "completed": false },
+        { "text": "Choose a path: negotiate, find a loophole, enlist Lady Seraphine, or force the crossing closed", "completed": false },
+        { "text": "Execute the plan and resolve the fate of the crossing", "completed": false },
+        { "text": "Return to Havenbrook and report to Elder Maren", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "Havenbrook",
+      "category": "Location",
+      "body": "Havenbrook is a farming village of roughly 200 souls nestled in a gentle valley fed by Briar Creek. The village is known for its golden wheat, sweet apples, and the annual Harvest Moon Festival that draws visitors from neighboring towns. Life in Havenbrook has always been simple and predictable — which is precisely why the Feywild crossing has thrown the community into such upheaval. The village consists of a central green with a well, a village hall, a small temple to Chauntea (goddess of agriculture), a general store, a tavern called the Bushel and Barrel, and approximately forty farmsteads spread across the surrounding fields. The stone circle on Aldric's north field has been a feature of the landscape for as long as anyone can remember, generally regarded as ancient field markers or a curiosity left by a long-forgotten civilization.",
+      "related_to": "Elder Maren Ashwood"
+    },
+    {
+      "title": "The Amber Court",
+      "category": "Faction",
+      "body": "The Amber Court is one of several fey courts that hold dominion over regions of the Feywild. Ruled by Lord Oberon, the Amber Court embodies the eternal autumn — a season of harvest, change, beauty in decay, and the bittersweet passage of time. The court's territory is a vast landscape of amber-toned forests, golden meadows, and rivers that run with honey-colored water. Its courtiers are eladrin, satyrs, dryads, pixies, and other fey who align with autumn's themes. The Amber Court is considered moderate among fey courts — less cruel than the Winter Court, less chaotic than the Summer Court, but no less dangerous for those who mistake its beauty for kindness. The court's primary values are artistry, cleverness, and the keeping of bargains — a deal made with the Amber Court is inviolable by fey law.",
+      "related_to": "Lord Oberon of the Amber Court"
+    },
+    {
+      "title": "Fey Crossings",
+      "category": "Lore",
+      "body": "Fey crossings are points where the boundary between the Material Plane and the Feywild grows thin enough for passage — or for the Feywild's wild magic to bleed through. Natural crossings occur at sites of ancient magical significance: stone circles, fairy rings of mushrooms, clearings where lightning struck thrice, or groves where the oldest trees have grown into archways. These natural crossings are typically temporary, opening during solstices, equinoxes, or under specific lunar conditions. Artificial crossings, like the one at Havenbrook, are created by powerful fey using dormant waypoints — ancient anchors placed in the Material Plane during an age when the two planes were closer together. Activating a waypoint requires immense magical power and usually serves a specific fey purpose. The influence of a crossing warps reality in a radius around it: plants grow in impossible ways, animals gain intelligence or magical properties, time flows strangely, and the emotional states of nearby mortals can manifest as physical phenomena.",
+      "related_to": "The Feywild Crossing"
+    },
+    {
+      "title": "The Wager of Courts",
+      "category": "History",
+      "body": "The wager between Lord Oberon and Lady Seraphine of the Frost Court dates back three centuries, born from a dispute over territorial boundaries in the Feywild. Rather than go to war — which is considered gauche among the higher fey — they agreed to a contest: each would attempt to establish a permanent foothold in the Material Plane. Whoever succeeded first would claim the other's border territories. Lady Seraphine has attempted twice before, both times thwarted by mortal adventurers (a fact that delights Oberon). This is Oberon's first serious attempt, and he has spent decades identifying and preparing the Havenbrook waypoint. The wager has specific terms recorded in a contract of living vines held by a neutral third party — the Archfey known as the Chronicler. The exact wording of the contract is the key to finding a loophole, as fey contracts are notoriously literal.",
+      "related_to": "Lord Oberon of the Amber Court"
+    },
+    {
+      "title": "The Standing Stones of Wynn Field",
+      "category": "Artifact",
+      "body": "The seven standing stones in Farmer Aldric's north field are not field markers or ancient curiosities — they are a fey waypoint, one of dozens scattered across the Material Plane during the Age of Confluence when the Feywild and the Material Plane were separated into distinct realms. Each stone is carved from a different type of rock not native to the Havenbrook region: rose quartz, obsidian, white marble, green serpentine, blue slate, amber sandstone, and grey granite. When activated, the stones resonate at a frequency that thins the planar boundary within their circle, creating a stable crossing point. The stones can be deactivated by disrupting their harmonic pattern — either through precise arcane intervention (rearranging the resonance frequencies) or brute force (destroying the central amber sandstone, which serves as the keystone). However, destroying the keystone releases a burst of wild magic that affects everything within a half-mile radius.",
+      "related_to": "Farmer Aldric Wynn"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: The Feywild Crossing",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe road to Havenbrook is supposed to be boring. Every traveler you have spoken with described it the same way: flat, straight, dusty, and lined with wheat fields as far as the eye can see. So when the wheat on the left side of the road turns luminescent purple and a rabbit with antlers bounds across your path, you know something has gone sideways.\n\nThe village itself is in a state of cheerful panic. A group of children are chasing — or being chased by — a swarm of butterflies that leave trails of glitter in the air. A woman stands outside her cottage shouting at a rosebush that appears to be growing through her front door in real time. Two old men sit on a bench outside the Bushel and Barrel tavern, watching a field of sunflowers slowly rotate to face a sun that is not in the sky.\n\n*\"Oh good, you must be the adventurers,\"* says a weathered woman striding toward you with purpose. **Elder Maren Ashwood** looks like she has not slept in three days but has compensated with sheer stubbornness. *\"Welcome to Havenbrook. As you can see, we have a bit of a situation.\"*\n\nShe gestures north, where the sky above Farmer Aldric's field shimmers with an amber light that does not belong to this world. Even from here, you can feel it — a tingling warmth on your skin, a faint melody just below the threshold of hearing, and the unmistakable sensation that the world is slightly thinner here than it ought to be.\n\n### Key Details\n- **Setting**: Havenbrook, a farming village affected by a Feywild crossing\n- **Level Range**: 3-6 (2024 Rules)\n- **Tone**: Whimsy and wonder balanced with genuine danger\n- **Theme**: Not all magic is malicious, but all magic has a cost\n- **Starting Hook**: Elder Maren's briefing at the Village Hall, followed by a visit to Aldric's field",
+    "tags": "introduction,session-zero,feywild,fey,whimsy",
+    "npcs_mentioned": "Elder Maren Ashwood,Thistle,Lord Oberon of the Amber Court,Brambleheart,Farmer Aldric Wynn"
+  }
+}

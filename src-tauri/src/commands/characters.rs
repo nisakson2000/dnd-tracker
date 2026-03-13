@@ -4,6 +4,24 @@ use uuid::Uuid;
 
 use crate::db::{self, AppState};
 
+/// Create indexes for frequently queried columns. Idempotent (IF NOT EXISTS).
+fn ensure_indexes(conn: &rusqlite::Connection) {
+    let indexes = [
+        "CREATE INDEX IF NOT EXISTS idx_quest_objectives_quest_id ON quest_objectives(quest_id)",
+        "CREATE INDEX IF NOT EXISTS idx_spells_level ON spells(level)",
+        "CREATE INDEX IF NOT EXISTS idx_journal_entries_created_at ON journal_entries(created_at)",
+        "CREATE INDEX IF NOT EXISTS idx_lore_notes_updated_at ON lore_notes(updated_at)",
+        "CREATE INDEX IF NOT EXISTS idx_lore_notes_category ON lore_notes(category)",
+        "CREATE INDEX IF NOT EXISTS idx_npcs_name ON npcs(name)",
+        "CREATE INDEX IF NOT EXISTS idx_quests_status ON quests(status)",
+        "CREATE INDEX IF NOT EXISTS idx_features_feature_type ON features(feature_type)",
+        "CREATE INDEX IF NOT EXISTS idx_items_item_type ON items(item_type)",
+    ];
+    for sql in &indexes {
+        let _ = conn.execute(sql, []);
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct CharacterSummary {
     pub id: String,
@@ -38,6 +56,7 @@ pub fn list_characters(state: State<'_, AppState>) -> Result<Vec<CharacterSummar
         state.get_char_conn(&char_id)?;
         let summary = state.with_char_conn(&char_id, |conn| {
             db::migrate_character_db(conn).map_err(|e| e.to_string())?;
+            ensure_indexes(conn);
             let mut stmt = conn
                 .prepare("SELECT name, race, primary_class, level, campaign_name, ruleset, updated_at, max_hp, current_hp, armor_class FROM character_overview LIMIT 1")
                 .map_err(|e| e.to_string())?;
@@ -99,6 +118,7 @@ pub fn create_character(
     let db_path = state.char_db_path(&char_id);
     let conn = db::open_connection(&db_path).map_err(|e| e.to_string())?;
     db::init_character_tables(&conn).map_err(|e| e.to_string())?;
+    db::migrate_character_db(&conn).map_err(|e| e.to_string())?;
 
     // Insert overview with race, class, subclass
     let now = chrono::Utc::now().to_rfc3339();
@@ -110,6 +130,9 @@ pub fn create_character(
 
     // Init defaults
     db::init_defaults(&conn).map_err(|e| e.to_string())?;
+
+    // Create performance indexes
+    ensure_indexes(&conn);
 
     // Store connection in cache
     {

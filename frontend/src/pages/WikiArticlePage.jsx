@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { ArrowLeft, BookOpen, ExternalLink, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -195,7 +196,7 @@ export default function WikiArticlePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
     getArticle(slug)
       .then(setArticle)
       .catch(err => {

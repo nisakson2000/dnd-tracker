@@ -1,4 +1,5 @@
 import { useState } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, AlertCircle, WifiOff, Clock, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { CHANGELOG } from '../data/changelog';
@@ -6,7 +7,7 @@ import { useUpdateCheck } from '../hooks/useUpdateCheck';
 import { invoke } from '@tauri-apps/api/core';
 
 export default function Updates() {
-  const { updateAvailable, latestVersion, checking, lastChecked, checkResult, currentVersion } = useUpdateCheck();
+  const { updateAvailable, latestVersion, lastChecked, checkResult, currentVersion } = useUpdateCheck();
   // Always start expanded since we only show the current version
   const [expandedVersion, setExpandedVersion] = useState(currentVersion || CHANGELOG[0]?.version || null);
 

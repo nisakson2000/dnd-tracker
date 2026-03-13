@@ -1,9 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Map, CheckSquare, Square, XCircle, Star, Coins, Package, User, MapPin } from 'lucide-react';
+import { Plus, Trash2, Edit2, Map, CheckSquare, Square, XCircle, Star, Coins, Package, User, MapPin, Clock, ChevronDown, ChevronRight, Flag, Scroll, MessageSquarePlus, Crosshair, Compass, EyeOff, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { getQuests, addQuest, updateQuest, deleteQuest } from '../api/quests';
+import { getNPCs } from '../api/npcs';
+import { getOverview, updateOverview } from '../api/overview';
 import ConfirmDialog from '../components/ConfirmDialog';
+import ModalPortal from '../components/ModalPortal';
 
 const DIFFICULTIES = ['trivial', 'easy', 'medium', 'hard', 'deadly'];
 const DIFFICULTY_COLORS = {
@@ -22,33 +25,149 @@ const PRIORITY_STYLES = {
   Critical: { dot: 'bg-red-500 animate-pulse', badge: 'bg-red-800/30 text-red-300 border-red-500/30' },
 };
 
+const QUEST_TYPES = ['Main Story', 'Side Quest', 'Personal', 'Bounty'];
+const QUEST_TYPE_STYLES = {
+  'Main Story': { bg: 'bg-amber-800/30', text: 'text-amber-300', border: 'border-amber-500/30', icon: Star, borderColor: 'border-l-amber-500' },
+  'Side Quest': { bg: 'bg-blue-800/30', text: 'text-blue-300', border: 'border-blue-500/30', icon: Compass, borderColor: 'border-l-blue-500' },
+  'Personal': { bg: 'bg-purple-800/30', text: 'text-purple-300', border: 'border-purple-500/30', icon: User, borderColor: 'border-l-purple-500' },
+  'Bounty': { bg: 'bg-red-800/30', text: 'text-red-300', border: 'border-red-500/30', icon: Crosshair, borderColor: 'border-l-red-500' },
+};
+
+const TIMELINE_STAGES = ['received', 'in_progress', 'completed', 'failed'];
+const TIMELINE_LABELS = { received: 'Received', in_progress: 'In Progress', completed: 'Completed', failed: 'Failed' };
+
+// Pack extra fields into the notes JSON blob so they persist
+function packQuestNotes(data) {
+  const { notes_text, quest_giver, location, priority, difficulty, xp_reward, gold_reward, item_rewards, rewards_received, quest_type, timeline, session_notes, sub_objectives, secret_objectives, session_counter } = data;
+  return JSON.stringify({
+    _v: 3,
+    notes_text: notes_text || '',
+    quest_giver: quest_giver || '',
+    location: location || '',
+    priority: priority || '',
+    difficulty: difficulty || '',
+    xp_reward: xp_reward || '',
+    gold_reward: gold_reward || '',
+    item_rewards: item_rewards || '',
+    rewards_received: rewards_received || false,
+    quest_type: quest_type || '',
+    timeline: timeline || [],
+    session_notes: session_notes || [],
+    sub_objectives: sub_objectives || {},
+    secret_objectives: secret_objectives || [],
+    session_counter: session_counter || 0,
+  });
+}
+
+function unpackQuestNotes(notesStr) {
+  const defaults = { notes_text: '', quest_giver: '', location: '', priority: '', difficulty: '', xp_reward: '', gold_reward: '', item_rewards: '', rewards_received: false, quest_type: '', timeline: [], session_notes: [], sub_objectives: {}, secret_objectives: [], session_counter: 0 };
+  if (!notesStr) return defaults;
+  try {
+    const parsed = JSON.parse(notesStr);
+    if (parsed._v) return { ...defaults, ...parsed };
+  } catch { /* not JSON — legacy plain text */ }
+  return { ...defaults, notes_text: notesStr };
+}
+
+function enrichQuest(q) {
+  const extra = unpackQuestNotes(q.notes);
+  return {
+    ...q,
+    notes_text: extra.notes_text || '',
+    quest_giver: extra.quest_giver || q.giver || '',
+    location: extra.location || '',
+    priority: extra.priority || '',
+    difficulty: extra.difficulty || '',
+    xp_reward: extra.xp_reward || '',
+    gold_reward: extra.gold_reward || '',
+    item_rewards: extra.item_rewards || '',
+    rewards_received: extra.rewards_received || false,
+    quest_type: extra.quest_type || '',
+    timeline: extra.timeline || [],
+    session_notes: extra.session_notes || [],
+    sub_objectives: extra.sub_objectives || {},
+    secret_objectives: extra.secret_objectives || [],
+    session_counter: extra.session_counter || 0,
+  };
+}
+
+function prepareQuestPayload(form) {
+  const notes = packQuestNotes(form);
+  return {
+    title: form.title,
+    giver: form.quest_giver || '',
+    description: form.description || '',
+    status: form.status || 'active',
+    notes,
+    objectives: form.objectives || [],
+  };
+}
+
 export default function Quests({ characterId }) {
   const [quests, setQuests] = useState([]);
+  const [npcs, setNpcs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [sortBy, setSortBy] = useState('status');
+  // viewMode reserved for future cards/timeline toggle
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [sessionNoteQuest, setSessionNoteQuest] = useState(null);
+  const [expandedQuests, setExpandedQuests] = useState(new Set());
 
   const load = async () => {
-    try { setQuests(await getQuests(characterId)); }
+    try { setQuests((await getQuests(characterId)).map(enrichQuest)); }
     catch (err) { toast.error(err.message); }
     finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, [characterId]);
+  const loadNPCs = async () => {
+    try { setNpcs(await getNPCs(characterId)); }
+    catch { /* silently ignore */ }
+  };
 
-  const handleSave = async (data) => {
+  useEffect(() => { load(); loadNPCs(); }, [characterId]);
+
+  const getRelatedNPCs = (quest) => {
+    if (npcs.length === 0) return [];
+    const matched = new Set();
+    const giver = (quest.quest_giver || quest.giver || '').toLowerCase();
+    const desc = (quest.description || '').toLowerCase();
+    return npcs.filter(npc => {
+      if (!npc.name) return false;
+      const name = npc.name.toLowerCase();
+      if (giver.includes(name) || desc.includes(name)) {
+        if (matched.has(npc.id)) return false;
+        matched.add(npc.id);
+        return true;
+      }
+      return false;
+    });
+  };
+
+  const handleSave = async (formData) => {
     try {
+      const payload = prepareQuestPayload(formData);
       if (editing) {
-        await updateQuest(characterId, editing.id, data);
-        if (data.status === 'completed' && editing.status !== 'completed') {
+        await updateQuest(characterId, editing.id, payload);
+        if (formData.status === 'completed' && editing.status !== 'completed') {
           toast.success('Quest completed!');
+          // Auto-award XP if quest has an XP reward
+          const xpReward = Number(formData.xp_reward) || 0;
+          if (xpReward > 0) {
+            try {
+              const overview = await getOverview(characterId);
+              const newXP = (overview.experience_points || 0) + xpReward;
+              await updateOverview(characterId, { ...overview, experience_points: newXP });
+              toast.success(`+${xpReward.toLocaleString()} XP awarded!`, { icon: '⭐' });
+            } catch { /* XP award is best-effort */ }
+          }
         } else {
           toast.success('Quest updated');
         }
       } else {
-        await addQuest(characterId, data);
+        await addQuest(characterId, payload);
         toast.success('Quest added');
       }
       setShowForm(false);
@@ -74,35 +193,161 @@ export default function Quests({ characterId }) {
       ),
     };
     try {
-      await updateQuest(characterId, quest.id, updated);
+      await updateQuest(characterId, quest.id, prepareQuestPayload(updated));
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
+  const toggleSubObjective = async (quest, objIndex, subIndex) => {
+    const subObjs = { ...(quest.sub_objectives || {}) };
+    const key = `${objIndex}`;
+    const subs = [...(subObjs[key] || [])];
+    subs[subIndex] = { ...subs[subIndex], completed: !subs[subIndex].completed };
+    subObjs[key] = subs;
+    const updated = { ...quest, sub_objectives: subObjs };
+    try {
+      await updateQuest(characterId, quest.id, prepareQuestPayload(updated));
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
+  const cyclePriority = async (quest) => {
+    const allPriorities = ['', ...PRIORITIES];
+    const currentIdx = allPriorities.indexOf(quest.priority || '');
+    const nextIdx = (currentIdx + 1) % allPriorities.length;
+    const updated = { ...quest, priority: allPriorities[nextIdx] };
+    try {
+      await updateQuest(characterId, quest.id, prepareQuestPayload(updated));
+      toast.success(allPriorities[nextIdx] ? `Priority: ${allPriorities[nextIdx]}` : 'Priority cleared');
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
+  const cycleQuestType = async (quest) => {
+    const allTypes = ['', ...QUEST_TYPES];
+    const currentIdx = allTypes.indexOf(quest.quest_type || '');
+    const nextIdx = (currentIdx + 1) % allTypes.length;
+    const updated = { ...quest, quest_type: allTypes[nextIdx] };
+    try {
+      await updateQuest(characterId, quest.id, prepareQuestPayload(updated));
+      toast.success(allTypes[nextIdx] ? `Type: ${allTypes[nextIdx]}` : 'Type cleared');
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
+  const addSessionNote = async (quest, noteText) => {
+    const sessionNotes = [...(quest.session_notes || [])];
+    const sessionNum = (quest.session_counter || 0) + 1;
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    sessionNotes.push({ text: noteText, date: new Date().toISOString().split('T')[0], timestamp: new Date().toISOString(), session: sessionNum, label: `Session ${sessionNum} - ${dateStr}` });
+    const updated = { ...quest, session_notes: sessionNotes, session_counter: sessionNum };
+    try {
+      await updateQuest(characterId, quest.id, prepareQuestPayload(updated));
+      toast.success('Session note added');
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
+  const toggleSecretObjective = async (quest, secretIdx) => {
+    const secrets = [...(quest.secret_objectives || [])];
+    secrets[secretIdx] = { ...secrets[secretIdx], revealed: !secrets[secretIdx].revealed };
+    const updated = { ...quest, secret_objectives: secrets };
+    try {
+      await updateQuest(characterId, quest.id, prepareQuestPayload(updated));
+      toast.success(secrets[secretIdx].revealed ? 'Objective revealed!' : 'Objective hidden');
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
+  const toggleSecretObjectiveComplete = async (quest, secretIdx) => {
+    const secrets = [...(quest.secret_objectives || [])];
+    secrets[secretIdx] = { ...secrets[secretIdx], completed: !secrets[secretIdx].completed };
+    const updated = { ...quest, secret_objectives: secrets };
+    try {
+      await updateQuest(characterId, quest.id, prepareQuestPayload(updated));
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
+  const markRewardsReceived = async (quest) => {
+    const updated = { ...quest, rewards_received: !quest.rewards_received };
+    try {
+      await updateQuest(characterId, quest.id, prepareQuestPayload(updated));
+      toast.success(updated.rewards_received ? 'Rewards marked as received' : 'Rewards unmarked');
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
+  const changeStatus = async (quest, newStatus) => {
+    // Add timeline event
+    const timeline = [...(quest.timeline || [])];
+    const stage = newStatus === 'active' ? 'in_progress' : newStatus;
+    if (!timeline.find(t => t.stage === stage)) {
+      timeline.push({ stage, date: new Date().toISOString().split('T')[0] });
+    }
+    const updated = { ...quest, status: newStatus, timeline };
+    try {
+      await updateQuest(characterId, quest.id, prepareQuestPayload(updated));
+      if (newStatus === 'completed') {
+        toast.success(`Quest "${quest.title}" completed!`);
+        // Auto-award XP if quest has an XP reward
+        const xpReward = Number(quest.xp_reward) || 0;
+        if (xpReward > 0) {
+          try {
+            const overview = await getOverview(characterId);
+            const newXP = (overview.experience_points || 0) + xpReward;
+            await updateOverview(characterId, { ...overview, experience_points: newXP });
+            toast.success(`+${xpReward.toLocaleString()} XP awarded!`, { icon: '⭐' });
+          } catch { /* XP award is best-effort */ }
+        }
+      }
+      else if (newStatus === 'failed') toast(`Quest "${quest.title}" failed`);
+      else toast.success(`Quest "${quest.title}" reactivated`);
       load();
     } catch (err) { toast.error(err.message); }
   };
 
   const getProgress = (q) => {
-    if (!q.objectives || q.objectives.length === 0) return 0;
-    return (q.objectives.filter(o => o.completed).length / q.objectives.length) * 100;
+    const objs = q.objectives || [];
+    const secrets = (q.secret_objectives || []).filter(s => s.revealed);
+    if (objs.length === 0 && secrets.length === 0) return 0;
+    let total = 0, done = 0;
+    objs.forEach((o, i) => {
+      total++;
+      if (o.completed) done++;
+      const subs = (q.sub_objectives || {})[`${i}`] || [];
+      subs.forEach(s => { total++; if (s.completed) done++; });
+    });
+    secrets.forEach(s => { total++; if (s.completed) done++; });
+    return total > 0 ? (done / total) * 100 : 0;
   };
 
-  const sortedQuests = useMemo(() => [...quests].sort((a, b) => {
-    if (sortBy === 'name') return (a.title || '').localeCompare(b.title || '');
-    if (sortBy === 'status') {
-      const order = { active: 0, completed: 1, failed: 2 };
-      return (order[a.status] ?? 9) - (order[b.status] ?? 9);
-    }
-    if (sortBy === 'progress') return getProgress(b) - getProgress(a);
-    if (sortBy === 'priority') {
-      const order = { Critical: 0, High: 1, Medium: 2, Low: 3 };
-      return (order[a.priority] ?? 9) - (order[b.priority] ?? 9);
-    }
-    return 0;
-  }), [quests, sortBy]);
+  const sortedQuests = useMemo(() => {
+    let list = [...quests];
+    if (typeFilter !== 'all') list = list.filter(q => q.quest_type === typeFilter);
+    return list.sort((a, b) => {
+      if (sortBy === 'name') return (a.title || '').localeCompare(b.title || '');
+      if (sortBy === 'status') {
+        const order = { active: 0, completed: 1, failed: 2 };
+        return (order[a.status] ?? 9) - (order[b.status] ?? 9);
+      }
+      if (sortBy === 'progress') return getProgress(b) - getProgress(a);
+      if (sortBy === 'priority') {
+        const order = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+        return (order[a.priority] ?? 9) - (order[b.priority] ?? 9);
+      }
+      if (sortBy === 'type') {
+        const order = { 'Main Story': 0, 'Side Quest': 1, 'Personal': 2, 'Bounty': 3 };
+        return (order[a.quest_type] ?? 9) - (order[b.quest_type] ?? 9);
+      }
+      return 0;
+    });
+  }, [quests, sortBy, typeFilter]);
 
   const active = useMemo(() => sortedQuests.filter(q => q.status === 'active'), [sortedQuests]);
   const completed = useMemo(() => sortedQuests.filter(q => q.status === 'completed'), [sortedQuests]);
   const failed = useMemo(() => sortedQuests.filter(q => q.status === 'failed'), [sortedQuests]);
 
-  // Reward summary for active quests
   const rewardSummary = useMemo(() => {
     const activeQuests = quests.filter(q => q.status === 'active');
     const totalXP = activeQuests.reduce((sum, q) => sum + (Number(q.xp_reward) || 0), 0);
@@ -110,44 +355,121 @@ export default function Quests({ characterId }) {
     return { totalXP, totalGold };
   }, [quests]);
 
-  if (loading) return <div className="text-amber-200/40">Loading quests...</div>;
+  const toggleExpand = (id) => {
+    setExpandedQuests(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  if (loading) return (
+    <div className="space-y-4">
+      <div className="skeleton-pulse" style={{ height: 32, width: '50%' }} />
+      <div className="skeleton-pulse" style={{ height: 100 }} />
+      <div className="skeleton-pulse" style={{ height: 100 }} />
+    </div>
+  );
+
+  const QuestTimeline = ({ quest }) => {
+    const timeline = quest.timeline || [];
+    const stages = ['received', 'in_progress', quest.status === 'failed' ? 'failed' : 'completed'];
+    return (
+      <div className="flex items-center gap-1 mt-2">
+        {stages.map((stage, i) => {
+          const event = timeline.find(t => t.stage === stage);
+          const isActive = event != null;
+          const isCurrent = (stage === 'in_progress' && quest.status === 'active') || stage === quest.status;
+          return (
+            <div key={stage} className="flex items-center gap-1 flex-1">
+              <div className="flex flex-col items-center flex-1">
+                <div className={`w-3 h-3 rounded-full border-2 ${isActive ? (stage === 'failed' ? 'bg-red-500 border-red-400' : stage === 'completed' ? 'bg-emerald-500 border-emerald-400' : 'bg-amber-500 border-amber-400') : isCurrent ? 'border-amber-400 bg-amber-400/30' : 'border-amber-200/20 bg-transparent'}`} />
+                <span className={`text-[9px] mt-0.5 ${isActive ? 'text-amber-200/60' : 'text-amber-200/20'}`}>{TIMELINE_LABELS[stage]}</span>
+                {event?.date && <span className="text-[8px] text-amber-200/30">{event.date}</span>}
+              </div>
+              {i < stages.length - 1 && <div className={`h-0.5 flex-1 -mt-3 ${isActive ? 'bg-amber-500/40' : 'bg-amber-200/10'}`} />}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   const QuestCard = ({ quest }) => {
     const priorityStyle = PRIORITY_STYLES[quest.priority] || null;
+    const typeStyle = QUEST_TYPE_STYLES[quest.quest_type] || null;
+    const isExpanded = expandedQuests.has(quest.id);
+    const progressPct = getProgress(quest);
+    const hasRewards = Number(quest.xp_reward) > 0 || Number(quest.gold_reward) > 0 || quest.item_rewards;
+
     return (
-      <div className={`card ${quest.status === 'failed' ? 'border-l-3 border-l-red-500' : ''}`}>
+      <div className={`card ${quest.status === 'failed' ? 'border-l-3 border-l-red-500' : ''} ${typeStyle ? `border-l-3 ${typeStyle.borderColor}` : ''}`}>
         <div className="flex items-start justify-between mb-2">
-          <div>
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               {quest.status === 'failed' && <XCircle size={16} className="text-red-400 flex-shrink-0" />}
               {priorityStyle && (
                 <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${priorityStyle.dot}`} title={`${quest.priority} priority`} />
               )}
               <h4 className={`text-amber-100 font-display ${quest.status === 'failed' ? 'line-through text-amber-100/50' : ''}`}>{quest.title || 'Untitled Quest'}</h4>
+              <button onClick={() => toggleExpand(quest.id)} className="text-amber-200/30 hover:text-amber-200/60 ml-auto flex-shrink-0">
+                {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              </button>
             </div>
-            {quest.quest_giver && (
-              <p className="text-xs text-amber-200/40 flex items-center gap-1 mt-0.5">
-                <User size={11} className="flex-shrink-0" /> {quest.quest_giver}
-              </p>
-            )}
-            {/* Legacy field support */}
-            {!quest.quest_giver && quest.giver && <p className="text-xs text-amber-200/40">Given by: {quest.giver}</p>}
-            {quest.location && (
-              <p className="text-xs text-amber-200/40 flex items-center gap-1 mt-0.5">
-                <MapPin size={11} className="flex-shrink-0" /> {quest.location}
-              </p>
-            )}
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+              {quest.quest_giver && (
+                <p className="text-xs text-amber-200/40 flex items-center gap-1">
+                  <User size={11} className="flex-shrink-0" /> {quest.quest_giver}
+                </p>
+              )}
+              {quest.location && (
+                <p className="text-xs text-amber-200/40 flex items-center gap-1">
+                  <MapPin size={11} className="flex-shrink-0" /> {quest.location}
+                </p>
+              )}
+            </div>
           </div>
-          <div className="flex gap-1">
-            <button onClick={() => { setEditing(quest); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200" aria-label={`Edit ${quest.title || 'quest'}`}><Edit2 size={14} /></button>
-            <button onClick={() => setConfirmDelete(quest)} className="text-red-400/50 hover:text-red-400" aria-label={`Delete ${quest.title || 'quest'}`}><Trash2 size={14} /></button>
+          <div className="flex gap-1 flex-shrink-0 ml-2">
+            {quest.status === 'active' && (
+              <>
+                <button onClick={() => changeStatus(quest, 'completed')} className="text-emerald-400/50 hover:text-emerald-400" title="Mark as completed"><CheckSquare size={14} /></button>
+                <button onClick={() => changeStatus(quest, 'failed')} className="text-red-400/30 hover:text-red-400" title="Mark as failed"><XCircle size={14} /></button>
+              </>
+            )}
+            {quest.status !== 'active' && (
+              <button onClick={() => changeStatus(quest, 'active')} className="text-amber-200/40 hover:text-amber-200" title="Reactivate quest"><Map size={14} /></button>
+            )}
+            <button onClick={() => setSessionNoteQuest(quest)} className="text-amber-200/40 hover:text-amber-200" title="Add session note"><MessageSquarePlus size={14} /></button>
+            <button onClick={() => { setEditing(quest); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>
+            <button onClick={() => setConfirmDelete(quest)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>
           </div>
         </div>
+
         {quest.description && <p className="text-sm text-amber-200/50 mb-2">{quest.description}</p>}
 
-        {/* Rewards */}
-        {(quest.xp_reward || quest.gold_reward || quest.item_rewards) && (
-          <div className="flex items-center gap-3 mb-2 flex-wrap">
+        {/* Quest type & priority badges */}
+        <div className="flex items-center gap-2 flex-wrap mb-2">
+          <span className={`text-xs px-2 py-0.5 rounded ${
+            quest.status === 'active' ? 'bg-emerald-800/30 text-emerald-300' :
+            quest.status === 'completed' ? 'bg-blue-800/30 text-blue-300' :
+            'bg-red-800/30 text-red-300'
+          }`}>{quest.status}</span>
+          <button onClick={() => cycleQuestType(quest)} className={`text-xs px-2 py-0.5 rounded border cursor-pointer transition-colors flex items-center gap-1 ${typeStyle ? `${typeStyle.bg} ${typeStyle.text} ${typeStyle.border}` : 'bg-amber-200/5 text-amber-200/30 border-amber-200/10 hover:text-amber-200/50'}`} title="Click to cycle quest type">
+            {typeStyle ? (() => { const TypeIcon = typeStyle.icon; return <TypeIcon size={11} />; })() : null}
+            {quest.quest_type || 'No Type'}
+          </button>
+          {quest.difficulty && DIFFICULTY_COLORS[quest.difficulty] && (
+            <span className={`text-xs px-2 py-0.5 rounded capitalize ${DIFFICULTY_COLORS[quest.difficulty]}`}>{quest.difficulty}</span>
+          )}
+          <button onClick={() => cyclePriority(quest)} className={`text-xs px-2 py-0.5 rounded border cursor-pointer transition-colors ${priorityStyle ? priorityStyle.badge : 'bg-amber-200/5 text-amber-200/30 border-amber-200/10 hover:text-amber-200/50'}`} title="Click to cycle priority">
+            {quest.priority || 'No Priority'}
+          </button>
+        </div>
+
+        {/* Rewards with received toggle */}
+        {hasRewards && (
+          <div className={`flex items-center gap-3 mb-2 flex-wrap ${quest.rewards_received ? 'opacity-50' : ''}`}>
             {Number(quest.xp_reward) > 0 && (
               <span className="text-xs text-amber-200/50 flex items-center gap-1">
                 <Star size={12} className="text-yellow-400" /> {quest.xp_reward} XP
@@ -163,52 +485,183 @@ export default function Quests({ characterId }) {
                 <Package size={12} className="text-blue-400" /> {quest.item_rewards}
               </span>
             )}
+            {quest.status === 'completed' && (
+              <button onClick={() => markRewardsReceived(quest)}
+                className={`text-[10px] px-1.5 py-0.5 rounded border ${quest.rewards_received ? 'bg-emerald-800/30 text-emerald-300 border-emerald-500/30' : 'border-amber-200/20 text-amber-200/40 hover:text-amber-200/60'}`}>
+                {quest.rewards_received ? 'Received' : 'Mark received'}
+              </button>
+            )}
           </div>
         )}
 
-        {(quest.objectives || []).length > 0 && (() => {
-          const completed = (quest.objectives || []).filter(o => o.completed).length;
-          const total = (quest.objectives || []).length;
-          const progressPct = total > 0 ? (completed / total) * 100 : 0;
+        {/* Timeline visualization */}
+        {(quest.timeline || []).length > 0 && <QuestTimeline quest={quest} />}
+
+        {/* Objectives & Progress */}
+        {((quest.objectives || []).length > 0 || (quest.secret_objectives || []).some(s => s.revealed)) && (() => {
+          const objs = quest.objectives || [];
+          const revealedSecrets = (quest.secret_objectives || []).filter(s => s.revealed);
+          const totalItems = objs.reduce((sum, o, i) => sum + 1 + ((quest.sub_objectives || {})[`${i}`] || []).length, 0) + revealedSecrets.length;
+          const doneItems = objs.reduce((sum, o, i) => {
+            let d = o.completed ? 1 : 0;
+            ((quest.sub_objectives || {})[`${i}`] || []).forEach(s => { if (s.completed) d++; });
+            return sum + d;
+          }, 0) + revealedSecrets.filter(s => s.completed).length;
           return (
             <div className="mt-2">
               <div className="space-y-1">
-                {(quest.objectives || []).map((obj, i) => (
-                  <button key={obj.id || i} onClick={() => toggleObjective(quest, i)} className="flex items-center gap-2 w-full text-left text-sm">
-                    {obj.completed ? <CheckSquare size={14} className="text-emerald-400 flex-shrink-0" /> : <Square size={14} className="text-amber-200/30 flex-shrink-0" />}
-                    <span className={obj.completed ? 'line-through text-amber-200/30' : 'text-amber-200/60'}>{obj.text}</span>
-                  </button>
-                ))}
+                {objs.map((obj, i) => {
+                  const subs = (quest.sub_objectives || {})[`${i}`] || [];
+                  return (
+                    <div key={obj.id || i}>
+                      <button onClick={() => toggleObjective(quest, i)} className="flex items-center gap-2 w-full text-left text-sm">
+                        {obj.completed ? <CheckSquare size={14} className="text-emerald-400 flex-shrink-0" /> : <Square size={14} className="text-amber-200/30 flex-shrink-0" />}
+                        <span className={obj.completed ? 'line-through text-amber-200/30' : 'text-amber-200/60'}>{obj.text}</span>
+                      </button>
+                      {subs.length > 0 && (
+                        <div className="ml-6 space-y-0.5 mt-0.5">
+                          {subs.map((sub, si) => (
+                            <button key={si} onClick={() => toggleSubObjective(quest, i, si)} className="flex items-center gap-2 w-full text-left text-xs">
+                              {sub.completed ? <CheckSquare size={12} className="text-emerald-400/70 flex-shrink-0" /> : <Square size={12} className="text-amber-200/20 flex-shrink-0" />}
+                              <span className={sub.completed ? 'line-through text-amber-200/20' : 'text-amber-200/40'}>{sub.text}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {/* Secret objectives (revealed ones) */}
+                {(quest.secret_objectives || []).map((secret, si) => {
+                  if (!secret.revealed) return null;
+                  return (
+                    <div key={`secret-${si}`} className="flex items-center gap-2">
+                      <button onClick={() => toggleSecretObjectiveComplete(quest, si)} className="flex items-center gap-2 w-full text-left text-sm">
+                        {secret.completed ? <CheckSquare size={14} className="text-emerald-400 flex-shrink-0" /> : <Square size={14} className="text-amber-200/30 flex-shrink-0" />}
+                        <span className={`${secret.completed ? 'line-through text-amber-200/30' : 'text-amber-200/60'}`}>{secret.text}</span>
+                      </button>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-800/20 text-amber-300/50 border border-amber-500/15 flex-shrink-0">SECRET</span>
+                    </div>
+                  );
+                })}
+                {/* Unrevealed secret objectives — DM toggle */}
+                {(quest.secret_objectives || []).map((secret, si) => {
+                  if (secret.revealed) return null;
+                  return (
+                    <div key={`hidden-${si}`} className="flex items-center gap-2">
+                      <button onClick={() => toggleSecretObjective(quest, si)} className="flex items-center gap-2 w-full text-left text-xs group" title="Click to reveal this secret objective">
+                        <EyeOff size={13} className="text-amber-200/15 group-hover:text-amber-200/40 flex-shrink-0" />
+                        <span className="text-amber-200/15 italic group-hover:text-amber-200/30">Hidden objective — click to reveal</span>
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
               <div className="mt-3">
                 <div className="flex justify-between text-xs text-amber-200/40 mb-1">
-                  <span>{completed}/{total} objectives</span>
+                  <span>{doneItems}/{totalItems} objectives</span>
                   <span>{Math.round(progressPct)}%</span>
                 </div>
-                <div className="hp-bar-container" style={{height: '6px'}} role="progressbar" aria-label={`Quest progress: ${completed} of ${total} objectives complete`} aria-valuenow={completed} aria-valuemin={0} aria-valuemax={total}>
+                <div className="hp-bar-container" style={{height: '6px'}} role="progressbar" aria-valuenow={doneItems} aria-valuemin={0} aria-valuemax={totalItems}>
                   <div className="hp-bar-fill hp-high" style={{width: `${progressPct}%`}} />
                 </div>
               </div>
             </div>
           );
         })()}
-        {quest.notes && (
-          <div className="mt-2 text-xs text-amber-200/30 [&_.wmde-markdown]:!bg-transparent [&_.wmde-markdown]:!text-amber-200/30 [&_.wmde-markdown]:!font-sans [&_.wmde-markdown]:!text-xs" data-color-mode="dark">
-            <MDEditor.Markdown source={quest.notes} />
+
+        {/* Expanded details */}
+        {isExpanded && (
+          <div className="mt-3 space-y-2">
+            {/* Session notes timeline */}
+            {(quest.session_notes || []).length > 0 && (
+              <div className="border-t border-amber-200/5 pt-2">
+                <span className="text-[10px] text-amber-200/25 uppercase tracking-wider">Session Notes</span>
+                <div className="mt-2 relative">
+                  {/* Timeline line */}
+                  <div className="absolute left-[5px] top-2 bottom-2 w-px bg-amber-200/10" />
+                  <div className="space-y-2">
+                    {quest.session_notes.map((note, i) => {
+                      const label = note.label || `${note.date}`;
+                      return (
+                        <div key={i} className="flex items-start gap-3 relative">
+                          <div className="w-[11px] h-[11px] rounded-full bg-amber-800/40 border-2 border-amber-500/30 flex-shrink-0 mt-0.5 z-10" />
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[10px] text-amber-300/40 font-mono">[{label}]</span>
+                            <p className="text-xs text-amber-200/50 mt-0.5">{note.text}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Markdown notes */}
+            {quest.notes_text && (
+              <div className="text-xs text-amber-200/30 [&_.wmde-markdown]:!bg-transparent [&_.wmde-markdown]:!text-amber-200/30 [&_.wmde-markdown]:!font-sans [&_.wmde-markdown]:!text-xs border-t border-amber-200/5 pt-2" data-color-mode="dark">
+                <MDEditor.Markdown source={quest.notes_text} />
+              </div>
+            )}
+
+            {/* Related NPCs */}
+            {(() => {
+              const related = getRelatedNPCs(quest);
+              if (related.length === 0) return null;
+              return (
+                <div className="pt-2 border-t border-amber-200/5">
+                  <span className="text-[10px] text-amber-200/25 uppercase tracking-wider">Related NPCs</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {related.map(npc => (
+                      <span key={npc.id} className="text-[11px] px-2 py-0.5 rounded-full bg-blue-800/25 text-blue-300/80 border border-blue-500/20">
+                        {npc.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
-        <div className="mt-2 flex items-center gap-2 flex-wrap">
-          <span className={`text-xs px-2 py-0.5 rounded ${
-            quest.status === 'active' ? 'bg-emerald-800/30 text-emerald-300' :
-            quest.status === 'completed' ? 'bg-blue-800/30 text-blue-300' :
-            'bg-red-800/30 text-red-300'
-          }`}>{quest.status}</span>
-          {quest.difficulty && DIFFICULTY_COLORS[quest.difficulty] && (
-            <span className={`text-xs px-2 py-0.5 rounded capitalize ${DIFFICULTY_COLORS[quest.difficulty]}`}>{quest.difficulty}</span>
-          )}
-          {priorityStyle && (
-            <span className={`text-xs px-2 py-0.5 rounded border ${priorityStyle.badge}`}>{quest.priority}</span>
-          )}
+
+        {/* Collapsed: show note preview and related NPCs inline */}
+        {!isExpanded && (
+          <>
+            {quest.notes_text && (
+              <div className="mt-2 text-xs text-amber-200/30 [&_.wmde-markdown]:!bg-transparent [&_.wmde-markdown]:!text-amber-200/30 [&_.wmde-markdown]:!font-sans [&_.wmde-markdown]:!text-xs line-clamp-2" data-color-mode="dark">
+                <MDEditor.Markdown source={quest.notes_text} />
+              </div>
+            )}
+            {(() => {
+              const related = getRelatedNPCs(quest);
+              if (related.length === 0) return null;
+              return (
+                <div className="mt-2 pt-2 border-t border-amber-200/5">
+                  <span className="text-[10px] text-amber-200/25 uppercase tracking-wider">Related NPCs</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {related.map(npc => (
+                      <span key={npc.id} className="text-[11px] px-2 py-0.5 rounded-full bg-blue-800/25 text-blue-300/80 border border-blue-500/20">
+                        {npc.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+          </>
+        )}
+      </div>
+    );
+  };
+
+  const QuestSection = ({ title, titleClass, quests: sectionQuests, wrapperClass }) => {
+    if (sectionQuests.length === 0) return null;
+    return (
+      <div>
+        <h3 className={`font-display mb-3 ${titleClass}`}>{title}</h3>
+        <div className={`space-y-3 ${wrapperClass || ''}`}>
+          {sectionQuests.map(q => <QuestCard key={q.id} quest={q} />)}
         </div>
       </div>
     );
@@ -221,7 +674,7 @@ export default function Quests({ characterId }) {
           <Map size={20} />
           <div>
             <span>Quests & Objectives</span>
-            <p className="text-xs text-amber-200/40 font-normal mt-0.5">Track your active quests and their objectives. Check off goals as you complete them and keep notes on what to do next.</p>
+            <p className="text-xs text-amber-200/40 font-normal mt-0.5">Track your active quests, objectives, and rewards. Check off goals as you complete them and keep session notes on progress.</p>
           </div>
         </h2>
         <button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
@@ -246,43 +699,37 @@ export default function Quests({ characterId }) {
         </div>
       )}
 
-      {/* Sort */}
-      <div className="flex items-center gap-1.5">
-        <span className="text-xs text-amber-200/40">Sort:</span>
-        {[['status', 'Active First'], ['name', 'Name A-Z'], ['progress', 'Progress %'], ['priority', 'Priority']].map(([key, label]) => (
-          <button key={key} onClick={() => setSortBy(key)}
-            className={`text-xs px-2.5 py-1 rounded ${sortBy === key ? 'bg-gold/20 text-gold border border-gold/30' : 'bg-amber-200/5 text-amber-200/40 border border-amber-200/10'}`}>
-            {label}
-          </button>
-        ))}
+      {/* Filters & Sort */}
+      <div className="space-y-2">
+        {/* Quest type filter */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-amber-200/40">Type:</span>
+          {['all', ...QUEST_TYPES].map(t => {
+            const style = t !== 'all' ? QUEST_TYPE_STYLES[t] : null;
+            const FilterIcon = style ? style.icon : null;
+            return (
+              <button key={t} onClick={() => setTypeFilter(t)}
+                className={`text-xs px-2.5 py-1 rounded flex items-center gap-1 ${typeFilter === t ? 'bg-gold/20 text-gold border border-gold/30' : 'bg-amber-200/5 text-amber-200/40 border border-amber-200/10'}`}>
+                {FilterIcon && <FilterIcon size={11} />}
+                {t === 'all' ? 'All' : t}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-amber-200/40">Sort:</span>
+          {[['status', 'Active First'], ['name', 'Name A-Z'], ['progress', 'Progress %'], ['priority', 'Priority'], ['type', 'Type']].map(([key, label]) => (
+            <button key={key} onClick={() => setSortBy(key)}
+              className={`text-xs px-2.5 py-1 rounded ${sortBy === key ? 'bg-gold/20 text-gold border border-gold/30' : 'bg-amber-200/5 text-amber-200/40 border border-amber-200/10'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {active.length > 0 && (
-        <div>
-          <h3 className="font-display text-amber-100/70 mb-3">Active Quests</h3>
-          <div className="space-y-3">
-            {active.map(q => <QuestCard key={q.id} quest={q} />)}
-          </div>
-        </div>
-      )}
-
-      {completed.length > 0 && (
-        <div>
-          <h3 className="font-display text-amber-100/40 mb-3">Completed</h3>
-          <div className="space-y-3 opacity-60">
-            {completed.map(q => <QuestCard key={q.id} quest={q} />)}
-          </div>
-        </div>
-      )}
-
-      {failed.length > 0 && (
-        <div>
-          <h3 className="font-display text-red-400/60 mb-3">Failed</h3>
-          <div className="space-y-3 opacity-50">
-            {failed.map(q => <QuestCard key={q.id} quest={q} />)}
-          </div>
-        </div>
-      )}
+      <QuestSection title="Active Quests" titleClass="text-amber-100/70" quests={active} />
+      <QuestSection title="Completed" titleClass="text-amber-100/40" quests={completed} wrapperClass="opacity-60" />
+      <QuestSection title="Failed" titleClass="text-red-400/60" quests={failed} wrapperClass="opacity-50" />
 
       {quests.length === 0 && (
         <div className="card border-dashed border-amber-200/10 text-center py-12">
@@ -296,6 +743,11 @@ export default function Quests({ characterId }) {
         <QuestForm quest={editing} onSubmit={handleSave} onCancel={() => { setShowForm(false); setEditing(null); }} />
       )}
 
+      {/* Session Note Modal */}
+      {sessionNoteQuest && (
+        <SessionNoteModal quest={sessionNoteQuest} onSubmit={(text) => { addSessionNote(sessionNoteQuest, text); setSessionNoteQuest(null); }} onCancel={() => setSessionNoteQuest(null)} />
+      )}
+
       <ConfirmDialog
         show={!!confirmDelete}
         title="Delete Quest?"
@@ -307,12 +759,45 @@ export default function Quests({ characterId }) {
   );
 }
 
+function SessionNoteModal({ quest, onSubmit, onCancel }) {
+  const [text, setText] = useState('');
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onCancel]);
+
+  return (
+    <ModalPortal><div className="modal-overlay" onClick={e => e.target === e.currentTarget && onCancel()}>
+      <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 className="font-display text-lg text-amber-100 mb-2">Add Session Note</h3>
+        <p className="text-xs text-amber-200/40 mb-3">for "{quest.title}" — {new Date().toISOString().split('T')[0]}</p>
+        <textarea className="input w-full h-24 resize-none" placeholder="What happened with this quest this session?" value={text} onChange={e => setText(e.target.value)} autoFocus
+          onKeyDown={e => { if (e.ctrlKey && e.key === 'Enter' && text.trim()) { e.preventDefault(); onSubmit(text.trim()); } }} />
+        <div className="flex gap-3 justify-end mt-4">
+          <span className="text-xs text-amber-200/30 self-center mr-auto">Ctrl+Enter to save</span>
+          <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
+          <button onClick={() => text.trim() && onSubmit(text.trim())} className="btn-primary text-sm" disabled={!text.trim()}>Add Note</button>
+        </div>
+      </div>
+      </div>
+    </ModalPortal>
+  );
+}
+
 function QuestForm({ quest, onSubmit, onCancel }) {
   const [form, setForm] = useState(() => {
-    const base = quest || { title: '', giver: '', quest_giver: '', description: '', status: 'active', difficulty: '', notes: '', objectives: [], priority: '', xp_reward: '', gold_reward: '', item_rewards: '', location: '' };
-    return { ...base, objectives: base.objectives || [] };
+    if (quest) return { ...quest, objectives: quest.objectives || [], secret_objectives: quest.secret_objectives || [] };
+    return {
+      title: '', quest_giver: '', description: '', status: 'active', difficulty: '',
+      notes_text: '', objectives: [], priority: '', xp_reward: '', gold_reward: '',
+      item_rewards: '', location: '', quest_type: '', timeline: [{ stage: 'received', date: new Date().toISOString().split('T')[0] }],
+      session_notes: [], rewards_received: false, sub_objectives: {}, secret_objectives: [], session_counter: 0,
+    };
   });
   const [newObj, setNewObj] = useState('');
+  const [newSubObj, setNewSubObj] = useState({});
+  const [newSecretObj, setNewSecretObj] = useState('');
   const [titleError, setTitleError] = useState(false);
   const update = (f, v) => {
     if (f === 'title') setTitleError(false);
@@ -336,24 +821,82 @@ function QuestForm({ quest, onSubmit, onCancel }) {
   };
 
   const removeObjective = (i) => {
-    update('objectives', form.objectives.filter((_, idx) => idx !== i));
+    const newObjs = form.objectives.filter((_, idx) => idx !== i);
+    const newSubObjs = { ...form.sub_objectives };
+    delete newSubObjs[`${i}`];
+    // Reindex sub_objectives
+    const reindexed = {};
+    newObjs.forEach((_, ni) => {
+      const oldIdx = ni >= i ? ni + 1 : ni;
+      if (newSubObjs[`${oldIdx}`]) reindexed[`${ni}`] = newSubObjs[`${oldIdx}`];
+      else if (ni < i && newSubObjs[`${ni}`]) reindexed[`${ni}`] = newSubObjs[`${ni}`];
+    });
+    setForm(prev => ({ ...prev, objectives: newObjs, sub_objectives: reindexed }));
+  };
+
+  const addSubObjective = (objIdx) => {
+    const text = (newSubObj[objIdx] || '').trim();
+    if (!text) return;
+    const subs = { ...form.sub_objectives };
+    subs[`${objIdx}`] = [...(subs[`${objIdx}`] || []), { text, completed: false }];
+    update('sub_objectives', subs);
+    setNewSubObj(prev => ({ ...prev, [objIdx]: '' }));
+  };
+
+  const removeSubObjective = (objIdx, subIdx) => {
+    const subs = { ...form.sub_objectives };
+    subs[`${objIdx}`] = (subs[`${objIdx}`] || []).filter((_, i) => i !== subIdx);
+    update('sub_objectives', subs);
+  };
+
+  const addSecretObjective = () => {
+    if (!newSecretObj.trim()) return;
+    update('secret_objectives', [...(form.secret_objectives || []), { text: newSecretObj.trim(), completed: false, revealed: false }]);
+    setNewSecretObj('');
+  };
+
+  const removeSecretObjective = (i) => {
+    update('secret_objectives', (form.secret_objectives || []).filter((_, idx) => idx !== i));
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={e => e.target === e.currentTarget && onCancel()}>
-      <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
-        <h3 className="font-display text-lg text-amber-100 mb-4">{quest ? 'Edit Quest' : 'New Quest'}</h3>
-        <div className="space-y-3">
-          <div>
-            <input className={`input w-full ${titleError ? 'border-red-500' : ''}`} placeholder="Quest title" value={form.title} onChange={e => update('title', e.target.value)} autoFocus />
-            {titleError && <p className="text-red-400 text-xs mt-1">Name required</p>}
+    <ModalPortal>
+      <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onCancel()}>
+      <div className="bg-[#14121c] border border-gold/30 rounded-lg p-5 w-full mx-4" style={{ maxWidth: '720px', display: 'flex', flexDirection: 'column' }}>
+        <div className="flex items-center justify-between mb-3 flex-shrink-0">
+          <h3 className="font-display text-lg text-amber-100">{quest ? 'Edit Quest' : 'New Quest'}</h3>
+          <div className="flex gap-2">
+            <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
+            <button onClick={handleSubmit} className="btn-primary text-sm">{quest ? 'Save' : 'Add'}</button>
           </div>
+        </div>
+        <div className="space-y-2 overflow-y-auto flex-1" style={{ minHeight: 0 }}>
+          <input className={`input w-full ${titleError ? 'border-red-500' : ''}`} placeholder="Quest title" value={form.title} onChange={e => update('title', e.target.value)} autoFocus />
+
+          {/* Quest type */}
+          <div className="flex items-center gap-1.5">
+              <button type="button" onClick={() => update('quest_type', '')}
+                className={`text-xs px-2.5 py-1 rounded ${!form.quest_type ? 'bg-gold/20 text-gold border border-gold/30' : 'bg-amber-200/5 text-amber-200/40 border border-amber-200/10'}`}>
+                None
+              </button>
+              {QUEST_TYPES.map(t => {
+                const style = QUEST_TYPE_STYLES[t];
+                const TypeIcon = style.icon;
+                return (
+                  <button key={t} type="button" onClick={() => update('quest_type', t)}
+                    className={`text-xs px-2.5 py-1 rounded border flex items-center gap-1 ${form.quest_type === t ? `${style.bg} ${style.text} ${style.border}` : 'bg-amber-200/5 text-amber-200/40 border-amber-200/10'}`}>
+                    <TypeIcon size={11} /> {t}
+                  </button>
+                );
+              })}
+            </div>
+
           <div className="grid grid-cols-2 gap-3">
-            <input className="input w-full" placeholder="Quest giver" value={form.quest_giver || form.giver || ''} onChange={e => update('quest_giver', e.target.value)} />
+            <input className="input w-full" placeholder="Quest giver" value={form.quest_giver || ''} onChange={e => update('quest_giver', e.target.value)} />
             <input className="input w-full" placeholder="Location" value={form.location || ''} onChange={e => update('location', e.target.value)} />
           </div>
-          <textarea className="input w-full h-20 resize-none" placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} />
-          <div className="grid grid-cols-3 gap-3">
+          <textarea className="input w-full h-14 resize-none" placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} />
+          <div className="grid grid-cols-3 gap-2">
             <select className="input w-full" value={form.status} onChange={e => update('status', e.target.value)}>
               <option value="active">Active</option>
               <option value="completed">Completed</option>
@@ -370,21 +913,34 @@ function QuestForm({ quest, onSubmit, onCancel }) {
           </div>
 
           {/* Rewards */}
-          <div>
-            <label className="label">Rewards</label>
-            <div className="grid grid-cols-2 gap-3">
-              <input className="input w-full" type="number" min="0" placeholder="XP reward" value={form.xp_reward || ''} onChange={e => update('xp_reward', e.target.value)} />
-              <input className="input w-full" type="number" min="0" placeholder="Gold reward" value={form.gold_reward || ''} onChange={e => update('gold_reward', e.target.value)} />
-            </div>
-            <input className="input w-full mt-2" placeholder="Item rewards (e.g. Sword of Flame, Potion of Healing)" value={form.item_rewards || ''} onChange={e => update('item_rewards', e.target.value)} />
+          <div className="grid grid-cols-3 gap-2">
+            <input className="input w-full" type="number" min="0" placeholder="XP reward" value={form.xp_reward || ''} onChange={e => update('xp_reward', e.target.value)} />
+            <input className="input w-full" type="number" min="0" placeholder="Gold reward" value={form.gold_reward || ''} onChange={e => update('gold_reward', e.target.value)} />
+            <input className="input w-full" placeholder="Item rewards" value={form.item_rewards || ''} onChange={e => update('item_rewards', e.target.value)} />
           </div>
 
+          {/* Objectives with sub-objectives */}
           <div>
             <label className="label">Objectives</label>
             {form.objectives.map((obj, i) => (
-              <div key={`${obj.text}-${i}`} className="flex items-center gap-2 mb-1">
-                <span className="text-sm text-amber-200/60 flex-1">{obj.text}</span>
-                <button onClick={() => removeObjective(i)} className="text-red-400/50 hover:text-red-400" aria-label={`Remove objective: ${obj.text}`}><Trash2 size={12} /></button>
+              <div key={`${obj.text}-${i}`} className="mb-2">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-sm text-amber-200/60 flex-1">{obj.text}</span>
+                  <button onClick={() => removeObjective(i)} className="text-red-400/50 hover:text-red-400"><Trash2 size={12} /></button>
+                </div>
+                {/* Sub-objectives */}
+                {((form.sub_objectives || {})[`${i}`] || []).map((sub, si) => (
+                  <div key={si} className="flex items-center gap-2 ml-5 mb-0.5">
+                    <span className="text-xs text-amber-200/40 flex-1">{sub.text}</span>
+                    <button onClick={() => removeSubObjective(i, si)} className="text-red-400/50 hover:text-red-400"><Trash2 size={10} /></button>
+                  </div>
+                ))}
+                <div className="flex gap-2 ml-5 mt-0.5">
+                  <input className="input flex-1 text-xs" placeholder="Add sub-objective..." value={newSubObj[i] || ''}
+                    onChange={e => setNewSubObj(prev => ({ ...prev, [i]: e.target.value }))}
+                    onKeyDown={e => e.key === 'Enter' && addSubObjective(i)} />
+                  <button onClick={() => addSubObjective(i)} className="text-xs text-amber-200/40 hover:text-amber-200">+</button>
+                </div>
               </div>
             ))}
             <div className="flex gap-2 mt-1">
@@ -394,15 +950,37 @@ function QuestForm({ quest, onSubmit, onCancel }) {
             </div>
           </div>
 
+          {/* Secret objectives (DM can reveal later) */}
+          <div>
+            <label className="label flex items-center gap-2">
+              <EyeOff size={12} className="text-amber-200/40" />
+              Secret Objectives
+              <span className="text-[10px] text-amber-200/25 font-normal">(hidden until revealed on the quest card)</span>
+            </label>
+            {(form.secret_objectives || []).map((secret, i) => (
+              <div key={i} className="flex items-center gap-2 mb-1">
+                <EyeOff size={12} className="text-amber-200/20 flex-shrink-0" />
+                <span className="text-sm text-amber-200/40 flex-1 italic">{secret.text}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded ${secret.revealed ? 'bg-emerald-800/30 text-emerald-300' : 'bg-amber-800/20 text-amber-200/30'}`}>
+                  {secret.revealed ? 'Revealed' : 'Hidden'}
+                </span>
+                <button onClick={() => removeSecretObjective(i)} className="text-red-400/50 hover:text-red-400"><Trash2 size={12} /></button>
+              </div>
+            ))}
+            <div className="flex gap-2 mt-1">
+              <input className="input flex-1 text-sm" placeholder="Add a secret objective..." value={newSecretObj}
+                onChange={e => setNewSecretObj(e.target.value)} onKeyDown={e => e.key === 'Enter' && addSecretObjective()} />
+              <button onClick={addSecretObjective} className="btn-secondary text-xs">Add</button>
+            </div>
+          </div>
+
           <div data-color-mode="dark">
-            <MDEditor value={form.notes} onChange={v => update('notes', v || '')} height={120} preview="edit" />
+            <label className="label">Notes</label>
+            <MDEditor value={form.notes_text} onChange={v => update('notes_text', v || '')} height={80} preview="edit" />
           </div>
         </div>
-        <div className="flex gap-3 justify-end mt-4">
-          <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
-          <button onClick={handleSubmit} className="btn-primary text-sm">{quest ? 'Save' : 'Add'}</button>
-        </div>
       </div>
-    </div>
+      </div>
+    </ModalPortal>
   );
 }

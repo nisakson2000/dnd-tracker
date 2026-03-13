@@ -31,15 +31,16 @@ export function useUpdateCheck() {
     setChecking(true);
     setCheckResult(null);
     try {
-      const signal = AbortSignal.timeout ? AbortSignal.timeout(5000) : (() => {
-        const controller = new AbortController();
-        setTimeout(() => controller.abort(), 5000);
-        return controller.signal;
-      })();
+      const controller = new AbortController();
+      const timeoutId = AbortSignal.timeout
+        ? null
+        : setTimeout(() => controller.abort(), 5000);
+      const signal = AbortSignal.timeout ? AbortSignal.timeout(5000) : controller.signal;
       const res = await fetch(VERSION_MANIFEST_URL, {
         cache: 'no-store',
         signal,
       });
+      if (timeoutId) clearTimeout(timeoutId);
       if (!res.ok) throw new Error('fetch failed');
       const data = await res.json();
       const remoteVer = data.version || null;

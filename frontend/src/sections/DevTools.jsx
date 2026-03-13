@@ -934,7 +934,7 @@ function TestRunner({ characterId }) {
 
 /* ── Improvement Audit — finds what's good and what's lacking ── */
 
-function ImprovementAudit({ characterId, character, isDM }) {
+function ImprovementAudit({ characterId, isDM }) {
   const [results, setResults] = useState([]);
   const [running, setRunning] = useState(false);
   const [summary, setSummary] = useState(null);

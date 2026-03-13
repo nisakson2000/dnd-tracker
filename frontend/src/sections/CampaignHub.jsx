@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { LayoutDashboard, Users, Map, BookMarked, Globe, Swords, ChevronDown, ChevronRight, Calculator, ClipboardList } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 
-function StatCard({ icon: Icon, label, value, color, sub }) {
+function StatCard({ icon: Icon, label, value, color, sub }) { // eslint-disable-line no-unused-vars
   return (
     <div style={{
       borderRadius: 12, padding: '18px 16px',
@@ -247,14 +247,14 @@ function SessionPlanningChecklist() {
   const toggle = (item) => {
     setChecked(prev => {
       const next = { ...prev, [item]: !prev[item] };
-      try { sessionStorage.setItem('session-planning-checklist', JSON.stringify(next)); } catch {}
+      try { sessionStorage.setItem('session-planning-checklist', JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
   };
 
   const resetAll = () => {
     setChecked({});
-    try { sessionStorage.removeItem('session-planning-checklist'); } catch {}
+    try { sessionStorage.removeItem('session-planning-checklist'); } catch { /* ignore */ }
   };
 
   const completedCount = SESSION_CHECKLIST_ITEMS.filter(i => checked[i]).length;

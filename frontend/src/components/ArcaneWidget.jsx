@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Send, Trash2, X, Loader2, AlertCircle, Zap, Check, Minimize2 } from 'lucide-react';
+import { Sparkles, Send, Trash2, X, Loader2, Zap, Check, Minimize2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { streamChat, searchWikiContext } from '../api/assistant';
 import { buildSectionPrompt, buildMessages } from '../data/assistantContext';

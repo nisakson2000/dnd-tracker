@@ -10,6 +10,7 @@ export default function DevToolsPanel() {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState('DB');
 
+
   useEffect(() => {
     const handler = (e) => {
       if (e.ctrlKey && e.shiftKey && e.key === 'D') {
@@ -63,7 +64,10 @@ export default function DevToolsPanel() {
       {/* Content */}
       <div style={{ flex: 1, overflow: 'auto', padding: '12px' }}>
         {tab === 'DB' && <DbPanel />}
-        {tab === 'Git' && <GitPanel />}
+        {/* Git panel stays mounted so logs persist across tab switches */}
+        <div style={{ display: tab === 'Git' ? 'contents' : 'none' }}>
+          <GitPanel visible={tab === 'Git'} />
+        </div>
         {tab === 'Chat' && <ChatPanel />}
         {tab === 'IPC' && <IpcPanel />}
         {tab === 'Env' && <EnvPanel />}
@@ -267,7 +271,6 @@ function FlagsPanel() {
 function PerfPanel() {
   const [fps, setFps] = useState(0);
   const [memory, setMemory] = useState(null);
-  const frameRef = useRef(0);
   const lastRef = useRef(performance.now());
 
   useEffect(() => {
@@ -527,13 +530,14 @@ function BugReportPanel() {
 
 // ─── Git Panel ──────────────────────────────────────────────────────────────
 
-function GitPanel() {
+function GitPanel({ visible }) {
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [commitMsg, setCommitMsg] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [actionResult, setActionResult] = useState(null);
+  const hasLoadedOnce = useRef(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -545,7 +549,16 @@ function GitPanel() {
     }
   }, []);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  // Auto-fetch only once on first view, then user must click Refresh
+  useEffect(() => {
+    if (visible && !hasLoadedOnce.current) {
+      hasLoadedOnce.current = true;
+      invoke('dev_git_status').then(res => {
+        setData(res);
+        setError(null);
+      }).catch(err => setError(String(err)));
+    }
+  }, [visible]);
 
   const toggleFile = (path) => {
     setSelected(prev => {

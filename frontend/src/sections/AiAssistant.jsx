@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Send, Trash2, HelpCircle, X, Check, Loader2, AlertCircle, Zap } from 'lucide-react';
+import { Sparkles, Send, Trash2, X, Check, Loader2, AlertCircle, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { streamChat, checkOllamaStatus, searchWikiContext } from '../api/assistant';
 import { buildSystemPrompt, buildMessages } from '../data/assistantContext';
@@ -20,7 +19,7 @@ function saveSettings(s) {
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
     window.dispatchEvent(new CustomEvent('codex-ai-settings-changed', { detail: s }));
-  } catch {}
+  } catch { /* ignore storage errors */ }
 }
 
 function loadHistory(characterId) {
@@ -33,7 +32,7 @@ function loadHistory(characterId) {
 function saveHistory(characterId, history) {
   try {
     sessionStorage.setItem(`${HISTORY_KEY}-${characterId}`, JSON.stringify(history.slice(-20)));
-  } catch {}
+  } catch { /* ignore storage errors */ }
 }
 
 const EXAMPLE_PROMPTS = [
@@ -88,7 +87,7 @@ function SetupPanel({ settings, onUpdate, onEnable }) {
     setChecking(false);
   };
 
-  useEffect(() => { checkStatus(); }, []);
+  useEffect(() => { checkStatus(); }, []); // eslint-disable-line react-hooks/set-state-in-effect
   const canEnable = status?.available && status?.modelInstalled;
 
   return (

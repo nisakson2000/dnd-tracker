@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 
 // Registry of flush functions from all active autosave hooks
 const flushRegistry = new Set();

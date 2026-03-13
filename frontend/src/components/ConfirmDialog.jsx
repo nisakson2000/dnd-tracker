@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle } from 'lucide-react';
 
@@ -7,7 +8,7 @@ export default function ConfirmDialog({ show, title, message, warning, confirmTe
   const dialogRef = useRef(null);
   const cancelRef = useRef(null);
 
-  useEffect(() => { if (!show) setTyped(''); }, [show]);
+  useEffect(() => { if (!show) setTyped(''); }, [show]); // eslint-disable-line react-hooks/set-state-in-effect
 
   // Auto-focus cancel button when dialog opens (unless confirmText input takes focus)
   useEffect(() => {

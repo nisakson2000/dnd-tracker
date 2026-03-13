@@ -1,0 +1,146 @@
+{
+  "name": "The Siege of Ironhold",
+  "description": "The dwarven fortress-city of Ironhold has stood unconquered for eight hundred years, its walls carved from the living rock of Mount Anvilspire. But now a massive orc horde under the banner of Warlord Grashak Bloodtide has encircled the fortress, cutting off supply lines and bombarding the outer walls with siege engines. The dwarves are holding, but barely — provisions grow thin, morale wavers, and cracks are forming in more than just the stonework. King Durin Ironmantle has sent word to allied nations requesting aid, and your party has answered the call. But the siege is only the surface threat. Deep beneath Ironhold, in tunnels sealed centuries ago, something ancient has begun to stir — something that the orcs' relentless bombardment has inadvertently awakened. The defenders face war above and horror below, and only your party stands at the crossroads of both threats. Built for the 2024 rules, this campaign leverages updated martial abilities, tactical combat options, and the revised monster stat blocks for a satisfying mid-tier experience.",
+  "level": "5-8",
+  "author": "The Codex",
+  "tags": ["war", "siege", "dungeon crawl", "dwarven", "political", "underdark", "5e 2024"],
+  "npcs": [
+    {
+      "name": "King Durin Ironmantle",
+      "role": "Quest Giver",
+      "race": "Dwarf",
+      "npc_class": "Fighter (Champion)",
+      "location": "Ironhold — The Throne Hall of Anvilspire",
+      "description": "A broad-shouldered dwarf in his late 300s with a silver-streaked auburn beard braided with iron rings. His crown is a simple circlet of dark iron, unadorned — a symbol that Ironhold values strength over ornamentation. Durin carries the ancestral warhammer Oathkeeper at his side at all times. His eyes are tired but fierce, and he speaks with the blunt efficiency of a lifelong soldier who never expected to be king. A jagged scar runs from his left temple to his jaw, earned in the Underdark campaigns of his youth.",
+      "notes": "Durin is a pragmatic leader stretched thin between military command, political pressures from his advisors, and the growing unrest among the civilian population. He trusts the party as outsiders who owe no loyalty to any dwarven faction, making them ideal for sensitive missions. He suspects there is a traitor among his war council leaking information to the orcs but cannot investigate without causing a political crisis. He will ask the party to handle this quietly.",
+      "status": "alive"
+    },
+    {
+      "name": "Warlord Grashak Bloodtide",
+      "role": "Antagonist",
+      "race": "Orc",
+      "npc_class": "Barbarian (Path of the World Tree)",
+      "location": "The Siege Camp — Bloodtide's War Tent",
+      "description": "An enormous orc standing nearly seven feet tall, with ashen grey skin covered in ritual scarification depicting waves of blood. His left tusk is capped in iron, and he wears a cloak of chimera hide over blackened plate armor. Grashak is not the mindless brute that dwarven propaganda suggests — he is a cunning tactician who united seven orc clans through a combination of martial dominance and strategic marriages. He speaks Common with a heavy accent but perfect grammar.",
+      "notes": "Grashak is a complex antagonist. He besieges Ironhold not out of bloodlust but because his people were driven from their ancestral lands by expanding human kingdoms and need territory to survive the coming winter. He can potentially be negotiated with (DC 20 Persuasion with valid territorial concessions), creating a political resolution path. However, he is also being manipulated by his shaman, who serves the entity beneath Ironhold. If the party kills the shaman, Grashak becomes open to parley. CR 9 in direct combat.",
+      "status": "alive"
+    },
+    {
+      "name": "Thane Brenna Coalvein",
+      "role": "Ally / Political",
+      "race": "Dwarf",
+      "npc_class": "Cleric (War Domain)",
+      "location": "Ironhold — The War Council Chamber",
+      "description": "A stocky, no-nonsense dwarf woman with close-cropped black hair and armor that has clearly seen decades of use. Brenna commands Ironhold's eastern wall defense and is the most respected military mind on the war council after the king himself. She wears a holy symbol of Moradin on a chain around her neck and carries a shield emblazoned with the Coalvein clan crest — a pickaxe crossed with a sword over a burning coal.",
+      "notes": "Brenna is the party's most reliable ally on the war council. She is loyal to the king and suspicious of Advisor Rikard. She has noticed supply discrepancies that suggest someone is sabotaging provisions — rations going missing, weapon shipments arriving short. She will share this information with the party if they earn her trust (friendly attitude or DC 13 Persuasion). She can also grant the party access to the sealed lower tunnels if given sufficient reason.",
+      "status": "alive"
+    },
+    {
+      "name": "Advisor Rikard Stoneweaver",
+      "role": "Traitor / Antagonist",
+      "race": "Dwarf",
+      "npc_class": "Wizard (Abjuration)",
+      "location": "Ironhold — The Council Archives",
+      "description": "A lean, scholarly dwarf with thin spectacles, a neatly trimmed grey beard, and ink-stained fingers. Rikard has served as the king's chief advisor for thirty years and is responsible for Ironhold's magical defenses — the runic wards on the walls, the scrying network, and the communication stones. He is soft-spoken, polite, and seemingly dedicated to the defense effort. He always carries a leather-bound journal and smells faintly of alchemical reagents.",
+      "notes": "Rikard is the traitor. He discovered the entity beneath Ironhold years ago during a routine inspection of the sealed tunnels and has been slowly falling under its influence. He is feeding information to the orcs through a corrupted sending stone, sabotaging supplies, and weakening the runic wards to hasten the fortress's fall — not to help the orcs, but because the entity promised him the magical knowledge sealed in the deepest vaults. Exposing him requires finding his hidden sending stone (DC 16 Investigation in his quarters) or catching him in the act. CR 7 if confronted.",
+      "status": "alive"
+    },
+    {
+      "name": "Ruuga the Hollow-Touched",
+      "role": "Information / Wild Card",
+      "race": "Orc",
+      "npc_class": "Shaman (Warlock of the Great Old One)",
+      "location": "The Siege Camp — The Bone Circle",
+      "description": "An ancient, hunched orc woman draped in layers of bone charms, dried herbs, and tattered cloth. Her eyes are milky white — she has been blind for decades but sees through other means. She moves through the orc camp with an authority that even Grashak does not challenge, and she speaks in riddles interspersed with moments of terrifying clarity. Her fingers are stained black to the knuckle, and shadows seem to gather around her feet.",
+      "notes": "Ruuga is the one pushing Grashak toward Ironhold specifically because she senses the entity beneath it. She serves the same ancient presence and wants the siege to crack the mountain open. She is CR 8 and fights with eldritch blast, psychic spells, and summoned aberrations. Killing her removes the supernatural influence on the orc horde and opens the door for negotiation with Grashak. She can also be encountered by the party if they sneak into the siege camp, and she may offer cryptic warnings about what lies below — she wants the entity freed but fears it in equal measure.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "Hold the Line",
+      "giver": "King Durin Ironmantle",
+      "description": "The siege has entered its third week, and the outer walls are buckling. King Durin needs the party to bolster the eastern wall defense under Thane Brenna's command, repel an imminent orc assault, and investigate why the runic wards on that section of wall failed during the last bombardment. The eastern wall is strategically critical — if it falls, the orcs gain access to the civilian quarter. While fighting alongside the dwarven defenders, the party will notice irregularities: wards that should be active are dormant, supply crates contain spoiled food instead of provisions, and orders from the war council seem to arrive late. Someone inside Ironhold is working against the defense.",
+      "status": "active",
+      "notes": "This quest establishes the siege setting and introduces the sabotage subplot. The eastern wall assault is a set-piece battle with waves of orc warriors (use 2024 Orc stat blocks, 3 waves of 4-6 orcs plus an Orc War Chief). During the battle, a section of wall collapses due to failed wards — investigation afterward (DC 14 Arcana) reveals the wards were deliberately weakened, not just damaged. This points toward an inside job. Completing this quest earns Brenna's trust and the king's attention for more sensitive work.",
+      "objectives": [
+        { "text": "Report to Thane Brenna at the eastern wall fortifications", "completed": false },
+        { "text": "Repel the orc assault on the eastern wall", "completed": false },
+        { "text": "Investigate why the runic wards failed during the bombardment", "completed": false },
+        { "text": "Report evidence of internal sabotage to King Durin", "completed": false }
+      ]
+    },
+    {
+      "title": "The Traitor Among Us",
+      "giver": "King Durin Ironmantle",
+      "description": "With evidence of sabotage mounting, King Durin tasks the party with a covert investigation: find the traitor on the war council before they can do more damage. The suspects include several high-ranking dwarves, each with their own motives and secrets. The party must search quarters, follow suspects, intercept communications, and piece together the truth — all while maintaining the appearance of normal siege duties to avoid tipping off the traitor. The investigation leads to Advisor Rikard Stoneweaver, but exposing him is complicated by his thirty years of loyal service and the political fallout of accusing the king's most trusted advisor.",
+      "status": "active",
+      "notes": "An investigation and social intrigue quest. Key evidence: Rikard's hidden sending stone (DC 16 Investigation in his quarters, hidden in a hollowed-out book), modified ward schematics in his journal (DC 15 Arcana to recognize the deliberate flaws), and testimony from a guard who saw Rikard near the eastern wall wards the night before they failed (DC 13 Persuasion to get the guard to talk). Confronting Rikard triggers a fight — he uses Shield, Counterspell, and Wall of Force while trying to flee to the sealed tunnels below. If he escapes, he joins the entity below for the final quest.",
+      "objectives": [
+        { "text": "Investigate the quarters of war council members for evidence", "completed": false },
+        { "text": "Find Rikard's hidden sending stone", "completed": false },
+        { "text": "Gather enough evidence to convince King Durin of the traitor's identity", "completed": false },
+        { "text": "Confront and apprehend Advisor Rikard Stoneweaver", "completed": false }
+      ]
+    },
+    {
+      "title": "The Depths of Anvilspire",
+      "giver": "Thane Brenna Coalvein",
+      "description": "With the traitor exposed (or escaped below), the true threat is revealed: deep beneath Ironhold, in tunnels sealed after the Underdark Wars two centuries ago, an aboleth named Zul'grathis has been imprisoned in a flooded vault. The siege's constant bombardment has cracked its prison, and Rikard's sabotage has weakened the binding wards. The aboleth's psychic influence has been seeping upward, corrupting dreams and subtly influencing those who venture too close to the lower levels. If the aboleth breaks free, it will flood the lower city and enslave the population. The party must descend through the sealed tunnels — past ancient traps, underdark creatures that have crept in through the cracks, and the aboleth's psychic projections — to either reinforce the prison or destroy the creature once and for all.",
+      "status": "active",
+      "notes": "The dungeon crawl climax. The sealed tunnels are a 6-room dungeon: Collapsed Gatehouse (traversal challenge, DC 14 Athletics/Acrobatics), The Fungal Grotto (myconid encounter, can be peaceful or hostile), Hall of Fallen Kings (ancient dwarven tomb with wight guardians, 3x CR 3), The Cracked Seals (puzzle to restore or bypass the binding wards, DC 15 Arcana), Flooded Approach (underwater section with chuul sentinels, 2x CR 4), and the Aboleth's Vault (Zul'grathis, CR 10, with lair actions in flooded terrain). If the party negotiated with Grashak or killed Ruuga, the siege lifts during this quest, allowing reinforcements. The aboleth can be re-imprisoned (skill challenge) or slain, each with different narrative outcomes.",
+      "objectives": [
+        { "text": "Enter the sealed tunnels beneath Ironhold", "completed": false },
+        { "text": "Navigate the ancient Underdark passages to reach the aboleth's vault", "completed": false },
+        { "text": "Survive the aboleth's psychic defenses and lair hazards", "completed": false },
+        { "text": "Defeat or re-imprison Zul'grathis the aboleth", "completed": false },
+        { "text": "Return to the surface and report to King Durin", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "Ironhold",
+      "category": "Location",
+      "body": "Ironhold is a dwarven fortress-city carved into and around Mount Anvilspire, a solitary peak rising from the northern plains. The city spans three levels: the Upper City (surface fortifications, military installations, and the Throne Hall), the Middle City (residential quarters, markets, forges, and temples), and the Lower City (mines, deep storerooms, and the sealed tunnels leading into the Underdark). The walls are reinforced with runic wards that have repelled sieges, dragons, and even a minor demonic incursion over the centuries. Ironhold's population of roughly 12,000 dwarves makes it the largest dwarven settlement in the region, and its forges produce some of the finest weapons and armor on the continent.",
+      "related_to": "King Durin Ironmantle"
+    },
+    {
+      "title": "The Bloodtide Horde",
+      "category": "Faction",
+      "body": "The Bloodtide Horde is an alliance of seven orc clans united under Warlord Grashak Bloodtide. The name comes from an ancient orcish prophecy about a 'tide of blood that will wash away the old walls and carve new homes from stone.' The horde numbers approximately 3,000 warriors plus an equal number of non-combatants — families, elders, and children who travel with the war camp. The seven clans each maintain their own chieftains who answer to Grashak, and internal politics are managed through ritual combat, council votes, and strategic marriages. The horde was displaced from the Ashenveld Plains by the expansion of the Kingdom of Valderos and has been moving north for two years, seeking land that can sustain their people through the harsh northern winters.",
+      "related_to": "Warlord Grashak Bloodtide"
+    },
+    {
+      "title": "Zul'grathis the Imprisoned",
+      "category": "Entity",
+      "body": "Zul'grathis is an aboleth of immense age and cunning that was discovered in a flooded cavern system beneath Mount Anvilspire during the Underdark Wars two hundred years ago. When the dwarves breached its lair, Zul'grathis enslaved an entire battalion of warriors before being driven back by a combined force of clerics and runesmiths. Unable to kill the creature — aboleths reform in the Elemental Plane of Water when slain on the Material Plane — the dwarves chose to imprison it using powerful binding wards anchored to the mountain itself. Zul'grathis has spent two centuries probing those wards, whispering to anyone who comes close enough to hear, and waiting for a crack it can exploit.",
+      "related_to": "The Depths of Anvilspire"
+    },
+    {
+      "title": "The Underdark Wars",
+      "category": "History",
+      "body": "Two hundred years ago, Ironhold fought a decade-long conflict against threats emerging from the Underdark — drow raiding parties, mind flayer scouting expeditions, and the discovery of Zul'grathis. The wars reshaped dwarven society in Ironhold, leading to the creation of the Deepwatch (a specialized military unit trained for underground combat), the sealing of the lower tunnels, and a cultural shift toward isolationism. King Durin's grandfather, King Thordak Ironmantle, led the final campaign that imprisoned the aboleth and sealed the tunnels. The wards were designed by the greatest runesmiths of the age, and their maintenance became a sacred duty — a duty that eventually fell to Advisor Rikard Stoneweaver, with disastrous consequences.",
+      "related_to": "Ironhold"
+    },
+    {
+      "title": "The Runic Wards of Anvilspire",
+      "category": "Artifact",
+      "body": "Ironhold's famous runic wards are a network of interconnected dwarven runes carved into the fortress walls, gates, and foundational stone of Mount Anvilspire itself. Created over centuries by generations of runesmiths, the wards serve multiple functions: structural reinforcement (making the walls resistant to siege damage), magical shielding (granting resistance to elemental and magical attacks), alarm systems (alerting the Deepwatch to breaches), and — in the deepest levels — binding magic that keeps Zul'grathis imprisoned. The wards require periodic maintenance and recharging, typically performed during the annual Runekeeping Festival. Advisor Rikard has been subtly degrading the wards during these maintenance cycles for the past three years, weakening them just enough to be unnoticeable until stressed by siege bombardment.",
+      "related_to": "Advisor Rikard Stoneweaver"
+    },
+    {
+      "title": "Mount Anvilspire",
+      "category": "Location",
+      "body": "Mount Anvilspire is a solitary granite peak rising 4,000 feet above the northern plains, named for its distinctive flat-topped summit that ancient dwarves believed was shaped by Moradin's own anvil. The mountain is rich in iron, mithral, and trace deposits of adamantine, making it one of the most valuable mining sites on the continent. Its internal cavern systems extend deep into the Underdark, though most passages have been sealed since the Underdark Wars. The mountain's unique mineral composition makes it an excellent conductor for runic magic, which is why the binding wards on Zul'grathis are anchored to the stone itself. A natural hot spring system provides Ironhold with heated water and powers several of the city's forges. The siege camp of the Bloodtide Horde encircles the mountain's base, cutting off the three main road approaches.",
+      "related_to": "Ironhold"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: The Siege of Ironhold",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nYou see the smoke before you see the fortress. Great columns of black and grey rise from the base of Mount Anvilspire, where siege engines hurl flaming pitch against walls that have stood for eight centuries. Even from a distance, the scale of the conflict is staggering — thousands of orc tents spread across the plains like a dark tide, their war drums a constant low thunder that you feel in your chest.\n\nYour approach has not been easy. The main roads are controlled by the Bloodtide Horde, forcing you through mountain goat trails and abandoned mine shafts to reach Ironhold's hidden eastern postern gate. A dwarven scout named Corporal Halvek meets you at the tunnel entrance, his face grim beneath a soot-stained helm.\n\n*\"You're the reinforcements? All of you?\"* He looks your party over, then shrugs. *\"Well. The king asked for heroes, not an army. Suppose we'll see which one we needed.\"*\n\nInside Ironhold, the mood is tense but defiant. Dwarven soldiers march with purpose along the upper battlements while civilians keep the forges burning and the supply chains moving. But you notice the signs of strain — rationing notices posted on every corner, children too quiet, and soldiers whose eyes carry the hollow look of too many sleepless nights.\n\n**King Durin Ironmantle** awaits you in the Throne Hall. The briefing will be direct — he is not a dwarf who wastes words.\n\n### Key Details\n- **Setting**: Ironhold, a dwarven fortress-city under siege\n- **Level Range**: 5-8 (2024 Rules)\n- **Tone**: War drama with dungeon crawl and political intrigue\n- **Theme**: Enemies above, horrors below, and betrayal within\n- **Starting Hook**: King Durin's war briefing in the Throne Hall",
+    "tags": "introduction,session-zero,siege,dwarven,war",
+    "npcs_mentioned": "King Durin Ironmantle,Warlord Grashak Bloodtide,Thane Brenna Coalvein,Advisor Rikard Stoneweaver,Ruuga the Hollow-Touched"
+  }
+}

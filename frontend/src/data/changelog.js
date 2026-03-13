@@ -3,6 +3,27 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.4.0',
+    date: '03/12/2026',
+    title: 'The Adventurer\'s Forge — Comprehensive Player Mode Overhaul',
+    changes: [
+      'Character Sheet — HP status text (Healthy/Bloodied/Critical/Down), exhaustion effects display, AC breakdown tooltip, ability modifier quick-reference row',
+      'Speed Variants — editable climb, swim, and fly speed fields with compact badges when collapsed',
+      'Concentration Tracker — track active concentration spell with drop button and CON save reminder',
+      'Auto-Calculate — hit dice from class, spell slots from class/level (full/half/third/pact casters), saving throw proficiencies from class',
+      'Character Setup Wizard — 6 quick start presets, progress indicator, step review panel, class/race tooltips with mechanical info',
+      'Spellbook — spell count summary bar, Prepare All/Unprepare All buttons, always-prepared spells get emerald visual distinction',
+      'Inventory — sort by name/weight/value/type, total inventory value display, Unequip All button for camp/rest',
+      'Journal — duplicate entries, live word/character count while editing',
+      'NPC-Quest-Lore Cross-Linking — NPCs show related quests, quests show related NPCs, lore entries show referenced NPCs and quests',
+      'Visual Polish — skeleton loading animations, card hover glow, section fade transitions, improved toast styling, scroll to top on section change',
+      'Dev Health Panel — memory usage monitoring, DB health check, slow IPC call tracker, localStorage usage breakdown, error rate trending, session uptime',
+      'Git Panel — session logs persist across tab switches, manual refresh only',
+      'DM Mode — locked to developers with git repo access only (beta)',
+      'Auto-Update — auto-pull from GitHub on first launch of the day, persistent update banner during play sessions',
+    ],
+  },
+  {
     version: 'V0.3.2',
     date: '03/11/2026',
     title: 'Dev Sync System, Dev Tools Panel & Robust Auto-Update',

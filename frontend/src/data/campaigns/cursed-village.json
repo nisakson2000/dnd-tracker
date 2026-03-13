@@ -1,0 +1,156 @@
+{
+  "name": "The Cursed Village",
+  "description": "The once-thriving village of Hollowmere has fallen under a mysterious curse. Crops wither overnight, livestock sicken, and villagers report nightmares of a shadowy figure in the old cemetery. The party must investigate the source of the curse before the village is abandoned entirely.",
+  "level": "3-5",
+  "author": "The Codex",
+  "tags": ["mystery", "undead", "investigation"],
+  "npcs": [
+    {
+      "name": "Mayor Cordelia Thorne",
+      "role": "Quest Giver",
+      "race": "Human",
+      "npc_class": "Noble",
+      "location": "Hollowmere - Town Hall",
+      "description": "A tall, gaunt woman in her fifties with prematurely white hair and dark circles under her eyes. She has barely slept since the curse began three weeks ago. She is desperate for help and willing to pay handsomely from the town treasury.",
+      "notes": "Hiding a secret: her ancestor, Aldric Thorne, was a necromancer who was buried in the old cemetery. She suspects the curse is connected to her family but is terrified to admit it publicly.",
+      "status": "alive"
+    },
+    {
+      "name": "Silas Duskwalker",
+      "role": "Antagonist",
+      "race": "Human (Undead)",
+      "npc_class": "Warlock",
+      "location": "Hollowmere Cemetery - Hidden Crypt",
+      "description": "The restless spirit of a warlock who died two centuries ago after being betrayed by his patron. He exists as a wraith bound to a cursed amulet buried with him. The amulet's containment ward cracked during a recent earthquake, unleashing the curse on the village.",
+      "notes": "Not purely evil - Silas is in agony and lashing out. If the party can destroy the amulet, his spirit will be freed and the curse will end. He can also be reasoned with briefly if someone casts Speak with Dead or similar magic.",
+      "status": "alive"
+    },
+    {
+      "name": "Fennwick Bramble",
+      "role": "Ally",
+      "race": "Gnome",
+      "npc_class": "Wizard",
+      "location": "Hollowmere - The Crooked Lantern (bookshop)",
+      "description": "An eccentric gnome scholar who runs the village's bookshop and serves as its unofficial historian. He has wild grey hair, oversized spectacles, and an encyclopedic knowledge of local legends. He has been researching the curse and has several theories.",
+      "notes": "Knows the legend of Aldric Thorne and suspects the cemetery connection. Has a scroll of Protection from Evil that he'll give the party. His shop contains historical records that can provide clues.",
+      "status": "alive"
+    },
+    {
+      "name": "Sergeant Kara Ironwood",
+      "role": "Ally",
+      "race": "Half-Elf",
+      "npc_class": "Fighter",
+      "location": "Hollowmere - Guard Barracks",
+      "description": "The captain of Hollowmere's small guard force. She is practical, brave, and frustrated that her sword skills are useless against a supernatural threat. She has lost two guards to the nightmares - they fell into comas and haven't woken up.",
+      "notes": "Will provide two guards as escorts if the party investigates the cemetery at night. She knows the cemetery layout well. Has noticed the curse seems strongest near the old Thorne family mausoleum.",
+      "status": "alive"
+    },
+    {
+      "name": "Old Marga",
+      "role": "Informant",
+      "race": "Human",
+      "npc_class": "Druid",
+      "location": "Hollowmere - Outskirts (herbalist hut)",
+      "description": "An elderly herbalist and hedge witch who lives on the edge of the village. The villagers respect and slightly fear her. She can sense the dark magic permeating Hollowmere and has been brewing protective charms, but they only slow the curse.",
+      "notes": "Can identify the curse as necrotic in origin. Will brew anti-nightmare tea for the party (grants advantage on saves against the nightmare effects). Knows the cemetery has old wards that were placed by a priest long ago.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "The Curse of Hollowmere",
+      "giver": "Mayor Cordelia Thorne",
+      "description": "Investigate the mysterious curse plaguing Hollowmere village. Crops are dying, people are falling into nightmare-induced comas, and a shadowy figure has been seen in the cemetery at night. Find the source and end the curse.",
+      "status": "active",
+      "notes": "Reward: 200 gold pieces and a deed to a small cottage in the village. The curse originates from a cracked containment ward on Silas Duskwalker's amulet in the old cemetery crypt.",
+      "objectives": [
+        { "text": "Speak with Mayor Thorne about the curse", "completed": false },
+        { "text": "Gather information from villagers about when the curse began", "completed": false },
+        { "text": "Investigate the Hollowmere Cemetery at night", "completed": false },
+        { "text": "Find and enter the hidden crypt beneath the Thorne mausoleum", "completed": false },
+        { "text": "Destroy the cursed amulet or find another way to end the curse", "completed": false }
+      ]
+    },
+    {
+      "title": "Wake the Sleepers",
+      "giver": "Sergeant Kara Ironwood",
+      "description": "Two guards and three villagers have fallen into nightmare-induced comas. Old Marga believes they can be woken if the curse is broken, but their condition worsens each day. Find a way to save them before it is too late.",
+      "status": "active",
+      "notes": "The sleepers will die in 5 days if the curse is not broken. Breaking the amulet wakes them all. Alternatively, a Remove Curse spell can wake one person at a time.",
+      "objectives": [
+        { "text": "Visit the comatose villagers at the guard barracks", "completed": false },
+        { "text": "Consult Old Marga about a remedy", "completed": false },
+        { "text": "Break the curse to wake all sleepers", "completed": false }
+      ]
+    },
+    {
+      "title": "The Thorne Family Secret",
+      "giver": "Fennwick Bramble",
+      "description": "Fennwick's research suggests the Thorne family has a dark secret connected to the cemetery. Investigate the historical records and confront Mayor Thorne about her ancestor Aldric, who was rumored to practice forbidden magic.",
+      "status": "active",
+      "notes": "This quest provides crucial backstory. Cordelia will initially deny everything but can be persuaded (DC 15 Persuasion) to reveal the truth about Aldric Thorne being a necromancer.",
+      "objectives": [
+        { "text": "Research the Thorne family history in Fennwick's bookshop", "completed": false },
+        { "text": "Confront Mayor Thorne about her ancestor Aldric", "completed": false },
+        { "text": "Find Aldric Thorne's journal in the mausoleum", "completed": false }
+      ]
+    },
+    {
+      "title": "Cemetery Guardians",
+      "giver": "Old Marga",
+      "description": "The cemetery's old protective wards, placed by a priest generations ago, have been weakened by the curse. Undead have begun rising at night. Clear the cemetery of undead and, if possible, restore the wards to prevent further risings.",
+      "status": "active",
+      "notes": "3-4 skeletons and 2 zombies roam the cemetery at night. Restoring the wards requires holy water poured on the four cornerstone markers.",
+      "objectives": [
+        { "text": "Obtain holy water from the village shrine", "completed": false },
+        { "text": "Clear the undead from the cemetery", "completed": false },
+        { "text": "Restore the four cornerstone wards", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "Hollowmere Village",
+      "category": "Location",
+      "body": "A farming village of about 300 people nestled in a shallow valley beside Stillwater Lake. Hollowmere is known for its fertile soil and bountiful harvests - or it was, until the curse began three weeks ago. The village has a town hall, a guard barracks, a general store, The Sleeping Fox inn, a small shrine to nature gods, and Fennwick's bookshop, The Crooked Lantern. A ancient cemetery sits on a hill overlooking the village.",
+      "related_to": "Mayor Cordelia Thorne"
+    },
+    {
+      "title": "Hollowmere Cemetery",
+      "category": "Location",
+      "body": "A centuries-old cemetery on the hill north of the village, surrounded by a wrought-iron fence. It contains over two hundred graves, several family mausoleums, and four cornerstone ward markers placed by a priest named Father Clement over a century ago. The Thorne family mausoleum is the largest structure, built from dark granite. Beneath it lies a hidden crypt accessible through a concealed stairway behind the altar inside the mausoleum.",
+      "related_to": "Silas Duskwalker"
+    },
+    {
+      "title": "The Thorne Family Legacy",
+      "category": "History",
+      "body": "The Thorne family founded Hollowmere three centuries ago. Most were honorable leaders, but Aldric Thorne (circa 200 years ago) secretly practiced necromancy after making a pact with a dark entity. When the villagers discovered his activities, he was executed and buried in the family mausoleum. A priest named Father Clement placed protective wards to contain any residual dark magic. The current mayor, Cordelia Thorne, is aware of this dark chapter but has kept it secret to protect her family's reputation.",
+      "related_to": "Mayor Cordelia Thorne"
+    },
+    {
+      "title": "Silas Duskwalker's Amulet",
+      "category": "Item",
+      "body": "A tarnished silver amulet set with a cracked obsidian stone, buried with the warlock Silas Duskwalker in the hidden crypt beneath the Thorne mausoleum. The amulet was the focus of Silas's pact with his patron and contains his bound spirit. A containment ward placed by Father Clement kept its power dormant for two centuries, but a recent earthquake cracked the ward, allowing the curse to seep out. Destroying the amulet (AC 15, 20 HP, vulnerable to radiant damage) will free Silas's spirit and end the curse.",
+      "related_to": "Silas Duskwalker"
+    },
+    {
+      "title": "The Nightmare Curse",
+      "category": "Magic",
+      "body": "The curse manifests as a creeping necrotic energy that spreads outward from the cemetery. Its effects include: withering of crops and plants, sickening of animals, terrifying nightmares for anyone who sleeps within the village, and in severe cases, nightmare-induced comas. The curse grows stronger each day. Those affected by the nightmares must make a DC 12 Wisdom save each night or suffer one level of exhaustion. On a natural 1, they fall into a coma.",
+      "related_to": "Silas Duskwalker's Amulet"
+    },
+    {
+      "title": "Father Clement's Wards",
+      "category": "Magic",
+      "body": "Protective wards placed on four cornerstone markers at the edges of Hollowmere Cemetery by the priest Father Clement approximately 150 years ago. The wards suppress undead activity and contain dark magical energy within the cemetery grounds. The wards have weakened over time and were further damaged by the earthquake that cracked Silas's amulet containment. They can be restored by pouring consecrated holy water on each cornerstone while reciting a prayer (any character proficient in Religion can perform this).",
+      "related_to": "Hollowmere Cemetery"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: The Cursed Village",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe party arrives at Hollowmere village following rumors of a mysterious affliction. The village looks sickly - gardens are brown and wilted, the air smells faintly of decay, and the few people outdoors move quickly with haunted expressions.\n\nAt The Sleeping Fox inn, the innkeeper warns the party not to sleep too deeply and offers them rooms with protective herb bundles hung over the beds. Mayor Cordelia Thorne soon arrives, having heard that adventurers have come to town.\n\n**Starting Hook:** Mayor Thorne offers 200 gold to anyone who can end the curse. She claims not to know its source but suggests starting the investigation at the cemetery where the shadowy figure has been spotted.\n\n**Key NPCs to introduce:** Mayor Thorne, Sergeant Kara Ironwood, Fennwick Bramble, Old Marga\n\n**DM Notes:** Let the party investigate freely. The key clues are: (1) the curse started after a minor earthquake three weeks ago, (2) it is strongest near the cemetery, (3) the Thorne mausoleum is at the epicenter. Fennwick and Old Marga can provide magical insights.",
+    "tags": "introduction,mystery,curse,hollowmere",
+    "npcs_mentioned": "Mayor Cordelia Thorne,Sergeant Kara Ironwood,Fennwick Bramble,Old Marga"
+  }
+}

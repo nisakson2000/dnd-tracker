@@ -1,0 +1,145 @@
+{
+  "name": "The Dragon Coast",
+  "description": "The port city of Dragontide is under threat. A young blue dragon named Stormscar has claimed the coastal cliffs as her territory, demanding tribute from passing ships. Meanwhile, a shadowy smuggling ring is exploiting the chaos to move forbidden cargo through the city. The party must navigate political intrigue, naval combat, and a dragon's lair to save the coast.",
+  "level": "5-8",
+  "author": "The Codex",
+  "tags": ["dragon", "coastal", "intrigue", "naval"],
+  "npcs": [
+    {
+      "name": "Harbormaster Vex Callowan",
+      "role": "Quest Giver",
+      "race": "Human",
+      "npc_class": "Fighter",
+      "location": "Dragontide - Harbor Office",
+      "description": "A broad-shouldered former naval captain with a salt-and-pepper beard, an eyepatch over his left eye, and a mechanical prosthetic hand. He runs Dragontide's port with military precision. The dragon situation is crippling trade, and the city council is threatening to replace him if he cannot resolve it.",
+      "notes": "Honorable but pragmatic. He suspects the smuggling ring is connected to someone on the city council but cannot prove it. Will pay well for both the dragon problem and evidence of corruption.",
+      "status": "alive"
+    },
+    {
+      "name": "Stormscar",
+      "role": "Antagonist",
+      "race": "Blue Dragon (Young)",
+      "npc_class": "Dragon",
+      "location": "Thunderclaw Cliffs - Lair",
+      "description": "A young blue dragon with brilliant azure scales scarred by lightning along her left flank. She is intelligent, proud, and surprisingly reasonable for a dragon. She claimed the coast not out of malice but because she was driven from her previous territory by an adult red dragon. She demands tribute because she needs a hoard to establish her new domain.",
+      "notes": "Can be fought (very dangerous at this level) or negotiated with. She respects strength and clever bargaining. If offered the smuggling ring's hidden treasure cache as tribute, she will agree to stop demanding tolls from honest merchants. She despises thieves and liars.",
+      "status": "alive"
+    },
+    {
+      "name": "Captain Lyra Stormwind",
+      "role": "Ally",
+      "race": "Half-Elf",
+      "npc_class": "Ranger",
+      "location": "Dragontide - The Siren's Rest Tavern",
+      "description": "A daring ship captain with sun-darkened skin, silver-streaked black hair, and a reputation for outrunning anything on the water. Her ship, The Wavecutter, is the fastest in port. She has personally witnessed Stormscar's attacks and has studied the dragon's patrol patterns.",
+      "notes": "Can transport the party to the dragon's lair by sea. Knows the coastal caves well. She has a personal vendetta - the dragon sank her partner's ship, and her partner barely survived. Will offer her services for free if the party plans to confront Stormscar.",
+      "status": "alive"
+    },
+    {
+      "name": "Councilor Drest Blackwater",
+      "role": "Antagonist",
+      "race": "Human",
+      "npc_class": "Rogue",
+      "location": "Dragontide - Council Chambers / Blackwater Estate",
+      "description": "A wealthy and influential city councilor with slicked-back dark hair, expensive clothes, and a politician's smile. Publicly he advocates for paying the dragon's tribute to keep the peace. Secretly, he leads the smuggling ring known as the Undertow, using the dragon crisis as cover for his operations.",
+      "notes": "His smuggling operation moves stolen magical artifacts, forbidden alchemical ingredients, and occasionally people. His warehouse on Pier 13 is the hub. He has bribed two city guards and has an escape plan (a hidden boat) if exposed.",
+      "status": "alive"
+    },
+    {
+      "name": "Zara Emberheart",
+      "role": "Ally",
+      "race": "Tiefling",
+      "npc_class": "Sorcerer",
+      "location": "Dragontide - Arcane Consortium Tower",
+      "description": "A sharp-tongued tiefling sorcerer who serves as Dragontide's arcane advisor. She has studied dragons extensively and can provide crucial intelligence about blue dragon weaknesses and behavior. Her horns are adorned with small silver rings, and she always smells faintly of ozone.",
+      "notes": "Can provide the party with two Potions of Lightning Resistance and a scroll of Protection from Energy. She has detected magical residue at the smuggling warehouse but was warned off investigating by Councilor Blackwater. Suspects him but has no proof.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "The Dragon of Thunderclaw Cliffs",
+      "giver": "Harbormaster Vex Callowan",
+      "description": "A young blue dragon named Stormscar has claimed the coastal cliffs near Dragontide and is demanding tribute from all passing ships. Trade is being strangled. The harbormaster needs the party to deal with the dragon - whether through combat, negotiation, or cunning.",
+      "status": "active",
+      "notes": "Reward: 500 gold pieces and a Letter of Marque granting the party legal authority to operate as privateers along the coast. Combat approach is possible but very challenging. Negotiation is the intended primary path.",
+      "objectives": [
+        { "text": "Meet with Harbormaster Callowan to learn about the dragon situation", "completed": false },
+        { "text": "Consult Zara Emberheart about blue dragon lore and weaknesses", "completed": false },
+        { "text": "Arrange passage to Thunderclaw Cliffs with Captain Stormwind", "completed": false },
+        { "text": "Confront Stormscar in her lair", "completed": false },
+        { "text": "Resolve the dragon threat (combat or negotiation)", "completed": false }
+      ]
+    },
+    {
+      "title": "The Undertow Smuggling Ring",
+      "giver": "Harbormaster Vex Callowan",
+      "description": "Someone is using the dragon crisis as cover to run a smuggling operation through Dragontide's port. Suspicious shipments have been spotted at Pier 13 during nighttime hours. Investigate the operation, identify its leader, and shut it down.",
+      "status": "active",
+      "notes": "Reward: 300 gold plus any confiscated contraband the party finds. The smuggling ring is led by Councilor Blackwater. His warehouse contains evidence, stolen goods worth 2,000 gold, and forbidden magical artifacts.",
+      "objectives": [
+        { "text": "Investigate Pier 13 at night for suspicious activity", "completed": false },
+        { "text": "Infiltrate or raid the smuggling warehouse", "completed": false },
+        { "text": "Find evidence connecting the operation to its leader", "completed": false },
+        { "text": "Expose Councilor Blackwater to the city council", "completed": false }
+      ]
+    },
+    {
+      "title": "Storm on the Water",
+      "giver": "Captain Lyra Stormwind",
+      "description": "Captain Stormwind needs help escorting a critical supply ship through the dragon's patrol zone. The ship carries food and medicine for a fishing village that has been cut off by the dragon's blockade. This mission will also allow the party to study Stormscar's attack patterns up close.",
+      "status": "active",
+      "notes": "A naval encounter. The party must defend the supply ship if Stormscar attacks. This is meant to be a dramatic chase scene, not a full dragon fight - Stormscar will make one or two strafing runs before losing interest if the ship takes evasive action.",
+      "objectives": [
+        { "text": "Board The Wavecutter and prepare for the escort mission", "completed": false },
+        { "text": "Survive the dragon's patrol zone", "completed": false },
+        { "text": "Deliver supplies to the fishing village of Saltspray", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "Dragontide - The Port City",
+      "category": "Location",
+      "body": "A bustling port city of about 5,000 people built along a natural harbor on the Sapphire Coast. Dragontide earned its name centuries ago when dragons were more commonly seen along the coast. The city thrives on maritime trade, fishing, and shipbuilding. Key locations include the Harbor District, the Market Quarter, the Council Hill where the wealthy live, and the Docks District where sailors and laborers reside. The city is governed by a council of seven members elected by property owners.",
+      "related_to": "Harbormaster Vex Callowan"
+    },
+    {
+      "title": "Thunderclaw Cliffs",
+      "category": "Location",
+      "body": "A dramatic stretch of coastal cliffs five miles north of Dragontide, rising 200 feet above the churning sea. The cliffs are riddled with sea caves, many of which are only accessible at low tide. Stormscar has claimed the largest cave system as her lair, which she has expanded with her lightning breath. The lair contains three chambers: an entry cavern open to the sea, a main hall where she keeps her growing hoard, and a sleeping chamber deeper in the cliff. The approach by sea is treacherous due to jagged rocks and strong currents.",
+      "related_to": "Stormscar"
+    },
+    {
+      "title": "The Undertow",
+      "category": "Faction",
+      "body": "A smuggling organization operating out of Dragontide's port, secretly led by Councilor Drest Blackwater. The Undertow has been active for two years but has expanded dramatically during the dragon crisis, using the chaos and reduced patrols as cover. They operate primarily from a warehouse on Pier 13, moving stolen magical artifacts, forbidden alchemical components, and occasionally kidnapped individuals to buyers along the coast. The organization has about a dozen members, including two bribed city guards.",
+      "related_to": "Councilor Drest Blackwater"
+    },
+    {
+      "title": "Blue Dragon Lore",
+      "category": "Creature",
+      "body": "Blue dragons are orderly and territorial creatures that prefer coastal and desert environments. They are lightning-wielders, using their breath weapon to devastating effect. Young blue dragons like Stormscar are intelligent enough to negotiate but proud enough to demand respect. They value their hoards above all else and consider an insult to their hoard an unforgivable offense. Blue dragons are vulnerable to attacks that target their vanity - they can be goaded into making tactical errors if sufficiently enraged or flattered. They lair in caves and burrows, often near water.",
+      "related_to": "Stormscar"
+    },
+    {
+      "title": "The Sapphire Coast",
+      "category": "Location",
+      "body": "The stretch of coastline where Dragontide and several smaller settlements are located. Named for the brilliant blue-green color of the water on clear days. The coast is dotted with fishing villages, hidden coves, and ancient sea caves. Maritime trade routes connect the coastal settlements to distant ports. The waters are generally safe but are home to occasional sea monsters, pirates, and now a territorial dragon.",
+      "related_to": "Dragontide - The Port City"
+    },
+    {
+      "title": "The Arcane Consortium",
+      "category": "Faction",
+      "body": "A small guild of magic practitioners based in Dragontide's Consortium Tower. The guild provides magical services to the city including weather prediction for sailors, identification of magical items, and arcane consultation for the city council. Zara Emberheart is the current head of the Consortium, which has five active members. The Consortium has been monitoring unusual magical activity near Pier 13 but has been politically blocked from investigating by Councilor Blackwater.",
+      "related_to": "Zara Emberheart"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: The Dragon Coast",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe party arrives in Dragontide by ship, immediately noticing that the normally busy port is half-empty. Many merchant vessels are anchored in the harbor rather than risking the coastal waters. Scorch marks on the harbor breakwater tell the story of a recent dragon attack.\n\nHarbormaster Vex Callowan meets the party at the docks, having heard they are capable adventurers. He wastes no time explaining the situation: a young blue dragon has claimed the nearby cliffs, trade is dying, and the city council is paralyzed by indecision.\n\n**Starting Hook:** Callowan offers 500 gold for resolving the dragon problem and mentions he also suspects a smuggling operation is exploiting the crisis. He suggests the party start by gathering intelligence - Zara Emberheart at the Arcane Consortium knows about dragons, and Captain Stormwind at The Siren's Rest has firsthand experience with the beast.\n\n**Key NPCs to introduce:** Harbormaster Callowan, Zara Emberheart, Captain Stormwind\n\n**DM Notes:** This adventure has two main threads (dragon and smuggling) that intertwine. The dragon negotiation works best if the party discovers the smuggling ring's treasure first, as they can offer it to Stormscar as tribute. Let players tackle the threads in any order.",
+    "tags": "introduction,dragon,smuggling,dragontide",
+    "npcs_mentioned": "Harbormaster Vex Callowan,Stormscar,Captain Lyra Stormwind,Zara Emberheart,Councilor Drest Blackwater"
+  }
+}

@@ -1,14 +1,17 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { TrendingUp, TrendingDown, Heart, Shield, Zap, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles, Skull, Search, Brain, Swords, AlertTriangle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Heart, Shield, Zap, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles, Skull, Search, Brain, Swords, AlertTriangle, ChevronDown, ChevronUp, StickyNote, Flame, Waves, Wind, Target, Wand2, Calculator, Package, Dices } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOverview, updateOverview, updateAbilityScores, updateSavingThrows, updateSkills } from '../api/overview';
 import { longRest, shortRest } from '../api/rest';
+import { getFeatures, updateFeature } from '../api/features';
+import { getSpells } from '../api/spells';
 import { useAutosave } from '../hooks/useAutosave';
 import SaveIndicator from '../components/SaveIndicator';
 import HelpTooltip from '../components/HelpTooltip';
 import { useRuleset } from '../contexts/RulesetContext';
 import { HELP } from '../data/helpText';
 import SubclassSelectModal from '../components/SubclassSelectModal';
+import ModalPortal from '../components/ModalPortal';
 import { computeConditionEffects, CONDITION_EFFECTS } from '../data/conditionEffects';
 
 const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
@@ -22,6 +25,51 @@ function calcMod(score) {
 function modStr(mod) {
   return mod >= 0 ? `+${mod}` : `${mod}`;
 }
+
+// ── Automation Engine Helpers ──
+
+/** Proficiency bonus from level (D&D 5e standard) */
+function calcProfBonus(level) {
+  if (level >= 17) return 6;
+  if (level >= 13) return 5;
+  if (level >= 9) return 4;
+  if (level >= 5) return 3;
+  return 2;
+}
+
+/** Spellcasting ability abbreviation for a given class */
+const CLASS_SPELL_ABILITY = {
+  Bard: 'CHA', Cleric: 'WIS', Druid: 'WIS', Paladin: 'CHA',
+  Ranger: 'WIS', Sorcerer: 'CHA', Warlock: 'CHA', Wizard: 'INT',
+  // Eldritch Knight (Fighter) and Arcane Trickster (Rogue) subclass casters:
+  Fighter: 'INT', Rogue: 'INT',
+};
+
+/** Standard hit die size per class */
+const CLASS_HIT_DIE = {
+  Barbarian: 12, Bard: 8, Cleric: 8, Druid: 8, Fighter: 10,
+  Monk: 8, Paladin: 10, Ranger: 10, Rogue: 8,
+  Sorcerer: 6, Warlock: 8, Wizard: 6,
+};
+
+/** Calculate auto HP: max hit die at level 1, then (avg + CON mod) per subsequent level */
+function calcAutoHP(className, level, conMod) {
+  const hitDie = CLASS_HIT_DIE[className];
+  if (!hitDie || level < 1) return null;
+  const avg = Math.floor(hitDie / 2) + 1; // average rounded up (standard D&D rule)
+  const hpAtOne = hitDie + conMod;
+  const hpAfterOne = (level - 1) * (avg + conMod);
+  return Math.max(1, hpAtOne + hpAfterOne);
+}
+
+/** Skill-to-ability mapping (D&D 5e) */
+const SKILL_ABILITY_MAP = {
+  'Acrobatics': 'DEX', 'Animal Handling': 'WIS', 'Arcana': 'INT', 'Athletics': 'STR',
+  'Deception': 'CHA', 'History': 'INT', 'Insight': 'WIS', 'Intimidation': 'CHA',
+  'Investigation': 'INT', 'Medicine': 'WIS', 'Nature': 'INT', 'Perception': 'WIS',
+  'Performance': 'CHA', 'Persuasion': 'CHA', 'Religion': 'INT', 'Sleight of Hand': 'DEX',
+  'Stealth': 'DEX', 'Survival': 'WIS',
+};
 
 export default function Overview({ characterId, character, onCharacterUpdate, onLevelUp, activeConditions = [] }) {
   const { PROFICIENCY_BONUS, SKILLS, RACES, CLASSES, CONDITIONS, EXHAUSTION_LEVELS, ancestryLabel } = useRuleset();
@@ -85,8 +133,17 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const { trigger: triggerSaves } = useAutosave(saveSaves);
   const { trigger: triggerSkills } = useAutosave(saveSkills);
 
+  const [notesOpen, setNotesOpen] = useState(false);
   const [showShortRest, setShowShortRest] = useState(false);
+  const [showDamage, setShowDamage] = useState(false);
+  const [showHeal, setShowHeal] = useState(false);
+  const [showTempHpInput, setShowTempHpInput] = useState(false);
+  const [damageAmount, setDamageAmount] = useState('');
+  const [healAmount, setHealAmount] = useState('');
+  const [tempHpAmount, setTempHpAmount] = useState('');
+  const [damageModifier, setDamageModifier] = useState('normal'); // 'normal' | 'resistant' | 'vulnerable'
   const prevHpRef = useRef(null);
+  const smartDamageAppliedRef = useRef(false);
   const [showSetup, setShowSetup] = useState(true);
   const [setupScores, setSetupScores] = useState(null);
   const [setupMethod, setSetupMethod] = useState(null);
@@ -95,11 +152,44 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const [pointBuyRemaining, setPointBuyRemaining] = useState(27);
   const [skillPicks, setSkillPicks] = useState([]);
 
+  // ── Automation Engine State ──
+  const [showHPCalc, setShowHPCalc] = useState(false);
+  const [showLevelUpSummary, setShowLevelUpSummary] = useState(null); // { level, gains }
+  const [hpRollResult, setHpRollResult] = useState(null);
+  // prevConModRef reserved for future CON modifier tracking
+
+  // Concentration tracker (session-only, stored in localStorage per character)
+  const [concentrationSpell, setConcentrationSpell] = useState('');
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(`codex_concentration_${characterId}`);
+      if (stored) setConcentrationSpell(stored);
+    } catch { /* ignore */ }
+  }, [characterId]);
+  const updateConcentration = (val) => {
+    setConcentrationSpell(val);
+    try {
+      if (val) localStorage.setItem(`codex_concentration_${characterId}`, val);
+      else localStorage.removeItem(`codex_concentration_${characterId}`);
+    } catch { /* ignore */ }
+  };
+
+  // Speed variants (climb, swim, fly) — stored in overview fields
+  const [showSpeedVariants, setShowSpeedVariants] = useState(false);
+
   const handleLongRest = async () => {
     try {
       const result = await longRest(characterId);
       result.restored.forEach(msg => toast.success(msg, { duration: 3000 }));
-      toast("Don't forget to restore your feature charges!", { icon: '🔄', duration: 4000, style: { background: '#1a1025', color: '#fde68a', border: '1px solid rgba(201,168,76,0.3)' } });
+      // Auto-restore features
+      try {
+        const features = await getFeatures(characterId);
+        const targets = features.filter(f => (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0) && f.recharge);
+        if (targets.length > 0) {
+          await Promise.all(targets.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total })));
+          toast.success(`${targets.length} feature${targets.length > 1 ? 's' : ''} restored`, { duration: 3000 });
+        }
+      } catch { /* features restore is best-effort */ }
       loadData();
     } catch (err) {
       toast.error(`Long rest failed: ${err.message}`);
@@ -110,12 +200,179 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     try {
       const result = await shortRest(characterId, hitDice);
       result.restored.forEach(msg => toast.success(msg, { duration: 3000 }));
-      toast("Don't forget to restore your feature charges!", { icon: '🔄', duration: 4000, style: { background: '#1a1025', color: '#fde68a', border: '1px solid rgba(201,168,76,0.3)' } });
+      // Auto-restore short rest features
+      try {
+        const features = await getFeatures(characterId);
+        const targets = features.filter(f => (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0) && (f.recharge === 'short_rest' || f.recharge === 'long_rest'));
+        if (targets.length > 0) {
+          await Promise.all(targets.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total })));
+          toast.success(`${targets.length} feature${targets.length > 1 ? 's' : ''} restored`, { duration: 3000 });
+        }
+      } catch { /* features restore is best-effort */ }
       setShowShortRest(false);
       loadData();
     } catch (err) {
       toast.error(`Short rest failed: ${err.message}`);
     }
+  };
+
+  const applyDamage = () => {
+    const rawDmg = parseInt(damageAmount) || 0;
+    if (rawDmg <= 0) return;
+    // Apply resistance/vulnerability
+    let dmg = rawDmg;
+    if (damageModifier === 'resistant') dmg = Math.floor(rawDmg / 2);
+    else if (damageModifier === 'vulnerable') dmg = rawDmg * 2;
+
+    let remaining = dmg;
+    let newTemp = overview.temp_hp || 0;
+    let newCurrent = overview.current_hp;
+    const oldTemp = newTemp;
+    // Temp HP absorbs first
+    if (newTemp > 0) {
+      const absorbed = Math.min(newTemp, remaining);
+      newTemp -= absorbed;
+      remaining -= absorbed;
+    }
+    newCurrent = Math.max(0, newCurrent - remaining);
+    const tempAbsorbed = oldTemp - newTemp;
+
+    smartDamageAppliedRef.current = true; // prevent duplicate concentration toast from useEffect
+    const updated = { ...overview, temp_hp: newTemp, current_hp: newCurrent };
+    // If HP drops to 0, activate death save mode (clear previous saves)
+    if (newCurrent === 0 && overview.current_hp > 0) {
+      updated.death_save_successes = 0;
+      updated.death_save_failures = 0;
+    }
+    setOverview(updated);
+    triggerOverview(updated);
+
+    // Build summary toast
+    const parts = [];
+    if (damageModifier === 'resistant') parts.push(`${rawDmg} halved to ${dmg}`);
+    else if (damageModifier === 'vulnerable') parts.push(`${rawDmg} doubled to ${dmg}`);
+    else parts.push(`Took ${dmg} damage`);
+    if (tempAbsorbed > 0) parts.push(`${tempAbsorbed} absorbed by temp HP`);
+    parts.push(`HP: ${newCurrent}/${overview.max_hp}`);
+    toast(parts.join('. ') + '.', { icon: '⚔️', duration: 4000, style: { background: '#1a1520', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' } });
+
+    // Unconscious warning
+    if (newCurrent === 0 && overview.current_hp > 0) {
+      toast.error("You're unconscious!", { duration: 5000, icon: '💀' });
+    }
+
+    // Concentration check (uses actual damage to HP for DC, not temp-absorbed)
+    const hpDamage = dmg - tempAbsorbed;
+    if (concentrationSpell && hpDamage > 0 && newCurrent > 0) {
+      const dc = Math.max(10, Math.floor(hpDamage / 2));
+      const conMod = calcMod(abilityMap.CON || 10);
+      const conSaveBonus = conMod + (saves.find(s => s.ability === 'CON')?.proficient ? profBonus : 0);
+      toast(
+        (t) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span>Concentration check! DC {dc} ({concentrationSpell})</span>
+            <button
+              onClick={() => {
+                rollDice(`CON Save (Concentration DC ${dc})`, conSaveBonus);
+                toast.dismiss(t.id);
+              }}
+              style={{ background: 'rgba(139,92,246,0.3)', border: '1px solid rgba(139,92,246,0.5)', color: '#c4b5fd', padding: '4px 12px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', fontFamily: 'var(--font-display)' }}
+            >
+              Roll CON Save ({modStr(conSaveBonus)})
+            </button>
+          </div>
+        ),
+        { duration: 8000, style: { background: '#1a1025', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' } }
+      );
+    }
+
+    // Fetch and suggest reaction spells
+    if (newCurrent > 0) {
+      getSpells(characterId).then(spells => {
+        const REACTION_SPELL_NAMES = ['Shield', 'Absorb Elements', 'Counterspell', 'Hellish Rebuke', 'Silvery Barbs', 'Feather Fall'];
+        const available = (spells || []).filter(s =>
+          s.prepared && REACTION_SPELL_NAMES.some(name => s.name?.toLowerCase() === name.toLowerCase())
+        );
+        if (available.length > 0) {
+          toast(
+            `Reaction spells available: ${available.map(s => s.name).join(', ')}`,
+            { icon: '✨', duration: 5000, style: { background: '#1a1a25', color: '#93c5fd', border: '1px solid rgba(96,165,250,0.3)' } }
+          );
+        }
+      }).catch(() => { /* best-effort */ });
+    }
+
+    setDamageAmount('');
+    setDamageModifier('normal');
+    setShowDamage(false);
+  };
+
+  const applyHeal = () => {
+    const heal = parseInt(healAmount) || 0;
+    if (heal <= 0) return;
+    const newCurrent = Math.min(overview.max_hp, overview.current_hp + heal);
+    const actualHeal = newCurrent - overview.current_hp;
+    const updated = { ...overview, current_hp: newCurrent };
+    // If healing from 0 HP, clear death saves and exit death save mode
+    if (overview.current_hp === 0 && newCurrent > 0) {
+      updated.death_save_successes = 0;
+      updated.death_save_failures = 0;
+    }
+    setOverview(updated);
+    triggerOverview(updated);
+    if (actualHeal > 0) {
+      toast.success(`Healed ${actualHeal} HP. HP: ${newCurrent}/${overview.max_hp}`, { duration: 3000 });
+    }
+    setHealAmount('');
+    setShowHeal(false);
+  };
+
+  const applyTempHp = () => {
+    const amount = parseInt(tempHpAmount) || 0;
+    if (amount <= 0) return;
+    // Temp HP doesn't stack — take the higher value
+    const newTemp = Math.max(overview.temp_hp || 0, amount);
+    const updated = { ...overview, temp_hp: newTemp };
+    setOverview(updated);
+    triggerOverview(updated);
+    if (newTemp === overview.temp_hp && amount <= (overview.temp_hp || 0)) {
+      toast(`Temp HP not applied — current (${overview.temp_hp}) is higher`, { icon: '🛡️', duration: 3000 });
+    } else {
+      toast.success(`Temp HP set to ${newTemp}`, { duration: 3000 });
+    }
+    setTempHpAmount('');
+    setShowTempHpInput(false);
+  };
+
+  const rollDice = (label, mod, { disadvantage = false } = {}) => {
+    const d20a = Math.floor(Math.random() * 20) + 1;
+    const d20b = disadvantage ? Math.floor(Math.random() * 20) + 1 : d20a;
+    const d20 = disadvantage ? Math.min(d20a, d20b) : d20a;
+    const total = d20 + mod;
+    const natText = d20 === 20 ? ' — NAT 20!' : d20 === 1 ? ' — NAT 1!' : '';
+    const disText = disadvantage ? ` [DIS: ${d20a}, ${d20b}]` : '';
+    toast(`${label}: ${d20} + (${modStr(mod)}) = ${total}${natText}${disText}`, {
+      icon: '🎲',
+      duration: 4000,
+      style: { background: d20 === 20 ? '#1a2e1a' : d20 === 1 ? '#2e1a1a' : '#1a1520', color: '#fde68a', border: '1px solid rgba(201,168,76,0.3)', fontFamily: 'monospace' },
+    });
+  };
+
+  const rollAbilityCheck = (ability, mod) => {
+    rollDice(`${ABILITY_NAMES[ability]} Check`, mod);
+  };
+
+  const rollSavingThrow = (ability, mod, isAutoFail, hasDis) => {
+    if (isAutoFail) {
+      toast(`${ABILITY_NAMES[ability]} Save: AUTO-FAIL`, { icon: '💀', duration: 3000, style: { background: '#2e1a1a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)', fontFamily: 'monospace' } });
+      return;
+    }
+    rollDice(`${ABILITY_NAMES[ability]} Save`, mod, { disadvantage: hasDis });
+  };
+
+  const rollSkillCheck = (skillName, ability, mod) => {
+    const hasDis = condEffects.checkDisadvantage;
+    rollDice(`${skillName} (${ability})`, mod, { disadvantage: hasDis });
   };
 
   const updateField = (field, value) => {
@@ -156,9 +413,100 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
       if (classData && classData.subclassLevel && v >= classData.subclassLevel && !overview.primary_subclass) {
         subclassTimeoutRef.current = setTimeout(() => setShowSubclassModal(true), 2000);
       }
+      // ── Level-up cascading: auto-update hit dice and suggest HP ──
+      if (classData?.hitDie) {
+        updated.hit_dice_total = `${v}d${classData.hitDie}`;
+      }
+      // Auto-suggest HP for level up
+      const conMod = calcMod(abilityMap.CON || 10);
+      if (classData?.hitDie && overview.hp_calc_method !== 'manual') {
+        const avgRoll = Math.floor(classData.hitDie / 2) + 1;
+        const hpGain = avgRoll + conMod;
+        updated.max_hp = Math.max(1, (overview.max_hp || 0) + Math.max(1, hpGain));
+        updated.current_hp = updated.max_hp; // Full HP on level up
+        toast.success(`Level ${v}! HP +${Math.max(1, hpGain)} (${classData.hitDie > 0 ? `d${classData.hitDie} avg` : ''} + CON ${modStr(conMod)}) = ${updated.max_hp} Max HP`, { duration: 4000 });
+      }
+      // Show level-up summary with features/spell slots
+      const newProf = calcProfBonus(v);
+      const oldProf = calcProfBonus(v - 1);
+      const gains = { level: v };
+      if (newProf > oldProf) {
+        gains.profBonusChange = { old: oldProf, new: newProf };
+      }
+      // Detect new features from CLASS data
+      if (classData?.features) {
+        gains.newFeatures = classData.features.filter(f => f.level === v);
+      }
+      // ASI levels (standard: 4, 8, 12, 16, 19; Fighter adds 6, 14; Rogue adds 10)
+      const asiLevels = overview.primary_class === 'Fighter' ? [4,6,8,12,14,16,19] : overview.primary_class === 'Rogue' ? [4,8,10,12,16,19] : [4,8,12,16,19];
+      if (asiLevels.includes(v)) {
+        gains.isASI = true;
+      }
+      if (gains.profBonusChange || (gains.newFeatures && gains.newFeatures.length > 0) || gains.isASI) {
+        setShowLevelUpSummary(gains);
+      }
+    }
+    // ── Level-down cascading ──
+    if (field === 'level' && prevLevelRef.current !== null && v < prevLevelRef.current) {
+      const classData = CLASSES.find(c => c.name === overview.primary_class);
+      if (classData?.hitDie) {
+        updated.hit_dice_total = `${v}d${classData.hitDie}`;
+      }
+      // Recalculate HP on level down if auto mode
+      if (classData?.hitDie && overview.hp_calc_method !== 'manual') {
+        const conMod = calcMod(abilityMap.CON || 10);
+        const autoHP = calcAutoHP(overview.primary_class, v, conMod);
+        if (autoHP !== null) {
+          updated.max_hp = autoHP;
+          updated.current_hp = Math.min(overview.current_hp, autoHP);
+        }
+      }
     }
     if (field === 'level') {
       prevLevelRef.current = v;
+    }
+
+    // ── Auto level-up/down from XP changes ──
+    if (field === 'experience_points') {
+      const newLevel = getLevelFromXP(v);
+      if (newLevel !== overview.level) {
+        const isLevelUp = newLevel > overview.level;
+        updated.level = newLevel;
+        if (isLevelUp) {
+          onLevelUp(overview.name, newLevel, overview.primary_class);
+          const classData = CLASSES.find(c => c.name === overview.primary_class);
+          if (classData && classData.subclassLevel && newLevel >= classData.subclassLevel && !overview.primary_subclass) {
+            subclassTimeoutRef.current = setTimeout(() => setShowSubclassModal(true), 2000);
+          }
+          if (classData?.hitDie) {
+            updated.hit_dice_total = `${newLevel}d${classData.hitDie}`;
+          }
+          const conMod = calcMod(abilityMap.CON || 10);
+          if (classData?.hitDie && overview.hp_calc_method !== 'manual') {
+            const avgRoll = Math.floor(classData.hitDie / 2) + 1;
+            const hpGain = avgRoll + conMod;
+            updated.max_hp = Math.max(1, (overview.max_hp || 0) + Math.max(1, hpGain));
+            updated.current_hp = updated.max_hp;
+            toast.success(`Level ${newLevel}! HP +${Math.max(1, hpGain)} (d${classData.hitDie} avg + CON ${modStr(conMod)}) = ${updated.max_hp} Max HP`, { duration: 4000 });
+          }
+        } else {
+          // Level down from XP loss
+          const classData = CLASSES.find(c => c.name === overview.primary_class);
+          if (classData?.hitDie) {
+            updated.hit_dice_total = `${newLevel}d${classData.hitDie}`;
+          }
+          if (classData?.hitDie && overview.hp_calc_method !== 'manual') {
+            const conMod = calcMod(abilityMap.CON || 10);
+            const autoHP = calcAutoHP(overview.primary_class, newLevel, conMod);
+            if (autoHP !== null) {
+              updated.max_hp = autoHP;
+              updated.current_hp = Math.min(overview.current_hp, autoHP);
+            }
+          }
+        }
+        prevLevelRef.current = newLevel;
+        setOverview(updated);
+      }
     }
 
     triggerOverview(updated);
@@ -178,10 +526,32 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     setAbilities(updated);
     setLocalAbilities(prev => ({ ...prev, [ability]: String(score) }));
     triggerAbilities(updated);
+
+    // ── Cascading updates when ability score changes ──
+    const newAbilityMap = {};
+    updated.forEach(a => { newAbilityMap[a.ability] = a.score; });
+    const newMod = calcMod(score);
+    const oldMod = calcMod(abilityMap[ability] || 10);
+
+    // If CON changed and HP is auto-calculated, adjust HP proportionally
+    if (ability === 'CON' && overview?.hp_calc_method !== 'manual' && overview?.primary_class) {
+      const oldConMod = oldMod;
+      const newConMod = newMod;
+      if (oldConMod !== newConMod) {
+        const hpDelta = (newConMod - oldConMod) * (overview.level || 1);
+        const newMax = Math.max(1, (overview.max_hp || 0) + hpDelta);
+        // Adjust current HP proportionally
+        const ratio = overview.max_hp > 0 ? overview.current_hp / overview.max_hp : 1;
+        const newCurrent = Math.max(1, Math.min(newMax, Math.round(newMax * ratio)));
+        const overviewUpdated = { ...overview, max_hp: newMax, current_hp: newCurrent };
+        setOverview(overviewUpdated);
+        triggerOverview(overviewUpdated);
+        toast.success(`CON mod changed (${modStr(oldConMod)} -> ${modStr(newConMod)}): Max HP adjusted to ${newMax}`, { duration: 3000 });
+      }
+    }
   };
 
   const toggleSave = (ability) => {
-    const prev = [...saves];
     const updated = saves.map(s => s.ability === ability ? { ...s, proficient: !s.proficient } : s);
     setSaves(updated);
     triggerSaves(updated);
@@ -214,7 +584,24 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
 
   const profBonus = PROFICIENCY_BONUS[overview?.level] || 2;
 
-  const { dexMod, wisMod, percMod, passivePerc, passiveInvestigation, passiveInsight, initiative, effectiveSpeed, encumbranceState } = useMemo(() => {
+  // Proficiency count: saves + skills with proficiency
+  const proficiencyCount = useMemo(() => {
+    const saveProfs = saves.filter(s => s.proficient).length;
+    const skillProfs = skills.filter(s => s.proficient || s.expertise).length;
+    return saveProfs + skillProfs;
+  }, [saves, skills]);
+
+  // HP status text & color
+  const hpStatus = useMemo(() => {
+    if (!overview) return { text: '', color: '', bgColor: '' };
+    const pct = overview.max_hp > 0 ? (overview.current_hp / overview.max_hp) * 100 : 0;
+    if (overview.current_hp <= 0) return { text: 'Down', color: '#ef4444', bgColor: 'rgba(239,68,68,0.15)' };
+    if (pct < 25) return { text: 'Critical', color: '#f97316', bgColor: 'rgba(249,115,22,0.12)' };
+    if (pct < 50) return { text: 'Bloodied', color: '#eab308', bgColor: 'rgba(234,179,8,0.1)' };
+    return { text: 'Healthy', color: '#4ade80', bgColor: 'rgba(74,222,128,0.08)' };
+  }, [overview?.current_hp, overview?.max_hp]);
+
+  const { dexMod, passivePerc, passiveInvestigation, passiveInsight, initiative, encumbranceState } = useMemo(() => {
     const dex = calcMod(abilityMap.DEX || 10);
     const wis = calcMod(abilityMap.WIS || 10);
     const intMod = calcMod(abilityMap.INT || 10);
@@ -255,6 +642,19 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     return { dc: 8 + profBonus + abilityMod, ability: spellAbility };
   }, [overview?.primary_class, CLASSES, abilityMap, profBonus]);
 
+  // Spell Attack Bonus: proficiency + spellcasting ability mod
+  const spellAttackBonus = useMemo(() => {
+    if (!spellSaveDC) return null;
+    const abilityMod = calcMod(abilityMap[spellSaveDC.ability] || 10);
+    return { bonus: profBonus + abilityMod, ability: spellSaveDC.ability };
+  }, [spellSaveDC, abilityMap, profBonus]);
+
+  // Carrying Capacity: STR x 15
+  const carryingCapacity = useMemo(() => {
+    const str = abilityMap.STR || 10;
+    return { capacity: str * 15, heavy: str * 10, encumbered: str * 5 };
+  }, [abilityMap.STR]);
+
   // Death save outcome toasts
   useEffect(() => {
     if (!overview) return;
@@ -266,21 +666,28 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     }
   }, [overview?.death_save_successes, overview?.death_save_failures]);
 
-  // Concentration save helper: detect HP decrease and remind about concentration check
+  // Concentration save helper: detect HP decrease from manual edits (smart damage has its own handler)
   useEffect(() => {
     if (overview && prevHpRef.current !== null && overview.current_hp < prevHpRef.current) {
-      const damageTaken = prevHpRef.current - overview.current_hp;
-      const dc = Math.max(10, Math.floor(damageTaken / 2));
-      toast('Concentration check! DC = ' + dc + ' (damage: ' + damageTaken + ')', {
-        icon: '🎯',
-        duration: 5000,
-        style: { background: '#1a1025', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' },
-      });
+      if (smartDamageAppliedRef.current) {
+        // Smart damage already showed concentration toast — skip
+        smartDamageAppliedRef.current = false;
+      } else if (concentrationSpell) {
+        const damageTaken = prevHpRef.current - overview.current_hp;
+        const dc = Math.max(10, Math.floor(damageTaken / 2));
+        toast('Concentration check! DC = ' + dc + ' (damage: ' + damageTaken + ')', {
+          icon: '🎯',
+          duration: 5000,
+          style: { background: '#1a1025', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' },
+        });
+      }
+    } else {
+      smartDamageAppliedRef.current = false;
     }
     if (overview) {
       prevHpRef.current = overview.current_hp;
     }
-  }, [overview?.current_hp]);
+  }, [overview?.current_hp, concentrationSpell]);
 
   const sortedSkillEntries = useMemo(() => Object.entries(SKILLS).sort(([a], [b]) => a.localeCompare(b)), [SKILLS]);
 
@@ -317,16 +724,25 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   }
 
   function applyScores() {
+    let newScoreMap = {};
     if (setupMethod === 'pointbuy') {
-      ABILITIES.forEach(ab => updateAbility(ab, pointBuyScores[ab]));
-      toast.success('Point buy scores applied!');
+      ABILITIES.forEach(ab => { newScoreMap[ab] = pointBuyScores[ab]; });
     } else if (setupScores) {
-      ABILITIES.forEach((ab, i) => {
+      ABILITIES.forEach(ab => {
         const scoreIdx = setupAssignment[ab];
-        updateAbility(ab, setupScores[scoreIdx].total);
+        newScoreMap[ab] = setupScores[scoreIdx].total;
       });
-      toast.success('Ability scores applied!');
+    } else {
+      return;
     }
+    // Bulk update all abilities at once to avoid stale closure issues
+    const updated = abilities.map(a => ({ ...a, score: newScoreMap[a.ability] ?? a.score }));
+    setAbilities(updated);
+    const localAb = {};
+    updated.forEach(a => { localAb[a.ability] = String(a.score); });
+    setLocalAbilities(localAb);
+    triggerAbilities(updated);
+    toast.success('Ability scores applied!');
   }
 
   function applyClassRaceDefaults() {
@@ -337,12 +753,13 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     });
     const updates = {};
     if (classData) {
-      // Saving throws
+      // Saving throws — bulk update to avoid stale closure
       if (classData.savingThrows) {
-        classData.savingThrows.forEach(ab => {
-          const s = saves.find(sv => sv.ability === ab);
-          if (s && !s.proficient) toggleSave(ab);
-        });
+        const updatedSaves = saves.map(s =>
+          classData.savingThrows.includes(s.ability) ? { ...s, proficient: true } : s
+        );
+        setSaves(updatedSaves);
+        triggerSaves(updatedSaves);
       }
       // Armor & weapon proficiencies
       if (classData.armorProficiencies) updates.proficiencies_armor = classData.armorProficiencies.join(', ');
@@ -358,16 +775,22 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
       if (raceData.languages) updates.languages = raceData.languages.join(', ');
       if (raceData.darkvision > 0) updates.senses = `Darkvision ${raceData.darkvision}ft`;
     }
-    // Apply all field updates
-    Object.entries(updates).forEach(([field, value]) => updateField(field, value));
+    // Bulk-apply all overview field updates at once to avoid stale closure
+    if (Object.keys(updates).length > 0) {
+      const updated = { ...overview, ...updates };
+      setOverview(updated);
+      triggerOverview(updated);
+    }
     toast.success(`${overview.primary_class || 'Class'} & ${overview.race || 'Race'} defaults applied!`);
   }
 
   function applySkillPicks() {
-    skillPicks.forEach(sk => {
-      const existing = skills.find(s => s.name === sk);
-      if (existing && !existing.proficient) toggleSkillProf(sk);
-    });
+    // Bulk update to avoid stale closure issues
+    const updatedSkills = skills.map(s =>
+      skillPicks.includes(s.name) ? { ...s, proficient: true } : s
+    );
+    setSkills(updatedSkills);
+    triggerSkills(updatedSkills);
     toast.success(`${skillPicks.length} skill proficiencies applied!`);
     setSkillPicks([]);
   }
@@ -377,11 +800,6 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   }
 
   const hpPercent = overview.max_hp > 0 ? (overview.current_hp / overview.max_hp) * 100 : 0;
-  const hpBarClass = hpPercent >= 75 ? 'hp-bar-fill hp-high' :
-                     hpPercent >= 50 ? 'hp-bar-fill hp-mid' :
-                     hpPercent >= 25 ? 'hp-bar-fill hp-low' :
-                     'hp-bar-fill hp-critical';
-
   return (
     <div className="space-y-6 max-w-none">
       {/* Header */}
@@ -864,7 +1282,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 return (
                   <div key={ab} className="text-center p-4 rounded-lg bg-[#0a0a10] border border-gold/15 hover:border-gold/30 transition-all">
                     <div className="text-[11px] text-amber-200/50 font-display tracking-widest mb-2">{ab}</div>
-                    <div className="text-3xl font-bold text-gold mb-1">{modStr(mod)}</div>
+                    <div className="text-3xl font-bold text-gold mb-1 cursor-pointer hover:text-amber-300 hover:scale-110 transition-all" onClick={() => rollAbilityCheck(ab, mod)} title={`Click to roll ${ABILITY_NAMES[ab]} check`}>{modStr(mod)}</div>
                     <input
                       type="number" min={1} max={30}
                       className="input text-center w-16 mx-auto text-sm"
@@ -883,12 +1301,55 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 );
               })}
             </div>
+            {/* Ability Score Modifier Quick-Reference Row */}
+            <div className="mt-3 py-2 px-3 rounded-lg bg-[#0a0a10] border border-amber-200/8">
+              <div className="flex items-center justify-center gap-1 flex-wrap text-xs font-mono">
+                {ABILITIES.map((ab, i) => {
+                  const mod = calcMod(abilityMap[ab] || 10);
+                  return (
+                    <span key={ab} className="inline-flex items-center">
+                      <span className="text-amber-200/40 font-display tracking-wider">{ab}</span>
+                      <span className={`ml-1 font-semibold ${mod >= 0 ? 'text-gold' : 'text-red-400'}`}>{modStr(mod)}</span>
+                      {i < ABILITIES.length - 1 && <span className="mx-2 text-amber-200/15">|</span>}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Saving Throws */}
           <div className="card">
-            <h3 className="font-display text-amber-100 mb-1">Saving Throws<HelpTooltip text={HELP.savingThrows} /></h3>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-display text-amber-100">Saving Throws<HelpTooltip text={HELP.savingThrows} /></h3>
+              {proficiencyCount > 0 && (
+                <span className="text-[10px] font-display tracking-wide text-gold/60 bg-gold/8 border border-gold/15 px-2 py-0.5 rounded-full">
+                  {proficiencyCount} proficienc{proficiencyCount === 1 ? 'y' : 'ies'} active
+                </span>
+              )}
+            </div>
             <p className="text-xs text-amber-200/30 mb-3">Click to mark proficiency — adds +{profBonus} to the roll.</p>
+            {(() => {
+              const noSavesSet = saves.every(s => !s.proficient);
+              const classData = CLASSES.find(c => c.name === overview.primary_class);
+              if (!noSavesSet || !classData?.savingThrows) return null;
+              return (
+                <button
+                  onClick={() => {
+                    const updatedSaves = saves.map(s =>
+                      classData.savingThrows.includes(s.ability) ? { ...s, proficient: true } : s
+                    );
+                    setSaves(updatedSaves);
+                    triggerSaves(updatedSaves);
+                    toast.success(`Saving throw proficiencies set for ${overview.primary_class}: ${classData.savingThrows.join(' & ')}`);
+                  }}
+                  className="flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded bg-gold/8 border border-gold/20 text-gold/70 hover:bg-gold/15 hover:text-gold transition-all mb-3"
+                  title={`${overview.primary_class} saving throws: ${classData.savingThrows.join(' & ')}`}
+                >
+                  <Wand2 size={11} /> Auto-set from {overview.primary_class}? ({classData.savingThrows.join(' & ')})
+                </button>
+              );
+            })()}
             <div className="space-y-0.5">
               {ABILITIES.map(ab => {
                 const score = abilityMap[ab] || 10;
@@ -909,7 +1370,11 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                   >
                     {/* Proficiency indicator */}
                     <div className={`prof-circle${prof ? ' active' : ''}`} />
-                    <span className={`text-sm font-semibold w-8 text-right transition-colors ${isAutoFail ? 'text-red-400 line-through' : prof ? 'text-gold' : 'text-amber-200/35'}`}>
+                    <span
+                      className={`text-sm font-semibold w-8 text-right transition-colors cursor-pointer hover:scale-110 ${isAutoFail ? 'text-red-400 line-through' : prof ? 'text-gold hover:text-amber-300' : 'text-amber-200/35 hover:text-amber-200/60'}`}
+                      onClick={(e) => { e.stopPropagation(); rollSavingThrow(ab, mod, isAutoFail, hasDis); }}
+                      title={`Click to roll ${ABILITY_NAMES[ab]} saving throw`}
+                    >
                       {isAutoFail ? 'FAIL' : modStr(mod)}
                     </span>
                     <span className={`text-sm flex-1 transition-colors ${isAutoFail ? 'text-red-300' : prof ? 'text-amber-100' : 'text-amber-200/60'}`}>{ABILITY_NAMES[ab]}</span>
@@ -972,12 +1437,20 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                       className={`expertise-diamond${sk?.expertise ? ' active' : ''}`}
                       title={sk?.expertise ? 'Expertise — click to remove' : 'Click to add expertise (auto-grants proficiency)'}
                     />
-                    <span className={`text-[13px] font-semibold w-[30px] text-right flex-shrink-0 transition-colors ${
-                      state === 'expertise' ? 'text-purple-300' : state === 'proficient' ? 'text-gold' : 'text-amber-200/35'
-                    }`}>{modStr(mod)}</span>
-                    <span className={`text-[13px] flex-1 transition-colors ${
-                      state === 'expertise' ? 'text-purple-100' : state === 'proficient' ? 'text-amber-100' : 'text-amber-200/60'
-                    }`}>{skillName}</span>
+                    <span
+                      className={`text-[13px] font-semibold w-[30px] text-right flex-shrink-0 transition-colors cursor-pointer hover:scale-110 ${
+                        state === 'expertise' ? 'text-purple-300 hover:text-purple-200' : state === 'proficient' ? 'text-gold hover:text-amber-300' : 'text-amber-200/35 hover:text-amber-200/60'
+                      }`}
+                      onClick={(e) => { e.stopPropagation(); rollSkillCheck(skillName, ability, mod); }}
+                      title={`Click to roll ${skillName} check`}
+                    >{modStr(mod)}</span>
+                    <span
+                      className={`text-[13px] flex-1 transition-colors cursor-pointer ${
+                        state === 'expertise' ? 'text-purple-100 hover:text-purple-50' : state === 'proficient' ? 'text-amber-100 hover:text-amber-50' : 'text-amber-200/60 hover:text-amber-200/80'
+                      }`}
+                      onClick={(e) => { e.stopPropagation(); rollSkillCheck(skillName, ability, mod); }}
+                      title={`Click to roll ${skillName} check`}
+                    >{skillName}</span>
                     <span className="text-[10px] font-display tracking-wider text-amber-200/[0.18] w-[26px] text-right">{ability}</span>
                   </div>
                 );
@@ -1011,20 +1484,37 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         {/* Right column: HP, Core Stats, Hit Dice, Death Saves, Conditions */}
         <div className="space-y-6">
           {/* Proficiency + Core Stats */}
-          <div className={`grid grid-cols-2 ${spellSaveDC ? 'md:grid-cols-6' : 'md:grid-cols-5'} gap-4`}>
+          <div className={`grid grid-cols-2 ${spellAttackBonus ? 'md:grid-cols-7' : spellSaveDC ? 'md:grid-cols-6' : 'md:grid-cols-5'} gap-4`}>
             <div className="card text-center border-gold/25 shadow-[0_0_12px_rgba(201,168,76,0.06)]" title={`Proficiency bonus: +${profBonus} (levels ${profBonus === 2 ? '1-4' : profBonus === 3 ? '5-8' : profBonus === 4 ? '9-12' : profBonus === 5 ? '13-16' : '17-20'})`}>
               <div className="text-xs text-gold/70 mb-1 font-semibold">Proficiency<HelpTooltip text={HELP.proficiencyBonus} /></div>
               <div className="text-3xl font-display text-gold font-bold">{modStr(profBonus)}</div>
               <div className="text-[10px] text-gold/40 mt-0.5">Level {overview.level}</div>
             </div>
-            <div className="card text-center" title={`AC Breakdown: Base 10 + DEX mod (${modStr(dexMod)}) = ${10 + dexMod}. Current AC: ${overview.armor_class}${overview.armor_class !== 10 + dexMod ? ' (armor/shield/magic may apply)' : ''}`}>
+            <div className="card text-center group relative" title={`AC Breakdown: Base 10 + DEX mod (${modStr(dexMod)}) = ${10 + dexMod}. Current AC: ${overview.armor_class}${overview.armor_class !== 10 + dexMod ? ' (armor/shield/magic may apply)' : ''}`}>
               <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Shield size={12} /> AC<HelpTooltip text={HELP.ac} /></div>
               <input type="number" min={0} max={30} className="input text-center text-2xl font-display w-20 mx-auto" value={overview.armor_class} onChange={e => updateField('armor_class', parseInt(e.target.value) || 0)} />
+              {/* AC Breakdown Tooltip on hover */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 p-3 rounded-lg bg-[#0c0a14] border border-gold/20 shadow-xl z-30 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200">
+                <div className="text-[10px] font-display text-gold/70 tracking-wider uppercase mb-1.5">AC Breakdown</div>
+                <div className="space-y-1 text-[11px] text-amber-200/60">
+                  <div className="flex justify-between"><span>Unarmored base</span><span className="text-amber-100">10</span></div>
+                  <div className="flex justify-between"><span>DEX modifier</span><span className="text-amber-100">{modStr(dexMod)}</span></div>
+                  <div className="border-t border-amber-200/10 my-1" />
+                  <div className="flex justify-between"><span>Unarmored total</span><span className="text-gold font-bold">{10 + dexMod}</span></div>
+                  {overview.armor_class !== 10 + dexMod && (
+                    <>
+                      <div className="border-t border-amber-200/10 my-1" />
+                      <div className="flex justify-between"><span>Your AC</span><span className="text-gold font-bold">{overview.armor_class}</span></div>
+                      <div className="text-[9px] text-amber-200/35 mt-1">Difference of {modStr(overview.armor_class - (10 + dexMod))} from armor, shield, or magic</div>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="card text-center" title={`Initiative = DEX modifier (${modStr(dexMod)})`}>
+            <div className="card text-center" title={`Initiative = DEX mod (${modStr(dexMod)})${overview.initiative_bonus ? ` + bonus (${modStr(overview.initiative_bonus)})` : ''}`}>
               <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Swords size={12} /> Initiative<HelpTooltip text={HELP.initiative} /></div>
-              <div className="text-2xl font-display text-gold">{modStr(initiative)}</div>
-              <div className="text-[10px] text-amber-200/30 mt-0.5">DEX {modStr(dexMod)}</div>
+              <div className="text-2xl font-display text-gold cursor-pointer hover:text-amber-300 hover:scale-110 transition-all" onClick={() => rollDice('Initiative', initiative + (overview.initiative_bonus || 0))} title="Click to roll initiative">{modStr(initiative + (overview.initiative_bonus || 0))}</div>
+              <div className="text-[10px] text-amber-200/30 mt-0.5">DEX {modStr(dexMod)}{overview.initiative_bonus ? ` + ${overview.initiative_bonus}` : ''}</div>
             </div>
             <div className={`card text-center ${condEffects.speedOverride === 0 ? 'border-2 border-red-500/40 bg-red-950/20' : encumbranceState !== 'normal' ? 'border-2 border-orange-500/30 bg-orange-950/10' : ''}`}>
               <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Footprints size={12} /> Speed</div>
@@ -1049,6 +1539,40 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                       <span className="text-[9px] text-orange-400 font-semibold">Encumbered: -10 ft</span>
                     </div>
                   )}
+                  {/* Speed variant mini-badges when collapsed */}
+                  {!showSpeedVariants && (overview.climb_speed > 0 || overview.swim_speed > 0 || overview.fly_speed > 0) && (
+                    <div className="flex justify-center gap-1 mt-1.5 flex-wrap">
+                      {overview.climb_speed > 0 && <span className="text-[8px] text-amber-200/35 bg-amber-200/5 px-1.5 py-0.5 rounded">Climb {overview.climb_speed}ft</span>}
+                      {overview.swim_speed > 0 && <span className="text-[8px] text-blue-300/35 bg-blue-300/5 px-1.5 py-0.5 rounded">Swim {overview.swim_speed}ft</span>}
+                      {overview.fly_speed > 0 && <span className="text-[8px] text-sky-300/35 bg-sky-300/5 px-1.5 py-0.5 rounded">Fly {overview.fly_speed}ft</span>}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => setShowSpeedVariants(!showSpeedVariants)}
+                    className="text-[8px] text-amber-200/25 hover:text-amber-200/50 transition-colors mt-1"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                  >
+                    {showSpeedVariants ? 'Hide variants' : 'Speed variants'}
+                  </button>
+                  {showSpeedVariants && (
+                    <div className="mt-1.5 space-y-1">
+                      <div className="flex items-center gap-1.5 justify-center">
+                        <Flame size={9} className="text-amber-200/30 flex-shrink-0" />
+                        <span className="text-[9px] text-amber-200/35 w-10">Climb</span>
+                        <input type="number" min={0} className="input text-center text-[10px] w-14 py-0" value={overview.climb_speed || ''} placeholder="--" onChange={e => updateField('climb_speed', parseInt(e.target.value) || 0)} />
+                      </div>
+                      <div className="flex items-center gap-1.5 justify-center">
+                        <Waves size={9} className="text-blue-300/30 flex-shrink-0" />
+                        <span className="text-[9px] text-blue-300/35 w-10">Swim</span>
+                        <input type="number" min={0} className="input text-center text-[10px] w-14 py-0" value={overview.swim_speed || ''} placeholder="--" onChange={e => updateField('swim_speed', parseInt(e.target.value) || 0)} />
+                      </div>
+                      <div className="flex items-center gap-1.5 justify-center">
+                        <Wind size={9} className="text-sky-300/30 flex-shrink-0" />
+                        <span className="text-[9px] text-sky-300/35 w-10">Fly</span>
+                        <input type="number" min={0} className="input text-center text-[10px] w-14 py-0" value={overview.fly_speed || ''} placeholder="--" onChange={e => updateField('fly_speed', parseInt(e.target.value) || 0)} />
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -1063,6 +1587,61 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 <div className="text-[10px] text-amber-200/30 mt-0.5">{spellSaveDC.ability}</div>
               </div>
             )}
+            {spellAttackBonus && (
+              <div className="card text-center" title={`Spell Attack = ${profBonus} (prof) + ${modStr(calcMod(abilityMap[spellAttackBonus.ability] || 10))} (${spellAttackBonus.ability})`}>
+                <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Wand2 size={12} /> Spell Atk</div>
+                <div className="text-2xl font-display text-purple-300">{modStr(spellAttackBonus.bonus)}</div>
+                <div className="text-[10px] text-amber-200/30 mt-0.5">{spellAttackBonus.ability}</div>
+              </div>
+            )}
+          </div>
+
+          {/* Concentration Tracker */}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all"
+            style={{
+              background: concentrationSpell ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.03)',
+              borderColor: concentrationSpell ? 'rgba(139,92,246,0.25)' : 'rgba(139,92,246,0.1)',
+            }}
+          >
+            <Target size={14} className={concentrationSpell ? 'text-purple-400' : 'text-purple-400/30'} />
+            <span className="text-xs text-purple-300/60 font-display tracking-wide flex-shrink-0">Concentrating on:</span>
+            <input
+              type="text"
+              className="input flex-1 text-sm py-1"
+              style={{ background: 'transparent', border: 'none', color: concentrationSpell ? '#c4b5fd' : 'rgba(196,181,253,0.4)', outline: 'none', boxShadow: 'none' }}
+              placeholder="None"
+              value={concentrationSpell}
+              onChange={e => updateConcentration(e.target.value)}
+            />
+            {concentrationSpell && (
+              <button
+                onClick={() => updateConcentration('')}
+                className="text-purple-400/40 hover:text-purple-300 transition-colors text-xs"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px' }}
+                title="Drop concentration"
+              >
+                Drop
+              </button>
+            )}
+          </div>
+
+          {/* Carrying Capacity */}
+          <div className="flex items-center gap-3 px-3 py-2 rounded-lg border transition-all"
+            style={{
+              background: encumbranceState !== 'normal' ? 'rgba(249,115,22,0.06)' : 'rgba(201,168,76,0.03)',
+              borderColor: encumbranceState === 'heavy' ? 'rgba(239,68,68,0.25)' : encumbranceState === 'encumbered' ? 'rgba(249,115,22,0.2)' : 'rgba(201,168,76,0.1)',
+            }}
+          >
+            <Package size={14} className={encumbranceState !== 'normal' ? 'text-orange-400' : 'text-amber-200/30'} />
+            <span className="text-xs text-amber-200/50 font-display tracking-wide flex-shrink-0">Carry Capacity:</span>
+            <span className="text-sm font-display text-amber-100 font-bold">{carryingCapacity.capacity} lbs</span>
+            <span className="text-[10px] text-amber-200/25">(STR {abilityMap.STR || 10} x 15)</span>
+            {encumbranceState === 'heavy' && (
+              <span className="ml-auto text-[10px] text-red-400 bg-red-900/30 px-1.5 py-0.5 rounded border border-red-500/20 font-medium">Heavily Encumbered</span>
+            )}
+            {encumbranceState === 'encumbered' && (
+              <span className="ml-auto text-[10px] text-orange-400 bg-orange-900/30 px-1.5 py-0.5 rounded border border-orange-500/20 font-medium">Encumbered</span>
+            )}
           </div>
 
           {/* HP Section */}
@@ -1070,6 +1649,18 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             <div className="flex items-center gap-2 mb-3">
               <Heart size={16} className="text-red-400" />
               <h3 className="font-display text-amber-100">Hit Points<HelpTooltip text={HELP.hp} /></h3>
+              <div className="ml-auto flex items-center gap-2">
+                {overview.hp_calc_method !== 'manual' && (
+                  <span className="text-[9px] text-emerald-400/50 bg-emerald-400/8 border border-emerald-400/15 px-1.5 py-0.5 rounded font-display tracking-wide">AUTO</span>
+                )}
+                <button
+                  onClick={() => setShowHPCalc(!showHPCalc)}
+                  className="text-[10px] text-amber-200/40 hover:text-gold transition-colors flex items-center gap-1"
+                  title="Open HP calculator"
+                >
+                  <Calculator size={11} /> {showHPCalc ? 'Hide' : 'Calculate HP'}
+                </button>
+              </div>
             </div>
             <div className="grid grid-cols-3 gap-4 mb-3">
               <div>
@@ -1085,6 +1676,173 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 <input type="number" className="input w-full" value={overview.temp_hp} onChange={e => updateField('temp_hp', parseInt(e.target.value) || 0)} />
               </div>
             </div>
+            {/* HP Calculator */}
+            {showHPCalc && (() => {
+              const classData = CLASSES.find(c => c.name === overview.primary_class);
+              const hitDie = classData?.hitDie;
+              const conMod = calcMod(abilityMap.CON || 10);
+              const autoHP = hitDie ? calcAutoHP(overview.primary_class, overview.level, conMod) : null;
+              return (
+                <div className="mt-3 p-4 rounded-lg bg-[#0a0a10] border border-gold/15">
+                  <div className="text-xs font-display text-gold/70 tracking-wider uppercase mb-3">HP Calculator</div>
+                  {hitDie ? (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-3 text-xs text-amber-200/60">
+                        <div className="flex justify-between"><span>Hit Die</span><span className="text-amber-100 font-medium">d{hitDie}</span></div>
+                        <div className="flex justify-between"><span>CON Modifier</span><span className="text-amber-100 font-medium">{modStr(conMod)}</span></div>
+                        <div className="flex justify-between"><span>Level 1 HP</span><span className="text-amber-100 font-medium">{hitDie} + {conMod} = {hitDie + conMod}</span></div>
+                        <div className="flex justify-between"><span>Per Level (avg)</span><span className="text-amber-100 font-medium">{Math.floor(hitDie / 2) + 1} + {conMod} = {Math.floor(hitDie / 2) + 1 + conMod}</span></div>
+                      </div>
+                      <div className="border-t border-amber-200/10 my-2" />
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-amber-200/60">Calculated Max HP (avg):</span>
+                        <span className="text-xl font-display text-gold font-bold">{autoHP}</span>
+                      </div>
+                      {autoHP !== overview.max_hp && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <button
+                            onClick={() => {
+                              const ratio = overview.max_hp > 0 ? overview.current_hp / overview.max_hp : 1;
+                              const newCurrent = Math.max(1, Math.min(autoHP, Math.round(autoHP * ratio)));
+                              const updated = { ...overview, max_hp: autoHP, current_hp: newCurrent, hp_calc_method: 'auto' };
+                              setOverview(updated);
+                              triggerOverview(updated);
+                              toast.success(`Max HP set to ${autoHP} (auto-calculated)`);
+                            }}
+                            className="text-xs px-3 py-1.5 rounded bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-all"
+                          >
+                            Apply Auto HP ({autoHP})
+                          </button>
+                          <button
+                            onClick={() => {
+                              const updated = { ...overview, hp_calc_method: 'manual' };
+                              setOverview(updated);
+                              triggerOverview(updated);
+                              toast('HP set to manual mode — auto-calc disabled', { duration: 2000 });
+                            }}
+                            className="text-xs px-3 py-1.5 rounded bg-white/[0.04] text-amber-200/50 border border-amber-200/10 hover:border-amber-200/25 transition-all"
+                          >
+                            Keep Manual ({overview.max_hp})
+                          </button>
+                        </div>
+                      )}
+                      {autoHP === overview.max_hp && overview.hp_calc_method !== 'manual' && (
+                        <div className="text-[10px] text-emerald-400/50 flex items-center gap-1"><Check size={10} /> HP matches auto-calculation</div>
+                      )}
+                      {/* Roll for HP option */}
+                      <div className="border-t border-amber-200/10 mt-3 pt-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              const roll = Math.floor(Math.random() * hitDie) + 1;
+                              const hpGain = Math.max(1, roll + conMod);
+                              setHpRollResult({ roll, conMod, total: hpGain, die: hitDie });
+                              toast(`Rolled d${hitDie}: ${roll} + CON (${modStr(conMod)}) = ${hpGain} HP`, { icon: '🎲', duration: 4000 });
+                            }}
+                            className="text-xs px-3 py-1.5 rounded bg-purple-900/20 text-purple-300 border border-purple-500/20 hover:bg-purple-900/30 transition-all flex items-center gap-1"
+                          >
+                            <Dices size={11} /> Roll d{hitDie} for HP
+                          </button>
+                          {hpRollResult && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-purple-300">
+                                Rolled {hpRollResult.roll} + {modStr(hpRollResult.conMod)} = <strong>{hpRollResult.total}</strong> HP
+                              </span>
+                              <button
+                                onClick={() => {
+                                  const newMax = (overview.max_hp || 0) + hpRollResult.total;
+                                  const updated = { ...overview, max_hp: newMax, current_hp: newMax, hp_calc_method: 'manual' };
+                                  setOverview(updated);
+                                  triggerOverview(updated);
+                                  setHpRollResult(null);
+                                  toast.success(`Added ${hpRollResult.total} HP! New max: ${newMax}`);
+                                }}
+                                className="text-[10px] px-2 py-1 rounded bg-purple-500/20 text-purple-200 border border-purple-500/30 hover:bg-purple-500/30 transition-all"
+                              >
+                                Add to Max
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-[9px] text-amber-200/25 mt-1">Roll instead of taking the average. Sets HP to manual mode.</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-amber-200/40">Select a class to auto-calculate HP.</p>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Quick Damage / Heal / Temp HP buttons */}
+            <div className="flex gap-2 mt-3">
+              <button onClick={() => { setShowDamage(!showDamage); setShowHeal(false); setShowTempHpInput(false); }}
+                className={`flex-1 text-xs font-display tracking-wider py-2 px-3 rounded-lg border transition-all ${showDamage ? 'bg-red-900/30 border-red-500/40 text-red-300' : 'bg-red-950/20 border-red-500/15 text-red-400/60 hover:border-red-500/30 hover:text-red-300'}`}>
+                Take Damage
+              </button>
+              <button onClick={() => { setShowHeal(!showHeal); setShowDamage(false); setShowTempHpInput(false); }}
+                className={`flex-1 text-xs font-display tracking-wider py-2 px-3 rounded-lg border transition-all ${showHeal ? 'bg-emerald-900/30 border-emerald-500/40 text-emerald-300' : 'bg-emerald-950/20 border-emerald-500/15 text-emerald-400/60 hover:border-emerald-500/30 hover:text-emerald-300'}`}>
+                Heal
+              </button>
+              <button onClick={() => { setShowTempHpInput(!showTempHpInput); setShowDamage(false); setShowHeal(false); }}
+                className={`flex-1 text-xs font-display tracking-wider py-2 px-3 rounded-lg border transition-all ${showTempHpInput ? 'bg-blue-900/30 border-blue-500/40 text-blue-300' : 'bg-blue-950/20 border-blue-500/15 text-blue-400/60 hover:border-blue-500/30 hover:text-blue-300'}`}>
+                + Temp HP
+              </button>
+            </div>
+            {showDamage && (
+              <div className="mt-2" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div className="flex gap-2 items-center">
+                  <input type="number" min={1} autoFocus className="input w-24 text-center text-red-300" placeholder="Amount"
+                    value={damageAmount} onChange={e => setDamageAmount(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && applyDamage()} />
+                  <button onClick={applyDamage} className="text-xs font-medium py-1.5 px-4 rounded-lg bg-red-600/20 border border-red-500/30 text-red-300 hover:bg-red-600/30 transition-colors">
+                    Apply
+                  </button>
+                </div>
+                <div className="flex gap-1.5 items-center">
+                  {['normal', 'resistant', 'vulnerable'].map(mod => (
+                    <button key={mod} onClick={() => setDamageModifier(mod)}
+                      className={`text-[10px] font-medium py-1 px-2.5 rounded-md border transition-all ${
+                        damageModifier === mod
+                          ? mod === 'resistant' ? 'bg-blue-600/25 border-blue-400/40 text-blue-300'
+                            : mod === 'vulnerable' ? 'bg-orange-600/25 border-orange-400/40 text-orange-300'
+                            : 'bg-amber-600/15 border-amber-400/30 text-amber-300'
+                          : 'border-amber-200/10 text-amber-200/30 hover:text-amber-200/50'
+                      }`}>
+                      {mod === 'normal' ? 'Normal' : mod === 'resistant' ? 'Resist (x0.5)' : 'Vuln (x2)'}
+                    </button>
+                  ))}
+                  {damageAmount && damageModifier !== 'normal' && (
+                    <span className="text-[10px] text-amber-200/40 ml-1">
+                      = {damageModifier === 'resistant' ? Math.floor((parseInt(damageAmount) || 0) / 2) : (parseInt(damageAmount) || 0) * 2} dmg
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+            {showHeal && (
+              <div className="flex gap-2 mt-2 items-center">
+                <input type="number" min={1} autoFocus className="input w-24 text-center text-emerald-300" placeholder="Amount"
+                  value={healAmount} onChange={e => setHealAmount(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && applyHeal()} />
+                <button onClick={applyHeal} className="text-xs font-medium py-1.5 px-4 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-600/30 transition-colors">
+                  Apply Healing
+                </button>
+              </div>
+            )}
+            {showTempHpInput && (
+              <div className="flex gap-2 mt-2 items-center">
+                <input type="number" min={1} autoFocus className="input w-24 text-center text-blue-300" placeholder="Amount"
+                  value={tempHpAmount} onChange={e => setTempHpAmount(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && applyTempHp()} />
+                <button onClick={applyTempHp} className="text-xs font-medium py-1.5 px-4 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 hover:bg-blue-600/30 transition-colors">
+                  Set Temp HP
+                </button>
+                {(overview.temp_hp || 0) > 0 && (
+                  <span className="text-[10px] text-blue-300/50">Current: {overview.temp_hp} (keeps higher)</span>
+                )}
+              </div>
+            )}
             {/* HP bar with color states and temp HP segment */}
             <div className="hp-bar-bg" style={{ marginTop: '10px' }} role="progressbar" aria-label={`HP: ${overview.current_hp} of ${overview.max_hp}`} aria-valuenow={overview.current_hp} aria-valuemin={0} aria-valuemax={overview.max_hp}>
               <div
@@ -1114,13 +1872,28 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 />
               )}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '5px', fontFamily: 'Outfit, sans-serif' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '5px', fontFamily: 'Outfit, sans-serif' }}>
               <span style={{ color: hpPercent < 25 ? '#fca5a5' : 'rgba(255,255,255,0.5)', fontWeight: hpPercent < 25 ? 600 : 400 }}>
                 {overview.current_hp} / {overview.max_hp} HP
               </span>
-              {overview.temp_hp > 0 && (
-                <span style={{ color: '#93c5fd' }}>+{overview.temp_hp} temp</span>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {overview.temp_hp > 0 && (
+                  <span style={{ color: '#93c5fd' }}>+{overview.temp_hp} temp</span>
+                )}
+                <span style={{
+                  color: hpStatus.color,
+                  background: hpStatus.bgColor,
+                  padding: '1px 8px',
+                  borderRadius: '9999px',
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  fontFamily: 'var(--font-display)',
+                  letterSpacing: '0.05em',
+                  border: `1px solid ${hpStatus.color}33`,
+                }}>
+                  {hpStatus.text}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -1170,6 +1943,41 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                   </div>
                 </div>
               </div>
+              <div className="flex justify-center mt-3">
+                <button
+                  onClick={() => {
+                    const d20 = Math.floor(Math.random() * 20) + 1;
+                    if (d20 === 20) {
+                      const updated = { ...overview, current_hp: 1, death_save_successes: 0, death_save_failures: 0 };
+                      setOverview(updated);
+                      triggerOverview(updated);
+                      toast.success(`NAT 20! You regain 1 HP and stabilize!`, { icon: '🎲', duration: 5000, style: { background: '#1a2e1a', color: '#86efac', border: '1px solid rgba(52,211,153,0.4)', fontFamily: 'monospace' } });
+                    } else if (d20 === 1) {
+                      const newFails = Math.min(3, overview.death_save_failures + 2);
+                      const updated = { ...overview, death_save_failures: newFails };
+                      setOverview(updated);
+                      triggerOverview(updated);
+                      toast(`NAT 1! Two death save failures! (${newFails}/3)`, { icon: '💀', duration: 5000, style: { background: '#2e1a1a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)', fontFamily: 'monospace' } });
+                    } else if (d20 >= 10) {
+                      const newSucc = Math.min(3, overview.death_save_successes + 1);
+                      const updated = { ...overview, death_save_successes: newSucc };
+                      setOverview(updated);
+                      triggerOverview(updated);
+                      toast.success(`Rolled ${d20} — Death save success! (${newSucc}/3)`, { icon: '🎲', duration: 4000, style: { background: '#1a2e1a', color: '#86efac', border: '1px solid rgba(52,211,153,0.3)', fontFamily: 'monospace' } });
+                    } else {
+                      const newFails = Math.min(3, overview.death_save_failures + 1);
+                      const updated = { ...overview, death_save_failures: newFails };
+                      setOverview(updated);
+                      triggerOverview(updated);
+                      toast(`Rolled ${d20} — Death save failure! (${newFails}/3)`, { icon: '💀', duration: 4000, style: { background: '#2e1a1a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)', fontFamily: 'monospace' } });
+                    }
+                  }}
+                  className="btn-primary text-sm px-6 py-2 flex items-center gap-2 bg-red-600/80 hover:bg-red-500 border-red-400/30"
+                  disabled={overview.death_save_successes >= 3 || overview.death_save_failures >= 3}
+                >
+                  🎲 Roll Death Save
+                </button>
+              </div>
               <p className="text-xs text-red-300/40 text-center mt-2">
                 Roll d20 each turn: 10+ = success, 9- = failure. Nat 20 = regain 1 HP. Nat 1 = two failures.
               </p>
@@ -1184,7 +1992,27 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
               <div className="flex items-center gap-4">
                 <div>
                   <label className="label">Total</label>
-                  <input className="input w-24" placeholder="e.g. 5d10" value={overview.hit_dice_total} onChange={e => updateField('hit_dice_total', e.target.value)} />
+                  <div className="flex items-center gap-2">
+                    <input className="input w-24" placeholder="e.g. 5d10" value={overview.hit_dice_total} onChange={e => updateField('hit_dice_total', e.target.value)} />
+                    {(() => {
+                      const classData = CLASSES.find(c => c.name === overview.primary_class);
+                      if (!classData?.hitDie || !overview.level) return null;
+                      const suggested = `${overview.level}d${classData.hitDie}`;
+                      if (overview.hit_dice_total === suggested) return null;
+                      return (
+                        <button
+                          onClick={() => {
+                            updateField('hit_dice_total', suggested);
+                            toast.success(`Hit dice set to ${suggested}`);
+                          }}
+                          className="text-[10px] font-medium px-2 py-1.5 rounded bg-gold/10 border border-gold/25 text-gold/80 hover:bg-gold/20 hover:text-gold transition-all whitespace-nowrap flex items-center gap-1"
+                          title={`Auto-set to ${suggested} (${overview.primary_class} Lv ${overview.level})`}
+                        >
+                          <Wand2 size={10} /> Auto
+                        </button>
+                      );
+                    })()}
+                  </div>
                 </div>
                 <div>
                   <label className="label">Used</label>
@@ -1283,13 +2111,53 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 })}
               </div>
               {overview.exhaustion_level > 0 && (
-                <div className="text-xs text-red-300/60 mt-2 space-y-0.5">
-                  {EXHAUSTION_LEVELS.slice(0, overview.exhaustion_level).map((effect, i) => (
-                    <p key={i}>Level {i + 1}: {effect}</p>
-                  ))}
+                <div className="mt-3 p-3 rounded-lg border-2 border-red-500/25 bg-red-950/30 shadow-[0_0_16px_rgba(239,68,68,0.06)]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle size={14} className="text-red-400" />
+                    <span className="text-xs font-display text-red-300 font-semibold tracking-wide">
+                      Exhaustion Level {overview.exhaustion_level} — Active Effects
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    {EXHAUSTION_LEVELS.slice(0, overview.exhaustion_level).map((effect, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs">
+                        <span className={`flex-shrink-0 mt-0.5 w-4 h-4 rounded text-center font-bold leading-4 ${i === overview.exhaustion_level - 1 ? 'bg-red-600/50 text-red-200 border border-red-500/40' : 'bg-red-900/40 text-red-300/60 border border-red-500/20'}`}>{i + 1}</span>
+                        <span className={`${i === overview.exhaustion_level - 1 ? 'text-red-200 font-medium' : 'text-red-300/50'}`}>{effect}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {overview.exhaustion_level >= 4 && (
+                    <div className="mt-2 pt-2 border-t border-red-500/15 text-[10px] text-red-400/70 flex items-center gap-1">
+                      <Skull size={10} /> {overview.exhaustion_level >= 6 ? 'LETHAL — Character dies at level 6!' : 'Dangerously high exhaustion!'}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Quick Notes / Scratchpad */}
+          <div className="card">
+            <button
+              onClick={() => setNotesOpen(!notesOpen)}
+              className="w-full flex items-center justify-between text-left"
+            >
+              <h3 className="font-display text-amber-100 flex items-center gap-2">
+                <StickyNote size={16} className="text-amber-200/40" />
+                Quick Notes
+              </h3>
+              {notesOpen ? <ChevronUp size={16} className="text-amber-200/40" /> : <ChevronDown size={16} className="text-amber-200/40" />}
+            </button>
+            {notesOpen && (
+              <div className="mt-3">
+                <textarea
+                  className="input w-full min-h-[120px] resize-y text-sm"
+                  placeholder="Jot down session notes, reminders, loot..."
+                  value={overview.notes || ''}
+                  onChange={e => updateField('notes', e.target.value)}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1372,6 +2240,61 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         </div>
       </div>
 
+      {/* Level-Up Summary */}
+      {showLevelUpSummary && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={e => e.target === e.currentTarget && setShowLevelUpSummary(null)}>
+          <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-gold/15 border border-gold/30 flex items-center justify-center">
+                <Sparkles size={20} className="text-gold" />
+              </div>
+              <div>
+                <h3 className="font-display text-lg text-gold">Level {showLevelUpSummary.level} Unlocked!</h3>
+                <p className="text-xs text-amber-200/40">Here's what changed for your character</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {/* Proficiency Bonus change */}
+              {showLevelUpSummary.profBonusChange && (
+                <div className="flex items-center gap-2 p-2 rounded bg-gold/8 border border-gold/15">
+                  <Star size={14} className="text-gold" />
+                  <span className="text-sm text-amber-100">Proficiency Bonus: +{showLevelUpSummary.profBonusChange.old} → <strong className="text-gold">+{showLevelUpSummary.profBonusChange.new}</strong></span>
+                  <span className="text-[10px] text-amber-200/30 ml-auto">All saves & skills updated</span>
+                </div>
+              )}
+              {/* ASI */}
+              {showLevelUpSummary.isASI && (
+                <div className="flex items-center gap-2 p-2 rounded bg-purple-900/20 border border-purple-500/20">
+                  <TrendingUp size={14} className="text-purple-400" />
+                  <span className="text-sm text-purple-200">Ability Score Improvement available!</span>
+                  <span className="text-[10px] text-purple-300/40 ml-auto">+2 to one / +1 to two</span>
+                </div>
+              )}
+              {/* New Features */}
+              {showLevelUpSummary.newFeatures && showLevelUpSummary.newFeatures.length > 0 && (
+                <div>
+                  <div className="text-[10px] font-display text-amber-200/40 tracking-wider uppercase mb-1.5">New Features</div>
+                  {showLevelUpSummary.newFeatures.map((f, i) => (
+                    <div key={i} className="p-2 rounded bg-[#0a0a10] border border-amber-200/8 mb-1.5">
+                      <div className="text-sm text-amber-100 font-medium">{f.name}</div>
+                      <div className="text-xs text-amber-200/45 mt-0.5">{f.description}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setShowLevelUpSummary(null)}
+                className="text-sm px-4 py-2 rounded font-medium bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-all"
+              >
+                Got it!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Short Rest Modal */}
       {showShortRest && (
         <ShortRestModal
@@ -1393,8 +2316,15 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   );
 }
 
-// D&D 5e XP thresholds per level
+// D&D 5e XP thresholds per level (index = level - 1)
 const XP_THRESHOLDS = [0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000, 85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000];
+
+function getLevelFromXP(xp) {
+  for (let i = XP_THRESHOLDS.length - 1; i >= 0; i--) {
+    if (xp >= XP_THRESHOLDS[i]) return i + 1;
+  }
+  return 1;
+}
 
 function XPProgress({ xp, level, onXPChange }) {
   const currentThreshold = XP_THRESHOLDS[level - 1] || 0;
@@ -1452,7 +2382,8 @@ function ShortRestModal({ overview, onRest, onCancel }) {
   }, [onCancel]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={e => e.target === e.currentTarget && onCancel()}>
+    <ModalPortal>
+      <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onCancel()}>
       <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="font-display text-lg text-amber-100 mb-2">Short Rest</h3>
         <p className="text-sm text-amber-200/50 mb-4">
@@ -1499,6 +2430,7 @@ function ShortRestModal({ overview, onRest, onCancel }) {
           <button onClick={() => onRest(diceToSpend)} className="btn-primary text-sm">Rest</button>
         </div>
       </div>
-    </div>
+      </div>
+    </ModalPortal>
   );
 }

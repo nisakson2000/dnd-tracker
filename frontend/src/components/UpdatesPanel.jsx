@@ -1,4 +1,5 @@
 import { useState } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, RefreshCw, CheckCircle, AlertCircle, Clock, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { CHANGELOG } from '../data/changelog';
@@ -55,7 +56,7 @@ export default function UpdatesPanel({ show, onClose }) {
                   className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors"
                   onClick={(e) => {
                     e.preventDefault();
-                    try { invoke('plugin:shell|open', { path: 'https://github.com/nisakson2000/dnd-tracker' }); } catch {}
+                    try { invoke('plugin:shell|open', { path: 'https://github.com/nisakson2000/dnd-tracker' }); } catch { /* ignore shell open failure */ }
                   }}
                 >
                   <ExternalLink size={12} /> View

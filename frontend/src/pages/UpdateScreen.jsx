@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { APP_VERSION } from '../version';
 
@@ -56,7 +57,7 @@ export default function UpdateScreen({ onDone, asModal = false }) {
 
   const currentVersion = APP_VERSION.replace(/^[vV]/, '');
 
-  useEffect(() => { runCheck(); }, []);
+  useEffect(() => { runCheck(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cleanup interval on unmount
   useEffect(() => () => { if (tickerRef.current) clearInterval(tickerRef.current); }, []);

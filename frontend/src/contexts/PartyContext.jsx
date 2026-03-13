@@ -49,7 +49,7 @@ export function PartyProvider({ children }) {
     // Guard: prevent concurrent connection attempts
     if (connectingRef.current) return;
     if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) return;
-    const { mode: m, roomCode: code, hostIp: hip, joinIp: jip } = connRef.current;
+    const { mode: m, roomCode: code, joinIp: jip } = connRef.current;
     const ip = m === 'host' ? 'localhost' : jip;
     if (!code || !ip) return;
 

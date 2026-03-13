@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Check, Dice5, RefreshCw } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check, Dice5, RefreshCw, Info, Zap, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import { getRuleset } from '../data/rulesets';
@@ -22,6 +23,100 @@ const SKILL_ABILITIES = {
   'Performance': 'CHA', 'Persuasion': 'CHA', 'Religion': 'INT', 'Sleight of Hand': 'DEX',
   'Stealth': 'DEX', 'Survival': 'WIS',
 };
+
+// ─── Class & Race Tooltips ───────────────────────────────────────────────────
+
+const CLASS_TOOLTIPS = {
+  Barbarian:  { hitDie: 'd12', saves: 'STR, CON', flavor: 'A fierce warrior who channels primal rage into devastating attacks. Good at: Tanking, melee damage.' },
+  Bard:       { hitDie: 'd8',  saves: 'DEX, CHA', flavor: 'A versatile performer whose music weaves magic. Good at: Support, utility, face skills.' },
+  Cleric:     { hitDie: 'd8',  saves: 'WIS, CHA', flavor: 'A holy champion who channels divine power. Good at: Healing, support, turning undead.' },
+  Druid:      { hitDie: 'd8',  saves: 'INT, WIS', flavor: 'A keeper of nature who can shapeshift into beasts. Good at: Control, versatility, Wild Shape.' },
+  Fighter:    { hitDie: 'd10', saves: 'STR, CON', flavor: 'A master of martial combat with unmatched weapon skill. Good at: Tanking, damage dealing.' },
+  Monk:       { hitDie: 'd8',  saves: 'STR, DEX', flavor: 'A martial artist harnessing the power of ki. Good at: Speed, stunning, evasion.' },
+  Paladin:    { hitDie: 'd10', saves: 'WIS, CHA', flavor: 'A holy knight bound by a sacred oath. Good at: Burst damage (smite), healing, auras.' },
+  Ranger:     { hitDie: 'd10', saves: 'STR, DEX', flavor: 'A wilderness warrior and tracker. Good at: Ranged combat, exploration, survival.' },
+  Rogue:      { hitDie: 'd8',  saves: 'DEX, INT', flavor: 'A cunning scoundrel who strikes from the shadows. Good at: Sneak Attack, skills, stealth.' },
+  Sorcerer:   { hitDie: 'd6',  saves: 'CON, CHA', flavor: 'A spellcaster born with innate magical power. Good at: Burst spells, Metamagic flexibility.' },
+  Warlock:    { hitDie: 'd8',  saves: 'WIS, CHA', flavor: 'A wielder of eldritch power from a patron pact. Good at: Eldritch Blast, short rest recovery.' },
+  Wizard:     { hitDie: 'd6',  saves: 'INT, WIS', flavor: 'A scholarly mage with an unmatched spell library. Good at: Spell variety, control, ritual casting.' },
+};
+
+const RACE_TOOLTIPS = {
+  Human:      { flavor: 'Versatile and ambitious. Adaptable to any class.', perks: '+1 to all abilities (Standard) or +1 to two & a feat (Variant).' },
+  Dwarf:      { flavor: 'Stout and resilient. Born from stone.', perks: 'CON +2, poison resistance, darkvision 60 ft.' },
+  Elf:        { flavor: 'Graceful and long-lived. Attuned to magic.', perks: 'DEX +2, fey ancestry, darkvision 60 ft, trance.' },
+  Halfling:   { flavor: 'Small but brave and incredibly lucky.', perks: 'DEX +2, Lucky (reroll natural 1s), brave.' },
+  'Half-Elf': { flavor: 'Charming and versatile, blending two heritages.', perks: 'CHA +2, +1 to two others, two bonus skills.' },
+  'Half-Orc': { flavor: 'Fierce and enduring. Hard to keep down.', perks: 'STR +2, CON +1, Relentless Endurance, Savage Attacks.' },
+  Gnome:      { flavor: 'Curious and inventive tinkerers.', perks: 'INT +2, advantage on INT/WIS/CHA saves vs. magic.' },
+  Dragonborn: { flavor: 'Proud descendants of dragons.', perks: 'STR +2, CHA +1, breath weapon, damage resistance.' },
+  Tiefling:   { flavor: 'Infernal heritage grants dark power.', perks: 'CHA +2, INT +1, fire resistance, innate spellcasting.' },
+};
+
+// ─── Quick Start Presets ─────────────────────────────────────────────────────
+
+const QUICK_START_PRESETS = [
+  {
+    name: 'Classic Fighter',
+    icon: '⚔',
+    desc: 'A stalwart warrior with heavy armor and a greatsword.',
+    targetClass: 'Fighter',
+    targetRace: 'Human',
+    scores: { STR: 16, DEX: 12, CON: 14, INT: 10, WIS: 13, CHA: 8 },
+    skills: ['Athletics', 'Perception'],
+    background: 'Soldier',
+  },
+  {
+    name: 'Elven Wizard',
+    icon: '🧙',
+    desc: 'A scholarly mage wielding arcane power with elven grace.',
+    targetClass: 'Wizard',
+    targetRace: 'Elf',
+    scores: { STR: 8, DEX: 14, CON: 13, INT: 16, WIS: 12, CHA: 10 },
+    skills: ['Arcana', 'Investigation'],
+    background: 'Sage',
+  },
+  {
+    name: 'Halfling Rogue',
+    icon: '🗡',
+    desc: 'A nimble trickster who slips past danger unseen.',
+    targetClass: 'Rogue',
+    targetRace: 'Halfling',
+    scores: { STR: 8, DEX: 16, CON: 12, INT: 13, WIS: 10, CHA: 14 },
+    skills: ['Stealth', 'Sleight of Hand', 'Perception', 'Deception'],
+    background: 'Criminal',
+  },
+  {
+    name: 'Dwarven Cleric',
+    icon: '🛡',
+    desc: 'A stout healer in heavy mail, channeling divine wrath.',
+    targetClass: 'Cleric',
+    targetRace: 'Dwarf',
+    scores: { STR: 14, DEX: 10, CON: 14, INT: 8, WIS: 16, CHA: 12 },
+    skills: ['Medicine', 'Insight'],
+    background: 'Acolyte',
+  },
+  {
+    name: 'Tiefling Warlock',
+    icon: '🔥',
+    desc: 'A charismatic pact-wielder with infernal heritage.',
+    targetClass: 'Warlock',
+    targetRace: 'Tiefling',
+    scores: { STR: 8, DEX: 14, CON: 12, INT: 10, WIS: 13, CHA: 16 },
+    skills: ['Deception', 'Arcana'],
+    background: 'Charlatan',
+  },
+  {
+    name: 'Half-Orc Barbarian',
+    icon: '🪓',
+    desc: 'A raging berserker who thrives in the chaos of battle.',
+    targetClass: 'Barbarian',
+    targetRace: 'Half-Orc',
+    scores: { STR: 16, DEX: 13, CON: 14, INT: 8, WIS: 12, CHA: 10 },
+    skills: ['Athletics', 'Intimidation'],
+    background: 'Outlander',
+  },
+];
 
 function mod(score) {
   return Math.floor((score - 10) / 2);
@@ -47,9 +142,297 @@ const cardStyle = {
   border: '1px solid rgba(201,168,76,0.15)',
 };
 
+// ─── Tooltip Component ───────────────────────────────────────────────────────
+
+function InfoTooltip({ text, style: extraStyle }) {
+  const [show, setShow] = useState(false);
+  return (
+    <span
+      style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'help', ...extraStyle }}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      <Info size={13} style={{ color: 'rgba(200,175,130,0.35)', flexShrink: 0 }} />
+      <AnimatePresence>
+        {show && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.15 }}
+            style={{
+              position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
+              marginBottom: 8, padding: '10px 14px', borderRadius: 8, width: 260, zIndex: 100,
+              background: 'rgba(20,17,35,0.97)', border: '1px solid rgba(201,168,76,0.25)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+              fontSize: 11, lineHeight: 1.6, color: 'rgba(200,175,130,0.7)',
+              pointerEvents: 'none',
+            }}
+          >
+            {text}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </span>
+  );
+}
+
+// ─── Class/Race Info Banner ──────────────────────────────────────────────────
+
+function ClassRaceInfoBanner({ overview }) {
+  const [expanded, setExpanded] = useState(false);
+  const className = overview?.primary_class || '';
+  const raceName = overview?.race || '';
+  const ct = CLASS_TOOLTIPS[className];
+  const rt = RACE_TOOLTIPS[raceName];
+
+  if (!ct && !rt) return null;
+
+  return (
+    <div style={{
+      ...cardStyle, padding: '12px 16px', marginBottom: 16,
+      background: 'rgba(201,168,76,0.03)', borderColor: 'rgba(201,168,76,0.12)',
+      cursor: 'pointer',
+    }} onClick={() => setExpanded(e => !e)}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Info size={14} style={{ color: accent, flexShrink: 0 }} />
+          <span style={{ fontSize: 11, fontFamily: 'var(--font-heading)', color: 'rgba(200,175,130,0.5)', letterSpacing: '0.05em' }}>
+            {className && raceName ? `${raceName} ${className}` : className || raceName} — Quick Reference
+          </span>
+        </div>
+        <motion.span
+          animate={{ rotate: expanded ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          style={{ color: 'rgba(200,175,130,0.3)', fontSize: 10 }}
+        >
+          ▼
+        </motion.span>
+      </div>
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{ paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {ct && (
+                <div>
+                  <div style={{ fontSize: 10, fontFamily: 'var(--font-heading)', letterSpacing: '0.15em', textTransform: 'uppercase', color: accent, marginBottom: 4 }}>{className}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.55)', lineHeight: 1.6 }}>
+                    Hit Die: <span style={{ color: '#efe0c0', fontFamily: 'var(--font-mono)' }}>{ct.hitDie}</span>
+                    {' | '}Saves: <span style={{ color: '#efe0c0', fontFamily: 'var(--font-mono)' }}>{ct.saves}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.4)', marginTop: 2 }}>{ct.flavor}</div>
+                </div>
+              )}
+              {rt && (
+                <div>
+                  <div style={{ fontSize: 10, fontFamily: 'var(--font-heading)', letterSpacing: '0.15em', textTransform: 'uppercase', color: accent, marginBottom: 4 }}>{raceName}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.55)', lineHeight: 1.6 }}>{rt.perks}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.4)', marginTop: 2 }}>{rt.flavor}</div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── Quick Start Step ────────────────────────────────────────────────────────
+
+function StepQuickStart({ overview, onApplyPreset, onSkip }) {
+  const matchingPresets = QUICK_START_PRESETS.filter(() => {
+    // Show all presets, but highlight ones matching current class/race
+    return true;
+  });
+
+  const getMatchLevel = (preset) => {
+    const classMatch = overview?.primary_class === preset.targetClass;
+    const raceMatch = overview?.race === preset.targetRace;
+    if (classMatch && raceMatch) return 'perfect';
+    if (classMatch || raceMatch) return 'partial';
+    return 'none';
+  };
+
+  // Sort: perfect matches first, then partial, then none
+  const sorted = [...matchingPresets].sort((a, b) => {
+    const order = { perfect: 0, partial: 1, none: 2 };
+    return order[getMatchLevel(a)] - order[getMatchLevel(b)];
+  });
+
+  return (
+    <div style={{ maxWidth: 560 }}>
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <div style={{ fontSize: 28, marginBottom: 8 }}><Zap size={28} style={{ color: accent }} /></div>
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 22, color: '#efe0c0', marginBottom: 4 }}>
+          Quick Start
+        </h2>
+        <p style={{ fontSize: 13, color: 'rgba(200,175,130,0.4)' }}>
+          Pick a template to auto-fill ability scores, skills, and background — or skip to build from scratch.
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {sorted.map(preset => {
+          const matchLvl = getMatchLevel(preset);
+          const isPerfect = matchLvl === 'perfect';
+          const isPartial = matchLvl === 'partial';
+          return (
+            <button
+              key={preset.name}
+              onClick={() => onApplyPreset(preset)}
+              style={{
+                ...cardStyle, cursor: 'pointer', textAlign: 'left',
+                display: 'flex', alignItems: 'flex-start', gap: 14, padding: '16px 18px',
+                transition: 'all 0.2s',
+                background: isPerfect ? 'rgba(201,168,76,0.06)' : 'rgba(11,9,20,0.9)',
+                borderColor: isPerfect ? `${accent}40` : isPartial ? `${accent}25` : 'rgba(201,168,76,0.15)',
+              }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = `${accent}50`}
+              onMouseLeave={e => e.currentTarget.style.borderColor = isPerfect ? `${accent}40` : isPartial ? `${accent}25` : 'rgba(201,168,76,0.15)'}
+            >
+              <span style={{ fontSize: 26, lineHeight: 1 }}>{preset.icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontFamily: 'var(--font-heading)', fontSize: 14, color: '#efe0c0', letterSpacing: '0.03em' }}>{preset.name}</span>
+                  {isPerfect && (
+                    <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 99, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)', color: '#4ade80', fontFamily: 'var(--font-heading)', letterSpacing: '0.05em' }}>
+                      BEST MATCH
+                    </span>
+                  )}
+                  {isPartial && (
+                    <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 99, background: `${accent}10`, border: `1px solid ${accent}25`, color: `${accent}aa`, fontFamily: 'var(--font-heading)', letterSpacing: '0.05em' }}>
+                      GOOD FIT
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.4)', marginTop: 3 }}>{preset.desc}</div>
+                <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(200,175,130,0.3)' }}>
+                  <span>STR {preset.scores.STR}</span>
+                  <span>DEX {preset.scores.DEX}</span>
+                  <span>CON {preset.scores.CON}</span>
+                  <span>INT {preset.scores.INT}</span>
+                  <span>WIS {preset.scores.WIS}</span>
+                  <span>CHA {preset.scores.CHA}</span>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: 20 }}>
+        <button
+          onClick={onSkip}
+          style={{
+            border: 'none', background: 'none', cursor: 'pointer',
+            color: 'rgba(200,175,130,0.35)', fontFamily: 'var(--font-heading)',
+            fontSize: 12, letterSpacing: '0.05em',
+            padding: '8px 16px',
+          }}
+          onMouseEnter={e => e.currentTarget.style.color = 'rgba(200,175,130,0.6)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'rgba(200,175,130,0.35)'}
+        >
+          Skip — I'll build from scratch
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Review Summary Panel ────────────────────────────────────────────────────
+
+function StepReviewSummary({ overview, scores, classData, raceData, backgroundData, selectedSkills, selectedBackground }) {
+  const conMod = mod(scores?.CON || 10);
+  const hp = classData ? classData.hitDie + conMod : 10;
+  const ac = 10 + mod(scores?.DEX || 10);
+  const bgSkills = backgroundData?.skillProficiencies || [];
+  const allSkills = [...new Set([...selectedSkills, ...bgSkills])];
+  const ct = CLASS_TOOLTIPS[overview?.primary_class];
+
+  const sections = [
+    {
+      title: 'Character',
+      items: [
+        { label: 'Name', value: overview?.name || 'Unknown' },
+        { label: 'Race', value: overview?.race || 'Unknown' },
+        { label: 'Class', value: overview?.primary_class || 'Unknown' },
+        ...(selectedBackground ? [{ label: 'Background', value: selectedBackground }] : []),
+      ],
+    },
+    {
+      title: 'Ability Scores',
+      items: ABILITIES.map(a => ({
+        label: a,
+        value: `${scores?.[a] || 10} (${modStr(scores?.[a] || 10)})`,
+      })),
+    },
+    {
+      title: 'Combat',
+      items: [
+        { label: 'Hit Points', value: `${hp}` },
+        { label: 'Armor Class', value: `${ac}` },
+        { label: 'Speed', value: `${raceData?.speed || 30} ft` },
+        ...(ct ? [{ label: 'Hit Die', value: ct.hitDie }] : []),
+      ],
+    },
+    ...(allSkills.length > 0 ? [{
+      title: 'Skills',
+      items: allSkills.map(s => ({ label: s, value: SKILL_ABILITIES[s] || '' })),
+    }] : []),
+    ...(classData?.savingThrows ? [{
+      title: 'Saving Throws',
+      items: classData.savingThrows.map(s => ({ label: s, value: ABILITY_NAMES[s] || s })),
+    }] : []),
+  ];
+
+  return (
+    <div style={{ maxWidth: 560 }}>
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <div style={{ fontSize: 28, marginBottom: 8 }}><Star size={28} style={{ color: accent }} /></div>
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 22, color: '#efe0c0', marginBottom: 4 }}>
+          Review Your Choices
+        </h2>
+        <p style={{ fontSize: 13, color: 'rgba(200,175,130,0.4)' }}>
+          Double-check everything before finalizing. Use Back to make changes.
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {sections.map(section => (
+          <div key={section.title}>
+            <div style={{
+              fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.2em',
+              textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', marginBottom: 8,
+            }}>
+              {section.title}
+            </div>
+            <div style={{ ...cardStyle, padding: '12px 16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {section.items.map((item, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, color: 'rgba(200,175,130,0.5)' }}>{item.label}</span>
+                    <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: '#efe0c0', fontWeight: 600 }}>{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Step 1: Ability Scores ─────────────────────────────────────────────────
 
-function StepAbilities({ scores, setScores, raceData }) {
+function StepAbilities({ setScores, raceData }) {
   const [method, setMethod] = useState(null);
   const [rolls, setRolls] = useState(null);
   const [assignments, setAssignments] = useState({});
@@ -60,7 +443,7 @@ function StepAbilities({ scores, setScores, raceData }) {
   const pointsSpent = Object.values(pointBuyScores).reduce((sum, v) => sum + (POINT_BUY_COSTS[v] || 0), 0);
   const pointsLeft = POINT_BUY_TOTAL - pointsSpent;
 
-  const racialBonuses = raceData?.abilityBonuses || {};
+  const racialBonuses = useMemo(() => raceData?.abilityBonuses || {}, [raceData?.abilityBonuses]);
 
   const doRoll = () => {
     const r = ABILITIES.map(() => roll4d6DropLowest());
@@ -72,13 +455,13 @@ function StepAbilities({ scores, setScores, raceData }) {
     let base = {};
     if (method === 'standard') {
       // Need all 6 assigned
-      ABILITIES.forEach((a, i) => {
+      ABILITIES.forEach((a) => {
         base[a] = assignments[a] != null ? STANDARD_ARRAY[assignments[a]] : 10;
       });
     } else if (method === 'pointbuy') {
       base = { ...pointBuyScores };
     } else if (method === 'roll') {
-      ABILITIES.forEach((a, i) => {
+      ABILITIES.forEach((a) => {
         base[a] = assignments[a] != null ? rolls[assignments[a]].total : 10;
       });
     }
@@ -455,7 +838,7 @@ function StepSkills({ classData, backgroundData, selectedSkills, setSelectedSkil
           const isSelected = selectedSkills.includes(skill) || isBg;
           const ability = SKILL_ABILITIES[skill] || '?';
           const scoreMod = scores ? modStr(scores[ability] || 10) : '+0';
-          const profBonus = isSelected ? '+2' : '+0';
+          const _profBonus = isSelected ? '+2' : '+0';
           const disabled = !isSelected && selectedSkills.length >= maxPicks && !isBg;
 
           return (
@@ -650,6 +1033,7 @@ export default function CharacterSetup() {
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [selectedBackground, setSelectedBackground] = useState('');
   const [saving, setSaving] = useState(false);
+  const [_quickStartApplied, setQuickStartApplied] = useState(false);
 
   // Load character overview
   useEffect(() => {
@@ -657,7 +1041,7 @@ export default function CharacterSetup() {
       try {
         const ov = await invoke('get_overview', { characterId });
         setOverview(ov.overview);
-      } catch (err) {
+      } catch { /* ignore */
         toast.error('Failed to load character');
         navigate('/');
       } finally {
@@ -679,26 +1063,64 @@ export default function CharacterSetup() {
   const backgrounds = ruleset.BACKGROUNDS || [];
   const backgroundData = backgrounds.find(b => b.name === selectedBackground) || null;
 
+  // Quick Start preset handler
+  const applyPreset = (preset) => {
+    // Apply racial bonuses on top of preset scores
+    const racialBonuses = raceData?.abilityBonuses || {};
+    const finalScores = {};
+    ABILITIES.forEach(a => {
+      finalScores[a] = (preset.scores[a] || 10) + (racialBonuses[a] || 0);
+    });
+    setScores(finalScores);
+
+    // Apply skills that are valid for this class
+    const availableSkills = classData?.skillChoices?.from || Object.keys(SKILL_ABILITIES);
+    const maxPicks = classData?.skillChoices?.count || 2;
+    const validSkills = preset.skills.filter(s => availableSkills.includes(s)).slice(0, maxPicks);
+    setSelectedSkills(validSkills);
+
+    // Apply background if it exists in ruleset
+    if (preset.background && backgrounds.find(b => b.name === preset.background)) {
+      setSelectedBackground(preset.background);
+    }
+
+    setQuickStartApplied(true);
+    setStep(2); // Move past quickstart
+    toast.success(`Applied "${preset.name}" template — customize as needed!`);
+  };
+
+  const skipQuickStart = () => {
+    setStep(2);
+  };
+
   // Steps depend on edition
   const steps = is2024
     ? [
+        { id: 'quickstart', label: 'Quick Start' },
         { id: 'background', label: 'Background' },
         { id: 'abilities', label: 'Abilities' },
         { id: 'autoapply', label: 'Defaults' },
         { id: 'skills', label: 'Skills' },
+        { id: 'summary', label: 'Summary' },
         { id: 'review', label: 'Review' },
       ]
     : [
+        { id: 'quickstart', label: 'Quick Start' },
         { id: 'abilities', label: 'Abilities' },
         { id: 'autoapply', label: 'Defaults' },
         { id: 'skills', label: 'Skills' },
+        { id: 'summary', label: 'Summary' },
         { id: 'review', label: 'Review' },
       ];
 
   const currentStep = steps[step - 1];
   const isLast = step === steps.length;
 
+  // Step label for progress indicator
+  const stepLabel = currentStep ? `Step ${step} of ${steps.length}: ${currentStep.label}` : '';
+
   const canNext = () => {
+    if (currentStep.id === 'quickstart') return true; // Can always proceed from quickstart
     if (currentStep.id === 'abilities') return scores && Object.keys(scores).length === 6;
     if (currentStep.id === 'skills') return selectedSkills.length === (classData?.skillChoices?.count || 2);
     if (currentStep.id === 'background') return !!selectedBackground;
@@ -834,7 +1256,26 @@ export default function CharacterSetup() {
           </button>
         </div>
 
-        {/* Step indicator */}
+        {/* Step label */}
+        <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 11, fontFamily: 'var(--font-heading)', color: accent, letterSpacing: '0.06em' }}>
+            {stepLabel}
+          </span>
+          <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(200,175,130,0.25)' }}>
+            {Math.round(((step - 1) / (steps.length - 1)) * 100)}%
+          </span>
+        </div>
+
+        {/* Progress bar */}
+        <div style={{ position: 'relative', height: 3, borderRadius: 2, background: 'rgba(201,168,76,0.1)', marginBottom: 14, overflow: 'hidden' }}>
+          <motion.div
+            animate={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            style={{ position: 'absolute', top: 0, left: 0, height: '100%', borderRadius: 2, background: `linear-gradient(90deg, ${accent}, #f0d878)` }}
+          />
+        </div>
+
+        {/* Step indicator dots */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 24 }}>
           {steps.map((s, i) => {
             const n = i + 1;
@@ -852,7 +1293,7 @@ export default function CharacterSetup() {
                 }}>
                   {done ? <Check size={11} /> : n}
                 </div>
-                <span style={{ fontSize: 10, fontFamily: 'var(--font-heading)', color: current ? accent : 'rgba(200,175,130,0.25)', whiteSpace: 'nowrap' }}>{s.label}</span>
+                <span style={{ fontSize: 10, fontFamily: 'var(--font-heading)', color: current ? accent : 'rgba(200,175,130,0.25)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</span>
                 {i < steps.length - 1 && <div style={{ flex: 1, height: 1, background: done ? `${accent}50` : 'rgba(201,168,76,0.1)', marginLeft: 4 }} />}
               </div>
             );
@@ -870,6 +1311,21 @@ export default function CharacterSetup() {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2 }}
           >
+            {/* Class/Race info banner on relevant steps */}
+            {['abilities', 'autoapply', 'skills'].includes(currentStep.id) && (
+              <ClassRaceInfoBanner classData={classData} raceData={raceData} overview={overview} />
+            )}
+
+            {currentStep.id === 'quickstart' && (
+              <StepQuickStart
+                overview={overview}
+                classData={classData}
+                raceData={raceData}
+                backgrounds={backgrounds}
+                onApplyPreset={applyPreset}
+                onSkip={skipQuickStart}
+              />
+            )}
             {currentStep.id === 'background' && (
               <StepBackground backgrounds={backgrounds} selected={selectedBackground} setSelected={setSelectedBackground} />
             )}
@@ -882,6 +1338,17 @@ export default function CharacterSetup() {
             {currentStep.id === 'skills' && (
               <StepSkills classData={classData} backgroundData={backgroundData} selectedSkills={selectedSkills} setSelectedSkills={setSelectedSkills} scores={scores} />
             )}
+            {currentStep.id === 'summary' && (
+              <StepReviewSummary
+                overview={overview}
+                scores={scores}
+                classData={classData}
+                raceData={raceData}
+                backgroundData={backgroundData}
+                selectedSkills={selectedSkills}
+                selectedBackground={selectedBackground}
+              />
+            )}
             {currentStep.id === 'review' && (
               <StepReview overview={overview} scores={scores} classData={classData} raceData={raceData} backgroundData={backgroundData} selectedSkills={selectedSkills} />
             )}
@@ -889,41 +1356,43 @@ export default function CharacterSetup() {
         </AnimatePresence>
       </div>
 
-      {/* Footer nav */}
-      <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: 620, padding: '16px 24px 24px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button
-          onClick={() => setStep(s => Math.max(1, s - 1))}
-          disabled={step === 1}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 4,
-            border: 'none', background: 'none', cursor: step > 1 ? 'pointer' : 'not-allowed',
-            color: step > 1 ? 'rgba(200,175,130,0.45)' : 'rgba(200,175,130,0.15)',
-            fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.05em',
-          }}
-        >
-          <ChevronLeft size={14} /> Back
-        </button>
+      {/* Footer nav — hidden on quickstart (it has its own buttons) */}
+      {currentStep.id !== 'quickstart' && (
+        <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: 620, padding: '16px 24px 24px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <button
+            onClick={() => setStep(s => Math.max(1, s - 1))}
+            disabled={step === 1}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              border: 'none', background: 'none', cursor: step > 1 ? 'pointer' : 'not-allowed',
+              color: step > 1 ? 'rgba(200,175,130,0.45)' : 'rgba(200,175,130,0.15)',
+              fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.05em',
+            }}
+          >
+            <ChevronLeft size={14} /> Back
+          </button>
 
-        <motion.button
-          onClick={() => {
-            if (isLast) finishSetup();
-            else setStep(s => s + 1);
-          }}
-          disabled={!canNext() || saving}
-          whileHover={canNext() && !saving ? { y: -2, boxShadow: `0 5px 18px ${accent}44` } : {}}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 7,
-            padding: '10px 24px', borderRadius: 9, border: 'none',
-            cursor: canNext() && !saving ? 'pointer' : 'not-allowed',
-            fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.08em', fontWeight: 700,
-            background: canNext() ? `linear-gradient(135deg, ${accent}, #f0d878)` : `${accent}20`,
-            color: canNext() ? '#12101c' : `${accent}50`,
-            opacity: saving ? 0.6 : canNext() ? 1 : 0.5,
-          }}
-        >
-          {saving ? 'Saving…' : isLast ? <><Check size={14} /> Finish Setup</> : <>Continue <ChevronRight size={14} /></>}
-        </motion.button>
-      </div>
+          <motion.button
+            onClick={() => {
+              if (isLast) finishSetup();
+              else setStep(s => s + 1);
+            }}
+            disabled={!canNext() || saving}
+            whileHover={canNext() && !saving ? { y: -2, boxShadow: `0 5px 18px ${accent}44` } : {}}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 7,
+              padding: '10px 24px', borderRadius: 9, border: 'none',
+              cursor: canNext() && !saving ? 'pointer' : 'not-allowed',
+              fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.08em', fontWeight: 700,
+              background: canNext() ? `linear-gradient(135deg, ${accent}, #f0d878)` : `${accent}20`,
+              color: canNext() ? '#12101c' : `${accent}50`,
+              opacity: saving ? 0.6 : canNext() ? 1 : 0.5,
+            }}
+          >
+            {saving ? 'Saving...' : isLast ? <><Check size={14} /> Finish Setup</> : <>Continue <ChevronRight size={14} /></>}
+          </motion.button>
+        </div>
+      )}
 
       {/* Version */}
       <div style={{ position: 'fixed', bottom: 12, right: 16, fontFamily: 'var(--font-heading)', fontSize: 9, letterSpacing: '0.1em', color: 'rgba(200,175,130,0.12)' }}>

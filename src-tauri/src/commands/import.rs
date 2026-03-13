@@ -150,7 +150,7 @@ pub fn import_character(
             // SAFETY: field names are from hardcoded array below, not user input.
             let fields = ["backstory_text", "personality_traits", "ideals", "bonds", "flaws",
                 "age", "height", "weight", "eyes", "hair", "skin",
-                "allies_organizations", "appearance_notes", "goals_motivations"];
+                "allies_organizations", "appearance_notes", "goals_motivations", "portrait_data"];
             for field in &fields {
                 if let Some(val) = bs.get(*field) {
                     let sql = format!("UPDATE backstory SET {} = ?1 WHERE id=1", field);
@@ -253,13 +253,16 @@ pub fn import_character(
                 let name = f.get("name").and_then(|v| v.as_str()).unwrap_or("");
                 if name.is_empty() { continue; }
                 conn.execute(
-                    "INSERT INTO features (name, source, source_level, feature_type, description) VALUES (?1,?2,?3,?4,?5)",
+                    "INSERT INTO features (name, source, source_level, feature_type, description, uses_total, uses_remaining, recharge) VALUES (?1,?2,?3,?4,?5,?6,?7,?8)",
                     rusqlite::params![
                         name,
                         safe_str(f.get("source").unwrap_or(&serde_json::json!("")), ""),
                         safe_i64(f.get("source_level").or_else(|| f.get("level")).unwrap_or(&serde_json::json!(0)), 0),
                         safe_str(f.get("feature_type").or_else(|| f.get("type")).unwrap_or(&serde_json::json!("class")), "class"),
                         safe_str(f.get("description").unwrap_or(&serde_json::json!("")), ""),
+                        safe_i64(f.get("uses_total").unwrap_or(&serde_json::json!(0)), 0),
+                        safe_i64(f.get("uses_remaining").unwrap_or(&serde_json::json!(0)), 0),
+                        safe_str(f.get("recharge").unwrap_or(&serde_json::json!("")), ""),
                     ],
                 ).map_err(|e| e.to_string())?;
                 count += 1;

@@ -13,13 +13,9 @@ function notify() {
   listeners.forEach(fn => fn(ipcLog));
 }
 
-let originalInvoke = null;
-
 export function installIpcInterceptor() {
-  // Dynamically import and monkey-patch
-  import('@tauri-apps/api/core').then(mod => {
-    originalInvoke = mod.invoke;
-  });
+  // Dynamically import to ensure module is loaded
+  import('@tauri-apps/api/core').then(() => { /* preload */ });
 }
 
 export async function devInvoke(command, args) {

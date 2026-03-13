@@ -33,6 +33,24 @@ pub struct OverviewData {
     pub exhaustion_level: i64,
     pub ruleset: String,
     pub multiclass_data: String,
+    #[serde(default)]
+    pub notes: String,
+    #[serde(default)]
+    pub climb_speed: i64,
+    #[serde(default)]
+    pub swim_speed: i64,
+    #[serde(default)]
+    pub fly_speed: i64,
+    #[serde(default = "default_hp_calc_method")]
+    pub hp_calc_method: String,
+    #[serde(default)]
+    pub initiative_bonus: i64,
+    #[serde(default)]
+    pub spell_attack_bonus: i64,
+}
+
+fn default_hp_calc_method() -> String {
+    "auto".to_string()
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -76,7 +94,8 @@ pub fn get_overview(
                         death_save_successes, death_save_failures, inspiration,
                         senses, languages, proficiencies_armor, proficiencies_weapons,
                         proficiencies_tools, campaign_name, exhaustion_level, ruleset,
-                        multiclass_data
+                        multiclass_data, notes, climb_speed, swim_speed, fly_speed,
+                        hp_calc_method, initiative_bonus, spell_attack_bonus
                  FROM character_overview LIMIT 1",
                 [],
                 |row| {
@@ -109,6 +128,13 @@ pub fn get_overview(
                         exhaustion_level: row.get(25).unwrap_or(0),
                         ruleset: row.get(26).unwrap_or_else(|_| "5e-2014".to_string()),
                         multiclass_data: row.get(27).unwrap_or_else(|_| "[]".to_string()),
+                        notes: row.get(28).unwrap_or_default(),
+                        climb_speed: row.get(29).unwrap_or(0),
+                        swim_speed: row.get(30).unwrap_or(0),
+                        fly_speed: row.get(31).unwrap_or(0),
+                        hp_calc_method: row.get(32).unwrap_or_else(|_| "auto".to_string()),
+                        initiative_bonus: row.get(33).unwrap_or(0),
+                        spell_attack_bonus: row.get(34).unwrap_or(0),
                     })
                 },
             )
@@ -184,6 +210,9 @@ pub fn update_overview(
     payload.death_save_successes = payload.death_save_successes.clamp(0, 3);
     payload.death_save_failures = payload.death_save_failures.clamp(0, 3);
     payload.hit_dice_used = payload.hit_dice_used.clamp(0, payload.level);
+    payload.climb_speed = payload.climb_speed.max(0);
+    payload.swim_speed = payload.swim_speed.max(0);
+    payload.fly_speed = payload.fly_speed.max(0);
 
     state.with_char_conn(&character_id, |conn| {
         let now = chrono::Utc::now().to_rfc3339();
@@ -196,7 +225,8 @@ pub fn update_overview(
                 death_save_failures=?18, inspiration=?19, senses=?20, languages=?21,
                 proficiencies_armor=?22, proficiencies_weapons=?23, proficiencies_tools=?24,
                 campaign_name=?25, exhaustion_level=?26, ruleset=?27, multiclass_data=?28,
-                updated_at=?29
+                updated_at=?29, notes=?30, climb_speed=?31, swim_speed=?32, fly_speed=?33,
+                hp_calc_method=?34, initiative_bonus=?35, spell_attack_bonus=?36
              WHERE id=1",
             rusqlite::params![
                 payload.name, payload.race, payload.subrace, payload.primary_class,
@@ -208,6 +238,8 @@ pub fn update_overview(
                 payload.proficiencies_armor, payload.proficiencies_weapons,
                 payload.proficiencies_tools, payload.campaign_name, payload.exhaustion_level,
                 payload.ruleset, payload.multiclass_data, now,
+                payload.notes, payload.climb_speed, payload.swim_speed, payload.fly_speed,
+                payload.hp_calc_method, payload.initiative_bonus, payload.spell_attack_bonus,
             ],
         )
         .map_err(|e| format!("Failed to save character overview: {}", e))?;

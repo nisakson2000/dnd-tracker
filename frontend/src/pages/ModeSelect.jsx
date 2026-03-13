@@ -1,5 +1,7 @@
 import { useState } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
+import { invoke } from '@tauri-apps/api/core';
 import { useAppMode } from '../contexts/ModeContext';
 import { APP_VERSION } from '../version';
 
@@ -8,11 +10,27 @@ const PARTICLES = Array.from({ length: 12 }, (_, i) => ({
   id: i, x: Math.random() * 100, y: 30 + Math.random() * 70,
   sym: RUNE_CHARS[i % RUNE_CHARS.length],
   delay: Math.random() * 10, dur: 14 + Math.random() * 8,
+  repeatDelay: Math.random() * 6 + 4,
 }));
 
 export default function ModeSelect() {
   const { setMode } = useAppMode();
   const [showBetaWarning, setShowBetaWarning] = useState(false);
+  const [devChecking, setDevChecking] = useState(false);
+  const [isDev, setIsDev] = useState(null); // null = unchecked, true/false
+
+  const verifyDevAccess = async () => {
+    setDevChecking(true);
+    try {
+      // If user has git repo access (can fetch from origin), they're a dev
+      await invoke('check_git_updates');
+      // If the command succeeds and we can reach origin, they have repo access
+      setIsDev(true);
+    } catch {
+      setIsDev(false);
+    }
+    setDevChecking(false);
+  };
 
   const modes = [
     {
@@ -55,7 +73,7 @@ export default function ModeSelect() {
             key={p.id}
             style={{ position: 'absolute', left: `${p.x}%`, top: `${p.y}%`, fontFamily: 'serif', fontSize: 12, color: '#c9a84c', opacity: 0, pointerEvents: 'none', userSelect: 'none' }}
             animate={{ y: [0, -100], opacity: [0, 0.08, 0.05, 0] }}
-            transition={{ delay: p.delay, duration: p.dur, repeat: Infinity, repeatDelay: Math.random() * 6 + 4, ease: 'linear' }}
+            transition={{ delay: p.delay, duration: p.dur, repeat: Infinity, repeatDelay: p.repeatDelay, ease: 'linear' }}
           >
             {p.sym}
           </motion.span>
@@ -110,7 +128,15 @@ export default function ModeSelect() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 + i * 0.15, type: 'spring', damping: 20 }}
               whileHover={{ y: -8, boxShadow: `0 20px 60px rgba(0,0,0,0.6), 0 0 40px ${m.color}15` }}
-              onClick={() => m.id === 'dm' ? setShowBetaWarning(true) : setMode(m.id)}
+              onClick={() => {
+                if (m.id === 'dm') {
+                  setShowBetaWarning(true);
+                  setIsDev(null);
+                  verifyDevAccess();
+                } else {
+                  setMode(m.id);
+                }
+              }}
               style={{
                 borderRadius: 16, overflow: 'hidden', cursor: 'pointer',
                 background: 'rgba(11,9,20,0.9)',
@@ -248,10 +274,35 @@ export default function ModeSelect() {
 
                 <p style={{
                   fontSize: 13, color: 'rgba(200,175,130,0.45)', lineHeight: 1.7,
-                  marginBottom: 24, fontFamily: 'var(--font-text, var(--font-ui, sans-serif))',
+                  marginBottom: 14, fontFamily: 'var(--font-text, var(--font-ui, sans-serif))',
                 }}>
-                  Some features may not exist yet or may not work as expected. We're actively building out DM tools — expect rough edges, missing functionality, and occasional bugs.
+                  DM Mode is currently in early development and restricted to project contributors only. Some features may not exist yet or work as expected.
                 </p>
+
+                {/* Dev verification status */}
+                {devChecking && (
+                  <div style={{ fontSize: 12, color: 'rgba(155,89,182,0.6)', marginBottom: 16, fontStyle: 'italic' }}>
+                    Verifying developer access...
+                  </div>
+                )}
+                {isDev === false && !devChecking && (
+                  <div style={{
+                    padding: '10px 16px', borderRadius: 8, marginBottom: 16,
+                    background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+                    fontSize: 12, color: '#fca5a5', lineHeight: 1.6,
+                  }}>
+                    Access denied — DM Mode is only available to developers with access to the project repository. If you're a contributor, make sure you're running from the cloned repo.
+                  </div>
+                )}
+                {isDev === true && !devChecking && (
+                  <div style={{
+                    padding: '10px 16px', borderRadius: 8, marginBottom: 16,
+                    background: 'rgba(39,174,96,0.08)', border: '1px solid rgba(39,174,96,0.2)',
+                    fontSize: 12, color: '#86efac', lineHeight: 1.6,
+                  }}>
+                    Developer access verified — you may enter DM Mode.
+                  </div>
+                )}
 
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
                   <button
@@ -267,15 +318,22 @@ export default function ModeSelect() {
                     Go Back
                   </button>
                   <button
-                    onClick={() => setMode('dm')}
+                    onClick={() => isDev && setMode('dm')}
+                    disabled={!isDev || devChecking}
                     style={{
-                      padding: '10px 24px', borderRadius: 9, border: 'none', cursor: 'pointer',
-                      background: 'linear-gradient(135deg, #9b59b6, #c084fc)',
-                      color: '#fff', fontFamily: 'var(--font-heading, "Cinzel", serif)',
+                      padding: '10px 24px', borderRadius: 9, border: 'none',
+                      cursor: isDev ? 'pointer' : 'not-allowed',
+                      background: isDev
+                        ? 'linear-gradient(135deg, #9b59b6, #c084fc)'
+                        : 'rgba(155,89,182,0.15)',
+                      color: isDev ? '#fff' : 'rgba(155,89,182,0.4)',
+                      fontFamily: 'var(--font-heading, "Cinzel", serif)',
                       fontSize: 11, letterSpacing: '0.08em', fontWeight: 700,
+                      opacity: devChecking ? 0.5 : 1,
+                      transition: 'all 0.3s',
                     }}
                   >
-                    Enter DM Mode
+                    {devChecking ? 'Verifying...' : isDev ? 'Enter DM Mode' : 'Dev Access Required'}
                   </button>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Users, Wifi, WifiOff, Copy, Check, LogIn, LogOut, Crown, Heart, Shield, RefreshCw, Signal, AlertTriangle, Activity } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -257,7 +257,7 @@ export default function Party({ characterId, character, onBugReport }) {
               { icon: Crown, label: isDM ? 'You host a room' : 'DM hosts a room', sub: isDM ? 'You get a code + IP' : 'Gets a code + IP' },
               { icon: Users, label: isDM ? 'Players join with your code' : 'You join with IP & code', sub: 'On the same WiFi' },
               { icon: Signal, label: 'Stats sync live', sub: 'HP & AC update in real time' },
-            ].map(({ icon: Icon, label, sub }, i) => (
+            ].map(({ icon: Icon, label, sub }, i) => ( // eslint-disable-line no-unused-vars
               <div key={i} className="space-y-2">
                 <div className="w-9 h-9 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center mx-auto">
                   <Icon size={16} className="text-gold/70" />

@@ -742,3 +742,401 @@ pub fn dev_git_push() -> Result<serde_json::Value, String> {
 
     Ok(json!({ "success": true, "output": stdout, "branch": branch }))
 }
+
+#[tauri::command]
+pub fn dev_git_pull() -> Result<serde_json::Value, String> {
+    let root = git_repo_root()?;
+
+    let (branch, _, ok) = run_git_sync(&root, &["branch", "--show-current"])?;
+    if !ok || branch.is_empty() {
+        return Err("Could not determine current branch".to_string());
+    }
+
+    let (stdout, stderr, ok) = run_git_sync(&root, &["pull", "origin", &branch])?;
+    if !ok {
+        return Err(format!("git pull failed: {}", stderr));
+    }
+
+    Ok(json!({ "success": true, "output": stdout.lines().take(20).collect::<Vec<_>>().join("\n"), "branch": branch }))
+}
+
+#[tauri::command]
+pub fn dev_git_diff(file_path: String) -> Result<serde_json::Value, String> {
+    let root = git_repo_root()?;
+
+    // Try staged diff first, fall back to unstaged, then show full file for untracked
+    let (diff, _, ok) = run_git_sync(&root, &["diff", "--", &file_path])?;
+    if ok && !diff.is_empty() {
+        return Ok(json!({ "diff": diff, "type": "unstaged" }));
+    }
+
+    let (diff, _, ok) = run_git_sync(&root, &["diff", "--cached", "--", &file_path])?;
+    if ok && !diff.is_empty() {
+        return Ok(json!({ "diff": diff, "type": "staged" }));
+    }
+
+    // Untracked file — show content preview
+    let full_path = root.join(&file_path);
+    if full_path.exists() {
+        let content = std::fs::read_to_string(&full_path)
+            .unwrap_or_else(|_| "(binary or unreadable)".to_string());
+        let preview: String = content.lines().take(100).collect::<Vec<_>>().join("\n");
+        return Ok(json!({ "diff": format!("+++ new file: {}\n{}", file_path, preview.lines().map(|l| format!("+ {}", l)).collect::<Vec<_>>().join("\n")), "type": "new" }));
+    }
+
+    Ok(json!({ "diff": "(no diff available)", "type": "empty" }))
+}
+
+#[tauri::command]
+pub fn dev_git_branch_info() -> Result<serde_json::Value, String> {
+    let root = git_repo_root()?;
+
+    let (branch, _, _) = run_git_sync(&root, &["branch", "--show-current"])?;
+
+    // All local branches
+    let (branches_raw, _, _) = run_git_sync(&root, &["branch", "--format=%(refname:short)"])?;
+    let branches: Vec<&str> = branches_raw.lines().filter(|l| !l.is_empty()).collect();
+
+    // Ahead/behind remote
+    let (ahead_behind, _, ok) = run_git_sync(&root, &["rev-list", "--left-right", "--count", &format!("{}...origin/{}", branch, branch)])?;
+    let (ahead, behind) = if ok {
+        let parts: Vec<&str> = ahead_behind.split_whitespace().collect();
+        (
+            parts.first().and_then(|s| s.parse::<i64>().ok()).unwrap_or(0),
+            parts.get(1).and_then(|s| s.parse::<i64>().ok()).unwrap_or(0),
+        )
+    } else {
+        (0, 0)
+    };
+
+    // Last fetch time (stat FETCH_HEAD)
+    let fetch_head = root.join(".git/FETCH_HEAD");
+    let last_fetch = if fetch_head.exists() {
+        std::fs::metadata(&fetch_head)
+            .ok()
+            .and_then(|m| m.modified().ok())
+            .map(|t| {
+                let elapsed = std::time::SystemTime::now().duration_since(t).unwrap_or_default();
+                let mins = elapsed.as_secs() / 60;
+                if mins < 1 { "just now".to_string() }
+                else if mins < 60 { format!("{}m ago", mins) }
+                else if mins < 1440 { format!("{}h ago", mins / 60) }
+                else { format!("{}d ago", mins / 1440) }
+            })
+    } else {
+        None
+    };
+
+    // Stash count
+    let (stash_list, _, _) = run_git_sync(&root, &["stash", "list"])?;
+    let stash_count = stash_list.lines().filter(|l| !l.is_empty()).count();
+
+    Ok(json!({
+        "branch": branch,
+        "branches": branches,
+        "ahead": ahead,
+        "behind": behind,
+        "last_fetch": last_fetch,
+        "stash_count": stash_count,
+    }))
+}
+
+#[tauri::command]
+pub fn dev_git_log_detailed() -> Result<serde_json::Value, String> {
+    let root = git_repo_root()?;
+
+    // Rich log: sha, date, author, message
+    let (log_out, _, _) = run_git_sync(&root, &[
+        "log", "--pretty=format:%h\t%ar\t%an\t%s", "-30"
+    ])?;
+
+    let commits: Vec<serde_json::Value> = log_out
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(|line| {
+            let parts: Vec<&str> = line.splitn(4, '\t').collect();
+            json!({
+                "sha": parts.first().unwrap_or(&""),
+                "date": parts.get(1).unwrap_or(&""),
+                "author": parts.get(2).unwrap_or(&""),
+                "message": parts.get(3).unwrap_or(&""),
+            })
+        })
+        .collect();
+
+    Ok(json!({ "commits": commits }))
+}
+
+#[tauri::command]
+pub fn dev_git_stash(action: String) -> Result<serde_json::Value, String> {
+    let root = git_repo_root()?;
+
+    match action.as_str() {
+        "save" => {
+            let (out, stderr, ok) = run_git_sync(&root, &["stash", "push", "-m", "Dev tools stash"])?;
+            if !ok { return Err(format!("Stash failed: {}", stderr)); }
+            Ok(json!({ "success": true, "output": out }))
+        }
+        "pop" => {
+            let (out, stderr, ok) = run_git_sync(&root, &["stash", "pop"])?;
+            if !ok { return Err(format!("Stash pop failed: {}", stderr)); }
+            Ok(json!({ "success": true, "output": out }))
+        }
+        "list" => {
+            let (out, _, _) = run_git_sync(&root, &["stash", "list"])?;
+            let stashes: Vec<&str> = out.lines().filter(|l| !l.is_empty()).collect();
+            Ok(json!({ "stashes": stashes }))
+        }
+        _ => Err("Invalid stash action. Use: save, pop, list".to_string()),
+    }
+}
+
+/// Analyze all uncommitted changes and produce a structured session summary
+/// categorized by type (bug fix, feature, improvement, refactor, etc.)
+#[tauri::command]
+pub fn dev_git_session_summary() -> Result<serde_json::Value, String> {
+    let root = git_repo_root()?;
+
+    // Get all changed files with their full diffs
+    let (status_out, _, _) = run_git_sync(&root, &["status", "--porcelain"])?;
+
+    let mut changes: Vec<serde_json::Value> = Vec::new();
+
+    for line in status_out.lines().filter(|l| !l.is_empty()) {
+        let status_code = line[..2].trim().to_string();
+        let file_path = line[3..].trim().to_string();
+
+        // Categorize by file path and type of change
+        let category = categorize_file(&file_path);
+        let area = detect_area(&file_path);
+
+        // Get diff summary for this file
+        let (diff, _, _) = run_git_sync(&root, &["diff", "--stat", "--", &file_path])
+            .unwrap_or_default();
+        let (full_diff, _, _) = run_git_sync(&root, &["diff", "-U0", "--", &file_path])
+            .unwrap_or_default();
+
+        // Extract what changed from the diff hunks
+        let summary_lines = extract_change_summary(&full_diff, &file_path);
+
+        changes.push(json!({
+            "file": file_path,
+            "status": status_code,
+            "category": category,
+            "area": area,
+            "stat": diff.lines().last().unwrap_or("").trim(),
+            "summary": summary_lines,
+        }));
+    }
+
+    // Group by category
+    let mut bug_fixes: Vec<&serde_json::Value> = Vec::new();
+    let mut features: Vec<&serde_json::Value> = Vec::new();
+    let mut improvements: Vec<&serde_json::Value> = Vec::new();
+    let mut refactors: Vec<&serde_json::Value> = Vec::new();
+
+    for c in &changes {
+        match c["category"].as_str().unwrap_or("") {
+            "bug-fix" => bug_fixes.push(c),
+            "feature" => features.push(c),
+            "improvement" => improvements.push(c),
+            _ => refactors.push(c),
+        }
+    }
+
+    // Generate a human-readable summary
+    let mut summary_parts: Vec<String> = Vec::new();
+    if !bug_fixes.is_empty() {
+        let descs: Vec<String> = bug_fixes.iter()
+            .filter_map(|c| {
+                let summaries = c["summary"].as_array()?;
+                Some(summaries.iter().filter_map(|s| s.as_str().map(String::from)).collect::<Vec<_>>())
+            })
+            .flatten()
+            .collect();
+        if !descs.is_empty() {
+            summary_parts.push(format!("Bug Fixes:\n{}", descs.iter().map(|d| format!("  - {}", d)).collect::<Vec<_>>().join("\n")));
+        }
+    }
+    if !features.is_empty() {
+        let descs: Vec<String> = features.iter()
+            .filter_map(|c| {
+                let summaries = c["summary"].as_array()?;
+                Some(summaries.iter().filter_map(|s| s.as_str().map(String::from)).collect::<Vec<_>>())
+            })
+            .flatten()
+            .collect();
+        if !descs.is_empty() {
+            summary_parts.push(format!("New Features:\n{}", descs.iter().map(|d| format!("  - {}", d)).collect::<Vec<_>>().join("\n")));
+        }
+    }
+    if !improvements.is_empty() {
+        let descs: Vec<String> = improvements.iter()
+            .filter_map(|c| {
+                let summaries = c["summary"].as_array()?;
+                Some(summaries.iter().filter_map(|s| s.as_str().map(String::from)).collect::<Vec<_>>())
+            })
+            .flatten()
+            .collect();
+        if !descs.is_empty() {
+            summary_parts.push(format!("Improvements:\n{}", descs.iter().map(|d| format!("  - {}", d)).collect::<Vec<_>>().join("\n")));
+        }
+    }
+    if !refactors.is_empty() {
+        let areas: Vec<String> = refactors.iter()
+            .filter_map(|c| c["area"].as_str().map(String::from))
+            .collect::<std::collections::HashSet<_>>()
+            .into_iter()
+            .collect();
+        if !areas.is_empty() {
+            summary_parts.push(format!("Other Changes:\n{}", areas.iter().map(|a| format!("  - {}", a)).collect::<Vec<_>>().join("\n")));
+        }
+    }
+
+    let total_files = changes.len();
+
+    Ok(json!({
+        "changes": changes,
+        "counts": {
+            "bug_fixes": bug_fixes.len(),
+            "features": features.len(),
+            "improvements": improvements.len(),
+            "refactors": refactors.len(),
+            "total": total_files,
+        },
+        "summary_text": summary_parts.join("\n\n"),
+    }))
+}
+
+/// Categorize a file change based on path patterns
+fn categorize_file(path: &str) -> &'static str {
+    let lower = path.to_lowercase();
+    // New files are features
+    if lower.contains("new") || lower.contains("create") {
+        return "feature";
+    }
+    // Test files
+    if lower.contains("test") || lower.contains("spec") {
+        return "refactor";
+    }
+    // Config / build files
+    if lower.ends_with(".toml") || lower.ends_with(".json") || lower.ends_with(".lock")
+        || lower.contains("config") || lower.contains("vite") {
+        return "refactor";
+    }
+    // Rust backend changes are often bug fixes or improvements
+    if lower.ends_with(".rs") {
+        if lower.contains("db") || lower.contains("migration") {
+            return "bug-fix";
+        }
+        return "improvement";
+    }
+    // Frontend component changes
+    if lower.ends_with(".jsx") || lower.ends_with(".tsx") {
+        if lower.contains("dev") || lower.contains("debug") {
+            return "feature";
+        }
+        return "improvement";
+    }
+    "refactor"
+}
+
+/// Detect which area of the app a file belongs to
+fn detect_area(path: &str) -> String {
+    let lower = path.to_lowercase();
+    if lower.contains("overview") { return "Character Overview".to_string(); }
+    if lower.contains("inventory") { return "Inventory".to_string(); }
+    if lower.contains("spell") { return "Spellbook".to_string(); }
+    if lower.contains("combat") { return "Combat".to_string(); }
+    if lower.contains("journal") { return "Journal".to_string(); }
+    if lower.contains("backstory") { return "Backstory".to_string(); }
+    if lower.contains("feature") { return "Features & Traits".to_string(); }
+    if lower.contains("dashboard") { return "Dashboard".to_string(); }
+    if lower.contains("devdashboard") || lower.contains("dev_tools") || lower.contains("devtools") {
+        return "Dev Tools".to_string();
+    }
+    if lower.contains("setting") { return "Settings".to_string(); }
+    if lower.contains("party") { return "Party Connect".to_string(); }
+    if lower.contains("quest") { return "Quests".to_string(); }
+    if lower.contains("npc") { return "NPCs".to_string(); }
+    if lower.contains("lore") { return "Lore & World".to_string(); }
+    if lower.contains("dice") { return "Dice Roller".to_string(); }
+    if lower.contains("export") || lower.contains("import") { return "Export/Import".to_string(); }
+    if lower.contains("db.rs") || lower.contains("database") { return "Database".to_string(); }
+    if lower.contains("main.rs") { return "App Core".to_string(); }
+    if lower.contains("rest.") { return "Rest System".to_string(); }
+    if lower.contains("character") { return "Character System".to_string(); }
+    if lower.contains("hook") { return "Hooks".to_string(); }
+    if lower.contains("api/") { return "API Layer".to_string(); }
+    // Fallback: use the directory name
+    if let Some(dir) = path.rsplit('/').nth(1) {
+        return dir.to_string();
+    }
+    "General".to_string()
+}
+
+/// Extract human-readable change descriptions from a diff
+fn extract_change_summary(diff: &str, file_path: &str) -> Vec<String> {
+    let mut summaries: Vec<String> = Vec::new();
+    let area = detect_area(file_path);
+
+    // Count additions and deletions
+    let additions = diff.lines().filter(|l| l.starts_with('+') && !l.starts_with("+++")).count();
+    let deletions = diff.lines().filter(|l| l.starts_with('-') && !l.starts_with("---")).count();
+
+    // Look for meaningful patterns in the diff
+    for line in diff.lines() {
+        let trimmed = line.trim();
+
+        // New functions/components
+        if line.starts_with('+') && !line.starts_with("+++") {
+            if trimmed.contains("pub fn ") || trimmed.contains("pub async fn ") {
+                if let Some(name) = trimmed.split("pub fn ").nth(1)
+                    .or_else(|| trimmed.split("pub async fn ").nth(1))
+                {
+                    let fn_name = name.split('(').next().unwrap_or("").trim();
+                    if !fn_name.is_empty() {
+                        summaries.push(format!("Added new backend command: {}", fn_name));
+                    }
+                }
+            }
+            if trimmed.contains("function ") && trimmed.contains('(') && !trimmed.contains("//") {
+                if let Some(name) = trimmed.split("function ").nth(1) {
+                    let fn_name = name.split('(').next().unwrap_or("").trim();
+                    if !fn_name.is_empty() && fn_name.len() < 40 {
+                        summaries.push(format!("Added new component/function: {}", fn_name));
+                    }
+                }
+            }
+        }
+
+        // Removed functions
+        if line.starts_with('-') && !line.starts_with("---") {
+            if trimmed.contains("pub fn ") {
+                if let Some(name) = trimmed.split("pub fn ").nth(1) {
+                    let fn_name = name.split('(').next().unwrap_or("").trim();
+                    if !fn_name.is_empty() {
+                        summaries.push(format!("Removed backend command: {}", fn_name));
+                    }
+                }
+            }
+        }
+    }
+
+    // If no specific patterns found, generate a generic summary
+    if summaries.is_empty() {
+        if additions > 0 && deletions > 0 {
+            summaries.push(format!("Updated {} (+{} -{} lines)", area, additions, deletions));
+        } else if additions > 0 {
+            summaries.push(format!("Added to {} (+{} lines)", area, additions));
+        } else if deletions > 0 {
+            summaries.push(format!("Removed from {} (-{} lines)", area, deletions));
+        }
+    }
+
+    // Deduplicate
+    summaries.sort();
+    summaries.dedup();
+    summaries.truncate(5); // Max 5 summaries per file
+    summaries
+}

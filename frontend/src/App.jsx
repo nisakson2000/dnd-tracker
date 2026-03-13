@@ -1,7 +1,10 @@
-import { useState, useEffect, useCallback, useRef, Component, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useState, useEffect, useRef, useCallback, useMemo, Component, lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+// eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion';
+import { invoke } from '@tauri-apps/api/core';
+import { Search, Wand2, Sword, Users, ScrollText, BookOpen, Sparkles, Clock, ArrowRight } from 'lucide-react';
 import { ModeProvider, useAppMode } from './contexts/ModeContext';
 import { useDevUpdateCheck } from './hooks/useDevUpdateCheck';
 import { APP_VERSION } from './version';
@@ -12,6 +15,7 @@ import WikiPage from './pages/WikiPage';
 import WikiArticlePage from './pages/WikiArticlePage';
 import UpdateScreen from './pages/UpdateScreen';
 import CharacterSetup from './pages/CharacterSetup';
+import BootupVideo from './components/BootupVideo';
 
 // Dev-only components — lazy loaded, tree-shaken in production
 const DevToolsPanel = import.meta.env.DEV
@@ -102,8 +106,6 @@ function DevBanner({ onOpenDevSettings }) {
   const [showDiffTooltip, setShowDiffTooltip] = useState(false);
   const tooltipRef = useRef(null);
 
-  if (!import.meta.env.DEV) return null;
-
   const height = hasUpdate ? DEV_BANNER_HEIGHT_UPDATE : DEV_BANNER_HEIGHT;
 
   // Set CSS variable so all fixed-position pages can offset themselves
@@ -111,6 +113,8 @@ function DevBanner({ onOpenDevSettings }) {
     document.documentElement.style.setProperty('--dev-banner-h', `${height}px`);
     return () => document.documentElement.style.setProperty('--dev-banner-h', '0px');
   }, [height]);
+
+  if (!import.meta.env.DEV) return null;
 
   return (
     <div style={{
@@ -290,9 +294,479 @@ function DevBanner({ onOpenDevSettings }) {
   );
 }
 
+// ─── Command Palette (Ctrl+K) ────────────────────────────────────────────────
+
+const PALETTE_CATEGORIES = [
+  { key: 'spells',   label: 'Spells',   icon: Wand2,      color: '#a78bfa', section: 'spellbook', command: 'get_spells',          nameField: 'name',  subtitleField: (i) => `Level ${i.level} ${i.school}` },
+  { key: 'items',    label: 'Items',    icon: Sword,      color: '#f59e0b', section: 'inventory', command: 'get_items',           nameField: 'name',  subtitleField: (i) => i.item_type || 'Item' },
+  { key: 'npcs',     label: 'NPCs',     icon: Users,      color: '#34d399', section: 'npcs',      command: 'get_npcs',            nameField: 'name',  subtitleField: (i) => i.role || i.location || '' },
+  { key: 'quests',   label: 'Quests',   icon: ScrollText, color: '#fb923c', section: 'quests',    command: 'get_quests',          nameField: 'title', subtitleField: (i) => i.status || '' },
+  { key: 'journal',  label: 'Journal',  icon: BookOpen,   color: '#60a5fa', section: 'journal',   command: 'get_journal_entries',  nameField: 'title', subtitleField: (i) => i.ingame_date || i.real_date || '' },
+  { key: 'lore',     label: 'Lore',     icon: BookOpen,   color: '#c084fc', section: 'lore',      command: 'get_lore_notes',      nameField: 'title', subtitleField: (i) => i.category || '' },
+  { key: 'features', label: 'Features', icon: Sparkles,   color: '#fbbf24', section: 'features',  command: 'get_features',        nameField: 'name',  subtitleField: (i) => i.source || i.feature_type || '' },
+];
+
+const RECENT_SEARCHES_KEY = 'codex-command-palette-recent';
+const MAX_RECENT = 8;
+
+function fuzzyMatch(text, query) {
+  if (!query) return true;
+  const lower = text.toLowerCase();
+  const q = query.toLowerCase();
+  // Direct substring match
+  if (lower.includes(q)) return true;
+  // Fuzzy: all query chars appear in order
+  let qi = 0;
+  for (let i = 0; i < lower.length && qi < q.length; i++) {
+    if (lower[i] === q[qi]) qi++;
+  }
+  return qi === q.length;
+}
+
+function fuzzyScore(text, query) {
+  if (!query) return 0;
+  const lower = text.toLowerCase();
+  const q = query.toLowerCase();
+  // Exact start = best
+  if (lower.startsWith(q)) return 3;
+  // Contains substring
+  if (lower.includes(q)) return 2;
+  // Fuzzy match
+  return 1;
+}
+
+function CommandPalette({ characterId }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [cache, setCache] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [recentSearches, setRecentSearches] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) || '[]'); } catch { return []; }
+  });
+  const inputRef = useRef(null);
+  const resultsRef = useRef(null);
+  const overlayRef = useRef(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Extract characterId from URL if not passed
+  const charId = characterId || (() => {
+    const m = location.pathname.match(/\/character\/([^/]+)/);
+    return m ? m[1] : null;
+  })();
+
+  // Open / close handlers
+  const closePalette = useCallback(() => {
+    setOpen(false);
+    setQuery('');
+    setSelectedIdx(0);
+  }, []);
+
+  // Global Ctrl+K listener
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.ctrlKey && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        e.stopPropagation();
+        setOpen(prev => {
+          if (prev) return false;
+          setQuery('');
+          setSelectedIdx(0);
+          return true;
+        });
+      }
+    };
+    document.addEventListener('keydown', handler, true);
+    return () => document.removeEventListener('keydown', handler, true);
+  }, []);
+
+  // Auto-focus input when opened
+  useEffect(() => {
+    if (open && inputRef.current) {
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
+  }, [open]);
+
+  // Fetch and cache data when opened
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (!open || !charId) return;
+    if (Object.keys(cache).length > 0) return; // already cached
+
+    let cancelled = false;
+    setLoading(true);
+
+    Promise.allSettled(
+      PALETTE_CATEGORIES.map(cat =>
+        invoke(cat.command, { characterId: charId })
+          .then(data => ({ key: cat.key, data }))
+          .catch(() => ({ key: cat.key, data: [] }))
+      )
+    ).then(results => {
+      if (cancelled) return;
+      const newCache = {};
+      results.forEach(r => {
+        if (r.status === 'fulfilled') {
+          newCache[r.value.key] = r.value.data;
+        }
+      });
+      setCache(newCache);
+      setLoading(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [open, charId]); // eslint-disable-line react-hooks/exhaustive-deps
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Invalidate cache when palette closes (so next open gets fresh data)
+  useEffect(() => {
+    if (!open) setCache({}); // eslint-disable-line react-hooks/set-state-in-effect
+  }, [open]);
+
+  // Build filtered results
+  const filteredResults = useMemo(() => {
+    if (!query.trim()) return [];
+    const groups = [];
+    for (const cat of PALETTE_CATEGORIES) {
+      const items = cache[cat.key] || [];
+      const matched = items
+        .filter(item => fuzzyMatch(item[cat.nameField] || '', query))
+        .map(item => ({
+          ...item,
+          _name: item[cat.nameField] || '',
+          _subtitle: cat.subtitleField(item),
+          _category: cat,
+          _score: fuzzyScore(item[cat.nameField] || '', query),
+        }))
+        .sort((a, b) => b._score - a._score)
+        .slice(0, 6);
+      if (matched.length > 0) {
+        groups.push({ category: cat, items: matched });
+      }
+    }
+    return groups;
+  }, [query, cache]);
+
+  const flatResults = useMemo(() => {
+    const flat = [];
+    filteredResults.forEach(group => {
+      group.items.forEach(item => flat.push(item));
+    });
+    return flat;
+  }, [filteredResults]);
+
+  // Reset selectedIdx when results change
+  useEffect(() => {
+    setSelectedIdx(0); // eslint-disable-line react-hooks/set-state-in-effect
+  }, [query]);
+
+  // Select a result: navigate to section, dispatch highlight event, save recent
+  const selectResult = useCallback((item) => {
+    const section = item._category.section;
+    const name = item._name;
+
+    // Save to recent searches
+    const updated = [
+      { name, section, categoryKey: item._category.key, categoryLabel: item._category.label },
+      ...recentSearches.filter(r => !(r.name === name && r.section === section)),
+    ].slice(0, MAX_RECENT);
+    setRecentSearches(updated);
+    try { localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated)); } catch { /* ignore storage errors */ }
+
+    closePalette();
+
+    // Navigate to character page with section + highlight
+    if (charId) {
+      const targetPath = `/character/${charId}`;
+      // Dispatch a custom event that CharacterView can listen for
+      window.dispatchEvent(new CustomEvent('codex-command-navigate', {
+        detail: { section, highlightId: item.id, highlightName: name },
+      }));
+      // If we're not on the character page, navigate there
+      if (!location.pathname.startsWith(targetPath)) {
+        navigate(targetPath, { state: { section, highlightId: item.id, highlightName: name } });
+      }
+    }
+  }, [charId, navigate, location, closePalette, recentSearches]);
+
+  // Click recent item
+  const selectRecent = useCallback((recent) => {
+    closePalette();
+    if (charId) {
+      window.dispatchEvent(new CustomEvent('codex-command-navigate', {
+        detail: { section: recent.section, highlightName: recent.name },
+      }));
+      const targetPath = `/character/${charId}`;
+      if (!location.pathname.startsWith(targetPath)) {
+        navigate(targetPath, { state: { section: recent.section, highlightName: recent.name } });
+      }
+    }
+  }, [charId, navigate, location, closePalette]);
+
+  // Keyboard navigation
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Escape') {
+      closePalette();
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIdx(prev => Math.min(prev + 1, flatResults.length - 1));
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIdx(prev => Math.max(prev - 1, 0));
+      return;
+    }
+    if (e.key === 'Enter' && flatResults[selectedIdx]) {
+      e.preventDefault();
+      selectResult(flatResults[selectedIdx]);
+    }
+  }, [flatResults, selectedIdx, selectResult, closePalette]);
+
+  // Scroll selected item into view
+  useEffect(() => {
+    if (!resultsRef.current) return;
+    const el = resultsRef.current.querySelector(`[data-idx="${selectedIdx}"]`);
+    if (el) el.scrollIntoView({ block: 'nearest' });
+  }, [selectedIdx]);
+
+  if (!open) return null;
+
+  const showRecent = !query.trim() && recentSearches.length > 0;
+  const noResults = query.trim() && flatResults.length === 0 && !loading;
+
+  return (
+    <div
+      ref={overlayRef}
+      onClick={(e) => { if (e.target === overlayRef.current) closePalette(); }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 99990,
+        background: 'rgba(0,0,0,0.6)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+        paddingTop: '12vh',
+        fontFamily: 'var(--font-ui, "DM Sans", sans-serif)',
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: -20, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -10, scale: 0.97 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}
+        style={{
+          width: '100%', maxWidth: '580px',
+          background: 'rgba(14,12,24,0.92)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '16px',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), 0 0 60px rgba(124,58,237,0.08)',
+          backdropFilter: 'blur(40px)',
+          overflow: 'hidden',
+        }}
+        onKeyDown={handleKeyDown}
+      >
+        {/* Search input */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '12px',
+          padding: '16px 20px',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}>
+          <Search size={18} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={charId ? 'Search spells, items, NPCs, quests...' : 'Open a character first to search'}
+            disabled={!charId}
+            style={{
+              flex: 1, background: 'none', border: 'none', outline: 'none',
+              color: 'rgba(255,255,255,0.9)', fontSize: '15px',
+              fontFamily: 'var(--font-ui, "DM Sans", sans-serif)',
+              caretColor: '#a78bfa',
+            }}
+          />
+          <kbd style={{
+            padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
+            color: 'rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            fontFamily: 'var(--font-mono, monospace)',
+          }}>
+            ESC
+          </kbd>
+        </div>
+
+        {/* Results area */}
+        <div ref={resultsRef} style={{
+          maxHeight: '400px', overflowY: 'auto', padding: '8px 0',
+          scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent',
+        }}>
+          {/* Loading state */}
+          {loading && (
+            <div style={{
+              padding: '32px 20px', textAlign: 'center',
+              color: 'rgba(255,255,255,0.3)', fontSize: '13px',
+            }}>
+              Loading...
+            </div>
+          )}
+
+          {/* No character */}
+          {!charId && !loading && (
+            <div style={{
+              padding: '32px 20px', textAlign: 'center',
+              color: 'rgba(255,255,255,0.3)', fontSize: '13px',
+            }}>
+              Open a character to search across spells, items, NPCs, and more.
+            </div>
+          )}
+
+          {/* Recent searches (when query is empty) */}
+          {showRecent && !loading && charId && (
+            <>
+              <div style={{
+                padding: '8px 20px 4px', fontSize: '10px', fontWeight: 700,
+                color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.08em',
+                display: 'flex', alignItems: 'center', gap: '6px',
+              }}>
+                <Clock size={11} />
+                Recent Searches
+              </div>
+              {recentSearches.map((recent, i) => (
+                <button
+                  key={`${recent.name}-${recent.section}-${i}`}
+                  onClick={() => selectRecent(recent)}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
+                    padding: '10px 20px', background: 'none', border: 'none',
+                    cursor: 'pointer', textAlign: 'left', transition: 'background 0.1s',
+                    color: 'rgba(255,255,255,0.7)', fontSize: '13px',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                >
+                  <Clock size={14} style={{ color: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
+                  <span style={{ flex: 1 }}>{recent.name}</span>
+                  <span style={{
+                    fontSize: '11px', color: 'rgba(255,255,255,0.2)',
+                    padding: '1px 8px', borderRadius: '4px',
+                    background: 'rgba(255,255,255,0.04)',
+                  }}>
+                    {recent.categoryLabel}
+                  </span>
+                  <ArrowRight size={12} style={{ color: 'rgba(255,255,255,0.15)' }} />
+                </button>
+              ))}
+            </>
+          )}
+
+          {/* Empty state when query is empty and no recent */}
+          {!query.trim() && recentSearches.length === 0 && !loading && charId && (
+            <div style={{
+              padding: '32px 20px', textAlign: 'center',
+              color: 'rgba(255,255,255,0.25)', fontSize: '13px',
+            }}>
+              Start typing to search across all your character data.
+            </div>
+          )}
+
+          {/* No results */}
+          {noResults && (
+            <div style={{
+              padding: '32px 20px', textAlign: 'center',
+              color: 'rgba(255,255,255,0.3)', fontSize: '13px',
+            }}>
+              No results for "<span style={{ color: 'rgba(255,255,255,0.5)' }}>{query}</span>"
+            </div>
+          )}
+
+          {/* Grouped results */}
+          {!loading && filteredResults.map((group) => {
+            const Icon = group.category.icon;
+            const catColor = group.category.color;
+            return (
+              <div key={group.category.key}>
+                <div style={{
+                  padding: '10px 20px 4px', fontSize: '10px', fontWeight: 700,
+                  color: catColor, textTransform: 'uppercase', letterSpacing: '0.08em',
+                  display: 'flex', alignItems: 'center', gap: '6px', opacity: 0.8,
+                }}>
+                  <Icon size={12} />
+                  {group.category.label}
+                </div>
+                {group.items.map((item) => {
+                  const globalIdx = flatResults.indexOf(item);
+                  const isSelected = globalIdx === selectedIdx;
+                  return (
+                    <button
+                      key={`${group.category.key}-${item.id}`}
+                      data-idx={globalIdx}
+                      onClick={() => selectResult(item)}
+                      onMouseEnter={() => setSelectedIdx(globalIdx)}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
+                        padding: '10px 20px', border: 'none', cursor: 'pointer',
+                        textAlign: 'left', transition: 'background 0.08s',
+                        background: isSelected ? 'rgba(167,139,250,0.1)' : 'none',
+                        borderLeft: isSelected ? `2px solid ${catColor}` : '2px solid transparent',
+                        fontFamily: 'var(--font-ui, "DM Sans", sans-serif)',
+                      }}
+                    >
+                      <Icon size={16} style={{
+                        color: catColor, opacity: isSelected ? 1 : 0.5, flexShrink: 0,
+                        transition: 'opacity 0.1s',
+                      }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          fontSize: '13px', fontWeight: 500,
+                          color: isSelected ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.7)',
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          transition: 'color 0.1s',
+                        }}>
+                          {item._name}
+                        </div>
+                        {item._subtitle && (
+                          <div style={{
+                            fontSize: '11px', color: 'rgba(255,255,255,0.3)',
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>
+                            {item._subtitle}
+                          </div>
+                        )}
+                      </div>
+                      {isSelected && (
+                        <ArrowRight size={14} style={{ color: catColor, opacity: 0.6, flexShrink: 0 }} />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer hint */}
+        {charId && (
+          <div style={{
+            padding: '10px 20px', borderTop: '1px solid rgba(255,255,255,0.05)',
+            display: 'flex', alignItems: 'center', gap: '16px',
+            fontSize: '11px', color: 'rgba(255,255,255,0.2)',
+          }}>
+            <span><kbd style={{ padding: '1px 5px', borderRadius: 4, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', fontSize: '10px' }}>&#x2191;&#x2193;</kbd> navigate</span>
+            <span><kbd style={{ padding: '1px 5px', borderRadius: 4, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', fontSize: '10px' }}>&#x23CE;</kbd> open</span>
+            <span><kbd style={{ padding: '1px 5px', borderRadius: 4, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', fontSize: '10px' }}>esc</kbd> close</span>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 function AppContent() {
+  const [bootupDone, setBootupDone] = useState(false);
   const [updateDone, setUpdateDone] = useState(false);
   const { mode } = useAppMode();
 
@@ -305,22 +779,36 @@ function AppContent() {
       <Toaster
         position="bottom-right"
         toastOptions={{
+          duration: 3000,
           style: {
-            background: '#09090f',
-            color: 'rgba(255,255,255,0.85)',
-            border: '1px solid rgba(255,255,255,0.07)',
+            background: 'rgba(12,10,20,0.95)',
+            color: 'rgba(255,255,255,0.88)',
+            border: '1px solid rgba(255,255,255,0.08)',
             fontFamily: 'var(--font-ui)',
             fontSize: '13px',
+            borderRadius: '10px',
+            backdropFilter: 'blur(16px)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03)',
+            padding: '10px 14px',
           },
-          success: { iconTheme: { primary: '#4ade80', secondary: '#09090f' } },
-          error: { iconTheme: { primary: '#ef4444', secondary: '#09090f' } },
+          success: {
+            iconTheme: { primary: '#4ade80', secondary: 'rgba(12,10,20,0.95)' },
+            style: { borderColor: 'rgba(74,222,128,0.15)' },
+          },
+          error: {
+            iconTheme: { primary: '#ef4444', secondary: 'rgba(12,10,20,0.95)' },
+            style: { borderColor: 'rgba(239,68,68,0.15)' },
+          },
           ariaProps: { role: 'status', 'aria-live': 'polite' },
         }}
       />
 
+      {/* Step 0: Bootup video */}
+      {!bootupDone && <BootupVideo onDone={() => setBootupDone(true)} />}
+
       {/* Step 1: Update splash */}
       <AnimatePresence>
-        {!updateDone && (
+        {bootupDone && !updateDone && (
           <UpdateScreen
             key="update-splash"
             onDone={() => setUpdateDone(true)}
@@ -335,6 +823,7 @@ function AppContent() {
       {/* Step 3: Main app (once mode is selected) */}
       {updateDone && mode && (
         <BrowserRouter>
+          <CommandPalette />
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/character/:characterId" element={<CharacterView />} />

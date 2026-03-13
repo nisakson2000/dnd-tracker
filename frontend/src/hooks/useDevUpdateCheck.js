@@ -20,6 +20,7 @@ export function useDevUpdateCheck() {
   const checkingRef = useRef(false); // prevent concurrent git checks
   const autoPullingRef = useRef(false); // prevent concurrent auto-pulls
   const pullUpdatesRef = useRef(null); // stable ref to latest pullUpdates
+  const autoPullTimerRef = useRef(null); // track auto-pull setTimeout for cleanup
 
   // Check rollback eligibility on mount
   useEffect(() => {
@@ -68,8 +69,8 @@ export function useDevUpdateCheck() {
         // Auto-pull after a short delay
         if (!autoPullingRef.current) {
           autoPullingRef.current = true;
-          setTimeout(() => {
-            pullUpdatesRef.current();
+          autoPullTimerRef.current = setTimeout(() => {
+            if (mountedRef.current) pullUpdatesRef.current();
           }, AUTO_PULL_DELAY);
         }
       } else {
@@ -249,6 +250,7 @@ export function useDevUpdateCheck() {
       mountedRef.current = false;
       clearInterval(peerInterval);
       clearInterval(gitInterval);
+      if (autoPullTimerRef.current) clearTimeout(autoPullTimerRef.current);
       if (unlistenUpdate) unlistenUpdate();
     };
   }, [checkForUpdates]);

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
 const ModeContext = createContext(null);
 
@@ -18,8 +18,10 @@ export function ModeProvider({ children }) {
     setModeState(null);
   }, []);
 
+  const value = useMemo(() => ({ mode, setMode, clearMode }), [mode, setMode, clearMode]);
+
   return (
-    <ModeContext.Provider value={{ mode, setMode, clearMode }}>
+    <ModeContext.Provider value={value}>
       {children}
     </ModeContext.Provider>
   );

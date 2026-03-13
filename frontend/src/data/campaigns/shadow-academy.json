@@ -1,0 +1,140 @@
+{
+  "name": "The Shadow Academy",
+  "description": "Valdris Academy has stood for centuries as one of the premier institutions of arcane learning in the realm. But this semester, something is terribly wrong. Students have begun vanishing from their dormitories without a trace — no signs of struggle, no farewell notes, just empty beds and cold meals. The faculty insists it is merely homesickness driving students to leave, but whispered rumors speak of shadowy figures in the restricted library wing, strange glyphs appearing on dormitory walls at midnight, and a new professor whose lectures delve into magic that makes even senior wizards uncomfortable. You have arrived at Valdris Academy as new enrollees, transfer students, or hired investigators. Whatever your cover, your true mission is clear: find the missing students before the next one disappears. The 2024 rules bring updated spellcasting and investigation mechanics that make this mystery-driven campaign shine, with plenty of opportunities for social interaction, arcane research, and creeping horror.",
+  "level": "1-4",
+  "author": "The Codex",
+  "tags": ["mystery", "horror", "investigation", "arcane", "social intrigue", "school", "5e 2024"],
+  "npcs": [
+    {
+      "name": "Headmaster Elara Nighthollow",
+      "role": "Quest Giver",
+      "race": "Half-Elf",
+      "npc_class": "Wizard (Divination)",
+      "location": "Valdris Academy — Headmaster's Tower",
+      "description": "A tall, silver-haired half-elf in her late 200s who carries herself with quiet authority. Her violet eyes seem to look through people rather than at them. She founded the modern iteration of Valdris Academy forty years ago and takes the disappearances as a personal failing. She wears layered robes of midnight blue embroidered with silver constellations, and a monocle that occasionally glows faintly when she concentrates.",
+      "notes": "Elara genuinely wants to find the students but is hiding something — she recognizes the shadow glyphs from her own research decades ago. She once studied shadow magic herself before abandoning it. She will be helpful but evasive about the restricted library wing. DC 15 Insight reveals she is withholding information.",
+      "status": "alive"
+    },
+    {
+      "name": "Professor Malachar Voss",
+      "role": "Antagonist",
+      "race": "Human",
+      "npc_class": "Warlock (The Undead)",
+      "location": "Valdris Academy — Shadow Studies Classroom",
+      "description": "A gaunt man in his 40s with sharp cheekbones, slicked-back dark hair, and pale grey eyes that catch the light unnervingly. He joined the faculty only this semester, teaching a new elective called 'Penumbral Theory.' His lectures are brilliant but unsettling, often involving live demonstrations where shadows behave in ways that make students queasy. He speaks in a measured, almost hypnotic cadence.",
+      "notes": "Voss is the primary antagonist. He serves a Shadowfell entity called the Hollow Sage and is using a ritual that requires the latent magical energy of young spellcasters. The missing students are alive but trapped in a demiplane between the Material Plane and the Shadowfell. He has a Pact of the Tome with custom shadow-themed invocations. CR 5 in final confrontation, but will flee if cornered early. His office contains coded notes (DC 14 Investigation to find, DC 16 Arcana to decode).",
+      "status": "alive"
+    },
+    {
+      "name": "Tomas Brightwick",
+      "role": "Ally / Information",
+      "race": "Halfling",
+      "npc_class": "Rogue (Soulknife)",
+      "location": "Valdris Academy — Student Dormitories",
+      "description": "A scrappy, copper-haired halfling student in his second year at the academy. He has a gap-toothed grin, ink-stained fingers, and an ever-present satchel overflowing with notes, sketches, and pilfered pastries. Tomas is the roommate of one of the missing students and has been conducting his own amateur investigation, pinning clues to a conspiracy board in his dorm room.",
+      "notes": "Tomas is a valuable ally who can share his findings: he has mapped the disappearance dates and noticed they align with lunar phases. He has also seen Professor Voss entering the restricted wing after hours. However, Tomas is reckless and will get himself into danger if the party does not keep him in check. He may become the next target if the party draws too much attention.",
+      "status": "alive"
+    },
+    {
+      "name": "Librarian Saeth",
+      "role": "Information / Gatekeeper",
+      "race": "Warforged",
+      "npc_class": "Artificer",
+      "location": "Valdris Academy — The Grand Archive",
+      "description": "A warforged of polished bronze and dark wood who has served as the academy librarian for as long as anyone can remember. Saeth speaks in a flat, precise monotone and refers to all books by their catalogue numbers rather than titles. Their eyes glow a soft amber, and they move through the towering shelves with mechanical grace. Saeth is fiercely protective of the restricted section.",
+      "notes": "Saeth is not antagonistic but is bound by academy rules — they will not grant access to the restricted wing without proper authorization (a signed writ from the Headmaster or a DC 18 Persuasion check). If the party earns Saeth's trust, the warforged will reveal that several books on shadow magic have been checked out by Professor Voss and not returned. Saeth also knows of a hidden reading room in the restricted section that predates the current academy.",
+      "status": "alive"
+    },
+    {
+      "name": "Yenra Duskmantle",
+      "role": "Victim / Ally",
+      "race": "Tiefling",
+      "npc_class": "Sorcerer (Shadow Magic)",
+      "location": "The Hollow — Shadow Demiplane",
+      "description": "A third-year tiefling student with lavender skin, short-cropped white hair, and a quiet intensity. She was the first student to disappear and has been trapped in the shadow demiplane the longest. Despite her situation, she has managed to maintain her sanity by studying the demiplane itself and has learned to manipulate small aspects of it. She communicates with the material plane through flickering shadows and whispered words that observant characters might notice.",
+      "notes": "Yenra can be contacted through the shadow glyphs if the party figures out how (DC 14 Arcana). She provides critical information: the number of students trapped (seven total), the nature of the demiplane, and that Voss needs one more student to complete his ritual during the next new moon. Rescuing her and the others is the climax of the campaign. She is a potential recurring ally if she survives.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "The Empty Beds",
+      "giver": "Headmaster Elara Nighthollow",
+      "description": "Headmaster Nighthollow has quietly recruited the party to investigate the disappearances plaguing Valdris Academy. Seven students have vanished over the past two months, always at night, always without a trace. The faculty is divided — some believe the students simply left, others fear something darker. The Headmaster wants answers before the next disappearance and before the Academy Board forces her to close the school. Begin by examining the dormitory rooms of the missing students, interviewing their classmates, and searching for any patterns connecting the victims.",
+      "status": "active",
+      "notes": "This is the introductory quest. All missing students were enrolled in Professor Voss's Penumbral Theory class. Their rooms show faint traces of shadow magic (DC 13 Arcana to detect). Tomas Brightwick is the best lead for connecting the dots. The disappearances happen every 8 days, giving the party a ticking clock.",
+      "objectives": [
+        { "text": "Examine at least two dormitory rooms of missing students", "completed": false },
+        { "text": "Interview Tomas Brightwick about his investigation findings", "completed": false },
+        { "text": "Identify the pattern connecting the missing students", "completed": false },
+        { "text": "Report initial findings to Headmaster Nighthollow", "completed": false }
+      ]
+    },
+    {
+      "title": "Secrets of the Restricted Wing",
+      "giver": "Tomas Brightwick",
+      "description": "Tomas has seen Professor Voss entering the restricted wing of the Grand Archive well after midnight on multiple occasions. The restricted wing houses the academy's collection of dangerous and forbidden magical texts, and access requires special authorization. To uncover what Voss is researching, the party must find a way into the restricted wing — whether through official channels, clever deception, or stealth — and discover what texts he has been studying. But the restricted wing has its own guardians, and some knowledge carries a price.",
+      "status": "active",
+      "notes": "The restricted wing contains magical wards (DC 14 to bypass without triggering), animated armor guardians (2x, CR 1 each), and Saeth's tracking enchantments. Inside, the party can find Voss's research notes on 'The Hollow,' a shadow demiplane that can be used to store living beings as magical batteries. The hidden reading room contains an ancient text describing the ritual Voss is performing and how to reverse it. This quest can be approached through stealth, social manipulation, or direct permission.",
+      "objectives": [
+        { "text": "Gain access to the restricted wing of the Grand Archive", "completed": false },
+        { "text": "Locate the texts Professor Voss has been studying", "completed": false },
+        { "text": "Discover the hidden reading room and the ancient ritual text", "completed": false },
+        { "text": "Learn how the shadow demiplane works and how to access it", "completed": false }
+      ]
+    },
+    {
+      "title": "Into the Hollow",
+      "giver": "Yenra Duskmantle",
+      "description": "The truth is revealed: Professor Voss has been trapping students in a shadow demiplane called the Hollow, siphoning their latent magical energy to fuel a ritual that will permanently anchor the Shadowfell to the academy grounds, creating a seat of power for his patron, the Hollow Sage. The next new moon is days away, and Voss needs one final student to complete the ritual. Armed with knowledge from the restricted wing, the party must confront Voss, breach the barrier between planes, enter the Hollow, rescue the seven trapped students, and destroy the ritual anchor before it becomes permanent. The Hollow is a twisted mirror of the academy where shadows have teeth and the walls whisper lies.",
+      "status": "active",
+      "notes": "The climactic quest. The Hollow is a 5-room dungeon: Shadowed Foyer (shadow puzzle), Whispering Corridor (Wisdom saves vs. frightened), Mirror Classroom (fight shadow duplicates of the party), The Hollow Library (rescue the students, skill challenge to break their bindings), and the Ritual Chamber (final fight with Voss and 2 shadow demons, CR 4 each). Voss is CR 5 here with lair actions. Destroying the ritual anchor requires a combined Arcana check (total DC 30 across the party) or channeling radiant damage into it. Success frees the students and banishes the Hollow Sage's influence.",
+      "objectives": [
+        { "text": "Confront Professor Voss and enter the Hollow", "completed": false },
+        { "text": "Navigate the shadowed halls of the demiplane", "completed": false },
+        { "text": "Free the seven trapped students from their bindings", "completed": false },
+        { "text": "Destroy the ritual anchor in the Ritual Chamber", "completed": false },
+        { "text": "Defeat or banish Professor Voss", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "Valdris Academy",
+      "category": "Location",
+      "body": "Valdris Academy is a sprawling campus of interconnected stone towers, ivy-covered halls, and enchanted courtyards perched on a cliff overlooking the Silvermist Valley. Founded over three centuries ago by the archmage Valdris the Illuminated, the academy has trained generations of spellcasters across all schools of magic. The campus includes the Grand Archive (the largest magical library in the region), the Praxis Yards (outdoor training grounds warded against stray spells), student dormitories organized by year, faculty towers, and the Headmaster's Tower at the center. The restricted wing of the Grand Archive is sealed behind enchanted doors and contains texts deemed too dangerous for general study, including works on necromancy, planar binding, and shadow magic.",
+      "related_to": "Headmaster Elara Nighthollow"
+    },
+    {
+      "title": "The Hollow",
+      "category": "Plane",
+      "body": "The Hollow is a demiplane that exists in the liminal space between the Material Plane and the Shadowfell. It is not a natural occurrence but a manufactured pocket dimension created through an ancient ritual found in a pre-Valdris text called the Codex Umbral. The Hollow appears as a dark mirror of whatever location it is anchored to — in this case, Valdris Academy. Within the Hollow, shadows are semi-solid, light sources dim to half their normal range, and the environment subtly shifts to disorient intruders. Living creatures trapped in the Hollow slowly have their magical essence drained, which can be channeled to power greater shadow rituals. The entity known as the Hollow Sage uses demiplanes like this one as footholds into the Material Plane.",
+      "related_to": "The Hollow Sage"
+    },
+    {
+      "title": "The Hollow Sage",
+      "category": "Entity",
+      "body": "The Hollow Sage is a powerful Shadowfell entity of unknown origin — possibly an ancient archmage who transcended mortality by merging with the plane of shadow, or perhaps something that has always existed in the dark spaces between worlds. It appears as a towering figure of layered shadow with a featureless face except for two points of cold white light where eyes should be. The Hollow Sage does not seek destruction but domination through knowledge — it collects minds, memories, and magical potential, adding them to its ever-growing consciousness. It communicates with its warlocks through whispered promises of forbidden knowledge and grants them power over shadow and fear. Professor Voss is merely its latest instrument.",
+      "related_to": "Professor Malachar Voss"
+    },
+    {
+      "title": "The Codex Umbral",
+      "category": "Artifact",
+      "body": "An ancient text predating the founding of Valdris Academy, the Codex Umbral is a book bound in shadow-treated leather that seems to absorb light around it. Its pages contain rituals, theories, and incantations related to shadow magic and the Shadowfell. Most of its contents are written in a cipher that shifts depending on the ambient light level, making it nearly impossible to read in full daylight. The Codex describes the creation of demiplanes like the Hollow, methods for siphoning magical essence from living beings, and — critically — the counter-rituals for undoing such work. Headmaster Nighthollow studied this text decades ago during her own research into shadow magic before sealing it away in the restricted wing. Professor Voss has secretly been accessing it for months.",
+      "related_to": "Secrets of the Restricted Wing"
+    },
+    {
+      "title": "Penumbral Theory",
+      "category": "Faction",
+      "body": "Penumbral Theory is the name of the elective course taught by Professor Voss, but it also serves as a subtle recruiting tool. The class covers the academic study of shadow as a magical medium — the boundary between light and darkness as a source of arcane power. While the lectures are genuinely brilliant and academically sound, Voss uses them to identify students with strong latent magical potential, particularly those with innate magical abilities like sorcerers. Students who show exceptional aptitude are invited to 'advanced study sessions' that serve as the first step in Voss's selection process. All seven missing students attended these sessions. The course has also attracted legitimate academic interest, making it difficult to shut down without proof of wrongdoing.",
+      "related_to": "Professor Malachar Voss"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: The Shadow Academy",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe road to Valdris Academy winds up through the Silvermist Valley, where morning fog clings to the hillsides like cobwebs. The academy itself emerges from the mist like a crown of stone towers — ancient, imposing, and alive with the faint hum of arcane energy. Banners of deep blue and silver snap in the mountain wind.\n\nBut something feels off. The courtyard, which should be bustling with students between lectures, is quieter than expected. Small clusters of students whisper nervously to each other, glancing over their shoulders. A notice board near the main gate is covered in missing-person flyers — seven of them, each bearing the face of a young student.\n\n**Headmaster Elara Nighthollow** has summoned you here under the guise of new enrollment, transfer paperwork, or a faculty consulting contract. Whatever your cover story, she has made one thing clear in her private correspondence: students are vanishing, the faculty cannot agree on why, and she needs outside eyes.\n\nYour first meeting with her is tonight, after the welcoming feast. Until then, you are free to explore the campus, attend a lecture, visit the Grand Archive, or simply listen to what the students and faculty are saying.\n\n### Key Details\n- **Setting**: Valdris Academy, a cliff-top school of magic\n- **Level Range**: 1-4 (2024 Rules)\n- **Tone**: Mystery and investigation with creeping arcane horror\n- **Theme**: Knowledge has a cost, and some shadows have teeth\n- **Starting Hook**: Headmaster Nighthollow's private briefing after the welcoming feast",
+    "tags": "introduction,session-zero,mystery,academy",
+    "npcs_mentioned": "Headmaster Elara Nighthollow,Professor Malachar Voss,Tomas Brightwick,Librarian Saeth,Yenra Duskmantle"
+  }
+}

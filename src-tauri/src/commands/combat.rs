@@ -155,14 +155,27 @@ pub fn update_conditions(
     payload: Vec<ConditionData>,
 ) -> Result<serde_json::Value, String> {
     state.with_char_conn(&character_id, |conn| {
-        for item in &payload {
-            conn.execute(
-                "UPDATE conditions SET active=?1, duration_rounds=?2, rounds_remaining=?3 WHERE name=?4",
-                rusqlite::params![item.active as i64, item.duration_rounds, item.rounds_remaining, item.name],
-            )
-            .map_err(|e| e.to_string())?;
+        conn.execute("BEGIN", []).map_err(|e| format!("Failed to begin transaction: {}", e))?;
+        let result = (|| -> Result<(), String> {
+            for item in &payload {
+                conn.execute(
+                    "UPDATE conditions SET active=?1, duration_rounds=?2, rounds_remaining=?3 WHERE name=?4",
+                    rusqlite::params![item.active as i64, item.duration_rounds, item.rounds_remaining, item.name],
+                )
+                .map_err(|e| format!("Failed to update condition '{}': {}", item.name, e))?;
+            }
+            Ok(())
+        })();
+        match result {
+            Ok(()) => {
+                conn.execute("COMMIT", []).map_err(|e| format!("Failed to commit: {}", e))?;
+                Ok(serde_json::json!({"status": "saved"}))
+            }
+            Err(e) => {
+                let _ = conn.execute("ROLLBACK", []);
+                Err(e)
+            }
         }
-        Ok(serde_json::json!({"status": "saved"}))
     })
 }
 

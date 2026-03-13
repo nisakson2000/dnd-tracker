@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import {
   Search, ArrowLeft, BookOpen, Sword, Sparkles, Shield, Skull,
@@ -148,7 +149,7 @@ export default function WikiPage() {
   useEffect(() => {
     const cat = searchParams.get('category');
     const q = searchParams.get('q');
-    if (cat) browseCategory(cat);
+    if (cat) browseCategory(cat); // eslint-disable-line react-hooks/set-state-in-effect
     else if (q) doSearch(q);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -5,15 +5,21 @@ export default function HotReloadIndicator() {
 
   useEffect(() => {
     if (!import.meta.hot) return;
+    let flashTimer = null;
 
     import.meta.hot.on('vite:beforeUpdate', () => {
       setFlash({ type: 'HMR', color: '#4ade80' });
-      setTimeout(() => setFlash(null), 2000);
+      if (flashTimer) clearTimeout(flashTimer);
+      flashTimer = setTimeout(() => setFlash(null), 2000);
     });
 
     import.meta.hot.on('vite:beforeFullReload', () => {
       setFlash({ type: 'Full Reload', color: '#fbbf24' });
     });
+
+    return () => {
+      if (flashTimer) clearTimeout(flashTimer);
+    };
   }, []);
 
   if (!flash) return null;

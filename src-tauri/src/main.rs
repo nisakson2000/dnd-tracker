@@ -223,6 +223,12 @@ fn main() {
             commands::dev_tools::dev_git_stage,
             commands::dev_tools::dev_git_commit,
             commands::dev_tools::dev_git_push,
+            commands::dev_tools::dev_git_pull,
+            commands::dev_tools::dev_git_diff,
+            commands::dev_tools::dev_git_branch_info,
+            commands::dev_tools::dev_git_log_detailed,
+            commands::dev_tools::dev_git_stash,
+            commands::dev_tools::dev_git_session_summary,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

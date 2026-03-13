@@ -1,0 +1,143 @@
+{
+  "name": "The Goblin Mine",
+  "description": "A band of goblins has overtaken an abandoned iron mine near the village of Brindlewood. Merchant caravans are being raided, and strange noises echo from the tunnels at night. The village elder seeks brave adventurers to clear the mine and restore peace to the trade road.",
+  "level": "1-3",
+  "author": "The Codex",
+  "tags": ["starter", "dungeon crawl", "goblins"],
+  "npcs": [
+    {
+      "name": "Elder Maeven Ashford",
+      "role": "Quest Giver",
+      "race": "Human",
+      "npc_class": "Commoner",
+      "location": "Brindlewood Village",
+      "description": "A weathered old woman with sharp eyes and a no-nonsense demeanor. She has led Brindlewood for twenty years and knows every family by name. She offers 50 gold from the village fund to anyone who can stop the goblin raids.",
+      "notes": "Knows the mine's original layout from when her late husband worked there. Can provide a rough map.",
+      "status": "alive"
+    },
+    {
+      "name": "Grukk the Toothless",
+      "role": "Antagonist",
+      "race": "Goblin",
+      "npc_class": "Goblin Boss",
+      "location": "Iron Fang Mine - Throne Room",
+      "description": "A cunning goblin warchief who lost his front teeth in a bar brawl with a dwarf. He wears a stolen merchant's hat as a crown and commands roughly twenty goblins. Despite his brutish appearance, he is surprisingly tactical.",
+      "notes": "Can be negotiated with if the party offers him something better than raiding. Secretly fears the strange sounds coming from the mine's deepest level.",
+      "status": "alive"
+    },
+    {
+      "name": "Tomas Brightwater",
+      "role": "Ally",
+      "race": "Halfling",
+      "npc_class": "Rogue",
+      "location": "Brindlewood - The Dusty Flagon Inn",
+      "description": "A cheerful halfling merchant whose caravan was raided last week. He lost his entire shipment of silks but kept his life by playing dead. He's willing to guide the party to the mine entrance and knows about a hidden side tunnel.",
+      "notes": "Former adventurer turned merchant. Still carries a short sword under his wagon seat. Will join the party temporarily if asked nicely.",
+      "status": "alive"
+    },
+    {
+      "name": "Whisper",
+      "role": "Informant",
+      "race": "Goblin",
+      "npc_class": "Goblin",
+      "location": "Forest near the mine entrance",
+      "description": "A scrawny goblin outcast who was banished from Grukk's tribe for refusing to fight. She lurks near the mine entrance and will trade information about the mine's defenses in exchange for food and a promise of safety.",
+      "notes": "Knows about the trapped corridors on the second level and the mysterious sealed door in the deepest chamber. Speaks broken Common.",
+      "status": "alive"
+    },
+    {
+      "name": "Brother Aldric",
+      "role": "Support",
+      "race": "Human",
+      "npc_class": "Cleric",
+      "location": "Brindlewood - Shrine of the Morning Light",
+      "description": "A young priest who tends the village shrine. He can provide healing potions at a discount and will bless the party before they enter the mine. He has been treating injured caravan guards and is worried the attacks are escalating.",
+      "notes": "Has two healing potions to offer at half price (25 gp each). Suspects there is something darker than goblins driving the raids.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "Clear the Iron Fang Mine",
+      "giver": "Elder Maeven Ashford",
+      "description": "The village of Brindlewood needs heroes to clear the goblin infestation from the old iron mine. The goblins have been raiding merchant caravans on the trade road, threatening the village's livelihood.",
+      "status": "active",
+      "notes": "Reward: 50 gold pieces from the village fund, plus whatever loot is found in the mine.",
+      "objectives": [
+        { "text": "Speak with Elder Maeven in Brindlewood to learn about the goblin threat", "completed": false },
+        { "text": "Find the entrance to the Iron Fang Mine", "completed": false },
+        { "text": "Defeat or negotiate with Grukk the Toothless", "completed": false },
+        { "text": "Return to Brindlewood and report success", "completed": false }
+      ]
+    },
+    {
+      "title": "The Sealed Door",
+      "giver": "Whisper (Goblin Outcast)",
+      "description": "Deep in the lowest level of the mine, there is an ancient door covered in dwarven runes that predates the mine itself. The goblins are terrified of it. Strange whispers and cold drafts seep through its cracks. What lies beyond?",
+      "status": "active",
+      "notes": "Optional side quest. The door leads to a small dwarven tomb with a minor magic item (a +1 dagger with a faintly glowing blade).",
+      "objectives": [
+        { "text": "Learn about the sealed door from Whisper", "completed": false },
+        { "text": "Reach the deepest level of the mine", "completed": false },
+        { "text": "Find a way to open the sealed door", "completed": false },
+        { "text": "Explore the chamber beyond", "completed": false }
+      ]
+    },
+    {
+      "title": "Tomas's Lost Cargo",
+      "giver": "Tomas Brightwater",
+      "description": "Tomas's stolen silk shipment is somewhere in the mine, likely being used as bedding or decorations by the goblins. If the party can recover even half of it, Tomas will pay them 20 gold and put in a good word with the Merchant's Guild.",
+      "status": "active",
+      "notes": "The silks are in the goblin common room on level 2, being used as hammocks and curtains.",
+      "objectives": [
+        { "text": "Search the mine for Tomas's stolen silk shipment", "completed": false },
+        { "text": "Recover the silks and return them to Tomas", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "Brindlewood Village",
+      "category": "Location",
+      "body": "A small farming and trading village of about 200 people, situated along the North Trade Road. Brindlewood is known for its apple orchards and the annual Harvest Dance festival. The village has a single inn (The Dusty Flagon), a general store, a blacksmith, and a small shrine. The villagers are mostly human and halfling farmers who have lived here for generations.",
+      "related_to": "Elder Maeven Ashford"
+    },
+    {
+      "title": "The Iron Fang Mine",
+      "category": "Location",
+      "body": "An abandoned iron mine about two miles north of Brindlewood, built into the side of Thornhill Ridge. The mine was operational for fifty years before the iron veins ran dry a decade ago. It has three levels: the entry tunnels (level 1), the main excavation chambers (level 2), and the deep shafts (level 3). The goblins have fortified levels 1 and 2, but avoid level 3 due to the sealed dwarven door and the strange sounds that emanate from it.",
+      "related_to": "Grukk the Toothless"
+    },
+    {
+      "title": "The North Trade Road",
+      "category": "Location",
+      "body": "The primary trade route connecting the coastal city of Saltmere to the inland market town of Crosshaven. Brindlewood sits roughly at the midpoint. The road is normally safe, patrolled by Crosshaven militia, but the recent goblin raids have made merchants reluctant to travel without armed escorts, driving up prices in both towns.",
+      "related_to": "Brindlewood Village"
+    },
+    {
+      "title": "Grukk's Tribe - The Rusty Fangs",
+      "category": "Faction",
+      "body": "A goblin tribe of about twenty members that moved into the Iron Fang Mine three months ago after being driven from their forest territory by a territorial owlbear. Grukk united several smaller goblin bands under his leadership through a combination of cunning tactics and liberal bribery with stolen goods. The tribe is not inherently evil - they are desperate and hungry, which makes them dangerous but also potentially open to negotiation.",
+      "related_to": "Grukk the Toothless"
+    },
+    {
+      "title": "The Dwarven Tomb",
+      "category": "History",
+      "body": "Long before the iron mine was established, dwarven explorers carved a small tomb into the deep rock of Thornhill Ridge to honor a fallen scout named Durgan Stonepick. The tomb was sealed with runic wards and forgotten. When miners later dug the Iron Fang Mine, they broke through near the tomb but never opened the sealed door. Durgan's spirit is restless but not hostile - he simply wants someone worthy to carry his enchanted dagger back into the world.",
+      "related_to": "The Iron Fang Mine"
+    },
+    {
+      "title": "The Dusty Flagon Inn",
+      "category": "Location",
+      "body": "Brindlewood's only inn and tavern, run by a stout dwarven woman named Hilda Copperkeg. The inn serves hearty meals, local apple cider, and surprisingly good ale. It has six rooms for rent (5 silver per night) and a common room that serves as the village's social hub. Adventurers can find rumors, job postings, and local gossip here.",
+      "related_to": "Brindlewood Village"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: The Goblin Mine",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe adventurers arrive in the village of Brindlewood after a long journey along the North Trade Road. The village is quieter than expected - many shops are closed, and the few villagers on the streets look worried.\n\nAt The Dusty Flagon Inn, the innkeeper Hilda mentions that merchant caravans have been raided by goblins operating from the old Iron Fang Mine. Elder Maeven is looking for capable adventurers to deal with the problem.\n\n**Starting Hook:** The party can seek out Elder Maeven at the village hall, investigate the trade road themselves, or ask around town for more information about the goblin raids.\n\n**Key NPCs to introduce:** Elder Maeven, Tomas Brightwater, Brother Aldric",
+    "tags": "introduction,session-zero,brindlewood",
+    "npcs_mentioned": "Elder Maeven Ashford,Tomas Brightwater,Brother Aldric,Hilda Copperkeg"
+  }
+}

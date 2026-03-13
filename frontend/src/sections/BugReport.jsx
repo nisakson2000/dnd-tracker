@@ -197,7 +197,7 @@ export default function BugReport({ characterId, character, errors = [], onClear
       });
     }
     prevErrorCountRef.current = errors.length;
-  }, [errors.length]);
+  }, [errors.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /** Get recent errors from the last 5 minutes (max 5) */
   function getRecentAutoErrors() {

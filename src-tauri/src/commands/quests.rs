@@ -126,22 +126,35 @@ pub fn add_quest(
     payload: QuestData,
 ) -> Result<QuestData, String> {
     state.with_char_conn(&character_id, |conn| {
-        conn.execute(
-            "INSERT INTO quests (title, giver, description, status, notes) VALUES (?1,?2,?3,?4,?5)",
-            rusqlite::params![payload.title, payload.giver, payload.description, payload.status, payload.notes],
-        )
-        .map_err(|e| e.to_string())?;
-        let quest_id = conn.last_insert_rowid();
-
-        for obj in &payload.objectives {
+        conn.execute("BEGIN", []).map_err(|e| format!("Failed to begin transaction: {}", e))?;
+        let result = (|| -> Result<QuestData, String> {
             conn.execute(
-                "INSERT INTO quest_objectives (quest_id, text, completed) VALUES (?1,?2,?3)",
-                rusqlite::params![quest_id, obj.text, obj.completed as i64],
+                "INSERT INTO quests (title, giver, description, status, notes) VALUES (?1,?2,?3,?4,?5)",
+                rusqlite::params![payload.title, payload.giver, payload.description, payload.status, payload.notes],
             )
-            .map_err(|e| e.to_string())?;
-        }
+            .map_err(|e| format!("Failed to create quest: {}", e))?;
+            let quest_id = conn.last_insert_rowid();
 
-        load_quest_with_objectives(conn, quest_id)
+            for obj in &payload.objectives {
+                conn.execute(
+                    "INSERT INTO quest_objectives (quest_id, text, completed) VALUES (?1,?2,?3)",
+                    rusqlite::params![quest_id, obj.text, obj.completed as i64],
+                )
+                .map_err(|e| format!("Failed to add quest objective: {}", e))?;
+            }
+
+            load_quest_with_objectives(conn, quest_id)
+        })();
+        match result {
+            Ok(val) => {
+                conn.execute("COMMIT", []).map_err(|e| format!("Failed to commit: {}", e))?;
+                Ok(val)
+            }
+            Err(e) => {
+                let _ = conn.execute("ROLLBACK", []);
+                Err(e)
+            }
+        }
     })
 }
 
@@ -153,28 +166,41 @@ pub fn update_quest(
     payload: QuestData,
 ) -> Result<QuestData, String> {
     state.with_char_conn(&character_id, |conn| {
-        let updated = conn
-            .execute(
-                "UPDATE quests SET title=?1, giver=?2, description=?3, status=?4, notes=?5 WHERE id=?6",
-                rusqlite::params![payload.title, payload.giver, payload.description, payload.status, payload.notes, quest_id],
-            )
-            .map_err(|e| e.to_string())?;
-        if updated == 0 {
-            return Err("Quest not found".to_string());
-        }
+        conn.execute("BEGIN", []).map_err(|e| format!("Failed to begin transaction: {}", e))?;
+        let result = (|| -> Result<QuestData, String> {
+            let updated = conn
+                .execute(
+                    "UPDATE quests SET title=?1, giver=?2, description=?3, status=?4, notes=?5 WHERE id=?6",
+                    rusqlite::params![payload.title, payload.giver, payload.description, payload.status, payload.notes, quest_id],
+                )
+                .map_err(|e| format!("Failed to update quest: {}", e))?;
+            if updated == 0 {
+                return Err("Quest not found".to_string());
+            }
 
-        // Replace objectives
-        conn.execute("DELETE FROM quest_objectives WHERE quest_id=?1", [quest_id])
-            .map_err(|e| e.to_string())?;
-        for obj in &payload.objectives {
-            conn.execute(
-                "INSERT INTO quest_objectives (quest_id, text, completed) VALUES (?1,?2,?3)",
-                rusqlite::params![quest_id, obj.text, obj.completed as i64],
-            )
-            .map_err(|e| e.to_string())?;
-        }
+            // Replace objectives
+            conn.execute("DELETE FROM quest_objectives WHERE quest_id=?1", [quest_id])
+                .map_err(|e| format!("Failed to clear quest objectives: {}", e))?;
+            for obj in &payload.objectives {
+                conn.execute(
+                    "INSERT INTO quest_objectives (quest_id, text, completed) VALUES (?1,?2,?3)",
+                    rusqlite::params![quest_id, obj.text, obj.completed as i64],
+                )
+                .map_err(|e| format!("Failed to add quest objective: {}", e))?;
+            }
 
-        load_quest_with_objectives(conn, quest_id)
+            load_quest_with_objectives(conn, quest_id)
+        })();
+        match result {
+            Ok(val) => {
+                conn.execute("COMMIT", []).map_err(|e| format!("Failed to commit: {}", e))?;
+                Ok(val)
+            }
+            Err(e) => {
+                let _ = conn.execute("ROLLBACK", []);
+                Err(e)
+            }
+        }
     })
 }
 
@@ -185,14 +211,27 @@ pub fn delete_quest(
     quest_id: i64,
 ) -> Result<serde_json::Value, String> {
     state.with_char_conn(&character_id, |conn| {
-        conn.execute("DELETE FROM quest_objectives WHERE quest_id=?1", [quest_id])
-            .map_err(|e| e.to_string())?;
-        let deleted = conn
-            .execute("DELETE FROM quests WHERE id=?1", [quest_id])
-            .map_err(|e| e.to_string())?;
-        if deleted == 0 {
-            return Err("Quest not found".to_string());
+        conn.execute("BEGIN", []).map_err(|e| format!("Failed to begin transaction: {}", e))?;
+        let result = (|| -> Result<serde_json::Value, String> {
+            conn.execute("DELETE FROM quest_objectives WHERE quest_id=?1", [quest_id])
+                .map_err(|e| format!("Failed to delete quest objectives: {}", e))?;
+            let deleted = conn
+                .execute("DELETE FROM quests WHERE id=?1", [quest_id])
+                .map_err(|e| format!("Failed to delete quest: {}", e))?;
+            if deleted == 0 {
+                return Err("Quest not found".to_string());
+            }
+            Ok(serde_json::json!({"status": "deleted"}))
+        })();
+        match result {
+            Ok(val) => {
+                conn.execute("COMMIT", []).map_err(|e| format!("Failed to commit: {}", e))?;
+                Ok(val)
+            }
+            Err(e) => {
+                let _ = conn.execute("ROLLBACK", []);
+                Err(e)
+            }
         }
-        Ok(serde_json::json!({"status": "deleted"}))
     })
 }

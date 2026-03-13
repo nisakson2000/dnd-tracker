@@ -32,8 +32,14 @@ export function useLevelUp() {
       }
       const audio = new Audio('/audio/levelup.flac');
       audioRef.current = audio;
-      audio.play().catch(() => {});
+      audio.play().catch(() => {
+        // Audio play failed — use fallback timer to dismiss overlay
+        fallbackTimerRef.current = setTimeout(() => setShowOverlay(false), 5000);
+      });
       audio.onended = () => setShowOverlay(false);
+      audio.onerror = () => {
+        fallbackTimerRef.current = setTimeout(() => setShowOverlay(false), 5000);
+      };
     } catch {
       fallbackTimerRef.current = setTimeout(() => setShowOverlay(false), 5000);
     }
