@@ -2162,9 +2162,10 @@ export default function Dashboard() {
   const { updateAvailable, latestVersion, currentVersion } = useUpdateCheck();
 
   // Tauri native updater — checks GitHub Releases for signed binary updates
+  // Checks on mount and every 5 minutes so mid-session updates are detected
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    const doCheck = async () => {
       try {
         const { check } = await import('@tauri-apps/plugin-updater');
         const update = await check();
@@ -2175,8 +2176,10 @@ export default function Dashboard() {
       } catch (e) {
         console.log('[updater] Check failed (expected in dev):', e);
       }
-    })();
-    return () => { cancelled = true; };
+    };
+    doCheck();
+    const interval = setInterval(doCheck, 5 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
   const handleTauriUpdate = async () => {

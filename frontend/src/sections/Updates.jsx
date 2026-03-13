@@ -35,11 +35,51 @@ export default function Updates() {
   const [phase, setPhase] = useState(PHASE.IDLE);
   const [progress, setProgress] = useState(0);
   const [updateError, setUpdateError] = useState('');
+  const [tauriUpdate, setTauriUpdate] = useState(null);
+  const [tauriInstalling, setTauriInstalling] = useState(false);
   const tickerRef = useRef(null);
+
+  // Combined check: version.json + Tauri native updater
+  const handleCheckForUpdates = useCallback(async () => {
+    checkForUpdates();
+    try {
+      const { check } = await import('@tauri-apps/plugin-updater');
+      const update = await check();
+      if (update?.available) {
+        setTauriUpdate({ available: true, version: update.version, body: update.body, update });
+      }
+    } catch { /* expected in dev */ }
+  }, [checkForUpdates]);
+
+  const handleTauriUpdate = useCallback(async () => {
+    if (!tauriUpdate?.update) return;
+    setTauriInstalling(true);
+    try {
+      await tauriUpdate.update.downloadAndInstall();
+      const { relaunch } = await import('@tauri-apps/plugin-process');
+      await relaunch();
+    } catch (e) {
+      setTauriInstalling(false);
+      setUpdateError(`Update failed: ${e?.message || e}`);
+    }
+  }, [tauriUpdate]);
 
   // Cleanup interval on unmount
   useEffect(() => () => {
     if (tickerRef.current) clearInterval(tickerRef.current);
+  }, []);
+
+  // Check Tauri updater on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const { check } = await import('@tauri-apps/plugin-updater');
+        const update = await check();
+        if (update?.available) {
+          setTauriUpdate({ available: true, version: update.version, body: update.body, update });
+        }
+      } catch { /* expected in dev */ }
+    })();
   }, []);
 
   // Only show current version — full history on GitHub
@@ -289,6 +329,46 @@ export default function Updates() {
         )}
       </AnimatePresence>
 
+      {/* ── Tauri native update banner ────────────────── */}
+      {tauriUpdate?.available && (
+        <div className="mb-6">
+          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(39,174,96,0.3)' }}>
+            <div className="flex items-center gap-4 p-5" style={{ background: 'linear-gradient(135deg, rgba(39,174,96,0.12), rgba(39,174,96,0.04))' }}>
+              <div style={{
+                width: '48px', height: '48px', borderRadius: '14px',
+                background: 'linear-gradient(135deg, rgba(39,174,96,0.25), rgba(39,174,96,0.1))',
+                border: '1px solid rgba(39,174,96,0.35)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <Download size={22} style={{ color: '#4ade80' }} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-display font-semibold" style={{ color: '#86efac' }}>Update v{tauriUpdate.version} Available</p>
+                <p className="text-xs text-amber-200/40 mt-1">Click to download, install, and relaunch automatically.</p>
+              </div>
+              <button
+                onClick={handleTauriUpdate}
+                disabled={tauriInstalling}
+                style={{
+                  padding: '10px 20px', borderRadius: '10px',
+                  background: tauriInstalling ? 'rgba(39,174,96,0.15)' : 'rgba(39,174,96,0.2)',
+                  border: '1px solid rgba(39,174,96,0.4)',
+                  color: '#86efac',
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: tauriInstalling ? 'wait' : 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {tauriInstalling ? 'Installing...' : 'UPDATE NOW'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Update status banner ────────────────────── */}
       {phase === PHASE.IDLE && (
         <div className="mb-6">
@@ -451,7 +531,7 @@ export default function Updates() {
                 <p className="text-xs text-amber-200/30 mt-0.5">Running the latest version of The Codex.</p>
               </div>
               <button
-                onClick={checkForUpdates}
+                onClick={handleCheckForUpdates}
                 disabled={checking}
                 className="flex items-center gap-1.5 text-xs text-amber-200/40 hover:text-amber-200/70 transition-colors disabled:opacity-40"
                 style={{ background: 'none', border: 'none', cursor: checking ? 'wait' : 'pointer', fontFamily: 'inherit' }}
