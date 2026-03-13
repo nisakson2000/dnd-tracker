@@ -3,7 +3,7 @@ import { APP_VERSION, DM_MODE_VERSION } from '../version';
 
 // Same neutral manifest URL as UpdateScreen — no repo name exposed
 const VERSION_MANIFEST_URL =
-  'https://gist.githubusercontent.com/ArsenalRX/ca61bfa2b0eadf1f1e57108cbd881152/raw/version.json';
+  'https://raw.githubusercontent.com/nisakson2000/dnd-tracker/main/version.json';
 
 const DISMISSED_KEY = 'codex_dismissed_update_version';
 const DISMISSED_DM_KEY = 'codex_dismissed_dm_update_version';

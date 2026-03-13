@@ -69,7 +69,7 @@ export default function Updates() {
 
       // Fetch manifest for download URL
       const res = await fetch(
-        'https://gist.githubusercontent.com/ArsenalRX/ca61bfa2b0eadf1f1e57108cbd881152/raw/version.json',
+        'https://raw.githubusercontent.com/nisakson2000/dnd-tracker/main/version.json',
         { cache: 'no-store' },
       );
       if (!res.ok) throw new Error('Failed to fetch update manifest');

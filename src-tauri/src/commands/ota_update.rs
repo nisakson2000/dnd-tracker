@@ -9,7 +9,7 @@ const DIST_ZIP_URL: &str =
     "https://raw.githubusercontent.com/nisakson2000/dnd-tracker/main/frontend/dist.zip";
 
 const VERSION_MANIFEST_URL: &str =
-    "https://gist.githubusercontent.com/ArsenalRX/ca61bfa2b0eadf1f1e57108cbd881152/raw/version.json";
+    "https://raw.githubusercontent.com/nisakson2000/dnd-tracker/main/version.json";
 
 /// Get the directory where OTA frontend updates are stored.
 fn ota_dist_dir(data_dir: &std::path::Path) -> PathBuf {

@@ -21,9 +21,7 @@ import { APP_VERSION } from '../version';
     asModal?   — if true, renders as overlay panel instead of full screen
 */
 
-// Point this at a public Gist raw URL, a Cloudflare Worker, or any static JSON host.
-// This way the private GitHub repo name is NEVER in the JS bundle.
-const VERSION_MANIFEST_URL = 'https://gist.githubusercontent.com/ArsenalRX/ca61bfa2b0eadf1f1e57108cbd881152/raw/version.json';
+const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/nisakson2000/dnd-tracker/main/version.json';
 
 function compareVersions(a, b) {
   const pa = a.replace(/^[vV]/, '').split('.').map(Number);
