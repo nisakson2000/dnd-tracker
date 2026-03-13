@@ -21,6 +21,16 @@ const CATEGORY_PRESETS = [
   { label: 'Other', icon: BookOpen, color: 'bg-gray-800/30 text-gray-300 border-gray-500/30', borderLeft: 'border-l-gray-400' },
 ];
 
+const LOCATION_SUGGESTIONS = ['The Rusty Anchor Tavern', 'Shadowfell Gate', 'Silvermine Pass', 'The Whispering Woods', 'Dragonspire Peak', 'The Sunken Temple', 'Ravenhollow Village', 'The Crimson Market'];
+const LORE_TEMPLATES = [
+  { label: 'Tavern / Inn', category: 'Location', title: '', body: '**Type:** Tavern / Inn\n**Owner:** \n**Notable features:** \n**Atmosphere:** \n**Menu specials:** \n**Rumors heard here:**' },
+  { label: 'Town / City', category: 'Location', title: '', body: '**Population:** \n**Government:** \n**Notable landmarks:** \n**Economy:** \n**Dangers:** \n**Key NPCs:**' },
+  { label: 'Dungeon', category: 'Location', title: '', body: '**Entrance:** \n**Levels/Rooms:** \n**Known hazards:** \n**Inhabitants:** \n**Treasure:** \n**History:**' },
+  { label: 'Faction', category: 'Organization', title: '', body: '**Leader:** \n**Goals:** \n**Members:** \n**Headquarters:** \n**Allies:** \n**Enemies:** \n**Reputation:**' },
+  { label: 'Legend / Myth', category: 'History', title: '', body: '**Origin:** \n**Key figures:** \n**What happened:** \n**Evidence:** \n**Current relevance:**' },
+  { label: 'Magic Item', category: 'Item', title: '', body: '**Rarity:** \n**Type:** \n**Properties:** \n**History:** \n**Current location:**\n**Attunement:**' },
+];
+
 const DISCOVERY_TYPES = ['Confirmed', 'Rumor', 'Speculation', 'Debunked'];
 const DISCOVERY_STYLES = {
   Confirmed: { bg: 'bg-emerald-800/30', text: 'text-emerald-300', border: 'border-emerald-500/30', icon: Eye, cardBg: '' },
@@ -661,6 +671,22 @@ function LoreForm({ note, allNotes, npcs, onSubmit, onCancel }) {
         </div>
         <div className="space-y-2 overflow-y-auto flex-1" style={{ minHeight: 0 }}>
           <input className={`input w-full ${titleError ? 'border-red-500' : ''}`} placeholder="Title" value={form.title} onChange={e => update('title', e.target.value)} autoFocus />
+
+          {!note && (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-amber-200/30 whitespace-nowrap">Template:</span>
+              <div className="flex gap-1 flex-wrap">
+                {LORE_TEMPLATES.map(t => (
+                  <button key={t.label} type="button" onClick={() => {
+                    setForm(prev => ({ ...prev, category: t.category, body: t.body }));
+                  }}
+                    className="text-[10px] px-2 py-0.5 rounded bg-amber-200/5 text-amber-200/30 border border-amber-200/8 hover:bg-amber-200/10 hover:text-amber-200/60 transition-all">
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Category with color-coded presets */}
           <div className="flex gap-1.5 flex-wrap">

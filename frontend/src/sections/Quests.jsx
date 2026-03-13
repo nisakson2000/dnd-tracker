@@ -26,6 +26,19 @@ const PRIORITY_STYLES = {
   Critical: { dot: 'bg-red-500 animate-pulse', badge: 'bg-red-800/30 text-red-300 border-red-500/30' },
 };
 
+const QUEST_TEMPLATES = [
+  { label: 'Bounty Hunt', quest_type: 'Bounty', description: 'A dangerous creature has been spotted in the area. Track it down and eliminate the threat.', objectives: [{ text: 'Locate the creature', completed: false }, { text: 'Defeat or capture the target', completed: false }, { text: 'Return with proof of completion', completed: false }], difficulty: 'medium' },
+  { label: 'Rescue Mission', quest_type: 'Side Quest', description: 'Someone has gone missing and needs to be found before it\'s too late.', objectives: [{ text: 'Investigate the disappearance', completed: false }, { text: 'Track down the missing person', completed: false }, { text: 'Ensure their safe return', completed: false }], difficulty: 'medium' },
+  { label: 'Fetch Quest', quest_type: 'Side Quest', description: 'A rare item must be retrieved from a dangerous location.', objectives: [{ text: 'Travel to the location', completed: false }, { text: 'Retrieve the item', completed: false }, { text: 'Return the item to the quest giver', completed: false }], difficulty: 'easy' },
+  { label: 'Escort Mission', quest_type: 'Side Quest', description: 'A traveler needs safe passage through dangerous territory.', objectives: [{ text: 'Meet the traveler', completed: false }, { text: 'Protect them during the journey', completed: false }, { text: 'Deliver them safely to the destination', completed: false }], difficulty: 'medium' },
+  { label: 'Dungeon Delve', quest_type: 'Main Story', description: 'An ancient dungeon holds secrets and treasure, but also deadly traps and guardians.', objectives: [{ text: 'Find the dungeon entrance', completed: false }, { text: 'Navigate the traps and puzzles', completed: false }, { text: 'Defeat the dungeon boss', completed: false }, { text: 'Claim the treasure', completed: false }], difficulty: 'hard' },
+  { label: 'Investigation', quest_type: 'Side Quest', description: 'Strange events demand answers. Gather clues and uncover the truth.', objectives: [{ text: 'Gather initial clues', completed: false }, { text: 'Interview witnesses or suspects', completed: false }, { text: 'Piece together the evidence', completed: false }, { text: 'Confront the responsible party', completed: false }], difficulty: 'medium' },
+  { label: 'Defense / Siege', quest_type: 'Main Story', description: 'An attack is imminent. Prepare defenses and hold the line.', objectives: [{ text: 'Fortify defenses', completed: false }, { text: 'Rally allies and defenders', completed: false }, { text: 'Repel the attackers', completed: false }], difficulty: 'hard' },
+  { label: 'Political Intrigue', quest_type: 'Main Story', description: 'Navigate the treacherous waters of politics and power.', objectives: [{ text: 'Gather intelligence on the factions', completed: false }, { text: 'Gain an ally among the powerful', completed: false }, { text: 'Expose or outmaneuver the opposition', completed: false }], difficulty: 'medium' },
+];
+
+const SUGGESTED_OBJECTIVES = ['Defeat the enemy', 'Find the hidden item', 'Speak to the contact', 'Solve the puzzle', 'Escort to safety', 'Survive the ambush', 'Gather evidence', 'Return to quest giver'];
+
 const QUEST_TYPES = ['Main Story', 'Side Quest', 'Personal', 'Bounty'];
 const QUEST_TYPE_STYLES = {
   'Main Story': { bg: 'bg-amber-800/30', text: 'text-amber-300', border: 'border-amber-500/30', icon: Star, borderColor: 'border-l-amber-500' },
@@ -882,6 +895,22 @@ function QuestForm({ quest, onSubmit, onCancel }) {
         <div className="space-y-2 overflow-y-auto flex-1" style={{ minHeight: 0 }}>
           <input className={`input w-full ${titleError ? 'border-red-500' : ''}`} placeholder="Quest title" value={form.title} onChange={e => update('title', e.target.value)} autoFocus />
 
+          {!quest && (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-amber-200/30 whitespace-nowrap">Quick template:</span>
+              <div className="flex gap-1 flex-wrap">
+                {QUEST_TEMPLATES.map(t => (
+                  <button key={t.label} type="button" onClick={() => {
+                    setForm(prev => ({ ...prev, quest_type: t.quest_type, description: t.description, objectives: t.objectives, difficulty: t.difficulty }));
+                  }}
+                    className="text-[10px] px-2 py-0.5 rounded bg-amber-200/5 text-amber-200/30 border border-amber-200/8 hover:bg-amber-200/10 hover:text-amber-200/60 transition-all">
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Quest type */}
           <div className="flex items-center gap-1.5">
               <button type="button" onClick={() => update('quest_type', '')}
@@ -956,6 +985,14 @@ function QuestForm({ quest, onSubmit, onCancel }) {
               <input className="input flex-1 text-sm" placeholder="Add an objective and press Enter" value={newObj}
                 onChange={e => setNewObj(e.target.value)} onKeyDown={e => e.key === 'Enter' && addObjective()} />
               <button onClick={addObjective} className="btn-secondary text-xs">Add</button>
+            </div>
+            <div className="flex gap-1 flex-wrap mt-1">
+              {SUGGESTED_OBJECTIVES.filter(s => !form.objectives.some(o => o.text === s)).slice(0, 4).map(s => (
+                <button key={s} type="button" onClick={() => update('objectives', [...form.objectives, { text: s, completed: false }])}
+                  className="text-[10px] px-1.5 py-0.5 rounded bg-amber-200/5 text-amber-200/20 hover:text-amber-200/50 hover:bg-amber-200/10">
+                  + {s}
+                </button>
+              ))}
             </div>
           </div>
 

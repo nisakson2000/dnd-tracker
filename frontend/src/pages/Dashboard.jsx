@@ -2156,41 +2156,33 @@ export default function Dashboard() {
   const [showDDBImport, setShowDDBImport] = useState(false);
   const [sessionPrepChar, setSessionPrepChar] = useState(null);
   const [postSessionChar, setPostSessionChar] = useState(null);
-  const [autoUpdateStatus, setAutoUpdateStatus] = useState(null); // null | 'checking' | 'pulling' | 'updated' | 'up_to_date' | 'failed'
+  const [autoUpdateStatus, setAutoUpdateStatus] = useState(null); // null | 'checking' | 'pulling' | 'updated' | 'available' | 'up_to_date' | 'failed'
+  const [updateBannerDismissed, setUpdateBannerDismissed] = useState(false);
   const { updateAvailable, latestVersion, currentVersion } = useUpdateCheck();
 
-  // Auto-pull from GitHub on first launch of the day (dev only)
+  // Auto-check for git updates on first launch of the day (check only, no auto-pull)
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
     const today = new Date().toISOString().split('T')[0];
-    const lastAutoUpdate = localStorage.getItem('codex_last_auto_update');
-    if (lastAutoUpdate === today) return; // Already checked today
+    const lastCheck = localStorage.getItem('codex_last_update_check');
+    if (lastCheck === today) return;
 
-    const autoUpdate = async () => {
+    const autoCheck = async () => {
       setAutoUpdateStatus('checking');
       try {
         const result = await invoke('check_git_updates');
+        localStorage.setItem('codex_last_update_check', today);
         if (result.has_update) {
-          setAutoUpdateStatus('pulling');
-          const pullResult = await invoke('pull_git_updates');
-          if (pullResult.success) {
-            localStorage.setItem('codex_last_auto_update', today);
-            setAutoUpdateStatus('updated');
-          } else {
-            localStorage.setItem('codex_last_auto_update', today);
-            setAutoUpdateStatus('failed');
-          }
+          setAutoUpdateStatus('available');
         } else {
-          localStorage.setItem('codex_last_auto_update', today);
           setAutoUpdateStatus('up_to_date');
         }
       } catch {
         // Git not available or not a git repo — skip silently
-        localStorage.setItem('codex_last_auto_update', today);
+        localStorage.setItem('codex_last_update_check', today);
         setAutoUpdateStatus(null);
       }
     };
-    autoUpdate();
+    autoCheck();
   }, []);
 
   const load = async () => {
@@ -2367,7 +2359,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Update Banner ── */}
-      {(updateAvailable || autoUpdateStatus === 'updated') && (
+      {!updateBannerDismissed && (updateAvailable || autoUpdateStatus === 'available' || autoUpdateStatus === 'updated' || autoUpdateStatus === 'pulling' || autoUpdateStatus === 'failed') && (
         <motion.div
           initial={{ y: -40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -2377,24 +2369,52 @@ export default function Dashboard() {
           }}
         >
           <div style={{
+            position: 'relative',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
             padding: '10px 20px', borderRadius: 10,
             background: autoUpdateStatus === 'updated'
               ? 'rgba(39,174,96,0.12)'
-              : 'rgba(201,168,76,0.1)',
+              : autoUpdateStatus === 'failed'
+                ? 'rgba(220,38,38,0.1)'
+                : 'rgba(201,168,76,0.1)',
             border: autoUpdateStatus === 'updated'
               ? '1px solid rgba(39,174,96,0.3)'
-              : '1px solid rgba(201,168,76,0.25)',
+              : autoUpdateStatus === 'failed'
+                ? '1px solid rgba(220,38,38,0.3)'
+                : '1px solid rgba(201,168,76,0.25)',
             backdropFilter: 'blur(12px)',
           }}>
-            <span style={{ fontSize: 16 }}>{autoUpdateStatus === 'updated' ? '✅' : '✨'}</span>
+            {/* Dismiss button */}
+            {autoUpdateStatus !== 'pulling' && (
+              <button
+                onClick={() => setUpdateBannerDismissed(true)}
+                style={{
+                  position: 'absolute', top: 6, right: 8,
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'rgba(255,255,255,0.35)', fontSize: 14, lineHeight: 1,
+                  padding: '2px 4px',
+                }}
+                title="Dismiss"
+              >
+                ✕
+              </button>
+            )}
+            <span style={{ fontSize: 16 }}>
+              {autoUpdateStatus === 'updated' ? '✅' : autoUpdateStatus === 'failed' ? '⚠️' : '✨'}
+            </span>
             <span style={{
               fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.05em',
-              color: autoUpdateStatus === 'updated' ? '#86efac' : '#fde68a',
+              color: autoUpdateStatus === 'updated' ? '#86efac'
+                : autoUpdateStatus === 'failed' ? '#fca5a5'
+                : '#fde68a',
             }}>
               {autoUpdateStatus === 'updated'
-                ? 'Updated to latest build — restart the app for changes to take effect'
-                : `Update available: ${latestVersion} (you have ${currentVersion})`
+                ? 'Updated to latest build — reload for changes to take effect'
+                : autoUpdateStatus === 'pulling'
+                  ? 'Updating...'
+                  : autoUpdateStatus === 'failed'
+                    ? 'Update failed — try again later'
+                    : `Update available: ${latestVersion} (you have ${currentVersion})`
               }
             </span>
             {autoUpdateStatus === 'updated' && (
@@ -2410,7 +2430,7 @@ export default function Dashboard() {
                 RELOAD NOW
               </button>
             )}
-            {updateAvailable && autoUpdateStatus !== 'updated' && (
+            {(updateAvailable || autoUpdateStatus === 'available') && autoUpdateStatus !== 'updated' && autoUpdateStatus !== 'pulling' && autoUpdateStatus !== 'failed' && (
               <button
                 onClick={async () => {
                   try {
@@ -2418,7 +2438,7 @@ export default function Dashboard() {
                     const result = await invoke('pull_git_updates');
                     if (result.success) {
                       setAutoUpdateStatus('updated');
-                      toast.success('Updated! Restart for changes.', { duration: 5000 });
+                      toast.success('Updated! Reload for changes.', { duration: 5000 });
                     } else {
                       setAutoUpdateStatus('failed');
                       toast.error('Update failed — check Dev Tools for details');
@@ -2428,16 +2448,14 @@ export default function Dashboard() {
                     toast.error(`Update failed: ${err}`);
                   }
                 }}
-                disabled={autoUpdateStatus === 'pulling'}
                 style={{
                   padding: '4px 14px', borderRadius: 6, fontSize: 11,
                   fontFamily: 'var(--font-heading)', letterSpacing: '0.08em',
                   background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.35)',
-                  color: '#fde68a', cursor: autoUpdateStatus === 'pulling' ? 'wait' : 'pointer',
-                  opacity: autoUpdateStatus === 'pulling' ? 0.6 : 1,
+                  color: '#fde68a', cursor: 'pointer',
                 }}
               >
-                {autoUpdateStatus === 'pulling' ? 'UPDATING...' : 'UPDATE NOW'}
+                UPDATE NOW
               </button>
             )}
           </div>

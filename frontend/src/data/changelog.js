@@ -3,6 +3,20 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.5.3',
+    date: '03/13/2026',
+    title: 'DM Content Creation Tools & Update System',
+    changes: [
+      'Quest templates — 8 quick-fill templates (Bounty Hunt, Rescue Mission, Dungeon Delve, etc.) with pre-filled objectives',
+      'Suggested objectives — clickable chips for common quest objectives below the objective input',
+      'NPC templates — 6 archetype presets (Tavern Keeper, Wise Sage, Shady Merchant, etc.) with auto-filled details',
+      'Random NPC name generator — button picks from 26 fantasy names',
+      'Race & class dropdowns — autocomplete suggestions for 16 races and 20 classes/occupations on NPC creation',
+      'Lore templates — 6 structured note templates (Town/City, Dungeon, Faction, etc.) with markdown section outlines',
+      'Update banner now works in production builds — checks for updates and lets you click to install',
+    ],
+  },
+  {
     version: 'V0.5.2',
     date: '03/13/2026',
     title: 'Character Sheet UX, Floating Dice & Campaign Management',

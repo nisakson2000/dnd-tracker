@@ -15,6 +15,22 @@ const STATUSES = ['alive', 'dead', 'unknown'];
 const RELATIONSHIPS = ['Friendly', 'Neutral', 'Hostile', 'Rival', 'Patron', 'Unknown'];
 const DISPOSITIONS = ['Hostile', 'Unfriendly', 'Neutral', 'Friendly', 'Allied'];
 
+const NPC_NAME_SUGGESTIONS = [
+  'Alaric', 'Brenna', 'Cedric', 'Delara', 'Eldrin', 'Fiona', 'Gareth', 'Helena',
+  'Idris', 'Jasira', 'Kael', 'Lyra', 'Magnus', 'Nessa', 'Orin', 'Petra',
+  'Quillon', 'Rhiannon', 'Silas', 'Thalia', 'Ulric', 'Vesper', 'Wren', 'Xara', 'Yoren', 'Zara',
+];
+const NPC_RACES = ['Human', 'Elf', 'Dwarf', 'Halfling', 'Gnome', 'Half-Elf', 'Half-Orc', 'Tiefling', 'Dragonborn', 'Goliath', 'Aasimar', 'Tabaxi', 'Kenku', 'Firbolg', 'Goblin', 'Orc'];
+const NPC_CLASSES = ['Commoner', 'Noble', 'Guard', 'Soldier', 'Merchant', 'Priest', 'Mage', 'Rogue', 'Bard', 'Ranger', 'Knight', 'Assassin', 'Druid', 'Warlock', 'Artificer', 'Scholar', 'Blacksmith', 'Innkeeper', 'Sailor', 'Farmer'];
+const NPC_TEMPLATES = [
+  { label: 'Tavern Keeper', name: '', role: 'neutral', race: 'Human', npc_class: 'Innkeeper', disposition: 'Friendly', description: 'A warm and welcoming tavern owner who hears all the local gossip.' },
+  { label: 'Mysterious Stranger', name: '', role: 'neutral', race: 'Half-Elf', npc_class: 'Rogue', disposition: 'Neutral', description: 'A hooded figure who seems to know more than they let on.' },
+  { label: 'Quest Giver', name: '', role: 'ally', race: 'Human', npc_class: 'Noble', disposition: 'Friendly', description: 'A person of influence who needs capable adventurers for an important task.' },
+  { label: 'Rival Adventurer', name: '', role: 'enemy', race: 'Human', npc_class: 'Fighter', disposition: 'Unfriendly', description: 'A competitive adventurer who always seems to be after the same prize.' },
+  { label: 'Wise Sage', name: '', role: 'ally', race: 'Elf', npc_class: 'Scholar', disposition: 'Friendly', description: 'An ancient scholar with vast knowledge of history and arcane lore.' },
+  { label: 'Shady Merchant', name: '', role: 'neutral', race: 'Halfling', npc_class: 'Merchant', disposition: 'Neutral', description: 'A trader who deals in rare and questionable goods, no questions asked.' },
+];
+
 const ROLE_COLORS = {
   ally: { bg: 'bg-emerald-600', border: 'border-emerald-400', text: 'text-emerald-400', cardBorder: 'border-emerald-500/25', cardBg: 'bg-emerald-950/10', leftBorder: 'border-l-emerald-500' },
   enemy: { bg: 'bg-red-600', border: 'border-red-400', text: 'text-red-400', cardBorder: 'border-red-500/25', cardBg: 'bg-red-950/10', leftBorder: 'border-l-red-500' },
@@ -1118,10 +1134,31 @@ function NPCForm({ npc, onSubmit, onCancel }) {
           </div>
         </div>
         <div className="grid grid-cols-3 gap-2">
-          <div className="col-span-3">
-            <input className={`input w-full ${nameError ? 'border-red-500' : ''}`} placeholder="NPC Name (e.g. Elara Brightheart)" value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
-            {nameError && <p className="text-red-400 text-xs mt-0.5">Name required</p>}
+          <div className="col-span-3 flex gap-2">
+            <input className={`input flex-1 ${nameError ? 'border-red-500' : ''}`} placeholder="NPC Name (e.g. Elara Brightheart)" value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
+            <button type="button" onClick={() => {
+              const name = NPC_NAME_SUGGESTIONS[Math.floor(Math.random() * NPC_NAME_SUGGESTIONS.length)];
+              update('name', name);
+            }} className="btn-secondary text-xs whitespace-nowrap" title="Random name suggestion">
+              Random
+            </button>
+            {nameError && <p className="text-red-400 text-xs mt-0.5 self-center">Name required</p>}
           </div>
+          {!npc && (
+            <div className="col-span-3 flex items-center gap-2">
+              <span className="text-[10px] text-amber-200/30 whitespace-nowrap">Quick fill:</span>
+              <div className="flex gap-1 flex-wrap">
+                {NPC_TEMPLATES.map(t => (
+                  <button key={t.label} type="button" onClick={() => {
+                    setForm(prev => ({ ...prev, role: t.role, race: t.race, npc_class: t.npc_class, disposition: t.disposition, description: t.description }));
+                  }}
+                    className="text-[10px] px-2 py-0.5 rounded bg-amber-200/5 text-amber-200/30 border border-amber-200/8 hover:bg-amber-200/10 hover:text-amber-200/60 transition-all">
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <select className="input w-full" value={form.role} onChange={e => update('role', e.target.value)}>
             {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
@@ -1131,8 +1168,18 @@ function NPCForm({ npc, onSubmit, onCancel }) {
           <select className="input w-full" value={form.disposition || 'Neutral'} onChange={e => update('disposition', e.target.value)}>
             {DISPOSITIONS.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
-          <input className="input w-full" placeholder="Race" value={form.race} onChange={e => update('race', e.target.value)} />
-          <input className="input w-full" placeholder="Class" value={form.npc_class} onChange={e => update('npc_class', e.target.value)} />
+          <div>
+            <input className="input w-full" placeholder="Race" value={form.race} onChange={e => update('race', e.target.value)} list="npc-races" />
+            <datalist id="npc-races">
+              {NPC_RACES.map(r => <option key={r} value={r} />)}
+            </datalist>
+          </div>
+          <div>
+            <input className="input w-full" placeholder="Class / Occupation" value={form.npc_class} onChange={e => update('npc_class', e.target.value)} list="npc-classes" />
+            <datalist id="npc-classes">
+              {NPC_CLASSES.map(c => <option key={c} value={c} />)}
+            </datalist>
+          </div>
           <select className="input w-full" value={form.relationship || 'Unknown'} onChange={e => update('relationship', e.target.value)}>
             {RELATIONSHIPS.map(r => <option key={r} value={r}>{r}</option>)}
           </select>

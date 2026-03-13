@@ -4,6 +4,30 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.5.3 — DM Content Creation Tools & Update System
+**Released:** March 13, 2026
+
+### Quest Creation Improvements
+- **8 Quick Templates** — Bounty Hunt, Rescue Mission, Fetch Quest, Escort Mission, Dungeon Delve, Investigation, Defense/Siege, Political Intrigue — pre-fill quest type, description, objectives, and difficulty
+- **Suggested Objectives** — clickable chips below the objective input for common objectives (Defeat the enemy, Find the hidden item, Speak to the contact, etc.)
+
+### NPC Creation Improvements
+- **6 NPC Templates** — Tavern Keeper, Mysterious Stranger, Quest Giver, Rival Adventurer, Wise Sage, Shady Merchant — pre-fill role, race, class, disposition, and description
+- **Random Name Generator** — button next to name input picks from 26 fantasy names
+- **Race & Class Dropdowns** — autocomplete datalists for 16 races and 20 classes/occupations (still allows custom input)
+
+### Lore Creation Improvements
+- **6 Lore Templates** — Tavern/Inn, Town/City, Dungeon, Faction, Legend/Myth, Magic Item — pre-fill category and structured markdown body templates
+- Templates provide formatted sections (Population, Government, Landmarks, etc.) for quick note creation
+
+### Update Banner
+- **Works in production** — update check now runs in both dev and production builds (was dev-only)
+- **Check-only by default** — no longer auto-pulls; shows banner and lets user click "UPDATE NOW"
+- **Dismiss button** — X button to close the banner if you don't want to update now
+- **Failed state** — red-tinted banner with warning icon when update fails
+
+---
+
 ## V0.5.2 — Character Sheet UX, Floating Dice & Campaign Management
 **Released:** March 13, 2026
 
