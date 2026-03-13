@@ -4,6 +4,29 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.4.2 — Wiki 5e 2024 Edition Rules
+**Released:** March 12, 2026
+
+### Arcane Encyclopedia — 5e 2024 Rules Update
+- **38 new articles** — total now 1,950 (up from 1,912)
+- Complete coverage of all 5e 2024 PHB changes vs 2014
+
+### 2024 Rules Changes (23)
+- **Overview**: Rules overview, terminology changes (Race→Species, Bloodied, d20 Test), character creation overhaul
+- **All 12 class revisions**: Barbarian (Brutal Strike), Bard (unrestricted Magical Secrets), Cleric (Divine Order), Druid (Wild Shape pool), Fighter (Weapon Mastery), Monk (major overhaul), Paladin (Smite as spell), Ranger (revised features), Rogue (Cunning Strike), Sorcerer (Innate Sorcery), Warlock (Pact Boon at 1), Wizard (minor changes)
+- **Systems**: Combat changes, Weapon Mastery (8 properties), spellcasting changes, feat system overhaul, rest changes, condition changes
+- **Migration**: Notable removals (Artificer, Half-Elf/Half-Orc), 2014→2024 migration guide
+
+### 2024 Character Options (15)
+- **Origin Feats** (8): Alert, Crafter, Healer, Lucky, Magic Initiate, Musician, Savage Attacker, Tough
+- **Epic Boons** (5): Combat Prowess, Fate, Irresistible Offense, Spell Recall, Truesight
+- **System Articles** (2): 2024 Backgrounds overview (all 16), Heroic Inspiration
+
+### Version Sync
+- All version files bumped to 0.4.2: VERSION, version.json, version.js, package.json (root + frontend), tauri.conf.json, Cargo.toml
+
+---
+
 ## V0.4.1 — Wiki Homebrew, Cross-Edition & Settings Expansion
 **Released:** March 12, 2026
 

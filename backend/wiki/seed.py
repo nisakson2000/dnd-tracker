@@ -82,6 +82,9 @@ SEED_FILES = [
     # Hazards
     "poisons.json",
     "diseases.json",
+    # 5e 2024 rules
+    "rules_2024.json",
+    "options_2024.json",
     # Adventuring and DM tools
     "adventuring.json",
     "adventuring_combat.json",

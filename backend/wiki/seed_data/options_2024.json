@@ -1,0 +1,282 @@
+[
+  {
+    "slug": "origin-feat-alert",
+    "title": "Origin Feat: Alert (2024)",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "The 2024 version of Alert is an Origin Feat that adds your proficiency bonus to initiative and lets you swap initiative with a willing ally.",
+    "content": "## Origin Feat: Alert (2024)\n\n*5e 2024 Character Option — Origin Feat (1st Level)*\n\nAlert has been redesigned as an Origin Feat in the 2024 Player's Handbook. It is available at 1st level through your background and replaces the 2014 version, which granted a flat +5 to initiative, immunity to surprise, and negated advantage from unseen attackers.\n\n### Benefits\n\n- **Initiative Proficiency.** When you roll Initiative, you add your Proficiency Bonus to the roll.\n- **Initiative Swap.** Immediately after you roll Initiative, you can swap your Initiative count with one willing creature you can see within 5 feet of you. You decide whether to swap after seeing all Initiative rolls but before the DM declares the order.\n\n### Key Differences from 2014\n\n| Feature | 2014 Alert | 2024 Alert |\n|---|---|---|\n| Initiative bonus | Flat +5 | Proficiency Bonus (+2 to +6) |\n| Surprise immunity | Yes | No (Surprise reworked) |\n| Unseen attacker protection | Yes | No |\n| Initiative swap | No | Yes (willing ally within 5 ft) |\n| Feat category | General (requires ASI) | Origin (free at 1st level) |\n\n### Design Notes\n\nThe scaling initiative bonus starts weaker at low levels (+2 vs +5) but eventually surpasses the 2014 version at higher levels (+6 at level 17+). The initiative swap adds a tactical team element — a slow-initiative Paladin can swap with a high-Dexterity Rogue to use Aura of Protection before enemies act. The removal of surprise immunity reflects the 2024 rules reworking the Surprised condition entirely.",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "origin-feat",
+      "prerequisite": "None (granted by background at 1st level)",
+      "replaces": "alert",
+      "benefits": ["Add Proficiency Bonus to Initiative", "Swap Initiative with willing creature within 5 ft"]
+    },
+    "tags": "rules,2024,5e-2024,character-options,origin-feat,alert,initiative,feat",
+    "source": "PHB 2024",
+    "sort_order": 560
+  },
+  {
+    "slug": "origin-feat-crafter",
+    "title": "Origin Feat: Crafter (2024)",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "Crafter is a new Origin Feat in the 2024 PHB that grants an ability score increase, a 20% discount on crafted nonmagical items, and three artisan tool proficiencies.",
+    "content": "## Origin Feat: Crafter (2024)\n\n*5e 2024 Character Option — Origin Feat (1st Level)*\n\nCrafter is an entirely new feat introduced in the 2024 Player's Handbook. It has no 2014 equivalent and supports characters who focus on crafting and artisan work.\n\n### Benefits\n\n- **Ability Score Increase.** Increase your Strength, Dexterity, Intelligence, Wisdom, or Charisma score by 1, to a maximum of 20.\n- **Tool Proficiency.** You gain proficiency with three different Artisan's Tools of your choice.\n- **Discount.** Whenever you buy a nonmagical item, you pay 80% of its listed price (a 20% discount). This reflects your ability to source materials and find bargains.\n- **Faster Crafting.** When you craft a nonmagical item during downtime, the crafting time and cost are reduced as described in the crafting rules.\n\n### Design Notes\n\nCrafter fills a niche that 2014 D&D never addressed with a dedicated feat. It pairs well with the expanded crafting downtime rules in the 2024 DMG. The three tool proficiencies make it the single best source of artisan tool proficiency in the game. The 20% discount applies to all nonmagical purchases, not just crafted items, making it valuable even outside dedicated crafting downtime.\n\n### Suggested Tool Choices\n\n- **Smith's Tools** — Repair metal armor and weapons, craft metal gear.\n- **Alchemist's Supplies** — Create potions, acids, and alchemical substances.\n- **Tinker's Tools** — Build small clockwork devices and repair mechanical items.\n- **Carpenter's Tools** — Build structures, barricades, and wooden equipment.\n- **Cook's Utensils** — Prepare meals that grant temporary hit points or other benefits during rests.",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "origin-feat",
+      "prerequisite": "None (granted by background at 1st level)",
+      "replaces": null,
+      "benefits": ["+1 to one ability score", "Proficiency with three Artisan's Tools", "20% discount on nonmagical item purchases", "Faster crafting during downtime"]
+    },
+    "tags": "rules,2024,5e-2024,character-options,origin-feat,crafter,crafting,tools,artisan,feat",
+    "source": "PHB 2024",
+    "sort_order": 561
+  },
+  {
+    "slug": "origin-feat-healer",
+    "title": "Origin Feat: Healer (2024)",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "The 2024 Healer Origin Feat lets you reroll any healing die that lands on 1, and grants a Battle Medic ability to heal 2d6+PB as an action once per rest.",
+    "content": "## Origin Feat: Healer (2024)\n\n*5e 2024 Character Option — Origin Feat (1st Level)*\n\nThe Healer feat has been significantly redesigned in the 2024 Player's Handbook. The 2014 version relied on a Healer's Kit for stabilization and flat healing. The 2024 version is more universally useful, benefiting any character who heals allies.\n\n### Benefits\n\n- **Reroll Healing Dice.** Whenever you roll a die to determine the number of Hit Points you restore with a spell or ability, you can reroll the die if it rolls a 1. You must use the new roll.\n- **Battle Medic.** As a Utilize action, you can tend to a creature within 5 feet of you. That creature regains 2d6 + your Proficiency Bonus Hit Points. A creature can benefit from this feature only once per Short Rest or Long Rest. You do not need a Healer's Kit to use this.\n\n### Key Differences from 2014\n\n| Feature | 2014 Healer | 2024 Healer |\n|---|---|---|\n| Stabilize dying creature | Yes (uses healer's kit) | No (separate rule) |\n| Heal with healer's kit | 1d6+4+HD (once per rest per creature) | No |\n| Reroll 1s on healing dice | No | Yes |\n| Battle Medic | No | 2d6 + PB once per rest |\n| Requires healer's kit | Yes | No |\n| Feat category | General (requires ASI) | Origin (free at 1st level) |\n\n### Design Notes\n\nThe reroll-1s benefit applies to all healing you do — spells like Cure Wounds, Healing Word, Heal, and class features like Lay on Hands dice or a Celestial Warlock's Healing Light. This makes it a strong pick for dedicated healers. The Battle Medic feature gives non-spellcaster characters a way to heal allies, scaling with Proficiency Bonus.",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "origin-feat",
+      "prerequisite": "None (granted by background at 1st level)",
+      "replaces": "healer",
+      "benefits": ["Reroll any healing die that rolls a 1", "Battle Medic: Utilize action to heal 2d6 + PB, once per Short or Long Rest per creature"]
+    },
+    "tags": "rules,2024,5e-2024,character-options,origin-feat,healer,healing,battle-medic,feat",
+    "source": "PHB 2024",
+    "sort_order": 562
+  },
+  {
+    "slug": "origin-feat-lucky",
+    "title": "Origin Feat: Lucky (2024)",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "The 2024 Lucky Origin Feat grants Luck Points equal to your Proficiency Bonus, which you spend to gain Advantage on your rolls or impose Disadvantage on attacks against you.",
+    "content": "## Origin Feat: Lucky (2024)\n\n*5e 2024 Character Option — Origin Feat (1st Level)*\n\nLucky has been restructured in the 2024 Player's Handbook. It remains one of the most popular feats in D&D but now uses Luck Points tied to Proficiency Bonus instead of a flat 3 luck points.\n\n### Benefits\n\n- **Luck Points.** You have a number of Luck Points equal to your Proficiency Bonus. You regain all expended Luck Points when you finish a Long Rest.\n- **Advantage.** Immediately after you roll a d20 for a D20 Test (ability check, attack roll, or saving throw), you can spend 1 Luck Point to give yourself Advantage on the roll.\n- **Disadvantage.** When a creature you can see rolls a d20 for an attack roll against you, you can spend 1 Luck Point as a Reaction to impose Disadvantage on that roll.\n\n### Key Differences from 2014\n\n| Feature | 2014 Lucky | 2024 Lucky |\n|---|---|---|\n| Luck points | 3 (flat) | Equal to Proficiency Bonus (2–6) |\n| Your rolls | Roll extra d20, choose | Gain Advantage |\n| Enemy attacks | Roll extra d20, choose | Impose Disadvantage |\n| Ally rolls | Could affect ally rolls | No (self and enemy attacks only) |\n| Interaction with (dis)advantage | Controversial — could negate disadvantage | Clean — grants/imposes advantage/disadvantage |\n| Feat category | General (requires ASI) | Origin (free at 1st level) |\n\n### Design Notes\n\nThe 2024 version scales — you start with 2 Luck Points at level 1 and eventually reach 6 at level 17+. The controversial 2014 interaction where Lucky could effectively \"super-advantage\" a disadvantaged roll (roll 3d20, take best) is gone. Now it simply grants Advantage or imposes Disadvantage using standard rules, so it cannot override existing Disadvantage into a net positive. The Reaction cost for imposing Disadvantage on enemy attacks is new and provides a meaningful resource trade-off.",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "origin-feat",
+      "prerequisite": "None (granted by background at 1st level)",
+      "replaces": "lucky",
+      "benefits": ["Luck Points equal to Proficiency Bonus (recharge on Long Rest)", "Spend 1 point to gain Advantage on a D20 Test", "Spend 1 point as Reaction to impose Disadvantage on an attack against you"]
+    },
+    "tags": "rules,2024,5e-2024,character-options,origin-feat,lucky,luck-points,advantage,disadvantage,feat",
+    "source": "PHB 2024",
+    "sort_order": 563
+  },
+  {
+    "slug": "origin-feat-magic-initiate",
+    "title": "Origin Feat: Magic Initiate (2024)",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "The 2024 Magic Initiate Origin Feat lets you choose from the Cleric, Druid, or Wizard spell list, learn 2 cantrips and 1 first-level spell, and swap a cantrip on level up.",
+    "content": "## Origin Feat: Magic Initiate (2024)\n\n*5e 2024 Character Option — Origin Feat (1st Level)*\n\nMagic Initiate has been updated in the 2024 Player's Handbook. It now references the three consolidated spell lists (Cleric, Druid, Wizard) and adds flexibility to change cantrips over time.\n\n### Benefits\n\n- **Spell List.** Choose one of the following spell lists: Cleric, Druid, or Wizard.\n- **Two Cantrips.** You learn two cantrips of your choice from the chosen spell list.\n- **1st-Level Spell.** You learn one 1st-level spell of your choice from the chosen spell list. You can cast this spell without a spell slot once per Long Rest. You can also cast it using any spell slots you have.\n- **Spellcasting Ability.** Your spellcasting ability for these spells depends on the list you chose: Wisdom for Cleric or Druid, or Intelligence for Wizard.\n- **Cantrip Swap.** Whenever you gain a level, you can replace one of the cantrips from this feat with another cantrip from the same spell list.\n\n### Key Differences from 2014\n\n| Feature | 2014 Magic Initiate | 2024 Magic Initiate |\n|---|---|---|\n| Spell list choice | Any class (Bard, Cleric, Druid, Sorcerer, Warlock, Wizard) | Cleric, Druid, or Wizard only |\n| Cantrips | 2 (permanent) | 2 (swappable on level up) |\n| 1st-level spell | 1/Long Rest only | 1/Long Rest free, or use spell slots |\n| Feat category | General (requires ASI) | Origin (free at 1st level) |\n\n### Design Notes\n\nThe 2024 version consolidates around three spell lists instead of six class-based lists. The Bard, Sorcerer, and Warlock no longer have separate lists — their spells appear on the Arcane (Wizard) list. The ability to cast the 1st-level spell using spell slots (not just the free daily cast) makes this feat significantly more useful for spellcasters who want to poach from another list. The cantrip swap on level-up adds welcome flexibility — you are not locked into choices made at level 1 forever.\n\n### Popular Picks\n\n- **Cleric List:** *Guidance* (best utility cantrip), *Healing Word* (bonus action healing from any class).\n- **Druid List:** *Shillelagh* (Wisdom-based melee), *Goodberry* (10 HP of out-of-combat healing).\n- **Wizard List:** *Booming Blade* or *Green-Flame Blade* (melee cantrips), *Find Familiar* (the best 1st-level spell in the game for utility).",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "origin-feat",
+      "prerequisite": "None (granted by background at 1st level)",
+      "replaces": "magic-initiate",
+      "benefits": ["2 cantrips from Cleric, Druid, or Wizard list", "1 first-level spell (free 1/Long Rest or use spell slots)", "Swap one cantrip on level up"]
+    },
+    "tags": "rules,2024,5e-2024,character-options,origin-feat,magic-initiate,cantrip,spellcasting,feat",
+    "source": "PHB 2024",
+    "sort_order": 564
+  },
+  {
+    "slug": "origin-feat-musician",
+    "title": "Origin Feat: Musician (2024)",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "Musician is a new Origin Feat in the 2024 PHB that grants an ability score increase, instrument proficiency, and the Inspiring Song feature that gives allies Heroic Inspiration after a rest.",
+    "content": "## Origin Feat: Musician (2024)\n\n*5e 2024 Character Option — Origin Feat (1st Level)*\n\nMusician is an entirely new feat introduced in the 2024 Player's Handbook. It has no 2014 equivalent and is designed for characters who inspire others through music.\n\n### Benefits\n\n- **Ability Score Increase.** Increase your Charisma, Dexterity, or Intelligence score by 1, to a maximum of 20.\n- **Instrument Proficiency.** You gain proficiency with one Musical Instrument of your choice.\n- **Inspiring Song.** As you finish a Short Rest or Long Rest, you can play a song on a Musical Instrument you have proficiency with and give Heroic Inspiration to allies who hear the song. The number of allies you can inspire equals your Proficiency Bonus.\n\n### How Heroic Inspiration Works\n\nHeroic Inspiration allows a creature to roll a d20 and then choose to add the Heroic Inspiration die (replacing the roll). A creature can hold only **one** instance of Heroic Inspiration at a time — if they already have it, the new one is lost.\n\nSee the **2024 Heroic Inspiration** article for full rules on the Heroic Inspiration system.\n\n### Design Notes\n\nMusician synergizes with the new Heroic Inspiration system. Since Heroic Inspiration is now a core mechanic (rolling a natural 20 grants it), Musician provides a reliable way to distribute it to party members. This is particularly useful for parties that rarely roll natural 20s or want to start each adventuring day with a safety net. The ability score increase makes it a half-feat, useful for rounding an odd ability score. Bard characters may find this feat redundant since their class features already involve musical inspiration, but for non-Bard characters it offers a flavorful support option.",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "origin-feat",
+      "prerequisite": "None (granted by background at 1st level)",
+      "replaces": null,
+      "benefits": ["+1 to Charisma, Dexterity, or Intelligence", "Proficiency with one Musical Instrument", "Give Heroic Inspiration to PB number of allies after a rest"]
+    },
+    "tags": "rules,2024,5e-2024,character-options,origin-feat,musician,heroic-inspiration,music,instrument,feat",
+    "source": "PHB 2024",
+    "sort_order": 565
+  },
+  {
+    "slug": "origin-feat-savage-attacker",
+    "title": "Origin Feat: Savage Attacker (2024)",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "The 2024 Savage Attacker Origin Feat lets you roll weapon damage dice twice and use the higher result, once per turn.",
+    "content": "## Origin Feat: Savage Attacker (2024)\n\n*5e 2024 Character Option — Origin Feat (1st Level)*\n\nSavage Attacker has been slightly refined in the 2024 Player's Handbook. The core mechanic remains similar — roll damage twice, take the higher — but is now explicitly limited to once per turn and is available as a free Origin Feat.\n\n### Benefits\n\n- **Savage Roll.** Once per turn when you hit a target with a weapon attack, you can roll the weapon's damage dice twice and use either result. This applies only to the weapon's damage dice, not to additional dice from features like Sneak Attack, Divine Smite, or other bonus damage sources.\n\n### Key Differences from 2014\n\n| Feature | 2014 Savage Attacker | 2024 Savage Attacker |\n|---|---|---|\n| Frequency | Once per turn | Once per turn (same) |\n| What is rerolled | Weapon damage dice | Weapon damage dice (same) |\n| Extra damage included | Ambiguous wording | Explicitly only weapon dice |\n| Feat category | General (requires ASI) | Origin (free at 1st level) |\n\n### Design Notes\n\nSavage Attacker was widely considered one of the weakest feats in 2014 because it cost an ASI for a modest average damage increase. As a free Origin Feat, it becomes much more attractive — you get a small but consistent damage boost without giving up anything. The average damage increase is approximately +1 to +2 per hit depending on the weapon die size, which is meaningful over an adventuring day but would not have been worth an ASI.\n\n### Best Weapon Pairings\n\n- **Greatsword (2d6):** Rerolling 2d6 averages ~8.94 instead of 7, a +1.94 increase.\n- **Greataxe (1d12):** Rerolling 1d12 averages ~8.49 instead of 6.5, a +1.99 increase.\n- **Longsword/Rapier (1d8):** Rerolling 1d8 averages ~5.81 instead of 4.5, a +1.31 increase.",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "origin-feat",
+      "prerequisite": "None (granted by background at 1st level)",
+      "replaces": "savage-attacker",
+      "benefits": ["Once per turn, roll weapon damage dice twice and use either result"]
+    },
+    "tags": "rules,2024,5e-2024,character-options,origin-feat,savage-attacker,damage,weapon,melee,feat",
+    "source": "PHB 2024",
+    "sort_order": 566
+  },
+  {
+    "slug": "origin-feat-tough",
+    "title": "Origin Feat: Tough (2024)",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "The 2024 Tough Origin Feat grants +2 HP per level, identical to the 2014 version but now available as a free Origin Feat at 1st level.",
+    "content": "## Origin Feat: Tough (2024)\n\n*5e 2024 Character Option — Origin Feat (1st Level)*\n\nTough is mechanically identical to its 2014 version but has been reclassified as an Origin Feat, making it available for free at 1st level through your background.\n\n### Benefits\n\n- **Hit Point Increase.** Your Hit Point maximum increases by an amount equal to twice your character level when you gain this feat. Whenever you gain a level thereafter, your Hit Point maximum increases by an additional 2 Hit Points.\n\n### Key Differences from 2014\n\n| Feature | 2014 Tough | 2024 Tough |\n|---|---|---|\n| HP increase | +2 per level | +2 per level (same) |\n| Feat category | General (requires ASI) | Origin (free at 1st level) |\n| Availability | Level 4+ (ASI) or Variant Human level 1 | Level 1 (any background) |\n\n### Effective Impact by Level\n\n| Level | Extra HP from Tough |\n|---|---|\n| 1 | +2 |\n| 5 | +10 |\n| 10 | +20 |\n| 15 | +30 |\n| 20 | +40 |\n\n### Design Notes\n\nTough was already considered a strong feat in 2014 — +40 HP over a career is equivalent to having +4 Constitution. As a free Origin Feat, it becomes even more appealing. It is particularly valuable for:\n\n- **d6 Hit Die classes** (Sorcerer, Wizard) who need every HP they can get.\n- **Front-line characters** who want to maximize durability without investing in Constitution.\n- **Concentration casters** who benefit from having more HP to absorb hits and maintain concentration.\n\nSince it stacks with Constitution, a level 20 character with 20 Constitution and Tough has an extra +45 HP from Constitution and +40 HP from Tough, for +85 HP over a base with no Constitution bonus and no Tough.",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "origin-feat",
+      "prerequisite": "None (granted by background at 1st level)",
+      "replaces": "tough",
+      "benefits": ["+2 HP per character level"]
+    },
+    "tags": "rules,2024,5e-2024,character-options,origin-feat,tough,hit-points,hp,durability,feat",
+    "source": "PHB 2024",
+    "sort_order": 567
+  },
+  {
+    "slug": "epic-boon-combat-prowess",
+    "title": "Epic Boon: Combat Prowess (2024)",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "The Epic Boon of Combat Prowess grants +1 to attack rolls, and when you miss an attack by exactly 1, it becomes a hit instead.",
+    "content": "## Epic Boon: Combat Prowess (2024)\n\n*5e 2024 Character Option — Epic Boon (Level 19+)*\n\nEpic Boons are a new feat category in the 2024 Player's Handbook, available at level 19 when characters would normally receive their final Ability Score Improvement. They replace the 2014 capstone ASI with powerful, character-defining abilities.\n\n### Prerequisites\n\n- **Level 19+**\n- Replaces the level 19 ASI/Feat choice\n\n### Benefits\n\n- **Ability Score Increase.** Increase one ability score of your choice by 1, to a maximum of 30. (Epic Boons raise the ability score cap from 20 to 30.)\n- **Attack Roll Bonus.** You gain a +1 bonus to attack rolls you make.\n- **Near Miss.** When you miss with an attack roll by 1 — that is, your total equals the target's AC minus 1 — the attack hits instead. This effectively gives you an additional +1 to hit in those specific circumstances, meaning your attacks rarely barely miss.\n\n### Design Notes\n\nCombat Prowess is the quintessential martial Epic Boon. The flat +1 to attack rolls stacks with all other bonuses and is always active. The Near Miss feature is unique in 5e — it turns a miss into a hit without changing the roll itself. Combined, these features mean that at level 19+ your effective attack bonus is +1 higher than normal, and any roll that would miss by exactly 1 still connects.\n\nThis boon is ideal for:\n\n- **Fighters** who make the most attacks per turn and benefit most from per-attack bonuses.\n- **Monks** who rely on many attacks per turn.\n- **Great Weapon Master / Sharpshooter** users who sometimes take penalties to hit and need every point of accuracy.\n\n### About Epic Boons\n\nAll Epic Boons share these properties:\n- Available at level 19+ only.\n- Each includes a +1 to one ability score (to a maximum of 30, breaking the normal cap of 20).\n- They represent the pinnacle of a character's power, approaching demigod-level capability.\n- A character can only take one Epic Boon (at level 19).",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "epic-boon",
+      "prerequisite": "Level 19+",
+      "benefits": ["+1 to one ability score (max 30)", "+1 to attack rolls", "Miss by 1 becomes a hit"]
+    },
+    "tags": "rules,2024,5e-2024,character-options,epic-boon,combat-prowess,attack-rolls,accuracy,martial,feat",
+    "source": "PHB 2024",
+    "sort_order": 568
+  },
+  {
+    "slug": "epic-boon-fate",
+    "title": "Epic Boon: Fate (2024)",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "The Epic Boon of Fate lets you add or subtract 2d4 from a D20 Test you can see, with a number of uses per Long Rest equal to your Proficiency Bonus.",
+    "content": "## Epic Boon: Fate (2024)\n\n*5e 2024 Character Option — Epic Boon (Level 19+)*\n\nThe Epic Boon of Fate grants the ability to manipulate luck and destiny, nudging die rolls in your favor or against your enemies.\n\n### Prerequisites\n\n- **Level 19+**\n- Replaces the level 19 ASI/Feat choice\n\n### Benefits\n\n- **Ability Score Increase.** Increase one ability score of your choice by 1, to a maximum of 30.\n- **Fate's Call.** When you or another creature you can see makes a D20 Test (ability check, attack roll, or saving throw), you can use your Reaction to add or subtract 2d4 from the roll. You can use this feature a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest.\n\n### Mechanical Analysis\n\n2d4 has an average of 5, with a range of 2–8. At level 19, your Proficiency Bonus is +6, giving you 6 uses per Long Rest.\n\n- **Adding 2d4:** Average +5 to an ally's roll — stronger than Bardic Inspiration (which uses a single die) at most levels.\n- **Subtracting 2d4:** Average -5 to an enemy's roll — can turn hits into misses or successful saves into failures.\n- **Reaction cost:** You can only use it once per round, creating meaningful tactical decisions.\n- **Visual range:** You must be able to see the creature, so Blindness or heavy obscurement blocks this.\n\n### Design Notes\n\nFate is arguably the most versatile Epic Boon. It works on any D20 Test — your own attacks, ally saving throws, enemy attack rolls, or enemy saves against your spells. The ability to subtract is rare in 5e and extremely powerful when applied to a critical enemy saving throw. This boon is ideal for:\n\n- **Support characters** (Bards, Clerics) who want to amplify their party-boosting role.\n- **Controllers** (Wizards, Warlocks) who need enemies to fail saving throws.\n- **Any character** who wants maximum flexibility in a high-level campaign.",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "epic-boon",
+      "prerequisite": "Level 19+",
+      "benefits": ["+1 to one ability score (max 30)", "Reaction: Add or subtract 2d4 to/from a D20 Test you can see", "PB uses per Long Rest"]
+    },
+    "tags": "rules,2024,5e-2024,character-options,epic-boon,fate,d20-test,reaction,support,feat",
+    "source": "PHB 2024",
+    "sort_order": 569
+  },
+  {
+    "slug": "epic-boon-irresistible-offense",
+    "title": "Epic Boon: Irresistible Offense (2024)",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "The Epic Boon of Irresistible Offense grants +1 to damage rolls and lets your damage ignore Resistance to your damage type.",
+    "content": "## Epic Boon: Irresistible Offense (2024)\n\n*5e 2024 Character Option — Epic Boon (Level 19+)*\n\nThe Epic Boon of Irresistible Offense enhances raw damage output by adding a flat bonus and bypassing one of the game's primary damage-reduction mechanics.\n\n### Prerequisites\n\n- **Level 19+**\n- Replaces the level 19 ASI/Feat choice\n\n### Benefits\n\n- **Ability Score Increase.** Increase your Strength or Dexterity score by 1, to a maximum of 30.\n- **Damage Bonus.** You gain a +1 bonus to damage rolls you make.\n- **Bypass Resistance.** When you deal damage to a creature that has Resistance to the type of damage you deal, that Resistance is ignored. The creature takes full damage as though it had no Resistance.\n\n### Mechanical Analysis\n\nThe +1 damage bonus applies to every damage roll — weapon attacks, spell damage, and any other damage roll. For a Fighter making 4 attacks per turn with Action Surge rounds reaching 8 attacks, this is +4 to +8 extra damage per round.\n\nThe Resistance bypass is the real prize at high levels. Many powerful monsters (dragons, fiends, undead) have Resistance to common damage types like fire, necrotic, or nonmagical bludgeoning/piercing/slashing. By ignoring Resistance, your effective damage against these creatures doubles from what it would have been (since Resistance normally halves damage).\n\n### Design Notes\n\nIrresistible Offense is the premier damage-dealing Epic Boon. It pairs best with:\n\n- **Characters who deal a single damage type frequently** — fire-themed sorcerers, necrotic warlocks, or radiant-damage paladins.\n- **Martial characters** who make many attacks per turn, maximizing the flat +1 bonus.\n- **Characters fighting fiends, undead, or dragons** where Resistance is extremely common.\n\nNote that this boon does **not** bypass Immunity — only Resistance. A creature immune to fire damage still takes no fire damage from you.",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "epic-boon",
+      "prerequisite": "Level 19+",
+      "benefits": ["+1 to Strength or Dexterity (max 30)", "+1 to damage rolls", "Your damage ignores Resistance"]
+    },
+    "tags": "rules,2024,5e-2024,character-options,epic-boon,irresistible-offense,damage,resistance,martial,feat",
+    "source": "PHB 2024",
+    "sort_order": 570
+  },
+  {
+    "slug": "epic-boon-spell-recall",
+    "title": "Epic Boon: Spell Recall (2024)",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "The Epic Boon of Spell Recall grants +1 to your spellcasting ability and lets you cast one spell of level 1-4 without expending a slot once per Long Rest.",
+    "content": "## Epic Boon: Spell Recall (2024)\n\n*5e 2024 Character Option — Epic Boon (Level 19+)*\n\nThe Epic Boon of Spell Recall is designed for spellcasters, enhancing their primary ability score and granting a free spell cast each day.\n\n### Prerequisites\n\n- **Level 19+**\n- Replaces the level 19 ASI/Feat choice\n\n### Benefits\n\n- **Ability Score Increase.** Increase your Intelligence, Wisdom, or Charisma score by 1, to a maximum of 30.\n- **Free Casting.** You can cast one spell you have prepared of level 1 through 4 without expending a spell slot. Once you use this feature, you cannot do so again until you finish a Long Rest.\n\n### Mechanical Analysis\n\nThe +1 to your spellcasting ability is significant because Epic Boons raise the ability score cap to 30. At level 19, most spellcasters have a 20 in their casting stat — this boon takes it to 21 (+5 modifier, same as 20). However, combined with other ASI increases from magic items or blessings, it paves the way to truly legendary ability scores.\n\nThe free spell slot is most valuable when used on a high-demand spell:\n\n- **Counterspell (3rd level):** Free Counterspell is always valuable.\n- **Polymorph (4th level):** An extra emergency Polymorph for healing (turning an ally into a Giant Ape with 157 HP).\n- **Greater Invisibility (4th level):** Free sustained invisibility for a key combat.\n- **Banishment (4th level):** Remove a dangerous enemy for free.\n- **Shield (1st level):** Even a 1st-level slot saved is a slot you can spend elsewhere.\n\n### Design Notes\n\nSpell Recall is the natural choice for full spellcasters (Wizards, Clerics, Druids, Bards, Sorcerers) at level 19. The cap of 4th-level spells prevents it from being used on the most powerful spells (no free Wish or Forcecage), but 4th-level spells are still impactful. Half-casters like Paladins and Rangers can also benefit, though their 4th-level slot is already their highest, making the free cast even more precious.",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "epic-boon",
+      "prerequisite": "Level 19+",
+      "benefits": ["+1 to Intelligence, Wisdom, or Charisma (max 30)", "Cast one prepared spell of level 1-4 without a slot, once per Long Rest"]
+    },
+    "tags": "rules,2024,5e-2024,character-options,epic-boon,spell-recall,spellcasting,spell-slot,caster,feat",
+    "source": "PHB 2024",
+    "sort_order": 571
+  },
+  {
+    "slug": "epic-boon-truesight",
+    "title": "Epic Boon: Truesight (2024)",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "The Epic Boon of Truesight permanently grants Truesight out to 60 feet, allowing you to see through illusions, invisibility, darkness, and shapechangers' true forms.",
+    "content": "## Epic Boon: Truesight (2024)\n\n*5e 2024 Character Option — Epic Boon (Level 19+)*\n\nThe Epic Boon of Truesight grants permanent access to one of the most powerful sensory abilities in the game.\n\n### Prerequisites\n\n- **Level 19+**\n- Replaces the level 19 ASI/Feat choice\n\n### Benefits\n\n- **Ability Score Increase.** Increase one ability score of your choice by 1, to a maximum of 30.\n- **Truesight.** You gain Truesight with a range of 60 feet. This is permanent and always active — it requires no concentration and is not a spell effect that can be dispelled.\n\n### What Truesight Does\n\nA creature with Truesight can, out to a specific range:\n\n- **See in normal and magical darkness.** This supersedes Darkvision entirely.\n- **See invisible creatures and objects.** Creatures using the Invisibility spell, Greater Invisibility, or natural invisibility are fully visible to you.\n- **Automatically detect visual illusions** and succeed on saving throws against them. Illusion spells like Major Image, Hallucinatory Terrain, and Mirage Arcane are seen through.\n- **Perceive the original form of a shapechanger** or a creature transformed by magic. You see through Polymorph, Disguise Self, Alter Self, and similar effects.\n- **See into the Ethereal Plane** (within the same range). You can perceive creatures and objects on the Ethereal Plane, which is normally invisible.\n\n### Design Notes\n\nTruesight is normally available only through the 6th-level spell *True Seeing* (costly material component, 1-hour duration) or very rare magic items. Having it permanently, with no action cost, no concentration, and no material components, is extraordinary.\n\nThis boon is ideal for:\n\n- **Characters in high-level campaigns** where enemies frequently use invisibility, illusions, and magical darkness.\n- **Investigators and scouts** who need to see through deception at all times.\n- **DMs who love ambushes** — the player with Truesight becomes the party's early-warning system.\n\nThe 60-foot range means it does not replace Darkvision for long-range perception in dark environments, but within 60 feet nothing is hidden from you.",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "epic-boon",
+      "prerequisite": "Level 19+",
+      "benefits": ["+1 to one ability score (max 30)", "Permanent Truesight out to 60 ft"]
+    },
+    "tags": "rules,2024,5e-2024,character-options,epic-boon,truesight,perception,invisibility,illusion,ethereal,feat",
+    "source": "PHB 2024",
+    "sort_order": 572
+  },
+  {
+    "slug": "2024-backgrounds-overview",
+    "title": "2024 Backgrounds Overview",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "In the 2024 PHB, backgrounds are the mechanical core of character origin, granting ability score increases, an Origin Feat, skill proficiencies, a tool proficiency, and an equipment package.",
+    "content": "## 2024 Backgrounds Overview\n\n*5e 2024 Character Option*\n\nBackgrounds have been completely overhauled in the 2024 Player's Handbook. In 2014, backgrounds were primarily a roleplaying tool with minor mechanical benefits (two skill proficiencies, a tool or language, and a flavor feature). In 2024, backgrounds are the **primary source of mechanical customization** at character creation, replacing racial ability score increases.\n\n### What a 2024 Background Grants\n\nEvery background provides:\n\n1. **Ability Score Increases.** Choose one of two options:\n   - +2 to one ability score and +1 to a different ability score, OR\n   - +1 to three different ability scores.\n   These are no longer tied to your race/species.\n\n2. **Origin Feat.** Each background grants one Origin Feat (such as Alert, Lucky, Magic Initiate, etc.). This is a free feat at 1st level.\n\n3. **Skill Proficiencies.** Two skill proficiencies specific to the background.\n\n4. **Tool Proficiency.** One tool proficiency.\n\n5. **Equipment Package.** A set of starting equipment including 50 GP.\n\n### The 16 Backgrounds\n\n| Background | Skill Proficiencies | Tool Proficiency | Origin Feat |\n|---|---|---|---|\n| Acolyte | Insight, Religion | Calligrapher's Supplies | Magic Initiate (Cleric) |\n| Artisan | Investigation, Persuasion | One Artisan's Tools | Crafter |\n| Charlatan | Deception, Sleight of Hand | Forgery Kit | Skilled |\n| Criminal | Sleight of Hand, Stealth | Thieves' Tools | Alert |\n| Entertainer | Acrobatics, Performance | One Musical Instrument | Musician |\n| Farmer | Animal Handling, Nature | Carpenter's Tools | Tough |\n| Guard | Athletics, Perception | One Gaming Set | Alert |\n| Guide | Stealth, Survival | Cartographer's Tools | Magic Initiate (Druid) |\n| Hermit | Medicine, Religion | Herbalism Kit | Healer |\n| Merchant | Animal Handling, Persuasion | Navigator's Tools | Lucky |\n| Noble | History, Persuasion | One Gaming Set | Skilled |\n| Sage | Arcana, History | Calligrapher's Supplies | Magic Initiate (Wizard) |\n| Sailor | Perception, Stealth | Navigator's Tools | Tavern Brawler |\n| Scribe | Investigation, Perception | Calligrapher's Supplies | Skilled |\n| Soldier | Athletics, Intimidation | One Gaming Set | Savage Attacker |\n| Wayfarer | Insight, Stealth | Thieves' Tools | Lucky |\n\n### Key Differences from 2014\n\n| Feature | 2014 Backgrounds | 2024 Backgrounds |\n|---|---|---|\n| Ability Score Increases | None (race grants ASI) | +2/+1 or +1/+1/+1 |\n| Feat | None | One Origin Feat |\n| Skill proficiencies | 2 | 2 (same) |\n| Tool/Language | Varies | 1 tool proficiency |\n| Equipment | Varies | Standardized + 50 GP |\n| Background feature | Flavor feature (Shelter of the Faithful, etc.) | Replaced by Origin Feat |\n| Number of backgrounds | 13 in PHB + many supplements | 16 in PHB 2024 |\n\n### Custom Backgrounds\n\nThe 2024 rules explicitly support custom backgrounds. You can create your own by:\n1. Choosing any two skill proficiencies.\n2. Choosing any tool proficiency.\n3. Choosing any Origin Feat.\n4. Assigning your ability score increases (+2/+1 or +1/+1/+1) to any scores.\n5. Taking the standard 50 GP equipment package or working with your DM.\n\nThis makes the listed backgrounds essentially **templates** — the real mechanical choice is which Origin Feat you want and where you put your ability scores.",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "background-system",
+      "backgrounds": ["Acolyte", "Artisan", "Charlatan", "Criminal", "Entertainer", "Farmer", "Guard", "Guide", "Hermit", "Merchant", "Noble", "Sage", "Sailor", "Scribe", "Soldier", "Wayfarer"],
+      "total_backgrounds": 16
+    },
+    "tags": "rules,2024,5e-2024,character-options,backgrounds,origin-feat,ability-scores,character-creation",
+    "source": "PHB 2024",
+    "sort_order": 573
+  },
+  {
+    "slug": "2024-heroic-inspiration",
+    "title": "2024 Heroic Inspiration",
+    "category": "rules",
+    "subcategory": "2024-options",
+    "ruleset": "5e-2024",
+    "summary": "Heroic Inspiration is a new 2024 core mechanic where rolling a natural 20 on a D20 Test grants Heroic Inspiration, which you can use later to reroll any d20 or give to another player.",
+    "content": "## 2024 Heroic Inspiration\n\n*5e 2024 Core Mechanic*\n\nHeroic Inspiration is a new system introduced in the 2024 Player's Handbook that replaces the DM-granted Inspiration mechanic from 2014. It is built into the core rules and triggers automatically, rather than relying on DM discretion.\n\n### How You Gain Heroic Inspiration\n\n- **Natural 20.** Whenever you roll a natural 20 on a D20 Test (ability check, attack roll, or saving throw), you gain Heroic Inspiration. This is automatic — no DM decision required.\n- **Musician feat.** The Musician Origin Feat lets you give Heroic Inspiration to a number of allies equal to your Proficiency Bonus when you finish a Short or Long Rest.\n- **DM awards.** The DM can still award Heroic Inspiration for exceptional roleplaying, clever tactics, or other reasons at their discretion.\n- **Other features.** Certain class features and abilities may grant or interact with Heroic Inspiration.\n\n### How You Use Heroic Inspiration\n\n- **Reroll.** When you have Heroic Inspiration, you can expend it to reroll any d20 immediately after rolling. You must use the new roll. This works on ability checks, attack rolls, saving throws, and even death saving throws.\n- **Give to another player.** If you already have Heroic Inspiration and would gain another instance, or if you simply want to share, you can give your Heroic Inspiration to another player character. The recipient must not already have Heroic Inspiration.\n\n### Rules and Limitations\n\n- **One at a time.** A creature can have only **one** instance of Heroic Inspiration at any time. You cannot stockpile it.\n- **Binary state.** You either have it or you don't — there are no \"charges\" or \"stacks.\"\n- **No wasting.** If you roll a natural 20 while you already have Heroic Inspiration, you can immediately give it to another player character you can see. If no one can receive it, the new Heroic Inspiration is lost.\n- **Player characters only.** Heroic Inspiration is a player-facing mechanic. Monsters and NPCs do not gain Heroic Inspiration from rolling natural 20s (though the DM could rule otherwise).\n\n### Key Differences from 2014 Inspiration\n\n| Feature | 2014 Inspiration | 2024 Heroic Inspiration |\n|---|---|---|\n| How gained | DM awards it (subjective) | Automatic on natural 20 (plus DM awards) |\n| How used | Gain Advantage on one roll | Reroll one d20 |\n| Stacking | Max 1 (same) | Max 1 (same) |\n| Sharing | Could not give to others | Can give to another player |\n| Tied to race | Some races (e.g., Human) had Inspiration features | Replaced — backgrounds and feats interact with it |\n| Frequency | Entirely DM-dependent | Natural 20s happen regularly |\n\n### Tactical Considerations\n\n- **Save it for saving throws.** Rerolling a failed save against a dragon's breath weapon or a Hold Person spell is far more impactful than rerolling a missed attack.\n- **Death saves.** Using Heroic Inspiration to reroll a failed death saving throw can be life-saving — literally.\n- **Share strategically.** If you already have Heroic Inspiration and roll another natural 20, give it to the party member most likely to need a reroll (the front-line Fighter or the Wizard concentrating on a critical spell).\n- **Musician synergy.** Starting each adventuring day with multiple party members holding Heroic Inspiration creates a significant safety net for early encounters.\n\n### Probability Note\n\nThe chance of rolling a natural 20 on any single d20 roll is 5% (1 in 20). In a typical combat round where a martial character makes 2-3 attack rolls and a saving throw or two, the chance of at least one natural 20 is roughly 10-20%. Over a full adventuring day, Heroic Inspiration will flow through the party regularly.",
+    "metadata_json": {
+      "edition": "2024",
+      "option_type": "core-mechanic",
+      "replaces": "DM Inspiration (2014)",
+      "trigger": "Natural 20 on D20 Test",
+      "effect": "Reroll any d20",
+      "max_stacks": 1
+    },
+    "tags": "rules,2024,5e-2024,character-options,heroic-inspiration,natural-20,reroll,inspiration,core-mechanic",
+    "source": "PHB 2024",
+    "sort_order": 574
+  }
+]
