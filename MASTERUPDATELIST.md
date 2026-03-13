@@ -4,6 +4,35 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.1.5 BETA — Update System Overhaul, Campaign Map Fix, Dev Tools Cleanup
+**Released:** March 12, 2026
+
+### Update System
+- Removed auto-update polling — updates now check once on app launch
+- New manual download flow: version comparison badges, download → patching → complete phases
+- Polished update UI with progress bar, spinner, and phase transitions
+
+### Campaign Map
+- Fixed black screen when clicking character (CampaignMap missing from SECTIONS registry)
+- Added early development warning banner (dismissible, persists via sessionStorage)
+
+### Updates Page
+- Dashboard bell now navigates to dedicated `/updates` route instead of last-selected character
+- New standalone UpdatesPage wrapper
+
+### Dev Tools
+- Removed Developer section from Player and DM sidebars (accessible only via Ctrl+Shift+D wrench icon)
+- Fixed dev chat duplicate messages (fingerprint-based deduplication for UDP broadcast)
+
+### Changelog
+- Fixed version mismatch — "What's New" now correctly shows entries for the running version
+- Added missing V0.4.1, V0.4.2, V0.4.3 changelog entries
+
+### Version Sync
+- All version files set to 0.1.5 BETA: version.js, package.json (frontend), tauri.conf.json, Cargo.toml
+
+---
+
 ## V0.4.3 — Wiki Phase 7: NPCs, Adventures, Edition History & DM Reference
 **Released:** March 12, 2026
 
