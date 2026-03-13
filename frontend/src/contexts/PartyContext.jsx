@@ -61,19 +61,24 @@ export function PartyProvider({ children }) {
     intentionalCloseRef.current = false;
     connectingRef.current = true;
 
+    const wsUrl = `ws://${ip}:${PARTY_PORT}/party/ws`;
+    console.log('[Party] Connecting WebSocket to', wsUrl);
+
     let ws;
     try {
-      ws = new WebSocket(`ws://${ip}:${PARTY_PORT}/party/ws`);
-    } catch {
+      ws = new WebSocket(wsUrl);
+    } catch (e) {
+      console.error('[Party] WebSocket create failed:', e);
       setWsStatus('disconnected');
       connectingRef.current = false;
-      toast.error('Invalid WebSocket URL — check the host IP', { duration: 5000 });
+      toast.error(`Invalid WebSocket URL — ${e?.message || 'check the host IP'}`, { duration: 5000 });
       return;
     }
     wsRef.current = ws;
 
     const timeout = setTimeout(() => {
       if (ws.readyState !== WebSocket.OPEN) {
+        console.warn('[Party] Connection timed out after', CONNECT_TIMEOUT_MS, 'ms, readyState:', ws.readyState);
         ws.close();
         setWsStatus('disconnected');
         connectingRef.current = false;
@@ -82,6 +87,7 @@ export function PartyProvider({ children }) {
     }, CONNECT_TIMEOUT_MS);
 
     ws.onopen = () => {
+      console.log('[Party] WebSocket connected, joining room', code);
       clearTimeout(timeout);
       connectingRef.current = false;
       reconnectCountRef.current = 0;
@@ -167,7 +173,8 @@ export function PartyProvider({ children }) {
       }
     };
 
-    ws.onerror = () => {
+    ws.onerror = (e) => {
+      console.error('[Party] WebSocket error:', e);
       if (reconnectCountRef.current === 0) {
         toast.error('Could not connect — is the host running and on the same network?', { duration: 5000 });
       }
@@ -202,17 +209,24 @@ export function PartyProvider({ children }) {
 
   const handleHost = useCallback(async () => {
     try {
+      console.log('[Party] Starting party server...');
       await invoke('start_party_server');
+      console.log('[Party] Server started on port', PARTY_PORT);
+
       let ip = 'localhost';
       try { ip = await invoke('get_local_ip'); } catch { /* fallback */ }
       setHostIp(ip);
-      const res = await fetch(`http://localhost:${PARTY_PORT}/party/rooms`, { method: 'POST' });
-      if (!res.ok) throw new Error('Failed to create room');
-      const data = await res.json();
-      setRoomCode(data.room_code);
+      console.log('[Party] Local IP:', ip);
+
+      // Create room via IPC (bypasses CSP/mixed-content issues in production)
+      console.log('[Party] Creating room via IPC...');
+      const roomCode = await invoke('create_party_room');
+      console.log('[Party] Room created:', roomCode);
+      setRoomCode(roomCode);
       setMode('host');
-    } catch {
-      toast.error('Could not start party server — is port 8787 available?', { duration: 5000 });
+    } catch (err) {
+      console.error('[Party] Host failed:', err);
+      toast.error(`Could not start party server: ${err?.message || err}`, { duration: 6000 });
     }
   }, []);
 

@@ -651,6 +651,14 @@ pub async fn stop_party_server(
     Ok(())
 }
 
+/// Create a party room via IPC (bypasses CSP/mixed-content issues in production).
+#[tauri::command]
+pub async fn create_party_room(
+    party: tauri::State<'_, Arc<PartyServer>>,
+) -> Result<String, String> {
+    party.create_room().await
+}
+
 /// Returns the machine's LAN IP so the host can share it with players.
 #[tauri::command]
 pub fn get_local_ip() -> String {

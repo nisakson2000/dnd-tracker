@@ -204,6 +204,7 @@ fn main() {
             // Party
             party::start_party_server,
             party::stop_party_server,
+            party::create_party_room,
             party::get_local_ip,
             // Dev updates
             commands::dev_updates::check_git_updates,
