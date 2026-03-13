@@ -2,12 +2,13 @@
 
 import math
 from fastapi import APIRouter, HTTPException, Query
-from sqlalchemy import func
+from sqlalchemy import func, text
 from backend.wiki.database import get_wiki_session
 from backend.wiki.models import WikiArticle, WikiCrossReference
 from backend.wiki.schemas import (
     WikiArticleDetail, WikiArticleSummary, WikiSearchResult,
     WikiRelatedArticle, CategoryCount, PaginatedResponse,
+    WikiStats, CategoryArticleCount, SubcategoryCount, AdjacentArticles,
 )
 from backend.wiki.search import search_articles
 
@@ -160,6 +161,114 @@ def wiki_article(slug: str):
         detail = WikiArticleDetail.model_validate(article)
         detail.related_articles = related
         return detail
+    finally:
+        session.close()
+
+
+@router.get("/stats", response_model=WikiStats)
+def wiki_stats():
+    """Return aggregate wiki statistics."""
+    session = get_wiki_session()
+    try:
+        total_articles = session.query(func.count(WikiArticle.id)).scalar() or 0
+        total_categories = session.query(
+            func.count(func.distinct(WikiArticle.category))
+        ).scalar() or 0
+        total_cross_references = session.query(
+            func.count(WikiCrossReference.id)
+        ).scalar() or 0
+
+        top_rows = (
+            session.query(WikiArticle.category, func.count(WikiArticle.id).label("cnt"))
+            .group_by(WikiArticle.category)
+            .order_by(text("cnt DESC"))
+            .limit(6)
+            .all()
+        )
+        top_categories = [
+            CategoryArticleCount(category=cat, count=cnt) for cat, cnt in top_rows
+        ]
+
+        return WikiStats(
+            total_articles=total_articles,
+            total_categories=total_categories,
+            total_cross_references=total_cross_references,
+            top_categories=top_categories,
+        )
+    finally:
+        session.close()
+
+
+@router.get("/subcategories/{category}", response_model=list[SubcategoryCount])
+def wiki_subcategories(category: str):
+    """Return subcategory counts for a given category."""
+    session = get_wiki_session()
+    try:
+        rows = (
+            session.query(
+                WikiArticle.subcategory,
+                func.count(WikiArticle.id).label("cnt"),
+            )
+            .filter(WikiArticle.category == category, WikiArticle.subcategory != "")
+            .group_by(WikiArticle.subcategory)
+            .order_by(WikiArticle.subcategory)
+            .all()
+        )
+        return [SubcategoryCount(subcategory=sub, count=cnt) for sub, cnt in rows]
+    finally:
+        session.close()
+
+
+@router.get("/random", response_model=list[WikiArticleSummary])
+def wiki_random_articles(
+    count: int = Query(5, ge=1, le=20),
+    category: str | None = Query(None),
+):
+    """Return random articles, optionally filtered by category."""
+    session = get_wiki_session()
+    try:
+        query = session.query(WikiArticle)
+        if category:
+            query = query.filter(WikiArticle.category == category)
+        articles = query.order_by(func.random()).limit(count).all()
+        return [WikiArticleSummary.model_validate(a) for a in articles]
+    finally:
+        session.close()
+
+
+@router.get("/articles/{slug}/adjacent", response_model=AdjacentArticles)
+def wiki_adjacent_articles(slug: str):
+    """Return the previous and next article within the same category."""
+    session = get_wiki_session()
+    try:
+        article = session.query(WikiArticle).filter(WikiArticle.slug == slug).first()
+        if not article:
+            raise HTTPException(status_code=404, detail="Article not found")
+
+        prev_art = (
+            session.query(WikiArticle)
+            .filter(
+                WikiArticle.category == article.category,
+                WikiArticle.title < article.title,
+            )
+            .order_by(WikiArticle.title.desc())
+            .first()
+        )
+
+        next_art = (
+            session.query(WikiArticle)
+            .filter(
+                WikiArticle.category == article.category,
+                WikiArticle.title > article.title,
+            )
+            .order_by(WikiArticle.title.asc())
+            .first()
+        )
+
+        return AdjacentArticles(
+            prev=WikiArticleSummary.model_validate(prev_art) if prev_art else None,
+            next=WikiArticleSummary.model_validate(next_art) if next_art else None,
+        )
     finally:
         session.close()
 

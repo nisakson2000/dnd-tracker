@@ -73,3 +73,25 @@ class PaginatedResponse(BaseModel):
     page: int
     per_page: int
     total_pages: int
+
+
+class CategoryArticleCount(BaseModel):
+    category: str
+    count: int
+
+
+class WikiStats(BaseModel):
+    total_articles: int
+    total_categories: int
+    total_cross_references: int
+    top_categories: list[CategoryArticleCount] = []
+
+
+class SubcategoryCount(BaseModel):
+    subcategory: str
+    count: int
+
+
+class AdjacentArticles(BaseModel):
+    prev: WikiArticleSummary | None = None
+    next: WikiArticleSummary | None = None
