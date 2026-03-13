@@ -4784,5 +4784,1310 @@
     "source_slug": "stabling-per-day",
     "target_slug": "riding-horse",
     "relationship_type": "component"
+  },
+  {
+    "source_slug": "bane",
+    "target_slug": "bhaal",
+    "relationship_type": "ally"
+  },
+  {
+    "source_slug": "bane",
+    "target_slug": "myrkul",
+    "relationship_type": "ally"
+  },
+  {
+    "source_slug": "bhaal",
+    "target_slug": "myrkul",
+    "relationship_type": "ally"
+  },
+  {
+    "source_slug": "shar",
+    "target_slug": "selune",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "selune",
+    "target_slug": "shar",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "mystra",
+    "target_slug": "azuth",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "azuth",
+    "target_slug": "mystra",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "torm",
+    "target_slug": "tyr",
+    "relationship_type": "ally"
+  },
+  {
+    "source_slug": "torm",
+    "target_slug": "ilmater",
+    "relationship_type": "ally"
+  },
+  {
+    "source_slug": "tyr",
+    "target_slug": "ilmater",
+    "relationship_type": "ally"
+  },
+  {
+    "source_slug": "lathander",
+    "target_slug": "sune",
+    "relationship_type": "ally"
+  },
+  {
+    "source_slug": "lathander",
+    "target_slug": "chauntea",
+    "relationship_type": "ally"
+  },
+  {
+    "source_slug": "chauntea",
+    "target_slug": "silvanus",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "chauntea",
+    "target_slug": "mielikki",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "silvanus",
+    "target_slug": "mielikki",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "cyric",
+    "target_slug": "bane",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "cyric",
+    "target_slug": "mystra",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "talos",
+    "target_slug": "umberlee",
+    "relationship_type": "ally"
+  },
+  {
+    "source_slug": "talos",
+    "target_slug": "auril",
+    "relationship_type": "ally"
+  },
+  {
+    "source_slug": "umberlee",
+    "target_slug": "auril",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "bane",
+    "target_slug": "torm",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "bane",
+    "target_slug": "tyr",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "mask",
+    "target_slug": "shar",
+    "relationship_type": "ally"
+  },
+  {
+    "source_slug": "mask",
+    "target_slug": "cyric",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "loviatar",
+    "target_slug": "ilmater",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "malar",
+    "target_slug": "silvanus",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "malar",
+    "target_slug": "mielikki",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "savras",
+    "target_slug": "mystra",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "savras",
+    "target_slug": "azuth",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "oghma",
+    "target_slug": "deneir",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "oghma",
+    "target_slug": "mystra",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "deneir",
+    "target_slug": "oghma",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "oghma",
+    "target_slug": "milil",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "milil",
+    "target_slug": "lliira",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "lliira",
+    "target_slug": "sune",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "leira",
+    "target_slug": "cyric",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "leira",
+    "target_slug": "mask",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "talona",
+    "target_slug": "ilmater",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "talona",
+    "target_slug": "loviatar",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "eldath",
+    "target_slug": "silvanus",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "eldath",
+    "target_slug": "mielikki",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "eldath",
+    "target_slug": "chauntea",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gond",
+    "target_slug": "oghma",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "tymora",
+    "target_slug": "waukeen",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "kelemvor",
+    "target_slug": "myrkul",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "kelemvor",
+    "target_slug": "bhaal",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "kelemvor",
+    "target_slug": "shar",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "helm",
+    "target_slug": "torm",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "helm",
+    "target_slug": "tyr",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "paladine",
+    "target_slug": "takhisis",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "takhisis",
+    "target_slug": "paladine",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "mishakal",
+    "target_slug": "morgion",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "morgion",
+    "target_slug": "mishakal",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "kiri-jolith",
+    "target_slug": "sargonnas",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "sargonnas",
+    "target_slug": "kiri-jolith",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "habbakuk",
+    "target_slug": "zeboim",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "zeboim",
+    "target_slug": "habbakuk",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "branchala",
+    "target_slug": "hiddukel",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "hiddukel",
+    "target_slug": "branchala",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "majere",
+    "target_slug": "chemosh",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "chemosh",
+    "target_slug": "majere",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "solinari",
+    "target_slug": "lunitari",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "solinari",
+    "target_slug": "nuitari",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "lunitari",
+    "target_slug": "solinari",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "lunitari",
+    "target_slug": "nuitari",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "nuitari",
+    "target_slug": "solinari",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "nuitari",
+    "target_slug": "lunitari",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gilean",
+    "target_slug": "zivilyn",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gilean",
+    "target_slug": "reorx",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "reorx",
+    "target_slug": "shinare",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "chislev",
+    "target_slug": "habbakuk",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "chislev",
+    "target_slug": "zivilyn",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "sirrion",
+    "target_slug": "shinare",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "paladine",
+    "target_slug": "dragonlance",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "takhisis",
+    "target_slug": "dragonlance",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "arawai",
+    "target_slug": "balinor",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "aureon",
+    "target_slug": "boldrei",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "dol-arrah",
+    "target_slug": "dol-dorn",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "olladra",
+    "target_slug": "onatar",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "kol-korran",
+    "target_slug": "olladra",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "arawai",
+    "target_slug": "the-devourer",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "balinor",
+    "target_slug": "the-devourer",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "aureon",
+    "target_slug": "the-shadow",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "dol-arrah",
+    "target_slug": "the-mockery",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "dol-dorn",
+    "target_slug": "the-mockery",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "olladra",
+    "target_slug": "the-keeper",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "kol-korran",
+    "target_slug": "the-keeper",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "onatar",
+    "target_slug": "the-keeper",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "arawai",
+    "target_slug": "the-fury",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "the-devourer",
+    "target_slug": "the-fury",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "the-silver-flame",
+    "target_slug": "eberron",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "the-blood-of-vol",
+    "target_slug": "eberron",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "the-undying-court",
+    "target_slug": "eberron",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "the-mockery",
+    "target_slug": "the-devourer",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "the-shadow",
+    "target_slug": "the-keeper",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "the-traveler",
+    "target_slug": "the-shadow",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "corellon-larethian",
+    "target_slug": "elf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "sehanine-moonbow",
+    "target_slug": "elf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "angharradh",
+    "target_slug": "elf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "hanali-celanil",
+    "target_slug": "elf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "rillifane-rallathil",
+    "target_slug": "elf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "solonor-thelandira",
+    "target_slug": "elf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "labelas-enoreth",
+    "target_slug": "elf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "deep-sashelas",
+    "target_slug": "elf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "aerdrie-faenya",
+    "target_slug": "elf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "erevan-ilesere",
+    "target_slug": "elf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "lolth",
+    "target_slug": "elf-dark",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "eilistraee",
+    "target_slug": "elf-dark",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "vhaeraun",
+    "target_slug": "elf-dark",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "selvetarm",
+    "target_slug": "elf-dark",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "kiaransalee",
+    "target_slug": "elf-dark",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "ghaunadaur",
+    "target_slug": "elf-dark",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "moradin",
+    "target_slug": "dwarf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "berronar-truesilver",
+    "target_slug": "dwarf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "clangeddin-silverbeard",
+    "target_slug": "dwarf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "abbathor",
+    "target_slug": "dwarf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "dumathoin",
+    "target_slug": "dwarf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "vergadain",
+    "target_slug": "dwarf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "dugmaren-brightmantle",
+    "target_slug": "dwarf",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "yondalla",
+    "target_slug": "halfling",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "arvoreen",
+    "target_slug": "halfling",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "brandobaris",
+    "target_slug": "halfling",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "cyrrollalee",
+    "target_slug": "halfling",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "sheela-peryroyl",
+    "target_slug": "halfling",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "garl-glittergold",
+    "target_slug": "gnome",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "baervan-wildwanderer",
+    "target_slug": "gnome",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "baravar-cloakshadow",
+    "target_slug": "gnome",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "flandal-steelskin",
+    "target_slug": "gnome",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "gaerdal-ironhand",
+    "target_slug": "gnome",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "nebelun",
+    "target_slug": "gnome",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "segojan-earthcaller",
+    "target_slug": "gnome",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "gruumsh",
+    "target_slug": "orc",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "gruumsh",
+    "target_slug": "half-orc",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "bahgtru",
+    "target_slug": "orc",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "ilneval",
+    "target_slug": "orc",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "luthic",
+    "target_slug": "orc",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "shargaas",
+    "target_slug": "orc",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "yurtrus",
+    "target_slug": "orc",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "maglubiyet",
+    "target_slug": "goblin",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "maglubiyet",
+    "target_slug": "hobgoblin",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "maglubiyet",
+    "target_slug": "bugbear",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "bahamut",
+    "target_slug": "dragonborn",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "tiamat",
+    "target_slug": "dragonborn",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "io",
+    "target_slug": "dragonborn",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "sardior",
+    "target_slug": "dragonborn",
+    "relationship_type": "parent_race"
+  },
+  {
+    "source_slug": "corellon-larethian",
+    "target_slug": "gruumsh",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "gruumsh",
+    "target_slug": "corellon-larethian",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "corellon-larethian",
+    "target_slug": "lolth",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "lolth",
+    "target_slug": "corellon-larethian",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "bahamut",
+    "target_slug": "tiamat",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "tiamat",
+    "target_slug": "bahamut",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "moradin",
+    "target_slug": "abbathor",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "moradin",
+    "target_slug": "gruumsh",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "gruumsh",
+    "target_slug": "moradin",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "garl-glittergold",
+    "target_slug": "urdlen",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "urdlen",
+    "target_slug": "garl-glittergold",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "yondalla",
+    "target_slug": "maglubiyet",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "maglubiyet",
+    "target_slug": "gruumsh",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "gruumsh",
+    "target_slug": "maglubiyet",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "eilistraee",
+    "target_slug": "lolth",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "lolth",
+    "target_slug": "eilistraee",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "vhaeraun",
+    "target_slug": "lolth",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "shevarash",
+    "target_slug": "lolth",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "heironeous",
+    "target_slug": "hextor",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "hextor",
+    "target_slug": "heironeous",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "annam-all-father",
+    "target_slug": "stronmaus",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "surtur",
+    "target_slug": "thrym",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "thrym",
+    "target_slug": "surtur",
+    "relationship_type": "enemy"
+  },
+  {
+    "source_slug": "kelemvor",
+    "target_slug": "anubis",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "kelemvor",
+    "target_slug": "hel",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "kelemvor",
+    "target_slug": "hades",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "nerull",
+    "target_slug": "hades",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "nerull",
+    "target_slug": "hel",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "myrkul",
+    "target_slug": "nerull",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "chemosh",
+    "target_slug": "kelemvor",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "shar",
+    "target_slug": "hel",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "tempus",
+    "target_slug": "ares",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "tempus",
+    "target_slug": "thor",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "torm",
+    "target_slug": "athena",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "tyr",
+    "target_slug": "tyr-norse",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "tyr-norse",
+    "target_slug": "tyr",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "kiri-jolith",
+    "target_slug": "torm",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "heironeous",
+    "target_slug": "torm",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "moradin",
+    "target_slug": "hephaestus",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "moradin",
+    "target_slug": "onatar",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "moradin",
+    "target_slug": "ptah",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "gond",
+    "target_slug": "hephaestus",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "hephaestus",
+    "target_slug": "ptah",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "reorx",
+    "target_slug": "moradin",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "reorx",
+    "target_slug": "hephaestus",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "silvanus",
+    "target_slug": "silvanus-celtic",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "silvanus-celtic",
+    "target_slug": "silvanus",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "silvanus",
+    "target_slug": "obad-hai",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "oghma",
+    "target_slug": "oghma-celtic",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "oghma-celtic",
+    "target_slug": "oghma",
+    "relationship_type": "variant"
+  },
+  {
+    "source_slug": "mask",
+    "target_slug": "hermes",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "mask",
+    "target_slug": "loki",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "olidammara",
+    "target_slug": "loki",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "olidammara",
+    "target_slug": "hermes",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "cyric",
+    "target_slug": "loki",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "talos",
+    "target_slug": "zeus",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "talos",
+    "target_slug": "thor",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "umberlee",
+    "target_slug": "poseidon",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "umberlee",
+    "target_slug": "aegir",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "lathander",
+    "target_slug": "apollo",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "lathander",
+    "target_slug": "re-horakhty",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "lathander",
+    "target_slug": "pelor",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "pelor",
+    "target_slug": "re-horakhty",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "pelor",
+    "target_slug": "apollo",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "pelor",
+    "target_slug": "belenus",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "oghma",
+    "target_slug": "thoth",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "oghma",
+    "target_slug": "aureon",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "boccob",
+    "target_slug": "vecna",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "vecna",
+    "target_slug": "thoth",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "sune",
+    "target_slug": "aphrodite",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "sune",
+    "target_slug": "hathor",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "sune",
+    "target_slug": "freya",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "tymora",
+    "target_slug": "tyche",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "tymora",
+    "target_slug": "hermod",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "lolth",
+    "target_slug": "the-abyss",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "bahamut",
+    "target_slug": "mount-celestia",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "tiamat",
+    "target_slug": "nine-hells",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "hel",
+    "target_slug": "shadowfell",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "corellon-larethian",
+    "target_slug": "arborea",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gruumsh",
+    "target_slug": "acheron",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "tharizdun",
+    "target_slug": "the-abyss",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "shar",
+    "target_slug": "shadowfell",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "lathander",
+    "target_slug": "elysium",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "surtur-norse",
+    "target_slug": "plane-of-fire",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "surtur",
+    "target_slug": "plane-of-fire",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "corellon-larethian",
+    "target_slug": "sehanine-moonbow",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "corellon-larethian",
+    "target_slug": "angharradh",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "corellon-larethian",
+    "target_slug": "hanali-celanil",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "angharradh",
+    "target_slug": "aerdrie-faenya",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "angharradh",
+    "target_slug": "hanali-celanil",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "angharradh",
+    "target_slug": "sehanine-moonbow",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "corellon-larethian",
+    "target_slug": "eilistraee",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "moradin",
+    "target_slug": "berronar-truesilver",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "moradin",
+    "target_slug": "clangeddin-silverbeard",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "moradin",
+    "target_slug": "dumathoin",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "clangeddin-silverbeard",
+    "target_slug": "haela-brightaxe",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gruumsh",
+    "target_slug": "bahgtru",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gruumsh",
+    "target_slug": "ilneval",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gruumsh",
+    "target_slug": "luthic",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gruumsh",
+    "target_slug": "shargaas",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "gruumsh",
+    "target_slug": "yurtrus",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "io",
+    "target_slug": "bahamut",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "io",
+    "target_slug": "tiamat",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "io",
+    "target_slug": "sardior",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "sardior",
+    "target_slug": "bahamut",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "sardior",
+    "target_slug": "tiamat",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "annam-all-father",
+    "target_slug": "skoraeus-stonebones",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "annam-all-father",
+    "target_slug": "surtur",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "annam-all-father",
+    "target_slug": "thrym",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "annam-all-father",
+    "target_slug": "grolantor",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "stronmaus",
+    "target_slug": "annam-all-father",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "mystra",
+    "target_slug": "forgotten-realms",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "bane",
+    "target_slug": "forgotten-realms",
+    "relationship_type": "see_also"
+  },
+  {
+    "source_slug": "odin",
+    "target_slug": "ysgard",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "thor",
+    "target_slug": "ysgard",
+    "relationship_type": "related"
+  },
+  {
+    "source_slug": "zeus",
+    "target_slug": "arborea",
+    "relationship_type": "related"
   }
 ]

@@ -67,6 +67,11 @@ SEED_FILES = [
     "monsters_cr19_30.json",
     # World and lore
     "gods.json",
+    "gods_expanded.json",
+    "gods_eberron.json",
+    "gods_nonhuman_elven_dwarven.json",
+    "gods_nonhuman_other.json",
+    "gods_pantheons.json",
     "planes.json",
     "languages.json",
     "settings.json",

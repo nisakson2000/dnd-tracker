@@ -4,6 +4,37 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.4.0 — Wiki Deities & Pantheons Expansion
+**Released:** March 12, 2026
+
+### Arcane Encyclopedia — Deities & Pantheons Update
+- **175 new deity articles** — total now 227 deities, 1,854 articles overall (up from 1,680)
+- **261 new cross-references** (1,204 total) — pantheon links, divine rivalries, race connections, plane associations
+- Complete coverage of all major D&D pantheons
+
+### New Deities (by pantheon)
+- **Forgotten Realms missing** (13): Bhaal, Deneir, Eldath, Gond, Leira, Lliira, Loviatar, Malar, Milil, Myrkul, Savras, Talona, Talos
+- **Dragonlance** (21): Complete pantheon — Paladine, Takhisis, Mishakal, Gilean, Reorx, and all Gods of Good/Neutrality/Evil
+- **Eberron** (20): The Sovereign Host (9), The Dark Six (6), plus Silver Flame, Blood of Vol, Path of Light, Undying Court, Cults of the Dragon Below
+- **Elven / Seldarine** (10): Aerdrie Faenya, Angharradh, Deep Sashelas, Hanali Celanil, Labelas Enoreth, Rillifane Rallathil, and more
+- **Drow / Dark Seldarine** (5): Eilistraee, Ghaunadaur, Kiaransalee, Selvetarm, Vhaeraun
+- **Dwarven / Morndinsamman** (9): Berronar Truesilver, Clangeddin Silverbeard, Dumathoin, Abbathor, and more
+- **Halfling** (5): Arvoreen, Brandobaris, Cyrrollalee, Sheela Peryroyl, Urogalan
+- **Gnome** (8): Baervan Wildwanderer, Baravar Cloakshadow, Nebelun, Urdlen, and more
+- **Orc** (5): Bahgtru, Ilneval, Luthic, Shargaas, Yurtrus
+- **Goblinoid** (3): Maglubiyet, Bargrivyek, Nomog-Geaya
+- **Draconic** (2): Sardior, Io (the Ninefold Dragon)
+- **Giant / Ordning** (6): Annam All-Father, Stronmaus, Skoraeus Stonebones, Surtur, Thrym, Grolantor
+- **Celtic** (14): The Daghdha, Lugh, Morrigan, Nuada, and more
+- **Greek** (19): Zeus, Athena, Apollo, Ares, Hades, Hecate, Poseidon, and more
+- **Egyptian** (14): Re-Horakhty, Anubis, Isis, Osiris, Set, Thoth, and more
+- **Norse** (21): Odin, Thor, Loki, Freya, Hel, Heimdall, and more
+
+### Version Sync
+- All version files bumped to 0.4.0: VERSION, version.json, version.js, package.json (root + frontend), tauri.conf.json, Cargo.toml
+
+---
+
 ## V0.3.9 — Wiki Magic Items & Equipment Expansion
 **Released:** March 12, 2026
 
