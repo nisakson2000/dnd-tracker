@@ -21,7 +21,7 @@ import { APP_VERSION } from '../version';
     asModal?   — if true, renders as overlay panel instead of full screen
 */
 
-const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/nisakson2000/dnd-tracker/main/version.json';
+const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/ArsenalRX/Dnd-tracker/main/version.json';
 
 function compareVersions(a, b) {
   const pa = a.replace(/^[vV]/, '').split('.').map(Number);

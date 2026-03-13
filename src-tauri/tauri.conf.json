@@ -35,7 +35,7 @@
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://github.com/nisakson2000/dnd-tracker/releases/latest/download/latest.json"
+        "https://github.com/ArsenalRX/Dnd-tracker/releases/latest/download/latest.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDUzQjJFNEU5NjdFOEM0MUUKUldRZXhPaG42ZVN5VStZSDdiT1BhUFZlLy9yZjU0SWQwam9kNG1GbjVJUnlrM255SkJrVHVJdWwK"
     }
