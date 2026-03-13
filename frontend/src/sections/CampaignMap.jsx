@@ -566,10 +566,35 @@ export default function CampaignMap({ characterId }) {
         setNpcs(npcData || []);
         setQuests(questData || []);
         setLore(loreData || []);
-        // Use campaign_name for premade map matching, fall back to character name
+        // Use campaign_name for premade map matching
         const campName = overviewData?.overview?.campaign_name || '';
         const charName = overviewData?.overview?.name || '';
-        setCampaignName(campName || charName);
+
+        // If no campaign_name set, try to detect from imported data
+        // (handles characters imported before the campaign_name fix)
+        let detectedName = campName;
+        if (!detectedName) {
+          const premadeNames = Object.keys(PREMADE_MAPS);
+          // Check lore titles for premade location names (e.g. "Havenbrook", "Ironhold")
+          const allText = [
+            ...(loreData || []).map(l => l.title + ' ' + (l.body || '')),
+            ...(npcData || []).map(n => n.location || ''),
+          ].join(' ').toLowerCase();
+
+          for (const name of premadeNames) {
+            const mapData = PREMADE_MAPS[name];
+            // Check if multiple location names from this premade map appear in the data
+            const matches = mapData.locations.filter(loc =>
+              !loc.parent && allText.includes(loc.name.toLowerCase())
+            );
+            if (matches.length >= 2) {
+              detectedName = name;
+              break;
+            }
+          }
+        }
+
+        setCampaignName(detectedName || charName);
       } catch (err) {
         if (!cancelled) toast.error('Failed to load map data');
       } finally {
@@ -1082,6 +1107,9 @@ export default function CampaignMap({ characterId }) {
             <filter id="shadow-sm">
               <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor="#000" floodOpacity="0.5" />
             </filter>
+            <clipPath id="map-clip">
+              <rect x="0" y="0" width={bounds.width} height={bounds.height} rx="8" />
+            </clipPath>
           </defs>
 
           <rect x="0" y="0" width={bounds.width} height={bounds.height} fill="url(#parchment-bg)" rx="8" />
@@ -1089,7 +1117,6 @@ export default function CampaignMap({ characterId }) {
           {/* Background map image (custom upload takes priority over premade) */}
           {(customMapImage || mapData.backgroundImage) && (
             <>
-              <clipPath id="map-clip"><rect x="0" y="0" width={bounds.width} height={bounds.height} rx="8" /></clipPath>
               <image
                 href={customMapImage || mapData.backgroundImage}
                 x="0" y="0"
@@ -1097,15 +1124,14 @@ export default function CampaignMap({ characterId }) {
                 height={bounds.height}
                 preserveAspectRatio="xMidYMid slice"
                 clipPath="url(#map-clip)"
-                opacity="0.35"
-                style={{ filter: 'saturate(0.6) brightness(0.7)' }}
+                opacity="0.7"
+                style={{ filter: 'saturate(0.7) brightness(0.55)' }}
               />
-              {/* Dark vignette overlay to keep pins readable */}
+              {/* Soft overlay to keep pins and labels readable */}
               <rect
                 x="0" y="0"
                 width={bounds.width} height={bounds.height}
-                fill="url(#parchment-bg)"
-                opacity="0.5"
+                fill="rgba(11,9,20,0.3)"
                 rx="8"
               />
             </>
