@@ -14,3 +14,12 @@ export const getArticle = (slug) =>
 
 export const getRelatedArticles = (slug) =>
   invoke('wiki_get_related', { slug })
+
+export const getWikiStats = () =>
+  invoke('wiki_stats')
+
+export const getSubcategories = (category) =>
+  invoke('wiki_subcategories', { category })
+
+export const getRandomArticles = (count = 5, category = null) =>
+  invoke('wiki_random_articles', { count, category })

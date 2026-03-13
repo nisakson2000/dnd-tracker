@@ -390,3 +390,128 @@ pub fn wiki_get_related(
     let detail = wiki_get_article(state, slug)?;
     Ok(detail.related_articles)
 }
+
+#[derive(Serialize, Clone)]
+pub struct WikiStats {
+    pub total_articles: i64,
+    pub total_categories: i64,
+    pub total_cross_references: i64,
+    pub top_categories: Vec<CategoryArticleCount>,
+}
+
+#[derive(Serialize, Clone)]
+pub struct CategoryArticleCount {
+    pub category: String,
+    pub count: i64,
+}
+
+#[tauri::command]
+pub fn wiki_stats(
+    state: State<'_, AppState>,
+) -> Result<WikiStats, String> {
+    let wiki = state.wiki_conn.lock().map_err(|e| e.to_string())?;
+
+    let total_articles: i64 = wiki
+        .query_row("SELECT COUNT(*) FROM wiki_articles", [], |row| row.get(0))
+        .map_err(|e| e.to_string())?;
+
+    let total_categories: i64 = wiki
+        .query_row("SELECT COUNT(DISTINCT category) FROM wiki_articles", [], |row| row.get(0))
+        .map_err(|e| e.to_string())?;
+
+    let total_cross_references: i64 = wiki
+        .query_row("SELECT COUNT(*) FROM wiki_cross_references", [], |row| row.get(0))
+        .map_err(|e| e.to_string())?;
+
+    let mut stmt = wiki
+        .prepare("SELECT category, COUNT(*) AS cnt FROM wiki_articles GROUP BY category ORDER BY cnt DESC LIMIT 6")
+        .map_err(|e| e.to_string())?;
+    let top_categories: Vec<CategoryArticleCount> = stmt
+        .query_map([], |row| {
+            Ok(CategoryArticleCount {
+                category: row.get(0)?,
+                count: row.get(1)?,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    Ok(WikiStats { total_articles, total_categories, total_cross_references, top_categories })
+}
+
+#[derive(Serialize, Clone)]
+pub struct SubcategoryCount {
+    pub subcategory: String,
+    pub count: i64,
+}
+
+#[tauri::command]
+pub fn wiki_subcategories(
+    state: State<'_, AppState>,
+    category: String,
+) -> Result<Vec<SubcategoryCount>, String> {
+    let wiki = state.wiki_conn.lock().map_err(|e| e.to_string())?;
+
+    let mut stmt = wiki
+        .prepare("SELECT subcategory, COUNT(*) AS cnt FROM wiki_articles WHERE category = ?1 AND subcategory != '' GROUP BY subcategory ORDER BY subcategory")
+        .map_err(|e| e.to_string())?;
+
+    let items: Vec<SubcategoryCount> = stmt
+        .query_map([&category], |row| {
+            Ok(SubcategoryCount {
+                subcategory: row.get(0)?,
+                count: row.get(1)?,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    Ok(items)
+}
+
+#[tauri::command]
+pub fn wiki_random_articles(
+    state: State<'_, AppState>,
+    count: Option<i64>,
+    category: Option<String>,
+) -> Result<Vec<WikiArticleSummary>, String> {
+    let count = count.unwrap_or(5).max(1).min(20);
+    let wiki = state.wiki_conn.lock().map_err(|e| e.to_string())?;
+
+    let (sql, params): (String, Vec<Box<dyn rusqlite::types::ToSql>>) = if let Some(ref cat) = category {
+        (
+            "SELECT id, slug, title, category, subcategory, ruleset, summary, tags, sort_order, source FROM wiki_articles WHERE category = ?1 ORDER BY RANDOM() LIMIT ?2".to_string(),
+            vec![Box::new(cat.clone()) as Box<dyn rusqlite::types::ToSql>, Box::new(count)],
+        )
+    } else {
+        (
+            "SELECT id, slug, title, category, subcategory, ruleset, summary, tags, sort_order, source FROM wiki_articles ORDER BY RANDOM() LIMIT ?1".to_string(),
+            vec![Box::new(count) as Box<dyn rusqlite::types::ToSql>],
+        )
+    };
+
+    let param_refs: Vec<&dyn rusqlite::types::ToSql> = params.iter().map(|p| p.as_ref()).collect();
+    let mut stmt = wiki.prepare(&sql).map_err(|e| e.to_string())?;
+    let items: Vec<WikiArticleSummary> = stmt
+        .query_map(param_refs.as_slice(), |row| {
+            Ok(WikiArticleSummary {
+                id: row.get(0)?,
+                slug: row.get(1)?,
+                title: row.get(2)?,
+                category: row.get(3)?,
+                subcategory: row.get(4).unwrap_or_default(),
+                ruleset: row.get(5).unwrap_or_else(|_| "universal".to_string()),
+                summary: row.get(6).unwrap_or_default(),
+                tags: row.get(7).unwrap_or_default(),
+                sort_order: row.get(8).unwrap_or(0),
+                source: row.get(9).unwrap_or_else(|_| "SRD 5.1".to_string()),
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    Ok(items)
+}

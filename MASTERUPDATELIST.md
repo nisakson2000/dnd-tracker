@@ -4,6 +4,43 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.4.4 — Arcane Encyclopedia Redesign Phase 1
+**Released:** March 12, 2026
+
+### Wiki Landing Page
+- **Hero Section** — animated count-up stat counters (2,018 Articles, 30 Categories, 1,204 Cross-References) with gold shimmer title
+- **Discover Rail** — 6 random featured articles on each visit, color-coded by category with accent top borders
+- **Category Cards** — 31 categories with unique accent colors, lucide-react icons, descriptions, and hover glow effects
+- **Random Article Button** — navigate to a random entry from any of the 2,000+ articles
+- **Skeleton Loading** — animated placeholder cards during data fetch
+- **Pagination Upgrade** — numbered page buttons with ellipsis and total count display
+
+### Category Browsing
+- **Subcategory Tabs** — horizontal scrollable pill bar to filter within categories (e.g., Abjuration, Conjuration for spells)
+- **Category Header** — icon, label, description, and article count when browsing a category
+- **3 new backend commands** — `wiki_stats`, `wiki_subcategories`, `wiki_random_articles`
+
+### Article Detail Page
+- **Spell Stat Blocks** — school-colored card with casting time/range/components/duration grid, concentration/ritual badges, class pills, higher levels
+- **Monster Stat Blocks** — classic crimson-bordered block with 6-column ability score row + modifiers, CR badge, AC/HP/Speed, legendary indicator
+- **Class Stat Blocks** — hit die badge, saving throw pills, armor/weapon/tool proficiencies, spellcasting indicator, subclass level
+- **Equipment Stat Blocks** — 6-tier rarity coloring (Common through Artifact), damage/AC display, attunement badge, weight/cost, property pills
+- **Race Stat Blocks** — size/speed/darkvision quick stats, ability bonus pills, languages, racial traits, subraces
+- **Generic Fallback** — categories without dedicated stat blocks still render metadata as clean key-value panels
+- **Table of Contents** — auto-generated sticky sidebar from article headings with scroll-to-section navigation
+- **Breadcrumb Fix** — proper `<Link>` navigation (Wiki > Category > Article) instead of fragile `navigate(-1)`
+- **Category-colored badges** — article badges and summary borders use each category's accent color
+- **Related articles** — now display category-colored icons next to each linked article
+
+### Technical
+- **`wikiCategoryConfig.js`** — single source of truth for 31 category colors, icons, labels, and descriptions
+- **`StatBlockRouter.jsx`** — automatically routes to the correct stat block renderer based on article category
+- **9 new component files** in `components/wiki/` and `components/wiki/statblocks/`
+- **3 new Rust commands** registered in Tauri invoke handler
+- **Frontend API** — 3 new functions: `getWikiStats()`, `getSubcategories()`, `getRandomArticles()`
+
+---
+
 ## V0.1.5 BETA — Update System Overhaul, Campaign Map Fix, Dev Tools Cleanup
 **Released:** March 12, 2026
 

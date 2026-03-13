@@ -1,55 +1,22 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import {
-  Search, ArrowLeft, BookOpen, Sword, Sparkles, Shield, Skull,
-  ScrollText, Globe, Users, Star, Flame, Crosshair, Heart,
-  Gem, Map, Compass, ChevronLeft, ChevronRight, X,
+  Search, ArrowLeft, BookOpen, ChevronLeft, ChevronRight, X, Shuffle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { searchArticles, getCategories, listArticles } from '../api/wiki';
+import {
+  searchArticles, getCategories, listArticles,
+  getWikiStats, getSubcategories, getRandomArticles,
+} from '../api/wiki';
+import { getCategoryConfig } from '../data/wikiCategoryConfig';
 import ArcaneWidget from '../components/ArcaneWidget';
+import WikiHero from '../components/wiki/WikiHero';
+import CategoryCard from '../components/wiki/CategoryCard';
+import SubcategoryTabs from '../components/wiki/SubcategoryTabs';
 
-const CATEGORY_ICONS = {
-  'conditions': Heart,
-  'rules': ScrollText,
-  'ability-scores': Star,
-  'skills': Crosshair,
-  'classes': Users,
-  'subclasses': Users,
-  'races': Globe,
-  'backgrounds': BookOpen,
-  'feats': Flame,
-  'equipment': Shield,
-  'magic-items': Gem,
-  'tools': Compass,
-  'spells': Sparkles,
-  'monsters': Skull,
-  'gods': Star,
-  'planes': Map,
-  'languages': ScrollText,
-  'settings': Globe,
-  'poisons': Flame,
-  'diseases': Heart,
-  'adventuring': Compass,
-  'combat': Sword,
-  'dm-tools': BookOpen,
-  'alignments': Globe,
-  'schools-of-magic': Sparkles,
-  'creature-types': Skull,
-  'character-options': Users,
-};
-
-function getCategoryIcon(category) {
-  const key = category.toLowerCase().replace(/\s+/g, '-');
-  return CATEGORY_ICONS[key] || BookOpen;
-}
-
-function formatCategoryName(category) {
-  return category
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, c => c.toUpperCase());
+function formatCategoryName(str) {
+  return (str || '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function sanitizeHTML(html) {
@@ -80,12 +47,36 @@ export default function WikiPage() {
   const [total, setTotal] = useState(0);
   const debounceRef = useRef(null);
 
-  // Load categories on mount
+  // New state for redesign
+  const [stats, setStats] = useState(null);
+  const [featured, setFeatured] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [activeSubcategory, setActiveSubcategory] = useState(null);
+
+  // Load stats, categories, and featured on mount
   useEffect(() => {
     getCategories()
       .then(setCategories)
       .catch(err => toast.error(`Failed to load categories: ${err.message}`));
+    getWikiStats()
+      .then(setStats)
+      .catch(() => {});
+    getRandomArticles(6)
+      .then(setFeatured)
+      .catch(() => {});
   }, []);
+
+  // Load subcategories when a category is selected
+  useEffect(() => {
+    if (!selectedCategory) {
+      setSubcategories([]);
+      setActiveSubcategory(null);
+      return;
+    }
+    getSubcategories(selectedCategory)
+      .then(setSubcategories)
+      .catch(() => setSubcategories([]));
+  }, [selectedCategory]);
 
   // Search with debounce
   const doSearch = useCallback((q, pg = 1) => {
@@ -128,13 +119,15 @@ export default function WikiPage() {
   };
 
   // Browse by category
-  const browseCategory = useCallback((category, pg = 1) => {
+  const browseCategory = useCallback((category, pg = 1, subcat = null) => {
     setLoading(true);
     setSelectedCategory(category);
     setQuery('');
     setSearchResults(null);
-    setSearchParams({ category }, { replace: true });
-    listArticles({ category, page: pg, per_page: 50, sort_by: 'title' })
+    const params = { category };
+    if (subcat) params.subcategory = subcat;
+    setSearchParams(params, { replace: true });
+    listArticles({ category, subcategory: subcat || undefined, page: pg, per_page: 50, sort_by: 'title' })
       .then(data => {
         setArticles(data.items);
         setTotalPages(data.total_pages);
@@ -145,11 +138,28 @@ export default function WikiPage() {
       .finally(() => setLoading(false));
   }, [setSearchParams]);
 
+  // Handle subcategory selection
+  const handleSubcategorySelect = (subcat) => {
+    setActiveSubcategory(subcat);
+    if (selectedCategory) {
+      browseCategory(selectedCategory, 1, subcat);
+    }
+  };
+
+  // Random article navigation
+  const goToRandomArticle = () => {
+    getRandomArticles(1)
+      .then(items => {
+        if (items.length > 0) navigate(`/wiki/${items[0].slug}`);
+      })
+      .catch(() => toast.error('Could not fetch a random article'));
+  };
+
   // Restore state from URL on mount
   useEffect(() => {
     const cat = searchParams.get('category');
     const q = searchParams.get('q');
-    if (cat) browseCategory(cat); // eslint-disable-line react-hooks/set-state-in-effect
+    if (cat) browseCategory(cat);
     else if (q) doSearch(q);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -157,18 +167,18 @@ export default function WikiPage() {
     if (searchResults !== null && query.trim()) {
       doSearch(query, newPage);
     } else if (selectedCategory) {
-      browseCategory(selectedCategory, newPage);
+      browseCategory(selectedCategory, newPage, activeSubcategory);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const displayItems = searchResults !== null ? searchResults : articles;
-  const showCategoryGrid = searchResults === null && !selectedCategory;
+  const showHome = searchResults === null && !selectedCategory;
 
   return (
-    <div className="min-h-screen flex flex-col items-center py-8 px-4 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="w-full flex items-center gap-4 mb-8">
+    <div className="min-h-screen flex flex-col items-center py-6 px-4 max-w-6xl mx-auto">
+      {/* Back button */}
+      <div className="w-full flex items-center gap-4 mb-4">
         <button
           onClick={() => window.history.back()}
           className="flex items-center gap-2 text-sm text-amber-200/60 hover:text-amber-200 transition-colors"
@@ -178,31 +188,11 @@ export default function WikiPage() {
         </button>
       </div>
 
-      <motion.div
-        className="text-center mb-8"
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-      >
-        <h1
-          className="text-4xl md:text-5xl font-display font-bold tracking-wider"
-          style={{
-            background: 'linear-gradient(135deg, #f0d878, #c9a84c, #f0d878)',
-            backgroundSize: '200% 200%',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            animation: 'shimmer 3s ease-in-out infinite',
-          }}
-        >
-          Arcane Encyclopedia
-        </h1>
-        <p className="text-amber-200/40 mt-2 flex items-center justify-center gap-2">
-          <BookOpen size={16} />
-          2,000+ articles of D&D knowledge
-        </p>
-      </motion.div>
+      {/* Hero Section */}
+      {showHome && <WikiHero stats={stats} />}
 
       {/* Search Bar */}
-      <div className="w-full max-w-2xl mb-8 relative">
+      <div className="w-full max-w-2xl mb-6 relative">
         <div className="relative">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-200/40 pointer-events-none" />
           <input
@@ -225,113 +215,159 @@ export default function WikiPage() {
         </div>
         {searchResults !== null && (
           <p className="text-sm text-amber-200/40 mt-2">
-            {total} result{total !== 1 ? 's' : ''} for "{query}"
+            {total} result{total !== 1 ? 's' : ''} for &quot;{query}&quot;
           </p>
         )}
       </div>
 
-      {/* Category breadcrumb when browsing */}
-      {selectedCategory && (
-        <div className="w-full mb-6 flex items-center gap-2 text-sm">
+      {/* Quick Actions */}
+      {showHome && (
+        <div className="flex gap-3 mb-8">
           <button
-            onClick={() => {
-              setSelectedCategory(null);
-              setArticles([]);
-              setSearchParams({}, { replace: true });
-            }}
-            className="text-amber-200/60 hover:text-amber-200 transition-colors"
+            onClick={goToRandomArticle}
+            className="btn-secondary flex items-center gap-2 text-xs"
           >
-            All Categories
+            <Shuffle size={14} />
+            Random Article
           </button>
-          <span className="text-amber-200/30">/</span>
-          <span className="text-amber-100">{formatCategoryName(selectedCategory)}</span>
-          <span className="text-amber-200/40 ml-2">({total} articles)</span>
+        </div>
+      )}
+
+      {/* Featured Articles Rail */}
+      {showHome && featured.length > 0 && (
+        <div className="w-full mb-8">
+          <h2 className="font-display text-sm text-amber-200/50 uppercase tracking-wider mb-3">
+            Discover
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {featured.map((item, i) => {
+              const config = getCategoryConfig(item.category);
+              const Icon = config.icon;
+              return (
+                <motion.div
+                  key={item.slug}
+                  className="card-grimoire cursor-pointer hover:border-gold/60 p-3"
+                  style={{ borderTop: `2px solid ${config.color}` }}
+                  onClick={() => navigate(`/wiki/${item.slug}`)}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.05 }}
+                >
+                  <Icon size={14} style={{ color: config.color }} className="mb-2" />
+                  <p className="text-xs font-display text-amber-100 line-clamp-2 mb-1">
+                    {item.title}
+                  </p>
+                  <p className="text-[10px] text-amber-200/40">{config.label}</p>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       )}
 
       {/* Category Grid */}
-      {showCategoryGrid && (
-        <motion.div
-          className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          {categories.map((cat, i) => {
-            const Icon = getCategoryIcon(cat.category);
-            return (
-              <motion.button
+      {showHome && (
+        <div className="w-full mb-8">
+          <h2 className="font-display text-sm text-amber-200/50 uppercase tracking-wider mb-3">
+            Browse by Category
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {categories.map((cat, i) => (
+              <CategoryCard
                 key={cat.category}
+                category={cat.category}
+                count={cat.count}
+                index={i}
                 onClick={() => browseCategory(cat.category)}
-                className="card-grimoire flex flex-col items-center gap-3 py-5 px-3 text-center hover:border-gold/60 transition-all"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-              >
-                <Icon size={24} className="text-amber-200/60" />
-                <span className="font-display text-sm text-amber-100">
-                  {formatCategoryName(cat.category)}
-                </span>
-                <span className="text-xs text-amber-200/40">
-                  {cat.count} article{cat.count !== 1 ? 's' : ''}
-                </span>
-              </motion.button>
-            );
-          })}
-        </motion.div>
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Category browsing header */}
+      {selectedCategory && (
+        <CategoryBrowseHeader
+          category={selectedCategory}
+          total={total}
+          subcategories={subcategories}
+          activeSubcategory={activeSubcategory}
+          onSubcategorySelect={handleSubcategorySelect}
+          onBack={() => {
+            setSelectedCategory(null);
+            setArticles([]);
+            setActiveSubcategory(null);
+            setSearchParams({}, { replace: true });
+          }}
+        />
       )}
 
       {/* Loading */}
       {loading && (
-        <div className="py-12 text-amber-200/40">Searching the archives...</div>
+        <div className="w-full space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="card-grimoire animate-pulse">
+              <div className="h-5 bg-white/5 rounded w-1/3 mb-2" />
+              <div className="h-3 bg-white/5 rounded w-2/3 mb-2" />
+              <div className="h-3 bg-white/5 rounded w-1/4" />
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Results List */}
       {!loading && displayItems.length > 0 && (
-        <div className="w-full space-y-3">
-          {displayItems.map((item, i) => (
-            <motion.div
-              key={item.id || item.slug}
-              className="card-grimoire cursor-pointer hover:border-gold/60"
-              onClick={() => navigate(`/wiki/${item.slug}`)}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.02 }}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-display text-lg text-amber-100 mb-1">
-                    {item.title}
-                  </h3>
-                  {item.snippet ? (
-                    <p
-                      className="text-sm text-amber-200/60 mb-2 line-clamp-2"
-                      dangerouslySetInnerHTML={{ __html: sanitizeHTML(item.snippet) }}
-                    />
-                  ) : (
-                    <p className="text-sm text-amber-200/60 mb-2 line-clamp-2">
-                      {item.summary}
-                    </p>
-                  )}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs bg-amber-900/30 text-amber-200/60 px-2 py-0.5 rounded">
-                      {formatCategoryName(item.category)}
-                    </span>
-                    {item.subcategory && (
-                      <span className="text-xs bg-purple-900/20 text-purple-300/60 px-2 py-0.5 rounded">
-                        {formatCategoryName(item.subcategory)}
-                      </span>
+        <div className="w-full space-y-2">
+          {displayItems.map((item, i) => {
+            const config = getCategoryConfig(item.category);
+            return (
+              <motion.div
+                key={item.id || item.slug}
+                className="card-grimoire cursor-pointer hover:border-gold/60"
+                style={{ borderLeft: `3px solid ${config.color}` }}
+                onClick={() => navigate(`/wiki/${item.slug}`)}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.02 }}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-display text-base text-amber-100 mb-1">
+                      {item.title}
+                    </h3>
+                    {item.snippet ? (
+                      <p
+                        className="text-sm text-amber-200/60 mb-2 line-clamp-2"
+                        dangerouslySetInnerHTML={{ __html: sanitizeHTML(item.snippet) }}
+                      />
+                    ) : (
+                      <p className="text-sm text-amber-200/60 mb-2 line-clamp-2">
+                        {item.summary}
+                      </p>
                     )}
-                    {item.ruleset && item.ruleset !== 'universal' && (
-                      <span className="text-[10px] bg-amber-900/20 text-amber-200/40 px-1.5 py-0.5 rounded">
-                        {item.ruleset === '5e-2024' ? '2024 PHB' : '2014 PHB'}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className="text-[10px] px-2 py-0.5 rounded font-medium"
+                        style={{ backgroundColor: `${config.color}20`, color: `${config.color}cc` }}
+                      >
+                        {config.label}
                       </span>
-                    )}
+                      {item.subcategory && (
+                        <span className="text-[10px] bg-purple-900/20 text-purple-300/60 px-2 py-0.5 rounded">
+                          {formatCategoryName(item.subcategory)}
+                        </span>
+                      )}
+                      {item.ruleset && item.ruleset !== 'universal' && (
+                        <span className="text-[10px] bg-amber-900/20 text-amber-200/40 px-1.5 py-0.5 rounded">
+                          {item.ruleset === '5e-2024' ? '2024 PHB' : '2014 PHB'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
@@ -345,30 +381,104 @@ export default function WikiPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center gap-4 mt-8">
-          <button
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page <= 1}
-            className="btn-secondary flex items-center gap-1 disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft size={14} /> Prev
-          </button>
-          <span className="text-sm text-amber-200/50">
-            Page {page} of {totalPages}
-          </span>
-          <button
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page >= totalPages}
-            className="btn-secondary flex items-center gap-1 disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            Next <ChevronRight size={14} />
-          </button>
-        </div>
+        <Pagination page={page} totalPages={totalPages} total={total} onChange={handlePageChange} />
       )}
 
       <div className="h-12" />
-
       <ArcaneWidget section="rules" />
+    </div>
+  );
+}
+
+/** Category browsing header with subcategory tabs */
+function CategoryBrowseHeader({ category, total, subcategories, activeSubcategory, onSubcategorySelect, onBack }) {
+  const config = getCategoryConfig(category);
+  const Icon = config.icon;
+
+  return (
+    <div className="w-full mb-6">
+      <div className="flex items-center gap-3 mb-4">
+        <button
+          onClick={onBack}
+          className="text-amber-200/60 hover:text-amber-200 transition-colors text-sm"
+        >
+          All Categories
+        </button>
+        <span className="text-amber-200/30">/</span>
+        <div className="flex items-center gap-2">
+          <Icon size={18} style={{ color: config.color }} />
+          <span className="font-display text-lg text-amber-100">{config.label}</span>
+          <span className="text-xs text-amber-200/40">({total} articles)</span>
+        </div>
+      </div>
+      {config.description && (
+        <p className="text-sm text-amber-200/50 mb-4">{config.description}</p>
+      )}
+      <SubcategoryTabs
+        subcategories={subcategories}
+        activeSubcategory={activeSubcategory}
+        onSelect={onSubcategorySelect}
+      />
+    </div>
+  );
+}
+
+/** Pagination with page numbers */
+function Pagination({ page, totalPages, total, onChange }) {
+  const pages = [];
+  const start = Math.max(1, page - 2);
+  const end = Math.min(totalPages, page + 2);
+  for (let i = start; i <= end; i++) pages.push(i);
+
+  return (
+    <div className="flex items-center gap-2 mt-8">
+      <button
+        onClick={() => onChange(page - 1)}
+        disabled={page <= 1}
+        className="btn-secondary flex items-center gap-1 text-xs disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        <ChevronLeft size={14} /> Prev
+      </button>
+
+      {start > 1 && (
+        <>
+          <button onClick={() => onChange(1)} className="btn-secondary text-xs px-3">1</button>
+          {start > 2 && <span className="text-amber-200/30 text-xs">...</span>}
+        </>
+      )}
+
+      {pages.map(p => (
+        <button
+          key={p}
+          onClick={() => onChange(p)}
+          className={`text-xs px-3 py-1.5 rounded transition-colors ${
+            p === page
+              ? 'bg-amber-700/40 text-amber-100 border border-gold/60'
+              : 'btn-secondary'
+          }`}
+        >
+          {p}
+        </button>
+      ))}
+
+      {end < totalPages && (
+        <>
+          {end < totalPages - 1 && <span className="text-amber-200/30 text-xs">...</span>}
+          <button onClick={() => onChange(totalPages)} className="btn-secondary text-xs px-3">{totalPages}</button>
+        </>
+      )}
+
+      <button
+        onClick={() => onChange(page + 1)}
+        disabled={page >= totalPages}
+        className="btn-secondary flex items-center gap-1 text-xs disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        Next <ChevronRight size={14} />
+      </button>
+
+      <span className="text-[10px] text-amber-200/30 ml-2">
+        {total} total
+      </span>
     </div>
   );
 }

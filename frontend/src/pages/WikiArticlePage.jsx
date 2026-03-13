@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { ArrowLeft, BookOpen, ExternalLink, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getArticle } from '../api/wiki';
+import { getCategoryConfig } from '../data/wikiCategoryConfig';
 import ArcaneWidget from '../components/ArcaneWidget';
+import StatBlockRouter from '../components/wiki/statblocks/StatBlockRouter';
 
 const RELATIONSHIP_LABELS = {
   'related': 'Related',
@@ -54,7 +55,7 @@ function formatContent(content) {
           </thead>
           <tbody>
             {dataRows.map((row, i) => (
-              <tr key={`row-${i}`} className={i % 2 === 0 ? 'bg-white/2' : ''}>
+              <tr key={`row-${i}`} className={i % 2 === 0 ? 'bg-white/[0.02]' : ''}>
                 {row.map((cell, j) => (
                   <td key={`cell-${i}-${j}`} className="px-3 py-2 text-amber-200/70 border-b border-gold/10">
                     {cell}
@@ -73,9 +74,7 @@ function formatContent(content) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Table row (pipe-separated)
     if (line.includes('|') && line.trim().startsWith('|')) {
-      // Skip separator rows like |---|---|
       if (/^\|[\s\-:|]+\|$/.test(line.trim())) continue;
       const cells = line.split('|').filter(c => c.trim() !== '').map(c => c.trim());
       if (cells.length > 0) {
@@ -87,41 +86,37 @@ function formatContent(content) {
 
     if (inTable) flushTable();
 
-    // Headers
     if (line.startsWith('### ')) {
+      const id = `section-${line.slice(4).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
       elements.push(
-        <h4 key={i} className="font-display text-amber-100 mt-5 mb-2 text-base">
+        <h4 key={i} id={id} className="font-display text-amber-100 mt-5 mb-2 text-base scroll-mt-20">
           {line.slice(4)}
         </h4>
       );
     } else if (line.startsWith('## ')) {
+      const id = `section-${line.slice(3).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
       elements.push(
-        <h3 key={i} className="font-display text-amber-100 mt-6 mb-2">
+        <h3 key={i} id={id} className="font-display text-amber-100 mt-6 mb-2 scroll-mt-20">
           {line.slice(3)}
         </h3>
       );
     } else if (line.startsWith('# ')) {
+      const id = `section-${line.slice(2).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
       elements.push(
-        <h2 key={i} className="font-display text-amber-100 mt-6 mb-3">
+        <h2 key={i} id={id} className="font-display text-amber-100 mt-6 mb-3 scroll-mt-20">
           {line.slice(2)}
         </h2>
       );
-    }
-    // Bullet points
-    else if (line.match(/^\s*[-*]\s/)) {
+    } else if (line.match(/^\s*[-*]\s/)) {
       const text = line.replace(/^\s*[-*]\s/, '');
       elements.push(
         <li key={i} className="text-amber-200/70 ml-5 list-disc mb-1">
           {renderInlineFormatting(text)}
         </li>
       );
-    }
-    // Empty lines
-    else if (line.trim() === '') {
+    } else if (line.trim() === '') {
       elements.push(<div key={i} className="h-3" />);
-    }
-    // Regular paragraphs
-    else {
+    } else {
       elements.push(
         <p key={i} className="text-amber-200/70 mb-2 leading-relaxed">
           {renderInlineFormatting(line)}
@@ -131,12 +126,10 @@ function formatContent(content) {
   }
 
   if (inTable) flushTable();
-
   return elements;
 }
 
 function renderInlineFormatting(text) {
-  // Bold: **text**
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
@@ -146,47 +139,17 @@ function renderInlineFormatting(text) {
   });
 }
 
-function MetadataPanel({ metadata }) {
-  if (!metadata) return null;
-
-  let parsed = metadata;
-  if (typeof metadata === 'string') {
-    try { parsed = JSON.parse(metadata); } catch { return null; }
-  }
-
-  if (!parsed || typeof parsed !== 'object' || Object.keys(parsed).length === 0) return null;
-
-  return (
-    <div className="card-grimoire mt-6">
-      <h4 className="font-display text-sm text-amber-200/60 mb-3 uppercase tracking-wider">
-        Details
-      </h4>
-      <dl className="space-y-2">
-        {Object.entries(parsed).map(([key, value]) => {
-          if (value === null || value === undefined || value === '') return null;
-          const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-          let display;
-
-          if (Array.isArray(value)) {
-            display = value.join(', ');
-          } else if (typeof value === 'object') {
-            display = Object.entries(value).map(([k, v]) => `${k}: ${v}`).join(', ');
-          } else if (typeof value === 'boolean') {
-            display = value ? 'Yes' : 'No';
-          } else {
-            display = String(value);
-          }
-
-          return (
-            <div key={key}>
-              <dt className="text-xs text-amber-200/40 uppercase tracking-wide">{label}</dt>
-              <dd className="text-sm text-amber-200/70">{display}</dd>
-            </div>
-          );
-        })}
-      </dl>
-    </div>
-  );
+/** Extract headings from content for table of contents */
+function extractHeadings(content) {
+  if (!content) return [];
+  return content.split('\n')
+    .filter(line => /^#{1,3}\s/.test(line))
+    .map(line => {
+      const level = line.match(/^(#+)/)[1].length;
+      const text = line.replace(/^#+\s/, '');
+      const id = `section-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      return { level, text, id };
+    });
 }
 
 export default function WikiArticlePage() {
@@ -196,7 +159,7 @@ export default function WikiArticlePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
+    setLoading(true);
     getArticle(slug)
       .then(setArticle)
       .catch(err => {
@@ -208,14 +171,23 @@ export default function WikiArticlePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-amber-200/40">
-        Opening the tome...
+      <div className="min-h-screen py-8 px-4 max-w-5xl mx-auto">
+        <div className="animate-pulse space-y-4">
+          <div className="h-4 bg-white/5 rounded w-1/4" />
+          <div className="h-10 bg-white/5 rounded w-2/3" />
+          <div className="h-3 bg-white/5 rounded w-full" />
+          <div className="h-3 bg-white/5 rounded w-5/6" />
+          <div className="h-3 bg-white/5 rounded w-4/6" />
+        </div>
       </div>
     );
   }
 
   if (!article) return null;
 
+  const config = getCategoryConfig(article.category);
+  const Icon = config.icon;
+  const headings = extractHeadings(article.content);
   const relatedGroups = {};
   (article.related_articles || []).forEach(rel => {
     const type = rel.relationship_type || 'related';
@@ -225,26 +197,27 @@ export default function WikiArticlePage() {
 
   return (
     <div className="min-h-screen py-8 px-4 max-w-5xl mx-auto">
-      {/* Breadcrumb */}
+      {/* Breadcrumb — proper links instead of navigate(-1) */}
       <motion.div
         className="flex items-center gap-2 text-sm mb-6 flex-wrap"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <button
-          onClick={() => navigate(-1)}
+        <Link
+          to="/wiki"
           className="flex items-center gap-1 text-amber-200/60 hover:text-amber-200 transition-colors"
         >
           <ArrowLeft size={14} />
           Wiki
-        </button>
+        </Link>
         <span className="text-amber-200/30">/</span>
-        <button
-          onClick={() => navigate(-1)}
-          className="text-amber-200/60 hover:text-amber-200 transition-colors"
+        <Link
+          to={`/wiki?category=${article.category}`}
+          className="text-amber-200/60 hover:text-amber-200 transition-colors flex items-center gap-1"
         >
-          {formatCategoryName(article.category)}
-        </button>
+          <Icon size={12} style={{ color: config.color }} />
+          {config.label}
+        </Link>
         {article.subcategory && (
           <>
             <span className="text-amber-200/30">/</span>
@@ -267,8 +240,11 @@ export default function WikiArticlePage() {
                 {article.title}
               </h1>
               <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className="text-xs bg-amber-900/30 text-amber-200/60 px-2 py-0.5 rounded">
-                  {formatCategoryName(article.category)}
+                <span
+                  className="text-xs px-2 py-0.5 rounded font-medium"
+                  style={{ backgroundColor: `${config.color}20`, color: `${config.color}cc` }}
+                >
+                  {config.label}
                 </span>
                 {article.subcategory && (
                   <span className="text-xs bg-purple-900/20 text-purple-300/60 px-2 py-0.5 rounded">
@@ -287,13 +263,16 @@ export default function WikiArticlePage() {
                 )}
               </div>
               {article.summary && (
-                <p className="text-amber-200/60 italic border-l-2 border-gold/30 pl-4">
+                <p className="text-amber-200/60 italic border-l-2 pl-4" style={{ borderColor: `${config.color}50` }}>
                   {article.summary}
                 </p>
               )}
             </div>
 
-            <hr className="divider-gold" />
+            {/* Stat Block — category-specific metadata rendering */}
+            <StatBlockRouter category={article.category} metadata={article.metadata_json} />
+
+            <hr className="divider-gold my-4" />
 
             {/* Article content */}
             <div className="mt-4">
@@ -323,8 +302,30 @@ export default function WikiArticlePage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
         >
-          {/* Metadata */}
-          <MetadataPanel metadata={article.metadata_json} />
+          {/* Table of Contents */}
+          {headings.length > 2 && (
+            <div className="card-grimoire">
+              <h4 className="font-display text-sm text-amber-200/60 mb-3 uppercase tracking-wider">
+                Contents
+              </h4>
+              <nav className="space-y-1">
+                {headings.map((h, i) => (
+                  <a
+                    key={i}
+                    href={`#${h.id}`}
+                    className="block text-sm text-amber-200/60 hover:text-amber-100 transition-colors"
+                    style={{ paddingLeft: `${(h.level - 1) * 12}px` }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    {h.text}
+                  </a>
+                ))}
+              </nav>
+            </div>
+          )}
 
           {/* Related Articles */}
           {Object.keys(relatedGroups).length > 0 && (
@@ -340,18 +341,21 @@ export default function WikiArticlePage() {
                       {RELATIONSHIP_LABELS[type] || type}
                     </p>
                     <ul className="space-y-1">
-                      {items.map(rel => (
-                        <li key={rel.slug}>
-                          <Link
-                            to={`/wiki/${rel.slug}`}
-                            replace
-                            className="text-sm text-amber-200/70 hover:text-amber-100 transition-colors flex items-center gap-1"
-                          >
-                            <BookOpen size={10} className="flex-shrink-0 opacity-40" />
-                            {rel.title}
-                          </Link>
-                        </li>
-                      ))}
+                      {items.map(rel => {
+                        const relConfig = getCategoryConfig(rel.category);
+                        return (
+                          <li key={rel.slug}>
+                            <Link
+                              to={`/wiki/${rel.slug}`}
+                              replace
+                              className="text-sm text-amber-200/70 hover:text-amber-100 transition-colors flex items-center gap-1.5"
+                            >
+                              <BookOpen size={10} style={{ color: relConfig.color }} className="flex-shrink-0" />
+                              {rel.title}
+                            </Link>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 ))}

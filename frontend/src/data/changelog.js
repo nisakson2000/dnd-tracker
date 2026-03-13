@@ -3,6 +3,28 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.4.4',
+    date: '03/12/2026',
+    title: 'Arcane Encyclopedia Redesign — Phase 1',
+    changes: [
+      'Wiki Hero Section — animated count-up stats (articles, categories, cross-references) with gold shimmer title',
+      'Category Cards — 31 categories with unique accent colors, icons, descriptions, and hover glow effects',
+      'Discover Rail — 6 random featured articles on landing page, color-coded by category',
+      'Subcategory Tabs — scrollable filter pills when browsing a category (e.g., spell schools, monster types)',
+      'Spell Stat Blocks — school-colored cards with casting time, range, components, duration grid, concentration/ritual badges, class pills',
+      'Monster Stat Blocks — classic crimson-bordered blocks with ability score row, CR badge, AC/HP/Speed, legendary indicator',
+      'Class Stat Blocks — hit die badge, saving throws, proficiency pills, spellcasting indicator, subclass level',
+      'Equipment Stat Blocks — rarity-colored badges (Common through Artifact), damage/AC display, attunement, properties',
+      'Race Stat Blocks — size/speed/darkvision stats, ability bonus pills, racial traits list, subraces',
+      'Table of Contents — auto-generated sticky sidebar TOC for long articles with scroll-to-section',
+      'Breadcrumb Navigation — proper linked breadcrumbs (Wiki > Category > Article) instead of fragile navigate(-1)',
+      'Category-colored article badges — search results and article pages use category accent colors',
+      'Skeleton Loading — animated placeholder cards while articles load',
+      'Pagination Upgrade — page number buttons with ellipsis, total count display',
+      'Random Article — Shuffle button navigates to a random encyclopedia entry',
+    ],
+  },
+  {
     version: 'V0.1.5 BETA',
     date: '03/12/2026',
     title: 'Campaign Map, Update System Overhaul & Dev Tools',
