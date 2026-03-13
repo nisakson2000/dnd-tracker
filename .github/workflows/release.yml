@@ -1,21 +1,15 @@
-name: 'Release'
+name: 'Build & Release'
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
 
 jobs:
-  publish-tauri:
+  publish:
     permissions:
       contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: windows-latest
-            args: ''
-    runs-on: ${{ matrix.platform }}
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -43,6 +37,7 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: 'The Codex v__VERSION__'
-          releaseBody: 'Auto-update release. Install or update via the app.'
+          releaseBody: 'Auto-update release'
           releaseDraft: false
           prerelease: false
+          updaterJsonKeepUniversal: true
