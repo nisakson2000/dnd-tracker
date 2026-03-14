@@ -1,6 +1,6 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.5.9**
+**Current Version: V0.6.5**
 
 A native desktop application for managing D&D 5e characters with full ruleset support, a 2,000+ article encyclopedia, real-time multiplayer sessions, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
@@ -26,6 +26,37 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - **Turn Notifications** — audio chime, window title flash, gold banner when it's your turn
 - **Equipment Selection** — players choose weapons/armor before combat starts
 - **Expanded Snapshots** — equipped weapons, spell slots, features, currency, death saves, and more synced to DM
+
+### NPC Intelligence & Decision Engines
+- **Personality Archetypes** — 8 archetypes (Schemer, Guardian, Merchant, Zealot, Outcast, Sage, Trickster, Noble) with auto-populated traits
+- **34 Personality Traits** — toggle traits that shape NPC behavior predictions
+- **Trust System** — -100 to +100 trust score with 7 labeled tiers (Sworn Enemy to Unbreakable Bond)
+- **NPC Memory** — memories with intensity, decay rate, and emotional impact; traumatic memories never fade
+- **Behavior Prediction** — live preview of how NPCs respond to 7 situation types based on personality
+- **Combat AI** — intelligence-tiered tactics (Mindless to Genius) with 6 personality combat styles
+- **Monster AI Profiles** — 7 behavior profiles (Pack, Ambush, Territorial, Mindless, Intelligent, Swarm, Boss)
+- **Boss Phase System** — 3 HP-based phases with escalating abilities and tactics
+- **Consequence Engine** — action-to-consequence templates with DM approval workflow
+- **Dynamic Merchant Pricing** — location, trust, faction, demand, and economy modifiers with haggling system
+- **NPC Form Overhaul** — 3-tab NPC editor (Basics, Intelligence & Behavior, Combat) in campaign builder
+
+### Story & Narrative Systems
+- **Story Threads** — plotlines with states (Dormant, Discovered, Investigating, Confrontation, Resolved)
+- **Story Branches** — decision points with branching outcomes and consequence tracking
+- **Villain Profiles** — phase-based villain behavior, adaptations that counter party tactics, master plans
+- **Campaign Arcs** — high-level narrative arcs linking quests, NPCs, and story threads
+- **Campaign History Archive** — unified event log with category filtering, session grouping, and bookmarking
+- **Campaign Secrets** — secret tracking with reveal conditions, known-by lists, and narrative impact ratings
+
+### Advanced World Systems
+- **Investigation Clues** — clue networks with red herrings, discovery DCs, and mystery grouping
+- **Rumor Propagation** — rumors that spread, distort over time, and expire
+- **World Crises** — escalating crises with severity levels and resolution conditions
+- **Artifact Evolution** — sentient items that level up, gain abilities, and develop personality
+- **Difficulty Scaling** — real-time combat assessment with DM suggestions when encounters are too easy/hard
+- **Skill Check Resolver** — full skill check engine with proficiency, expertise, conditions, and advantage
+- **Faction System** — faction relations, party reputation, military/wealth/influence tracking
+- **Weather & Economy** — regional weather effects and dynamic economy with trade goods
 
 ### DM Session Tools
 - **Character Arc Manager** — track character arcs (hooks, development, complications, climax, resolution)

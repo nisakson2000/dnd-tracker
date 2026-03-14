@@ -5,7 +5,7 @@ import {
   BookMarked, Users, Map, Globe, Dice5, ArrowLeft, User, Download,
   Library, Settings2, Heart, Bug, Crown, LayoutDashboard,
   Star, Search, X, Zap, Wifi, MapPin, Lightbulb, Grid3X3,
-  Calendar, Hammer, Package,
+  Calendar, Hammer, Package, HelpCircle,
 } from 'lucide-react';
 import { useAppMode } from '../contexts/ModeContext';
 import { useSession } from '../contexts/SessionContext';
@@ -43,6 +43,7 @@ const PLAYER_SECTION_GROUPS = [
       { id: 'dice',       label: 'Dice Roller',        icon: Dice5 },
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
       { id: 'party-connect', label: 'Party Connect',   icon: Wifi },
+      { id: 'ai-modules', label: 'AI Modules',        icon: Sparkles },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
       { id: 'export',     label: 'Export & Import',    icon: Download },
@@ -52,35 +53,38 @@ const PLAYER_SECTION_GROUPS = [
   },
 ];
 
+// phase: 'build' = draft/building only, 'run' = active/running only, undefined = both
 const DM_SECTION_GROUPS = [
   {
     label: 'Campaign',
     items: [
       { id: 'campaign-hub', label: 'Campaign Hub',     icon: LayoutDashboard },
-      { id: 'campaign-map', label: 'Campaign Map',     icon: MapPin },
-      { id: 'journal',      label: 'Session Notes',    icon: BookMarked },
+      { id: 'npcs',         label: 'NPCs',             icon: Users },
       { id: 'quests',       label: 'Quests & Plot',    icon: Map },
       { id: 'lore',         label: 'Lore & Locations', icon: Globe },
+      { id: 'journal',      label: 'Session Notes',    icon: BookMarked, phase: 'run' },
     ],
   },
   {
     label: 'World Building',
+    phase: 'build', // entire group is build-only
     items: [
-      { id: 'npcs',         label: 'NPCs',             icon: Users },
       { id: 'homebrew',     label: 'Homebrew Builder',  icon: Hammer, campaignTypes: ['homebrew'] },
+      { id: 'encounter-builder',  label: 'Encounter Builder', icon: Swords },
       { id: 'calendar',     label: 'Fantasy Calendar',  icon: Calendar, campaignTypes: ['homebrew'] },
     ],
   },
   {
     label: 'Combat',
+    phase: 'run', // entire group is run-only
     items: [
       { id: 'encounter',          label: 'Encounter Runner',  icon: Swords },
-      { id: 'encounter-builder',  label: 'Encounter Builder', icon: Swords },
       { id: 'battle-map',         label: 'Battle Map',        icon: Grid3X3 },
     ],
   },
   {
     label: 'Party',
+    phase: 'run', // entire group is run-only
     items: [
       { id: 'party-overview', label: 'Party Overview', icon: Crown },
       { id: 'party-loot',     label: 'Party Loot',     icon: Package },
@@ -90,9 +94,10 @@ const DM_SECTION_GROUPS = [
     label: 'Tools',
     items: [
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
+      { id: 'ai-modules', label: 'AI Modules',        icon: Sparkles },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
-      { id: 'export',     label: 'Export & Import',    icon: Download },
+      { id: 'export',     label: 'Export & Import',    icon: Download, phase: 'run' },
       { id: 'bugreport', label: 'Bug Report',         icon: Bug },
       { id: 'featurerequest', label: 'Feature Request', icon: Lightbulb },
     ],
@@ -135,13 +140,28 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
   }, []);
 
   const isDM = appMode === 'dm';
-  // Filter DM sidebar items based on campaign type
+  const { campaignStatus } = useSession();
+  const isDraft = campaignStatus === 'draft';
+  // Filter DM sidebar items based on campaign type and status (draft = building, active = running)
   const rawGroups = isDM ? DM_SECTION_GROUPS : PLAYER_SECTION_GROUPS;
   const sectionGroups = isDM
-    ? rawGroups.map(g => ({
-        ...g,
-        items: g.items.filter(item => !item.campaignTypes || item.campaignTypes.includes(campaignType)),
-      })).filter(g => g.items.length > 0)
+    ? rawGroups
+        .filter(g => {
+          // Hide entire groups based on campaign phase
+          if (isDraft && g.phase === 'run') return false;
+          if (!isDraft && g.phase === 'build') return false;
+          return true;
+        })
+        .map(g => ({
+          ...g,
+          items: g.items.filter(item => {
+            if (item.campaignTypes && !item.campaignTypes.includes(campaignType)) return false;
+            // Hide items based on campaign phase
+            if (isDraft && item.phase === 'run') return false;
+            if (!isDraft && item.phase === 'build') return false;
+            return true;
+          }),
+        })).filter(g => g.items.length > 0)
     : rawGroups;
 
   const hp = character?.current_hp ?? 0;
@@ -418,7 +438,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
           </div>
         ))}
 
-        {/* Wiki link */}
+        {/* Wiki + Archives links */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '8px', paddingTop: '8px' }}>
           <Link
             to="/wiki"
@@ -429,6 +449,24 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
             <BookOpen size={14} />
             Arcane Encyclopedia
           </Link>
+          {isDM && isDraft && (
+            <button
+              onClick={() => onSelect('dm-guide')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 16px', fontSize: '13px',
+                color: activeSection === 'dm-guide' ? 'white' : 'rgba(255,255,255,0.4)',
+                background: activeSection === 'dm-guide' ? 'var(--accent-xl)' : 'none',
+                borderLeft: activeSection === 'dm-guide' ? '2px solid var(--accent)' : '2px solid transparent',
+                border: 'none', cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
+                transition: 'color 0.15s', width: '100%', textAlign: 'left',
+              }}
+              onMouseEnter={e => { if (activeSection !== 'dm-guide') e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+              onMouseLeave={e => { if (activeSection !== 'dm-guide') e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+            >
+              <HelpCircle size={14} />
+              Create a Campaign
+            </button>
+          )}
         </div>
       </nav>
     </aside>

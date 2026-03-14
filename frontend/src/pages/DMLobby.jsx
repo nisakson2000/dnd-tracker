@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Play, Plus, Trash2, Edit3, X, Check,
   Users, MapPin, BookOpen, Clock, Settings, Wand2, FileText,
+  ChevronDown, ChevronRight, DoorOpen, MessageCircle, User, Swords, Skull, Layers, Wine,
+  Globe, Shield, CloudSun, Coins, Route, AlertTriangle, Calendar, Sparkles,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
@@ -13,6 +15,41 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import SessionRecap from '../components/dm-session/SessionRecap';
 import HandoutsManager from '../components/dm-session/HandoutsManager';
 import QuestGenerator from '../components/dm-session/QuestGenerator';
+import DungeonGenerator from '../components/dm-session/DungeonGenerator';
+import RumorGenerator from '../components/dm-session/RumorGenerator';
+import ImprovAssistant from '../components/dm-session/ImprovAssistant';
+import EncounterGenerator from '../components/dm-session/EncounterGenerator';
+import BossGenerator from '../components/dm-session/BossGenerator';
+import PuzzleGenerator from '../components/dm-session/PuzzleGenerator';
+import TavernGenerator from '../components/dm-session/TavernGenerator';
+import FactionManager from '../components/dm-session/FactionManager';
+import WeatherPanel from '../components/dm-session/WeatherPanel';
+import EconomyPanel from '../components/dm-session/EconomyPanel';
+import TravelCalculator from '../components/dm-session/TravelCalculator';
+import WorldEventsManager from '../components/dm-session/WorldEventsManager';
+import WorldTimeline from '../components/dm-session/WorldTimeline';
+import DisasterSystem from '../components/dm-session/DisasterSystem';
+import AiModules from '../components/dm-session/AiModules';
+
+const GENERATOR_TABS = [
+  { key: 'dungeon', label: 'Dungeon', icon: DoorOpen },
+  { key: 'encounter', label: 'Encounters', icon: Swords },
+  { key: 'boss', label: 'Boss', icon: Skull },
+  { key: 'rumor', label: 'Rumors', icon: MessageCircle },
+  { key: 'improv', label: 'Improv', icon: User },
+  { key: 'puzzle', label: 'Puzzles', icon: Layers },
+  { key: 'tavern', label: 'Tavern', icon: Wine },
+];
+
+const SIMULATION_TABS = [
+  { key: 'factions', label: 'Factions', icon: Shield },
+  { key: 'weather', label: 'Weather', icon: CloudSun },
+  { key: 'economy', label: 'Economy', icon: Coins },
+  { key: 'travel', label: 'Travel', icon: Route },
+  { key: 'events', label: 'Events', icon: AlertTriangle },
+  { key: 'timeline', label: 'Timeline', icon: Calendar },
+  { key: 'disaster', label: 'Disasters', icon: Globe },
+];
 
 export default function DMLobby() {
   const { id: campaignId } = useParams();
@@ -57,6 +94,17 @@ export default function DMLobby() {
   });
   const [showSettings, setShowSettings] = useState(false);
   const [lastSessionId, setLastSessionId] = useState(null);
+
+  // DM Toolkit
+  const [toolkitOpen, setToolkitOpen] = useState(false);
+  const [activeGenerator, setActiveGenerator] = useState('dungeon');
+
+  // World Simulation
+  const [simOpen, setSimOpen] = useState(false);
+  const [activeSimTab, setActiveSimTab] = useState('factions');
+
+  // AI Modules (Phase 5)
+  const [aiOpen, setAiOpen] = useState(false);
 
   const loadCampaignSettings = useCallback(async () => {
     try {
@@ -930,6 +978,173 @@ export default function DMLobby() {
 
             {/* AI Quest Generator (M-20) */}
             <QuestGenerator />
+
+            {/* DM Toolkit — Generators (Phase 3) */}
+            <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: '12px', overflow: 'hidden',
+            }}>
+              <button
+                onClick={() => setToolkitOpen(!toolkitOpen)}
+                style={{
+                  width: '100%',
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '10px 16px', background: 'none', border: 'none',
+                  cursor: 'pointer', color: 'var(--text-mute)',
+                  fontSize: '11px', fontWeight: 700,
+                  letterSpacing: '0.08em', textTransform: 'uppercase',
+                  fontFamily: 'var(--font-mono, monospace)',
+                }}
+              >
+                {toolkitOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                <Wand2 size={12} /> DM Toolkit
+                <span style={{ fontSize: '9px', opacity: 0.5, fontWeight: 400, letterSpacing: '0.02em', textTransform: 'none' }}>
+                  7 generators
+                </span>
+              </button>
+              {toolkitOpen && (
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                  {/* Generator tab bar */}
+                  <div style={{
+                    display: 'flex', flexWrap: 'wrap', gap: '4px',
+                    padding: '8px 10px',
+                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                  }}>
+                    {GENERATOR_TABS.map(t => {
+                      const Icon = t.icon;
+                      const active = activeGenerator === t.key;
+                      return (
+                        <button
+                          key={t.key}
+                          onClick={() => setActiveGenerator(t.key)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '4px',
+                            padding: '4px 10px', borderRadius: '6px',
+                            fontSize: '10px', fontWeight: 600,
+                            background: active ? 'rgba(155,89,182,0.2)' : 'rgba(255,255,255,0.03)',
+                            border: `1px solid ${active ? 'rgba(155,89,182,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                            color: active ? '#c084fc' : 'var(--text-mute)',
+                            cursor: 'pointer', fontFamily: 'var(--font-ui)',
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          <Icon size={10} /> {t.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Active generator */}
+                  <div style={{ padding: '12px' }}>
+                    {activeGenerator === 'dungeon' && <DungeonGenerator />}
+                    {activeGenerator === 'encounter' && <EncounterGenerator />}
+                    {activeGenerator === 'boss' && <BossGenerator />}
+                    {activeGenerator === 'rumor' && <RumorGenerator />}
+                    {activeGenerator === 'improv' && <ImprovAssistant />}
+                    {activeGenerator === 'puzzle' && <PuzzleGenerator />}
+                    {activeGenerator === 'tavern' && <TavernGenerator />}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* World Simulation (Phase 4) */}
+            <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: '12px', overflow: 'hidden',
+            }}>
+              <button
+                onClick={() => setSimOpen(!simOpen)}
+                style={{
+                  width: '100%',
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '10px 16px', background: 'none', border: 'none',
+                  cursor: 'pointer', color: 'var(--text-mute)',
+                  fontSize: '11px', fontWeight: 700,
+                  letterSpacing: '0.08em', textTransform: 'uppercase',
+                  fontFamily: 'var(--font-mono, monospace)',
+                }}
+              >
+                {simOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                <Globe size={12} /> World Simulation
+                <span style={{ fontSize: '9px', opacity: 0.5, fontWeight: 400, letterSpacing: '0.02em', textTransform: 'none' }}>
+                  factions, weather, economy & more
+                </span>
+              </button>
+              {simOpen && (
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{
+                    display: 'flex', flexWrap: 'wrap', gap: '4px',
+                    padding: '8px 10px',
+                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                  }}>
+                    {SIMULATION_TABS.map(t => {
+                      const Icon = t.icon;
+                      const active = activeSimTab === t.key;
+                      return (
+                        <button
+                          key={t.key}
+                          onClick={() => setActiveSimTab(t.key)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '4px',
+                            padding: '4px 10px', borderRadius: '6px',
+                            fontSize: '10px', fontWeight: 600,
+                            background: active ? 'rgba(155,89,182,0.2)' : 'rgba(255,255,255,0.03)',
+                            border: `1px solid ${active ? 'rgba(155,89,182,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                            color: active ? '#c084fc' : 'var(--text-mute)',
+                            cursor: 'pointer', fontFamily: 'var(--font-ui)',
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          <Icon size={10} /> {t.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div style={{ padding: '12px' }}>
+                    {activeSimTab === 'factions' && <FactionManager />}
+                    {activeSimTab === 'weather' && <WeatherPanel />}
+                    {activeSimTab === 'economy' && <EconomyPanel />}
+                    {activeSimTab === 'travel' && <TravelCalculator />}
+                    {activeSimTab === 'events' && <WorldEventsManager />}
+                    {activeSimTab === 'timeline' && <WorldTimeline />}
+                    {activeSimTab === 'disaster' && <DisasterSystem />}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* AI Modules (Phase 5) */}
+            <div style={{
+              background: 'rgba(139,92,246,0.02)',
+              border: '1px solid rgba(139,92,246,0.1)',
+              borderRadius: '12px', overflow: 'hidden',
+            }}>
+              <button
+                onClick={() => setAiOpen(!aiOpen)}
+                style={{
+                  width: '100%',
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '10px 16px', background: 'none', border: 'none',
+                  cursor: 'pointer', color: 'rgba(139,92,246,0.7)',
+                  fontSize: '11px', fontWeight: 700,
+                  letterSpacing: '0.08em', textTransform: 'uppercase',
+                  fontFamily: 'var(--font-mono, monospace)',
+                }}
+              >
+                {aiOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                <Sparkles size={12} /> AI Modules
+                <span style={{ fontSize: '9px', opacity: 0.5, fontWeight: 400, letterSpacing: '0.02em', textTransform: 'none' }}>
+                  9 generators powered by Ollama
+                </span>
+              </button>
+              {aiOpen && (
+                <div style={{ borderTop: '1px solid rgba(139,92,246,0.08)' }}>
+                  <AiModules />
+                </div>
+              )}
+            </div>
 
             {/* Dev-only Connection Diagnostics */}
             {import.meta.env.DEV && (

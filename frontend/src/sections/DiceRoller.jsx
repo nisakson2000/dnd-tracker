@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Dice5, Save, X, Play, Pencil, Check, ClipboardCopy, Radio } from 'lucide-react';
+import { Dice5, Save, X, Play, Pencil, Check, ClipboardCopy, Radio, ChevronDown, ChevronUp, Search, Trash2 } from 'lucide-react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -11,7 +11,9 @@ import { rollDie, parseAndRollExpression, validateExpression } from '../utils/di
 
 /* ── Storage keys ── */
 const getMacrosKey = (charId) => charId ? `codex_dice_macros_${charId}` : 'codex_dice_macros';
+const getHistoryKey = (charId) => charId ? `codex_roll_history_${charId}` : 'codex_roll_history';
 const MAX_MACROS = 30;
+const MAX_HISTORY = 100;
 
 /* ── localStorage helpers ── */
 function loadFromStorage(key, fallback = []) {
@@ -20,6 +22,19 @@ function loadFromStorage(key, fallback = []) {
 }
 function saveToStorage(key, data) {
   try { localStorage.setItem(key, JSON.stringify(data)); } catch { /* ignore */ }
+}
+
+/* ── Relative time formatter ── */
+function formatRelativeTime(ts) {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 5) return 'just now';
+  if (diff < 60) return `${diff}s ago`;
+  const mins = Math.floor(diff / 60);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
 }
 
 /* ── Die constants ── */
@@ -240,6 +255,9 @@ export default function DiceRoller({ characterId, activeConditions = [], session
   const [broadcastOn, setBroadcastOn] = useState(false);
   const [macros, setMacros] = useState([]);
   const [editingMacro, setEditingMacro] = useState(null); // { id, name, expr }
+  const [rollHistory, setRollHistory] = useState([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyFilter, setHistoryFilter] = useState('');
   const condEffects = computeConditionEffects(activeConditions);
 
   useEffect(() => { ensureParticleStyles(); }, []);
@@ -247,6 +265,33 @@ export default function DiceRoller({ characterId, activeConditions = [], session
   // Load macros from per-character localStorage
   useEffect(() => {
     setMacros(loadFromStorage(getMacrosKey(characterId)));
+  }, [characterId]);
+
+  // Load roll history from per-character localStorage
+  useEffect(() => {
+    setRollHistory(loadFromStorage(getHistoryKey(characterId)));
+  }, [characterId]);
+
+  const pushToHistory = useCallback((entry) => {
+    setRollHistory(prev => {
+      const historyEntry = {
+        id: Date.now(),
+        expression: entry.expr,
+        result: entry.total,
+        rolls: entry.rolls || [],
+        label: entry.label || '',
+        timestamp: Date.now(),
+      };
+      const updated = [historyEntry, ...prev].slice(0, MAX_HISTORY);
+      saveToStorage(getHistoryKey(characterId), updated);
+      return updated;
+    });
+  }, [characterId]);
+
+  const clearHistory = useCallback(() => {
+    setRollHistory([]);
+    saveToStorage(getHistoryKey(characterId), []);
+    toast.success('Roll history cleared');
   }, [characterId]);
 
   const saveMacros = useCallback((newMacros) => {
@@ -360,6 +405,7 @@ export default function DiceRoller({ characterId, activeConditions = [], session
       };
 
       setLastRoll(entry);
+      pushToHistory(entry);
       setRolling(false);
 
       // Broadcast roll to session if toggle is on and not a DM secret roll
@@ -380,7 +426,7 @@ export default function DiceRoller({ characterId, activeConditions = [], session
 
       if (rollLabel) setRollLabel('');
     }, 650); // Slightly longer to allow animation to play
-  }, [rollMode, rollLabel, broadcastOn, sessionActive, playerUuid]);
+  }, [rollMode, rollLabel, broadcastOn, sessionActive, playerUuid, pushToHistory]);
 
   /**
    * Legacy simple roll for quick buttons.
@@ -825,6 +871,108 @@ export default function DiceRoller({ characterId, activeConditions = [], session
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Roll History ── */}
+      <div className="card">
+        <button
+          onClick={() => setHistoryOpen(o => !o)}
+          className="w-full flex items-center justify-between"
+        >
+          <h3 className="font-display text-amber-100 flex items-center gap-2">
+            Roll History
+            {rollHistory.length > 0 && (
+              <span className="text-xs text-amber-200/30 font-normal">({rollHistory.length})</span>
+            )}
+          </h3>
+          {historyOpen ? <ChevronUp size={16} className="text-amber-200/40" /> : <ChevronDown size={16} className="text-amber-200/40" />}
+        </button>
+
+        <AnimatePresence>
+          {historyOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-3 space-y-3">
+                {/* Filter + Clear */}
+                <div className="flex gap-2 items-center">
+                  <div className="relative flex-1">
+                    <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-amber-200/30 pointer-events-none" />
+                    <input
+                      className="input w-full pl-8 text-sm"
+                      placeholder="Filter by label or expression..."
+                      value={historyFilter}
+                      onChange={e => setHistoryFilter(e.target.value)}
+                    />
+                  </div>
+                  {rollHistory.length > 0 && (
+                    <button
+                      onClick={clearHistory}
+                      className="text-xs text-amber-200/30 hover:text-red-400 transition-colors flex items-center gap-1 shrink-0"
+                      title="Clear all roll history"
+                    >
+                      <Trash2 size={12} /> Clear
+                    </button>
+                  )}
+                </div>
+
+                {/* History list */}
+                {rollHistory.length === 0 ? (
+                  <p className="text-sm text-amber-200/20">No rolls yet. Start rolling to build your history.</p>
+                ) : (() => {
+                  const filterLower = historyFilter.toLowerCase().trim();
+                  const filtered = filterLower
+                    ? rollHistory.filter(h =>
+                        (h.label && h.label.toLowerCase().includes(filterLower)) ||
+                        (h.expression && h.expression.toLowerCase().includes(filterLower))
+                      )
+                    : rollHistory;
+
+                  if (filtered.length === 0) {
+                    return <p className="text-sm text-amber-200/20">No rolls match your filter.</p>;
+                  }
+
+                  return (
+                    <div className="max-h-72 overflow-y-auto space-y-1 pr-1 scrollbar-thin scrollbar-thumb-amber-200/10">
+                      {filtered.map(h => (
+                        <div
+                          key={h.id}
+                          className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-[#0d0d12] border border-amber-200/5 hover:border-amber-200/15 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="text-amber-100 font-display text-lg font-bold w-10 text-right shrink-0">
+                              {h.result}
+                            </span>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-amber-200/60 truncate">{h.expression}</span>
+                                {h.label && (
+                                  <span className="text-[10px] text-gold/50 bg-gold/10 px-1.5 py-0.5 rounded-full truncate shrink-0">
+                                    {h.label}
+                                  </span>
+                                )}
+                              </div>
+                              {h.rolls && h.rolls.length > 1 && (
+                                <div className="text-[10px] text-amber-200/25">[{h.rolls.join(', ')}]</div>
+                              )}
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-amber-200/20 shrink-0 whitespace-nowrap">
+                            {formatRelativeTime(h.timestamp)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
     </div>
   );

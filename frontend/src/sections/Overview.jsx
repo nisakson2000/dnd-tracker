@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { TrendingUp, TrendingDown, Heart, Shield, ShieldOff, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles, Skull, Search, Brain, Swords, AlertTriangle, ChevronDown, ChevronUp, StickyNote, Flame, Waves, Wind, Target, Wand2, Calculator, Package, Dices, X, Plus, Trash2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Heart, Shield, ShieldOff, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles, Skull, Search, Brain, Swords, AlertTriangle, ChevronDown, ChevronUp, ChevronRight, StickyNote, Flame, Waves, Wind, Target, Wand2, Calculator, Package, Dices, X, Plus, Trash2, Compass, Loader2 } from 'lucide-react';
+import { invoke } from '@tauri-apps/api/core';
 import { getTotalLevel, getHitDiceBreakdown } from '../utils/multiclass';
 import toast from 'react-hot-toast';
 import { getOverview, updateOverview, updateAbilityScores, updateSavingThrows, updateSkills } from '../api/overview';
@@ -11,6 +12,7 @@ import { useAutosave } from '../hooks/useAutosave';
 import SaveIndicator from '../components/SaveIndicator';
 import HelpTooltip from '../components/HelpTooltip';
 import { useRuleset } from '../contexts/RulesetContext';
+import { useCampaignSyncSafe } from '../contexts/CampaignSyncContext';
 import { HELP } from '../data/helpText';
 import SubclassSelectModal from '../components/SubclassSelectModal';
 import ModalPortal from '../components/ModalPortal';
@@ -65,6 +67,8 @@ function calcAutoHP(className, level, conMod) {
 
 export default function Overview({ characterId, character, onCharacterUpdate, onLevelUp, activeConditions = [] }) {
   const { PROFICIENCY_BONUS, SKILLS, RACES, CLASSES, CONDITIONS, EXHAUSTION_LEVELS, ancestryLabel } = useRuleset();
+  const syncCtx = useCampaignSyncSafe();
+  const dmSessionLocked = syncCtx?.dmSessionActive && !syncCtx?.isHost;
   const [overview, setOverview] = useState(null);
   const [abilities, setAbilities] = useState([]);
   const [saves, setSaves] = useState([]);
@@ -147,6 +151,12 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const { trigger: triggerSkills } = useAutosave(saveSkills);
 
   const [notesOpen, setNotesOpen] = useState(false);
+  const [goalsOpen, setGoalsOpen] = useState(false);
+  const [personalArcs, setPersonalArcs] = useState([]);
+  const [arcsLoading, setArcsLoading] = useState(false);
+  const [expandedArcId, setExpandedArcId] = useState(null);
+  const [arcEntries, setArcEntries] = useState({});
+  const [arcEntriesLoading, setArcEntriesLoading] = useState({});
   const [showShortRest, setShowShortRest] = useState(false);
   const [showDamage, setShowDamage] = useState(false);
   const [showHeal, setShowHeal] = useState(false);
@@ -179,6 +189,47 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
       else localStorage.removeItem(`codex_concentration_${characterId}`);
     } catch (err) { if (import.meta.env.DEV) console.warn('Failed to save concentration to localStorage:', err); }
   };
+
+  // ── Personal Goals (Character Arcs) ──
+  const loadPersonalArcs = useCallback(async () => {
+    setArcsLoading(true);
+    try {
+      const allArcs = await invoke('list_character_arcs');
+      // Filter arcs belonging to this character
+      const mine = (allArcs || []).filter(a => a.character_id === characterId);
+      setPersonalArcs(mine);
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn('[Overview] list_character_arcs:', err);
+    } finally {
+      setArcsLoading(false);
+    }
+  }, [characterId]);
+
+  useEffect(() => {
+    if (goalsOpen && personalArcs.length === 0 && !arcsLoading) {
+      loadPersonalArcs();
+    }
+  }, [goalsOpen, loadPersonalArcs, personalArcs.length, arcsLoading]);
+
+  const loadArcEntries = useCallback(async (arcId) => {
+    setArcEntriesLoading(prev => ({ ...prev, [arcId]: true }));
+    try {
+      const entries = await invoke('get_arc_entries', { arcId });
+      setArcEntries(prev => ({ ...prev, [arcId]: entries || [] }));
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn('[Overview] get_arc_entries:', err);
+    } finally {
+      setArcEntriesLoading(prev => ({ ...prev, [arcId]: false }));
+    }
+  }, []);
+
+  const toggleArcExpand = useCallback((arcId) => {
+    setExpandedArcId(prev => {
+      const newId = prev === arcId ? null : arcId;
+      if (newId && !arcEntries[arcId]) loadArcEntries(arcId);
+      return newId;
+    });
+  }, [arcEntries, loadArcEntries]);
 
   // Speed variants (climb, swim, fly) — stored in overview fields
   const [showSpeedVariants, setShowSpeedVariants] = useState(false);
@@ -233,7 +284,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
       // Auto-restore features
       try {
         const features = await getFeatures(characterId);
-        const targets = features.filter(f => (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0) && f.recharge);
+        const targets = features.filter(f => (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0) && f.recharge && f.recharge !== 'recharge_5_6' && f.recharge !== 'recharge_6');
         if (targets.length > 0) {
           await Promise.all(targets.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total })));
           toast.success(`${targets.length} feature${targets.length > 1 ? 's' : ''} restored`, { duration: 3000 });
@@ -252,7 +303,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
       // Auto-restore short rest features
       try {
         const features = await getFeatures(characterId);
-        const targets = features.filter(f => (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0) && (f.recharge === 'short_rest' || f.recharge === 'long_rest'));
+        const targets = features.filter(f => (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0) && f.recharge === 'short_rest');
         if (targets.length > 0) {
           await Promise.all(targets.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total })));
           toast.success(`${targets.length} feature${targets.length > 1 ? 's' : ''} restored`, { duration: 3000 });
@@ -1003,7 +1054,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         )}
 
         {/* XP Progress */}
-        <XPProgress xp={overview.experience_points} level={overview.level} onXPChange={v => updateField('experience_points', v)} />
+        <XPProgress xp={overview.experience_points} level={overview.level} onXPChange={v => updateField('experience_points', v)} locked={dmSessionLocked} />
 
         {/* Multiclass Section */}
         {(() => {
@@ -2158,6 +2209,163 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         </div>
       </div>
 
+      {/* Personal Goals (Character Arcs) */}
+      <div className="card">
+        <button
+          onClick={() => setGoalsOpen(!goalsOpen)}
+          className="w-full flex items-center justify-between text-left"
+        >
+          <h3 className="font-display text-amber-100 flex items-center gap-2">
+            <Compass size={16} className="text-amber-200/40" />
+            Personal Goals
+          </h3>
+          {goalsOpen ? <ChevronUp size={16} className="text-amber-200/40" /> : <ChevronDown size={16} className="text-amber-200/40" />}
+        </button>
+        {goalsOpen && (
+          <div className="mt-3 space-y-3">
+            {arcsLoading ? (
+              <div className="flex items-center gap-2 text-amber-200/40 text-sm py-4 justify-center">
+                <Loader2 size={14} className="animate-spin" /> Loading goals...
+              </div>
+            ) : personalArcs.length === 0 ? (
+              <div className="text-sm text-amber-200/30 py-4 text-center">
+                No goals assigned yet. Your DM can create character arcs for you.
+              </div>
+            ) : (
+              <>
+                {/* Active arcs first, then resolved */}
+                {[...personalArcs]
+                  .sort((a, b) => {
+                    if (a.status === 'active' && b.status !== 'active') return -1;
+                    if (a.status !== 'active' && b.status === 'active') return 1;
+                    return (b.created_at || 0) - (a.created_at || 0);
+                  })
+                  .map(arc => {
+                    const isExpanded = expandedArcId === arc.id;
+                    const isResolved = arc.status === 'resolved';
+                    const isAbandoned = arc.status === 'abandoned';
+                    const entries = arcEntries[arc.id] || [];
+                    const entriesLoading = arcEntriesLoading[arc.id];
+                    return (
+                      <div
+                        key={arc.id}
+                        className={`rounded-lg border transition-all ${
+                          isResolved
+                            ? 'bg-emerald-900/8 border-emerald-500/15 opacity-70'
+                            : isAbandoned
+                              ? 'bg-neutral-900/20 border-neutral-500/15 opacity-50'
+                              : 'bg-[#0a0a10] border-amber-200/10'
+                        }`}
+                      >
+                        {/* Arc header — clickable to expand */}
+                        <button
+                          onClick={() => toggleArcExpand(arc.id)}
+                          className="w-full flex items-start gap-2 p-3 text-left"
+                        >
+                          <span className="mt-0.5 shrink-0">
+                            {isExpanded
+                              ? <ChevronDown size={14} className="text-amber-200/40" />
+                              : <ChevronRight size={14} className="text-amber-200/40" />
+                            }
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={`text-sm font-medium ${isResolved ? 'text-emerald-200/70' : isAbandoned ? 'text-neutral-400' : 'text-amber-100'}`}>
+                                {arc.title}
+                              </span>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                                isResolved
+                                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                  : isAbandoned
+                                    ? 'bg-neutral-500/20 text-neutral-400 border-neutral-500/30'
+                                    : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                              }`}>
+                                {arc.status}
+                              </span>
+                            </div>
+                            {arc.description && (
+                              <p className="text-xs text-amber-200/35 mt-1 line-clamp-2">{arc.description}</p>
+                            )}
+                          </div>
+                        </button>
+
+                        {/* Expanded content — timeline entries */}
+                        {isExpanded && (
+                          <div className="px-3 pb-3 pt-0 border-t border-amber-200/5 mt-0">
+                            {/* Resolution note for resolved/abandoned arcs */}
+                            {(isResolved || isAbandoned) && arc.resolution && (
+                              <div className={`mt-3 p-2 rounded text-xs ${
+                                isResolved
+                                  ? 'bg-emerald-900/15 border border-emerald-500/15 text-emerald-200/60'
+                                  : 'bg-neutral-800/20 border border-neutral-500/15 text-neutral-400/60'
+                              }`}>
+                                <span className="font-medium">{isResolved ? 'Resolution' : 'Reason'}:</span> {arc.resolution}
+                              </div>
+                            )}
+
+                            {/* Timeline */}
+                            <div className="mt-3">
+                              <h4 className="text-[10px] font-display text-amber-200/30 tracking-wider uppercase mb-2">Timeline</h4>
+                              {entriesLoading ? (
+                                <div className="flex items-center gap-2 text-amber-200/30 text-xs py-2">
+                                  <Loader2 size={12} className="animate-spin" /> Loading...
+                                </div>
+                              ) : entries.length === 0 ? (
+                                <p className="text-xs text-amber-200/20 py-2">No timeline entries yet.</p>
+                              ) : (
+                                <div className="space-y-0 relative">
+                                  {/* Vertical line connecting entries */}
+                                  <div className="absolute left-[5px] top-2 bottom-2 w-px bg-amber-200/8" />
+                                  {entries.map((entry, idx) => {
+                                    const typeColors = {
+                                      hook: 'bg-sky-400',
+                                      development: 'bg-amber-400',
+                                      complication: 'bg-rose-400',
+                                      climax: 'bg-purple-400',
+                                      resolution: 'bg-emerald-400',
+                                    };
+                                    const typeBadgeColors = {
+                                      hook: 'bg-sky-500/15 text-sky-300 border-sky-500/25',
+                                      development: 'bg-amber-500/15 text-amber-300 border-amber-500/25',
+                                      complication: 'bg-rose-500/15 text-rose-300 border-rose-500/25',
+                                      climax: 'bg-purple-500/15 text-purple-300 border-purple-500/25',
+                                      resolution: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25',
+                                    };
+                                    const dotColor = typeColors[entry.entry_type] || typeColors.development;
+                                    const badgeColor = typeBadgeColors[entry.entry_type] || typeBadgeColors.development;
+                                    return (
+                                      <div key={entry.id || idx} className="relative pl-5 py-1.5">
+                                        {/* Timeline dot */}
+                                        <div className={`absolute left-0.5 top-[11px] w-[7px] h-[7px] rounded-full ${dotColor} ring-2 ring-[#14121c]`} />
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          {entry.session_number > 0 && (
+                                            <span className="text-[10px] text-amber-200/25 font-mono">S{entry.session_number}</span>
+                                          )}
+                                          <span className={`text-[10px] px-1.5 py-0.5 rounded border ${badgeColor}`}>
+                                            {entry.entry_type}
+                                          </span>
+                                          {entry.npc_involved && (
+                                            <span className="text-[10px] text-purple-300/40">w/ {entry.npc_involved}</span>
+                                          )}
+                                        </div>
+                                        <p className="text-xs text-amber-200/50 mt-0.5">{entry.description}</p>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Damage Modifiers (Resistances, Immunities, Vulnerabilities) */}
       <div className="card">
         <h3 className="font-display text-amber-100 mb-1">Damage Modifiers</h3>
@@ -2315,7 +2523,7 @@ function getLevelFromXP(xp) {
   return 1;
 }
 
-function XPProgress({ xp, level, onXPChange }) {
+function XPProgress({ xp, level, onXPChange, locked }) {
   const currentThreshold = XP_THRESHOLDS[level - 1] || 0;
   const nextThreshold = level < 20 ? XP_THRESHOLDS[level] : XP_THRESHOLDS[19];
   const xpInLevel = xp - currentThreshold;
@@ -2325,7 +2533,10 @@ function XPProgress({ xp, level, onXPChange }) {
   return (
     <div className="mt-4 pt-4 border-t border-gold/10">
       <div className="flex items-center justify-between mb-2">
-        <label className="text-xs text-amber-200/50 font-display tracking-wider uppercase">Experience Points</label>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-amber-200/50 font-display tracking-wider uppercase">Experience Points</label>
+          {locked && <span className="text-[9px] text-red-400/50 border border-red-400/20 rounded px-1.5 py-0.5">DM Controlled</span>}
+        </div>
         <div className="flex items-center gap-2">
           <input
             type="number"
@@ -2333,6 +2544,9 @@ function XPProgress({ xp, level, onXPChange }) {
             className="input w-28 text-sm text-right"
             value={xp}
             onChange={e => onXPChange(Math.max(0, parseInt(e.target.value) || 0))}
+            disabled={locked}
+            title={locked ? 'XP is controlled by the DM during live sessions' : ''}
+            style={locked ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           />
           {level < 20 && (
             <span className="text-xs text-amber-200/30">/ {nextThreshold.toLocaleString()} XP</span>

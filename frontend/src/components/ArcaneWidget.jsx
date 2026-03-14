@@ -124,7 +124,7 @@ export default function ArcaneWidget({ characterId, section, sectionData }) {
     const container = messagesContainerRef.current;
     if (!container) return;
     const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
-    if (nearBottom) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (nearBottom) container.scrollTop = container.scrollHeight;
   }, [messages]);
 
   // Focus input when opened

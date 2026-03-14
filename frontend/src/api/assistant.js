@@ -39,7 +39,7 @@ export async function searchWikiContext(query) {
   }
 }
 
-export async function* streamChat(messages) {
+export async function* streamChat(messages, options = {}) {
   const queue = [];
   let resolveWait = null;
   let finished = false;
@@ -52,8 +52,13 @@ export async function* streamChat(messages) {
     if (resolveWait) { resolveWait(); resolveWait = null; }
   };
 
-  const invokePromise = invoke('ollama_chat', { model: MODEL, messages, onChunk: channel })
-    .catch(err => {
+  const invokePromise = invoke('ollama_chat', {
+    model: options.model || MODEL,
+    messages,
+    onChunk: channel,
+    maxTokens: options.maxTokens || null,
+    temperature: options.temperature || null,
+  }).catch(err => {
       error = err;
       finished = true;
       if (resolveWait) { resolveWait(); resolveWait = null; }
@@ -69,4 +74,15 @@ export async function* streamChat(messages) {
 
   await invokePromise;
   if (error) throw new Error(String(error));
+}
+
+// One-shot generation (non-streaming) for AI modules
+export async function generateAI(prompt, system, options = {}) {
+  return invoke('ollama_generate', {
+    model: options.model || 'llama3.2',
+    prompt,
+    system: system || null,
+    maxTokens: options.maxTokens || 1024,
+    temperature: options.temperature || 0.7,
+  });
 }

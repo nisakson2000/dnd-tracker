@@ -24,6 +24,7 @@ import DDBImportModal from '../components/DDBImportModal';
 import { APP_VERSION } from '../version';
 import { useAppMode } from '../contexts/ModeContext';
 import { useUpdateCheck } from '../hooks/useUpdateCheck';
+import { useOllamaAutoSetup } from '../hooks/useOllamaAutoSetup';
 
 // ─── Class definitions ──────────────────────────────────────────────────────
 
@@ -329,10 +330,10 @@ function NewCharCard({ index, onClick, isDM }) {
       </motion.div>
       <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 6 }}>
         <div style={{ fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.2em', textTransform: 'uppercase', color: hovered ? 'rgba(200,175,130,0.7)' : 'rgba(200,175,130,0.38)', transition: 'color 0.3s' }}>
-          {isDM ? 'New Campaign' : 'New Character'}
+          {isDM ? 'Select Campaign' : 'New Character'}
         </div>
         <div style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 12, color: hovered ? 'rgba(200,175,130,0.4)' : 'rgba(200,175,130,0.18)', transition: 'color 0.3s' }}>
-          {isDM ? 'Start a new adventure' : 'Begin a new legend'}
+          {isDM ? 'Pick a premade adventure' : 'Begin a new legend'}
         </div>
       </div>
 
@@ -497,7 +498,8 @@ function DDBImportCard({ index, onClick }) {
 
 function CampaignCard({ char, index, onEnter, onDelete, onExport, onArchive }) {
   const [hovered, setHovered] = useState(false);
-  const color = char.status === 'archived' ? '#6b7280' : '#9b59b6';
+  const isDraft = char.status === 'draft';
+  const color = char.status === 'archived' ? '#6b7280' : isDraft ? '#4ade80' : '#9b59b6';
 
   return (
     <motion.div
@@ -589,7 +591,7 @@ function CampaignCard({ char, index, onEnter, onDelete, onExport, onArchive }) {
           </button>
         </motion.div>
 
-        {/* Archived badge */}
+        {/* Status badge */}
         {char.status === 'archived' && (
           <div style={{
             position: 'absolute', top: 8, right: 10,
@@ -599,6 +601,17 @@ function CampaignCard({ char, index, onEnter, onDelete, onExport, onArchive }) {
             padding: '2px 8px', borderRadius: 99, textTransform: 'uppercase',
           }}>
             Archived
+          </div>
+        )}
+        {isDraft && (
+          <div style={{
+            position: 'absolute', top: 8, right: 10,
+            fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.08em',
+            color: '#4ade80', background: 'rgba(74,222,128,0.12)',
+            border: '1px solid rgba(74,222,128,0.3)',
+            padding: '2px 8px', borderRadius: 99, textTransform: 'uppercase',
+          }}>
+            Building
           </div>
         )}
       </div>
@@ -640,7 +653,7 @@ function CampaignCard({ char, index, onEnter, onDelete, onExport, onArchive }) {
               letterSpacing: '0.05em',
             }}
           >
-            Open <ChevronRight size={12} />
+            {isDraft ? 'Continue Building' : 'Open'} <ChevronRight size={12} />
           </motion.div>
         </div>
       </div>
@@ -685,8 +698,6 @@ const PREMADE_LEVEL_COLORS = {
 // ─── Create Campaign Modal (DM mode — with premade/homebrew choice) ──────────
 
 function CreateCampaignModal({ onClose, onCreate }) {
-  const [mode, setMode] = useState(null); // null = choose, 'homebrew', 'premade'
-  const [name, setName] = useState('');
   const [dmName, setDmName] = useState(() => localStorage.getItem('codex-dm-name') || '');
   const [ruleset, setRuleset] = useState('5e-2014');
   const [busy, setBusy] = useState(false);
@@ -694,24 +705,35 @@ function CreateCampaignModal({ onClose, onCreate }) {
   const [expandedCampaign, setExpandedCampaign] = useState(null);
   const [starterOpen, setStarterOpen] = useState(true);
   const [communityOpen, setCommunityOpen] = useState(false);
+  const [localOpen, setLocalOpen] = useState(false);
+  const [localCampaigns, setLocalCampaigns] = useState([]);
   const [communityList, setCommunityList] = useState([]);
   const [communityLoading, setCommunityLoading] = useState(false);
   const [communityError, setCommunityError] = useState(null);
   const [communitySearch, setCommunitySearch] = useState('');
   const [downloadingAdv, setDownloadingAdv] = useState(null);
-  const ref = useRef(null);
-  useEffect(() => { if (mode === 'homebrew') ref.current?.focus(); }, [mode]);
 
-  // Fetch community list when premade mode is opened
+  // Fetch community list on mount
   useEffect(() => {
-    if (mode === 'premade' && communityList.length === 0 && !communityLoading) {
+    if (communityList.length === 0 && !communityLoading) {
       setCommunityLoading(true);
       fetchCommunityList()
         .then(list => setCommunityList(list))
         .catch(err => setCommunityError(err.message))
         .finally(() => setCommunityLoading(false));
     }
-  }, [mode]);
+  }, []);
+
+  // Load local (homebrew) campaigns for the Local Campaigns section
+  useEffect(() => {
+    (async () => {
+      try {
+        const chars = await invoke('list_characters');
+        const homebrew = chars.filter(c => (c.campaign_type === 'homebrew' || (!c.campaign_type && !c.primary_class)) && c.status !== 'draft' && c.status !== 'archived');
+        setLocalCampaigns(homebrew);
+      } catch { /* ignore */ }
+    })();
+  }, []);
 
   const handleSelectCommunity = async (adv) => {
     if (downloadingAdv) return;
@@ -768,71 +790,7 @@ function CreateCampaignModal({ onClose, onCreate }) {
   const overlayStyle = { position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(8px)' };
   const cardStyle = { maxWidth: '100%', borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg,#0d0b18 0%,#110e1e 100%)', border: '1px solid rgba(155,89,182,0.22)', boxShadow: '0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(155,89,182,0.08)' };
 
-  // ── Step 0: Choose type ──
-  if (mode === null) {
-    return (
-      <motion.div style={overlayStyle} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={e => e.target === e.currentTarget && onClose()}>
-        <motion.div initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
-          transition={{ type: 'spring', damping: 24, stiffness: 300 }}
-          style={{ ...cardStyle, width: 500 }}>
-          <div style={{ height: 3, background: 'linear-gradient(90deg,transparent,#9b59b6,transparent)' }} />
-          <div style={{ padding: '28px 28px 32px' }}>
-            <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <div style={{ fontSize: 30, marginBottom: 8 }}>📖</div>
-              <h4 style={{ fontFamily: 'var(--font-heading)', color: '#efe0c0', fontSize: 20, marginBottom: 4 }}>
-                Create a Campaign
-              </h4>
-              <p style={{ fontSize: 13, color: 'rgba(200,175,130,0.38)' }}>
-                Start from scratch or load a premade adventure with NPCs, quests, and lore ready to go.
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-              {/* Homebrew option */}
-              <button onClick={() => setMode('homebrew')} style={{
-                padding: '20px 16px', borderRadius: 14, cursor: 'pointer', textAlign: 'center',
-                background: 'rgba(155,89,182,0.06)', border: '1px solid rgba(155,89,182,0.2)',
-                transition: 'all 0.2s',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(155,89,182,0.12)'; e.currentTarget.style.borderColor = 'rgba(155,89,182,0.4)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(155,89,182,0.06)'; e.currentTarget.style.borderColor = 'rgba(155,89,182,0.2)'; }}
-              >
-                <div style={{ fontSize: 28, marginBottom: 8 }}>🛠️</div>
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 15, color: '#c084fc', marginBottom: 4, fontWeight: 700 }}>Homebrew</div>
-                <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.4)', lineHeight: 1.5 }}>
-                  Start with a blank campaign. Build your own world, NPCs, and quests from scratch.
-                </div>
-              </button>
-
-              {/* Premade option */}
-              <button onClick={() => setMode('premade')} style={{
-                padding: '20px 16px', borderRadius: 14, cursor: 'pointer', textAlign: 'center',
-                background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)',
-                transition: 'all 0.2s',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.12)'; e.currentTarget.style.borderColor = 'rgba(201,168,76,0.4)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.06)'; e.currentTarget.style.borderColor = 'rgba(201,168,76,0.2)'; }}
-              >
-                <div style={{ fontSize: 28, marginBottom: 8 }}>📚</div>
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 15, color: '#c9a84c', marginBottom: 4, fontWeight: 700 }}>Premade Adventure</div>
-                <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.4)', lineHeight: 1.5 }}>
-                  Pick a ready-to-play campaign with NPCs, quests, lore, and plot already set up.
-                </div>
-              </button>
-            </div>
-
-            <div style={{ textAlign: 'center' }}>
-              <button onClick={onClose} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'rgba(200,175,130,0.38)', fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.05em' }}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
-    );
-  }
-
-  // ── Premade campaign picker ──
+  // ── Campaign picker (direct — no homebrew/premade choice) ──
 
   const renderCampaignItem = (c, key) => {
     const isSelected = selectedPremade?.name === c.name;
@@ -882,8 +840,7 @@ function CreateCampaignModal({ onClose, onCreate }) {
     );
   };
 
-  if (mode === 'premade') {
-    return (
+  return (
       <motion.div style={overlayStyle} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={e => e.target === e.currentTarget && onClose()}>
         <motion.div initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
           transition={{ type: 'spring', damping: 24, stiffness: 300 }}
@@ -891,13 +848,12 @@ function CreateCampaignModal({ onClose, onCreate }) {
           <div style={{ height: 3, background: 'linear-gradient(90deg,transparent,#c9a84c,transparent)' }} />
           <div style={{ padding: '20px 24px 14px', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <button onClick={() => { setMode(null); setSelectedPremade(null); }} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'rgba(200,175,130,0.5)', fontSize: 18, lineHeight: 1 }}>←</button>
               <h4 style={{ fontFamily: 'var(--font-heading)', color: '#efe0c0', fontSize: 18, margin: 0 }}>
-                Choose a Premade Adventure
+                Select a Campaign
               </h4>
             </div>
-            <p style={{ fontSize: 11, color: 'rgba(200,175,130,0.35)', marginLeft: 32 }}>
-              Select an adventure to create your campaign with all content pre-loaded.
+            <p style={{ fontSize: 11, color: 'rgba(200,175,130,0.35)' }}>
+              Choose an adventure to load with NPCs, quests, and lore ready to go.
             </p>
 
             {/* Ruleset selector */}
@@ -1039,6 +995,44 @@ function CreateCampaignModal({ onClose, onCreate }) {
                 )}
               </div>
             )}
+
+            {/* ── Local Campaigns dropdown ── */}
+            <button onClick={() => setLocalOpen(v => !v)} style={{
+              display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 0', border: 'none', background: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.06)',
+            }}>
+              <span style={{ fontSize: 12, color: localOpen ? '#4ade80' : 'rgba(200,175,130,0.5)', transition: 'transform 0.2s', display: 'inline-block', transform: localOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
+              <span style={{ fontFamily: 'var(--font-heading)', fontSize: 12, fontWeight: 700, color: '#4ade80', letterSpacing: '0.08em' }}>
+                Local Campaigns
+              </span>
+              <span style={{ fontSize: 10, color: 'var(--text-mute)', marginLeft: 'auto' }}>{localCampaigns.length} saved</span>
+            </button>
+            {localOpen && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 0' }}>
+                {localCampaigns.length === 0 ? (
+                  <div style={{ padding: '16px', textAlign: 'center', fontSize: 11, color: 'var(--text-mute)' }}>
+                    No homebrew campaigns yet. Use "Create Campaign" to build one from scratch.
+                  </div>
+                ) : localCampaigns.map(c => (
+                  <div key={c.id} style={{
+                    borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(74,222,128,0.15)',
+                    transition: 'all 0.2s', padding: '12px 14px',
+                  }}
+                    onClick={() => onClose()}
+                    onDoubleClick={() => { onClose(); /* navigate handled by parent */ }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontFamily: 'var(--font-heading)', fontSize: 13, color: 'var(--text)', fontWeight: 600, flex: 1 }}>{c.name}</span>
+                      <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: 'rgba(74,222,128,0.08)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.2)', fontFamily: 'var(--font-mono)' }}>Homebrew</span>
+                    </div>
+                    <p style={{ fontSize: 10, color: 'rgba(200,175,130,0.4)', lineHeight: 1.5, margin: '4px 0 0' }}>
+                      Click to open this campaign from the dashboard.
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Selected campaign preview */}
@@ -1095,8 +1089,8 @@ function CreateCampaignModal({ onClose, onCreate }) {
             </div>
           </div>
           <div style={{ padding: '4px 24px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-            <button onClick={() => { setMode(null); setSelectedPremade(null); }} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'rgba(200,175,130,0.38)', fontFamily: 'var(--font-heading)', fontSize: 12 }}>
-              ← Back
+            <button onClick={onClose} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'rgba(200,175,130,0.38)', fontFamily: 'var(--font-heading)', fontSize: 12 }}>
+              Cancel
             </button>
             <motion.button
               onClick={() => selectedPremade && doCreate(selectedPremade)}
@@ -1118,9 +1112,30 @@ function CreateCampaignModal({ onClose, onCreate }) {
         </motion.div>
       </motion.div>
     );
-  }
+}
 
-  // ── Homebrew flow (original) ──
+// ─── Create Homebrew Campaign Modal ─────────────────────────────────────────
+
+function CreateHomebrewModal({ onClose, onCreate }) {
+  const [name, setName] = useState('');
+  const [dmName, setDmName] = useState(() => localStorage.getItem('codex-dm-name') || '');
+  const [ruleset, setRuleset] = useState('5e-2014');
+  const [busy, setBusy] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => { ref.current?.focus(); }, []);
+
+  const doCreate = async () => {
+    if (busy || !name.trim()) return;
+    if (dmName.trim()) localStorage.setItem('codex-dm-name', dmName.trim());
+    setBusy(true);
+    try {
+      await onCreate({ name: name.trim(), ruleset, primaryClass: '', race: '', experience: 'experienced', premade: null, draft: true });
+    } finally { setBusy(false); }
+  };
+
+  const overlayStyle = { position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(8px)' };
+  const cardStyle = { maxWidth: '100%', borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg,#0d0b18 0%,#110e1e 100%)', border: '1px solid rgba(74,222,128,0.22)', boxShadow: '0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(74,222,128,0.08)' };
+
   return (
     <motion.div
       style={overlayStyle}
@@ -1132,33 +1147,33 @@ function CreateCampaignModal({ onClose, onCreate }) {
         transition={{ type: 'spring', damping: 24, stiffness: 300 }}
         style={{ ...cardStyle, width: 420 }}
       >
-        <div style={{ height: 3, background: 'linear-gradient(90deg,transparent,#9b59b6,transparent)' }} />
+        <div style={{ height: 3, background: 'linear-gradient(90deg,transparent,#4ade80,transparent)' }} />
         <div style={{ padding: '24px 24px 28px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-            <button onClick={() => setMode(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'rgba(200,175,130,0.5)', fontSize: 18, lineHeight: 1 }}>←</button>
-            <h4 style={{ fontFamily: 'var(--font-heading)', color: '#efe0c0', fontSize: 20, margin: 0 }}>
-              Name Your Campaign
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 30, marginBottom: 8 }}>🛠️</div>
+            <h4 style={{ fontFamily: 'var(--font-heading)', color: '#efe0c0', fontSize: 20, margin: '0 0 4px' }}>
+              Create Campaign
             </h4>
+            <p style={{ fontSize: 13, color: 'rgba(200,175,130,0.38)' }}>
+              Build your own world from scratch with NPCs, quests, and lore.
+            </p>
           </div>
-          <p style={{ fontSize: 13, color: 'rgba(200,175,130,0.38)', marginLeft: 32, marginBottom: 20 }}>
-            Give your world a name. You can manage sessions, NPCs, and quests inside.
-          </p>
 
           <input
             ref={ref}
             value={name}
             onChange={e => setName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && name.trim() && doCreate(null)}
+            onKeyDown={e => e.key === 'Enter' && name.trim() && doCreate()}
             placeholder="e.g. Curse of Strahd, Homebrew World…"
             maxLength={60}
             style={{
               width: '100%', padding: '13px 18px', borderRadius: 10, marginBottom: 16,
-              background: 'rgba(8,6,16,0.9)', border: '1px solid rgba(155,89,182,0.28)',
+              background: 'rgba(8,6,16,0.9)', border: '1px solid rgba(74,222,128,0.28)',
               color: '#f0e4c8', fontFamily: 'var(--font-heading)', fontSize: 16,
               letterSpacing: '0.05em', textAlign: 'center', outline: 'none',
             }}
-            onFocus={e => e.target.style.borderColor = 'rgba(155,89,182,0.65)'}
-            onBlur={e => e.target.style.borderColor = 'rgba(155,89,182,0.28)'}
+            onFocus={e => e.target.style.borderColor = 'rgba(74,222,128,0.65)'}
+            onBlur={e => e.target.style.borderColor = 'rgba(74,222,128,0.28)'}
           />
 
           <div style={{ marginBottom: 16 }}>
@@ -1187,32 +1202,72 @@ function CreateCampaignModal({ onClose, onCreate }) {
                 return (
                   <button key={opt.id} onClick={() => setRuleset(opt.id)} style={{
                     flex: 1, padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', textAlign: 'center',
-                    background: sel ? 'rgba(155,89,182,0.1)' : 'rgba(255,255,255,0.03)',
-                    outline: sel ? '1px solid rgba(155,89,182,0.38)' : '1px solid rgba(255,255,255,0.06)',
+                    background: sel ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.03)',
+                    outline: sel ? '1px solid rgba(74,222,128,0.38)' : '1px solid rgba(255,255,255,0.06)',
                     transition: 'all 0.2s',
                   }}>
-                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: 12, color: sel ? '#c084fc' : 'rgba(200,175,130,0.5)', letterSpacing: '0.03em' }}>{opt.name}</div>
+                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: 12, color: sel ? '#4ade80' : 'rgba(200,175,130,0.5)', letterSpacing: '0.03em' }}>{opt.name}</div>
                   </button>
                 );
               })}
             </div>
           </div>
 
+          {/* Campaign Completion Checklist */}
+          <div style={{
+            marginBottom: 18, padding: '14px 16px', borderRadius: 10,
+            background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(74,222,128,0.12)',
+          }}>
+            <div style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(74,222,128,0.5)', marginBottom: 10 }}>
+              What makes a complete campaign
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              {[
+                { icon: Users, label: 'NPCs', desc: 'Characters that populate your world', required: true },
+                { icon: Flag, label: 'Quests', desc: 'Plot threads and objectives for players', required: true },
+                { icon: BookOpen, label: 'Lore & Locations', desc: 'World history, factions, and places', required: true },
+                { icon: Sparkles, label: 'Encounters', desc: 'Combat encounters with monsters', required: false },
+                { icon: ClipboardList, label: 'Session Notes', desc: 'Document sessions as you play', required: false },
+              ].map(item => (
+                <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                    background: item.required ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${item.required ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <item.icon size={11} style={{ color: item.required ? '#4ade80' : 'rgba(255,255,255,0.25)' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>{item.label}</span>
+                    <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginLeft: 6 }}>{item.desc}</span>
+                  </div>
+                  {item.required && (
+                    <span style={{ fontSize: 8, fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', color: '#4ade80', opacity: 0.5, textTransform: 'uppercase' }}>Required</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 10, color: 'rgba(200,175,130,0.3)', marginTop: 10, lineHeight: 1.5 }}>
+              You'll need at least 1 NPC, 1 Quest, and 1 Lore entry before you can publish your campaign.
+            </div>
+          </div>
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <button onClick={() => setMode(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'rgba(200,175,130,0.38)', fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.05em' }}>
-              ← Back
+            <button onClick={onClose} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'rgba(200,175,130,0.38)', fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.05em' }}>
+              Cancel
             </button>
             <motion.button
-              onClick={() => doCreate(null)}
+              onClick={doCreate}
               disabled={busy || !name.trim()}
-              whileHover={name.trim() ? { y: -2, boxShadow: '0 5px 18px rgba(155,89,182,0.3)' } : {}}
+              whileHover={name.trim() ? { y: -2, boxShadow: '0 5px 18px rgba(74,222,128,0.3)' } : {}}
               style={{
                 display: 'flex', alignItems: 'center', gap: 7,
                 padding: '10px 24px', borderRadius: 9, border: 'none',
                 cursor: name.trim() && !busy ? 'pointer' : 'not-allowed',
                 fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.08em', fontWeight: 700,
-                background: name.trim() ? 'linear-gradient(135deg,#9b59b6,#c084fc)' : 'rgba(155,89,182,0.15)',
-                color: name.trim() ? '#fff' : 'rgba(155,89,182,0.4)',
+                background: name.trim() ? 'linear-gradient(135deg,#16a34a,#4ade80)' : 'rgba(74,222,128,0.15)',
+                color: name.trim() ? '#fff' : 'rgba(74,222,128,0.4)',
                 opacity: busy ? 0.6 : name.trim() ? 1 : 0.5,
               }}
             >
@@ -1615,7 +1670,7 @@ function Divider() {
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
-function EmptyState({ onOpen, onImport, onDDBImport, isDM }) {
+function EmptyState({ onOpen, onImport, onDDBImport, isDM, onCreateHomebrew, onImportCampaign }) {
   const fileInputRef = useRef(null);
 
   const handleFileSelect = async (e) => {
@@ -1642,39 +1697,61 @@ function EmptyState({ onOpen, onImport, onDDBImport, isDM }) {
       <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: 22, color: 'rgba(200,175,130,0.5)', marginBottom: 10 }}>
         {isDM ? 'No Campaigns Yet' : 'The Codex Awaits'}
       </h3>
-      <p style={{ fontSize: 15, color: 'rgba(200,175,130,0.27)', maxWidth: 320, margin: '0 auto 32px', lineHeight: 1.75 }}>
+      <p style={{ fontSize: 15, color: 'rgba(200,175,130,0.27)', maxWidth: 380, margin: '0 auto 32px', lineHeight: 1.75 }}>
         {isDM
-          ? 'Create your first campaign to start managing sessions, NPCs, quests, and encounters.'
+          ? 'Select a premade adventure, create your own homebrew campaign, or import an existing one.'
           : 'No adventurers have been recorded yet. Create your first character or import an existing one.'}
       </p>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <motion.button
-          onClick={onOpen}
-          whileHover={{ y: -2, boxShadow: isDM ? '0 8px 28px rgba(155,89,182,0.3)' : '0 8px 28px rgba(201,168,76,0.3)' }}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: isDM ? 'linear-gradient(135deg,#9b59b6,#c084fc)' : 'linear-gradient(135deg,#c9a84c,#f0d878)', color: isDM ? '#fff' : '#12101c' }}
-        >
-          <Scroll size={16} /> {isDM ? 'Create First Campaign' : 'Create New Character'}
-        </motion.button>
-        {!isDM && (
-          <>
-            <input ref={fileInputRef} type="file" accept=".json" onChange={handleFileSelect} style={{ display: 'none' }} />
-            <motion.button
-              onClick={() => fileInputRef.current?.click()}
-              whileHover={{ y: -2, boxShadow: '0 8px 28px rgba(52,152,219,0.25)' }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: '1px solid rgba(52,152,219,0.3)', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: 'rgba(52,152,219,0.1)', color: 'rgba(100,180,230,0.85)' }}
-            >
-              <Upload size={16} /> Import Existing Character
-            </motion.button>
-            <motion.button
-              onClick={onDDBImport}
-              whileHover={{ y: -2, boxShadow: '0 8px 28px rgba(59,130,246,0.25)' }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: '1px solid rgba(59,130,246,0.3)', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: 'rgba(59,130,246,0.1)', color: 'rgba(96,165,250,0.85)' }}
-            >
-              <FileJson size={16} /> D&D Beyond Import
-            </motion.button>
-          </>
-        )}
-      </div>
+      {isDM ? (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <motion.button
+            onClick={onOpen}
+            whileHover={{ y: -2, boxShadow: '0 8px 28px rgba(155,89,182,0.3)' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: 'linear-gradient(135deg,#9b59b6,#c084fc)', color: '#fff' }}
+          >
+            <Scroll size={16} /> Select Campaign
+          </motion.button>
+          <motion.button
+            onClick={onCreateHomebrew}
+            whileHover={{ y: -2, boxShadow: '0 8px 28px rgba(74,222,128,0.25)' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: '1px solid rgba(74,222,128,0.3)', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: 'rgba(74,222,128,0.1)', color: 'rgba(74,222,128,0.85)' }}
+          >
+            <Plus size={16} /> Create Campaign
+          </motion.button>
+          <motion.button
+            onClick={onImportCampaign}
+            whileHover={{ y: -2, boxShadow: '0 8px 28px rgba(96,165,250,0.25)' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: '1px solid rgba(96,165,250,0.3)', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: 'rgba(96,165,250,0.1)', color: 'rgba(96,165,250,0.85)' }}
+          >
+            <Upload size={16} /> Import Campaign
+          </motion.button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <motion.button
+            onClick={onOpen}
+            whileHover={{ y: -2, boxShadow: '0 8px 28px rgba(201,168,76,0.3)' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: 'linear-gradient(135deg,#c9a84c,#f0d878)', color: '#12101c' }}
+          >
+            <Scroll size={16} /> Create New Character
+          </motion.button>
+          <input ref={fileInputRef} type="file" accept=".json" onChange={handleFileSelect} style={{ display: 'none' }} />
+          <motion.button
+            onClick={() => fileInputRef.current?.click()}
+            whileHover={{ y: -2, boxShadow: '0 8px 28px rgba(52,152,219,0.25)' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: '1px solid rgba(52,152,219,0.3)', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: 'rgba(52,152,219,0.1)', color: 'rgba(100,180,230,0.85)' }}
+          >
+            <Upload size={16} /> Import Existing Character
+          </motion.button>
+          <motion.button
+            onClick={onDDBImport}
+            whileHover={{ y: -2, boxShadow: '0 8px 28px rgba(59,130,246,0.25)' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: '1px solid rgba(59,130,246,0.3)', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: 'rgba(59,130,246,0.1)', color: 'rgba(96,165,250,0.85)' }}
+          >
+            <FileJson size={16} /> D&D Beyond Import
+          </motion.button>
+        </div>
+      )}
     </motion.div>
   );
 }
@@ -2223,6 +2300,7 @@ export default function Dashboard() {
   const [characters, setCharacters] = useState([]);
   const [loading, setLoading]       = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [showCreateHomebrew, setShowCreateHomebrew] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const navigate = useNavigate();
 
@@ -2235,6 +2313,7 @@ export default function Dashboard() {
   const [tauriUpdate, setTauriUpdate] = useState(null); // { available, version, body, update }
   const [updateInstalling, setUpdateInstalling] = useState(false);
   const { updateAvailable, latestVersion, currentVersion } = useUpdateCheck();
+  const ollamaSetup = useOllamaAutoSetup();
 
   // Tauri native updater — checks GitHub Releases for signed binary updates
   // Checks on mount and every 5 minutes so mid-session updates are detected
@@ -2277,9 +2356,26 @@ export default function Dashboard() {
   };
   useEffect(() => { load(); }, []);
 
-  const handleCreate = async ({ name, ruleset, primaryClass, race, premade }) => {
+  const handleCreate = async ({ name, ruleset, primaryClass, race, premade, draft }) => {
     try {
       const char = await createCharacter({ name, ruleset, primaryClass, race });
+
+      // If draft homebrew campaign, create campaign entry with 'draft' status
+      if (draft && isDM) {
+        await invoke('create_campaign', {
+          name: char.name || name,
+          description: '',
+          ruleset: ruleset || 'dnd5e-2024',
+          campaignType: 'homebrew',
+          campaignId: char.id,
+          status: 'draft',
+        }).catch(() => {});
+        await invoke('set_active_campaign_id', { campaignId: char.id });
+        toast.success(`Campaign "${char.name}" created — start building!`);
+        setShowCreateHomebrew(false);
+        navigate(`/character/${char.id}`, { state: { section: 'dm-guide' } });
+        return;
+      }
 
       // If premade campaign selected, import all its data
       if (premade && isDM) {
@@ -2303,7 +2399,59 @@ export default function Dashboard() {
           try { await addJournal(char.id, { title: entry.title, session_number: entry.session_number ?? 0, real_date: entry.real_date || new Date().toISOString().split('T')[0], ingame_date: entry.ingame_date || '', body: entry.body || '', tags: entry.tags || '', npcs_mentioned: entry.npcs_mentioned || '', pinned: entry.pinned || 0 }); imported.journal++; } catch { /* skip */ }
         }
 
-        toast.success(`"${char.name}" created with ${imported.npcs} NPCs, ${imported.quests} quests, ${imported.lore} lore entries!`);
+        // Auto-generate scenes from lore locations + NPC locations
+        try {
+          // Create a matching campaign entry in campaigns.db so scene FK constraints pass
+          await invoke('create_campaign', {
+            name: char.name || name,
+            description: premade.summary || premade.description || '',
+            ruleset: ruleset || 'dnd5e-2024',
+            campaignType: 'premade',
+            campaignId: char.id,
+          }).catch(() => {});
+          // Set active campaign so create_scene works
+          await invoke('set_active_campaign_id', { campaignId: char.id });
+
+          // Collect location lore entries as primary scenes
+          const locationLore = (premade.lore || []).filter(l => (l.category || '').toLowerCase() === 'location');
+          const sceneNames = new Set();
+          let sceneCount = 0;
+
+          for (const loc of locationLore) {
+            if (sceneNames.has(loc.title)) continue;
+            sceneNames.add(loc.title);
+            await invoke('create_scene', {
+              name: loc.title,
+              description: loc.body || '',
+              location: loc.related_to || '',
+            }).catch(() => {});
+            sceneCount++;
+          }
+
+          // Add NPC locations that aren't already covered by lore
+          const npcLocations = [...new Set((premade.npcs || []).map(n => n.location).filter(Boolean))];
+          for (const loc of npcLocations) {
+            // Skip if already a scene or a sub-location of an existing scene
+            if (sceneNames.has(loc)) continue;
+            const alreadyCovered = [...sceneNames].some(s => loc.includes(s) || s.includes(loc));
+            if (alreadyCovered) continue;
+            sceneNames.add(loc);
+            const npcsHere = (premade.npcs || []).filter(n => n.location === loc).map(n => n.name).join(', ');
+            await invoke('create_scene', {
+              name: loc,
+              description: npcsHere ? `NPCs here: ${npcsHere}` : '',
+              location: loc,
+            }).catch(() => {});
+            sceneCount++;
+          }
+
+          if (sceneCount > 0) imported.scenes = sceneCount;
+        } catch (e) {
+          console.warn('[Dashboard] Scene auto-generation failed:', e);
+        }
+
+        const scenePart = imported.scenes ? `, ${imported.scenes} scenes` : '';
+        toast.success(`"${char.name}" created with ${imported.npcs} NPCs, ${imported.quests} quests, ${imported.lore} lore entries${scenePart}!`);
       } else {
         toast.success(isDM ? `Campaign "${char.name}" created!` : `${char.name} added to the Codex!`);
       }
@@ -2501,6 +2649,40 @@ export default function Dashboard() {
         </motion.div>
       )}
 
+      {/* ── AI Setup Banner ── */}
+      {ollamaSetup.stage !== 'idle' && ollamaSetup.stage !== 'ready' && ollamaSetup.stage !== 'error' && (
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          style={{
+            position: 'relative', zIndex: 20, width: '100%', maxWidth: 1060, margin: '0 auto',
+            padding: '6px 24px',
+          }}
+        >
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '8px 16px', borderRadius: 10,
+            background: 'rgba(139,92,246,0.08)',
+            border: '1px solid rgba(139,92,246,0.2)',
+            backdropFilter: 'blur(12px)',
+          }}>
+            <div style={{
+              width: 14, height: 14, border: '2px solid rgba(139,92,246,0.6)',
+              borderTopColor: 'transparent', borderRadius: '50%',
+              animation: 'spin 0.8s linear infinite', flexShrink: 0,
+            }} />
+            <span style={{ fontSize: 11, color: 'rgba(167,139,250,0.8)', fontFamily: 'var(--font-ui)' }}>
+              {ollamaSetup.message}
+            </span>
+            {ollamaSetup.progress > 0 && ollamaSetup.progress < 100 && (
+              <div style={{ flex: 1, maxWidth: 120, height: 4, borderRadius: 4, background: 'rgba(139,92,246,0.15)', overflow: 'hidden' }}>
+                <div style={{ width: `${ollamaSetup.progress}%`, height: '100%', borderRadius: 4, background: 'rgba(139,92,246,0.5)', transition: 'width 0.3s' }} />
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
       {/* ── Content ── */}
       <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: 1060, padding: '0 24px 120px' }}>
 
@@ -2640,26 +2822,28 @@ export default function Dashboard() {
                 {filteredCharacters.length} {filteredCharacters.length === 1 ? 'result' : 'results'}
               </div>
             )}
-            {isDM && archivedCount > 0 && (
-              <div style={{ textAlign: 'center', marginTop: 6 }}>
-                <button
-                  onClick={() => setShowArchived(v => !v)}
-                  style={{
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    color: showArchived ? 'rgba(201,168,76,0.7)' : 'rgba(200,175,130,0.3)',
-                    fontSize: 11, fontFamily: 'var(--font-heading)', letterSpacing: '0.08em',
-                    display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 8px',
-                    borderRadius: 6, transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={e => e.target.style.color = 'rgba(201,168,76,0.7)'}
-                  onMouseLeave={e => { if (!showArchived) e.target.style.color = 'rgba(200,175,130,0.3)'; }}
-                >
-                  <Archive size={11} />
-                  {showArchived ? 'Hide' : 'Show'} archived ({archivedCount})
-                </button>
-              </div>
-            )}
           </motion.div>
+        )}
+
+        {/* Archived toggle — always visible when archived campaigns exist */}
+        {!loading && isDM && archivedCount > 0 && (
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <button
+              onClick={() => setShowArchived(v => !v)}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: showArchived ? 'rgba(201,168,76,0.7)' : 'rgba(200,175,130,0.3)',
+                fontSize: 11, fontFamily: 'var(--font-heading)', letterSpacing: '0.08em',
+                display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 8px',
+                borderRadius: 6, transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => e.target.style.color = 'rgba(201,168,76,0.7)'}
+              onMouseLeave={e => { if (!showArchived) e.target.style.color = 'rgba(200,175,130,0.3)'; }}
+            >
+              <Archive size={11} />
+              {showArchived ? 'Hide' : 'Show'} archived ({archivedCount})
+            </button>
+          </div>
         )}
 
         {/* Grid / states */}
@@ -2668,7 +2852,14 @@ export default function Dashboard() {
             Consulting the ancient texts…
           </div>
         ) : characters.length === 0 ? (
-          <EmptyState onOpen={() => setShowCreate(true)} onImport={handleImport} onDDBImport={() => setShowDDBImport(true)} isDM={isDM} />
+          <EmptyState
+            onOpen={() => setShowCreate(true)}
+            onImport={handleImport}
+            onDDBImport={() => setShowDDBImport(true)}
+            isDM={isDM}
+            onCreateHomebrew={() => setShowCreateHomebrew(true)}
+            onImportCampaign={handleImportCampaign}
+          />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 20 }}>
             {filteredCharacters.map((c, i) => isDM ? (
@@ -2690,27 +2881,52 @@ export default function Dashboard() {
               <>
                 <NewCharCard index={filteredCharacters.length} onClick={() => setShowCreate(true)} isDM={isDM} />
                 {isDM && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 24 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: (filteredCharacters.length + 1) * 0.08, type: 'spring', damping: 22, stiffness: 200 }}
-                    whileHover={{ y: -4, borderColor: 'rgba(96,165,250,0.4)' }}
-                    onClick={handleImportCampaign}
-                    style={{
-                      borderRadius: 14, cursor: 'pointer', minHeight: 160,
-                      background: 'rgba(11,9,20,0.6)', border: '1px dashed rgba(96,165,250,0.2)',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                      gap: 10, transition: 'all 0.2s',
-                    }}
-                  >
-                    <Upload size={28} style={{ color: 'rgba(96,165,250,0.35)' }} />
-                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: 13, color: 'rgba(96,165,250,0.5)', letterSpacing: '0.04em' }}>
-                      Import Campaign
-                    </div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
-                      Load a .json campaign file
-                    </div>
-                  </motion.div>
+                  <>
+                    {/* Create Campaign card */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 24 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: (filteredCharacters.length + 1) * 0.08, type: 'spring', damping: 22, stiffness: 200 }}
+                      whileHover={{ y: -4, borderColor: 'rgba(74,222,128,0.4)' }}
+                      onClick={() => setShowCreateHomebrew(true)}
+                      style={{
+                        borderRadius: 14, cursor: 'pointer', minHeight: 160,
+                        background: 'rgba(11,9,20,0.6)', border: '1px dashed rgba(74,222,128,0.2)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        gap: 10, transition: 'all 0.2s',
+                      }}
+                    >
+                      <Plus size={28} style={{ color: 'rgba(74,222,128,0.35)' }} />
+                      <div style={{ fontFamily: 'var(--font-heading)', fontSize: 13, color: 'rgba(74,222,128,0.5)', letterSpacing: '0.04em' }}>
+                        Create Campaign
+                      </div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
+                        Build your own homebrew world
+                      </div>
+                    </motion.div>
+                    {/* Import Campaign card */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 24 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: (filteredCharacters.length + 2) * 0.08, type: 'spring', damping: 22, stiffness: 200 }}
+                      whileHover={{ y: -4, borderColor: 'rgba(96,165,250,0.4)' }}
+                      onClick={handleImportCampaign}
+                      style={{
+                        borderRadius: 14, cursor: 'pointer', minHeight: 160,
+                        background: 'rgba(11,9,20,0.6)', border: '1px dashed rgba(96,165,250,0.2)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        gap: 10, transition: 'all 0.2s',
+                      }}
+                    >
+                      <Upload size={28} style={{ color: 'rgba(96,165,250,0.35)' }} />
+                      <div style={{ fontFamily: 'var(--font-heading)', fontSize: 13, color: 'rgba(96,165,250,0.5)', letterSpacing: '0.04em' }}>
+                        Import Campaign
+                      </div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
+                        Load a .json campaign file
+                      </div>
+                    </motion.div>
+                  </>
                 )}
                 {!isDM && <ImportCharCard index={filteredCharacters.length + 1} onImport={handleImport} />}
                 {!isDM && <DDBImportCard index={filteredCharacters.length + 2} onClick={() => setShowDDBImport(true)} />}
@@ -2772,6 +2988,13 @@ export default function Dashboard() {
         ) : (
           <CreateModal onClose={() => setShowCreate(false)} onCreate={handleCreate} />
         ))}
+      </AnimatePresence>
+
+      {/* Create Homebrew Campaign Modal */}
+      <AnimatePresence>
+        {showCreateHomebrew && (
+          <CreateHomebrewModal onClose={() => setShowCreateHomebrew(false)} onCreate={handleCreate} />
+        )}
       </AnimatePresence>
 
       {/* Session Prep Modal */}

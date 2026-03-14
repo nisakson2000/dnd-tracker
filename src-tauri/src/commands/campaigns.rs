@@ -30,17 +30,50 @@ where
     f(conn)
 }
 
+/// Enrich a campaign JSON value with quest_count, session_count, and total_hours.
+fn enrich_campaign_stats(conn: &rusqlite::Connection, campaign: &mut serde_json::Value) {
+    let cid = campaign["id"].as_str().unwrap_or("").to_string();
+
+    let quest_count: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM campaign_quests WHERE campaign_id = ?1",
+        params![cid],
+        |row| row.get(0),
+    ).unwrap_or(0);
+
+    let session_count: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM event_log WHERE campaign_id = ?1 AND event_type = 'session_start'",
+        params![cid],
+        |row| row.get(0),
+    ).unwrap_or(0);
+
+    let total_seconds: i64 = conn.query_row(
+        "SELECT COALESCE(SUM(e.ts - s.ts), 0) FROM event_log s JOIN event_log e ON s.session_id = e.session_id AND e.event_type = 'session_end' WHERE s.campaign_id = ?1 AND s.event_type = 'session_start'",
+        params![cid],
+        |row| row.get(0),
+    ).unwrap_or(0);
+    let total_hours = (total_seconds as f64 / 3600.0 * 10.0).round() / 10.0;
+
+    if let Some(obj) = campaign.as_object_mut() {
+        obj.insert("quest_count".to_string(), serde_json::json!(quest_count));
+        obj.insert("session_count".to_string(), serde_json::json!(session_count));
+        obj.insert("total_hours".to_string(), serde_json::json!(total_hours));
+    }
+}
+
 #[tauri::command]
 pub fn create_campaign(
     name: String,
     description: String,
     ruleset: String,
     campaign_type: Option<String>,
+    campaign_id: Option<String>,
+    status: Option<String>,
     state: State<'_, AppState>,
 ) -> Result<serde_json::Value, String> {
-    let id = Uuid::new_v4().to_string();
+    let id = campaign_id.unwrap_or_else(|| Uuid::new_v4().to_string());
     let now = chrono::Utc::now().timestamp();
     let ctype = campaign_type.unwrap_or_else(|| "homebrew".to_string());
+    let campaign_status = status.unwrap_or_else(|| "active".to_string());
 
     with_campaign_conn(&state, |conn| {
         let count: i64 = conn.query_row("SELECT COUNT(*) FROM campaigns", [], |row| row.get(0))
@@ -49,9 +82,12 @@ pub fn create_campaign(
             return Err("Campaign limit reached (max 20). Delete or archive an existing campaign first.".to_string());
         }
 
+        // Ensure status column exists
+        let _ = conn.execute("ALTER TABLE campaigns ADD COLUMN status TEXT DEFAULT 'active'", []);
+
         conn.execute(
-            "INSERT INTO campaigns (id, name, description, ruleset, campaign_type, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)",
-            params![id, name, description, ruleset, ctype, now],
+            "INSERT INTO campaigns (id, name, description, ruleset, campaign_type, status, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7)",
+            params![id, name, description, ruleset, ctype, campaign_status, now],
         ).map_err(|e| format!("Failed to create campaign: {}", e))?;
 
         Ok(serde_json::json!({
@@ -60,6 +96,7 @@ pub fn create_campaign(
             "description": description,
             "ruleset": ruleset,
             "campaign_type": ctype,
+            "status": campaign_status,
             "created_at": now,
             "updated_at": now,
         }))
@@ -93,6 +130,12 @@ pub fn list_campaigns(
         for row in rows {
             results.push(row.map_err(|e| format!("Failed to read campaign row: {}", e))?);
         }
+
+        // Enrich each campaign with stats
+        for campaign in &mut results {
+            enrich_campaign_stats(conn, campaign);
+        }
+
         Ok(results)
     })
 }
@@ -107,7 +150,7 @@ pub fn select_campaign(
             "SELECT id, name, description, ruleset, created_at, updated_at, last_session, active_scene_id, campaign_type FROM campaigns WHERE id = ?1"
         ).map_err(|e| format!("Failed to query campaign: {}", e))?;
 
-        stmt.query_row(params![campaign_id], |row| {
+        let mut campaign = stmt.query_row(params![campaign_id], |row| {
             Ok(serde_json::json!({
                 "id": row.get::<_, String>(0)?,
                 "name": row.get::<_, String>(1)?,
@@ -119,7 +162,10 @@ pub fn select_campaign(
                 "active_scene_id": row.get::<_, Option<String>>(7).unwrap_or(None),
                 "campaign_type": row.get::<_, String>(8).unwrap_or_else(|_| "homebrew".to_string()),
             }))
-        }).map_err(|e| format!("Campaign not found: {}", e))
+        }).map_err(|e| format!("Campaign not found: {}", e))?;
+
+        enrich_campaign_stats(conn, &mut campaign);
+        Ok(campaign)
     })?;
 
     // Set active campaign
@@ -139,6 +185,20 @@ pub fn get_active_campaign(
         "Failed to read active campaign.".to_string()
     })?;
     Ok(active.clone())
+}
+
+/// Sets the active campaign ID without looking it up in campaigns.db.
+/// Used by DM mode when the "campaign" is stored as a character record.
+#[tauri::command]
+pub fn set_active_campaign_id(
+    campaign_id: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let mut active = state.active_campaign.lock().map_err(|_| {
+        "Failed to set active campaign.".to_string()
+    })?;
+    *active = Some(campaign_id);
+    Ok(())
 }
 
 #[tauri::command]

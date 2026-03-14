@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useSession } from '../contexts/SessionContext';
+import { CONDITION_EFFECTS } from '../data/conditionEffects';
 import CampaignOverview from '../components/CampaignOverview';
 
 export default function PlayerSession() {
@@ -111,11 +112,20 @@ export default function PlayerSession() {
                 icon: gameEvent.delta > 0 ? '💚' : '💔', duration: 3000,
               });
               break;
-            case 'ConditionApplied':
-              toast(`Condition: ${gameEvent.condition || 'effect'} applied`, { icon: '⚠️', duration: 3000 });
+            case 'ConditionApplied': {
+              const condApplied = gameEvent.condition || 'effect';
+              const appliedSummary = CONDITION_EFFECTS[condApplied]?.summary;
+              toast(`Condition: ${condApplied} applied${appliedSummary ? `\n${appliedSummary}` : ''}`, {
+                icon: '⚠️', duration: 4000,
+                style: { background: '#1a1520', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.4)', maxWidth: '360px', lineHeight: '1.4' }
+              });
               break;
+            }
             case 'ConditionRemoved':
-              toast(`Condition: ${gameEvent.condition || 'effect'} removed`, { icon: '✅', duration: 3000 });
+              toast(`Condition: ${gameEvent.condition || 'effect'} removed`, {
+                icon: '✅', duration: 2500,
+                style: { background: '#1a1520', color: '#4ade80', border: '1px solid rgba(74,222,128,0.4)' }
+              });
               break;
             case 'RestCompleted':
               toast(`${gameEvent.rest_type === 'long' ? 'Long' : 'Short'} rest completed!`, {

@@ -167,7 +167,7 @@ export default function AiAssistant({ characterId, character }) {
     const container = messagesContainerRef.current;
     if (!container) return;
     const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
-    if (nearBottom) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (nearBottom) container.scrollTop = container.scrollHeight;
   }, [messages]);
 
   const updateSettings = (next) => { setSettings(next); saveSettings(next); };

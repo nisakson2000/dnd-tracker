@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Heart, Clock, Shield, Zap, Star, Footprints, X, Moon, Coffee, Sunrise, Dices, Flame, Check, Keyboard, Wand2, Sword, FlaskConical, Sparkles, ChevronUp, ChevronDown, Pin, Plus } from 'lucide-react';
+import { Heart, Clock, Shield, Zap, Star, Footprints, X, Moon, Coffee, Sunrise, Dices, Flame, Check, Keyboard, Wand2, Sword, FlaskConical, Sparkles, ChevronUp, ChevronDown, Pin, Plus, Hammer } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOverview } from '../api/overview';
 import { getConditions, getAttacks } from '../api/combat';
@@ -14,6 +14,7 @@ import { PartyProvider } from '../contexts/PartyContext';
 import { CampaignSyncProvider, useCampaignSync } from '../contexts/CampaignSyncContext';
 import { addQuest, addNpc } from '../utils/playerJournal';
 import { LiveSessionProvider } from '../contexts/LiveSessionContext';
+import { useSession } from '../contexts/SessionContext';
 import PlayerNotification from '../components/party/PlayerNotification';
 import PlayerActionOverlay from '../components/party/PlayerActionOverlay';
 import SharedCombatBar from '../components/party/SharedCombatBar';
@@ -24,6 +25,7 @@ import LevelUpOverlay from '../components/LevelUpOverlay';
 import ArcaneWidget from '../components/ArcaneWidget';
 import CombatModeHUD from '../components/CombatModeHUD';
 import { useLevelUp } from '../hooks/useLevelUp';
+import { CONDITION_EFFECTS } from '../data/conditionEffects';
 import { useCrashRecovery } from '../hooks/useCrashRecovery';
 import { useAutoBackup } from '../hooks/useAutoBackup';
 import { useErrorLog, setErrorContext } from '../hooks/useErrorLog';
@@ -59,6 +61,9 @@ const BattleMap = lazy(() => import('../sections/BattleMap'));
 const FantasyCalendar = lazy(() => import('../sections/Calendar'));
 const HomebrewBuilder = lazy(() => import('../sections/HomebrewBuilder'));
 const PartyLoot = lazy(() => import('../sections/PartyLoot'));
+const AiModulesSection = lazy(() => import('../sections/AiModulesSection'));
+const Archives = lazy(() => import('../sections/Archives'));
+const DmGuide = lazy(() => import('../sections/DmGuide'));
 const DevTools = import.meta.env.DEV ? lazy(() => import('../sections/DevTools')) : null;
 
 class SectionErrorBoundary extends React.Component {
@@ -109,6 +114,9 @@ const SECTIONS = {
   'calendar': FantasyCalendar,
   'homebrew': HomebrewBuilder,
   'party-loot': PartyLoot,
+  'ai-modules': AiModulesSection,
+  'archives': Archives,
+  'dm-guide': DmGuide,
   ...(DevTools ? { devtools: DevTools } : {}),
 };
 
@@ -137,12 +145,15 @@ const SECTION_LABELS = {
   'party-connect': 'Party Connect',
   'party-analyzer': 'Party Analyzer',
   'ai-assistant': 'Arcane Advisor',
+  'ai-modules': 'AI Modules',
   'premade-campaigns': 'Premade Campaigns',
   'encounter-builder': 'Encounter Builder',
   'battle-map': 'Battle Map',
   'calendar': 'Fantasy Calendar',
   'homebrew': 'Homebrew Builder',
   'party-loot': 'Party Loot',
+  'archives': 'Archives',
+  'dm-guide': 'Create a Campaign Tutorial',
 };
 
 const SHORTCUT_SECTIONS = SECTION_ORDER;
@@ -888,9 +899,10 @@ function CampaignEventProcessor({ characterId, character, onCharacterUpdate, onC
               active: true
             }).catch(() => {});
             activeList.push(change.condition);
-            toast(`Condition applied: ${change.condition}`, {
-              icon: '\u26A0\uFE0F', duration: 3000,
-              style: { background: '#1a1520', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }
+            const appliedSummary = CONDITION_EFFECTS[change.condition]?.summary;
+            toast(`Condition applied: ${change.condition}${appliedSummary ? `\n${appliedSummary}` : ''}`, {
+              icon: '\u26A0\uFE0F', duration: 4000,
+              style: { background: '#1a1520', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.4)', maxWidth: '360px', lineHeight: '1.4' }
             });
           } else if (change.action === 'remove') {
             // Remove condition via invoke
@@ -902,8 +914,8 @@ function CampaignEventProcessor({ characterId, character, onCharacterUpdate, onC
               }).catch(() => {});
               activeList = activeList.filter(n => n !== change.condition);
               toast(`Condition removed: ${change.condition}`, {
-                icon: '\u2705', duration: 2000,
-                style: { background: '#1a1520', color: '#4ade80', border: '1px solid rgba(74,222,128,0.3)' }
+                icon: '\u2705', duration: 2500,
+                style: { background: '#1a1520', color: '#4ade80', border: '1px solid rgba(74,222,128,0.4)' }
               });
             }
           }
@@ -1116,6 +1128,7 @@ export default function CharacterView() {
   const navigate = useNavigate();
   const location = useLocation();
   const { mode: appMode } = useAppMode();
+  const { dispatch: sessionDispatch, campaignId: sessionCampaignId, campaignStatus } = useSession();
   const [activeSection, setActiveSection] = useState(
     location.state?.section || (appMode === 'dm' ? 'campaign-hub' : 'overview')
   );
@@ -1133,6 +1146,7 @@ export default function CharacterView() {
   const [showRestModal, setShowRestModal] = useState(false);
   const [restTab, setRestTab] = useState('short'); // 'short' | 'long'
   const [combatMode, setCombatMode] = useState(false);
+  const [campaignStats, setCampaignStats] = useState({ session_count: 0, total_hours: 0 });
   const { showOverlay, levelUpInfo, triggerLevelUp, dismiss } = useLevelUp();
   useCrashRecovery();
   useAutoBackup(characterId, character?.name);
@@ -1231,6 +1245,41 @@ export default function CharacterView() {
   useEffect(() => {
     loadCharacter();
   }, [characterId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // DM mode: set campaign info in SessionContext from the loaded character data
+  useEffect(() => {
+    if (appMode !== 'dm' || !characterId || !character || sessionCampaignId === characterId) return;
+    // Fetch campaign details to get status
+    (async () => {
+      try {
+        const campaign = await invoke('select_campaign', { campaignId: characterId });
+        sessionDispatch({
+          type: 'SET_CAMPAIGN',
+          payload: {
+            id: characterId,
+            name: character.name || 'Campaign',
+            campaign_type: campaign?.campaign_type || 'homebrew',
+            status: campaign?.status || 'active',
+          },
+        });
+      } catch {
+        sessionDispatch({
+          type: 'SET_CAMPAIGN',
+          payload: { id: characterId, name: character.name || 'Campaign', campaign_type: 'homebrew', status: 'active' },
+        });
+      }
+    })();
+  }, [appMode, characterId, character, sessionCampaignId, sessionDispatch]);
+
+  // DM mode: fetch campaign stats (session count, total hours)
+  useEffect(() => {
+    if (appMode !== 'dm' || !characterId) return;
+    invoke('select_campaign', { campaignId: characterId })
+      .then(c => {
+        if (c) setCampaignStats({ session_count: c.session_count || 0, total_hours: c.total_hours || 0 });
+      })
+      .catch(() => {});
+  }, [appMode, characterId]);
 
   // Reload character data when import/export triggers a refresh (avoids full page reload)
   useEffect(() => {
@@ -1478,6 +1527,7 @@ export default function CharacterView() {
                     </div>
                   </div>
                 </div>
+                {/* Campaign stat badges removed per user request */}
               </>
             ) : (
               <>
@@ -1683,7 +1733,22 @@ export default function CharacterView() {
           {appMode !== 'dm' && <FavoritesBar characterId={characterId} character={character} />}
 
           {/* Main content */}
-          <main ref={contentRef} style={{ flex: 1, padding: 'calc(24px * var(--density, 1)) calc(28px * var(--density, 1))', overflowY: 'auto', maxHeight: 'calc(100vh - var(--top-h, 52px))', minWidth: 0 }}>
+          <main ref={contentRef} className="section-content" style={{ flex: 1, padding: 'calc(24px * var(--density, 1)) calc(28px * var(--density, 1))', overflowY: 'auto', maxHeight: 'calc(100vh - var(--top-h, 52px))', minWidth: 0 }}>
+            {appMode === 'dm' && campaignStatus === 'draft' && activeSection !== 'campaign-hub' && activeSection !== 'dm-guide' && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, padding: '8px 14px',
+                borderRadius: 8, background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.15)',
+              }}>
+                <Hammer size={13} style={{ color: '#4ade80', flexShrink: 0 }} />
+                <span style={{ fontSize: 11, color: '#4ade80', fontFamily: 'var(--font-heading)', letterSpacing: '0.05em' }}>
+                  Building Campaign
+                </span>
+                <span style={{ fontSize: 11, color: 'var(--text-mute)' }}>—</span>
+                <span style={{ fontSize: 11, color: 'var(--text-mute)' }}>
+                  {character?.name || 'Untitled'}
+                </span>
+              </div>
+            )}
             <SectionErrorBoundary key={activeSection}>
               <Suspense fallback={
                 <div className="space-y-4">
@@ -1708,6 +1773,7 @@ export default function CharacterView() {
                   onClearErrors={clearErrors}
                   onBugReport={handlePartyBugReport}
                   onSpellSlotsChange={(slots) => setSpellSlots(slots || [])}
+                  onNavigate={setActiveSection}
                 />
               </div>
               </Suspense>
@@ -1764,7 +1830,7 @@ export default function CharacterView() {
       <PlayerNotification />
       <PlayerActionOverlay activeConditions={activeConditions} characterId={characterId} />
       <SharedCombatBar />
-      <DmToolbar campaignId={characterId} />
+      <DmToolbar />
       </LiveSessionProvider>
       </CampaignSyncProvider>
       </PartyProvider>

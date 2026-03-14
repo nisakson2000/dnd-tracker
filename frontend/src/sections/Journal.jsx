@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Plus, Trash2, Edit2, BookMarked, Search, X, Download, BookOpen, Star, Users, Copy, Clock, Coins, Zap, Calendar, ChevronDown, ChevronRight, FileText, Tag, Filter, Swords, MessageCircle, Map, ShoppingBag, Coffee, Sparkles, Wand2, Save, RefreshCw, Loader2, ScrollText } from 'lucide-react';
+import { invoke } from '@tauri-apps/api/core';
+import { Plus, Trash2, Edit2, BookMarked, Search, X, Download, BookOpen, Star, Users, Copy, Clock, Coins, Zap, Calendar, ChevronDown, ChevronRight, FileText, Tag, Filter, Swords, MessageCircle, Map, ShoppingBag, Coffee, Sparkles, Wand2, Save, RefreshCw, Loader2, ScrollText, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
@@ -811,6 +812,265 @@ function SessionRecapModal({ onClose, onSaveAsEntry }) {
   );
 }
 
+// ── Auto-Generate Journal from Session Event Log ──
+function AutoSessionJournalModal({ onClose, onSaveAsEntry }) {
+  const [sessions, setSessions] = useState([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
+  const [selectedSession, setSelectedSession] = useState(null);
+  const [recapText, setRecapText] = useState('');
+  const [loadingRecap, setLoadingRecap] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await invoke('list_sessions');
+        setSessions(data || []);
+        if (data && data.length > 0) {
+          setSelectedSession(data[0]);
+        }
+      } catch (err) {
+        console.warn('Failed to load sessions:', err);
+        setError('Could not load sessions. Make sure you have an active campaign with session data.');
+      } finally {
+        setLoadingSessions(false);
+      }
+    })();
+  }, []);
+
+  const handleGenerate = async () => {
+    if (!selectedSession) return;
+    setLoadingRecap(true);
+    setError('');
+    try {
+      const recap = await invoke('generate_session_recap', { sessionId: selectedSession.session_id });
+      setRecapText(recap);
+    } catch (err) {
+      setError('Failed to generate recap: ' + (err.message || String(err)));
+      toast.error('Failed to generate session recap');
+    } finally {
+      setLoadingRecap(false);
+    }
+  };
+
+  const handleSave = () => {
+    if (!recapText) return;
+    const dateLabel = selectedSession?.started_at?.split(' ')[0] || new Date().toISOString().split('T')[0];
+    onSaveAsEntry(recapText, dateLabel);
+    onClose();
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(recapText)
+      .then(() => toast.success('Recap copied to clipboard'))
+      .catch(() => toast.error('Failed to copy'));
+  };
+
+  return (
+    <ModalPortal>
+      <AnimatePresence>
+        <motion.div
+          className="modal-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              background: '#14121c',
+              border: '1px solid rgba(34, 197, 94, 0.25)',
+              borderRadius: '12px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '680px',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              margin: '0 16px',
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <ClipboardList size={20} style={{ color: '#22c55e' }} />
+                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#e8d5b5', fontFamily: 'var(--font-display, serif)' }}>
+                  Auto-Generate from Session
+                </h3>
+              </div>
+              <button onClick={onClose} style={{ color: 'rgba(232, 213, 181, 0.4)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: '12px', color: 'rgba(232, 213, 181, 0.4)', marginBottom: '16px' }}>
+              Pick a past session to auto-generate a journal entry from its event log.
+            </p>
+
+            {/* Error */}
+            {error && (
+              <div style={{
+                padding: '10px 14px', marginBottom: '16px', borderRadius: '8px',
+                background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)',
+                fontSize: '12px', color: 'rgba(239, 68, 68, 0.8)',
+              }}>
+                {error}
+              </div>
+            )}
+
+            {/* Loading sessions */}
+            {loadingSessions && (
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '40px 20px',
+                background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)',
+              }}>
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}>
+                  <Loader2 size={20} style={{ color: '#22c55e' }} />
+                </motion.div>
+                <span style={{ fontSize: '13px', color: 'rgba(232, 213, 181, 0.5)', marginLeft: '12px' }}>Loading sessions...</span>
+              </div>
+            )}
+
+            {/* No sessions */}
+            {!loadingSessions && sessions.length === 0 && !error && (
+              <div style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                padding: '40px 20px',
+                background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)',
+              }}>
+                <ClipboardList size={24} style={{ color: 'rgba(232, 213, 181, 0.2)' }} />
+                <p style={{ fontSize: '13px', color: 'rgba(232, 213, 181, 0.4)', marginTop: '12px', textAlign: 'center' }}>
+                  No sessions found. Run a live session first to generate journal entries from event logs.
+                </p>
+              </div>
+            )}
+
+            {/* Session picker */}
+            {!loadingSessions && sessions.length > 0 && (
+              <>
+                <div style={{
+                  marginBottom: '16px', maxHeight: '200px', overflowY: 'auto',
+                  background: 'rgba(255,255,255,0.02)', borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                }}>
+                  {sessions.map((s) => {
+                    const isSelected = selectedSession?.session_id === s.session_id;
+                    return (
+                      <button
+                        key={s.session_id}
+                        onClick={() => { setSelectedSession(s); setRecapText(''); setError(''); }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
+                          padding: '10px 14px', cursor: 'pointer',
+                          background: isSelected ? 'rgba(34, 197, 94, 0.1)' : 'transparent',
+                          border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                          textAlign: 'left', transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                        onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <div style={{
+                          width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
+                          background: isSelected ? '#22c55e' : 'rgba(232, 213, 181, 0.15)',
+                          border: isSelected ? '2px solid rgba(34, 197, 94, 0.5)' : '2px solid rgba(232, 213, 181, 0.1)',
+                        }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '13px', color: isSelected ? '#22c55e' : 'rgba(232, 213, 181, 0.7)', fontWeight: isSelected ? 500 : 400 }}>
+                            {s.started_at}
+                          </div>
+                          <div style={{ fontSize: '11px', color: 'rgba(232, 213, 181, 0.35)', marginTop: '2px' }}>
+                            {s.event_count} event{s.event_count !== 1 ? 's' : ''} — ended {s.ended_at}
+                          </div>
+                        </div>
+                        {isSelected && <ChevronRight size={14} style={{ color: '#22c55e', flexShrink: 0 }} />}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Generate button */}
+                {!loadingRecap && (
+                  <button onClick={handleGenerate} disabled={!selectedSession}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                      width: '100%', padding: '10px', borderRadius: '8px', border: 'none',
+                      cursor: selectedSession ? 'pointer' : 'not-allowed',
+                      background: selectedSession
+                        ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(22, 163, 74, 0.15))'
+                        : 'rgba(255,255,255,0.03)',
+                      color: selectedSession ? '#22c55e' : 'rgba(232, 213, 181, 0.2)',
+                      fontSize: '13px', fontWeight: 500,
+                      borderWidth: '1px', borderStyle: 'solid',
+                      borderColor: selectedSession ? 'rgba(34, 197, 94, 0.25)' : 'rgba(255,255,255,0.05)',
+                      marginBottom: '16px', transition: 'all 0.2s',
+                    }}>
+                    {recapText ? <RefreshCw size={14} /> : <ClipboardList size={14} />}
+                    {recapText ? 'Regenerate Recap' : 'Generate Journal Entry'}
+                  </button>
+                )}
+
+                {/* Loading recap */}
+                {loadingRecap && (
+                  <div style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    padding: '40px 20px', marginBottom: '16px',
+                    background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)',
+                  }}>
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}>
+                      <Loader2 size={24} style={{ color: '#22c55e' }} />
+                    </motion.div>
+                    <p style={{ fontSize: '13px', color: 'rgba(232, 213, 181, 0.5)', marginTop: '12px' }}>
+                      Compiling session events...
+                    </p>
+                  </div>
+                )}
+
+                {/* Recap preview */}
+                {recapText && !loadingRecap && (
+                  <>
+                    <div data-color-mode="dark" style={{ marginBottom: '16px' }}>
+                      <MDEditor value={recapText} onChange={v => setRecapText(v || '')} height={300} preview="preview" />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <button onClick={handleSave}
+                        style={{
+                          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                          padding: '9px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, cursor: 'pointer',
+                          background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.25)',
+                        }}>
+                        <Save size={13} /> Save as Journal Entry
+                      </button>
+                      <button onClick={handleCopy}
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                          padding: '9px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, cursor: 'pointer',
+                          background: 'rgba(255,255,255,0.04)', color: 'rgba(232, 213, 181, 0.6)', border: '1px solid rgba(255,255,255,0.08)',
+                        }}>
+                        <Copy size={13} /> Copy
+                      </button>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    </ModalPortal>
+  );
+}
+
 export default function Journal({ characterId }) {
   const [entries, setEntries] = useState([]);
   const [npcs, setNpcs] = useState([]);
@@ -830,6 +1090,7 @@ export default function Journal({ characterId }) {
   const [showRecentSearches, setShowRecentSearches] = useState(false);
   const [showRecap, setShowRecap] = useState(false);
   const [showSessionRecap, setShowSessionRecap] = useState(false);
+  const [showAutoSession, setShowAutoSession] = useState(false);
   const searchInputRef = useRef(null);
 
   const addRecentSearch = (q) => {
@@ -951,6 +1212,24 @@ export default function Journal({ characterId }) {
     } catch (err) { toast.error(err.message); }
   };
 
+  const handleSaveAutoSession = async (recapText, dateLabel) => {
+    const nextNum = entries.length > 0 ? Math.max(...entries.map(e => e.session_number || 0)) + 1 : 1;
+    try {
+      await addJournalEntry(characterId, {
+        title: `Session Recap — ${dateLabel}`,
+        session_number: nextNum,
+        real_date: new Date().toISOString().split('T')[0],
+        ingame_date: '',
+        body: recapText,
+        tags: 'Recap',
+        npcs_mentioned: '',
+        pinned: 0,
+      });
+      toast.success('Session journal entry saved');
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
   // Enhanced search with highlighting
   const searchResults = useMemo(() => {
     if (!searchQuery) return null;
@@ -1052,6 +1331,16 @@ export default function Journal({ characterId }) {
               <Download size={12} /> Export
             </button>
           )}
+          <button onClick={() => setShowAutoSession(true)}
+            className="text-xs flex items-center gap-1"
+            style={{
+              padding: '5px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500,
+              background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(22, 163, 74, 0.12))',
+              color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.25)',
+            }}
+            title="Auto-generate a journal entry from a past session's event log">
+            <ClipboardList size={12} /> Auto Journal
+          </button>
           <button onClick={() => setShowSessionRecap(true)}
             className="text-xs flex items-center gap-1"
             style={{
@@ -1357,6 +1646,13 @@ export default function Journal({ characterId }) {
         <SessionRecapModal
           onClose={() => setShowSessionRecap(false)}
           onSaveAsEntry={handleSaveSessionRecap}
+        />
+      )}
+
+      {showAutoSession && (
+        <AutoSessionJournalModal
+          onClose={() => setShowAutoSession(false)}
+          onSaveAsEntry={handleSaveAutoSession}
         />
       )}
     </div>

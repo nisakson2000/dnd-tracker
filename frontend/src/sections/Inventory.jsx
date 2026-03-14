@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Minus, Trash2, Package, Coins, Search, ArrowRightLeft, FlaskConical, Shield, Swords, Sparkles, AlertTriangle, ChevronUp, ChevronDown, Zap, Pencil, Weight, Tag } from 'lucide-react';
+import { Plus, Minus, Trash2, Package, Coins, Search, ArrowRightLeft, FlaskConical, Shield, Swords, Sparkles, AlertTriangle, ChevronUp, ChevronDown, Zap, Pencil, Weight, Tag, Layers } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getItems, addItem, updateItem, deleteItem, getCurrency, updateCurrency } from '../api/inventory';
 import { getOverview, updateOverview } from '../api/overview';
@@ -10,6 +10,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
 import { HELP } from '../data/helpText';
 import { ITEM_CATALOG } from '../data/itemCatalog';
+import { useCampaignSyncSafe } from '../contexts/CampaignSyncContext';
 
 // --- Standard 5e Armor AC values ---
 const ARMOR_AC_TABLE = {
@@ -150,6 +151,8 @@ function parseDiceAvg(diceStr) {
 }
 
 export default function Inventory({ characterId, character }) {
+  const syncCtx = useCampaignSyncSafe();
+  const currencyLocked = syncCtx?.dmSessionActive && !syncCtx?.isHost;
   const [items, setItems] = useState([]);
   const [currency, setCurrency] = useState({ cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 });
   const [strScore, setStrScore] = useState(10);
@@ -166,6 +169,8 @@ export default function Inventory({ characterId, character }) {
   const [convertAmount, setConvertAmount] = useState('');
   const [activeTagFilter, setActiveTagFilter] = useState(null);
   const [comparisonItem, setComparisonItem] = useState(null);
+  const [groupBy, setGroupBy] = useState('none');
+  const [collapsedGroups, setCollapsedGroups] = useState({});
 
   const load = async () => {
     try {
@@ -385,6 +390,49 @@ export default function Inventory({ characterId, character }) {
     });
   }, [items, searchQuery, sortBy, activeTagFilter]);
 
+  // --- Group items by selected criterion ---
+  const groupedItems = useMemo(() => {
+    if (groupBy === 'none') return null;
+    const groups = {};
+    for (const item of sortedFilteredItems) {
+      let key;
+      if (groupBy === 'type') {
+        key = (item.item_type || 'misc').charAt(0).toUpperCase() + (item.item_type || 'misc').slice(1);
+      } else if (groupBy === 'rarity') {
+        const r = (item.rarity || 'common').toLowerCase();
+        key = r.charAt(0).toUpperCase() + r.slice(1);
+      } else if (groupBy === 'equipped') {
+        key = item.equipped ? 'Equipped' : 'Unequipped';
+      }
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    }
+    // Sort group keys: for rarity use a defined order, otherwise alphabetical
+    const rarityOrder = ['common', 'uncommon', 'rare', 'very rare', 'legendary'];
+    const equippedOrder = ['Equipped', 'Unequipped'];
+    let sortedKeys;
+    if (groupBy === 'rarity') {
+      sortedKeys = Object.keys(groups).sort((a, b) => {
+        const ai = rarityOrder.indexOf(a.toLowerCase()); const bi = rarityOrder.indexOf(b.toLowerCase());
+        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      });
+    } else if (groupBy === 'equipped') {
+      sortedKeys = Object.keys(groups).sort((a, b) => equippedOrder.indexOf(a) - equippedOrder.indexOf(b));
+    } else {
+      sortedKeys = Object.keys(groups).sort();
+    }
+    return sortedKeys.map(key => ({
+      key,
+      items: groups[key],
+      totalWeight: groups[key].reduce((sum, i) => sum + ((i.weight || 0) * (i.quantity || 1)), 0),
+      totalValue: groups[key].reduce((sum, i) => sum + ((i.value_gp || 0) * (i.quantity || 1)), 0),
+    }));
+  }, [sortedFilteredItems, groupBy]);
+
+  const toggleGroup = (key) => {
+    setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
   // Find the currently equipped item of a given type for comparison
   const getEquippedOfType = useCallback((itemType, itemName) => {
     if (itemType === 'weapon') return items.find(i => i.equipped && i.item_type === 'weapon' && i.id !== comparisonItem?.id);
@@ -536,6 +584,182 @@ export default function Inventory({ characterId, character }) {
       }
       load();
     } catch (err) { toast.error(err.message); }
+  };
+
+  // --- Shared item row renderer ---
+  const renderItem = (item) => {
+    const typeColor = { weapon: 'border-l-red-500/70', armor: 'border-l-blue-400/70', wondrous: 'border-l-purple-400/70', consumable: 'border-l-emerald-400/70', misc: 'border-l-amber-200/20' };
+    const rarityColor = { common: 'border-l-gray-400/60', uncommon: 'border-l-emerald-400/70', rare: 'border-l-blue-400/70', 'very rare': 'border-l-purple-400/70', legendary: 'border-l-orange-400/70' };
+    const leftBorder = item.rarity ? (rarityColor[item.rarity.toLowerCase()] || typeColor[item.item_type] || 'border-l-amber-200/20') : (typeColor[item.item_type] || 'border-l-amber-200/20');
+    const consumableEffect = item.item_type === 'consumable' ? CONSUMABLE_EFFECTS[item.name] : null;
+    const itemTags = getItemTags(item);
+    const equippedCounterpart = !item.equipped && (item.item_type === 'weapon' || item.item_type === 'armor')
+      ? getEquippedOfType(item.item_type, item.name)
+      : null;
+    return (
+      <div
+        key={item.id}
+        className={`bg-[#0d0d12] rounded p-3 border border-l-[3px] ${leftBorder} flex items-start gap-3 ${item.attuned ? 'border-purple-500/30 shadow-[0_0_8px_rgba(168,85,247,0.15)]' : 'border-gold/10'} relative`}
+        title={item.description || undefined}
+        onMouseEnter={() => equippedCounterpart && setComparisonItem(item)}
+        onMouseLeave={() => setComparisonItem(null)}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className="text-amber-100 font-medium">{item.name}</span>
+            {item.quantity > 1 && <span className="text-xs text-amber-200/40">x{item.quantity}</span>}
+            {item.quantity > 0 && item.quantity <= 5 && (item.item_type === 'consumable') && (
+              <span className="flex items-center gap-1">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${item.quantity <= 3 ? 'bg-red-500' : 'bg-amber-400'}`} title={`Low stock: ${item.quantity} remaining`} />
+                {item.quantity <= 3 && <span className="text-[10px] font-bold text-red-400">LOW</span>}
+              </span>
+            )}
+            <span className="text-xs text-amber-200/30 capitalize">{item.item_type}</span>
+            {item.rarity && <span className="text-xs text-amber-200/30 capitalize">{item.rarity}</span>}
+            {item.equipped && <span className="text-xs bg-emerald-800/40 text-emerald-300 px-1.5 py-0.5 rounded">Equipped</span>}
+            {item.attuned && <span className="text-xs bg-purple-800/40 text-purple-300 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Sparkles size={10} />Attuned</span>}
+            {itemTags.filter(t => t !== 'equipped' && t !== 'attuned').map(tag => {
+              const style = TAG_STYLES[tag];
+              return (
+                <span key={tag} className={`text-[10px] px-1.5 py-0.5 rounded-full border capitalize ${style.bg} ${style.text} ${style.border}`}>
+                  {tag}
+                </span>
+              );
+            })}
+          </div>
+          <div className="text-xs text-amber-200/40">
+            <span>{item.weight > 0 ? `${item.weight} lb` : '\u2014'}</span>
+            {item.value_gp > 0 && (
+              <span className="ml-3">
+                {item.value_gp >= 1
+                  ? `${item.value_gp} gp`
+                  : item.value_gp >= 0.1
+                  ? `${Math.round(item.value_gp * 10)} sp`
+                  : `${Math.round(item.value_gp * 100)} cp`}
+              </span>
+            )}
+          </div>
+          {item.description && (
+            <p className={`text-xs text-amber-200/30 italic mt-1 ${item.equipped ? '' : 'truncate'}`}>{item.description}</p>
+          )}
+          {consumableEffect && (
+            <p className="text-xs text-emerald-400/60 mt-1 flex items-center gap-1">
+              <FlaskConical size={10} /> {consumableEffect}
+            </p>
+          )}
+          {(() => {
+            try {
+              const mods = typeof item.stat_modifiers === 'string'
+                ? JSON.parse(item.stat_modifiers || '{}')
+                : (item.stat_modifiers || {});
+              const entries = Object.entries(mods).filter(([, v]) => v !== 0);
+              if (entries.length === 0) return null;
+              return (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {entries.map(([stat, value]) => (
+                    <span key={stat} className="text-[10px] bg-green-900/20 text-green-400/70 px-1.5 py-0.5 rounded font-mono">
+                      {stat.toUpperCase()} {value > 0 ? '+' : ''}{value}
+                    </span>
+                  ))}
+                </div>
+              );
+            } catch { return null; }
+          })()}
+          {comparisonItem?.id === item.id && equippedCounterpart && (() => {
+            const currentStats = getEquipmentStats(equippedCounterpart);
+            const newStats = getEquipmentStats(item);
+            const comparisons = [];
+            if (item.item_type === 'weapon') {
+              const currentAvg = parseDiceAvg(currentStats.damage);
+              const newAvg = parseDiceAvg(newStats.damage);
+              if (currentStats.damage || newStats.damage) {
+                const diff = newAvg - currentAvg;
+                comparisons.push({
+                  label: 'Damage', current: currentStats.damage || '\u2014', next: newStats.damage || '\u2014',
+                  diff: diff !== 0 ? (diff > 0 ? `+${diff.toFixed(1)} avg` : `${diff.toFixed(1)} avg`) : 'same',
+                  positive: diff > 0, negative: diff < 0,
+                });
+              }
+            }
+            if (item.item_type === 'armor') {
+              const currentAC = currentStats.ac || 0;
+              const newAC = newStats.ac || 0;
+              const diff = newAC - currentAC;
+              comparisons.push({
+                label: currentStats.isShield || newStats.isShield ? 'Shield Bonus' : 'Base AC',
+                current: currentAC || '\u2014', next: newAC || '\u2014',
+                diff: diff !== 0 ? (diff > 0 ? `+${diff}` : `${diff}`) : 'same',
+                positive: diff > 0, negative: diff < 0,
+              });
+            }
+            const wDiff = newStats.weight - currentStats.weight;
+            comparisons.push({
+              label: 'Weight', current: `${currentStats.weight} lb`, next: `${newStats.weight} lb`,
+              diff: wDiff !== 0 ? (wDiff > 0 ? `+${wDiff} lb` : `${wDiff} lb`) : 'same',
+              positive: wDiff < 0, negative: wDiff > 0,
+            });
+            if (comparisons.length === 0) return null;
+            return (
+              <div className="mt-2 p-2 bg-amber-950/30 border border-amber-500/20 rounded text-xs">
+                <div className="text-amber-200/50 font-medium mb-1.5 flex items-center gap-1">
+                  <ArrowRightLeft size={10} /> vs. equipped: {equippedCounterpart.name}
+                </div>
+                <div className="grid grid-cols-4 gap-x-3 gap-y-1">
+                  <span className="text-amber-200/30"></span>
+                  <span className="text-amber-200/30 text-center">Current</span>
+                  <span className="text-amber-200/30 text-center">This</span>
+                  <span className="text-amber-200/30 text-center">Diff</span>
+                  {comparisons.map(c => (
+                    <>
+                      <span key={c.label} className="text-amber-200/50">{c.label}</span>
+                      <span className="text-amber-200/40 text-center">{c.current}</span>
+                      <span className="text-amber-100 text-center">{c.next}</span>
+                      <span className={`text-center font-medium ${c.positive ? 'text-emerald-400' : c.negative ? 'text-red-400' : 'text-amber-200/30'}`}>
+                        {c.diff}
+                      </span>
+                    </>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+        <div className="flex flex-col gap-1 items-end">
+          <div className="flex gap-1">
+            {(item.item_type === 'consumable' || Object.keys(CONSUMABLE_EFFECTS).some(k => item.name?.toLowerCase().includes(k.toLowerCase()))) && (
+              <button onClick={(e) => { e.stopPropagation(); handleUseConsumable(item); }} className="btn-primary text-xs px-2 py-1 flex items-center gap-1" title={`Use ${item.name}${consumableEffect ? ` \u2014 ${consumableEffect}` : ''}`}>
+                <FlaskConical size={11} /> Use
+              </button>
+            )}
+            <button onClick={() => handleToggle(item, 'equipped')} className="btn-secondary text-xs px-2 py-1">
+              {item.equipped ? 'Unequip' : 'Equip'}
+            </button>
+            {item.attunement && (
+              <button onClick={() => handleToggle(item, 'attuned')} className="btn-secondary text-xs px-2 py-1">
+                {item.attuned ? 'Unattune' : 'Attune'}
+              </button>
+            )}
+            <button onClick={() => setEditingItem(item)} className="text-amber-200/40 hover:text-amber-200 p-1" aria-label={`Edit ${item.name || 'item'}`} title="Edit item">
+              <Pencil size={14} />
+            </button>
+            <button onClick={() => setConfirmDelete(item)} className="text-red-400/50 hover:text-red-400 p-1" aria-label={`Delete ${item.name || 'item'}`}>
+              <Trash2 size={14} />
+            </button>
+          </div>
+          {item.quantity > 1 && (
+            <div className="flex items-center gap-1">
+              <button onClick={() => handleQuantityChange(item, -1)} className="text-amber-200/40 hover:text-amber-200 p-0.5 rounded hover:bg-white/5" title="Decrease quantity">
+                <Minus size={12} />
+              </button>
+              <span className="text-xs text-amber-200/50 w-6 text-center">{item.quantity}</span>
+              <button onClick={() => handleQuantityChange(item, 1)} className="text-amber-200/40 hover:text-amber-200 p-0.5 rounded hover:bg-white/5" title="Increase quantity">
+                <Plus size={12} />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   if (loading) return <div className="text-amber-200/40">Loading inventory...</div>;
@@ -696,6 +920,17 @@ export default function Inventory({ characterId, character }) {
               ))}
             </div>
           </div>
+          {/* Group By */}
+          <div className="flex items-center gap-1.5">
+            <Layers size={12} className="text-amber-200/30" />
+            <span className="text-xs text-amber-200/40">Group:</span>
+            {[['none', 'None'], ['type', 'Type'], ['rarity', 'Rarity'], ['equipped', 'Equipped']].map(([key, label]) => (
+              <button key={key} onClick={() => { setGroupBy(key); setCollapsedGroups({}); }}
+                className={`text-xs px-2.5 py-1 rounded ${groupBy === key ? 'bg-gold/20 text-gold border border-gold/30' : 'bg-amber-200/5 text-amber-200/40 border border-amber-200/10'}`}>
+                {label}
+              </button>
+            ))}
+          </div>
           {/* Tag Filter */}
           <div className="flex items-center gap-1.5">
             <Tag size={12} className="text-amber-200/30" />
@@ -733,6 +968,7 @@ export default function Inventory({ characterId, character }) {
         <div className="flex items-center gap-2 mb-3">
           <Coins size={16} className="text-gold" />
           <h3 className="font-display text-amber-100">Currency<HelpTooltip text={HELP.currency} /></h3>
+          {currencyLocked && <span style={{ fontSize: 9, color: 'rgba(239,68,68,0.5)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 4, padding: '1px 6px' }}>DM Controlled</span>}
           <SaveIndicator saving={savingCurrency} lastSaved={currencySaved} />
           <div className="ml-auto flex items-center gap-2">
             <button
@@ -774,7 +1010,10 @@ export default function Inventory({ characterId, character }) {
                 <label className={`label !mb-0 ${color}`}>{label}</label>
               </div>
               <input type="number" min={0} className="input w-full text-center"
-                value={currency[key]} onChange={e => updateCurrencyField(key, e.target.value)} />
+                value={currency[key]} onChange={e => updateCurrencyField(key, e.target.value)}
+                disabled={currencyLocked}
+                title={currencyLocked ? 'Currency is controlled by the DM during live sessions' : ''}
+                style={currencyLocked ? { opacity: 0.5, cursor: 'not-allowed' } : {}} />
               {/* Convert Up / Down arrows for non-EP denominations */}
               {key !== 'ep' && (
                 <div className="flex justify-center gap-0.5 mt-1">
@@ -923,196 +1162,43 @@ export default function Inventory({ characterId, character }) {
               <Plus size={12} /> Add Your First Item
             </button>
           </div>
+        ) : groupedItems ? (
+          <div className="space-y-4">
+            {groupedItems.map(group => (
+              <div key={group.key}>
+                <button
+                  onClick={() => toggleGroup(group.key)}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-t bg-amber-200/5 border border-amber-200/10 hover:bg-amber-200/8 transition-colors group"
+                >
+                  <div className="flex items-center gap-2">
+                    <ChevronDown size={14} className={`text-amber-200/40 transition-transform ${collapsedGroups[group.key] ? '-rotate-90' : ''}`} />
+                    <span className="text-sm font-display text-amber-100">{group.key}</span>
+                    <span className="text-xs text-amber-200/40">({group.items.length})</span>
+                  </div>
+                  <div className="flex items-center gap-4 text-[11px] text-amber-200/30">
+                    {group.totalWeight > 0 && <span>{group.totalWeight.toFixed(1)} lb</span>}
+                    {group.totalValue > 0 && (
+                      <span className="text-gold/60">
+                        {group.totalValue >= 1
+                          ? `${group.totalValue.toFixed(group.totalValue % 1 === 0 ? 0 : 2)} gp`
+                          : group.totalValue >= 0.1
+                          ? `${Math.round(group.totalValue * 10)} sp`
+                          : `${Math.round(group.totalValue * 100)} cp`}
+                      </span>
+                    )}
+                  </div>
+                </button>
+                {!collapsedGroups[group.key] && (
+                  <div className="space-y-2 mt-2 ml-2">
+                    {group.items.map(item => renderItem(item))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="space-y-2">
-            {sortedFilteredItems.map(item => {
-              const typeColor = { weapon: 'border-l-red-500/70', armor: 'border-l-blue-400/70', wondrous: 'border-l-purple-400/70', consumable: 'border-l-emerald-400/70', misc: 'border-l-amber-200/20' };
-              const rarityColor = { common: 'border-l-gray-400/60', uncommon: 'border-l-emerald-400/70', rare: 'border-l-blue-400/70', 'very rare': 'border-l-purple-400/70', legendary: 'border-l-orange-400/70' };
-              const leftBorder = item.rarity ? (rarityColor[item.rarity.toLowerCase()] || typeColor[item.item_type] || 'border-l-amber-200/20') : (typeColor[item.item_type] || 'border-l-amber-200/20');
-              const consumableEffect = item.item_type === 'consumable' ? CONSUMABLE_EFFECTS[item.name] : null;
-              const itemTags = getItemTags(item);
-              // Equipment comparison: find currently equipped item of same type
-              const equippedCounterpart = !item.equipped && (item.item_type === 'weapon' || item.item_type === 'armor')
-                ? getEquippedOfType(item.item_type, item.name)
-                : null;
-              return (
-              <div
-                key={item.id}
-                className={`bg-[#0d0d12] rounded p-3 border border-l-[3px] ${leftBorder} flex items-start gap-3 ${item.attuned ? 'border-purple-500/30 shadow-[0_0_8px_rgba(168,85,247,0.15)]' : 'border-gold/10'} relative`}
-                title={item.description || undefined}
-                onMouseEnter={() => equippedCounterpart && setComparisonItem(item)}
-                onMouseLeave={() => setComparisonItem(null)}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="text-amber-100 font-medium">{item.name}</span>
-                    {item.quantity > 1 && <span className="text-xs text-amber-200/40">x{item.quantity}</span>}
-                    {item.quantity > 0 && item.quantity <= 5 && (item.item_type === 'consumable') && (
-                      <span className="flex items-center gap-1">
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${item.quantity <= 3 ? 'bg-red-500' : 'bg-amber-400'}`} title={`Low stock: ${item.quantity} remaining`} />
-                        {item.quantity <= 3 && <span className="text-[10px] font-bold text-red-400">LOW</span>}
-                      </span>
-                    )}
-                    <span className="text-xs text-amber-200/30 capitalize">{item.item_type}</span>
-                    {item.rarity && <span className="text-xs text-amber-200/30 capitalize">{item.rarity}</span>}
-                    {item.equipped && <span className="text-xs bg-emerald-800/40 text-emerald-300 px-1.5 py-0.5 rounded">Equipped</span>}
-                    {item.attuned && <span className="text-xs bg-purple-800/40 text-purple-300 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Sparkles size={10} />Attuned</span>}
-                    {/* Item Tags */}
-                    {itemTags.filter(t => t !== 'equipped' && t !== 'attuned').map(tag => {
-                      const style = TAG_STYLES[tag];
-                      return (
-                        <span key={tag} className={`text-[10px] px-1.5 py-0.5 rounded-full border capitalize ${style.bg} ${style.text} ${style.border}`}>
-                          {tag}
-                        </span>
-                      );
-                    })}
-                  </div>
-                  <div className="text-xs text-amber-200/40">
-                    <span>{item.weight > 0 ? `${item.weight} lb` : '\u2014'}</span>
-                    {item.value_gp > 0 && (
-                      <span className="ml-3">
-                        {item.value_gp >= 1
-                          ? `${item.value_gp} gp`
-                          : item.value_gp >= 0.1
-                          ? `${Math.round(item.value_gp * 10)} sp`
-                          : `${Math.round(item.value_gp * 100)} cp`}
-                      </span>
-                    )}
-                  </div>
-                  {item.description && (
-                    <p className={`text-xs text-amber-200/30 italic mt-1 ${item.equipped ? '' : 'truncate'}`}>{item.description}</p>
-                  )}
-                  {/* Consumable effect hint */}
-                  {consumableEffect && (
-                    <p className="text-xs text-emerald-400/60 mt-1 flex items-center gap-1">
-                      <FlaskConical size={10} /> {consumableEffect}
-                    </p>
-                  )}
-                  {/* Stat modifier tags */}
-                  {(() => {
-                    try {
-                      const mods = typeof item.stat_modifiers === 'string'
-                        ? JSON.parse(item.stat_modifiers || '{}')
-                        : (item.stat_modifiers || {});
-                      const entries = Object.entries(mods).filter(([, v]) => v !== 0);
-                      if (entries.length === 0) return null;
-                      return (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {entries.map(([stat, value]) => (
-                            <span key={stat} className="text-[10px] bg-green-900/20 text-green-400/70 px-1.5 py-0.5 rounded font-mono">
-                              {stat.toUpperCase()} {value > 0 ? '+' : ''}{value}
-                            </span>
-                          ))}
-                        </div>
-                      );
-                    } catch { return null; }
-                  })()}
-                  {/* Equipment Comparison Tooltip */}
-                  {comparisonItem?.id === item.id && equippedCounterpart && (() => {
-                    const currentStats = getEquipmentStats(equippedCounterpart);
-                    const newStats = getEquipmentStats(item);
-                    const comparisons = [];
-                    if (item.item_type === 'weapon') {
-                      const currentAvg = parseDiceAvg(currentStats.damage);
-                      const newAvg = parseDiceAvg(newStats.damage);
-                      if (currentStats.damage || newStats.damage) {
-                        const diff = newAvg - currentAvg;
-                        comparisons.push({
-                          label: 'Damage',
-                          current: currentStats.damage || '—',
-                          next: newStats.damage || '—',
-                          diff: diff !== 0 ? (diff > 0 ? `+${diff.toFixed(1)} avg` : `${diff.toFixed(1)} avg`) : 'same',
-                          positive: diff > 0,
-                          negative: diff < 0,
-                        });
-                      }
-                    }
-                    if (item.item_type === 'armor') {
-                      const currentAC = currentStats.ac || 0;
-                      const newAC = newStats.ac || 0;
-                      const diff = newAC - currentAC;
-                      comparisons.push({
-                        label: currentStats.isShield || newStats.isShield ? 'Shield Bonus' : 'Base AC',
-                        current: currentAC || '—',
-                        next: newAC || '—',
-                        diff: diff !== 0 ? (diff > 0 ? `+${diff}` : `${diff}`) : 'same',
-                        positive: diff > 0,
-                        negative: diff < 0,
-                      });
-                    }
-                    // Weight comparison
-                    const wDiff = newStats.weight - currentStats.weight;
-                    comparisons.push({
-                      label: 'Weight',
-                      current: `${currentStats.weight} lb`,
-                      next: `${newStats.weight} lb`,
-                      diff: wDiff !== 0 ? (wDiff > 0 ? `+${wDiff} lb` : `${wDiff} lb`) : 'same',
-                      positive: wDiff < 0, // lighter is better
-                      negative: wDiff > 0,
-                    });
-                    if (comparisons.length === 0) return null;
-                    return (
-                      <div className="mt-2 p-2 bg-amber-950/30 border border-amber-500/20 rounded text-xs">
-                        <div className="text-amber-200/50 font-medium mb-1.5 flex items-center gap-1">
-                          <ArrowRightLeft size={10} /> vs. equipped: {equippedCounterpart.name}
-                        </div>
-                        <div className="grid grid-cols-4 gap-x-3 gap-y-1">
-                          <span className="text-amber-200/30"></span>
-                          <span className="text-amber-200/30 text-center">Current</span>
-                          <span className="text-amber-200/30 text-center">This</span>
-                          <span className="text-amber-200/30 text-center">Diff</span>
-                          {comparisons.map(c => (
-                            <React.Fragment key={c.label}>
-                              <span className="text-amber-200/50">{c.label}</span>
-                              <span className="text-amber-200/40 text-center">{c.current}</span>
-                              <span className="text-amber-100 text-center">{c.next}</span>
-                              <span className={`text-center font-medium ${c.positive ? 'text-emerald-400' : c.negative ? 'text-red-400' : 'text-amber-200/30'}`}>
-                                {c.diff}
-                              </span>
-                            </React.Fragment>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-                <div className="flex flex-col gap-1 items-end">
-                  <div className="flex gap-1">
-                    {(item.item_type === 'consumable' || Object.keys(CONSUMABLE_EFFECTS).some(k => item.name?.toLowerCase().includes(k.toLowerCase()))) && (
-                      <button onClick={(e) => { e.stopPropagation(); handleUseConsumable(item); }} className="btn-primary text-xs px-2 py-1 flex items-center gap-1" title={`Use ${item.name}${consumableEffect ? ` \u2014 ${consumableEffect}` : ''}`}>
-                        <FlaskConical size={11} /> Use
-                      </button>
-                    )}
-                    <button onClick={() => handleToggle(item, 'equipped')} className="btn-secondary text-xs px-2 py-1">
-                      {item.equipped ? 'Unequip' : 'Equip'}
-                    </button>
-                    {item.attunement && (
-                      <button onClick={() => handleToggle(item, 'attuned')} className="btn-secondary text-xs px-2 py-1">
-                        {item.attuned ? 'Unattune' : 'Attune'}
-                      </button>
-                    )}
-                    <button onClick={() => setEditingItem(item)} className="text-amber-200/40 hover:text-amber-200 p-1" aria-label={`Edit ${item.name || 'item'}`} title="Edit item">
-                      <Pencil size={14} />
-                    </button>
-                    <button onClick={() => setConfirmDelete(item)} className="text-red-400/50 hover:text-red-400 p-1" aria-label={`Delete ${item.name || 'item'}`}>
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                  {item.quantity > 1 && (
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => handleQuantityChange(item, -1)} className="text-amber-200/40 hover:text-amber-200 p-0.5 rounded hover:bg-white/5" title="Decrease quantity">
-                        <Minus size={12} />
-                      </button>
-                      <span className="text-xs text-amber-200/50 w-6 text-center">{item.quantity}</span>
-                      <button onClick={() => handleQuantityChange(item, 1)} className="text-amber-200/40 hover:text-amber-200 p-0.5 rounded hover:bg-white/5" title="Increase quantity">
-                        <Plus size={12} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-              );
-            })}
+            {sortedFilteredItems.map(item => renderItem(item))}
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Users, Wifi, WifiOff, Copy, Check, LogIn, LogOut, Crown, Heart, Shield, RefreshCw, Signal, AlertTriangle, Activity } from 'lucide-react';
+import { Users, Wifi, WifiOff, Copy, Check, LogIn, LogOut, Crown, Heart, Shield, RefreshCw, Signal, AlertTriangle, Activity, Eye, Sparkles, ChevronDown, ChevronUp, Swords, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useAppMode } from '../contexts/ModeContext';
@@ -31,7 +31,12 @@ function hpBarColor(hp, maxHp) {
 
 // ─── Member card ─────────────────────────────────────────────────────────────
 
+function modStr(mod) {
+  return mod >= 0 ? `+${mod}` : `${mod}`;
+}
+
 function MemberCard({ member, isYou, colorIndex = 0 }) {
+  const [expanded, setExpanded] = useState(false);
   if (!member?.character) return null;
   const { character } = member;
   const hp = character.hp ?? 0;
@@ -39,9 +44,17 @@ function MemberCard({ member, isYou, colorIndex = 0 }) {
   const hpPct = maxHp > 0 ? Math.max(0, Math.min(100, (hp / maxHp) * 100)) : 0;
   const isDead = maxHp > 0 && hp <= 0;
   const accent = AVATAR_COLORS[colorIndex % AVATAR_COLORS.length];
+  const abilities = character.ability_scores || {};
+  const saves = character.saving_throws || {};
+  const conditions = character.conditions || [];
+  const ExpandIcon = expanded ? ChevronUp : ChevronDown;
 
   return (
-    <div className={`party-card${isYou ? ' is-you' : ''}`} style={isDead ? { opacity: 0.6 } : undefined}>
+    <div
+      className={`party-card${isYou ? ' is-you' : ''}`}
+      style={{ ...(isDead ? { opacity: 0.6 } : {}), cursor: 'pointer', transition: 'border-color 0.15s' }}
+      onClick={() => setExpanded(e => !e)}
+    >
       <div className="party-card-header">
         <div className="party-card-avatar" style={{ background: `${accent}22`, borderColor: `${accent}55`, color: accent }}>
           {(character.name || '?')[0]}
@@ -52,12 +65,15 @@ function MemberCard({ member, isYou, colorIndex = 0 }) {
           </div>
           <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontFamily: 'Outfit, sans-serif', maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {[character.race, character.primary_class].filter(Boolean).join(' ')}
-            {character.level ? ` · Lv ${character.level}` : ''}
+            {character.level ? ` \u00B7 Lv ${character.level}` : ''}
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'rgba(147,197,253,0.8)', flexShrink: 0 }}>
-          <Shield size={12} />
-          <span style={{ fontWeight: 700 }}>{character.ac ?? '—'}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'rgba(147,197,253,0.8)' }}>
+            <Shield size={12} />
+            <span style={{ fontWeight: 700 }}>{character.ac ?? '\u2014'}</span>
+          </div>
+          <ExpandIcon size={12} style={{ color: 'rgba(255,255,255,0.2)' }} />
         </div>
       </div>
       <div className="party-card-body">
@@ -67,12 +83,172 @@ function MemberCard({ member, isYou, colorIndex = 0 }) {
           </div>
           <span style={{ fontSize: '11px', fontWeight: 700, color: hpColor(hp, maxHp), fontFamily: 'Outfit, sans-serif' }}>
             {isDead ? '\uD83D\uDC80 Down' : `${hp} / ${maxHp}`}
+            {(character.temp_hp ?? 0) > 0 && <span style={{ color: 'rgba(96,165,250,0.8)', marginLeft: 4 }}>+{character.temp_hp} temp</span>}
           </span>
         </div>
         <div className="party-mini-bar" role="progressbar" aria-label={`${character.name || 'Unknown'} HP: ${hp} of ${maxHp}`} aria-valuenow={hp} aria-valuemin={0} aria-valuemax={maxHp}>
           <div className="party-mini-bar-fill" style={{ width: `${hpPct}%`, background: hpBarColor(hp, maxHp) }} />
         </div>
       </div>
+
+      {/* ── Expanded details ── */}
+      {expanded && (
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '10px 12px 6px', display: 'flex', flexDirection: 'column', gap: 10 }} onClick={e => e.stopPropagation()}>
+          {/* Ability Scores */}
+          {Object.keys(abilities).length > 0 && (
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(201,168,76,0.5)', marginBottom: 5 }}>
+                Ability Scores
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4 }}>
+                {['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(stat => (
+                  <div key={stat} style={{
+                    textAlign: 'center', padding: '4px 0', borderRadius: 6,
+                    background: 'rgba(255,255,255,0.03)', border: saves[stat] ? '1px solid rgba(74,222,128,0.25)' : '1px solid rgba(255,255,255,0.05)',
+                  }}>
+                    <div style={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.05em', marginBottom: 2 }}>{stat}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: saves[stat] ? '#4ade80' : '#e8d9b5', fontFamily: 'Outfit, sans-serif' }}>
+                      {modStr(abilities[stat] ?? 0)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: 9, color: 'rgba(74,222,128,0.4)', marginTop: 3 }}>
+                Green border = saving throw proficiency
+              </div>
+            </div>
+          )}
+
+          {/* Quick Stats Row */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {character.passive_perception != null && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.03)', borderRadius: 5, padding: '3px 8px' }}>
+                <Eye size={10} /> PP {character.passive_perception}
+              </div>
+            )}
+            {character.spell_save_dc != null && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'rgba(167,139,250,0.7)', background: 'rgba(167,139,250,0.08)', borderRadius: 5, padding: '3px 8px' }}>
+                <Zap size={10} /> Spell DC {character.spell_save_dc}
+              </div>
+            )}
+            {character.proficiency_bonus != null && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'rgba(201,168,76,0.6)', background: 'rgba(201,168,76,0.08)', borderRadius: 5, padding: '3px 8px' }}>
+                <Swords size={10} /> Prof {modStr(character.proficiency_bonus)}
+              </div>
+            )}
+            {character.inspiration && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'rgba(251,191,36,0.8)', background: 'rgba(251,191,36,0.1)', borderRadius: 5, padding: '3px 8px' }}>
+                <Sparkles size={10} /> Inspired
+              </div>
+            )}
+          </div>
+
+          {/* Active Conditions */}
+          {conditions.length > 0 && (
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(239,68,68,0.5)', marginBottom: 4 }}>
+                Conditions
+              </div>
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                {conditions.map((c, i) => (
+                  <span key={i} style={{
+                    fontSize: 10, padding: '2px 8px', borderRadius: 4,
+                    background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)',
+                    color: '#fca5a5', fontWeight: 500,
+                  }}>
+                    {c}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Speed & Languages */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {character.speed != null && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'rgba(74,222,128,0.6)', background: 'rgba(74,222,128,0.08)', borderRadius: 5, padding: '3px 8px' }}>
+                Speed {character.speed} ft
+              </div>
+            )}
+            {character.concentration_spell && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'rgba(251,191,36,0.8)', background: 'rgba(251,191,36,0.1)', borderRadius: 5, padding: '3px 8px' }}>
+                Concentrating: {character.concentration_spell}
+              </div>
+            )}
+          </div>
+
+          {/* Equipped Weapons */}
+          {character.equipped_weapons && character.equipped_weapons.length > 0 && (
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(239,68,68,0.5)', marginBottom: 4 }}>
+                Weapons
+              </div>
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                {character.equipped_weapons.slice(0, 5).map((w, i) => (
+                  <span key={i} style={{
+                    fontSize: 10, padding: '2px 8px', borderRadius: 4,
+                    background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)',
+                    color: '#fca5a5', fontWeight: 500,
+                  }}>
+                    {typeof w === 'string' ? w : w.name || 'Weapon'}
+                    {w.damage ? ` (${w.damage})` : ''}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Spell Slots */}
+          {character.spell_slots && Object.keys(character.spell_slots).length > 0 && (
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(167,139,250,0.5)', marginBottom: 4 }}>
+                Spell Slots
+              </div>
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                {Object.entries(character.spell_slots).filter(([, v]) => v && (v.max > 0 || v.total > 0)).map(([level, slot]) => (
+                  <span key={level} style={{
+                    fontSize: 10, padding: '2px 6px', borderRadius: 4,
+                    background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.15)',
+                    color: '#c4b5fd', fontWeight: 500, fontFamily: 'Outfit, sans-serif',
+                  }}>
+                    L{level}: {slot.used ?? slot.remaining ?? 0}/{slot.max ?? slot.total ?? 0}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Currency */}
+          {character.currency && Object.values(character.currency).some(v => v > 0) && (
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(201,168,76,0.5)', marginBottom: 4 }}>
+                Currency
+              </div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {[
+                  { key: 'pp', label: 'PP', color: '#c0c0c0' },
+                  { key: 'gp', label: 'GP', color: '#c9a84c' },
+                  { key: 'ep', label: 'EP', color: '#a0a0a0' },
+                  { key: 'sp', label: 'SP', color: '#94a3b8' },
+                  { key: 'cp', label: 'CP', color: '#b87333' },
+                ].filter(({ key }) => (character.currency[key] ?? 0) > 0).map(({ key, label, color }) => (
+                  <span key={key} style={{ fontSize: 10, color, fontWeight: 600, fontFamily: 'Outfit, sans-serif' }}>
+                    {character.currency[key]} {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Death Saves */}
+          {character.death_saves && (character.death_saves.successes > 0 || character.death_saves.failures > 0) && (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <span style={{ fontSize: 10, color: '#4ade80' }}>Saves: {'●'.repeat(character.death_saves.successes)}{'○'.repeat(3 - character.death_saves.successes)}</span>
+              <span style={{ fontSize: 10, color: '#ef4444' }}>Fails: {'●'.repeat(character.death_saves.failures)}{'○'.repeat(3 - character.death_saves.failures)}</span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -167,9 +343,9 @@ export default function Party({ characterId, character, activeConditions, onBugR
   const { mode: appMode } = useAppMode();
   const party = useParty();
   const {
-    wsStatus: status, mode, roomCode, hostIp, joinIp, joinInput, members, myClientId, autoSync,
+    wsStatus: status, mode, roomCode, hostIp, joinIp, joinInput, members, myClientId,
     wasConnected, reconnecting, hostInfo,
-    setJoinIp, setJoinInput, setAutoSync,
+    setJoinIp, setJoinInput,
     connect, sendUpdate, handleHost, handleLeave, manualReconnect,
     onBugReportRef,
   } = party;
@@ -220,16 +396,18 @@ export default function Party({ characterId, character, activeConditions, onBugR
       spell_save_dc: character?.spell_save_dc ?? null,
       passive_perception: passivePerception,
       temp_hp: character?.temp_hp ?? 0,
-      equipped_weapons: [],
-      spell_slots: {},
-      prepared_spells: [],
-      feature_charges: [],
-      class_resources: [],
+      equipped_weapons: character?.equipped_weapons || character?.attacks || [],
+      spell_slots: character?.spell_slots || {},
+      prepared_spells: character?.prepared_spells || [],
+      feature_charges: character?.feature_charges || [],
+      class_resources: character?.class_resources || [],
       currency: character?.currency || { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 },
-      death_saves: { successes: 0, failures: 0 },
-      concentration_spell: null,
+      death_saves: character?.death_saves || { successes: 0, failures: 0 },
+      concentration_spell: character?.concentration_spell || null,
       inspiration: character?.inspiration ? true : false,
-      attacks: [],
+      attacks: character?.attacks || [],
+      speed: character?.speed || null,
+      languages: character?.languages || [],
       dm_name: localStorage.getItem('codex-dm-name') || '',
     };
   }, [
@@ -249,14 +427,14 @@ export default function Party({ characterId, character, activeConditions, onBugR
   // Auto-sync when any tracked character stat changes
   const prevStatsRef = useRef(null);
   useEffect(() => {
-    if (status !== 'connected' || !autoSync) return;
+    if (status !== 'connected') return;
     const condKey = (activeConditions || []).join(',');
     const key = `${character?.current_hp}|${character?.max_hp}|${character?.armor_class}|${character?.level}|${character?.name}|${character?.race}|${character?.primary_class}|${character?.proficiency_bonus}|${character?.spell_save_dc}|${JSON.stringify(character?.ability_scores)}|${JSON.stringify(character?.saving_throws)}|${condKey}|${character?.temp_hp}|${JSON.stringify(character?.currency)}|${character?.inspiration}`;
     if (prevStatsRef.current === key) return;
     prevStatsRef.current = key;
     sendUpdate(charSnapshot);
   }, [
-    status, autoSync, sendUpdate, charSnapshot,
+    status, sendUpdate, charSnapshot,
     character?.current_hp, character?.max_hp, character?.armor_class,
     character?.level, character?.name, character?.race, character?.primary_class,
     character?.proficiency_bonus, character?.spell_save_dc,
@@ -387,7 +565,12 @@ export default function Party({ characterId, character, activeConditions, onBugR
   // ── Active session ────────────────────────────────────────────────────────
   // DM host shouldn't appear as a party member — they're the DM, not a player
   const isHostDM = isDM && mode === 'host';
-  const otherMembers = members.filter(m => isHostDM ? m.client_id !== myClientId : m.client_id !== myClientId);
+  const otherMembers = members.filter(m => {
+    if (m.client_id === myClientId) return false;
+    // Players should not see the DM in their party list
+    if (!isHostDM && m.character?.dm_name) return false;
+    return true;
+  });
   const me = isHostDM ? null : members.find(m => m.client_id === myClientId);
 
   return (
@@ -507,26 +690,6 @@ export default function Party({ characterId, character, activeConditions, onBugR
           <p className="text-xs text-amber-200/20">Share code <span className="font-mono text-gold/60">{roomCode}</span> and IP <span className="font-mono text-gold/60">{hostIp}</span> with your players</p>
         </div>
       ) : null}
-
-      {status === 'connected' && !isHostDM && (
-        <div className="flex items-center justify-between text-xs text-amber-200/30 pt-1 border-t border-amber-200/8">
-          <span>Auto-sync HP/AC when you take damage</span>
-          <div
-            className="flex items-center gap-2 cursor-pointer"
-            onClick={() => setAutoSync(v => !v)}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAutoSync(v => !v); } }}
-            tabIndex={0}
-            role="switch"
-            aria-checked={autoSync}
-            aria-label="Auto-sync HP/AC"
-          >
-            <div className={`w-8 h-4 rounded-full transition-colors relative ${autoSync ? 'bg-gold/40' : 'bg-amber-200/10'}`}>
-              <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white/80 transition-all ${autoSync ? 'left-4' : 'left-0.5'}`} />
-            </div>
-            <span className={autoSync ? 'text-gold/60' : ''}>{autoSync ? 'On' : 'Off'}</span>
-          </div>
-        </div>
-      )}
 
       <ConfirmDialog
         show={showLeaveConfirm}

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Play, Square, Clock, Users, RefreshCw, MapPin, Swords, ScrollText, Eye, ChevronRight, Sparkles, Map, FileText, Moon, Coffee, Gift, Navigation, Compass, Search, AlertTriangle, Volume2, VolumeX } from 'lucide-react';
+import { Play, Square, Clock, Users, RefreshCw, MapPin, Swords, ScrollText, Eye, ChevronRight, Sparkles, Map, FileText, Moon, Coffee, Gift, Navigation, Compass, Search, AlertTriangle } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
+import toast from 'react-hot-toast';
 import { useLiveSession } from '../../contexts/LiveSessionContext';
 import { useCampaignSync } from '../../contexts/CampaignSyncContext';
 import { useParty } from '../../contexts/PartyContext';
+import { useSession } from '../../contexts/SessionContext';
 
 const ACTION_ICONS = {
   encounter: Swords,
@@ -25,7 +27,7 @@ const ACTION_COLORS = {
  * Merged Campaign panel — session header + scene navigator + quick actions
  * Replaces DmSessionPanel + DmScenePanel
  */
-export default function DmCampaignPanel({ campaignId: activeCampaignId }) {
+export default function DmCampaignPanel() {
   const {
     sessionActive, campaignName, elapsed,
     startLiveSession, endLiveSession, refreshData,
@@ -35,8 +37,11 @@ export default function DmCampaignPanel({ campaignId: activeCampaignId }) {
     startSceneEncounter, activeEncounterId,
     logEvent,
   } = useLiveSession();
-  const { combatActive, round, sendPrompt, sendRestSync, sendXpAward, sendBroadcast, currentMood, ambientSound, sendMoodChange, sendAmbientChange, clearMood } = useCampaignSync();
+  const { combatActive, round, sendPrompt, sendRestSync, sendXpAward, sendBroadcast, currentMood, sendMoodChange, clearMood } = useCampaignSync();
   const { members, myClientId, memberPresence } = useParty();
+  const sessionCtx = useSession();
+
+  const [activeCampaignId, setActiveCampaignIdLocal] = useState(null);
 
   const presenceColor = (clientId) => {
     const status = memberPresence[clientId]?.status;
@@ -88,6 +93,14 @@ export default function DmCampaignPanel({ campaignId: activeCampaignId }) {
 
   const playerCount = members.filter(m => m.client_id !== myClientId).length;
 
+  // Auto-select campaign from SessionContext (set by CharacterView in DM mode)
+  useEffect(() => {
+    if (sessionCtx?.campaignId) {
+      setActiveCampaignIdLocal(sessionCtx.campaignId);
+      setCampaignDisplayName(sessionCtx.campaignName || 'Campaign');
+    }
+  }, [sessionCtx?.campaignId, sessionCtx?.campaignName]);
+
   // Check for recoverable (incomplete) sessions on mount
   useEffect(() => {
     if (sessionActive || !activeCampaignId) return;
@@ -100,15 +113,7 @@ export default function DmCampaignPanel({ campaignId: activeCampaignId }) {
       .catch(() => {});
   }, [activeCampaignId, sessionActive]);
 
-  // Load campaign display name from the character/campaign data
-  useEffect(() => {
-    if (!activeCampaignId) return;
-    invoke('get_overview', { characterId: activeCampaignId })
-      .then(data => {
-        if (data?.overview?.name) setCampaignDisplayName(data.overview.name);
-      })
-      .catch(() => {});
-  }, [activeCampaignId]);
+  // Display name is set by the auto-select effect above — no separate tracking needed
 
   const formatElapsed = (secs) => {
     const h = Math.floor(secs / 3600);
@@ -120,12 +125,16 @@ export default function DmCampaignPanel({ campaignId: activeCampaignId }) {
   };
 
   const handleStart = async () => {
-    if (!activeCampaignId) return;
+    if (!activeCampaignId) {
+      toast.error('No campaign selected — create one in Campaign Manager first');
+      return;
+    }
     setLoading(true);
     try {
       await startLiveSession(activeCampaignId, campaignDisplayName || 'Campaign');
     } catch (e) {
-      if (import.meta.env.DEV) console.error('[DmCampaign] Failed to start session:', e);
+      console.error('[DmCampaign] Failed to start session:', e);
+      toast.error(`Session start failed: ${e?.message || e}`);
     }
     setLoading(false);
   };
@@ -184,11 +193,18 @@ export default function DmCampaignPanel({ campaignId: activeCampaignId }) {
               An incomplete session was found from {new Date(recoverableSession.timestamp).toLocaleString()}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => {
-                startLiveSession(recoverableSession.campaignId, recoverableSession.campaignName || campaignName);
-                setRecoverableSession(null);
-              }} style={{ padding: '6px 16px', borderRadius: 6, background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
-                Resume Session
+              <button onClick={async () => {
+                setLoading(true);
+                try {
+                  await startLiveSession(recoverableSession.campaignId, recoverableSession.campaignName || campaignDisplayName);
+                  setRecoverableSession(null);
+                } catch (e) {
+                  console.error('[DmCampaign] Failed to resume session:', e);
+                  toast.error('Failed to resume session');
+                }
+                setLoading(false);
+              }} disabled={loading} style={{ padding: '6px 16px', borderRadius: 6, background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', cursor: 'pointer', fontSize: 12, fontWeight: 600, opacity: loading ? 0.5 : 1 }}>
+                {loading ? 'Resuming...' : 'Resume Session'}
               </button>
               <button onClick={() => {
                 invoke('mark_session_complete', { sessionId: recoverableSession.sessionId }).catch(() => {});
@@ -200,8 +216,8 @@ export default function DmCampaignPanel({ campaignId: activeCampaignId }) {
           </div>
         )}
 
-        {/* Campaign name — auto-selected from DM's game */}
-        {campaignDisplayName && (
+        {/* Campaign display — auto-selected from DMLobby, no dropdown needed */}
+        {campaignDisplayName ? (
           <div style={{
             padding: '8px 12px', borderRadius: 8,
             background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.15)',
@@ -209,6 +225,14 @@ export default function DmCampaignPanel({ campaignId: activeCampaignId }) {
             fontFamily: 'var(--font-heading)', letterSpacing: '0.03em',
           }}>
             {campaignDisplayName}
+          </div>
+        ) : (
+          <div style={{
+            padding: '8px 12px', borderRadius: 8,
+            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+            color: 'rgba(255,255,255,0.3)', fontSize: 12, textAlign: 'center',
+          }}>
+            No campaign loaded — select one from Campaign Manager
           </div>
         )}
 
@@ -443,7 +467,7 @@ export default function DmCampaignPanel({ campaignId: activeCampaignId }) {
             return (
               <button
                 key={key}
-                onClick={() => sendMoodChange(active ? null : key, ambientSound)}
+                onClick={() => sendMoodChange(active ? null : key, null)}
                 title={label}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 4,
@@ -462,36 +486,8 @@ export default function DmCampaignPanel({ campaignId: activeCampaignId }) {
           })}
         </div>
 
-        {/* Ambient Sound selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Volume2 size={10} style={{ color: 'rgba(255,255,255,0.35)', flexShrink: 0 }} />
-          <select
-            value={ambientSound || 'none'}
-            onChange={e => {
-              const val = e.target.value === 'none' ? null : e.target.value;
-              sendAmbientChange(val);
-            }}
-            style={{
-              flex: 1, padding: '4px 6px', borderRadius: 5, fontSize: 10,
-              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-              color: '#e8d9b5', outline: 'none',
-            }}
-          >
-            <option value="none">No Ambient</option>
-            <option value="tavern">Tavern</option>
-            <option value="forest">Forest</option>
-            <option value="dungeon">Dungeon</option>
-            <option value="storm">Storm</option>
-            <option value="battle">Battle</option>
-            <option value="ocean">Ocean</option>
-            <option value="campfire">Campfire</option>
-            <option value="city">City</option>
-            <option value="cave">Cave</option>
-          </select>
-        </div>
-
         {/* Clear mood button */}
-        {(currentMood || ambientSound) && (
+        {currentMood && (
           <button
             onClick={clearMood}
             style={{
@@ -501,7 +497,7 @@ export default function DmCampaignPanel({ campaignId: activeCampaignId }) {
               fontFamily: 'var(--font-heading)', letterSpacing: '0.03em',
             }}
           >
-            Clear Mood & Ambient
+            Clear Mood
           </button>
         )}
       </div>

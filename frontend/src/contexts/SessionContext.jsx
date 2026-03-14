@@ -8,6 +8,7 @@ const initialState = {
   campaignId: null,
   campaignName: '',
   campaignType: 'homebrew', // 'homebrew' | 'premade'
+  campaignStatus: 'active', // 'draft' | 'active' | 'archived'
   sessionId: null,
   sessionActive: false,
   connectedPlayers: [],
@@ -34,6 +35,7 @@ function sessionReducer(state, action) {
         campaignId: action.payload.id,
         campaignName: action.payload.name,
         campaignType: action.payload.campaign_type || 'homebrew',
+        campaignStatus: action.payload.status || 'active',
       };
     case 'START_SESSION':
       return {

@@ -273,6 +273,49 @@ pub fn generate_session_recap(
     })
 }
 
+/// List all sessions for the active campaign (distinct session_ids from event_log).
+#[tauri::command]
+pub fn list_sessions(
+    state: State<'_, AppState>,
+) -> Result<Vec<serde_json::Value>, String> {
+    let campaign_id = require_active_campaign(&state)?;
+
+    with_campaign_conn(&state, |conn| {
+        let mut stmt = conn.prepare(
+            "SELECT session_id,
+                    MIN(ts) AS started_at,
+                    MAX(ts) AS ended_at,
+                    COUNT(*) AS event_count
+             FROM event_log
+             WHERE campaign_id = ?1
+               AND session_id IS NOT NULL
+               AND session_id != ''
+             GROUP BY session_id
+             ORDER BY MIN(ts) DESC"
+        ).map_err(|e| format!("Failed to query sessions: {}", e))?;
+
+        let rows = stmt.query_map(params![campaign_id], |row| {
+            let started_ts: i64 = row.get(1)?;
+            let ended_ts: i64 = row.get(2)?;
+            let started_dt = chrono::DateTime::from_timestamp(started_ts, 0)
+                .unwrap_or_default();
+            let ended_dt = chrono::DateTime::from_timestamp(ended_ts, 0)
+                .unwrap_or_default();
+
+            Ok(serde_json::json!({
+                "session_id": row.get::<_, String>(0)?,
+                "started_at": started_dt.format("%Y-%m-%d %H:%M").to_string(),
+                "ended_at": ended_dt.format("%Y-%m-%d %H:%M").to_string(),
+                "started_ts": started_ts,
+                "event_count": row.get::<_, i64>(3)?,
+            }))
+        }).map_err(|e| format!("Failed to read sessions: {}", e))?;
+
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(|e| format!("Failed to collect sessions: {}", e))
+    })
+}
+
 // ── Session crash-recovery snapshots ──
 
 #[tauri::command]

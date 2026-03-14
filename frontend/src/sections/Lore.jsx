@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Plus, Trash2, Edit2, Globe, Search, MapPin, Users, Star, Clock, Sparkles, Bug, Package, Tag, Link, Shield, BookOpen, Eye, HelpCircle, MessageCircle, XCircle, ChevronDown, ChevronRight, Sun, ScrollText, Hash } from 'lucide-react';
+import { Plus, Trash2, Edit2, Globe, Search, MapPin, Users, Star, Clock, Sparkles, Bug, Package, Tag, Link, Shield, BookOpen, Eye, HelpCircle, MessageCircle, XCircle, ChevronDown, ChevronRight, Sun, ScrollText, Hash, Shuffle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { getLoreNotes, addLoreNote, updateLoreNote, deleteLoreNote } from '../api/lore';
@@ -30,6 +30,36 @@ const LORE_TEMPLATES = [
   { label: 'Legend / Myth', category: 'History', title: '', body: '**Origin:** \n**Key figures:** \n**What happened:** \n**Evidence:** \n**Current relevance:**' },
   { label: 'Magic Item', category: 'Item', title: '', body: '**Rarity:** \n**Type:** \n**Properties:** \n**History:** \n**Current location:**\n**Attunement:**' },
 ];
+
+const QUICK_LORE_TITLES = {
+  Location: ['The Sunken Temple', 'Ravenhollow Village', 'Dragonspire Peak', 'The Crimson Market', 'Thornwall Keep', 'The Whispering Caverns'],
+  History: ['The Fall of the Old Kingdom', 'The Dragon Wars', 'The Great Betrayal', 'The Founding of the Realm', 'The Age of Shadows'],
+  Religion: ['The Order of the Silver Flame', 'The Moon Goddess', 'The Cult of the Void', 'The Temple of Dawn', 'The Old Gods'],
+  Organization: ['The Merchants Guild', 'The Shadow Council', 'The Arcane College', 'The Iron Guard', 'The Wayfinders'],
+  Faction: ['The Black Thorns', 'The Emerald Enclave', 'The Red Hand', 'The Silent Pact', 'The Order of Whispers'],
+  Creature: ['The Forest Warden', 'The Deepwater Leviathan', 'The Shadow Stalker', 'The Crystal Drake', 'The Bog Witch'],
+  Magic: ['The Ley Lines', 'The Weave Disruption', 'Wild Magic Zones', 'The Arcane Wellspring', 'The Binding Ritual'],
+  Item: ['The Blade of the First King', 'The Amulet of Warding', 'The Staff of Seasons', 'The Cloak of Many Faces'],
+};
+
+function generateRandomLoreNote() {
+  const template = LORE_TEMPLATES[Math.floor(Math.random() * LORE_TEMPLATES.length)];
+  const category = template.category;
+  const titles = QUICK_LORE_TITLES[category] || QUICK_LORE_TITLES.Location;
+  const title = titles[Math.floor(Math.random() * titles.length)];
+  const discoveryType = ['Confirmed', 'Rumor', 'Speculation'][Math.floor(Math.random() * 3)];
+  return {
+    title,
+    category,
+    body: template.body,
+    related_to_text: '',
+    discovery_type: discoveryType,
+    source_npc: '',
+    source_date: '',
+    session_number: '',
+    linked_entries: [],
+  };
+}
 
 const DISCOVERY_TYPES = ['Confirmed', 'Rumor', 'Speculation', 'Debunked'];
 const DISCOVERY_STYLES = {
@@ -143,6 +173,7 @@ export default function Lore({ characterId }) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [quickGenData, setQuickGenData] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [discoveryFilter, setDiscoveryFilter] = useState('all');
@@ -481,9 +512,19 @@ export default function Lore({ characterId }) {
           </div>
         </h2>
         {isDM && (
-          <button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
-            <Plus size={12} /> New Note
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setEditing(null); setQuickGenData(generateRandomLoreNote()); setShowForm(true); }}
+              className="text-xs flex items-center gap-1"
+              style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(74,222,128,0.25)', background: 'rgba(74,222,128,0.08)', color: '#4ade80', fontFamily: 'var(--font-heading)', letterSpacing: '0.04em', cursor: 'pointer' }}
+              title="Generate a random lore entry with category and template"
+            >
+              <Shuffle size={12} /> Quick Generate
+            </button>
+            <button onClick={() => { setEditing(null); setQuickGenData(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
+              <Plus size={12} /> New Note
+            </button>
+          </div>
         )}
       </div>
 
@@ -612,7 +653,7 @@ export default function Lore({ characterId }) {
       )}
 
       {showForm && (
-        <LoreForm note={editing} allNotes={notes} npcs={npcs} onSubmit={handleSave} onCancel={() => { setShowForm(false); setEditing(null); }} />
+        <LoreForm note={editing} initialData={quickGenData} allNotes={notes} npcs={npcs} onSubmit={handleSave} onCancel={() => { setShowForm(false); setEditing(null); setQuickGenData(null); }} />
       )}
 
       <ConfirmDialog
@@ -626,9 +667,10 @@ export default function Lore({ characterId }) {
   );
 }
 
-function LoreForm({ note, allNotes, npcs, onSubmit, onCancel }) {
+function LoreForm({ note, initialData, allNotes, npcs, onSubmit, onCancel }) {
   const [form, setForm] = useState(() => {
     if (note) return { ...note };
+    if (initialData) return { ...initialData };
     return { title: '', category: '', body: '', related_to_text: '', discovery_type: '', source_npc: '', source_date: '', session_number: '', linked_entries: [] };
   });
   const [titleError, setTitleError] = useState(false);

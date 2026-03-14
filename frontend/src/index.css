@@ -856,54 +856,6 @@ div[style*="z-index: 9999"] {
 .animate-scale-in { animation: scaleIn 0.3s ease-out forwards; }
 .animate-shimmer { background: linear-gradient(90deg, transparent 30%, var(--accent-xl) 50%, transparent 70%); background-size: 200% 100%; animation: shimmer 2s infinite; }
 
-/* ── Responsive: sidebar collapse at narrow widths ── */
-@media (max-width: 768px) {
-  :root {
-    --sidebar-w: 56px;
-  }
-
-  /* Ability grid: 3 columns on narrow */
-  .ab-grid { grid-template-columns: repeat(3, 1fr); }
-
-  /* Vitals: stack on narrow */
-  .vitals { grid-template-columns: 1fr 1fr; }
-
-  /* Combat strip: wrap */
-  .cstrip { grid-template-columns: repeat(3, 1fr); }
-
-  /* Identity grid: 2 columns */
-  .id-grid { grid-template-columns: repeat(2, 1fr); }
-
-  /* Conditions: 2 columns */
-  .cond-grid { grid-template-columns: repeat(2, 1fr); }
-
-  /* Two column: stack */
-  .two-col { grid-template-columns: 1fr; }
-
-  /* Rest row: stack */
-  .rest-row { flex-direction: column; }
-
-  /* Preset grid: single column */
-  .preset-grid { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 480px) {
-  .ab-grid { grid-template-columns: repeat(2, 1fr); }
-  .vitals { grid-template-columns: 1fr; }
-  .cstrip { grid-template-columns: repeat(2, 1fr); }
-  .id-grid { grid-template-columns: 1fr; }
-}
-
-/* ── Responsive: modal sizing ── */
-@media (max-width: 640px) {
-  .fixed.inset-0[class*="z-50"] > div:first-child:not(.fixed),
-  .fixed.inset-0[class*="z-["] > div:first-child:not(.fixed) {
-    max-width: calc(100vw - 24px) !important;
-    max-height: calc(100vh - 24px) !important;
-    margin: 12px;
-  }
-}
-
 /* ── Prevent horizontal overflow globally ── */
 main, [role="main"], .main-content {
   overflow-x: hidden;
@@ -920,26 +872,46 @@ main, [role="main"], .main-content {
   }
 }
 
-/* ── Mobile Responsive Enhancements ── */
+/* ── Section content should always fit the available space ── */
+.section-content {
+  width: 100%;
+  box-sizing: border-box;
+}
+.section-content > div {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Responsive: tablet (≤1024px) — tighten spacing ── */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-w: 180px;
+    --font-scale: 0.95;
+  }
+}
+
+/* ── Responsive: narrow tablet (≤768px) — collapse sidebar ── */
 @media (max-width: 768px) {
   :root {
-    --sidebar-w: 0px;
-    --top-h: 44px;
+    --sidebar-w: 56px;
+    --top-h: 48px;
+    --font-scale: 0.92;
   }
 
-  /* Stack ability scores 3x2 instead of 6x1 */
+  /* Grids adapt */
   .ab-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
-
-  /* Vitals 2x2 grid */
   .vitals { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-
-  /* Combat strip stacks */
-  .cstrip { grid-template-columns: repeat(2, 1fr); }
+  .cstrip { grid-template-columns: repeat(3, 1fr); }
+  .id-grid { grid-template-columns: repeat(2, 1fr); }
+  .cond-grid { grid-template-columns: repeat(2, 1fr); }
+  .two-col { grid-template-columns: 1fr; }
+  .rest-row { flex-direction: column; }
+  .preset-grid { grid-template-columns: 1fr; }
 
   /* Cards go full width */
   .card, .card-grimoire { margin: 4px 0; }
 
-  /* Modal takes full screen on mobile */
+  /* Modal sizing */
   .modal-content {
     width: 95vw !important;
     max-width: 95vw !important;
@@ -949,7 +921,7 @@ main, [role="main"], .main-content {
   }
 
   /* Touch-friendly buttons */
-  .btn, button { min-height: 44px; min-width: 44px; }
+  .btn, button { min-height: 40px; min-width: 40px; }
 
   /* Reduce padding */
   .glass { padding: 12px; }
@@ -960,21 +932,38 @@ main, [role="main"], .main-content {
   /* Inventory list full width */
   .inv-grid { grid-template-columns: 1fr !important; }
 
-  /* Floating dice roller adjustments */
+  /* Floating dice roller */
   .floating-dice { width: calc(100vw - 16px) !important; left: 8px !important; right: 8px !important; }
 }
 
+/* ── Responsive: small screens (≤640px) — modals full width ── */
+@media (max-width: 640px) {
+  .fixed.inset-0[class*="z-50"] > div:first-child:not(.fixed),
+  .fixed.inset-0[class*="z-["] > div:first-child:not(.fixed) {
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100vh - 24px) !important;
+    margin: 12px;
+  }
+}
+
+/* ── Responsive: phone (≤480px) — minimal sidebar, compact layout ── */
 @media (max-width: 480px) {
+  :root {
+    --sidebar-w: 0px;
+    --top-h: 44px;
+  }
+
   .ab-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; }
   .vitals { grid-template-columns: 1fr; }
   .cstrip { grid-template-columns: 1fr; }
+  .id-grid { grid-template-columns: 1fr; }
 
   /* Reduce font sizes */
   body { font-size: 13px; }
   h1 { font-size: 1.4rem; }
   h2 { font-size: 1.1rem; }
 
-  /* Compact header */
+  /* Compact elements */
   .ab-card { padding: 6px; }
   .ab-mod { font-size: 1.3rem; }
 }

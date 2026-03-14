@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Plus, Trash2, Swords, Dice5, Timer, X, Search, Minus, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ScrollText, ArrowRight, Filter, Heart, Shield, ShieldOff, Skull, Activity, Zap, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Swords, Dice5, Timer, X, Search, Minus, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ScrollText, ArrowRight, Filter, Heart, Shield, ShieldOff, Skull, Activity, Zap, AlertTriangle, Cross, Lightbulb } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAttacks, addAttack, deleteAttack, getConditions, updateConditions, getCombatNotes, updateCombatNotes } from '../api/combat';
 import { useAutosave } from '../hooks/useAutosave';
@@ -10,6 +10,8 @@ import ModalPortal from '../components/ModalPortal';
 import { useRuleset } from '../contexts/RulesetContext';
 import { HELP, ACTION_ECONOMY } from '../data/helpText';
 import { CONDITION_EFFECTS, computeConditionEffects } from '../data/conditionEffects';
+import { calculateEffectiveDamage, applyDamageToHp, calculateHealingResult, resolveDeathSave, checkConcentration } from '../utils/damageEngine';
+import { insertCombatLog } from '../api/combatLog';
 
 const CONDITION_ICONS = {
   'Blinded': '\u{1F441}', 'Charmed': '\u{1F495}', 'Deafened': '\u{1F507}',
@@ -44,6 +46,9 @@ const COMBAT_SESSION_DEFAULTS = {
   flankingEnabled: false,
   legendaryActions: { used: 0, max: 3 },
   combatLog: [],
+  concentratingSpell: null, // { name: string } or null
+  deathSaves: {}, // { [combatantId]: { successes: 0, failures: 0, stable: false, dead: false } }
+  lairAction: { enabled: false, description: '' },
 };
 
 function useCombatSession(characterId) {
@@ -134,6 +139,15 @@ function useCombatSession(characterId) {
   const setCombatLog = useCallback((updater) => {
     setSessionRaw(prev => ({ ...prev, combatLog: typeof updater === 'function' ? updater(prev.combatLog) : updater }));
   }, []);
+  const setConcentratingSpell = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, concentratingSpell: typeof updater === 'function' ? updater(prev.concentratingSpell) : updater }));
+  }, []);
+  const setDeathSaves = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, deathSaves: typeof updater === 'function' ? updater(prev.deathSaves || {}) : updater }));
+  }, []);
+  const setLairAction = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, lairAction: typeof updater === 'function' ? updater(prev.lairAction || COMBAT_SESSION_DEFAULTS.lairAction) : updater }));
+  }, []);
 
   return {
     combatants: session.combatants, setCombatants,
@@ -144,6 +158,9 @@ function useCombatSession(characterId) {
     flankingEnabled: session.flankingEnabled, setFlankingEnabled,
     legendaryActions: session.legendaryActions, setLegendaryActions,
     combatLog: session.combatLog, setCombatLog,
+    concentratingSpell: session.concentratingSpell, setConcentratingSpell,
+    deathSaves: session.deathSaves || {}, setDeathSaves,
+    lairAction: session.lairAction || COMBAT_SESSION_DEFAULTS.lairAction, setLairAction,
   };
 }
 
@@ -157,6 +174,141 @@ const DAMAGE_TYPES = [
   'Piercing', 'Poison', 'Psychic', 'Radiant', 'Slashing', 'Thunder',
   'Nonmagical Bludgeoning', 'Nonmagical Piercing', 'Nonmagical Slashing',
 ];
+
+// --- Condition-based tactical hints for enemies ---
+const CONDITION_EXPLOIT_HINTS = {
+  Prone: { icon: '\u2B07', hint: 'Prone target: melee attacks have advantage (ranged have disadvantage)' },
+  Blinded: { icon: '\u{1F441}', hint: 'Blinded target: your attacks have advantage' },
+  Stunned: { icon: '\u2B50', hint: 'Stunned target: attacks have advantage, auto-fail STR/DEX saves' },
+  Paralyzed: { icon: '\u26A1', hint: 'Paralyzed target: attacks have advantage, melee auto-crits within 5ft' },
+  Restrained: { icon: '\u26D3', hint: 'Restrained target: your attacks have advantage' },
+  Frightened: { icon: '\u{1F631}', hint: 'Frightened target: has disadvantage on attacks and checks' },
+  Poisoned: { icon: '\u{1F922}', hint: 'Poisoned target: has disadvantage on attacks and ability checks' },
+  Unconscious: { icon: '\u{1F480}', hint: 'Unconscious target: attacks have advantage, melee auto-crits within 5ft' },
+  Invisible: { icon: '\u{1F47B}', hint: 'Invisible target: your attacks have disadvantage unless you can see them' },
+  Incapacitated: { icon: '\u{1F4AB}', hint: "Incapacitated target: can't take actions or reactions" },
+};
+
+function CombatSuggestions({ character, combatants, conditions, deathSaves, concentratingSpell, actionEcon, combatActive }) {
+  const [collapsed, setCollapsed] = useState(true);
+
+  const suggestions = useMemo(() => {
+    if (!combatActive) return [];
+    const tips = [];
+
+    // 1. Low HP — suggest healing
+    if (character?.current_hp > 0 && character?.max_hp > 0) {
+      const hpRatio = character.current_hp / character.max_hp;
+      if (hpRatio <= 0.25) {
+        tips.push({ id: 'low-hp', icon: '\u2764\uFE0F', text: 'HP critical! Consider a healing potion, healing spell, or disengaging to safety.', priority: 1 });
+      } else if (hpRatio <= 0.5) {
+        tips.push({ id: 'half-hp', icon: '\u{1F49B}', text: 'HP below half. Keep healing options in mind — Second Wind, potions, or healing magic.', priority: 3 });
+      }
+    }
+
+    // 2. Enemy conditions — suggest exploiting them
+    const enemyCombatants = combatants.filter(c => c.isEnemy);
+    for (const enemy of enemyCombatants) {
+      // Check if any conditions stored in deathSaves or in the combatant's conditions array
+      // Combatants don't store conditions directly, but we can check the conditions list for known enemies
+      if (enemy.currentHp <= 0 && enemy.maxHp > 0) {
+        // Enemy is down, skip
+        continue;
+      }
+    }
+
+    // Check player's own conditions for self-awareness hints
+    if (Array.isArray(conditions) && conditions.length > 0) {
+      for (const cond of conditions) {
+        const condName = typeof cond === 'string' ? cond : cond?.name;
+        if (!condName) continue;
+        const effects = CONDITION_EFFECTS[condName];
+        if (effects?.attackRolls === 'disadvantage') {
+          tips.push({ id: `self-cond-${condName}`, icon: '\u26A0\uFE0F', text: `You are ${condName} — your attacks have disadvantage. Consider removing the condition first.`, priority: 2 });
+        }
+        if (effects?.cantAct) {
+          tips.push({ id: `self-cond-${condName}-noact`, icon: '\u{1F6D1}', text: `You are ${condName} — you cannot take actions or reactions this turn.`, priority: 1 });
+        }
+      }
+    }
+
+    // 3. Concentration active — remind to maintain
+    if (concentratingSpell) {
+      tips.push({ id: 'concentration', icon: '\u{1F52E}', text: `Concentrating on ${concentratingSpell.name}. Taking damage requires a CON save (DC 10 or half damage, whichever is higher).`, priority: 4 });
+    }
+
+    // 4. Death saves happening for allies — suggest help
+    if (deathSaves && Object.keys(deathSaves).length > 0) {
+      for (const [combatantId, ds] of Object.entries(deathSaves)) {
+        if (ds.dead || ds.stable) continue;
+        const ally = combatants.find(c => c.id === Number(combatantId) || c.id === combatantId);
+        if (ally && !ally.isEnemy) {
+          tips.push({ id: `death-save-${combatantId}`, icon: '\u{1F198}', text: `${ally.name} is making death saves (${ds.successes} success, ${ds.failures} fail). Stabilize with Spare the Dying, Medicine DC 10, or heal them.`, priority: 1 });
+        }
+      }
+    }
+
+    // 5. Unused action economy — remind about available actions
+    if (!actionEcon.action && !actionEcon.bonusAction && !actionEcon.reaction) {
+      // All actions still available — no specific suggestion needed
+    } else if (actionEcon.action && !actionEcon.bonusAction) {
+      tips.push({ id: 'bonus-action', icon: '\u26A1', text: 'Bonus action still available! Offhand attack, class feature, or bonus action spell?', priority: 5 });
+    } else if (actionEcon.action && actionEcon.bonusAction && !actionEcon.reaction) {
+      tips.push({ id: 'reaction', icon: '\u{1F6E1}\uFE0F', text: 'Reaction still available. Save it for opportunity attacks or Shield/Counterspell.', priority: 5 });
+    }
+
+    // 6. Prone enemies in the tracker (by checking combatant names against conditions context)
+    // Since conditions are per-character (not per-combatant), we check for general tactical tips
+    // based on enemies being low HP
+    for (const enemy of enemyCombatants) {
+      if (enemy.maxHp > 0 && enemy.currentHp > 0 && enemy.currentHp <= Math.floor(enemy.maxHp * 0.25)) {
+        tips.push({ id: `finish-${enemy.id}`, icon: '\u{1F3AF}', text: `${enemy.name} is nearly down (${enemy.currentHp}/${enemy.maxHp} HP). Focus fire to eliminate the threat.`, priority: 2 });
+        break; // Only show one "finish them" suggestion
+      }
+    }
+
+    // Sort by priority (lower = more important) and cap at 4
+    return tips.sort((a, b) => a.priority - b.priority).slice(0, 4);
+  }, [character?.current_hp, character?.max_hp, combatants, conditions, deathSaves, concentratingSpell, actionEcon, combatActive]);
+
+  if (!combatActive || suggestions.length === 0) return null;
+
+  return (
+    <div className="card bg-gradient-to-r from-[#1a1610] to-[#14121c] border-amber-500/15">
+      <button
+        onClick={() => setCollapsed(c => !c)}
+        className="flex items-center justify-between w-full group"
+      >
+        <div className="flex items-center gap-2">
+          <Lightbulb size={16} className="text-amber-400/80" />
+          <span className="font-display text-amber-200/80 text-sm">Suggestions</span>
+          <span className="text-[10px] text-amber-200/40 bg-amber-200/5 border border-amber-200/10 px-1.5 py-0.5 rounded-full">
+            {suggestions.length}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] text-amber-200/30 group-hover:text-amber-200/50 transition-colors">
+            {collapsed ? 'Show hints' : 'Hide'}
+          </span>
+          {collapsed ? <ChevronDown size={14} className="text-amber-200/40" /> : <ChevronUp size={14} className="text-amber-200/40" />}
+        </div>
+      </button>
+      {!collapsed && (
+        <div className="mt-3 space-y-2">
+          {suggestions.map(s => (
+            <div
+              key={s.id}
+              className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-amber-900/10 border border-amber-500/10 hover:border-amber-500/20 transition-colors"
+            >
+              <span className="text-base mt-0.5 flex-shrink-0">{s.icon}</span>
+              <span className="text-xs text-amber-200/70 leading-relaxed">{s.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Combat({ characterId, character, onConditionsChange }) {
   const { CONDITIONS } = useRuleset();
@@ -180,6 +332,9 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     flankingEnabled, setFlankingEnabled,
     legendaryActions, setLegendaryActions,
     combatLog, setCombatLog,
+    concentratingSpell, setConcentratingSpell,
+    deathSaves, setDeathSaves,
+    lairAction, setLairAction,
   } = useCombatSession(characterId);
 
   const [combatLogOpen, setCombatLogOpen] = useState(false);
@@ -219,26 +374,113 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     } catch (err) { if (import.meta.env.DEV) console.warn('charDamageModifiers parse error:', err); return { resistances: [], immunities: [], vulnerabilities: [] }; }
   }, [character?.damage_modifiers]);
 
+  // --- Death save roll for a combatant ---
+  const rollDeathSave = (combatantId) => {
+    const target = combatants.find(c => c.id === combatantId);
+    const ds = deathSaves[combatantId];
+    if (!target || !ds || ds.dead || ds.stable) return;
+
+    const roll = rollDie(20);
+    const result = resolveDeathSave(roll);
+    const newSuccesses = Math.min(3, ds.successes + result.successes);
+    const newFailures = Math.min(3, ds.failures + result.failures);
+
+    logEvent('death', `${target.name} death save: ${result.description}`);
+
+    if (result.type === 'nat20') {
+      // Heal to 1 HP, clear death saves
+      setCombatants(prev => prev.map(c => c.id === combatantId ? { ...c, currentHp: 1 } : c));
+      setDeathSaves(prev => { const next = { ...prev }; delete next[combatantId]; return next; });
+      toast(`${target.name} rolls a Natural 20! Regains 1 HP!`, {
+        icon: '\u2728', duration: 4000,
+        style: { background: '#0a1a0a', color: '#86efac', border: '1px solid rgba(34,197,94,0.5)' },
+      });
+      return;
+    }
+
+    const isDead = newFailures >= 3;
+    const isStable = newSuccesses >= 3;
+    setDeathSaves(prev => ({
+      ...prev,
+      [combatantId]: { successes: newSuccesses, failures: newFailures, stable: isStable, dead: isDead },
+    }));
+
+    if (isDead) {
+      logEvent('death', `${target.name} has died.`);
+      toast(`${target.name} has died.`, { icon: '\u{1F480}', duration: 4000,
+        style: { background: '#1a0505', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.5)' },
+      });
+    } else if (isStable) {
+      logEvent('death', `${target.name} has stabilized!`);
+      toast(`${target.name} has stabilized!`, { icon: '\u{1F49A}', duration: 3000,
+        style: { background: '#0a1a0a', color: '#86efac', border: '1px solid rgba(34,197,94,0.4)' },
+      });
+    } else {
+      toast(result.description, { icon: result.failures > 0 ? '\u274C' : '\u2705', duration: 2500,
+        style: result.failures > 0
+          ? { background: '#1a0a0a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' }
+          : { background: '#0a1a0a', color: '#86efac', border: '1px solid rgba(34,197,94,0.3)' },
+      });
+    }
+  };
+
+  // --- Drop concentration ---
+  const dropConcentration = () => {
+    if (!concentratingSpell) return;
+    logEvent('concentration', `Concentration on ${concentratingSpell.name} dropped`);
+    toast(`Concentration on ${concentratingSpell.name} dropped`, {
+      icon: '\u{1F52E}', duration: 2000,
+      style: { background: '#1a0a2a', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' },
+    });
+    setConcentratingSpell(null);
+  };
+
   // --- Next/Previous Turn ---
   const nextTurn = () => {
     if (combatants.length === 0) return;
     setCurrentTurn(prev => {
       const next = prev + 1;
-      if (next >= combatants.length) {
+      const isNewRound = next >= combatants.length;
+      const resolvedNext = isNewRound ? 0 : next;
+
+      if (isNewRound) {
         setRoundCounter(r => {
           const newRound = r + 1;
           logEvent('round', `Round ${newRound} started`);
           return newRound;
         });
-        resetActionEconomy();
-        return 0;
+        // Auto-reset legendary actions on new round (use updater to avoid stale closure)
+        setLegendaryActions(la => {
+          if (la.max > 0) {
+            logEvent('legendary', 'Legendary actions recharged');
+            return { ...la, used: 0 };
+          }
+          return la;
+        });
+        // Lair action reminder (use updater to read fresh state)
+        setLairAction(la => {
+          if (la.enabled) {
+            const desc = la.description ? ': ' + la.description.slice(0, 200) : '';
+            toast(`Lair Action! (Init 20)${desc}`, {
+              icon: '\u{1F3F0}', duration: 5000,
+              style: { background: '#1a0a2a', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.4)' },
+            });
+            logEvent('lair', `Lair action triggered${desc}`);
+          }
+          return la; // don't mutate
+        });
+        // Tick condition durations on new round
+        tickRound();
       }
+
       resetActionEconomy();
-      return next;
+
+      // Log next combatant's turn (use resolvedNext to avoid stale currentTurn)
+      const nextName = combatants[resolvedNext]?.name || '?';
+      logEvent('turn', `${nextName}'s turn`);
+
+      return resolvedNext;
     });
-    const nextIdx = (currentTurn + 1) % combatants.length;
-    const nextName = combatants[nextIdx]?.name || '?';
-    logEvent('turn', `${nextName}'s turn`);
   };
 
   const prevTurn = () => {
@@ -275,12 +517,12 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     setCombatants(prev => {
       const idx = prev.findIndex(c => c.id === id);
       const newList = prev.filter(c => c.id !== id);
-      // Adjust currentTurn if needed
-      if (idx < currentTurn) {
-        setCurrentTurn(t => Math.max(0, t - 1));
-      } else if (currentTurn >= newList.length && newList.length > 0) {
-        setCurrentTurn(0);
-      }
+      // Adjust currentTurn if needed (use updater to avoid stale closure)
+      setCurrentTurn(t => {
+        if (idx < t) return Math.max(0, t - 1);
+        if (t >= newList.length && newList.length > 0) return 0;
+        return t;
+      });
       return newList;
     });
   };
@@ -295,66 +537,169 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   // --- Apply Damage/Healing to Combatant ---
   const applyDamageHealing = (combatantId, amount, mode, modifier, damageTypeArg) => {
     if (!amount || amount <= 0) return;
-    let effectiveModifier = modifier;
-    let autoDetected = false;
-    // Auto-detect modifier from character's damage modifiers if combatant matches character name
     const target = combatants.find(c => c.id === combatantId);
-    if (mode === 'damage' && damageTypeArg && modifier === 'normal' && target && character?.name &&
-        target.name.toLowerCase() === character.name.toLowerCase()) {
-      const mods = charDamageModifiers;
-      if (mods.immunities.includes(damageTypeArg)) { effectiveModifier = 'immune'; autoDetected = true; }
-      else if (mods.resistances.includes(damageTypeArg)) { effectiveModifier = 'resist'; autoDetected = true; }
-      else if (mods.vulnerabilities.includes(damageTypeArg)) { effectiveModifier = 'vuln'; autoDetected = true; }
-    }
-    let effectiveAmount = amount;
-    if (mode === 'damage') {
-      if (effectiveModifier === 'immune') effectiveAmount = 0;
-      else if (effectiveModifier === 'resist') effectiveAmount = Math.floor(amount / 2);
-      else if (effectiveModifier === 'vuln') effectiveAmount = amount * 2;
-    }
+    if (!target) return;
 
-    setCombatants(prev => prev.map(c => {
-      if (c.id !== combatantId) return c;
-      if (mode === 'damage') {
-        const newHp = Math.max(0, (c.currentHp ?? c.maxHp ?? 0) - effectiveAmount);
-        return { ...c, currentHp: newHp };
-      } else {
-        const newHp = Math.min(c.maxHp || 9999, (c.currentHp ?? 0) + effectiveAmount);
-        return { ...c, currentHp: newHp };
+    if (mode === 'damage') {
+      // --- Use damageEngine for resistance/vulnerability/immunity ---
+      let resistances = [];
+      let vulnerabilities = [];
+      let immunities = [];
+
+      // Auto-detect from character's damage modifiers if combatant matches character name
+      if (damageTypeArg && modifier === 'normal' && character?.name &&
+          target.name.toLowerCase() === character.name.toLowerCase()) {
+        resistances = charDamageModifiers.resistances || [];
+        vulnerabilities = charDamageModifiers.vulnerabilities || [];
+        immunities = charDamageModifiers.immunities || [];
       }
-    }));
 
-    if (mode === 'damage') {
+      // Manual override takes precedence
+      if (modifier === 'resist') { resistances = [damageTypeArg || 'all']; immunities = []; vulnerabilities = []; }
+      else if (modifier === 'vuln') { vulnerabilities = [damageTypeArg || 'all']; immunities = []; resistances = []; }
+      else if (modifier === 'immune') { immunities = [damageTypeArg || 'all']; resistances = []; vulnerabilities = []; }
+
+      const dmgResult = calculateEffectiveDamage({
+        amount,
+        damageType: damageTypeArg || 'all',
+        resistances,
+        vulnerabilities,
+        immunities,
+      });
+
+      const currentHp = target.currentHp ?? target.maxHp ?? 0;
+      const tempHp = target.tempHp || 0;
+      const maxHp = target.maxHp || 0;
+      const hpResult = applyDamageToHp({ damage: dmgResult.effective, currentHp, tempHp, maxHp });
+
+      // Apply HP change
+      setCombatants(prev => prev.map(c => {
+        if (c.id !== combatantId) return c;
+        return { ...c, currentHp: hpResult.newHp, tempHp: hpResult.newTempHp };
+      }));
+
+      // Update stats
       setCombatStats(prev => ({
         ...prev,
-        totalDamageDealt: prev.totalDamageDealt + effectiveAmount,
+        totalDamageDealt: prev.totalDamageDealt + dmgResult.effective,
         attackCount: prev.attackCount + 1,
       }));
-      const modLabel = autoDetected
-        ? (effectiveModifier === 'immune' ? 'immune' : effectiveModifier === 'resist' ? 'resistance' : 'vulnerability')
-        : (effectiveModifier !== 'normal' && effectiveModifier !== 'immune' ? effectiveModifier : '');
+
+      // Log message
+      const modLabel = dmgResult.modifier !== 'normal' ? dmgResult.modifier : '';
       const modSuffix = modLabel ? ` (${modLabel}${damageTypeArg ? ` - ${damageTypeArg}` : ''})` : '';
-      const dmgMsg = effectiveModifier === 'immune'
-        ? `${target?.name || '?'} is immune to ${damageTypeArg || 'this damage'}!`
-        : `${target?.name || '?'} took ${effectiveAmount} damage${modSuffix}`;
+      const dmgMsg = dmgResult.modifier === 'immune'
+        ? `${target.name} is immune to ${damageTypeArg || 'this damage'}!`
+        : `${target.name} took ${dmgResult.effective} damage${modSuffix}`;
       logEvent('damage', dmgMsg);
-      const toastStyle = effectiveModifier === 'immune'
+
+      const toastStyle = dmgResult.modifier === 'immune'
         ? { background: '#0a1a1a', color: '#fde68a', border: '1px solid rgba(234,179,8,0.3)' }
         : { background: '#1a0a0a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' };
       toast(dmgMsg, {
-        icon: effectiveModifier === 'immune' ? '\u{1F6E1}' : '\u2694\uFE0F', duration: 2000,
+        icon: dmgResult.modifier === 'immune' ? '\u{1F6E1}' : '\u2694\uFE0F', duration: 2000,
         style: toastStyle,
       });
+
+      // Persist to combat log DB (fire-and-forget)
+      insertCombatLog('', roundCounter, currentTurn, 'damage', '', target.name, dmgMsg,
+        JSON.stringify({ raw: amount, effective: dmgResult.effective, modifier: dmgResult.modifier, damageType: damageTypeArg })
+      ).catch(() => {}); // silent fail for solo play (no campaign)
+
+      // --- Death save trigger: dropped to 0 HP ---
+      if (hpResult.droppedToZero) {
+        if (hpResult.massiveDamage) {
+          logEvent('death', `${target.name} suffered MASSIVE DAMAGE and is instantly killed!`);
+          toast(`${target.name} is instantly killed! (massive damage)`, {
+            icon: '\u{1F480}', duration: 4000,
+            style: { background: '#1a0505', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.5)' },
+          });
+          setDeathSaves(prev => ({ ...prev, [combatantId]: { successes: 0, failures: 3, stable: false, dead: true } }));
+        } else {
+          logEvent('death', `${target.name} dropped to 0 HP! Death saves begin.`);
+          toast(`${target.name} dropped to 0 HP! Death saves begin.`, {
+            icon: '\u{1F480}', duration: 3000,
+            style: { background: '#1a0505', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)' },
+          });
+          setDeathSaves(prev => ({ ...prev, [combatantId]: { successes: 0, failures: 0, stable: false, dead: false } }));
+        }
+      }
+
+      // --- Damage while at 0 HP = auto death save failure ---
+      if (currentHp === 0 && dmgResult.effective > 0) {
+        const ds = deathSaves[combatantId];
+        if (ds && !ds.dead && !ds.stable) {
+          const newFailures = Math.min(3, ds.failures + 1);
+          const isDead = newFailures >= 3;
+          setDeathSaves(prev => ({ ...prev, [combatantId]: { ...ds, failures: newFailures, dead: isDead } }));
+          logEvent('death', `${target.name} takes damage at 0 HP — automatic death save failure!`);
+          if (isDead) {
+            logEvent('death', `${target.name} has died.`);
+            toast(`${target.name} has died.`, { icon: '\u{1F480}', duration: 4000,
+              style: { background: '#1a0505', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.5)' },
+            });
+          }
+        }
+      }
+
+      // --- Concentration check trigger ---
+      if (concentratingSpell && dmgResult.effective > 0 && character?.name &&
+          target.name.toLowerCase() === character.name.toLowerCase()) {
+        const dc = checkConcentration(dmgResult.effective);
+        toast(`Concentration check! DC ${dc} CON save to maintain ${concentratingSpell.name}`, {
+          icon: '\u{1F52E}', duration: 5000,
+          style: { background: '#1a0a2a', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.4)' },
+        });
+        logEvent('concentration', `Concentration check: DC ${dc} CON save for ${concentratingSpell.name}`);
+      }
+
     } else {
+      // --- Healing ---
+      const currentHp = target.currentHp ?? 0;
+      const maxHp = target.maxHp || 9999;
+      const healResult = calculateHealingResult({ amount, currentHp, maxHp });
+
+      setCombatants(prev => prev.map(c => {
+        if (c.id !== combatantId) return c;
+        return { ...c, currentHp: healResult.newHp };
+      }));
+
       setCombatStats(prev => ({
         ...prev,
-        totalHealing: prev.totalHealing + effectiveAmount,
+        totalHealing: prev.totalHealing + healResult.actualHealing,
       }));
-      logEvent('healing', `${target?.name || '?'} healed ${effectiveAmount} HP`);
-      toast(`${target?.name || '?'} healed ${effectiveAmount} HP`, {
+      logEvent('healing', `${target.name} healed ${healResult.actualHealing} HP`);
+      toast(`${target.name} healed ${healResult.actualHealing} HP`, {
         icon: '\u2764\uFE0F', duration: 2000,
         style: { background: '#0a1a0a', color: '#86efac', border: '1px solid rgba(34,197,94,0.3)' },
       });
+
+      // Persist to combat log DB
+      insertCombatLog('', roundCounter, currentTurn, 'healing', '', target.name,
+        `${target.name} healed ${healResult.actualHealing} HP`,
+        JSON.stringify({ amount, actual: healResult.actualHealing })
+      ).catch(() => {});
+
+      // --- Healing from 0 HP clears death saves (but not if dead — need resurrection) ---
+      if (healResult.wasAtZero && healResult.newHp > 0) {
+        const ds = deathSaves[combatantId];
+        if (ds?.dead) {
+          // Dead characters can't be healed by normal means — notify DM
+          toast(`${target.name} is dead and cannot be healed. Use DM Revive or resurrection magic.`, {
+            icon: '\u{1F480}', duration: 4000,
+            style: { background: '#1a0505', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)' },
+          });
+          // Revert the HP change
+          setCombatants(prev => prev.map(c => c.id === combatantId ? { ...c, currentHp: 0 } : c));
+        } else {
+          setDeathSaves(prev => {
+            const next = { ...prev };
+            delete next[combatantId];
+            return next;
+          });
+          logEvent('death', `${target.name} is no longer dying (healed to ${healResult.newHp} HP)`);
+        }
+      }
     }
     setCalcAmount('');
     setCalcDamageType('');
@@ -726,6 +1071,17 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         </div>
       )}
 
+      {/* Combat Suggestions Panel */}
+      <CombatSuggestions
+        character={character}
+        combatants={combatants}
+        conditions={conditions}
+        deathSaves={deathSaves}
+        concentratingSpell={concentratingSpell}
+        actionEcon={actionEcon}
+        combatActive={combatActive}
+      />
+
       {/* Initiative / Combatant Tracker (Enhanced with HP tracking & damage/healing) */}
       <div className="card">
         <div className="flex items-center justify-between mb-2">
@@ -879,7 +1235,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                         {calcMode === 'damage' && (
                           <>
                             <span className="text-amber-200/20">|</span>
-                            {['normal', 'resist', 'vuln'].map(mod => (
+                            {['normal', 'resist', 'vuln', 'immune'].map(mod => (
                               <button
                                 key={mod}
                                 onClick={() => setCalcModifier(mod)}
@@ -887,11 +1243,12 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                                   calcModifier === mod
                                     ? mod === 'resist' ? 'bg-blue-900/50 text-blue-200 border-blue-500/40'
                                       : mod === 'vuln' ? 'bg-red-900/50 text-red-200 border-red-500/40'
+                                      : mod === 'immune' ? 'bg-yellow-900/50 text-yellow-200 border-yellow-500/40'
                                       : 'bg-gold/15 text-gold border-gold/30'
                                     : 'bg-white/5 text-amber-200/40 border-amber-200/10'
                                 }`}
                               >
-                                {mod === 'normal' ? 'Normal' : mod === 'resist' ? '\u00BD Resist' : '\u00D72 Vuln'}
+                                {mod === 'normal' ? 'Normal' : mod === 'resist' ? '\u00BD Resist' : mod === 'vuln' ? '\u00D72 Vuln' : '\u{1F6E1} Immune'}
                               </button>
                             ))}
                           </>
@@ -902,7 +1259,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                         <div className="flex items-center gap-2 mb-1">
                           <select
                             value={calcDamageType}
-                            onChange={e => setCalcDamageType(e.target.value)}
+                            onChange={e => { setCalcDamageType(e.target.value); setCalcModifier('normal'); }}
                             className="input text-[11px]"
                             style={{ width: '140px', padding: '3px 6px' }}
                           >
@@ -953,10 +1310,58 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                         </button>
                         {calcMode === 'damage' && calcAmount && calcModifier !== 'normal' && (
                           <span className="text-xs text-amber-200/40">
-                            = {calcModifier === 'resist' ? Math.floor((parseInt(calcAmount) || 0) / 2) : (parseInt(calcAmount) || 0) * 2} effective
+                            = {calcModifier === 'immune' ? 0 : calcModifier === 'resist' ? Math.floor((parseInt(calcAmount) || 0) / 2) : (parseInt(calcAmount) || 0) * 2} effective
                           </span>
                         )}
                       </div>
+                    </div>
+                  )}
+                  {/* Death Save Tracker */}
+                  {deathSaves[c.id] && !deathSaves[c.id].dead && (
+                    <div className="ml-11 mt-1 mb-2 p-3 bg-[#1a0808] border border-red-500/20 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-display text-red-300 flex items-center gap-1.5">
+                          <Skull size={12} /> Death Saves — {c.name}
+                        </span>
+                        {deathSaves[c.id].stable ? (
+                          <span className="text-[10px] text-emerald-400 bg-emerald-900/30 px-2 py-0.5 rounded border border-emerald-500/30">Stabilized</span>
+                        ) : (
+                          <button
+                            onClick={() => rollDeathSave(c.id)}
+                            className="text-xs px-2.5 py-1 rounded bg-red-900/40 text-red-300 border border-red-500/30 hover:bg-red-900/60 transition-all flex items-center gap-1"
+                          >
+                            <Dice5 size={11} /> Roll Death Save
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-emerald-400/70 uppercase tracking-wider">Successes</span>
+                          {[0, 1, 2].map(i => (
+                            <div key={`s-${i}`} className={`w-4 h-4 rounded-full border-2 transition-all ${
+                              i < deathSaves[c.id].successes
+                                ? 'bg-emerald-500 border-emerald-400'
+                                : 'bg-transparent border-emerald-500/30'
+                            }`} />
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-red-400/70 uppercase tracking-wider">Failures</span>
+                          {[0, 1, 2].map(i => (
+                            <div key={`f-${i}`} className={`w-4 h-4 rounded-full border-2 transition-all ${
+                              i < deathSaves[c.id].failures
+                                ? 'bg-red-500 border-red-400'
+                                : 'bg-transparent border-red-500/30'
+                            }`} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {/* Dead indicator */}
+                  {deathSaves[c.id]?.dead && (
+                    <div className="ml-11 mt-1 mb-2 p-2 bg-[#1a0505] border border-red-500/30 rounded-lg text-center">
+                      <span className="text-xs text-red-400 font-display">{'\u{1F480}'} {c.name} has died</span>
                     </div>
                   )}
                 </div>
@@ -965,6 +1370,25 @@ export default function Combat({ characterId, character, onConditionsChange }) {
           </div>
         )}
       </div>
+
+      {/* Concentration Tracker */}
+      {concentratingSpell && (
+        <div className="card bg-gradient-to-r from-purple-950/30 to-[#14121c] border-purple-500/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-purple-400">{'\u{1F52E}'}</span>
+              <span className="text-sm font-display text-purple-200">Concentrating on</span>
+              <span className="text-sm font-bold text-purple-100">{concentratingSpell.name}</span>
+            </div>
+            <button
+              onClick={dropConcentration}
+              className="text-xs px-2.5 py-1 rounded bg-purple-900/40 text-purple-300 border border-purple-500/30 hover:bg-purple-900/60 transition-all"
+            >
+              Drop Concentration
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Turn Action Tracker */}
       <TurnActionTracker
@@ -1030,6 +1454,36 @@ export default function Combat({ characterId, character, onConditionsChange }) {
             </button>
           </div>
         </div>
+        <p className="text-[10px] text-amber-200/30 mt-2">Auto-resets each round on Next Turn.</p>
+      </div>
+
+      {/* Lair Actions */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-display text-amber-100">Lair Actions</h3>
+          <button
+            onClick={() => setLairAction(prev => ({ ...prev, enabled: !prev.enabled }))}
+            className={`text-xs px-2.5 py-1 rounded border transition-all ${
+              lairAction.enabled
+                ? 'bg-purple-900/40 text-purple-300 border-purple-500/30'
+                : 'bg-white/5 text-amber-200/40 border-amber-200/10'
+            }`}
+          >
+            {lairAction.enabled ? 'Enabled' : 'Disabled'}
+          </button>
+        </div>
+        {lairAction.enabled && (
+          <div className="space-y-2">
+            <p className="text-[10px] text-amber-200/30">Triggers on initiative count 20 (losing ties). Reminder shown each round.</p>
+            <textarea
+              className="input w-full text-xs"
+              rows={2}
+              placeholder="Describe lair action effects..."
+              value={lairAction.description}
+              onChange={e => setLairAction(prev => ({ ...prev, description: e.target.value }))}
+            />
+          </div>
+        )}
       </div>
 
       {/* Attacks with Roll Buttons */}

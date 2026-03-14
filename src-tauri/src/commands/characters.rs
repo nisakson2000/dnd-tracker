@@ -35,6 +35,10 @@ pub struct CharacterSummary {
     pub campaign_name: String,
     pub ruleset: String,
     pub updated_at: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub campaign_type: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -73,6 +77,8 @@ pub fn list_characters(state: State<'_, AppState>) -> Result<Vec<CharacterSummar
                     max_hp: row.get::<_, i64>(7).unwrap_or(0),
                     current_hp: row.get::<_, i64>(8).unwrap_or(0),
                     armor_class: row.get::<_, i64>(9).unwrap_or(0),
+                    status: None,
+                    campaign_type: None,
                 })
             });
             match result {
@@ -89,10 +95,30 @@ pub fn list_characters(state: State<'_, AppState>) -> Result<Vec<CharacterSummar
                     campaign_name: String::new(),
                     ruleset: "5e-2014".to_string(),
                     updated_at: None,
+                    status: None,
+                    campaign_type: None,
                 }),
             }
         })?;
         results.push(summary);
+    }
+
+    // Cross-reference campaign status from campaigns.db
+    let campaign_db_path = state.data_dir.join("campaigns.db");
+    if campaign_db_path.exists() {
+        if let Ok(conn) = rusqlite::Connection::open(&campaign_db_path) {
+            let _ = conn.execute("ALTER TABLE campaigns ADD COLUMN status TEXT DEFAULT 'active'", []);
+            for summary in results.iter_mut() {
+                if let Ok(row) = conn.query_row(
+                    "SELECT COALESCE(status, 'active'), COALESCE(campaign_type, 'homebrew') FROM campaigns WHERE id = ?1",
+                    rusqlite::params![summary.id],
+                    |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)),
+                ) {
+                    summary.status = Some(row.0);
+                    summary.campaign_type = Some(row.1);
+                }
+            }
+        }
     }
 
     Ok(results)
@@ -152,6 +178,8 @@ pub fn create_character(
         campaign_name: String::new(),
         ruleset,
         updated_at: Some(now),
+        status: None,
+        campaign_type: None,
     })
 }
 

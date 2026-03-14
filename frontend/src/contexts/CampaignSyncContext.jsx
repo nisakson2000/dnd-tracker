@@ -48,6 +48,7 @@ export function CampaignSyncProvider({ children }) {
   const [pendingPurchases, setPendingPurchases] = useState([]);
   const [incomingAttacks, setIncomingAttacks] = useState([]); // player_attack events for DM auto-damage
   const [currentMood, setCurrentMood] = useState(null);
+  const [dmSessionActive, setDmSessionActive] = useState(false);
   const [ambientSound, setAmbientSound] = useState(null);
 
   const isHost = mode === 'host';
@@ -279,6 +280,10 @@ export function CampaignSyncProvider({ children }) {
     unsubs.push(onPartyEvent('shop_purchase_request', (msg) => {
       setPendingPurchases(prev => [...prev, msg.data]);
     }));
+
+    // DM session lifecycle events — lock player editing during live sessions
+    unsubs.push(onPartyEvent('session_start', () => setDmSessionActive(true)));
+    unsubs.push(onPartyEvent('session_end', () => setDmSessionActive(false)));
 
     return () => unsubs.forEach(fn => fn());
   }, [onPartyEvent]);
@@ -529,6 +534,7 @@ export function CampaignSyncProvider({ children }) {
     incomingAttacks, removeIncomingAttack, clearIncomingAttacks,
     pendingLevelUp, clearLevelUp,
     currentMood, ambientSound, sendMoodChange, sendAmbientChange, clearMood,
+    dmSessionActive,
   }), [activePrompts, promptResults, broadcasts, latestBroadcast,
        combatActive, initiativeOrder, currentTurn, round, isMyTurn, isHost,
        sendBroadcast, sendPrompt, respondToPrompt,
@@ -555,7 +561,8 @@ export function CampaignSyncProvider({ children }) {
        activeShop, pendingPurchases, sendShopOpen, sendShopClose, clearPendingPurchases,
        incomingAttacks, removeIncomingAttack, clearIncomingAttacks,
        pendingLevelUp, clearLevelUp,
-       currentMood, ambientSound, sendMoodChange, sendAmbientChange, clearMood]);
+       currentMood, ambientSound, sendMoodChange, sendAmbientChange, clearMood,
+       dmSessionActive]);
 
   return <CampaignSyncContext.Provider value={value}>{children}</CampaignSyncContext.Provider>;
 }

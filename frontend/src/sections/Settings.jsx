@@ -295,11 +295,12 @@ function AiSettingsTab() {
       }}>
         <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text)', marginBottom: 8 }}>Setup</div>
         <ol style={{ paddingLeft: 18, fontSize: 12, color: 'var(--text-sub)', lineHeight: 2 }}>
-          <li>Install Ollama from <span style={{ color: 'var(--accent-l)' }}>ollama.ai</span></li>
+          <li>Install Ollama from <span style={{ color: 'var(--accent-l)' }}>ollama.com/download</span></li>
           <li>Toggle the switch above — model downloads automatically</li>
+          <li>For DM AI Modules, open a campaign and expand the "AI Modules" panel</li>
         </ol>
         <p style={{ fontSize: 11, color: 'var(--text-mute)', marginTop: 8, fontStyle: 'italic' }}>
-          Runs entirely on your machine. Uses the built-in wiki for D&D knowledge.
+          Runs entirely on your machine. The Arcane Advisor uses phi3.5 for chat; DM AI Modules use llama3.2 for content generation.
         </p>
       </div>
     </div>

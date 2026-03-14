@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Plus, Trash2, Edit2, Users, Search, Copy, ScrollText, Pin, ChevronDown, ChevronRight, MapPin, Clock, MessageSquare, Shield, MessageCircle, Send, Bot, User, X, Loader2, Shuffle } from 'lucide-react';
+import { Plus, Trash2, Edit2, Users, Search, Copy, ScrollText, Pin, ChevronDown, ChevronRight, MapPin, Clock, MessageSquare, Shield, MessageCircle, Send, Bot, User, X, Loader2, Shuffle, Brain, Swords, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
@@ -106,7 +106,7 @@ function getInitials(name) {
 // Pack extra NPC data into notes field as JSON
 function packNpcNotes(data) {
   return JSON.stringify({
-    _v: 2,
+    _v: 3,
     notes_text: data.notes_text || '',
     relationship: data.relationship || 'Unknown',
     quest_hook: data.quest_hook || '',
@@ -116,11 +116,25 @@ function packNpcNotes(data) {
     faction: data.faction || '',
     pinned: data.pinned || false,
     conversation_log: data.conversation_log || [],
+    // Phase 6: NPC Intelligence
+    personality_archetype: data.personality_archetype || '',
+    personality_traits: data.personality_traits || [],
+    motivations: data.motivations || [],
+    intelligence: data.intelligence ?? 10,
+    fear_courage: data.fear_courage ?? 50,
+    trust_score: data.trust_score ?? 0,
+    combat_style: data.combat_style || '',
+    merchant_location_type: data.merchant_location_type || 'town',
   });
 }
 
 function unpackNpcNotes(notesStr) {
-  const defaults = { notes_text: '', relationship: 'Unknown', quest_hook: '', disposition: 'Neutral', last_seen_location: '', last_encountered: '', faction: '', pinned: false, conversation_log: [] };
+  const defaults = {
+    notes_text: '', relationship: 'Unknown', quest_hook: '', disposition: 'Neutral',
+    last_seen_location: '', last_encountered: '', faction: '', pinned: false, conversation_log: [],
+    personality_archetype: '', personality_traits: [], motivations: [], intelligence: 10,
+    fear_courage: 50, trust_score: 0, combat_style: '', merchant_location_type: 'town',
+  };
   if (!notesStr) return defaults;
   try {
     const parsed = JSON.parse(notesStr);
@@ -142,6 +156,14 @@ function enrichNpc(npc) {
     faction: extra.faction || '',
     pinned: extra.pinned || false,
     conversation_log: extra.conversation_log || [],
+    personality_archetype: extra.personality_archetype || '',
+    personality_traits: extra.personality_traits || [],
+    motivations: extra.motivations || [],
+    intelligence: extra.intelligence ?? 10,
+    fear_courage: extra.fear_courage ?? 50,
+    trust_score: extra.trust_score ?? 0,
+    combat_style: extra.combat_style || '',
+    merchant_location_type: extra.merchant_location_type || 'town',
   };
 }
 
@@ -1153,6 +1175,51 @@ function ConversationModal({ npc, onSubmit, onCancel }) {
   );
 }
 
+// ── Personality archetypes for the behavior engine ──
+const ARCHETYPES = [
+  { id: '', label: 'None (Custom)' },
+  { id: 'schemer', label: 'The Schemer', traits: ['cunning', 'ambitious', 'deceptive', 'patient'], color: '#8b5cf6', desc: 'Manipulative and calculating — always has a hidden agenda.' },
+  { id: 'guardian', label: 'The Guardian', traits: ['loyal', 'brave', 'protective', 'honorable'], color: '#3b82f6', desc: 'Steadfast defender — honor above all.' },
+  { id: 'merchant', label: 'The Merchant', traits: ['greedy', 'practical', 'risk-averse', 'shrewd'], color: '#f59e0b', desc: 'Profit-driven and pragmatic — everything has a price.' },
+  { id: 'zealot', label: 'The Zealot', traits: ['devoted', 'unyielding', 'charismatic', 'extreme'], color: '#ef4444', desc: 'Unshakeable conviction — will sacrifice anything.' },
+  { id: 'outcast', label: 'The Outcast', traits: ['suspicious', 'independent', 'resourceful', 'bitter'], color: '#6b7280', desc: 'Mistrustful of others — self-reliance only.' },
+  { id: 'sage', label: 'The Sage', traits: ['wise', 'curious', 'patient', 'detached'], color: '#06b6d4', desc: 'Seeks truth above all.' },
+  { id: 'trickster', label: 'The Trickster', traits: ['witty', 'unpredictable', 'charming', 'selfish'], color: '#ec4899', desc: 'Life is a game — and they intend to win laughing.' },
+  { id: 'noble', label: 'The Noble', traits: ['proud', 'commanding', 'generous', 'entitled'], color: '#a855f7', desc: 'Born to rule — expects deference.' },
+];
+const ALL_PERSONALITY_TRAITS = [
+  'brave', 'cowardly', 'cunning', 'honest', 'deceptive', 'loyal', 'treacherous',
+  'greedy', 'generous', 'cruel', 'kind', 'patient', 'impulsive', 'suspicious',
+  'trusting', 'proud', 'humble', 'ambitious', 'lazy', 'devoted', 'selfish',
+  'protective', 'reckless', 'cautious', 'charismatic', 'shy', 'witty', 'serious',
+  'vengeful', 'forgiving', 'stubborn', 'flexible', 'honorable', 'pragmatic',
+];
+const MOTIVATION_OPTIONS = [
+  'Wealth', 'Power', 'Knowledge', 'Faith', 'Duty', 'Protection', 'Revenge',
+  'Survival', 'Freedom', 'Fun', 'Legacy', 'Love', 'Control', 'Status',
+];
+const COMBAT_STYLES = [
+  { id: '', label: 'Default' },
+  { id: 'cowardly', label: 'Cowardly — flees when wounded' },
+  { id: 'aggressive', label: 'Aggressive — never retreats' },
+  { id: 'cunning', label: 'Cunning — targets casters, uses cover' },
+  { id: 'protective', label: 'Protective — guards allies' },
+  { id: 'chaotic', label: 'Chaotic — unpredictable' },
+  { id: 'tactical', label: 'Tactical — exploits weaknesses' },
+];
+const TRUST_LABELS = [
+  { min: -100, max: -80, label: 'Sworn Enemy', color: '#7f1d1d' },
+  { min: -79, max: -50, label: 'Hostile', color: '#dc2626' },
+  { min: -49, max: -20, label: 'Distrustful', color: '#f97316' },
+  { min: -19, max: 19, label: 'Neutral', color: '#6b7280' },
+  { min: 20, max: 49, label: 'Friendly', color: '#22c55e' },
+  { min: 50, max: 79, label: 'Devoted', color: '#3b82f6' },
+  { min: 80, max: 100, label: 'Unbreakable Bond', color: '#a855f7' },
+];
+function getTrustLabel(score) {
+  return TRUST_LABELS.find(l => score >= l.min && score <= l.max) || TRUST_LABELS[3];
+}
+
 function NPCForm({ npc, initialData, onSubmit, onCancel }) {
   const [form, setForm] = useState(() => {
     if (npc) return { ...npc };
@@ -1162,15 +1229,31 @@ function NPCForm({ npc, initialData, onSubmit, onCancel }) {
       notes_text: '', status: 'alive', relationship: 'Unknown', quest_hook: '',
       disposition: 'Neutral', last_seen_location: '', last_encountered: '',
       faction: '', pinned: false, conversation_log: [],
+      personality_archetype: '', personality_traits: [], motivations: [],
+      intelligence: 10, fear_courage: 50, trust_score: 0,
+      combat_style: '', merchant_location_type: 'town',
     };
   });
   const [nameError, setNameError] = useState(false);
+  const [activeTab, setActiveTab] = useState('basics');
   const update = (f, v) => {
     if (f === 'name') setNameError(false);
     setForm(prev => ({ ...prev, [f]: v }));
   };
+  const toggleTrait = (trait) => {
+    setForm(prev => {
+      const traits = prev.personality_traits || [];
+      return { ...prev, personality_traits: traits.includes(trait) ? traits.filter(t => t !== trait) : [...traits, trait] };
+    });
+  };
+  const toggleMotivation = (m) => {
+    setForm(prev => {
+      const motivations = prev.motivations || [];
+      return { ...prev, motivations: motivations.includes(m) ? motivations.filter(x => x !== m) : [...motivations, m] };
+    });
+  };
   const handleSubmit = () => {
-    if (!form.name.trim()) { setNameError(true); return; }
+    if (!form.name.trim()) { setNameError(true); setActiveTab('basics'); return; }
     onSubmit(form);
   };
 
@@ -1180,10 +1263,19 @@ function NPCForm({ npc, initialData, onSubmit, onCancel }) {
     return () => window.removeEventListener('keydown', handler);
   }, [onCancel]);
 
+  const trustInfo = getTrustLabel(form.trust_score || 0);
+  const tabStyle = (tab) => ({
+    padding: '6px 14px', borderRadius: '6px 6px 0 0', cursor: 'pointer', fontSize: '12px', fontWeight: 600,
+    border: 'none', borderBottom: activeTab === tab ? '2px solid #fbbf24' : '2px solid transparent',
+    background: activeTab === tab ? 'rgba(251,191,36,0.08)' : 'transparent',
+    color: activeTab === tab ? '#fbbf24' : 'rgba(255,255,255,0.4)',
+    fontFamily: 'var(--font-heading)',
+  });
+
   return (
     <ModalPortal>
       <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onCancel()}>
-      <div className="bg-[#14121c] border border-gold/30 rounded-lg p-5 w-full mx-4" style={{ maxWidth: '720px' }}>
+      <div className="bg-[#14121c] border border-gold/30 rounded-lg p-5 w-full mx-4" style={{ maxWidth: '780px', maxHeight: '85vh', overflowY: 'auto' }}>
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-display text-lg text-amber-100">{npc ? 'Edit NPC' : 'Add NPC'}</h3>
           <div className="flex gap-2">
@@ -1204,6 +1296,22 @@ function NPCForm({ npc, initialData, onSubmit, onCancel }) {
             <button onClick={handleSubmit} className="btn-primary text-sm">{npc ? 'Save' : 'Add'}</button>
           </div>
         </div>
+
+        {/* ── Tabs ── */}
+        <div style={{ display: 'flex', gap: 2, borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 12 }}>
+          <button style={tabStyle('basics')} onClick={() => setActiveTab('basics')}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Users size={12} /> Basics</span>
+          </button>
+          <button style={tabStyle('intelligence')} onClick={() => setActiveTab('intelligence')}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Brain size={12} /> Intelligence & Behavior</span>
+          </button>
+          <button style={tabStyle('combat')} onClick={() => setActiveTab('combat')}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Swords size={12} /> Combat</span>
+          </button>
+        </div>
+
+        {/* ── Basics Tab ── */}
+        {activeTab === 'basics' && (
         <div className="grid grid-cols-3 gap-2">
           <div className="col-span-3 flex gap-2">
             <input className={`input flex-1 ${nameError ? 'border-red-500' : ''}`} placeholder="NPC Name (e.g. Elara Brightheart)" value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
@@ -1272,6 +1380,206 @@ function NPCForm({ npc, initialData, onSubmit, onCancel }) {
             <MDEditor value={form.notes_text} onChange={v => update('notes_text', v || '')} height={90} preview="edit" />
           </div>
         </div>
+        )}
+
+        {/* ── Intelligence & Behavior Tab ── */}
+        {activeTab === 'intelligence' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Archetype Picker */}
+          <div>
+            <label style={{ fontSize: 11, color: 'var(--text-mute)', fontFamily: 'var(--font-heading)', marginBottom: 6, display: 'block' }}>Personality Archetype</label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {ARCHETYPES.map(a => (
+                <button key={a.id} type="button" onClick={() => {
+                  update('personality_archetype', a.id);
+                  if (a.traits) update('personality_traits', a.traits);
+                }}
+                  style={{
+                    padding: '6px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 600,
+                    border: `1px solid ${form.personality_archetype === a.id ? (a.color || '#fbbf24') + '50' : 'rgba(255,255,255,0.08)'}`,
+                    background: form.personality_archetype === a.id ? (a.color || '#fbbf24') + '15' : 'rgba(255,255,255,0.02)',
+                    color: form.personality_archetype === a.id ? (a.color || '#fbbf24') : 'rgba(255,255,255,0.5)',
+                    fontFamily: 'var(--font-heading)',
+                  }}>
+                  {a.label}
+                </button>
+              ))}
+            </div>
+            {form.personality_archetype && ARCHETYPES.find(a => a.id === form.personality_archetype)?.desc && (
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 4, fontStyle: 'italic' }}>
+                {ARCHETYPES.find(a => a.id === form.personality_archetype).desc}
+              </p>
+            )}
+          </div>
+
+          {/* Traits */}
+          <div>
+            <label style={{ fontSize: 11, color: 'var(--text-mute)', fontFamily: 'var(--font-heading)', marginBottom: 6, display: 'block' }}>
+              Personality Traits <span style={{ color: 'rgba(255,255,255,0.2)' }}>({(form.personality_traits || []).length} selected)</span>
+            </label>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+              {ALL_PERSONALITY_TRAITS.map(t => {
+                const selected = (form.personality_traits || []).includes(t);
+                return (
+                  <button key={t} type="button" onClick={() => toggleTrait(t)}
+                    style={{
+                      padding: '3px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 10,
+                      border: `1px solid ${selected ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                      background: selected ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.02)',
+                      color: selected ? '#4ade80' : 'rgba(255,255,255,0.35)',
+                      fontWeight: selected ? 600 : 400,
+                    }}>
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Motivations */}
+          <div>
+            <label style={{ fontSize: 11, color: 'var(--text-mute)', fontFamily: 'var(--font-heading)', marginBottom: 6, display: 'block' }}>
+              Motivations <span style={{ color: 'rgba(255,255,255,0.2)' }}>({(form.motivations || []).length} selected)</span>
+            </label>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+              {MOTIVATION_OPTIONS.map(m => {
+                const selected = (form.motivations || []).includes(m);
+                return (
+                  <button key={m} type="button" onClick={() => toggleMotivation(m)}
+                    style={{
+                      padding: '3px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 10,
+                      border: `1px solid ${selected ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                      background: selected ? 'rgba(139,92,246,0.1)' : 'rgba(255,255,255,0.02)',
+                      color: selected ? '#a78bfa' : 'rgba(255,255,255,0.35)',
+                      fontWeight: selected ? 600 : 400,
+                    }}>
+                    {m}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sliders: Intelligence, Fear/Courage, Trust */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+            <div>
+              <label style={{ fontSize: 11, color: 'var(--text-mute)', fontFamily: 'var(--font-heading)', display: 'flex', justifyContent: 'space-between' }}>
+                <span>Intelligence</span>
+                <span style={{ color: '#fbbf24' }}>{form.intelligence ?? 10}</span>
+              </label>
+              <input type="range" min="1" max="30" value={form.intelligence ?? 10} onChange={e => update('intelligence', parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: '#fbbf24' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>
+                <span>Mindless</span><span>Genius</span>
+              </div>
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: 'var(--text-mute)', fontFamily: 'var(--font-heading)', display: 'flex', justifyContent: 'space-between' }}>
+                <span>Fear / Courage</span>
+                <span style={{ color: (form.fear_courage ?? 50) >= 50 ? '#22c55e' : '#ef4444' }}>{form.fear_courage ?? 50}</span>
+              </label>
+              <input type="range" min="0" max="100" value={form.fear_courage ?? 50} onChange={e => update('fear_courage', parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: (form.fear_courage ?? 50) >= 50 ? '#22c55e' : '#ef4444' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>
+                <span>Cowardly</span><span>Fearless</span>
+              </div>
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: 'var(--text-mute)', fontFamily: 'var(--font-heading)', display: 'flex', justifyContent: 'space-between' }}>
+                <span>Trust</span>
+                <span style={{ color: trustInfo.color }}>{form.trust_score ?? 0} — {trustInfo.label}</span>
+              </label>
+              <input type="range" min="-100" max="100" value={form.trust_score ?? 0} onChange={e => update('trust_score', parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: trustInfo.color }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>
+                <span>Sworn Enemy</span><span>Unbreakable</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Behavior Preview */}
+          {(form.personality_traits || []).length > 0 && (
+            <div style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: 10, color: 'var(--text-mute)', fontFamily: 'var(--font-heading)', marginBottom: 6 }}>Behavior Preview</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+                <div><strong style={{ color: 'rgba(255,255,255,0.7)' }}>If party asks for help:</strong> {
+                  (form.trust_score ?? 0) >= 50 ? 'Eagerly agrees — devoted to party' :
+                  (form.trust_score ?? 0) >= 20 ? 'Happy to help — friendly relationship' :
+                  (form.personality_traits || []).includes('greedy') ? 'Demands payment first — greedy nature' :
+                  (form.trust_score ?? 0) <= -20 ? 'Refuses — wants nothing to do with party' :
+                  'Weighs the request — persuasion may be needed'
+                }</div>
+                <div><strong style={{ color: 'rgba(255,255,255,0.7)' }}>If threatened:</strong> {
+                  (form.personality_traits || []).includes('brave') || (form.fear_courage ?? 50) >= 70 ? 'Stands firm — refuses to be intimidated' :
+                  (form.personality_traits || []).includes('cowardly') || (form.fear_courage ?? 50) <= 30 ? 'Capitulates immediately — too afraid to resist' :
+                  (form.personality_traits || []).includes('cunning') ? 'Pretends to submit, plans retaliation' :
+                  'Considers their options — DC 13 Intimidation'
+                }</div>
+                <div><strong style={{ color: 'rgba(255,255,255,0.7)' }}>Combat morale:</strong> {
+                  (form.fear_courage ?? 50) >= 70 ? 'Fights bravely, inspires allies' :
+                  (form.fear_courage ?? 50) >= 40 ? 'Holds the line, retreats if badly wounded' :
+                  'Flees at first sign of real danger'
+                }</div>
+              </div>
+            </div>
+          )}
+        </div>
+        )}
+
+        {/* ── Combat Tab ── */}
+        {activeTab === 'combat' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={{ fontSize: 11, color: 'var(--text-mute)', fontFamily: 'var(--font-heading)', marginBottom: 6, display: 'block' }}>Combat Style</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {COMBAT_STYLES.map(s => (
+                <button key={s.id} type="button" onClick={() => update('combat_style', s.id)}
+                  style={{
+                    padding: '8px 14px', borderRadius: 8, cursor: 'pointer', textAlign: 'left',
+                    border: `1px solid ${form.combat_style === s.id ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                    background: form.combat_style === s.id ? 'rgba(239,68,68,0.08)' : 'rgba(255,255,255,0.02)',
+                    color: form.combat_style === s.id ? '#fca5a5' : 'rgba(255,255,255,0.4)',
+                    fontSize: 12,
+                  }}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Intelligence tier preview */}
+          <div style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 10, color: 'var(--text-mute)', fontFamily: 'var(--font-heading)', marginBottom: 6 }}>Combat Intelligence Tier</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
+              {(form.intelligence ?? 10) <= 2 && <><strong style={{ color: '#ef4444' }}>Mindless</strong> — Attacks nearest target, ignores tactics, never retreats</>}
+              {(form.intelligence ?? 10) >= 3 && (form.intelligence ?? 10) <= 4 && <><strong style={{ color: '#f97316' }}>Beast</strong> — Instinct-driven, attacks nearest, flees when wounded</>}
+              {(form.intelligence ?? 10) >= 5 && (form.intelligence ?? 10) <= 8 && <><strong style={{ color: '#fbbf24' }}>Low</strong> — Focuses weak targets, basic self-preservation</>}
+              {(form.intelligence ?? 10) >= 9 && (form.intelligence ?? 10) <= 12 && <><strong style={{ color: '#22c55e' }}>Average</strong> — Targets casters, uses terrain, coordinates with allies</>}
+              {(form.intelligence ?? 10) >= 13 && (form.intelligence ?? 10) <= 16 && <><strong style={{ color: '#3b82f6' }}>Smart</strong> — Exploits conditions, baits reactions, retreats tactically</>}
+              {(form.intelligence ?? 10) >= 17 && <><strong style={{ color: '#a855f7' }}>Genius</strong> — Predicts player strategies, sets traps, sacrifices pawns</>}
+            </div>
+          </div>
+
+          {/* Merchant settings (show if class is merchant-related) */}
+          {['Merchant', 'Innkeeper', 'Blacksmith', 'Alchemist'].includes(form.npc_class) && (
+            <div>
+              <label style={{ fontSize: 11, color: 'var(--text-mute)', fontFamily: 'var(--font-heading)', marginBottom: 6, display: 'block' }}>
+                Merchant Location Type <span style={{ color: 'rgba(255,255,255,0.2)' }}>(affects pricing)</span>
+              </label>
+              <select className="input w-full" value={form.merchant_location_type || 'town'} onChange={e => update('merchant_location_type', e.target.value)}>
+                <option value="capital">Capital City (best prices)</option>
+                <option value="city">City (competitive)</option>
+                <option value="town">Town (standard)</option>
+                <option value="village">Village (slight markup)</option>
+                <option value="outpost">Outpost (noticeable markup)</option>
+                <option value="wilderness">Wilderness (premium)</option>
+                <option value="underdark">Underdark (high markup)</option>
+                <option value="black_market">Black Market (cheap buy, cheap sell)</option>
+              </select>
+            </div>
+          )}
+        </div>
+        )}
       </div>
       </div>
     </ModalPortal>

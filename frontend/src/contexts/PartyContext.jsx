@@ -22,7 +22,7 @@ export function PartyProvider({ children }) {
   const [joinInput, setJoinInput] = useState('');
   const [members, setMembers] = useState([]);
   const [myClientId, setMyClientId] = useState(null);
-  const [autoSync, setAutoSync] = useState(true);
+  // autoSync is always on — no toggle needed
   const [wasConnected, setWasConnected] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const [memberPresence, setMemberPresence] = useState({}); // { clientId: { lastSeen, status } }
@@ -127,8 +127,24 @@ export function PartyProvider({ children }) {
           return prev.filter(m2 => m2.client_id !== msg.client_id);
         });
       } else if (msg.type === 'host_ended') {
-        toast('The host ended the session', { icon: '\uD83C\uDFF0', duration: 4000 });
+        toast('The DM disconnected — session ended', { icon: '\uD83C\uDFF0', duration: 5000 });
         intentionalCloseRef.current = true;
+        // Fully disconnect and reset — don't try to reconnect
+        clearTimers();
+        connectedRef.current = false;
+        connectingRef.current = false;
+        try { invoke('party_ipc_disconnect').catch(() => {}); } catch {}
+        if (unlistenRef.current) { unlistenRef.current(); unlistenRef.current = null; }
+        setWsStatus('disconnected');
+        setMode(null);
+        setRoomCode('');
+        setMembers([]);
+        setMyClientId(null);
+        setWasConnected(false);
+        setReconnecting(false);
+        setMemberPresence({});
+        setChatMessages([]);
+        setHostInfo(null);
       } else if (msg.type === 'host_promoted') {
         toast('You are now the host', { icon: '\uD83D\uDC51', duration: 4000 });
       } else if (msg.type === 'sync_event' && msg.event) {
@@ -171,19 +187,37 @@ export function PartyProvider({ children }) {
     setWsStatus('disconnected');
 
     if (!intentionalCloseRef.current && connRef.current.roomCode && (connRef.current.mode === 'host' || connRef.current.joinIp)) {
+      const isPlayer = connRef.current.mode === 'join';
+      const maxAttempts = isPlayer ? 3 : 10; // Players give up faster — DM probably closed
       const attempt = reconnectCountRef.current;
       const delay = RECONNECT_DELAYS[Math.min(attempt, RECONNECT_DELAYS.length - 1)];
       reconnectCountRef.current = attempt + 1;
       setReconnecting(true);
 
-      if (attempt < 10) {
+      if (attempt < maxAttempts) {
         toast(`Connection lost \u2014 retrying in ${Math.round(delay / 1000)}s\u2026`, { icon: '\uD83D\uDD04', duration: delay });
         reconnectTimerRef.current = setTimeout(() => {
           if (!intentionalCloseRef.current) connect(charSnapshotRef.current);
         }, delay);
       } else {
         setReconnecting(false);
-        toast.error('Could not reconnect after multiple attempts. Use the Reconnect button to try again.', { duration: 6000 });
+        if (isPlayer) {
+          toast.error('The DM appears to have disconnected. The session has ended.', { icon: '\uD83C\uDFF0', duration: 6000 });
+          // Reset player state — no point staying in a dead session
+          intentionalCloseRef.current = true;
+          try { invoke('party_ipc_disconnect').catch(() => {}); } catch {}
+          if (unlistenRef.current) { unlistenRef.current(); unlistenRef.current = null; }
+          setMode(null);
+          setRoomCode('');
+          setMembers([]);
+          setMyClientId(null);
+          setWasConnected(false);
+          setMemberPresence({});
+          setChatMessages([]);
+          setHostInfo(null);
+        } else {
+          toast.error('Could not reconnect after multiple attempts. Use the Reconnect button to try again.', { duration: 6000 });
+        }
       }
     }
   }, [clearTimers]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -421,11 +455,15 @@ export function PartyProvider({ children }) {
           else status = 'offline';
           if (status !== entry.status) {
             // Transition to offline — toast (deferred to avoid setState-in-setState)
+            // Skip for the DM/host — if we're connected to the server, the DM is connected
             if (status === 'offline' && entry.status !== 'offline') {
               const membersSnap = membersRef.current || [];
               const m = membersSnap.find(m => m.client_id === clientId);
-              const name = m?.character?.name || m?.display_name || 'A player';
-              setTimeout(() => toast(`${name} appears disconnected`, { icon: '\uD83D\uDD34', duration: 4000 }), 0);
+              const isDmMember = m?.character?.dm_name;
+              if (!isDmMember) {
+                const name = m?.character?.name || m?.display_name || 'A player';
+                setTimeout(() => toast(`${name} appears disconnected`, { icon: '\uD83D\uDD34', duration: 4000 }), 0);
+              }
             }
             next[clientId] = { ...entry, status };
             changed = true;
@@ -438,12 +476,12 @@ export function PartyProvider({ children }) {
   }, []);
 
   const value = useMemo(() => ({
-    wsStatus, mode, roomCode, hostIp, joinIp, joinInput, members, myClientId, autoSync,
+    wsStatus, mode, roomCode, hostIp, joinIp, joinInput, members, myClientId,
     wasConnected, reconnecting, memberPresence, chatMessages, hostInfo,
-    setMode, setRoomCode, setHostIp, setJoinIp, setJoinInput, setAutoSync,
+    setMode, setRoomCode, setHostIp, setJoinIp, setJoinInput,
     connect, disconnect, sendUpdate, sendEvent, sendTargetedEvent, onPartyEvent, sendBugReport, sendChatMessage, handleHost, handleLeave,
     manualReconnect, onBugReportRef,
-  }), [wsStatus, mode, roomCode, hostIp, joinIp, joinInput, members, myClientId, autoSync,
+  }), [wsStatus, mode, roomCode, hostIp, joinIp, joinInput, members, myClientId,
        wasConnected, reconnecting, memberPresence, chatMessages, hostInfo,
        connect, disconnect, sendUpdate, sendEvent, sendTargetedEvent, onPartyEvent, sendBugReport, sendChatMessage, handleHost, handleLeave,
        manualReconnect]);

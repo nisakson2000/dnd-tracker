@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, Map, BookMarked, Globe, Swords, ChevronDown, ChevronRight, Calculator, ClipboardList } from 'lucide-react';
+import {
+  LayoutDashboard, Users, Map, BookMarked, Globe, Swords,
+  ChevronDown, ChevronRight, Calculator, ClipboardList, CheckCircle,
+  Hammer, Sparkles, FileText,
+} from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
+import { useSession } from '../contexts/SessionContext';
+import toast from 'react-hot-toast';
 
-function StatCard({ icon: Icon, label, value, color, sub }) { // eslint-disable-line no-unused-vars
+function StatCard({ icon: Icon, label, value, color, sub }) {
   return (
     <div style={{
       borderRadius: 12, padding: '18px 16px',
@@ -28,7 +34,7 @@ function StatCard({ icon: Icon, label, value, color, sub }) { // eslint-disable-
   );
 }
 
-// ─── DM Quick Reference ───────────────────────────────────────────────────
+// ─── DM Quick Reference (active mode only) ──────────────────────────────
 
 function DMQuickReference() {
   const [open, setOpen] = useState(false);
@@ -60,7 +66,6 @@ function DMQuickReference() {
 
       {open && (
         <div style={{ padding: '0 18px 18px' }}>
-          {/* DC Guidelines */}
           <div style={{ ...sectionHeader, marginTop: 0 }}>DC Guidelines</div>
           <table style={tableStyle}>
             <tbody>
@@ -70,7 +75,6 @@ function DMQuickReference() {
             </tbody>
           </table>
 
-          {/* Common Damage by Level */}
           <div style={sectionHeader}>Common Damage by Level</div>
           <table style={tableStyle}>
             <tbody>
@@ -80,7 +84,6 @@ function DMQuickReference() {
             </tbody>
           </table>
 
-          {/* Cover Rules */}
           <div style={sectionHeader}>Cover Rules</div>
           <table style={tableStyle}>
             <tbody>
@@ -94,7 +97,6 @@ function DMQuickReference() {
             </tbody>
           </table>
 
-          {/* Lighting */}
           <div style={sectionHeader}>Lighting</div>
           <table style={tableStyle}>
             <tbody>
@@ -108,7 +110,6 @@ function DMQuickReference() {
             </tbody>
           </table>
 
-          {/* Travel Pace */}
           <div style={sectionHeader}>Travel Pace</div>
           <table style={tableStyle}>
             <tbody>
@@ -225,7 +226,7 @@ function EncounterDifficultyCalculator() {
   );
 }
 
-// ─── Session Planning Checklist ───────────────────────────────────────────
+// ─── Session Planning Checklist (active mode only) ────────────────────────
 
 const SESSION_CHECKLIST_ITEMS = [
   'Review last session notes',
@@ -316,9 +317,70 @@ function SessionPlanningChecklist() {
   );
 }
 
-export default function CampaignHub({ characterId, character }) {
-  const [stats, setStats] = useState({ npcs: 0, quests: 0, sessions: 0, lore: 0 });
+// ─── Builder Workflow Card ────────────────────────────────────────────────
+
+function BuilderWorkflowCard({ step, icon: Icon, title, desc, color, count }) {
+  return (
+    <div style={{
+      borderRadius: 10, padding: '14px 16px',
+      background: 'rgba(11,9,20,0.8)', border: `1px solid ${color}18`,
+      display: 'flex', alignItems: 'center', gap: 14,
+    }}>
+      <div style={{
+        width: 36, height: 36, borderRadius: 8,
+        background: `${color}10`, border: `1px solid ${color}20`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0, position: 'relative',
+      }}>
+        <Icon size={16} style={{ color }} />
+        <div style={{
+          position: 'absolute', top: -6, left: -6,
+          width: 18, height: 18, borderRadius: 99,
+          background: count > 0 ? color : 'rgba(255,255,255,0.06)',
+          border: `1px solid ${count > 0 ? color : 'rgba(255,255,255,0.1)'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 9, fontWeight: 700, color: count > 0 ? '#fff' : 'var(--text-mute)',
+          fontFamily: 'var(--font-mono)',
+        }}>
+          {step}
+        </div>
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{title}</div>
+        <div style={{ fontSize: 11, color: 'var(--text-mute)', lineHeight: 1.4 }}>{desc}</div>
+      </div>
+      {count > 0 && (
+        <div style={{
+          padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 700,
+          background: `${color}15`, color, fontFamily: 'var(--font-mono)',
+        }}>
+          {count}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Component ──────────────────────────────────────────────────────
+
+export default function CampaignHub({ characterId, character, onNavigate }) {
+  const { campaignStatus, dispatch } = useSession();
+  const isDraft = campaignStatus === 'draft';
+  const [stats, setStats] = useState({ npcs: 0, quests: 0, sessions: 0, lore: 0, encounters: 0 });
   const [loading, setLoading] = useState(true);
+  const [publishing, setPublishing] = useState(false);
+
+  const handlePublish = async () => {
+    setPublishing(true);
+    try {
+      await invoke('archive_campaign', { campaignId: characterId, archived: false });
+      dispatch({ type: 'SET_CAMPAIGN', payload: { id: characterId, name: character?.name || 'Campaign', campaign_type: 'homebrew', status: 'active' } });
+      toast.success('Campaign published! You can now run live sessions.');
+    } catch (err) {
+      toast.error(`Failed: ${err.message || err}`);
+    }
+    setPublishing(false);
+  };
 
   useEffect(() => {
     (async () => {
@@ -349,6 +411,184 @@ export default function CampaignHub({ characterId, character }) {
     );
   }
 
+  // ── DRAFT / BUILDER VIEW ────────────────────────────────────────────────
+  if (isDraft) {
+    const checks = [
+      { label: 'At least 1 NPC created', done: stats.npcs >= 1, tip: 'Go to NPCs' },
+      { label: 'At least 1 Quest created', done: stats.quests >= 1, tip: 'Go to Quests & Plot' },
+      { label: 'At least 1 Lore entry', done: stats.lore >= 1, tip: 'Go to Lore & Locations' },
+    ];
+    const ready = checks.every(c => c.done);
+    const completed = checks.filter(c => c.done).length;
+
+    return (
+      <div style={{ maxWidth: 700 }}>
+        {/* Header */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <Hammer size={20} style={{ color: '#4ade80' }} />
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--text)', fontWeight: 700 }}>
+              Campaign Builder
+            </h2>
+            <span style={{
+              fontSize: 9, padding: '3px 10px', borderRadius: 99,
+              background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.25)',
+              color: '#4ade80', fontFamily: 'var(--font-heading)', letterSpacing: '0.1em',
+              textTransform: 'uppercase', fontWeight: 700,
+            }}>
+              Building
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 6 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-mute)', margin: 0 }}>
+              {character?.name || 'Untitled Campaign'} — Build your world, then publish when ready.
+            </p>
+            {onNavigate && (
+              <button
+                onClick={() => onNavigate('dm-guide')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '5px 12px', borderRadius: 8, border: '1px solid rgba(74,222,128,0.2)',
+                  background: 'rgba(74,222,128,0.06)', color: '#4ade80',
+                  fontSize: 11, fontFamily: 'var(--font-heading)', letterSpacing: '0.04em',
+                  cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(74,222,128,0.12)'; e.currentTarget.style.borderColor = 'rgba(74,222,128,0.35)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(74,222,128,0.06)'; e.currentTarget.style.borderColor = 'rgba(74,222,128,0.2)'; }}
+              >
+                <FileText size={12} />
+                Tutorial
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Publish banner with readiness */}
+        <div style={{
+          marginBottom: 24, padding: '18px 20px', borderRadius: 12,
+          background: ready ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.02)',
+          border: `1px solid ${ready ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.06)'}`,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: ready ? '#4ade80' : 'var(--text-dim)', fontWeight: 700, marginBottom: 4 }}>
+                {ready ? 'Ready to Publish!' : 'Campaign Readiness'}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-dim)', lineHeight: 1.5 }}>
+                {ready
+                  ? 'Your campaign meets the minimum requirements. Publish to unlock session tools.'
+                  : 'Complete the checklist below to unlock publishing.'}
+              </div>
+            </div>
+            <button
+              onClick={handlePublish}
+              disabled={publishing || !ready}
+              title={ready ? 'Publish your campaign' : `Complete ${checks.length - completed} more item${checks.length - completed > 1 ? 's' : ''} first`}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '10px 20px', borderRadius: 10, border: 'none',
+                background: ready ? 'linear-gradient(135deg, #16a34a, #4ade80)' : 'rgba(255,255,255,0.06)',
+                color: ready ? '#fff' : 'var(--text-mute)', fontFamily: 'var(--font-heading)', fontSize: 12,
+                fontWeight: 700, letterSpacing: '0.06em',
+                cursor: publishing || !ready ? 'not-allowed' : 'pointer',
+                opacity: publishing ? 0.6 : 1, whiteSpace: 'nowrap', flexShrink: 0,
+              }}
+            >
+              <CheckCircle size={14} /> {publishing ? 'Publishing...' : 'Publish Campaign'}
+            </button>
+          </div>
+
+          <div style={{
+            padding: '12px 14px', borderRadius: 8,
+            background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.04)',
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', marginBottom: 8, fontFamily: 'var(--font-ui)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              Checklist — {completed}/{checks.length}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {checks.map(c => (
+                <div key={c.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <CheckCircle size={14} style={{ color: c.done ? '#4ade80' : 'rgba(255,255,255,0.12)', flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, color: c.done ? 'var(--text-dim)' : 'var(--text-mute)', textDecoration: c.done ? 'line-through' : 'none' }}>
+                    {c.label}
+                  </span>
+                  {!c.done && <span style={{ fontSize: 10, color: 'var(--text-mute)', marginLeft: 'auto' }}>{c.tip}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Builder progress stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginBottom: 28 }}>
+          <StatCard icon={Users} label="NPCs Created" value={stats.npcs} color="#4ade80" sub="Characters in your world" />
+          <StatCard icon={Map} label="Quests Designed" value={stats.quests} color="#fbbf24" sub="Plot threads & objectives" />
+          <StatCard icon={Globe} label="Lore Entries" value={stats.lore} color="#c084fc" sub="World knowledge" />
+        </div>
+
+        {/* Builder Workflow — step by step */}
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ fontSize: 12, fontFamily: 'var(--font-ui)', fontWeight: 600, color: 'var(--text-dim)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
+            Building Workflow
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <BuilderWorkflowCard
+              step={1} icon={Users} title="Create NPCs"
+              desc="Add the characters that populate your world — allies, enemies, quest givers, and merchants."
+              color="#4ade80" count={stats.npcs}
+            />
+            <BuilderWorkflowCard
+              step={2} icon={Map} title="Design Quests"
+              desc="Create quest lines with objectives, rewards, and difficulty. Link them to NPCs."
+              color="#fbbf24" count={stats.quests}
+            />
+            <BuilderWorkflowCard
+              step={3} icon={Globe} title="Write Lore & Locations"
+              desc="Build your world knowledge — locations, history, factions, religions, and legends."
+              color="#c084fc" count={stats.lore}
+            />
+            <BuilderWorkflowCard
+              step={4} icon={Swords} title="Plan Encounters"
+              desc="Design combat encounters using the SRD monster database. Balance difficulty for your expected party."
+              color="#ef4444" count={0}
+            />
+            <BuilderWorkflowCard
+              step={5} icon={Hammer} title="Homebrew Content"
+              desc="Create custom monsters, spells, and magic items with full stat blocks and balance checking."
+              color="#f59e0b" count={0}
+            />
+            <BuilderWorkflowCard
+              step={6} icon={Sparkles} title="AI Generation"
+              desc="Use AI modules to generate scene descriptions, NPC dialogue, story hooks, and lore."
+              color="#8b5cf6" count={0}
+            />
+          </div>
+        </div>
+
+        {/* Builder Tips */}
+        <div style={{
+          borderRadius: 10, padding: '16px 18px',
+          background: 'rgba(74,222,128,0.04)', border: '1px solid rgba(74,222,128,0.12)',
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#4ade80', marginBottom: 8 }}>Builder Tips</div>
+          <ul style={{ fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.8, margin: 0, paddingLeft: 16 }}>
+            <li>Start with <strong style={{ color: 'var(--text)' }}>NPCs</strong> — they're the heart of every campaign</li>
+            <li>Create <strong style={{ color: 'var(--text)' }}>Quests</strong> that connect to your NPCs for a living world</li>
+            <li>Use <strong style={{ color: 'var(--text)' }}>Lore</strong> to document locations, factions, and history your players can discover</li>
+            <li>The <strong style={{ color: 'var(--text)' }}>Encounter Builder</strong> helps you balance fights for your expected party size and level</li>
+            <li>Use <strong style={{ color: 'var(--text)' }}>AI Modules</strong> to quickly generate descriptions, dialogue, and hooks</li>
+            <li>You can always add more content after publishing — building never stops!</li>
+          </ul>
+        </div>
+
+        {/* Encounter Difficulty Calculator — useful during building */}
+        <EncounterDifficultyCalculator />
+      </div>
+    );
+  }
+
+  // ── ACTIVE / DM SESSION VIEW ────────────────────────────────────────────
   return (
     <div style={{ maxWidth: 700 }}>
       {/* Header */}
@@ -372,7 +612,7 @@ export default function CampaignHub({ characterId, character }) {
         <StatCard icon={Globe} label="Lore Entries" value={stats.lore} color="#c084fc" sub="World knowledge" />
       </div>
 
-      {/* Quick actions */}
+      {/* Quick actions — DM session focused */}
       <div style={{ marginBottom: 24 }}>
         <h3 style={{ fontSize: 12, fontFamily: 'var(--font-ui)', fontWeight: 600, color: 'var(--text-dim)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
           Quick Start

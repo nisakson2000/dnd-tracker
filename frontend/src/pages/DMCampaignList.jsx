@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, ChevronRight, BookOpen, Clock, Shield, X, Scroll, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, ChevronRight, BookOpen, Clock, Shield, X, Scroll, ArrowLeft, ArrowUpDown, Filter } from 'lucide-react';
 import { useAppMode } from '../contexts/ModeContext';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
@@ -34,6 +34,40 @@ export default function DMCampaignList() {
   const [newRuleset, setNewRuleset] = useState('dnd5e-2024');
   const [newCampaignType, setNewCampaignType] = useState('homebrew');
   const [creating, setCreating] = useState(false);
+
+  // Sort & filter state
+  const [sortBy, setSortBy] = useState('recent');
+  const [filterType, setFilterType] = useState('all');
+
+  const filteredCampaigns = useMemo(() => {
+    let result = [...campaigns];
+
+    // Filter
+    if (filterType === 'homebrew') result = result.filter(c => c.campaign_type === 'homebrew');
+    else if (filterType === 'premade') result = result.filter(c => c.campaign_type === 'premade');
+
+    // Sort
+    switch (sortBy) {
+      case 'alpha':
+        result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        break;
+      case 'quests':
+        result.sort((a, b) => (b.quest_count || 0) - (a.quest_count || 0));
+        break;
+      case 'sessions':
+        result.sort((a, b) => (b.session_count || 0) - (a.session_count || 0));
+        break;
+      case 'hours':
+        result.sort((a, b) => (b.total_hours || 0) - (a.total_hours || 0));
+        break;
+      case 'recent':
+      default:
+        result.sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0));
+        break;
+    }
+
+    return result;
+  }, [campaigns, sortBy, filterType]);
 
   const fetchCampaigns = useCallback(async () => {
     try {
@@ -173,6 +207,70 @@ export default function DMCampaignList() {
           </button>
         </motion.div>
 
+        {/* Sort / Filter bar */}
+        {!loading && campaigns.length > 0 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            marginBottom: '16px', gap: '12px', flexWrap: 'wrap',
+          }}>
+            {/* Filter chips */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Filter size={12} style={{ color: 'var(--text-mute, rgba(255,255,255,0.25))', marginRight: '2px' }} />
+              {[
+                { value: 'all', label: 'All' },
+                { value: 'homebrew', label: 'Homebrew' },
+                { value: 'premade', label: 'Premade' },
+              ].map(f => (
+                <button
+                  key={f.value}
+                  onClick={() => setFilterType(f.value)}
+                  style={{
+                    padding: '4px 12px', borderRadius: '20px',
+                    fontSize: '12px', fontWeight: 500,
+                    fontFamily: 'var(--font-ui)',
+                    cursor: 'pointer', transition: 'all 0.15s',
+                    border: filterType === f.value
+                      ? '1px solid rgba(155,89,182,0.5)'
+                      : '1px solid rgba(255,255,255,0.08)',
+                    background: filterType === f.value
+                      ? 'rgba(155,89,182,0.15)'
+                      : 'rgba(255,255,255,0.03)',
+                    color: filterType === f.value
+                      ? '#c084fc'
+                      : 'var(--text-dim, rgba(255,255,255,0.45))',
+                  }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Sort dropdown */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <ArrowUpDown size={12} style={{ color: 'var(--text-mute, rgba(255,255,255,0.25))' }} />
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value)}
+                style={{
+                  padding: '4px 10px', borderRadius: '8px',
+                  fontSize: '12px', fontWeight: 500,
+                  fontFamily: 'var(--font-ui)',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'var(--text-dim, rgba(255,255,255,0.5))',
+                  cursor: 'pointer', outline: 'none',
+                }}
+              >
+                <option value="recent" style={{ background: '#1a1520', color: '#fff' }}>Most Recent</option>
+                <option value="alpha" style={{ background: '#1a1520', color: '#fff' }}>Alphabetical</option>
+                <option value="quests" style={{ background: '#1a1520', color: '#fff' }}>Most Quests</option>
+                <option value="sessions" style={{ background: '#1a1520', color: '#fff' }}>Most Sessions</option>
+                <option value="hours" style={{ background: '#1a1520', color: '#fff' }}>Most Hours</option>
+              </select>
+            </div>
+          </div>
+        )}
+
         {/* Campaign list */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--text-dim)' }}>
@@ -194,7 +292,7 @@ export default function DMCampaignList() {
         ) : (
           <div style={{ display: 'grid', gap: '12px' }}>
             <AnimatePresence>
-              {campaigns.map((c, i) => (
+              {filteredCampaigns.map((c, i) => (
                 <motion.div
                   key={c.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -269,6 +367,30 @@ export default function DMCampaignList() {
                       }}>
                         {c.campaign_type === 'premade' ? 'Premade' : 'Homebrew'}
                       </span>
+                      {c.quest_count != null && (
+                        <span style={{
+                          display: 'flex', alignItems: 'center', gap: '4px',
+                          fontSize: '11px', color: 'var(--text-mute, rgba(255,255,255,0.25))',
+                        }}>
+                          <Scroll size={10} /> {c.quest_count} quest{c.quest_count !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                      {c.session_count != null && (
+                        <span style={{
+                          display: 'flex', alignItems: 'center', gap: '4px',
+                          fontSize: '11px', color: 'var(--text-mute, rgba(255,255,255,0.25))',
+                        }}>
+                          <BookOpen size={10} /> {c.session_count} session{c.session_count !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                      {c.total_hours != null && c.total_hours > 0 && (
+                        <span style={{
+                          display: 'flex', alignItems: 'center', gap: '4px',
+                          fontSize: '11px', color: 'var(--text-mute, rgba(255,255,255,0.25))',
+                        }}>
+                          <Clock size={10} /> {c.total_hours.toFixed(1)} hrs
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -506,6 +628,7 @@ export default function DMCampaignList() {
       {/* ── Delete Confirmation ── */}
       {deleteTarget && (
         <ConfirmDialog
+          show={true}
           title="Delete Campaign"
           message={`Are you sure you want to delete "${deleteTarget.name}"? This will remove all scenes, encounters, and session data. This cannot be undone.`}
           confirmLabel="Delete"

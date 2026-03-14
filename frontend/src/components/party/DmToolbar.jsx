@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Crown, Megaphone, Swords, X, MapPin, ScrollText, HelpCircle } from 'lucide-react';
+import { Crown, Megaphone, Swords, X, MapPin, ScrollText, HelpCircle, Scroll } from 'lucide-react';
 import ModalPortal from '../ModalPortal';
 import { useParty } from '../../contexts/PartyContext';
 import { useCampaignSync } from '../../contexts/CampaignSyncContext';
@@ -9,15 +9,21 @@ import DmCombatPanel from './DmCombatPanel';
 import DmCommsPanel from './DmCommsPanel';
 import DmLogPanel from './DmLogPanel';
 import DmTutorial, { shouldShowTutorial } from './DmTutorial';
+import QuestRunner from '../dm-session/QuestRunner';
 
 /**
  * Floating DM toolbar — positioned at TOP-RIGHT to avoid AI Assistant overlap.
  * 4 buttons: Campaign, Combat, Comms, Log + help (?) button.
  */
-export default function DmToolbar({ campaignId }) {
+export default function DmToolbar() {
   const { wsStatus, mode, members, myClientId } = useParty();
   const { combatActive, initiativeOrder, currentTurn, round, advanceTurn, endCombat } = useCampaignSync();
-  const { sessionActive, elapsed, campaignName, currentScene } = useLiveSession();
+  const {
+    sessionActive, elapsed, campaignName, currentScene, activeQuestId,
+    quests, npcs, scenes,
+    discoverNpc, setActiveScene, startRandomEncounter, advanceQuestBeat,
+  } = useLiveSession();
+  const { sendBroadcast } = useCampaignSync();
   const [activePanel, setActivePanel] = useState(null);
   const [showTutorial, setShowTutorial] = useState(false);
 
@@ -45,8 +51,26 @@ export default function DmToolbar({ campaignId }) {
   };
 
   const PANELS = {
-    campaign: { title: 'Campaign', component: DmCampaignPanel, props: { campaignId } },
+    campaign: { title: 'Campaign', component: DmCampaignPanel, props: {} },
     combat: { title: 'Combat Manager', component: DmCombatPanel },
+    quest: {
+      title: 'Quest Runner', component: QuestRunner,
+      props: {
+        quests: quests || [],
+        npcs: npcs || [],
+        scenes: scenes || [],
+        onLoadEncounter: (monsters) => startRandomEncounter(monsters),
+        onRevealNpcs: (npcIds) => {
+          (npcIds || []).forEach(id => discoverNpc(id));
+        },
+        onSetScene: (sceneId) => {
+          const scene = (scenes || []).find(s => s.id === sceneId);
+          if (scene) setActiveScene(scene);
+        },
+        onAdvanceBeat: () => advanceQuestBeat(),
+        onBroadcast: (text) => sendBroadcast('narrative', 'Quest', text),
+      },
+    },
     comms: { title: 'Communications', component: DmCommsPanel },
     log: { title: 'Action Log', component: DmLogPanel },
   };
@@ -60,9 +84,10 @@ export default function DmToolbar({ campaignId }) {
       {showTutorial && <DmTutorial onClose={() => setShowTutorial(false)} />}
 
       <div style={{
-        position: 'fixed', top: 16, right: 16, zIndex: 50,
+        position: 'fixed', top: 12, right: 12, zIndex: 50,
         display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8,
         pointerEvents: 'none',
+        maxWidth: 'calc(100vw - 24px)',
       }}>
         {/* ── Main toolbar — 4 buttons + help ── */}
         <div style={{
@@ -91,6 +116,9 @@ export default function DmToolbar({ campaignId }) {
 
           {/* Combat */}
           <TBtn icon={Swords} label="Combat" active={activePanel === 'combat'} onClick={() => togglePanel('combat')} dot={combatActive ? '#ef4444' : null} disabled={!sessionActive} />
+
+          {/* Quests */}
+          <TBtn icon={Scroll} label="Quests" active={activePanel === 'quest'} onClick={() => togglePanel('quest')} dot={activeQuestId ? '#a78bfa' : null} disabled={!sessionActive} />
 
           <Divider />
 
@@ -164,7 +192,7 @@ export default function DmToolbar({ campaignId }) {
         {/* Expanded panel — drops down below toolbar */}
         {activePanel && ActiveComponent && (
           <div style={{
-            width: 420, maxHeight: '70vh', overflowY: 'auto',
+            width: 'min(420px, calc(100vw - 32px))', maxHeight: 'calc(100vh - 120px)', overflowY: 'auto',
             background: 'rgba(10,10,16,0.96)', backdropFilter: 'blur(20px)',
             border: '1px solid rgba(201,168,76,0.18)', borderRadius: 14,
             padding: '14px 16px', boxShadow: '0 16px 56px rgba(0,0,0,0.55), 0 0 1px rgba(201,168,76,0.15)',

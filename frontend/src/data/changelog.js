@@ -3,6 +3,30 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.6.5',
+    date: '03/14/2026',
+    time: '11:59 PM',
+    title: 'NPC Intelligence, Story Engines & Advanced World Systems',
+    changes: [
+      'NPC Personality System — 8 archetypes (Schemer, Guardian, Merchant, Zealot, etc.) with auto-populated traits and live behavior preview',
+      'Trust Score System — -100 to +100 trust with 7 labeled tiers, 16 action types affect trust dynamically',
+      'NPC Memory System — memories with intensity, emotional impact, and decay; traumatic memories never fade',
+      'Combat AI — intelligence-tiered tactics (Mindless to Genius) with 6 personality combat styles and morale calculation',
+      'Monster AI Profiles — 7 behavior types (Pack, Ambush, Territorial, Mindless, Intelligent, Swarm, Boss) with boss phase system',
+      'Consequence Engine — 12 action templates generating consequences with severity levels and DM approval workflow',
+      'Dynamic Merchant Pricing — location, trust, faction, demand, economy modifiers with haggling system',
+      'Story Threads — plotlines with 5 states (Dormant → Resolved) and branching decision points',
+      'Villain Profiles — phase-based villains with adaptations that counter party tactics and master plans',
+      'Campaign Arcs — high-level narrative arcs linking quests, NPCs, and story threads',
+      'Campaign History Archive — unified event log with filtering, bookmarking, and narrative significance',
+      'Investigation Clues, Rumor Propagation, World Crises, and Artifact Evolution systems',
+      'NPC Form overhauled — 3-tab editor (Basics, Intelligence & Behavior, Combat) in campaign builder',
+      'Difficulty Scaling — real-time combat assessment with DM suggestions when encounters are unbalanced',
+      'Migration runner hardened — duplicate column errors and SQL comment parsing fixed',
+      '57 new Rust backend commands and 7 new frontend utility engines',
+    ],
+  },
+  {
     version: 'V0.5.9',
     date: '03/13/2026',
     time: '11:59 PM',

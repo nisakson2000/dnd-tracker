@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Plus, Trash2, ScrollText, RotateCcw, RefreshCw, Search, ChevronDown, ChevronUp, Pin, PinOff, Zap, ChevronsDown, ChevronsUp, Coffee, Moon, Clock, ArrowRight, Star, Eye, Shield, Lock, Filter, Pencil } from 'lucide-react';
+import { Plus, Trash2, ScrollText, RotateCcw, RefreshCw, Search, ChevronDown, ChevronUp, Pin, PinOff, Zap, ChevronsDown, ChevronsUp, Coffee, Moon, Clock, ArrowRight, Star, Eye, Shield, Lock, Filter, Pencil, Dices, BookOpen, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { getFeatures, addFeature, updateFeature, deleteFeature } from '../api/features';
@@ -9,14 +9,17 @@ import ModalPortal from '../components/ModalPortal';
 import { HELP } from '../data/helpText';
 import { CLASS_FEATURES } from '../data/classFeatures';
 import { useAppMode } from '../contexts/ModeContext';
+import { searchArticles } from '../api/wiki';
 
-const RECHARGE_OPTIONS = ['', 'short_rest', 'long_rest', 'dawn', 'manual'];
-const RECHARGE_LABELS = { '': 'None', 'short_rest': 'Short Rest', 'long_rest': 'Long Rest', 'dawn': 'At Dawn', 'manual': 'Manual' };
+const RECHARGE_OPTIONS = ['', 'short_rest', 'long_rest', 'dawn', 'recharge_5_6', 'recharge_6', 'manual'];
+const RECHARGE_LABELS = { '': 'None', 'short_rest': 'Short Rest', 'long_rest': 'Long Rest', 'dawn': 'At Dawn', 'recharge_5_6': 'Recharge 5-6', 'recharge_6': 'Recharge 6', 'manual': 'Manual' };
 
 const RECHARGE_BADGE_STYLES = {
   short_rest: 'bg-blue-500/15 text-blue-300 border-blue-400/25',
   long_rest: 'bg-purple-500/15 text-purple-300 border-purple-400/25',
   dawn: 'bg-amber-500/15 text-amber-200 border-amber-400/25',
+  recharge_5_6: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/25',
+  recharge_6: 'bg-teal-500/15 text-teal-300 border-teal-400/25',
   manual: 'bg-amber-200/5 text-amber-200/40 border-amber-200/10',
 };
 
@@ -195,6 +198,23 @@ export default function Features({ characterId, character }) {
     } catch (err) { toast.error(err.message); load(); }
   };
 
+  const rollRecharge = async (feature) => {
+    if ((feature.uses_total ?? 0) <= 0) return;
+    const roll = Math.floor(Math.random() * 6) + 1;
+    const threshold = feature.recharge === 'recharge_6' ? 6 : 5;
+    const label = feature.recharge === 'recharge_6' ? '6' : '5-6';
+    if (roll >= threshold) {
+      const updated = { ...feature, uses_remaining: feature.uses_total };
+      setFeatures(prev => prev.map(f => f.id === feature.id ? updated : f));
+      try {
+        await updateFeature(characterId, feature.id, updated);
+        toast.success(`${feature.name}: Rolled ${roll} — Recharged! (needed ${label})`, { duration: 4000 });
+      } catch (err) { toast.error(err.message); load(); }
+    } else {
+      toast(`${feature.name}: Rolled ${roll} — No recharge (needed ${label})`, { icon: '\uD83C\uDFB2', duration: 4000 });
+    }
+  };
+
   const flashRestored = (ids) => {
     setRestoredIds(new Set(ids));
     setTimeout(() => setRestoredIds(new Set()), 1200);
@@ -233,14 +253,15 @@ export default function Features({ characterId, character }) {
   };
 
   const longRestRestore = async () => {
-    // Long rest restores ALL features to max charges
+    // Long rest restores ALL features to max charges (except d6 recharge — those need a roll)
     const targets = features.filter(f =>
       (f.uses_total ?? 0) > 0 &&
-      (f.uses_remaining ?? 0) < (f.uses_total ?? 0)
+      (f.uses_remaining ?? 0) < (f.uses_total ?? 0) &&
+      f.recharge !== 'recharge_5_6' && f.recharge !== 'recharge_6'
     );
     if (targets.length === 0) { toast('No features to restore on long rest', { icon: '\u2139\uFE0F' }); return; }
     setFeatures(prev => prev.map(f =>
-      (f.uses_total ?? 0) > 0 ? { ...f, uses_remaining: f.uses_total } : f
+      (f.uses_total ?? 0) > 0 && f.recharge !== 'recharge_5_6' && f.recharge !== 'recharge_6' ? { ...f, uses_remaining: f.uses_total } : f
     ));
     flashRestored(targets.map(f => f.id));
     // Clear usage history on long rest
@@ -256,7 +277,8 @@ export default function Features({ characterId, character }) {
     f.recharge === 'short_rest'
   ).length;
   const longRestCount = features.filter(f =>
-    (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0)
+    (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0) &&
+    f.recharge !== 'recharge_5_6' && f.recharge !== 'recharge_6'
   ).length;
 
   const useAllFeatures = async () => {
@@ -543,7 +565,7 @@ export default function Features({ characterId, character }) {
           <div className="flex items-center gap-4 flex-wrap pl-1">
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] text-amber-200/30 uppercase tracking-wider">Recharge:</span>
-              {['all', 'short_rest', 'long_rest', 'dawn', 'none'].map(r => (
+              {['all', 'short_rest', 'long_rest', 'dawn', 'recharge_5_6', 'recharge_6', 'none'].map(r => (
                 <button key={r} onClick={() => setRechargeFilter(r)}
                   className={`text-xs px-2.5 py-1 rounded ${rechargeFilter === r ? 'bg-gold/20 text-gold border border-gold/30' : 'text-amber-200/40 border border-amber-200/10'}`}>
                   {r === 'all' ? 'All' : r === 'none' ? 'No Recharge' : RECHARGE_LABELS[r] || r}
@@ -648,6 +670,7 @@ export default function Features({ characterId, character }) {
                       onUseCharge={() => spendCharge(f)}
                       onRestoreCharge={() => restoreCharge(f)}
                       onRestoreAll={() => restoreAll(f)}
+                      onRollRecharge={() => rollRecharge(f)}
                       onEdit={isDM ? () => setEditingFeature(f) : undefined}
                       onDelete={isDM ? () => setConfirmDelete(f) : undefined}
                       allExpanded={allExpanded}
@@ -675,8 +698,76 @@ export default function Features({ characterId, character }) {
   );
 }
 
+/* --- Wiki Lookup Tooltip --- */
+function WikiLookup({ featureName }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [searched, setSearched] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  const handleClick = async (e) => {
+    e.stopPropagation();
+    if (open) { setOpen(false); return; }
+    setOpen(true);
+    if (searched) return;
+    setLoading(true);
+    try {
+      const results = await searchArticles(featureName);
+      setResult(results && results.length > 0 ? results[0] : null);
+    } catch {
+      setResult(null);
+    }
+    setLoading(false);
+    setSearched(true);
+  };
+
+  return (
+    <span className="relative inline-flex items-center" ref={ref}>
+      <button
+        type="button"
+        onClick={handleClick}
+        className="text-amber-200/20 hover:text-amber-300/70 transition-colors focus:outline-none"
+        aria-label={`Look up ${featureName} in wiki`}
+        title="Wiki lookup"
+      >
+        <BookOpen size={12} />
+      </button>
+      {open && (
+        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 px-3 py-2.5 text-xs text-amber-100 bg-[#1a1825] border border-gold/30 rounded-lg shadow-xl leading-relaxed">
+          {loading ? (
+            <div className="flex items-center gap-2 text-amber-200/50">
+              <Loader2 size={12} className="animate-spin" /> Searching wiki...
+            </div>
+          ) : result ? (
+            <div>
+              <div className="font-semibold text-amber-100 mb-1">{result.title}</div>
+              {result.category && (
+                <span className="text-[10px] text-amber-200/40 mb-1 block">{result.category}</span>
+              )}
+              <p className="text-amber-200/70 leading-relaxed">{result.summary}</p>
+            </div>
+          ) : (
+            <span className="text-amber-200/40">No wiki article found.</span>
+          )}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-gold/30" />
+        </div>
+      )}
+    </span>
+  );
+}
+
 /* --- Feature Card --- */
-function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharge, onRestoreCharge, onRestoreAll, onEdit, onDelete, allExpanded, lastUsed }) {
+function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharge, onRestoreCharge, onRestoreAll, onRollRecharge, onEdit, onDelete, allExpanded, lastUsed }) {
   const hasCharges = (f.uses_total ?? 0) > 0;
   const remaining = f.uses_remaining ?? 0;
   const total = f.uses_total ?? 0;
@@ -720,6 +811,7 @@ function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharg
               {isPinned ? <Pin size={13} /> : <PinOff size={13} />}
             </button>
             <h4 className="text-amber-100 font-medium">{f.name || 'Unnamed Feature'}</h4>
+            {f.name && <WikiLookup featureName={f.name} />}
             {/* Level badge */}
             {f.source_level > 0 && (
               <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${levelBadgeColors(f.source_level)}`}
@@ -803,6 +895,15 @@ function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharg
         <div className="mt-2 text-xs text-amber-400/70 flex items-center gap-1.5">
           <RefreshCw size={10} className="text-amber-400/50" />
           Recharges on {RECHARGE_LABELS[f.recharge] || f.recharge}
+          {(f.recharge === 'recharge_5_6' || f.recharge === 'recharge_6') && (
+            <button
+              onClick={onRollRecharge}
+              className="ml-2 px-2.5 py-1 rounded-md bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/30 text-emerald-300 text-xs font-semibold transition-all flex items-center gap-1.5 active:scale-95"
+              title={`Roll d6 to recharge (need ${f.recharge === 'recharge_6' ? '6' : '5-6'})`}
+            >
+              <Dices size={12} /> Roll Recharge
+            </button>
+          )}
         </div>
       )}
 
@@ -820,7 +921,15 @@ function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharg
                 <Zap size={12} /> USE
               </button>
             )}
-            {remaining === 0 && (
+            {remaining === 0 && (f.recharge === 'recharge_5_6' || f.recharge === 'recharge_6') ? (
+              <button
+                onClick={onRollRecharge}
+                className="px-3 py-1.5 rounded-md bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/30 text-emerald-300 text-xs font-semibold transition-all flex items-center gap-1.5 active:scale-95"
+                title={`Roll d6 to recharge (need ${f.recharge === 'recharge_6' ? '6' : '5-6'})`}
+              >
+                <Dices size={12} /> ROLL RECHARGE
+              </button>
+            ) : remaining === 0 && (
               <button
                 onClick={onRestoreAll}
                 className="px-3 py-1.5 rounded-md bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 text-amber-400 text-xs font-semibold transition-all flex items-center gap-1.5 active:scale-95"
@@ -852,6 +961,15 @@ function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharg
             )}
 
             <span className="text-xs text-amber-200/40">{remaining} / {total}</span>
+            {remaining < total && remaining > 0 && (f.recharge === 'recharge_5_6' || f.recharge === 'recharge_6') && (
+              <button
+                onClick={onRollRecharge}
+                className="text-xs text-emerald-400/60 hover:text-emerald-300 transition-colors flex items-center gap-1"
+                title={`Roll d6 to recharge (need ${f.recharge === 'recharge_6' ? '6' : '5-6'})`}
+              >
+                <Dices size={10} /> Roll
+              </button>
+            )}
             {remaining < total && remaining > 0 && (
               <button
                 onClick={onRestoreAll}

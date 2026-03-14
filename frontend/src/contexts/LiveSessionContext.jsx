@@ -42,6 +42,11 @@ export function LiveSessionProvider({ children }) {
   const [activeEncounterId, setActiveEncounterId] = useState(null);
   const [encounterMonsters, setEncounterMonsters] = useState([]);
 
+  // Quest runner state
+  const [activeQuestId, setActiveQuestId] = useState(null);
+  const [activeQuestBeats, setActiveQuestBeats] = useState([]);
+  const [currentBeat, setCurrentBeat] = useState(null);
+
   // Action log
   const [actionLog, setActionLog] = useState([]);
 
@@ -49,6 +54,8 @@ export function LiveSessionProvider({ children }) {
   const [sessionXp, setSessionXp] = useState(0);
 
   const timerRef = useRef(null);
+  const activeCampaignIdRef = useRef(activeCampaignId);
+  activeCampaignIdRef.current = activeCampaignId;
   const [elapsed, setElapsed] = useState(0);
 
   // Elapsed timer
@@ -101,15 +108,44 @@ export function LiveSessionProvider({ children }) {
   // Load all campaign data
   const loadCampaignData = useCallback(async () => {
     try {
-      const [sceneList, npcList, questList, handoutList] = await Promise.all([
-        invoke('list_scenes').catch(e => { console.error('Failed to load scenes:', e); return []; }),
-        invoke('list_campaign_npcs').catch(e => { console.error('Failed to load NPCs:', e); return []; }),
-        invoke('list_campaign_quests').catch(e => { console.error('Failed to load quests:', e); return []; }),
-        invoke('list_handouts').catch(e => { console.error('Failed to load handouts:', e); return []; }),
+      console.log('[LiveSession] loadCampaignData: fetching scenes, npcs, quests, handouts...');
+      // Try campaign DB first (campaigns.db)
+      const [sceneList, campaignNpcs, campaignQuests, handoutList] = await Promise.all([
+        invoke('list_scenes').catch(() => []),
+        invoke('list_campaign_npcs').catch(() => []),
+        invoke('list_campaign_quests').catch(() => []),
+        invoke('list_handouts').catch(() => []),
       ]);
+
+      let npcList = campaignNpcs || [];
+      let questList = campaignQuests || [];
+
+      // Fallback: if campaign DB returned nothing, try character-based data
+      // (DM mode from Dashboard stores data in per-character DB)
+      if (npcList.length === 0 && activeCampaignIdRef.current) {
+        const charNpcs = await invoke('get_npcs', { characterId: activeCampaignIdRef.current }).catch(() => []);
+        if (charNpcs && charNpcs.length > 0) {
+          console.log('[LiveSession] Using character-based NPCs:', charNpcs.length);
+          npcList = charNpcs;
+        }
+      }
+      if (questList.length === 0 && activeCampaignIdRef.current) {
+        const charQuests = await invoke('get_quests', { characterId: activeCampaignIdRef.current }).catch(() => []);
+        if (charQuests && charQuests.length > 0) {
+          console.log('[LiveSession] Using character-based quests:', charQuests.length);
+          questList = charQuests;
+        }
+      }
+
+      console.log('[LiveSession] loadCampaignData results:', {
+        scenes: (sceneList || []).length,
+        npcs: npcList.length,
+        quests: questList.length,
+        handouts: (handoutList || []).length,
+      });
       setScenes(sceneList || []);
-      setNpcs(npcList || []);
-      setQuests(questList || []);
+      setNpcs(npcList);
+      setQuests(questList);
       setHandouts(handoutList || []);
 
       const activeSceneId = (sceneList || []).length > 0 ? sceneList[0].active_scene_id : null;
@@ -118,15 +154,25 @@ export function LiveSessionProvider({ children }) {
         : (sceneList || [])[0] || null;
       setCurrentScene(active || (sceneList || [])[0] || null);
     } catch (e) {
-      console.error('Failed to load campaign data:', e);
+      console.error('[LiveSession] Failed to load campaign data:', e);
       toast.error('Failed to load campaign data');
     }
   }, []);
 
   const startLiveSession = useCallback(async (campaignId, name) => {
     try {
-      await invoke('select_campaign', { campaignId });
+      console.log('[LiveSession] Step 1: Selecting campaign:', campaignId);
+      // Try select_campaign first (campaigns.db), fall back to set_active_campaign_id
+      // (character-based campaigns from Dashboard DM mode don't exist in campaigns.db)
+      try {
+        await invoke('select_campaign', { campaignId });
+      } catch {
+        console.log('[LiveSession] Campaign not in campaigns.db, using character-based mode');
+        await invoke('set_active_campaign_id', { campaignId });
+      }
+      console.log('[LiveSession] Step 2: Starting session...');
       const result = await invoke('start_session');
+      console.log('[LiveSession] Step 3: Session started, id:', result.session_id);
       setActiveCampaignId(campaignId);
       setCampaignName(name || 'Campaign');
       setSessionId(result.session_id);
@@ -136,16 +182,21 @@ export function LiveSessionProvider({ children }) {
       setSessionXp(0);
 
       // Load all campaign data — pulls quests, NPCs, scenes, handouts from the selected campaign
+      console.log('[LiveSession] Step 4: Loading campaign data...');
       await loadCampaignData();
+      console.log('[LiveSession] Step 5: Campaign data loaded. Broadcasting...');
 
+      // Notify players that a live session is active (locks XP/currency editing)
+      sendEvent('session_start', { campaign_id: campaignId, campaign_name: name });
       sendBroadcast('announcement', 'Session Started', `The adventure begins! Welcome to ${name || 'the campaign'}.`);
       logEvent('session_start', `Live session started for ${name}`);
+      console.log('[LiveSession] Session fully started!');
     } catch (e) {
-      console.error('Failed to start live session:', e);
-      toast.error('Failed to start session');
+      console.error('[LiveSession] Failed to start live session:', e);
+      toast.error(`Failed to start session: ${e?.message || e}`);
       throw e;
     }
-  }, [loadCampaignData, sendBroadcast, logEvent]);
+  }, [loadCampaignData, sendBroadcast, sendEvent, logEvent]);
 
   const endLiveSession = useCallback(async () => {
     try {
@@ -156,6 +207,7 @@ export function LiveSessionProvider({ children }) {
       if (sessionXp > 0) {
         sendBroadcast('loot', 'Session XP', `The party earned ${sessionXp} XP this session!`);
       }
+      sendEvent('session_end', {});
       sendBroadcast('announcement', 'Session Ended', 'Thanks for playing! The session has ended.');
       logEvent('session_end', `Live session ended — ${sessionXp} XP earned`);
 
@@ -181,7 +233,7 @@ export function LiveSessionProvider({ children }) {
       console.error('Failed to end live session:', e);
       toast.error('Failed to end session');
     }
-  }, [sessionId, sessionXp, sendBroadcast, logEvent]);
+  }, [sessionId, sessionXp, sendBroadcast, sendEvent, logEvent]);
 
   const setActiveScene = useCallback(async (scene) => {
     try {
@@ -540,6 +592,44 @@ export function LiveSessionProvider({ children }) {
     }
   }, [handouts, sendBroadcast, logEvent]);
 
+  // ── NPC Disposition Auto-Update ──
+  // Call this when player actions affect NPC relationships
+  const updateNpcDisposition = useCallback(async (npcId, delta, reason) => {
+    try {
+      const npc = npcs.find(n => n.id === npcId);
+      if (!npc) return;
+      const newScore = Math.max(-100, Math.min(100, (npc.disposition_score || 0) + delta));
+      // Map score to disposition label
+      let disposition = 'Neutral';
+      if (newScore >= 50) disposition = 'Friendly';
+      else if (newScore >= 20) disposition = 'Warm';
+      else if (newScore <= -50) disposition = 'Hostile';
+      else if (newScore <= -20) disposition = 'Unfriendly';
+
+      await invoke('update_npc_disposition', { npcId, disposition, dispositionScore: newScore });
+      logEvent('npc_disposition', `${npc.name}: ${disposition} (${delta > 0 ? '+' : ''}${delta}) — ${reason}`);
+
+      // Refresh NPCs
+      const updated = await invoke('list_campaign_npcs').catch(() => []);
+      setNpcs(updated || []);
+
+      // Broadcast to players if the change crosses a threshold
+      if (disposition !== npc.disposition) {
+        sendEvent('npc_updated', { npc_id: npcId, name: npc.name, disposition });
+      }
+    } catch (e) {
+      console.error('Failed to update NPC disposition:', e);
+    }
+  }, [npcs, logEvent, sendEvent]);
+
+  // Auto-update disposition when social encounters resolve positively
+  const handleSocialOutcome = useCallback((npcName, outcome) => {
+    const npc = npcs.find(n => n.name === npcName);
+    if (!npc) return;
+    const delta = outcome === 'success' ? 10 : outcome === 'critical_success' ? 20 : outcome === 'failure' ? -5 : outcome === 'critical_failure' ? -15 : 0;
+    if (delta !== 0) updateNpcDisposition(npc.id, delta, `Social ${outcome}`);
+  }, [npcs, updateNpcDisposition]);
+
   const refreshData = useCallback(async () => {
     if (sessionActive) {
       await loadCampaignData();
@@ -589,25 +679,75 @@ export function LiveSessionProvider({ children }) {
     return actions;
   }, [currentScene, npcs, quests, handouts, activeEncounterId]);
 
+  // Quest runner functions
+  const loadQuestForSession = useCallback(async (questId) => {
+    try {
+      setActiveQuestId(questId);
+      const beats = await invoke('list_quest_beats', { questId }).catch(() => []);
+      setActiveQuestBeats(beats || []);
+      const quest = quests.find(q => q.id === questId);
+      const activeBeatId = quest?.active_beat_id;
+      if (activeBeatId) {
+        setCurrentBeat((beats || []).find(b => b.id === activeBeatId) || (beats || [])[0] || null);
+      } else {
+        setCurrentBeat((beats || [])[0] || null);
+      }
+      logEvent('quest_loaded', `Quest loaded for session: ${quest?.title || questId}`);
+    } catch (e) {
+      console.error('Failed to load quest:', e);
+      toast.error('Failed to load quest');
+    }
+  }, [quests, logEvent]);
+
+  const advanceQuestBeat = useCallback(async () => {
+    if (!activeQuestId) return;
+    try {
+      const result = await invoke('advance_quest_beat', { questId: activeQuestId });
+      // Refresh beats
+      const beats = await invoke('list_quest_beats', { questId: activeQuestId }).catch(() => []);
+      setActiveQuestBeats(beats || []);
+      if (result?.id) {
+        setCurrentBeat(result);
+        logEvent('beat_advanced', `Beat advanced to: ${result.title || 'next'}`);
+      } else {
+        // Quest complete — no more beats
+        setCurrentBeat(null);
+        logEvent('quest_beats_done', 'All quest beats completed');
+      }
+      // Refresh quests
+      const updatedQuests = await invoke('list_campaign_quests').catch(() => []);
+      setQuests(updatedQuests || []);
+    } catch (e) {
+      console.error('Failed to advance beat:', e);
+      toast.error('Failed to advance quest beat');
+    }
+  }, [activeQuestId, logEvent]);
+
   const value = useMemo(() => ({
     activeCampaignId, campaignName, sessionId, sessionActive, sessionStartedAt, elapsed,
     currentScene, scenes, npcs, quests, handouts,
     activeEncounterId, encounterMonsters,
     actionLog, sessionXp,
+    activeQuestId, activeQuestBeats, currentBeat,
     startLiveSession, endLiveSession,
     setActiveScene, startSceneEncounter, endSceneEncounter,
     damageMonster, discoverNpc, revealQuest, revealHandout,
     logEvent, getSceneActions, refreshData,
     restParty, completeQuest, startRandomEncounter,
+    loadQuestForSession, advanceQuestBeat,
+    updateNpcDisposition, handleSocialOutcome,
   }), [
     activeCampaignId, campaignName, sessionId, sessionActive, sessionStartedAt, elapsed,
     currentScene, scenes, npcs, quests, handouts,
     activeEncounterId, encounterMonsters, actionLog, sessionXp,
+    activeQuestId, activeQuestBeats, currentBeat,
     startLiveSession, endLiveSession,
     setActiveScene, startSceneEncounter, endSceneEncounter,
     damageMonster, discoverNpc, revealQuest, revealHandout,
     logEvent, getSceneActions, refreshData,
     restParty, completeQuest, startRandomEncounter,
+    loadQuestForSession, advanceQuestBeat,
+    updateNpcDisposition, handleSocialOutcome,
   ]);
 
   return <LiveSessionContext.Provider value={value}>{children}</LiveSessionContext.Provider>;

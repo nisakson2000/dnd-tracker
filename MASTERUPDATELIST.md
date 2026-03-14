@@ -4,6 +4,50 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.6.5 — NPC Intelligence, Story Engines & Advanced World Systems
+**Released:** March 14, 2026
+
+### Phase 6: NPC Intelligence & Decision Engines
+- **NPC Personality System** — 8 archetypes (Schemer, Guardian, Merchant, Zealot, Outcast, Sage, Trickster, Noble) with auto-populated trait sets
+- **34 Personality Traits** — toggleable traits that drive NPC behavior predictions in real-time
+- **Trust Score System** — -100 to +100 trust with 7 labeled tiers (Sworn Enemy → Unbreakable Bond), 16 action types affect trust
+- **NPC Memory System** — memories with intensity (1-10), emotional impact, decay rate; traumatic memories (8+) never decay
+- **Behavior Prediction Engine** — live preview showing how NPCs respond to 7 situations (ask help, threaten, haggle, etc.)
+- **Combat AI System** — intelligence-tiered suggestions (Mindless/Beast/Low/Average/Smart/Genius) with 6 personality combat styles
+- **Monster AI Profiles** — 7 creature behavior profiles (Pack Hunter, Ambush Predator, Territorial, Mindless, Intelligent, Swarm, Boss)
+- **Boss Phase System** — 3 HP-based phases (Testing → Escalation → Desperate) with escalating tactics
+- **Consequence Engine** — 12 action templates (kill NPC, betray ally, steal, etc.) generating consequences with DM approval workflow
+- **Dynamic Merchant Pricing** — multiplicative modifiers for location (9 types), trust, faction, demand, economy; haggling with DC adjustments
+- **NPC Form Overhaul** — 3-tab NPC editor in campaign builder: Basics, Intelligence & Behavior, Combat
+- **Difficulty Scaling** — real-time combat assessment (emergency/too hard/balanced/too easy) with tactical suggestions
+- **Skill Check Resolver** — full engine with proficiency, expertise, advantage/disadvantage, conditions, contested checks
+
+### Phase 7: Dynamic Story & Memory Systems
+- **Story Threads** — major plotlines with 5 states (Dormant → Discovered → Investigating → Confrontation → Resolved)
+- **Story Branches** — decision points with branching outcomes, consequence tracking, and session logging
+- **Villain Profiles** — phase-based villain behavior, adaptations countering party tactics, master plans with power levels
+- **Campaign Arcs** — high-level narrative arcs linking quests, NPCs, and story threads together
+- **Campaign History Archive** — unified event log with category filtering, session grouping, bookmarking, and narrative significance
+- **Campaign Secrets** — secret tracking with reveal conditions, known-by lists, narrative impact, and urgency levels
+
+### Phase 8-9: Advanced Systems
+- **Investigation Clues** — clue networks with red herrings, discovery DCs, mystery grouping, and solution requirements
+- **Rumor Propagation** — rumors that spread between locations, distort over time, and auto-expire
+- **World Crises** — escalating crises with severity (1-10), affected regions, resolution conditions, and auto-escalation
+- **Artifact Evolution** — sentient items that absorb XP, level up, gain abilities, develop personality and curses
+- **Session Replay Logging** — event sequence capture for session replay and audit
+- **Roll Verification** — server-side roll verification infrastructure for multiplayer integrity
+- **Shop/Merchant System** — full shop table with inventory, gold, location type, restock intervals, and NPC links
+
+### Infrastructure & Bug Fixes
+- **Migration Runner Hardened** — statements now execute individually; duplicate column and already-exists errors skipped gracefully on retry
+- **Shops Table Created** — migration 6 now properly creates the shops table instead of altering a nonexistent one
+- **Comment-Stripping Fix** — SQL comments no longer cause CREATE TABLE statements to be silently skipped
+- **57 New Rust Commands** — NPC memory (7), consequences (6), story engine (25), advanced systems (19)
+- **7 New Frontend Utilities** — npcBehavior, combatAI, merchantPricing, consequenceTemplates, difficultyScaling, monsterAI, skillCheckResolver
+
+---
+
 ## V0.5.9 — Campaign Engine, Combat Automation & Polish
 **Released:** March 13, 2026
 

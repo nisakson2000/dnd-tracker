@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { X, Crown, MapPin, Swords, Megaphone, ScrollText, HelpCircle, Sparkles, ChevronRight, ChevronLeft } from 'lucide-react';
+import { X, Crown, MapPin, Swords, Megaphone, ScrollText, Sparkles, ChevronRight, ChevronLeft, Play, Gift, Users, Scroll } from 'lucide-react';
 
-const STORAGE_KEY = 'codex-dm-tutorial-dismissed';
+const STORAGE_KEY = 'codex-dm-tutorial-dismissed-v2';
 
 const STEPS = [
   {
@@ -9,18 +9,58 @@ const STEPS = [
     icon: Crown,
     color: '#c9a84c',
     content: [
-      'The DM Toolbar gives you full control over your live session — campaigns, combat, communications, and event logging — all from a floating panel.',
+      'The DM Toolbar gives you full control over your live session — campaigns, combat, communications, quests, items, and event logging — all from a floating panel.',
       'This guide will walk you through each tool. You can always reopen this by clicking the ? button on the toolbar.',
+    ],
+  },
+  {
+    title: 'Getting Started',
+    icon: Play,
+    color: '#4ade80',
+    content: [
+      '1. Select DM Mode from the main menu and choose or create a campaign.',
+      '2. Premade campaigns come pre-loaded with NPCs, quests, lore, and auto-generated scenes. Homebrew campaigns start blank — you build everything.',
+      '3. Go to the Party section, host a party, and share the room code with players.',
+      '4. Your selected campaign auto-loads — just click "Start Live Session" to begin. No need to pick it again.',
+      '5. Players connect with the room code and their characters sync automatically.',
     ],
   },
   {
     title: 'Campaign Panel',
     icon: MapPin,
-    color: '#4ade80',
+    color: '#22c55e',
     content: [
-      'Start a live session by selecting a campaign. Once active, you\'ll see a compact session header with timer, player count, and combat status.',
-      'Navigate scenes from the collapsible scene list. Each scene shows DM notes and description.',
+      'Once the session is live, you\'ll see a compact header with timer, player count, and combat status.',
+      'Navigate scenes from the collapsible scene list. Each scene shows DM notes, description, and location.',
       'Quick Actions appear based on the current scene — reveal NPCs, activate quests, start encounters, or hand out documents with one click.',
+      'Set the Scene Mood (Combat, Exploration, Social, Mystery, Danger, etc.) to change the atmosphere for players.',
+      'Use the Travel Calculator to plan overland journeys with random encounter rolls per day.',
+      'Short Rest and Long Rest buttons sync to all players automatically.',
+    ],
+  },
+  {
+    title: 'DM Actions',
+    icon: Gift,
+    color: '#f59e0b',
+    content: [
+      'The Actions panel has tabs: Quick, Skill Check, Conditions, Loot, Social, and Results.',
+      'Quick: Send common prompts to players or trigger passive perception checks.',
+      'Skill Check: Request ability checks, saving throws, or skill checks with custom DCs. Results show pass/fail automatically.',
+      'Conditions: Apply or remove conditions on connected players.',
+      'Loot: Give items to players — search the SRD database with class/race filtering, or create custom weapons, armor, spells, potions, and consumables with full stat blocks.',
+      'Social: Run NPC social encounters — set a DC and the NPC\'s disposition auto-updates based on how players roll.',
+    ],
+  },
+  {
+    title: 'Quest Runner',
+    icon: Scroll,
+    color: '#a78bfa',
+    content: [
+      'The Quest Runner shows all non-completed quests loaded from your campaign.',
+      'Select a quest to see its current beat — the story step you\'re on — with description, DM notes, and linked NPCs.',
+      'Action buttons let you: Load an encounter, Reveal NPCs, Set the scene, Advance to the next beat, or Broadcast the description to players.',
+      'The timeline sidebar shows all beats with their status (completed, active, pending).',
+      'Quests created in the Campaign Lobby or imported from premade campaigns appear here automatically.',
     ],
   },
   {
@@ -38,13 +78,13 @@ const STEPS = [
   {
     title: 'Communications',
     icon: Megaphone,
-    color: '#f59e0b',
+    color: '#f97316',
     content: [
       'The Comms panel has two tabs: Broadcast and Prompt.',
-      'Broadcast sends narrative text, loot announcements, quest updates, or general announcements to all players.',
+      'Broadcast sends narrative text, loot announcements, quest updates, or general announcements to all players. Broadcasts auto-dismiss after 10 seconds.',
       'Prompt requests actions from players — skill checks, choices, confirmations, or free-text questions.',
       'Use Quick Checks for common D&D skill checks (Perception, Stealth, Investigation, etc.) with proper DCs by difficulty tier.',
-      'Target specific players or send to everyone.',
+      'Target specific players or send to everyone. HP and AC sync automatically — no toggle needed.',
     ],
   },
   {
@@ -58,14 +98,32 @@ const STEPS = [
     ],
   },
   {
+    title: 'Creating a Homebrew Campaign',
+    icon: Scroll,
+    color: '#22c55e',
+    content: [
+      '1. On the Dashboard, click "Create Campaign" to start from scratch.',
+      '2. Give your campaign a name and pick a ruleset (2024 PHB or 2014 PHB).',
+      '3. Once created, click into your campaign to access the Campaign Hub.',
+      '4. Build your world: add NPCs, write quests with objectives, create lore entries for locations and history.',
+      '5. Use the DM Toolkit generators (Dungeon, Encounter, Boss, Rumors, etc.) to quickly create content.',
+      '6. Set up scenes in the Campaign Lobby — each scene is a location or story beat for your session.',
+      '7. Use AI Modules to generate scene descriptions, NPC dialogue, and story hooks — then save them directly to your campaign.',
+      '8. Your campaign appears under "Local Campaigns" when selecting a campaign, so you can always find it.',
+    ],
+  },
+  {
     title: 'Tips & Tricks',
     icon: Sparkles,
     color: '#c084fc',
     content: [
       'Click the status bars (green session bar or red combat bar) to quickly open the relevant panel.',
       'The toolbar stays visible across all app sections while you\'re hosting.',
+      'NPC dispositions auto-update when players pass or fail social skill checks.',
+      'Premade campaigns auto-generate scenes from locations in the campaign data. Homebrew campaigns let you build scenes manually in the Campaign Lobby.',
       'Use the Arcane Advisor (AI Assistant) for rules questions, encounter ideas, or lore generation.',
-      'You can ask the AI "How do I use the DM tools?" for live help anytime.',
+      'Use AI Modules in the sidebar to generate content and auto-save it to your campaign.',
+      'Export your campaign as a .json file to share it with other DMs, or archive it when you\'re done.',
     ],
   },
 ];

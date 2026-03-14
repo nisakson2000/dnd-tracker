@@ -20,7 +20,7 @@ export default function PlayerNotification() {
   useEffect(() => {
     if (!latestBroadcast) return;
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(dismissBroadcast, 8000);
+    timerRef.current = setTimeout(dismissBroadcast, 10000);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [latestBroadcast, dismissBroadcast]);
 

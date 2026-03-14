@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Map, CheckSquare, Square, XCircle, Star, Coins, Package, User, MapPin, Clock, ChevronDown, ChevronRight, Flag, Scroll, MessageSquarePlus, Crosshair, Compass, EyeOff, Eye } from 'lucide-react';
+import { Plus, Trash2, Edit2, Map, CheckSquare, Square, XCircle, Star, Coins, Package, User, MapPin, Clock, ChevronDown, ChevronRight, Flag, Scroll, MessageSquarePlus, Crosshair, Compass, EyeOff, Eye, Shuffle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { getQuests, addQuest, updateQuest, deleteQuest } from '../api/quests';
@@ -38,6 +38,40 @@ const QUEST_TEMPLATES = [
 ];
 
 const SUGGESTED_OBJECTIVES = ['Defeat the enemy', 'Find the hidden item', 'Speak to the contact', 'Solve the puzzle', 'Escort to safety', 'Survive the ambush', 'Gather evidence', 'Return to quest giver'];
+
+const QUICK_QUEST_TITLES = [
+  'The Missing Merchant', 'Shadows in the Mines', 'A Debt Unpaid', 'The Cursed Relic',
+  'Wolves at the Gate', 'The Silent Village', 'Bounty: The Iron Fang', 'Secrets of the Old Tower',
+  'The Stolen Heirloom', 'Rumbles Beneath', 'A Call for Aid', 'The Poisoned Well',
+  'Whispers in the Dark', 'The Broken Seal', 'Trouble at the Border', 'The Lost Expedition',
+];
+
+function generateRandomQuest() {
+  const template = QUEST_TEMPLATES[Math.floor(Math.random() * QUEST_TEMPLATES.length)];
+  const title = QUICK_QUEST_TITLES[Math.floor(Math.random() * QUICK_QUEST_TITLES.length)];
+  const priority = PRIORITIES[Math.floor(Math.random() * PRIORITIES.length)];
+  return {
+    title,
+    quest_giver: '',
+    description: template.description,
+    status: 'active',
+    difficulty: template.difficulty,
+    notes_text: '',
+    objectives: template.objectives.map(o => ({ ...o })),
+    priority,
+    xp_reward: '',
+    gold_reward: '',
+    item_rewards: '',
+    location: '',
+    quest_type: template.quest_type,
+    timeline: [{ stage: 'received', date: new Date().toISOString().split('T')[0] }],
+    session_notes: [],
+    rewards_received: false,
+    sub_objectives: {},
+    secret_objectives: [],
+    session_counter: 0,
+  };
+}
 
 const QUEST_TYPES = ['Main Story', 'Side Quest', 'Personal', 'Bounty'];
 const QUEST_TYPE_STYLES = {
@@ -127,6 +161,7 @@ export default function Quests({ characterId }) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [quickGenData, setQuickGenData] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [sortBy, setSortBy] = useState('status');
   // viewMode reserved for future cards/timeline toggle
@@ -698,9 +733,19 @@ export default function Quests({ characterId }) {
           </div>
         </h2>
         {isDM && (
-          <button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
-            <Plus size={12} /> New Quest
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setEditing(null); setQuickGenData(generateRandomQuest()); setShowForm(true); }}
+              className="text-xs flex items-center gap-1"
+              style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(74,222,128,0.25)', background: 'rgba(74,222,128,0.08)', color: '#4ade80', fontFamily: 'var(--font-heading)', letterSpacing: '0.04em', cursor: 'pointer' }}
+              title="Generate a random quest with title, type, and objectives"
+            >
+              <Shuffle size={12} /> Quick Generate
+            </button>
+            <button onClick={() => { setEditing(null); setQuickGenData(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
+              <Plus size={12} /> New Quest
+            </button>
+          </div>
         )}
       </div>
 
@@ -762,7 +807,7 @@ export default function Quests({ characterId }) {
       )}
 
       {showForm && (
-        <QuestForm quest={editing} onSubmit={handleSave} onCancel={() => { setShowForm(false); setEditing(null); }} />
+        <QuestForm quest={editing} initialData={quickGenData} onSubmit={handleSave} onCancel={() => { setShowForm(false); setEditing(null); setQuickGenData(null); }} />
       )}
 
       {/* Session Note Modal */}
@@ -807,9 +852,10 @@ function SessionNoteModal({ quest, onSubmit, onCancel }) {
   );
 }
 
-function QuestForm({ quest, onSubmit, onCancel }) {
+function QuestForm({ quest, initialData, onSubmit, onCancel }) {
   const [form, setForm] = useState(() => {
     if (quest) return { ...quest, objectives: quest.objectives || [], secret_objectives: quest.secret_objectives || [] };
+    if (initialData) return { ...initialData, objectives: initialData.objectives || [], secret_objectives: initialData.secret_objectives || [] };
     return {
       title: '', quest_giver: '', description: '', status: 'active', difficulty: '',
       notes_text: '', objectives: [], priority: '', xp_reward: '', gold_reward: '',
