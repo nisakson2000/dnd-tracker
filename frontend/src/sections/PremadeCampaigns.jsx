@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  BookOpen, Download, Globe, Users, Map, Scroll, Search,
+  BookOpen, Download, Globe, Users, Map, Scroll, Search, Clock,
   ChevronDown, ChevronUp, Loader2, CheckCircle2, AlertTriangle,
   ExternalLink, Package, RefreshCw, Sparkles, Shield,
 } from 'lucide-react';
@@ -518,8 +518,8 @@ function CampaignCard({ campaign, onLoad, loading, isBundled }) {
         </button>
 
         {expanded && (
+          <div style={{ marginTop: '10px' }}>
           <div style={{
-            marginTop: '10px',
             padding: '12px',
             background: 'rgba(0,0,0,0.2)',
             borderRadius: '8px',
@@ -551,6 +551,41 @@ function CampaignCard({ campaign, onLoad, loading, isBundled }) {
                 {(campaign.journal ? 1 : campaign.journals?.length || 0)} Journal {(campaign.journal ? 1 : campaign.journals?.length || 0) === 1 ? 'entry' : 'entries'}
               </span>
             </div>
+          </div>
+          {/* Quest count & estimated time badges */}
+          <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: '4px',
+              fontSize: '10px', fontFamily: 'var(--font-mono)', padding: '2px 8px', borderRadius: '4px',
+              background: 'rgba(167,139,250,0.08)', color: 'rgba(167,139,250,0.7)', border: '1px solid rgba(167,139,250,0.15)',
+            }}>
+              <Scroll size={10} /> {campaign.quests?.length || 0} Quests
+            </span>
+            {(() => {
+              const qLen = campaign.quests?.length || 0;
+              const estMin = Math.max(2, qLen * 2);
+              const estMax = Math.max(4, qLen * 4);
+              const sessions = Math.max(1, Math.round((estMin + estMax) / 2 / 3.5));
+              return (
+                <>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '4px',
+                    fontSize: '10px', fontFamily: 'var(--font-mono)', padding: '2px 8px', borderRadius: '4px',
+                    background: 'rgba(201,168,76,0.08)', color: 'rgba(201,168,76,0.6)', border: '1px solid rgba(201,168,76,0.15)',
+                  }}>
+                    <Clock size={10} /> ~{estMin}-{estMax} hrs
+                  </span>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '4px',
+                    fontSize: '10px', fontFamily: 'var(--font-mono)', padding: '2px 8px', borderRadius: '4px',
+                    background: 'rgba(74,222,128,0.08)', color: 'rgba(74,222,128,0.6)', border: '1px solid rgba(74,222,128,0.15)',
+                  }}>
+                    ~{sessions} sessions
+                  </span>
+                </>
+              );
+            })()}
+          </div>
           </div>
         )}
       </div>
@@ -760,10 +795,46 @@ export default function PremadeCampaigns({ characterId }) {
         tables && `${tables} tables`,
       ].filter(Boolean).join(', ');
 
+      // Count chapters for time estimation
+      let chapterCount = 0;
+      if (data.adventureData && Array.isArray(data.adventureData)) {
+        for (const ad of data.adventureData) {
+          if (ad.data && Array.isArray(ad.data)) chapterCount += ad.data.length;
+        }
+      }
+      if (chapterCount === 0 && data.adventure && Array.isArray(data.adventure)) {
+        chapterCount = data.adventure.length;
+      }
+      chapterCount = Math.max(chapterCount, 1);
+
+      // Count quests from sections
+      let questCount = 0;
+      if (data.adventureData && Array.isArray(data.adventureData)) {
+        for (const ad of data.adventureData) {
+          if (ad.data && Array.isArray(ad.data)) {
+            for (const chapter of ad.data) {
+              if (Array.isArray(chapter.entries)) {
+                for (const entry of chapter.entries) {
+                  if (entry && typeof entry === 'object' && entry.name && entry.type === 'section') questCount++;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      const minHours = chapterCount * 2;
+      const maxHours = chapterCount * 4;
+      const estimatedHours = `${minHours}-${maxHours}`;
+      const estimatedSessions = Math.max(1, Math.round((minHours + maxHours) / 2 / 3.5));
+
       const summary = {
         name: advName,
         description: desc ? (desc.length > 200 ? desc.substring(0, 200) + '...' : desc) : '',
         counts: counts || 'Adventure data available',
+        questCount: questCount || null,
+        estimatedHours,
+        estimatedSessions,
         loading: false,
       };
       previewCacheRef.current[adv.fileName] = summary;
@@ -1221,6 +1292,37 @@ export default function PremadeCampaigns({ characterId }) {
                             fontFamily: 'var(--font-mono)',
                           }}>
                             Contains: {preview.counts}
+                          </div>
+                        )}
+                        {(preview.questCount != null || preview.estimatedHours) && (
+                          <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                            {preview.questCount != null && (
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                fontSize: '9px', fontFamily: 'var(--font-mono)', padding: '2px 7px', borderRadius: '4px',
+                                background: 'rgba(167,139,250,0.08)', color: 'rgba(167,139,250,0.7)', border: '1px solid rgba(167,139,250,0.15)',
+                              }}>
+                                <Scroll size={9} /> {preview.questCount} Quests
+                              </span>
+                            )}
+                            {preview.estimatedHours && (
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                fontSize: '9px', fontFamily: 'var(--font-mono)', padding: '2px 7px', borderRadius: '4px',
+                                background: 'rgba(201,168,76,0.08)', color: 'rgba(201,168,76,0.6)', border: '1px solid rgba(201,168,76,0.15)',
+                              }}>
+                                <Clock size={9} /> ~{preview.estimatedHours} hrs
+                              </span>
+                            )}
+                            {preview.estimatedSessions != null && (
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                fontSize: '9px', fontFamily: 'var(--font-mono)', padding: '2px 7px', borderRadius: '4px',
+                                background: 'rgba(74,222,128,0.08)', color: 'rgba(74,222,128,0.6)', border: '1px solid rgba(74,222,128,0.15)',
+                              }}>
+                                ~{preview.estimatedSessions} sessions
+                              </span>
+                            )}
                           </div>
                         )}
                         {!preview.description && !preview.counts && (

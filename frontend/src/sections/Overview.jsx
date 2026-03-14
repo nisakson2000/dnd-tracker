@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { TrendingUp, TrendingDown, Heart, Shield, ShieldOff, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles, Skull, Search, Brain, Swords, AlertTriangle, ChevronDown, ChevronUp, StickyNote, Flame, Waves, Wind, Target, Wand2, Calculator, Package, Dices, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, Heart, Shield, ShieldOff, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles, Skull, Search, Brain, Swords, AlertTriangle, ChevronDown, ChevronUp, StickyNote, Flame, Waves, Wind, Target, Wand2, Calculator, Package, Dices, X, Plus, Trash2 } from 'lucide-react';
+import { getTotalLevel, getHitDiceBreakdown } from '../utils/multiclass';
 import toast from 'react-hot-toast';
 import { getOverview, updateOverview, updateAbilityScores, updateSavingThrows, updateSkills } from '../api/overview';
 import { getItems } from '../api/inventory';
@@ -14,6 +15,7 @@ import { HELP } from '../data/helpText';
 import SubclassSelectModal from '../components/SubclassSelectModal';
 import ModalPortal from '../components/ModalPortal';
 import { computeConditionEffects, CONDITION_EFFECTS } from '../data/conditionEffects';
+import { autoPopulateStats } from '../utils/autoPopulate';
 
 const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
 
@@ -558,6 +560,54 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     if (onCharacterUpdate) onCharacterUpdate({ ...character, primary_subclass: subclass });
   };
 
+  const handleAutoPopulate = () => {
+    const classData = CLASSES.find(c => c.name === overview.primary_class);
+    const raceData = RACES.find(r => {
+      const val = r.subrace ? `${r.name} (${r.subrace})` : r.name;
+      return val === overview.race;
+    });
+
+    if (!classData && !raceData) {
+      toast.error('Set a class and race before auto-populating.');
+      return;
+    }
+
+    const result = autoPopulateStats({
+      classData,
+      raceData,
+      level: overview.level || 1,
+      overview,
+      abilities,
+      saves,
+      respectManualEdits: true,
+    });
+
+    // Apply overview changes
+    setOverview(result.overview);
+    triggerOverview(result.overview);
+
+    // Apply ability score changes
+    if (result.abilities !== abilities) {
+      setAbilities(result.abilities);
+      const localAb = {};
+      result.abilities.forEach(a => { localAb[a.ability] = String(a.score); });
+      setLocalAbilities(localAb);
+      triggerAbilities(result.abilities);
+    }
+
+    // Apply saving throw changes
+    if (result.saves !== saves) {
+      setSaves(result.saves);
+      triggerSaves(result.saves);
+    }
+
+    if (result.changes.length > 0) {
+      toast.success(result.summary, { duration: 5000 });
+    } else {
+      toast('No changes applied — fields already have values. Clear them first to re-populate.', { icon: '\u2139\uFE0F', duration: 4000 });
+    }
+  };
+
   const updateAbility = (ability, score) => {
     const updated = abilities.map(a => a.ability === ability ? { ...a, score } : a);
     setAbilities(updated);
@@ -941,24 +991,123 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           </div>
         </div>
 
+        {/* Auto-Populate Stats Button */}
+        {overview.primary_class && overview.race && (
+          <button
+            onClick={handleAutoPopulate}
+            className="flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded bg-gold/8 border border-gold/20 text-gold/70 hover:bg-gold/15 hover:text-gold transition-all mt-3"
+            title="Auto-fill HP, saving throws, proficiencies, speed, and racial bonuses from your class and race"
+          >
+            <Sparkles size={12} /> Auto-Populate Stats from Class & Race
+          </button>
+        )}
+
         {/* XP Progress */}
         <XPProgress xp={overview.experience_points} level={overview.level} onXPChange={v => updateField('experience_points', v)} />
 
-        {/* Multiclass Display */}
+        {/* Multiclass Section */}
         {(() => {
           let mc = [];
           try { mc = JSON.parse(overview.multiclass_data || '[]'); } catch (err) { if (import.meta.env.DEV) console.warn('Failed to parse multiclass_data:', err); mc = []; }
-          if (!Array.isArray(mc) || mc.length === 0) return null;
+          if (!Array.isArray(mc)) mc = [];
+
+          const totalLevel = getTotalLevel(overview.level, mc);
+          const hitDice = getHitDiceBreakdown(overview.primary_class, overview.level, mc);
+
+          const updateMulticlass = (newMc) => {
+            const updated = { ...overview, multiclass_data: JSON.stringify(newMc) };
+            setOverview(updated);
+            triggerOverview(updated);
+          };
+
+          const addMulticlass = () => {
+            updateMulticlass([...mc, { class: '', subclass: '', level: 1 }]);
+          };
+
+          const removeMulticlass = (index) => {
+            updateMulticlass(mc.filter((_, i) => i !== index));
+          };
+
+          const updateMulticlassEntry = (index, field, value) => {
+            const newMc = mc.map((entry, i) => {
+              if (i !== index) return entry;
+              const updated = { ...entry, [field]: value };
+              if (field === 'level') updated.level = Math.max(1, Math.min(20, parseInt(value) || 1));
+              return updated;
+            });
+            updateMulticlass(newMc);
+          };
+
           return (
             <div className="mt-4 pt-4 border-t border-gold/10">
-              <div className="text-xs text-amber-200/50 font-display tracking-wider uppercase mb-2">Multiclass</div>
-              <div className="flex flex-wrap gap-2">
-                {mc.map((cls, i) => (
-                  <span key={i} className="text-xs bg-purple-900/30 text-purple-200 px-3 py-1.5 rounded border border-purple-500/20">
-                    {cls.class || cls.name || 'Unknown'} {cls.subclass && `(${cls.subclass})`} Lv {cls.level || '?'}
-                  </span>
-                ))}
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-xs text-amber-200/50 font-display tracking-wider uppercase">Multiclass</div>
+                {mc.length > 0 && (
+                  <div className="text-xs text-amber-200/40">
+                    Total Level: {totalLevel} ({overview.primary_class || 'Primary'} {overview.level}
+                    {mc.map((cls, i) => ` + ${cls.class || '?'} ${cls.level || '?'}`).join('')})
+                  </div>
+                )}
               </div>
+
+              {mc.length > 0 && (
+                <div className="space-y-2 mb-3">
+                  {mc.map((cls, i) => (
+                    <div key={i} className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-end bg-purple-900/10 border border-purple-500/15 rounded p-2">
+                      <div>
+                        <label className="label text-[10px]">Class</label>
+                        <select className="input w-full text-sm" value={cls.class || ''} onChange={e => updateMulticlassEntry(i, 'class', e.target.value)}>
+                          <option value="">Select...</option>
+                          {CLASSES.map(c => (
+                            <option key={c.name} value={c.name} disabled={c.name === overview.primary_class}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="label text-[10px]">Subclass</label>
+                        {(() => {
+                          const clsData = CLASSES.find(c => c.name === cls.class);
+                          const subs = clsData?.subclasses || [];
+                          if (subs.length > 0) {
+                            return (
+                              <select className="input w-full text-sm" value={cls.subclass || ''} onChange={e => updateMulticlassEntry(i, 'subclass', e.target.value)}>
+                                <option value="">Select...</option>
+                                {subs.map(s => <option key={s} value={s}>{s}</option>)}
+                              </select>
+                            );
+                          }
+                          return <input className="input w-full text-sm" value={cls.subclass || ''} onChange={e => updateMulticlassEntry(i, 'subclass', e.target.value)} placeholder="Subclass" />;
+                        })()}
+                      </div>
+                      <div>
+                        <label className="label text-[10px]">Lv</label>
+                        <input type="number" className="input w-16 text-sm text-center" min={1} max={20}
+                          value={cls.level || 1} onChange={e => updateMulticlassEntry(i, 'level', e.target.value)} />
+                      </div>
+                      <button onClick={() => removeMulticlass(i)} className="btn-ghost p-1.5 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded self-end mb-0.5" title="Remove class">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button onClick={addMulticlass} className="btn-ghost text-xs flex items-center gap-1 text-purple-300 hover:text-purple-200">
+                <Plus size={12} /> Add Class
+              </button>
+
+              {mc.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gold/5">
+                  <div className="text-[10px] text-amber-200/40 uppercase tracking-wider mb-1">Hit Dice Breakdown</div>
+                  <div className="flex flex-wrap gap-2">
+                    {hitDice.map((hd, i) => (
+                      <span key={i} className="text-xs bg-purple-900/20 text-purple-200/80 px-2 py-1 rounded border border-purple-500/15">
+                        {hd.count}{hd.die} ({hd.class || '?'})
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}

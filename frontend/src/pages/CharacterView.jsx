@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Heart, Clock, Shield, Zap, Star, Footprints, PenLine, X, HelpCircle, Moon, Coffee, Sunrise, Dices, Flame, Check, Keyboard, Search, Wand2, Sword, FlaskConical, Sparkles, ChevronUp, ChevronDown, Pin, Plus } from 'lucide-react';
+import { Heart, Clock, Shield, Zap, Star, Footprints, X, Moon, Coffee, Sunrise, Dices, Flame, Check, Keyboard, Wand2, Sword, FlaskConical, Sparkles, ChevronUp, ChevronDown, Pin, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOverview } from '../api/overview';
 import { getConditions, getAttacks } from '../api/combat';
@@ -11,18 +11,26 @@ import { getItems, updateItem } from '../api/inventory';
 import { longRest, shortRest } from '../api/rest';
 import { RulesetProvider } from '../contexts/RulesetContext';
 import { PartyProvider } from '../contexts/PartyContext';
+import { CampaignSyncProvider, useCampaignSync } from '../contexts/CampaignSyncContext';
+import { addQuest, addNpc } from '../utils/playerJournal';
+import { LiveSessionProvider } from '../contexts/LiveSessionContext';
+import PlayerNotification from '../components/party/PlayerNotification';
+import PlayerActionOverlay from '../components/party/PlayerActionOverlay';
+import SharedCombatBar from '../components/party/SharedCombatBar';
+import DmToolbar from '../components/party/DmToolbar';
 import Sidebar from '../components/Sidebar';
+import KeyboardShortcutsHelp from '../components/KeyboardShortcutsHelp';
 import LevelUpOverlay from '../components/LevelUpOverlay';
-import BeginnerWizard from '../components/BeginnerWizard';
 import ArcaneWidget from '../components/ArcaneWidget';
+import CombatModeHUD from '../components/CombatModeHUD';
 import { useLevelUp } from '../hooks/useLevelUp';
 import { useCrashRecovery } from '../hooks/useCrashRecovery';
 import { useAutoBackup } from '../hooks/useAutoBackup';
-import { useUpdateCheck } from '../hooks/useUpdateCheck';
 import { useErrorLog, setErrorContext } from '../hooks/useErrorLog';
 import { invoke } from '@tauri-apps/api/core';
 import { APP_VERSION } from '../version';
 import { useAppMode } from '../contexts/ModeContext';
+import { SECTION_ORDER } from '../utils/keyboardShortcuts';
 
 const Overview = lazy(() => import('../sections/Overview'));
 const Backstory = lazy(() => import('../sections/Backstory'));
@@ -34,7 +42,6 @@ const NPCs = lazy(() => import('../sections/NPCs'));
 const Quests = lazy(() => import('../sections/Quests'));
 const DiceRoller = lazy(() => import('../sections/DiceRoller'));
 const Settings = lazy(() => import('../sections/Settings'));
-const Updates = lazy(() => import('../sections/Updates'));
 const BugReport = lazy(() => import('../sections/BugReport'));
 const FeatureRequest = lazy(() => import('../sections/FeatureRequest'));
 const Journal = lazy(() => import('../sections/Journal'));
@@ -49,10 +56,8 @@ const CampaignMap = lazy(() => import('../sections/CampaignMap'));
 const PartyAnalyzer = lazy(() => import('../sections/PartyAnalyzer'));
 const EncounterBuilder = lazy(() => import('../sections/EncounterBuilder'));
 const BattleMap = lazy(() => import('../sections/BattleMap'));
-const Soundboard = lazy(() => import('../sections/Soundboard'));
 const FantasyCalendar = lazy(() => import('../sections/Calendar'));
 const HomebrewBuilder = lazy(() => import('../sections/HomebrewBuilder'));
-const Downtime = lazy(() => import('../sections/Downtime'));
 const PartyLoot = lazy(() => import('../sections/PartyLoot'));
 const DevTools = import.meta.env.DEV ? lazy(() => import('../sections/DevTools')) : null;
 
@@ -90,7 +95,6 @@ const SECTIONS = {
   export: ExportImport,
   bugreport: BugReport,
   featurerequest: FeatureRequest,
-  updates: Updates,
   // DM-mode sections
   'campaign-hub': CampaignHub,
   'encounter': Combat,
@@ -102,10 +106,8 @@ const SECTIONS = {
   'premade-campaigns': PremadeCampaigns,
   'encounter-builder': EncounterBuilder,
   'battle-map': BattleMap,
-  'soundboard': Soundboard,
   'calendar': FantasyCalendar,
   'homebrew': HomebrewBuilder,
-  'downtime': Downtime,
   'party-loot': PartyLoot,
   ...(DevTools ? { devtools: DevTools } : {}),
 };
@@ -127,7 +129,6 @@ const SECTION_LABELS = {
   export: 'Export & Import',
   bugreport: 'Bug Report',
   featurerequest: 'Feature Request',
-  updates: 'Updates',
   devtools: 'Dev Tools',
   'campaign-map': 'Campaign Map',
   'campaign-hub': 'Campaign Hub',
@@ -139,14 +140,12 @@ const SECTION_LABELS = {
   'premade-campaigns': 'Premade Campaigns',
   'encounter-builder': 'Encounter Builder',
   'battle-map': 'Battle Map',
-  'soundboard': 'Soundboard',
   'calendar': 'Fantasy Calendar',
   'homebrew': 'Homebrew Builder',
-  'downtime': 'Downtime',
   'party-loot': 'Party Loot',
 };
 
-const SHORTCUT_SECTIONS = ['overview','backstory','spellbook','inventory','features','combat','journal','npcs','quests'];
+const SHORTCUT_SECTIONS = SECTION_ORDER;
 
 /* ── Favorites Quick-Access Bar constants ── */
 const FAV_TYPE_META = {
@@ -581,11 +580,26 @@ function UnifiedRestModal({ characterId, restTab, setRestTab, onClose, reloadCha
     try {
       const res = await shortRest(characterId, hitDiceRolls.length);
       if (res.restored) res.restored.forEach(m => lines.push(m));
+      // Hit dice spent summary with individual rolls
+      if (hitDiceRolls.length > 0) {
+        const totalHealed = hitDiceRolls.reduce((sum, r) => sum + r.total, 0);
+        lines.push('Hit dice spent: ' + hitDiceRolls.length + ' (healed ' + totalHealed + ' HP)');
+        lines.push('HP: ' + overview.current_hp + ' \u2192 ' + Math.min(overview.max_hp, overview.current_hp + totalHealed) + ' / ' + overview.max_hp);
+      }
       if (shortRestFeats.length > 0) {
         await Promise.all(shortRestFeats.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total }).catch(() => {})));
-        lines.push(shortRestFeats.length + ' feature' + (shortRestFeats.length > 1 ? 's' : '') + ' recharged: ' + shortRestFeats.map(f => f.name).join(', '));
+        for (const f of shortRestFeats) {
+          lines.push('Recharged: ' + f.name + ' (' + f.uses_remaining + '/' + f.uses_total + ' \u2192 ' + f.uses_total + '/' + f.uses_total + ')');
+        }
       }
-      if (pendingHpGain > 0) lines.push('Recovered ' + pendingHpGain + ' HP from ' + hitDiceRolls.length + ' hit ' + (hitDiceRolls.length === 1 ? 'die' : 'dice'));
+      // Warlock Pact Magic: spell slots recover on short rest
+      if (overview.primary_class && overview.primary_class.toLowerCase().includes('warlock')) {
+        try {
+          await resetSpellSlots(characterId);
+          lines.push('Pact Magic spell slots restored');
+        } catch (e) { void e; }
+      }
+      if (lines.length === 0) lines.push('Rested for 1 hour. Nothing needed restoring.');
       setSummary({ type: 'short', lines });
       reloadCharacter();
     } catch (err) { toast.error('Short rest failed: ' + err.message); }
@@ -598,12 +612,35 @@ function UnifiedRestModal({ characterId, restTab, setRestTab, onClose, reloadCha
     try {
       const res = await longRest(characterId);
       if (res.restored) res.restored.forEach(m => lines.push(m));
+      // HP restoration detail
+      if (overview.current_hp < overview.max_hp) {
+        lines.push('HP restored to full: ' + overview.current_hp + ' \u2192 ' + overview.max_hp);
+      } else {
+        lines.push('HP already at full (' + overview.max_hp + '/' + overview.max_hp + ')');
+      }
+      // Spell slots
+      if (usedSlots.length > 0) {
+        const totalRecovered = usedSlots.reduce((acc, sl) => acc + sl.used_slots, 0);
+        try { await resetSpellSlots(characterId); lines.push('All spell slots recovered (' + totalRecovered + ' slot' + (totalRecovered !== 1 ? 's' : '') + ' restored)'); } catch(e) { void e; }
+      }
+      // Hit dice recovery (half level, rounded up, min 1)
+      if (overview.hit_dice_used > 0) {
+        const hitDiceRecovered = Math.max(1, Math.ceil(overview.level / 2));
+        const actualRecovered = Math.min(hitDiceRecovered, overview.hit_dice_used);
+        lines.push('Hit dice recovered: ' + actualRecovered + ' of ' + overview.hit_dice_used + ' spent');
+      }
+      // Features recharged — itemized
       if (longRestFeats.length > 0) {
         await Promise.all(longRestFeats.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total }).catch(() => {})));
-        lines.push(longRestFeats.length + ' feature' + (longRestFeats.length > 1 ? 's' : '') + ' recharged: ' + longRestFeats.map(f => f.name).join(', '));
+        for (const f of longRestFeats) {
+          lines.push('Recharged: ' + f.name + ' (' + f.uses_remaining + '/' + f.uses_total + ' \u2192 ' + f.uses_total + '/' + f.uses_total + ')');
+        }
       }
-      if (usedSlots.length > 0) { try { await resetSpellSlots(characterId); lines.push('All spell slots restored'); } catch(e) { void e; } }
-      if (overview.exhaustion_level > 0) lines.push('Exhaustion reduced from ' + overview.exhaustion_level + ' to ' + (overview.exhaustion_level - 1));
+      // Exhaustion
+      if (overview.exhaustion_level > 0) {
+        lines.push('Exhaustion reduced by 1: Level ' + overview.exhaustion_level + ' \u2192 ' + (overview.exhaustion_level - 1));
+      }
+      if (lines.length === 0) lines.push('Rested for 8 hours. Everything was already at full capacity.');
       setSummary({ type: 'long', lines });
       reloadCharacter();
     } catch (err) { toast.error('Long rest failed: ' + err.message); }
@@ -786,6 +823,294 @@ function UnifiedRestModal({ characterId, restTab, setRestTab, onClose, reloadCha
   );
 }
 
+/* ========================================================================
+   Campaign Event Processor — syncs DM-pushed events to player character
+   ======================================================================== */
+function CampaignEventProcessor({ characterId, character, onCharacterUpdate, onConditionsChange }) {
+  const {
+    conditionChanges, clearConditionChanges,
+    pendingHpChanges, clearHpChanges,
+    pendingRestSync, clearRestSync,
+    latestXpAward, clearXpAward,
+    pendingInspiration, clearInspiration,
+    pendingItemLoss, clearItemLoss,
+    pendingGoldChange, clearGoldChange,
+    pendingSlotLoss, clearSlotLoss,
+    latestBroadcast,
+    pendingLevelUp, clearLevelUp,
+  } = useCampaignSync();
+
+  // Level-up notification
+  useEffect(() => {
+    if (!pendingLevelUp) return;
+    const newLevel = pendingLevelUp.new_level || '?';
+    toast(`Level Up Available! You've reached level ${newLevel}!`, {
+      icon: '\uD83C\uDF1F',
+      duration: 6000,
+      style: { background: '#1a1a10', color: '#fde68a', border: '1px solid rgba(201,168,76,0.5)', fontWeight: 700 }
+    });
+    clearLevelUp();
+  }, [pendingLevelUp, clearLevelUp]);
+
+  // Save quest/NPC reveals to player journal
+  useEffect(() => {
+    if (!latestBroadcast || !characterId) return;
+    if (latestBroadcast.broadcast_type === 'quest_reveal') {
+      addQuest(characterId, {
+        title: latestBroadcast.title,
+        description: latestBroadcast.body,
+        status: 'active',
+      });
+    }
+    if (latestBroadcast.broadcast_type === 'npc_reveal') {
+      addNpc(characterId, {
+        name: latestBroadcast.title,
+        description: latestBroadcast.body,
+      });
+    }
+  }, [latestBroadcast, characterId]);
+
+  // Phase 1A: Process condition changes from DM
+  useEffect(() => {
+    if (!conditionChanges || conditionChanges.length === 0) return;
+
+    (async () => {
+      try {
+        const conditions = await getConditions(characterId);
+        let activeList = (conditions || []).filter(c => c.active).map(c => c.name);
+
+        for (const change of conditionChanges) {
+          if (change.action === 'add' && !activeList.includes(change.condition)) {
+            // Add condition via invoke
+            await invoke('add_condition', {
+              characterId,
+              name: change.condition,
+              active: true
+            }).catch(() => {});
+            activeList.push(change.condition);
+            toast(`Condition applied: ${change.condition}`, {
+              icon: '\u26A0\uFE0F', duration: 3000,
+              style: { background: '#1a1520', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }
+            });
+          } else if (change.action === 'remove') {
+            // Remove condition via invoke
+            const cond = conditions.find(c => c.name === change.condition && c.active);
+            if (cond) {
+              await invoke('update_condition', {
+                conditionId: cond.id,
+                active: false
+              }).catch(() => {});
+              activeList = activeList.filter(n => n !== change.condition);
+              toast(`Condition removed: ${change.condition}`, {
+                icon: '\u2705', duration: 2000,
+                style: { background: '#1a1520', color: '#4ade80', border: '1px solid rgba(74,222,128,0.3)' }
+              });
+            }
+          }
+        }
+
+        onConditionsChange(activeList.length, activeList);
+      } catch (e) {
+        console.error('Failed to process condition changes:', e);
+      }
+      clearConditionChanges();
+    })();
+  }, [conditionChanges, characterId, clearConditionChanges, onConditionsChange]);
+
+  // Phase 1C: Process HP changes from DM
+  useEffect(() => {
+    if (!pendingHpChanges || pendingHpChanges.length === 0) return;
+
+    (async () => {
+      try {
+        for (const change of pendingHpChanges) {
+          const delta = change.delta || 0;
+          const currentHp = character?.current_hp ?? 0;
+          const maxHp = character?.max_hp ?? 0;
+          const newHp = Math.max(0, Math.min(maxHp, currentHp + delta));
+
+          await invoke('update_overview', {
+            characterId,
+            updates: { current_hp: newHp }
+          }).catch(() => {});
+
+          onCharacterUpdate(prev => ({ ...prev, current_hp: newHp }));
+
+          const source = change.source || (delta > 0 ? 'Healing' : 'Damage');
+          if (delta < 0) {
+            toast(`${source}: ${Math.abs(delta)} damage (HP: ${newHp}/${maxHp})`, {
+              icon: '\uD83D\uDCA5', duration: 3000,
+              style: { background: '#1a1520', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' }
+            });
+          } else if (delta > 0) {
+            toast(`${source}: +${delta} HP (HP: ${newHp}/${maxHp})`, {
+              icon: '\uD83D\uDC9A', duration: 3000,
+              style: { background: '#1a1520', color: '#86efac', border: '1px solid rgba(74,222,128,0.3)' }
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Failed to process HP changes:', e);
+      }
+      clearHpChanges();
+    })();
+  }, [pendingHpChanges, characterId, character?.current_hp, character?.max_hp, clearHpChanges, onCharacterUpdate]);
+
+  // Phase 1D: Process rest sync from DM
+  useEffect(() => {
+    if (!pendingRestSync) return;
+
+    (async () => {
+      try {
+        const restType = pendingRestSync.rest_type;
+        if (restType === 'long') {
+          await longRest(characterId);
+          toast('Long Rest complete! HP, spell slots, and features restored.', {
+            icon: '\uD83C\uDF19', duration: 4000,
+            style: { background: '#1a1520', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' }
+          });
+        } else if (restType === 'short') {
+          await shortRest(characterId, 0);
+          // Warlock Pact Magic: spell slots recover on short rest
+          if (character?.primary_class && character.primary_class.toLowerCase().includes('warlock')) {
+            try { await resetSpellSlots(characterId); } catch (e) { void e; }
+          }
+          toast('Short Rest complete! Short-rest features recharged.', {
+            icon: '\u2615', duration: 3000,
+            style: { background: '#1a1520', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }
+          });
+        }
+        // Reload character to reflect changes
+        window.dispatchEvent(new Event('codex-character-reload'));
+      } catch (e) {
+        console.error('Failed to process rest sync:', e);
+      }
+      clearRestSync();
+    })();
+  }, [pendingRestSync, characterId, clearRestSync]);
+
+  // Phase 1E: Process XP award notification
+  useEffect(() => {
+    if (!latestXpAward) return;
+
+    const amount = latestXpAward.amount || 0;
+    const reason = latestXpAward.reason || 'XP Awarded';
+    toast(`+${amount} XP — ${reason}`, {
+      icon: '\u2B50', duration: 4000,
+      style: { background: '#1a1a10', color: '#fde68a', border: '1px solid rgba(201,168,76,0.4)', fontWeight: 600 }
+    });
+    clearXpAward();
+  }, [latestXpAward, clearXpAward]);
+
+  // Phase 3E: Process inspiration toggle
+  useEffect(() => {
+    if (!pendingInspiration) return;
+
+    (async () => {
+      try {
+        const granted = pendingInspiration.granted;
+        await invoke('update_overview', {
+          characterId,
+          updates: { inspiration: granted ? 1 : 0 }
+        }).catch(() => {});
+        onCharacterUpdate(prev => ({ ...prev, inspiration: granted ? 1 : 0 }));
+
+        if (granted) {
+          toast('Inspiration granted!', {
+            icon: '\u2728', duration: 3000,
+            style: { background: '#1a1a10', color: '#fde68a', border: '1px solid rgba(201,168,76,0.4)' }
+          });
+        }
+      } catch (e) {
+        console.error('Failed to process inspiration:', e);
+      }
+      clearInspiration();
+    })();
+  }, [pendingInspiration, characterId, clearInspiration, onCharacterUpdate]);
+
+  // Phase 4C: Process item loss
+  useEffect(() => {
+    if (!pendingItemLoss || pendingItemLoss.length === 0) return;
+
+    (async () => {
+      try {
+        for (const loss of pendingItemLoss) {
+          // Try to find and delete the item by name
+          const items = await getItems(characterId).catch(() => []);
+          const item = (items || []).find(i => i.name === loss.item_name);
+          if (item) {
+            await invoke('delete_item', { itemId: item.id }).catch(() => {});
+            toast(`Lost item: ${loss.item_name}${loss.reason ? ` (${loss.reason})` : ''}`, {
+              icon: '\uD83D\uDEAB', duration: 3000,
+              style: { background: '#1a1520', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' }
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Failed to process item loss:', e);
+      }
+      clearItemLoss();
+    })();
+  }, [pendingItemLoss, characterId, clearItemLoss]);
+
+  // Phase 4C: Process gold change
+  useEffect(() => {
+    if (!pendingGoldChange || pendingGoldChange.length === 0) return;
+
+    (async () => {
+      try {
+        for (const change of pendingGoldChange) {
+          const delta = change.delta || 0;
+          const currency = await invoke('get_currency', { characterId }).catch(() => ({ gp: 0 }));
+          const newGp = Math.max(0, (currency?.gp || 0) + delta);
+          await invoke('update_currency', { characterId, currency: { ...currency, gp: newGp } }).catch(() => {});
+
+          if (delta < 0) {
+            toast(`Lost ${Math.abs(delta)} GP${change.reason ? ` — ${change.reason}` : ''}`, {
+              icon: '\uD83D\uDCB0', duration: 3000,
+              style: { background: '#1a1520', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' }
+            });
+          } else {
+            toast(`Gained ${delta} GP${change.reason ? ` — ${change.reason}` : ''}`, {
+              icon: '\uD83D\uDCB0', duration: 3000,
+              style: { background: '#1a1a10', color: '#fde68a', border: '1px solid rgba(201,168,76,0.3)' }
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Failed to process gold change:', e);
+      }
+      clearGoldChange();
+    })();
+  }, [pendingGoldChange, characterId, clearGoldChange]);
+
+  // Phase 4C: Process spell slot loss
+  useEffect(() => {
+    if (!pendingSlotLoss || pendingSlotLoss.length === 0) return;
+
+    (async () => {
+      try {
+        for (const loss of pendingSlotLoss) {
+          // Deduct spell slot at specified level
+          await invoke('use_spell_slot', {
+            characterId,
+            slotLevel: loss.level
+          }).catch(() => {});
+          toast(`Lost a level ${loss.level} spell slot`, {
+            icon: '\uD83D\uDD2E', duration: 3000,
+            style: { background: '#1a1520', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' }
+          });
+        }
+      } catch (e) {
+        console.error('Failed to process slot loss:', e);
+      }
+      clearSlotLoss();
+    })();
+  }, [pendingSlotLoss, characterId, clearSlotLoss]);
+
+  return null; // This is a logic-only component
+}
+
 export default function CharacterView() {
   const { characterId } = useParams();
   const navigate = useNavigate();
@@ -796,11 +1121,9 @@ export default function CharacterView() {
   );
   const [character, setCharacter] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showWizard, setShowWizard] = useState(location.state?.showGuide === true);
   const [activeConditionCount, setActiveConditionCount] = useState(0);
   const [activeConditions, setActiveConditions] = useState([]);
   const [portrait, setPortrait] = useState('');
-  const [diceHistory, setDiceHistory] = useState([]);
   const [sessionElapsed, setSessionElapsed] = useState('0m');
   const [spellSlots, setSpellSlots] = useState([]);
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
@@ -809,11 +1132,10 @@ export default function CharacterView() {
   });
   const [showRestModal, setShowRestModal] = useState(false);
   const [restTab, setRestTab] = useState('short'); // 'short' | 'long'
+  const [combatMode, setCombatMode] = useState(false);
   const { showOverlay, levelUpInfo, triggerLevelUp, dismiss } = useLevelUp();
   useCrashRecovery();
   useAutoBackup(characterId, character?.name);
-  const { updateAvailable, checkResult, latestVersion, currentVersion } = useUpdateCheck();
-
   // Broadcast which section we're editing to other devs (dev presence)
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -906,26 +1228,6 @@ export default function CharacterView() {
     toast(`Bug report from ${msg.reporter || 'a player'}`, { icon: '\uD83D\uDC1B', duration: 4000 });
   }, []);
 
-  // Show toast notification when update check completes
-  useEffect(() => {
-    if (!checkResult) return;
-    if (checkResult === 'update_available') {
-      toast(`Update available: v${latestVersion}`, {
-        icon: '\u2728',
-        duration: 5000,
-        style: { background: '#1a1520', color: '#fde68a', border: '1px solid rgba(201,168,76,0.4)' },
-      });
-    } else if (checkResult === 'up_to_date') {
-      toast.success(`You're up to date (v${currentVersion})`, { duration: 3000 });
-    } else if (checkResult === 'offline') {
-      toast('Update check failed — no internet', {
-        icon: '\uD83D\uDCE1',
-        duration: 3000,
-        style: { background: '#1a1520', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' },
-      });
-    }
-  }, [checkResult]); // eslint-disable-line react-hooks/exhaustive-deps
-
   useEffect(() => {
     loadCharacter();
   }, [characterId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1011,7 +1313,6 @@ export default function CharacterView() {
       if (e.key === 'Escape') {
         if (showShortcutHelp) { setShowShortcutHelp(false); return; }
         if (showRestModal) { setShowRestModal(false); return; }
-        if (showWizard) { setShowWizard(false); return; }
         return;
       }
 
@@ -1110,7 +1411,7 @@ export default function CharacterView() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showShortcutHelp, showRestModal, showWizard, character, activeSection, isTyping, toggleShortcutHelp, handleNewEntry]);
+  }, [showShortcutHelp, showRestModal, character, activeSection, isTyping, toggleShortcutHelp, handleNewEntry]);
 
   if (loading) {
     return (
@@ -1126,6 +1427,17 @@ export default function CharacterView() {
   return (
     <RulesetProvider rulesetId={rulesetId}>
       <PartyProvider>
+      <CampaignSyncProvider>
+      <LiveSessionProvider>
+      <CampaignEventProcessor
+        characterId={characterId}
+        character={character}
+        onCharacterUpdate={setCharacter}
+        onConditionsChange={(count, condNames) => {
+          setActiveConditionCount(count);
+          setActiveConditions(condNames || []);
+        }}
+      />
       <div style={{ display: 'flex', minHeight: '100vh', paddingTop: 'var(--dev-banner-h, 0px)' }}>
         <Sidebar
           character={character}
@@ -1134,39 +1446,10 @@ export default function CharacterView() {
           onBack={() => navigate('/')}
           activeConditionCount={activeConditionCount}
           portrait={portrait}
-          updateAvailable={updateAvailable}
         />
 
         {/* Right side: topbar + content */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-
-          {/* Update banner */}
-          {updateAvailable && (
-            <div
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                padding: '6px 16px', flexShrink: 0,
-                background: 'linear-gradient(90deg, rgba(201,168,76,0.08), rgba(201,168,76,0.14), rgba(201,168,76,0.08))',
-                borderBottom: '1px solid rgba(201,168,76,0.2)',
-              }}
-            >
-              <span style={{ fontSize: 13 }}>✨</span>
-              <span style={{ fontFamily: 'var(--font-heading)', fontSize: 11, letterSpacing: '0.04em', color: '#fde68a' }}>
-                Update available: {latestVersion}
-              </span>
-              <button
-                onClick={() => navigate('/')}
-                style={{
-                  padding: '2px 12px', borderRadius: 5, fontSize: 10,
-                  fontFamily: 'var(--font-heading)', letterSpacing: '0.08em',
-                  background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)',
-                  color: '#fde68a', cursor: 'pointer',
-                }}
-              >
-                GO TO DASHBOARD
-              </button>
-            </div>
-          )}
 
           {/* Breadcrumb */}
           <div className="text-xs text-amber-200/30 px-[18px] pt-1.5 pb-0" style={{ background: 'rgba(4,4,11,0.85)', flexShrink: 0 }}>
@@ -1334,6 +1617,32 @@ export default function CharacterView() {
                 <span style={{ fontSize: '8px', opacity: 0.35, fontFamily: 'var(--font-mono, monospace)', marginLeft: '2px' }}>Ctrl+Shift+R</span>
               )}
             </button>
+
+            {/* Combat Mode toggle */}
+            <button
+              onClick={() => setCombatMode(true)}
+              title="Enter Combat Mode"
+              style={{
+                background: combatMode ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.06)',
+                border: `1px solid ${combatMode ? 'rgba(239,68,68,0.35)' : 'rgba(239,68,68,0.15)'}`,
+                borderRadius: '7px',
+                padding: '4px 10px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                color: '#fca5a5',
+                fontSize: '11px',
+                fontFamily: 'var(--font-heading)',
+                letterSpacing: '0.03em',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.15)'; }}
+            >
+              <Sword size={12} />
+              Combat
+            </button>
               </>
             )}
 
@@ -1395,8 +1704,6 @@ export default function CharacterView() {
                   }}
                   onPortraitChange={setPortrait}
                   activeConditions={activeConditions}
-                  diceHistory={diceHistory}
-                  onDiceHistoryChange={setDiceHistory}
                   errors={errors}
                   onClearErrors={clearErrors}
                   onBugReport={handlePartyBugReport}
@@ -1408,6 +1715,16 @@ export default function CharacterView() {
           </main>
         </div>
 
+        {/* Combat Mode HUD overlay */}
+        {combatMode && (
+          <CombatModeHUD
+            characterId={characterId}
+            character={character}
+            onClose={() => setCombatMode(false)}
+            onCharacterUpdate={setCharacter}
+          />
+        )}
+
         {/* Arcane Advisor floating widget (context-aware per section) */}
         {activeSection !== 'ai-assistant' && (
           <ArcaneWidget
@@ -1416,17 +1733,6 @@ export default function CharacterView() {
           />
         )}
 
-        {/* D&D Help button (bottom-left, out of widget's way) */}
-        <button
-          onClick={() => setShowWizard(true)}
-          className="fixed bottom-6 left-[calc(var(--sidebar-w,214px)+16px)] z-40 rounded-full bg-gold/15 border border-gold/30 text-gold hover:bg-gold/25 hover:border-gold/50 transition-all shadow-lg"
-          style={{ padding: '8px 14px', fontFamily: 'var(--font-heading)', fontSize: 12, cursor: 'pointer' }}
-          title="Learn the basics of D&D"
-        >
-          ?
-        </button>
-
-        {showWizard && <BeginnerWizard onClose={() => setShowWizard(false)} />}
 
 
         {/* Unified Rest Modal */}
@@ -1443,158 +1749,8 @@ export default function CharacterView() {
           />
         )}
 
-        {/* ── Full-screen Keyboard Shortcuts Help Overlay ── */}
-        {showShortcutHelp && (
-          <div
-            onClick={(e) => { if (e.target === e.currentTarget) setShowShortcutHelp(false); }}
-            style={{
-              position: 'fixed', inset: 0, zIndex: 9999,
-              background: 'rgba(4,4,11,0.88)', backdropFilter: 'blur(12px)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              animation: 'fadeIn 0.15s ease',
-            }}
-          >
-            <div style={{
-              background: 'rgba(12,10,20,0.97)',
-              border: '1px solid rgba(201,168,76,0.25)',
-              borderRadius: '16px',
-              padding: '32px 40px',
-              maxWidth: '720px',
-              width: '90vw',
-              maxHeight: '85vh',
-              overflowY: 'auto',
-              boxShadow: '0 24px 80px rgba(0,0,0,0.7), 0 0 1px rgba(201,168,76,0.3)',
-            }}>
-              {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Keyboard size={20} style={{ color: '#fde68a' }} />
-                  <span style={{ fontFamily: 'var(--font-display)', fontSize: '18px', color: '#fde68a', fontWeight: 600 }}>
-                    Keyboard Shortcuts
-                  </span>
-                </div>
-                <button
-                  onClick={() => setShowShortcutHelp(false)}
-                  style={{
-                    background: 'rgba(253,230,138,0.06)', border: '1px solid rgba(253,230,138,0.15)',
-                    borderRadius: '6px', padding: '4px 10px', cursor: 'pointer',
-                    color: 'rgba(253,230,138,0.5)', fontSize: '11px', fontFamily: 'var(--font-ui)',
-                    display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s',
-                  }}
-                >
-                  <X size={12} /> <span>Esc</span>
-                </button>
-              </div>
-
-              {/* Shortcut grid — 2 columns */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px 40px', fontSize: '12px', fontFamily: 'var(--font-ui)' }}>
-
-                {/* Navigation */}
-                <div>
-                  <div style={{ fontFamily: 'var(--font-heading)', fontSize: '11px', letterSpacing: '0.08em', color: 'rgba(253,230,138,0.4)', textTransform: 'uppercase', marginBottom: '10px' }}>
-                    Navigation
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-                    {[
-                      ['Ctrl+1', 'Character Sheet'],
-                      ['Ctrl+2', 'Backstory'],
-                      ['Ctrl+3', 'Spellbook'],
-                      ['Ctrl+4', 'Inventory'],
-                      ['Ctrl+5', 'Features & Traits'],
-                      ['Ctrl+6', 'Combat'],
-                      ['Ctrl+7', 'Journal'],
-                      ['Ctrl+8', 'NPCs'],
-                      ['Ctrl+9', 'Quests'],
-                    ].map(([key, label]) => (
-                      <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: 'rgba(253,230,138,0.55)' }}>{label}</span>
-                        <kbd style={{
-                          background: 'rgba(253,230,138,0.08)', border: '1px solid rgba(253,230,138,0.15)',
-                          borderRadius: '4px', padding: '2px 7px', fontSize: '10px',
-                          color: 'rgba(253,230,138,0.65)', fontFamily: 'var(--font-mono, monospace)',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                        }}>{key}</kbd>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div>
-                  <div style={{ fontFamily: 'var(--font-heading)', fontSize: '11px', letterSpacing: '0.08em', color: 'rgba(253,230,138,0.4)', textTransform: 'uppercase', marginBottom: '10px' }}>
-                    Actions
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-                    {[
-                      ['Ctrl+S', 'Manual save'],
-                      ['Ctrl+N', 'New entry (context)'],
-                      ['Ctrl+K', 'Command palette'],
-                      ['Ctrl+Shift+N', 'Quick journal note'],
-                    ].map(([key, label]) => (
-                      <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: 'rgba(253,230,138,0.55)' }}>{label}</span>
-                        <kbd style={{
-                          background: 'rgba(253,230,138,0.08)', border: '1px solid rgba(253,230,138,0.15)',
-                          borderRadius: '4px', padding: '2px 7px', fontSize: '10px',
-                          color: 'rgba(253,230,138,0.65)', fontFamily: 'var(--font-mono, monospace)',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                        }}>{key}</kbd>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Combat */}
-                  <div style={{ fontFamily: 'var(--font-heading)', fontSize: '11px', letterSpacing: '0.08em', color: 'rgba(253,230,138,0.4)', textTransform: 'uppercase', marginBottom: '10px', marginTop: '20px' }}>
-                    Combat
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-                    {[
-                      ['Ctrl+R', 'Quick roll d20'],
-                      ['Ctrl+Shift+R', 'Roll initiative'],
-                    ].map(([key, label]) => (
-                      <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: 'rgba(253,230,138,0.55)' }}>{label}</span>
-                        <kbd style={{
-                          background: 'rgba(253,230,138,0.08)', border: '1px solid rgba(253,230,138,0.15)',
-                          borderRadius: '4px', padding: '2px 7px', fontSize: '10px',
-                          color: 'rgba(253,230,138,0.65)', fontFamily: 'var(--font-mono, monospace)',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                        }}>{key}</kbd>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* General */}
-                  <div style={{ fontFamily: 'var(--font-heading)', fontSize: '11px', letterSpacing: '0.08em', color: 'rgba(253,230,138,0.4)', textTransform: 'uppercase', marginBottom: '10px', marginTop: '20px' }}>
-                    General
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-                    {[
-                      ['?', 'Toggle this help'],
-                      ['Escape', 'Close modals / overlays'],
-                      ['Ctrl+Enter', 'Save form'],
-                    ].map(([key, label]) => (
-                      <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: 'rgba(253,230,138,0.55)' }}>{label}</span>
-                        <kbd style={{
-                          background: 'rgba(253,230,138,0.08)', border: '1px solid rgba(253,230,138,0.15)',
-                          borderRadius: '4px', padding: '2px 7px', fontSize: '10px',
-                          color: 'rgba(253,230,138,0.65)', fontFamily: 'var(--font-mono, monospace)',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                        }}>{key}</kbd>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer hint */}
-              <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '10px', color: 'rgba(253,230,138,0.25)', fontFamily: 'var(--font-ui)' }}>
-                Press <kbd style={{ background: 'rgba(253,230,138,0.06)', border: '1px solid rgba(253,230,138,0.1)', borderRadius: '3px', padding: '0 4px', fontSize: '10px', color: 'rgba(253,230,138,0.4)', fontFamily: 'var(--font-mono, monospace)' }}>?</kbd> or <kbd style={{ background: 'rgba(253,230,138,0.06)', border: '1px solid rgba(253,230,138,0.1)', borderRadius: '3px', padding: '0 4px', fontSize: '10px', color: 'rgba(253,230,138,0.4)', fontFamily: 'var(--font-mono, monospace)' }}>Esc</kbd> to dismiss
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Keyboard Shortcuts Help Overlay */}
+        <KeyboardShortcutsHelp open={showShortcutHelp} onClose={() => setShowShortcutHelp(false)} />
 
         <LevelUpOverlay
           show={showOverlay}
@@ -1605,6 +1761,12 @@ export default function CharacterView() {
           onDismiss={dismiss}
         />
       </div>
+      <PlayerNotification />
+      <PlayerActionOverlay activeConditions={activeConditions} characterId={characterId} />
+      <SharedCombatBar />
+      <DmToolbar campaignId={characterId} />
+      </LiveSessionProvider>
+      </CampaignSyncProvider>
       </PartyProvider>
     </RulesetProvider>
   );

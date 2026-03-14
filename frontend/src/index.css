@@ -848,6 +848,8 @@ div[style*="z-index: 9999"] {
 @keyframes crit-miss-glow { 0%, 100% { text-shadow: 0 0 20px rgba(239,68,68,0.4), 0 0 40px rgba(239,68,68,0.2); } 50% { text-shadow: 0 0 30px rgba(239,68,68,0.8), 0 0 60px rgba(239,68,68,0.4), 0 0 80px rgba(239,68,68,0.2); } }
 @keyframes amber-pulse { 0%, 100% { box-shadow: 0 0 4px rgba(245,158,11,0.3), inset 0 0 0 1px rgba(245,158,11,0.25); } 50% { box-shadow: 0 0 14px rgba(245,158,11,0.5), inset 0 0 0 1px rgba(245,158,11,0.5); } }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes pulseGold { 0%, 100% { background: linear-gradient(90deg, rgba(201,168,76,0.15), rgba(201,168,76,0.25), rgba(201,168,76,0.15)); } 50% { background: linear-gradient(90deg, rgba(201,168,76,0.25), rgba(201,168,76,0.4), rgba(201,168,76,0.25)); } }
 .animate-amber-pulse { animation: amber-pulse 2s ease-in-out infinite; border-color: rgba(245,158,11,0.4) !important; }
 
 .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
@@ -915,5 +917,162 @@ main, [role="main"], .main-content {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ── Mobile Responsive Enhancements ── */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-w: 0px;
+    --top-h: 44px;
+  }
+
+  /* Stack ability scores 3x2 instead of 6x1 */
+  .ab-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+
+  /* Vitals 2x2 grid */
+  .vitals { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+  /* Combat strip stacks */
+  .cstrip { grid-template-columns: repeat(2, 1fr); }
+
+  /* Cards go full width */
+  .card, .card-grimoire { margin: 4px 0; }
+
+  /* Modal takes full screen on mobile */
+  .modal-content {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    max-height: 90vh !important;
+    margin: 5vh auto;
+    border-radius: 8px;
+  }
+
+  /* Touch-friendly buttons */
+  .btn, button { min-height: 44px; min-width: 44px; }
+
+  /* Reduce padding */
+  .glass { padding: 12px; }
+
+  /* Stack spell cards */
+  .spell-grid { grid-template-columns: 1fr !important; }
+
+  /* Inventory list full width */
+  .inv-grid { grid-template-columns: 1fr !important; }
+
+  /* Floating dice roller adjustments */
+  .floating-dice { width: calc(100vw - 16px) !important; left: 8px !important; right: 8px !important; }
+}
+
+@media (max-width: 480px) {
+  .ab-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; }
+  .vitals { grid-template-columns: 1fr; }
+  .cstrip { grid-template-columns: 1fr; }
+
+  /* Reduce font sizes */
+  body { font-size: 13px; }
+  h1 { font-size: 1.4rem; }
+  h2 { font-size: 1.1rem; }
+
+  /* Compact header */
+  .ab-card { padding: 6px; }
+  .ab-mod { font-size: 1.3rem; }
+}
+
+/* Touch-friendly hover states */
+@media (hover: none) {
+  .card:hover, .btn:hover, .glass:hover {
+    transform: none !important;
+  }
+}
+
+/* ── Print Styles ── */
+@media print {
+  /* Hide non-essential UI */
+  nav, .sidebar, .topbar, .floating-dice, .toast-container,
+  .modal-overlay, button:not(.print-include), .btn:not(.print-include),
+  [data-no-print], .settings-panel, .dice-roller {
+    display: none !important;
+  }
+
+  /* Reset backgrounds for printing */
+  body, .app-container, .main-content {
+    background: white !important;
+    color: black !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Glass panels print clean */
+  .glass, .card, .card-grimoire {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    color: black !important;
+  }
+
+  /* Ability scores print grid */
+  .ab-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+  }
+  .ab-card {
+    background: white !important;
+    border: 1px solid #999 !important;
+    color: black !important;
+  }
+  .ab-mod, .ab-score { color: black !important; }
+
+  /* HP bar prints as text */
+  .hp-fill, .hp-bar-fill {
+    background: #ddd !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Vitals print clean */
+  .vitals { grid-template-columns: repeat(4, 1fr); }
+  .vcard {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    color: black !important;
+  }
+  .vv, .vs { color: black !important; }
+
+  /* Full width for print */
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Page breaks */
+  .section-break { page-break-before: always; }
+  h2, h3 { page-break-after: avoid; }
+
+  /* Spell list prints compact */
+  .spell-card {
+    break-inside: avoid;
+    border: 1px solid #ccc !important;
+    background: white !important;
+    color: black !important;
+    margin: 4px 0;
+  }
+
+  /* Inventory table prints clean */
+  table, th, td {
+    border: 1px solid #999 !important;
+    color: black !important;
+    background: white !important;
+  }
+
+  /* Links show URLs */
+  a[href]:after { content: " (" attr(href) ")"; font-size: 0.8em; }
+
+  @page {
+    margin: 1cm;
+    size: A4;
   }
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Plus, Trash2, Edit2, BookMarked, Search, X, Download, BookOpen, Star, Users, Copy, Clock, Coins, Zap, Calendar, ChevronDown, ChevronRight, FileText, Tag, Filter, Swords, MessageCircle, Map, ShoppingBag, Coffee, Sparkles, Wand2, Save, RefreshCw, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, BookMarked, Search, X, Download, BookOpen, Star, Users, Copy, Clock, Coins, Zap, Calendar, ChevronDown, ChevronRight, FileText, Tag, Filter, Swords, MessageCircle, Map, ShoppingBag, Coffee, Sparkles, Wand2, Save, RefreshCw, Loader2, ScrollText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
@@ -9,6 +9,7 @@ import { getQuests } from '../api/quests';
 import { checkOllamaStatus, streamChat } from '../api/assistant';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
+import { useLiveSession } from '../contexts/LiveSessionContext';
 
 const MOOD_OPTIONS = [
   { value: 'adventure', label: 'Adventure', emoji: '\u2694\uFE0F' },
@@ -595,6 +596,221 @@ function RecapModal({ entries, npcs, quests, characterId, onClose, onSaveAsEntry
   );
 }
 
+// ── Session Recap from Action Log ──
+function formatElapsed(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function compileSessionRecap(actionLog, elapsed, sessionXp) {
+  const encounters = actionLog.filter(e => e.type === 'combat_start' || e.type === 'combat_end');
+  const combatStarts = actionLog.filter(e => e.type === 'combat_start');
+  const kills = actionLog.filter(e => e.type === 'kill');
+  const npcsRevealed = actionLog.filter(e => e.type === 'npc_reveal');
+  const questEvents = actionLog.filter(e => e.type === 'quest_reveal' || e.type === 'quest_complete');
+  const xpEvents = actionLog.filter(e => e.type === 'xp_award' || e.type === 'kill');
+  const lootEvents = actionLog.filter(e => e.type === 'loot' || e.type === 'loot_drop');
+  const sceneChanges = actionLog.filter(e => e.type === 'scene_change');
+  const restEvents = actionLog.filter(e => e.type === 'rest');
+  const damageEvents = actionLog.filter(e => e.type === 'damage');
+
+  let recap = `## Session Recap\n`;
+  recap += `**Duration:** ${formatElapsed(elapsed)}\n`;
+  recap += `**XP Awarded:** ${sessionXp || 0}\n\n`;
+
+  // Encounters
+  recap += `### Encounters\n`;
+  if (combatStarts.length > 0) {
+    combatStarts.forEach(e => { recap += `- ${e.text}\n`; });
+    if (kills.length > 0) {
+      recap += `- **Creatures slain:** ${kills.map(k => k.text.split(' was slain')[0]?.split(': ').pop() || k.text).join(', ')}\n`;
+    }
+  } else {
+    recap += `- No combat encounters\n`;
+  }
+  recap += `\n`;
+
+  // NPCs Met
+  recap += `### NPCs Met\n`;
+  if (npcsRevealed.length > 0) {
+    npcsRevealed.forEach(e => { recap += `- ${e.text}\n`; });
+  } else {
+    recap += `- No new NPCs discovered\n`;
+  }
+  recap += `\n`;
+
+  // Quests
+  recap += `### Quests\n`;
+  if (questEvents.length > 0) {
+    questEvents.forEach(e => { recap += `- ${e.text}\n`; });
+  } else {
+    recap += `- No quest updates\n`;
+  }
+  recap += `\n`;
+
+  // Loot
+  recap += `### Loot\n`;
+  if (lootEvents.length > 0) {
+    lootEvents.forEach(e => { recap += `- ${e.text}\n`; });
+  } else {
+    recap += `- No loot distributed\n`;
+  }
+  recap += `\n`;
+
+  // Scenes visited
+  if (sceneChanges.length > 0) {
+    recap += `### Scenes Visited\n`;
+    sceneChanges.forEach(e => { recap += `- ${e.text}\n`; });
+    recap += `\n`;
+  }
+
+  // Rests
+  if (restEvents.length > 0) {
+    recap += `### Rests\n`;
+    restEvents.forEach(e => { recap += `- ${e.text}\n`; });
+    recap += `\n`;
+  }
+
+  // Stats summary
+  recap += `### Session Stats\n`;
+  recap += `- **Total encounters:** ${combatStarts.length}\n`;
+  recap += `- **Creatures slain:** ${kills.length}\n`;
+  recap += `- **NPCs discovered:** ${npcsRevealed.length}\n`;
+  recap += `- **Quest updates:** ${questEvents.length}\n`;
+  recap += `- **Total action log entries:** ${actionLog.length}\n`;
+
+  return recap;
+}
+
+function SessionRecapModal({ onClose, onSaveAsEntry }) {
+  const sessionCtx = useLiveSession();
+
+  const actionLog = sessionCtx?.actionLog || [];
+  const elapsed = sessionCtx?.elapsed || 0;
+  const sessionXp = sessionCtx?.sessionXp || 0;
+  const sessionActive = sessionCtx?.sessionActive || false;
+
+  const recapText = useMemo(() => {
+    if (actionLog.length === 0) return '';
+    return compileSessionRecap(actionLog, elapsed, sessionXp);
+  }, [actionLog, elapsed, sessionXp]);
+
+  const [editedRecap, setEditedRecap] = useState('');
+  useEffect(() => { setEditedRecap(recapText); }, [recapText]);
+
+  const handleSave = () => {
+    onSaveAsEntry(editedRecap);
+    onClose();
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(editedRecap).then(() => toast.success('Recap copied to clipboard')).catch(() => toast.error('Failed to copy'));
+  };
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return (
+    <ModalPortal>
+      <AnimatePresence>
+        <motion.div
+          className="modal-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              background: '#14121c',
+              border: '1px solid rgba(251, 191, 36, 0.25)',
+              borderRadius: '12px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '680px',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              margin: '0 16px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <ScrollText size={20} style={{ color: '#fbbf24' }} />
+                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#e8d5b5', fontFamily: 'var(--font-display, serif)' }}>
+                  Session Recap
+                </h3>
+              </div>
+              <button onClick={onClose} style={{ color: 'rgba(232, 213, 181, 0.4)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {!sessionActive && actionLog.length === 0 ? (
+              <div style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                padding: '40px 20px',
+                background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)',
+              }}>
+                <ScrollText size={24} style={{ color: 'rgba(232, 213, 181, 0.2)' }} />
+                <p style={{ fontSize: '13px', color: 'rgba(232, 213, 181, 0.4)', marginTop: '12px', textAlign: 'center' }}>
+                  No active session or action log data. Start a live session and perform actions to generate a recap.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px',
+                  padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                }}>
+                  <Clock size={14} style={{ color: '#fbbf24', flexShrink: 0 }} />
+                  <span style={{ fontSize: '13px', color: 'rgba(232, 213, 181, 0.5)' }}>
+                    {sessionActive ? 'Live session in progress' : 'Session ended'} — {actionLog.length} action log {actionLog.length === 1 ? 'entry' : 'entries'}
+                    {elapsed > 0 && ` — ${formatElapsed(elapsed)}`}
+                    {sessionXp > 0 && ` — ${sessionXp} XP`}
+                  </span>
+                </div>
+
+                <div data-color-mode="dark" style={{ marginBottom: '16px' }}>
+                  <MDEditor value={editedRecap} onChange={v => setEditedRecap(v || '')} height={300} preview="preview" />
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button onClick={handleSave}
+                    style={{
+                      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                      padding: '9px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, cursor: 'pointer',
+                      background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.25)',
+                    }}>
+                    <Save size={13} /> Save as Journal Entry
+                  </button>
+                  <button onClick={handleCopy}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                      padding: '9px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, cursor: 'pointer',
+                      background: 'rgba(255,255,255,0.04)', color: 'rgba(232, 213, 181, 0.6)', border: '1px solid rgba(255,255,255,0.08)',
+                    }}>
+                    <Copy size={13} /> Copy
+                  </button>
+                </div>
+              </>
+            )}
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    </ModalPortal>
+  );
+}
+
 export default function Journal({ characterId }) {
   const [entries, setEntries] = useState([]);
   const [npcs, setNpcs] = useState([]);
@@ -613,6 +829,7 @@ export default function Journal({ characterId }) {
   });
   const [showRecentSearches, setShowRecentSearches] = useState(false);
   const [showRecap, setShowRecap] = useState(false);
+  const [showSessionRecap, setShowSessionRecap] = useState(false);
   const searchInputRef = useRef(null);
 
   const addRecentSearch = (q) => {
@@ -712,6 +929,24 @@ export default function Journal({ characterId }) {
         pinned: 0,
       });
       toast.success('Recap saved as journal entry');
+      load();
+    } catch (err) { toast.error(err.message); }
+  };
+
+  const handleSaveSessionRecap = async (recapText) => {
+    const nextNum = entries.length > 0 ? Math.max(...entries.map(e => e.session_number || 0)) + 1 : 1;
+    try {
+      await addJournalEntry(characterId, {
+        title: `Session ${nextNum} Recap`,
+        session_number: nextNum,
+        real_date: new Date().toISOString().split('T')[0],
+        ingame_date: '',
+        body: recapText,
+        tags: 'Recap',
+        npcs_mentioned: '',
+        pinned: 0,
+      });
+      toast.success('Session recap saved as journal entry');
       load();
     } catch (err) { toast.error(err.message); }
   };
@@ -817,6 +1052,16 @@ export default function Journal({ characterId }) {
               <Download size={12} /> Export
             </button>
           )}
+          <button onClick={() => setShowSessionRecap(true)}
+            className="text-xs flex items-center gap-1"
+            style={{
+              padding: '5px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500,
+              background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(217, 119, 6, 0.12))',
+              color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.25)',
+            }}
+            title="Compile a structured recap from the live session action log">
+            <ScrollText size={12} /> Session Recap
+          </button>
           <button onClick={() => setShowRecap(true)}
             className="text-xs flex items-center gap-1"
             style={{
@@ -825,7 +1070,7 @@ export default function Journal({ characterId }) {
               color: '#c084fc', border: '1px solid rgba(192, 132, 252, 0.25)',
             }}
             title="Generate an AI recap of recent sessions">
-            <Sparkles size={12} /> Recap
+            <Sparkles size={12} /> AI Recap
           </button>
           <button onClick={() => setShowAdd(true)} className="btn-primary text-xs flex items-center gap-1">
             <Plus size={12} /> New Entry
@@ -1105,6 +1350,13 @@ export default function Journal({ characterId }) {
           characterId={characterId}
           onClose={() => setShowRecap(false)}
           onSaveAsEntry={handleSaveRecap}
+        />
+      )}
+
+      {showSessionRecap && (
+        <SessionRecapModal
+          onClose={() => setShowSessionRecap(false)}
+          onSaveAsEntry={handleSaveSessionRecap}
         />
       )}
     </div>

@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
+import { BookOpen, Sword, Crown, Dice5, Shield, Heart, Sparkles, Users, X, Bell } from 'lucide-react';
 import { useAppMode } from '../contexts/ModeContext';
+import { useUpdateCheck } from '../hooks/useUpdateCheck';
 import { APP_VERSION, DM_MODE_VERSION } from '../version';
+
+const Updates = lazy(() => import('../sections/Updates'));
 
 const RUNE_CHARS = ['ᚠ','ᚢ','ᚦ','ᚨ','ᚱ','ᚲ','ᚷ','ᚹ','ᚺ','ᚾ','ᛁ','ᛃ','ᛇ','ᛈ','ᛉ','ᛊ','ᛏ','ᛒ','ᛖ','ᛗ'];
 const PARTICLES = Array.from({ length: 12 }, (_, i) => ({
@@ -15,6 +19,9 @@ const PARTICLES = Array.from({ length: 12 }, (_, i) => ({
 export default function ModeSelect() {
   const { setMode } = useAppMode();
   const [showBetaWarning, setShowBetaWarning] = useState(false);
+  const [showTutorials, setShowTutorials] = useState(false);
+  const [showUpdates, setShowUpdates] = useState(false);
+  const { updateAvailable, dmUpdateAvailable } = useUpdateCheck();
 
   const modes = [
     {
@@ -183,6 +190,27 @@ export default function ModeSelect() {
           ))}
         </div>
 
+        {/* Tutorials button */}
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          onClick={() => setShowTutorials(true)}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '10px 22px', borderRadius: 10,
+            background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.15)',
+            color: 'rgba(201,168,76,0.5)', cursor: 'pointer',
+            fontFamily: 'var(--font-heading, "Cinzel", serif)', fontSize: 12,
+            letterSpacing: '0.08em', transition: 'all 0.2s', marginBottom: 16,
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.1)'; e.currentTarget.style.borderColor = 'rgba(201,168,76,0.3)'; e.currentTarget.style.color = 'rgba(201,168,76,0.7)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.06)'; e.currentTarget.style.borderColor = 'rgba(201,168,76,0.15)'; e.currentTarget.style.color = 'rgba(201,168,76,0.5)'; }}
+        >
+          <BookOpen size={14} />
+          Tutorials & Guides
+        </motion.button>
+
         {/* Footer note */}
         <motion.p
           initial={{ opacity: 0 }}
@@ -193,6 +221,33 @@ export default function ModeSelect() {
           You can switch between modes anytime from the Dashboard
         </motion.p>
       </motion.div>
+
+      {/* Bottom-left: Updates */}
+      <div style={{ position: 'fixed', bottom: 16, left: 16, display: 'flex', alignItems: 'center', gap: 8, zIndex: 20 }}>
+        <button
+          onClick={() => setShowUpdates(true)}
+          title="Updates"
+          style={{
+            position: 'relative',
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '8px 14px', borderRadius: 9,
+            background: (updateAvailable || dmUpdateAvailable) ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.03)',
+            border: `1px solid ${(updateAvailable || dmUpdateAvailable) ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.08)'}`,
+            color: (updateAvailable || dmUpdateAvailable) ? 'rgba(74,222,128,0.6)' : 'rgba(200,175,130,0.4)',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-heading, "Cinzel", serif)', fontSize: 11,
+            letterSpacing: '0.06em', transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = (updateAvailable || dmUpdateAvailable) ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = (updateAvailable || dmUpdateAvailable) ? 'rgba(74,222,128,0.35)' : 'rgba(201,168,76,0.25)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = (updateAvailable || dmUpdateAvailable) ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = (updateAvailable || dmUpdateAvailable) ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.08)'; }}
+        >
+          <Bell size={13} />
+          Updates
+          {(updateAvailable || dmUpdateAvailable) && (
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px rgba(74,222,128,0.6)', animation: 'pulse 2s ease-in-out infinite' }} />
+          )}
+        </button>
+      </div>
 
       {/* Version */}
       <div style={{ position: 'fixed', bottom: 12, right: 16, fontFamily: 'var(--font-heading, "Cinzel", serif)', fontSize: 9, letterSpacing: '0.1em', color: 'rgba(200,175,130,0.15)' }}>
@@ -292,6 +347,347 @@ export default function ModeSelect() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Tutorials Modal */}
+      <AnimatePresence>
+        {showTutorials && (
+          <TutorialsModal onClose={() => setShowTutorials(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* Updates Modal */}
+      <AnimatePresence>
+        {showUpdates && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 300,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+              padding: 16,
+            }}
+            onClick={e => e.target === e.currentTarget && setShowUpdates(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.93, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.93, y: 20 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 300 }}
+              style={{
+                width: 620, maxWidth: '100%', maxHeight: '85vh',
+                borderRadius: 16, overflow: 'hidden',
+                background: 'linear-gradient(160deg, #0d0b18 0%, #110e1e 100%)',
+                border: '1px solid rgba(201,168,76,0.2)',
+                boxShadow: '0 40px 100px rgba(0,0,0,0.85)',
+                display: 'flex', flexDirection: 'column',
+              }}
+            >
+              <div style={{ height: 3, background: 'linear-gradient(90deg, transparent, #4ade80, transparent)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Bell size={16} style={{ color: '#4ade80' }} />
+                  <span style={{ fontFamily: 'var(--font-heading, "Cinzel", serif)', fontSize: 16, color: '#efe0c0', fontWeight: 700 }}>Updates</span>
+                </div>
+                <button onClick={() => setShowUpdates(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(201,168,76,0.3)', padding: 4, display: 'flex' }}>
+                  <X size={18} />
+                </button>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 20px' }}>
+                <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'rgba(200,175,130,0.3)', fontSize: 12 }}>Loading...</div>}>
+                  <Updates />
+                </Suspense>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
+  );
+}
+
+// ─── Tutorial content ──────────────────────────────────────────────────────────
+
+const TUTORIAL_TABS = [
+  {
+    id: 'dnd',
+    label: 'What is D&D?',
+    icon: BookOpen,
+    color: '#c9a84c',
+    sections: [
+      {
+        title: 'Welcome to D&D!',
+        icon: BookOpen,
+        paragraphs: [
+          "Dungeons & Dragons is a tabletop roleplaying game where you and your friends go on adventures together. One person (the Dungeon Master, or DM) tells the story, and everyone else plays a character in that story.",
+          "You don't need to memorize any rules — the DM will guide you, and The Codex handles all the math and tracking so you can focus on the fun.",
+        ],
+      },
+      {
+        title: 'Rolling Dice',
+        icon: Dice5,
+        paragraphs: [
+          "D&D uses different shaped dice. The number after 'd' is how many sides it has: d4, d6, d8, d10, d12, and the d20.",
+          "The d20 is the most important — you roll it for almost everything: attacking, dodging, persuading, sneaking, and more. High = good!",
+          "'2d6+3' means: roll two 6-sided dice, add them together, then add 3.",
+        ],
+      },
+      {
+        title: 'Your Six Stats',
+        icon: Shield,
+        paragraphs: [
+          "STR (Strength) — hitting things, lifting, athletics",
+          "DEX (Dexterity) — dodging, sneaking, aiming bows",
+          "CON (Constitution) — health, endurance, staying alive",
+          "INT (Intelligence) — knowledge, arcane magic (Wizard)",
+          "WIS (Wisdom) — perception, insight, divine magic (Cleric/Druid)",
+          "CHA (Charisma) — persuasion, deception, innate magic (Bard/Warlock)",
+        ],
+      },
+      {
+        title: 'Health & Combat',
+        icon: Heart,
+        paragraphs: [
+          "Hit Points (HP) = your health. Take damage and HP drops. Hit 0 and you start making death saving throws.",
+          "Armor Class (AC) = how hard you are to hit. Enemies roll d20 + their bonus — if they meet or beat your AC, they hit.",
+          "On your turn: one Action (attack, cast a spell), one Bonus Action (if available), and Movement (up to your speed).",
+        ],
+      },
+      {
+        title: 'Magic & Spells',
+        icon: Sparkles,
+        paragraphs: [
+          "Not every class uses magic. If yours does, here's the basics:",
+          "Cantrips = free spells you can cast as often as you want.",
+          "Spell Slots = fuel for bigger spells. A Level 1 spell costs a Level 1 slot. Slots refill after a long rest (8 hours).",
+          "Concentration = some spells require focus. You can only concentrate on one at a time.",
+        ],
+      },
+      {
+        title: 'Resting & Leveling',
+        icon: Users,
+        paragraphs: [
+          "Short Rest (1 hour): Spend hit dice to heal. Some abilities recharge.",
+          "Long Rest (8 hours): Recover all HP, all spell slots, and half your hit dice.",
+          "As you earn XP from quests and combat, you level up — gaining new abilities, more HP, and stronger spells.",
+        ],
+      },
+    ],
+  },
+  {
+    id: 'player',
+    label: 'Player Mode',
+    icon: Sword,
+    color: '#c9a84c',
+    sections: [
+      {
+        title: 'Getting Started',
+        icon: Sword,
+        paragraphs: [
+          "Player Mode is your full character sheet. Create a character from the Dashboard, then manage everything about them here.",
+          "The sidebar has sections for Overview, Backstory, Spellbook, Inventory, Combat, Journal, and more.",
+        ],
+      },
+      {
+        title: 'Character Overview',
+        icon: Shield,
+        paragraphs: [
+          "Your Overview shows your stats, HP, AC, level, and core info at a glance.",
+          "Click any stat to see its modifier. Edit fields directly — everything auto-saves.",
+        ],
+      },
+      {
+        title: 'Combat & Dice',
+        icon: Dice5,
+        paragraphs: [
+          "The Combat section tracks your attacks, conditions, and AC. Use the built-in Dice Roller for any roll.",
+          "Attacks can be set up with damage dice, modifiers, and damage types — just click to roll.",
+        ],
+      },
+      {
+        title: 'Spells & Inventory',
+        icon: Sparkles,
+        paragraphs: [
+          "Spellbook tracks all your spells and spell slots. Mark spells as prepared, and track slot usage.",
+          "Inventory manages items with weight tracking and quick-use buttons for consumables.",
+        ],
+      },
+      {
+        title: 'Joining a Party',
+        icon: Users,
+        paragraphs: [
+          "Go to Settings > Party Connect to join your DM's session.",
+          "Enter the DM's Room Code and click Join. Once connected, you'll receive DM broadcasts, prompts, and combat updates in real-time.",
+          "Your character data syncs automatically — the DM can see your HP, conditions, and more.",
+        ],
+      },
+      {
+        title: 'Rest & Level Up',
+        icon: Heart,
+        paragraphs: [
+          "Use the Rest buttons (Short Rest / Long Rest) to recover HP and resources automatically.",
+          "When you have enough XP, you'll get a Level Up notification with guided choices for your class.",
+        ],
+      },
+    ],
+  },
+  {
+    id: 'dm',
+    label: 'DM Mode',
+    icon: Crown,
+    color: '#9b59b6',
+    sections: [
+      {
+        title: 'Getting Started as DM',
+        icon: Crown,
+        paragraphs: [
+          "DM Mode lets you run your campaign. Create or import a campaign from the Dashboard, then enter it to manage everything.",
+          "You can create homebrew campaigns from scratch or pick a premade adventure with NPCs, quests, and lore pre-loaded.",
+        ],
+      },
+      {
+        title: 'Campaign Hub',
+        icon: BookOpen,
+        paragraphs: [
+          "The Campaign Hub is your central command. Manage NPCs, quests, lore, encounters, and session notes all in one place.",
+          "Each section has full CRUD — create, read, update, and delete entries as your story evolves.",
+        ],
+      },
+      {
+        title: 'Hosting a Session',
+        icon: Users,
+        paragraphs: [
+          "Go to Party Overview, then start a lobby as Host. Your Room Code appears for players to join.",
+          "Once connected, the DM Toolbar appears in the top-right with 4 panels: Campaign, Combat, Comms, and Log.",
+        ],
+      },
+      {
+        title: 'Campaign Panel',
+        icon: Shield,
+        paragraphs: [
+          "Start a Live Session to begin the timer and activate scenes. Your campaign auto-loads based on what you selected.",
+          "Navigate scenes, trigger quick actions (reveal NPCs, start encounters, prompt skill checks), and track session XP.",
+        ],
+      },
+      {
+        title: 'Combat Manager',
+        icon: Sword,
+        paragraphs: [
+          "Add monsters from the SRD database or create custom enemies. Roll initiative and manage turn order.",
+          "Track monster HP with +/- buttons, apply conditions (stunned, poisoned, etc.), and see player HP bars.",
+          "Combat syncs to all connected players in real-time — they see whose turn it is and the round count.",
+        ],
+      },
+      {
+        title: 'Communications',
+        icon: Sparkles,
+        paragraphs: [
+          "Broadcasts send announcements to all players (scene descriptions, narrative text, warnings).",
+          "Prompts request responses — skill checks, saving throws, choices, or free-text questions. Results flow back to your panel.",
+          "Quick Checks let you send premade D&D skill checks and saving throws with one click.",
+        ],
+      },
+    ],
+  },
+];
+
+function TutorialsModal({ onClose }) {
+  const [activeTab, setActiveTab] = useState('dnd');
+  const tab = TUTORIAL_TABS.find(t => t.id === activeTab);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 300,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+        padding: 16,
+      }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <motion.div
+        initial={{ scale: 0.93, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.93, y: 20 }}
+        transition={{ type: 'spring', damping: 24, stiffness: 300 }}
+        style={{
+          width: 620, maxWidth: '100%', maxHeight: '85vh',
+          borderRadius: 16, overflow: 'hidden',
+          background: 'linear-gradient(160deg, #0d0b18 0%, #110e1e 100%)',
+          border: '1px solid rgba(201,168,76,0.2)',
+          boxShadow: '0 40px 100px rgba(0,0,0,0.85)',
+          display: 'flex', flexDirection: 'column',
+        }}
+      >
+        {/* Glow bar */}
+        <div style={{ height: 3, background: `linear-gradient(90deg, transparent, ${tab?.color || '#c9a84c'}, transparent)`, transition: 'background 0.3s' }} />
+
+        {/* Header */}
+        <div style={{ padding: '20px 24px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <BookOpen size={18} style={{ color: '#c9a84c' }} />
+            <span style={{ fontFamily: 'var(--font-heading, "Cinzel", serif)', fontSize: 18, color: '#efe0c0', fontWeight: 700 }}>
+              Tutorials & Guides
+            </span>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(201,168,76,0.3)', padding: 4, display: 'flex', transition: 'color 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.color = 'rgba(201,168,76,0.7)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(201,168,76,0.3)'}
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Tab bar */}
+        <div style={{ display: 'flex', gap: 4, padding: '16px 24px 0' }}>
+          {TUTORIAL_TABS.map(t => {
+            const Icon = t.icon;
+            const isActive = activeTab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '8px 16px', borderRadius: '8px 8px 0 0',
+                  background: isActive ? `${t.color}12` : 'transparent',
+                  border: 'none', borderBottom: isActive ? `2px solid ${t.color}` : '2px solid transparent',
+                  color: isActive ? t.color : 'rgba(200,175,130,0.35)',
+                  cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                  fontFamily: 'var(--font-heading, "Cinzel", serif)',
+                  letterSpacing: '0.04em', transition: 'all 0.2s',
+                }}
+              >
+                <Icon size={13} />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: 'rgba(201,168,76,0.1)', margin: '0 24px' }} />
+
+        {/* Content — scrollable */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px 24px' }}>
+          {tab?.sections.map((section, i) => {
+            const SIcon = section.icon;
+            return (
+              <div key={i} style={{ marginBottom: i < tab.sections.length - 1 ? 20 : 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <SIcon size={14} style={{ color: tab.color, flexShrink: 0 }} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#e8d9b5', fontFamily: 'var(--font-heading, "Cinzel", serif)' }}>
+                    {section.title}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 22 }}>
+                  {section.paragraphs.map((p, j) => (
+                    <p key={j} style={{ fontSize: 12, color: 'rgba(200,175,130,0.55)', lineHeight: 1.7, margin: 0, fontFamily: 'var(--font-text, var(--font-ui, sans-serif))' }}>
+                      {p}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }

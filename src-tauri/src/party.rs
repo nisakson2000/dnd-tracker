@@ -15,6 +15,7 @@ const MAX_MESSAGE_SIZE: usize = 65_536; // 64KB per message
 const CLIENT_TIMEOUT_SECS: u64 = 90; // Remove clients with no activity after 90s
 const CHANNEL_BUFFER_SIZE: usize = 256; // Bounded channel — drops slow clients
 const MAX_ROOMS: usize = 50; // Prevent memory exhaustion from room spam
+const MAX_PLAYERS_PER_ROOM: usize = 20; // Cap players per room
 const RATE_LIMIT_MSGS: u32 = 10; // Max messages per second before warning
 const RATE_LIMIT_WINDOW: std::time::Duration = std::time::Duration::from_secs(1);
 
@@ -290,6 +291,15 @@ impl PartyServer {
         let room_exists = {
             let mut rooms = self.rooms.write().await;
             if let Some(r) = rooms.get_mut(room) {
+                // Check player cap before adding
+                if r.members.len() >= MAX_PLAYERS_PER_ROOM {
+                    drop(rooms);
+                    let clients = self.clients.read().await;
+                    if let Some(client) = clients.get(client_id) {
+                        Self::send_error(client, "Room is full (max 20 players)");
+                    }
+                    return;
+                }
                 // Add to room while we hold the lock
                 if !r.members.contains(&client_id.to_string()) {
                     r.members.push(client_id.to_string());
@@ -408,6 +418,66 @@ impl PartyServer {
             Some(client_id),
         )
         .await;
+    }
+
+    async fn handle_targeted_event(self: &Arc<Self>, client_id: &str, event: &Value) {
+        let room_code = {
+            let clients = self.clients.read().await;
+            clients.get(client_id).and_then(|c| c.room_code.clone())
+        };
+        let Some(code) = room_code else { return };
+
+        // Verify sender is the room host
+        let is_host = {
+            let rooms = self.rooms.read().await;
+            rooms.get(&code).map_or(false, |r| r.host_id == client_id)
+        };
+        if !is_host {
+            let clients = self.clients.read().await;
+            if let Some(client) = clients.get(client_id) {
+                Self::send_error(client, "Only the host can send targeted events");
+            }
+            return;
+        }
+
+        // Update last_seen
+        {
+            let mut clients = self.clients.write().await;
+            if let Some(client) = clients.get_mut(client_id) {
+                client.last_seen = Instant::now();
+            }
+        }
+
+        let event_type = event
+            .get("event")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unknown");
+        let data = event.get("data").cloned().unwrap_or(json!({}));
+        let targets = event
+            .get("targets")
+            .and_then(|t| t.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+
+        let msg = json!({
+            "type": "sync_event",
+            "client_id": client_id,
+            "event": event_type,
+            "data": data,
+            "timestamp": Self::timestamp(),
+        });
+
+        let text = msg.to_string();
+        let clients = self.clients.read().await;
+        for target_id in &targets {
+            if let Some(client) = clients.get(target_id) {
+                let _ = client.tx.try_send(Message::text(text.clone()));
+            }
+        }
     }
 
     async fn handle_update(self: &Arc<Self>, client_id: &str, character: Value) {
@@ -572,6 +642,9 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
                         }
                         Some("event") => {
                             state.handle_event(&client_id, &parsed).await;
+                        }
+                        Some("targeted_event") => {
+                            state.handle_targeted_event(&client_id, &parsed).await;
                         }
                         Some("update") => {
                             let character =
@@ -845,6 +918,9 @@ pub async fn party_ipc_send(
             }
             Some("event") => {
                 party.handle_event(&client_id, &parsed).await;
+            }
+            Some("targeted_event") => {
+                party.handle_targeted_event(&client_id, &parsed).await;
             }
             Some("ping") => {
                 let mut clients = party.clients.write().await;

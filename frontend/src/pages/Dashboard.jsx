@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Plus, Trash2, Heart, Shield, Bell, ArrowLeft,
+  Plus, Trash2, Heart, Shield, ArrowLeft,
   Library, ChevronRight, ChevronLeft, Scroll, Check, X,
   Search, Users, Upload, ClipboardList, Flag, FileJson,
   Sparkles, Coins, BookOpen, AlertTriangle, Moon,
@@ -688,6 +687,7 @@ const PREMADE_LEVEL_COLORS = {
 function CreateCampaignModal({ onClose, onCreate }) {
   const [mode, setMode] = useState(null); // null = choose, 'homebrew', 'premade'
   const [name, setName] = useState('');
+  const [dmName, setDmName] = useState(() => localStorage.getItem('codex-dm-name') || '');
   const [ruleset, setRuleset] = useState('5e-2014');
   const [busy, setBusy] = useState(false);
   const [selectedPremade, setSelectedPremade] = useState(null);
@@ -735,6 +735,9 @@ function CreateCampaignModal({ onClose, onCreate }) {
         journals: parsed.journals,
         tags: ['community'],
         _community: true,
+        questCount: parsed.questCount,
+        estimatedHours: parsed.estimatedHours,
+        estimatedSessions: parsed.estimatedSessions,
       });
       toast.success(`"${parsed.name || adv.name}" loaded — ready to create!`);
     } catch (err) {
@@ -754,6 +757,8 @@ function CreateCampaignModal({ onClose, onCreate }) {
   const doCreate = async (premadeCampaign) => {
     const campaignName = premadeCampaign ? premadeCampaign.name : name.trim();
     if (busy || !campaignName) return;
+    // Save DM name to localStorage for session use
+    if (dmName.trim()) localStorage.setItem('codex-dm-name', dmName.trim());
     setBusy(true);
     try {
       await onCreate({ name: campaignName, ruleset, primaryClass: '', race: '', experience: 'experienced', premade: premadeCampaign || null });
@@ -1010,6 +1015,20 @@ function CreateCampaignModal({ onClose, onCreate }) {
                               <div style={{ fontSize: 9, color: 'var(--text-mute)', marginTop: 2, lineHeight: 1.4 }}>
                                 {adv.description}
                               </div>
+                              {(adv.estQuestCount || adv.estTime) && (
+                                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                                  {adv.estQuestCount && (
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 8, fontFamily: 'var(--font-mono)', padding: '1px 6px', borderRadius: 4, background: 'rgba(167,139,250,0.08)', color: 'rgba(167,139,250,0.7)', border: '1px solid rgba(167,139,250,0.15)' }}>
+                                      <Scroll size={8} /> ~{adv.estQuestCount} Quests
+                                    </span>
+                                  )}
+                                  {adv.estTime && (
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 8, fontFamily: 'var(--font-mono)', padding: '1px 6px', borderRadius: 4, background: 'rgba(201,168,76,0.08)', color: 'rgba(201,168,76,0.6)', border: '1px solid rgba(201,168,76,0.15)' }}>
+                                      <Clock size={8} /> ~{adv.estTime}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                             {isDownloading && <span style={{ fontSize: 9, color: '#a78bfa', fontFamily: 'var(--font-ui)', flexShrink: 0 }}>Downloading...</span>}
                           </div>
@@ -1032,12 +1051,50 @@ function CreateCampaignModal({ onClose, onCreate }) {
                 <div style={{ fontSize: 10, color: 'var(--text-mute)' }}>
                   {selectedPremade.npcs?.length || 0} NPCs, {selectedPremade.quests?.length || 0} quests, {selectedPremade.lore?.length || 0} lore entries will be imported
                 </div>
+                {(selectedPremade.questCount != null || selectedPremade.estimatedHours) && (
+                  <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                    {selectedPremade.questCount != null && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, fontFamily: 'var(--font-mono)', padding: '2px 7px', borderRadius: 4, background: 'rgba(167,139,250,0.08)', color: 'rgba(167,139,250,0.7)', border: '1px solid rgba(167,139,250,0.15)' }}>
+                        <Scroll size={9} /> {selectedPremade.questCount} Quests
+                      </span>
+                    )}
+                    {selectedPremade.estimatedHours && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, fontFamily: 'var(--font-mono)', padding: '2px 7px', borderRadius: 4, background: 'rgba(201,168,76,0.08)', color: 'rgba(201,168,76,0.6)', border: '1px solid rgba(201,168,76,0.15)' }}>
+                        <Clock size={9} /> ~{selectedPremade.estimatedHours} hrs
+                      </span>
+                    )}
+                    {selectedPremade.estimatedSessions != null && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, fontFamily: 'var(--font-mono)', padding: '2px 7px', borderRadius: 4, background: 'rgba(74,222,128,0.08)', color: 'rgba(74,222,128,0.6)', border: '1px solid rgba(74,222,128,0.15)' }}>
+                        ~{selectedPremade.estimatedSessions} sessions
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* Bottom action bar */}
-          <div style={{ padding: '12px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          {/* DM Name + action bar */}
+          <div style={{ padding: '8px 24px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', whiteSpace: 'nowrap' }}>DM Name</span>
+              <input
+                value={dmName}
+                onChange={e => setDmName(e.target.value)}
+                placeholder="Your name…"
+                maxLength={40}
+                style={{
+                  flex: 1, padding: '7px 12px', borderRadius: 7,
+                  background: 'rgba(8,6,16,0.9)', border: '1px solid rgba(201,168,76,0.2)',
+                  color: '#f0e4c8', fontFamily: 'var(--font-heading)', fontSize: 12,
+                  letterSpacing: '0.03em', outline: 'none',
+                }}
+                onFocus={e => e.target.style.borderColor = 'rgba(201,168,76,0.5)'}
+                onBlur={e => e.target.style.borderColor = 'rgba(201,168,76,0.2)'}
+              />
+            </div>
+          </div>
+          <div style={{ padding: '4px 24px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
             <button onClick={() => { setMode(null); setSelectedPremade(null); }} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'rgba(200,175,130,0.38)', fontFamily: 'var(--font-heading)', fontSize: 12 }}>
               ← Back
             </button>
@@ -1103,6 +1160,24 @@ function CreateCampaignModal({ onClose, onCreate }) {
             onFocus={e => e.target.style.borderColor = 'rgba(155,89,182,0.65)'}
             onBlur={e => e.target.style.borderColor = 'rgba(155,89,182,0.28)'}
           />
+
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', marginBottom: 8 }}>Your Name (Dungeon Master)</div>
+            <input
+              value={dmName}
+              onChange={e => setDmName(e.target.value)}
+              placeholder="e.g. Matt, DM Sarah…"
+              maxLength={40}
+              style={{
+                width: '100%', padding: '11px 16px', borderRadius: 10,
+                background: 'rgba(8,6,16,0.9)', border: '1px solid rgba(201,168,76,0.25)',
+                color: '#f0e4c8', fontFamily: 'var(--font-heading)', fontSize: 14,
+                letterSpacing: '0.03em', textAlign: 'center', outline: 'none',
+              }}
+              onFocus={e => e.target.style.borderColor = 'rgba(201,168,76,0.55)'}
+              onBlur={e => e.target.style.borderColor = 'rgba(201,168,76,0.25)'}
+            />
+          </div>
 
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', marginBottom: 8 }}>Ruleset</div>
@@ -2174,7 +2249,7 @@ export default function Dashboard() {
           setTauriUpdate({ available: true, version: update.version, body: update.body, update });
         }
       } catch (e) {
-        console.log('[updater] Check failed (expected in dev):', e);
+        if (import.meta.env.DEV) console.log('[updater] Check failed:', e);
       }
     };
     doCheck();
@@ -2460,13 +2535,6 @@ export default function Dashboard() {
               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 22px', borderRadius: 99, border: '1px solid rgba(201,168,76,0.22)', background: 'rgba(201,168,76,0.06)', color: 'rgba(200,175,130,0.6)', fontFamily: 'var(--font-heading)', fontSize: 11, letterSpacing: '0.1em', cursor: 'pointer', textTransform: 'uppercase' }}
             >
               <Library size={13} /> Arcane Encyclopedia
-            </motion.button>
-            <motion.button
-              onClick={() => navigate('/updates')}
-              whileHover={{ borderColor: 'rgba(201,168,76,0.6)', color: '#c9a84c', boxShadow: '0 0 20px rgba(201,168,76,0.12), 0 4px 16px rgba(0,0,0,0.4)' }}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 22px', borderRadius: 99, border: '1px solid rgba(201,168,76,0.22)', background: 'rgba(201,168,76,0.06)', color: 'rgba(200,175,130,0.6)', fontFamily: 'var(--font-heading)', fontSize: 11, letterSpacing: '0.1em', cursor: 'pointer', textTransform: 'uppercase' }}
-            >
-              <Bell size={13} /> Updates
             </motion.button>
           </div>
         </motion.header>

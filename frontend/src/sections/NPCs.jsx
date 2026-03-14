@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Plus, Trash2, Edit2, Users, Search, Copy, ScrollText, Pin, ChevronDown, ChevronRight, MapPin, Clock, MessageSquare, Shield, MessageCircle, Send, Bot, User, X, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, Users, Search, Copy, ScrollText, Pin, ChevronDown, ChevronRight, MapPin, Clock, MessageSquare, Shield, MessageCircle, Send, Bot, User, X, Loader2, Shuffle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
@@ -30,6 +30,50 @@ const NPC_TEMPLATES = [
   { label: 'Wise Sage', name: '', role: 'ally', race: 'Elf', npc_class: 'Scholar', disposition: 'Friendly', description: 'An ancient scholar with vast knowledge of history and arcane lore.' },
   { label: 'Shady Merchant', name: '', role: 'neutral', race: 'Halfling', npc_class: 'Merchant', disposition: 'Neutral', description: 'A trader who deals in rare and questionable goods, no questions asked.' },
 ];
+
+// ── Quick NPC Generator tables ──
+const RANDOM_NPC_NAMES = {
+  human: ['Aldric', 'Brenna', 'Cedric', 'Dahlia', 'Edmund', 'Fiona', 'Gareth', 'Helena', 'Ivar', 'Juliana', 'Kael', 'Lyra', 'Marcus', 'Nadia', 'Osric', 'Petra', 'Quinn', 'Rowena', 'Silas', 'Thea'],
+  elf: ['Aelindra', 'Caelum', 'Elowen', 'Faelan', 'Galathil', 'Ithilwen', 'Lirael', 'Maelis', 'Nimue', 'Thalion', 'Varis', 'Yavanna'],
+  dwarf: ['Balin', 'Dagny', 'Flint', 'Greta', 'Haldor', 'Ingrid', 'Korgrim', 'Marda', 'Nori', 'Thorin', 'Ulfgar', 'Willa'],
+  halfling: ['Bramble', 'Corrin', 'Daisy', 'Eldon', 'Fern', 'Garret', 'Hilda', 'Jillian', 'Lavinia', 'Milo', 'Pip', 'Rosie'],
+  tiefling: ['Amnon', 'Bryseis', 'Criella', 'Damakos', 'Euphemia', 'Kairon', 'Lerissa', 'Mordai', 'Nemeia', 'Orianna', 'Rieta', 'Zariel'],
+};
+const RANDOM_NPC_RACES = ['Human', 'Elf', 'Dwarf', 'Halfling', 'Tiefling', 'Half-Orc', 'Gnome', 'Dragonborn'];
+const RANDOM_NPC_OCCUPATIONS = ['Blacksmith', 'Innkeeper', 'Merchant', 'Guard', 'Scholar', 'Farmer', 'Sailor', 'Thief', 'Priest', 'Noble', 'Bard', 'Hunter', 'Healer', 'Alchemist', 'Scribe', 'Cook', 'Stable Hand', 'Messenger', 'Beggar', 'Retired Adventurer'];
+const RANDOM_NPC_TRAITS = ['Nervous laughter', 'Speaks in riddles', 'Overly friendly', 'Deeply suspicious', 'Tells tall tales', 'Whispers everything', 'Dramatic hand gestures', 'Never makes eye contact', 'Hums constantly', 'Obsessed with cats', 'Forgetful', 'Extremely literal', 'Always eating', 'Quotes old proverbs', 'Paranoid about magic'];
+const RANDOM_NPC_VOICE_TAGS = ['Gruff and low', 'High-pitched and fast', 'Slow and deliberate', 'Thick accent', 'Wheezy', 'Booming', 'Soft-spoken', 'Singsong', 'Raspy', 'Stuttering', 'Formal', 'Slang-heavy'];
+
+function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function generateRandomNpc() {
+  const race = pickRandom(RANDOM_NPC_RACES);
+  const raceKey = race.toLowerCase().replace('-', '');
+  const namePool = RANDOM_NPC_NAMES[raceKey] || RANDOM_NPC_NAMES.human;
+  const name = pickRandom(namePool);
+  const occupation = pickRandom(RANDOM_NPC_OCCUPATIONS);
+  const trait = pickRandom(RANDOM_NPC_TRAITS);
+  const voice = pickRandom(RANDOM_NPC_VOICE_TAGS);
+
+  return {
+    name,
+    role: 'neutral',
+    race,
+    npc_class: occupation,
+    location: '',
+    description: `${trait}. Voice: ${voice}.`,
+    notes_text: `**Personality:** ${trait}\n**Voice/Accent:** ${voice}\n**Occupation:** ${occupation}`,
+    status: 'alive',
+    relationship: 'Unknown',
+    quest_hook: '',
+    disposition: 'Neutral',
+    last_seen_location: '',
+    last_encountered: new Date().toISOString().split('T')[0],
+    faction: '',
+    pinned: false,
+    conversation_log: [],
+  };
+}
 
 const ROLE_COLORS = {
   ally: { bg: 'bg-emerald-600', border: 'border-emerald-400', text: 'text-emerald-400', cardBorder: 'border-emerald-500/25', cardBg: 'bg-emerald-950/10', leftBorder: 'border-l-emerald-500' },
@@ -132,6 +176,7 @@ export default function NPCs({ characterId }) {
   const [conversationNpc, setConversationNpc] = useState(null);
   const [aiChatNpc, setAiChatNpc] = useState(null);
   const [dispositionFilter, setDispositionFilter] = useState('all');
+  const [quickGenData, setQuickGenData] = useState(null);
 
   const load = useCallback(async () => {
     try { setNpcs((await getNPCs(characterId)).map(enrichNpc)); }
@@ -396,7 +441,7 @@ export default function NPCs({ characterId }) {
                   <MessageCircle size={14} />
                 </button>
                 {isDM && <button onClick={() => handleDuplicate(npc)} className="text-amber-200/40 hover:text-amber-200" title="Duplicate"><Copy size={14} /></button>}
-                {isDM && <button onClick={() => { setEditing(npc); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>}
+                {isDM && <button onClick={() => { setEditing(npc); setQuickGenData(null); setShowForm(true); }} className="text-amber-200/40 hover:text-amber-200"><Edit2 size={14} /></button>}
                 {isDM && <button onClick={() => setConfirmDelete(npc)} className="text-red-400/50 hover:text-red-400"><Trash2 size={14} /></button>}
               </div>
             </div>
@@ -508,9 +553,21 @@ export default function NPCs({ characterId }) {
           </div>
         </h2>
         {isDM && (
-          <button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
-            <Plus size={12} /> Add NPC
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => { setEditing(null); setQuickGenData(generateRandomNpc()); setShowForm(true); }}
+              className="text-xs flex items-center gap-1"
+              style={{
+                padding: '5px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500,
+                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.12))',
+                color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.25)',
+              }}
+              title="Generate a random NPC with name, race, trait, occupation, and voice tag">
+              <Shuffle size={12} /> Quick Generate
+            </button>
+            <button onClick={() => { setEditing(null); setQuickGenData(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
+              <Plus size={12} /> Add NPC
+            </button>
+          </div>
         )}
       </div>
 
@@ -611,7 +668,7 @@ export default function NPCs({ characterId }) {
       )}
 
       {showForm && (
-        <NPCForm npc={editing} onSubmit={handleSave} onCancel={() => { setShowForm(false); setEditing(null); }} />
+        <NPCForm npc={editing} initialData={quickGenData} onSubmit={handleSave} onCancel={() => { setShowForm(false); setEditing(null); setQuickGenData(null); }} />
       )}
 
       {/* Conversation log modal */}
@@ -1096,9 +1153,10 @@ function ConversationModal({ npc, onSubmit, onCancel }) {
   );
 }
 
-function NPCForm({ npc, onSubmit, onCancel }) {
+function NPCForm({ npc, initialData, onSubmit, onCancel }) {
   const [form, setForm] = useState(() => {
     if (npc) return { ...npc };
+    if (initialData) return { ...initialData };
     return {
       name: '', role: 'neutral', race: '', npc_class: '', location: '', description: '',
       notes_text: '', status: 'alive', relationship: 'Unknown', quest_hook: '',
@@ -1129,6 +1187,19 @@ function NPCForm({ npc, onSubmit, onCancel }) {
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-display text-lg text-amber-100">{npc ? 'Edit NPC' : 'Add NPC'}</h3>
           <div className="flex gap-2">
+            <button type="button" onClick={() => {
+              const gen = generateRandomNpc();
+              setForm(prev => ({ ...prev, ...gen }));
+            }}
+              className="text-xs flex items-center gap-1"
+              style={{
+                padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500,
+                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.12))',
+                color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.25)',
+              }}
+              title="Re-roll all fields with a new random NPC">
+              <Shuffle size={12} /> Re-roll
+            </button>
             <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
             <button onClick={handleSubmit} className="btn-primary text-sm">{npc ? 'Save' : 'Add'}</button>
           </div>

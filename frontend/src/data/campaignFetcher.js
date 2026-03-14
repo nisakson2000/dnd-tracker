@@ -80,6 +80,20 @@ export async function fetchCommunityList() {
 
       const { title, author, description } = parseAdventureFilename(f.name);
 
+      // Estimate quest count from file size heuristic
+      const sizeKB = (f.size || 0) / 1024;
+      let estQuestCount, estTime;
+      if (sizeKB < 30) {
+        estQuestCount = '2-5';
+        estTime = '2-4 hrs';
+      } else if (sizeKB < 150) {
+        estQuestCount = '5-10';
+        estTime = '6-12 hrs';
+      } else {
+        estQuestCount = '10-20';
+        estTime = '12-24 hrs';
+      }
+
       return {
         name: title,
         fileName: f.name,
@@ -88,6 +102,8 @@ export async function fetchCommunityList() {
         ruleset,
         author,
         description,
+        estQuestCount,
+        estTime,
       };
     });
 
@@ -229,5 +245,25 @@ export function parse5etoolsAdventure(data) {
     npcs_mentioned: npcs.slice(0, 5).map(n => n.name).join(','),
   });
 
-  return { npcs, quests, lore, journals, name: advName };
+  // Count chapters/sections for time estimation
+  let chapterCount = 0;
+  if (data.adventureData && Array.isArray(data.adventureData)) {
+    for (const ad of data.adventureData) {
+      if (ad.data && Array.isArray(ad.data)) {
+        chapterCount += ad.data.length;
+      }
+    }
+  }
+  if (chapterCount === 0 && data.adventure && Array.isArray(data.adventure)) {
+    chapterCount = data.adventure.length;
+  }
+  chapterCount = Math.max(chapterCount, 1);
+
+  const questCount = quests.length;
+  const minHours = chapterCount * 2;
+  const maxHours = chapterCount * 4;
+  const estimatedHours = `${minHours}-${maxHours}`;
+  const estimatedSessions = Math.max(1, Math.round((minHours + maxHours) / 2 / 3.5));
+
+  return { npcs, quests, lore, journals, name: advName, questCount, estimatedHours, estimatedSessions };
 }

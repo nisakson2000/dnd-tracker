@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Dices, X, Minus, Maximize2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const DiceRoller = lazy(() => import('../sections/DiceRoller'));
 
@@ -13,17 +14,28 @@ function loadState() {
   return { minimized: false };
 }
 
-export default function FloatingDiceRoller({ characterId, activeConditions = [], diceHistory, onDiceHistoryChange, sessionActive, playerUuid, isDM }) {
+export default function FloatingDiceRoller({ characterId, activeConditions = [], sessionActive, playerUuid }) {
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(() => loadState().minimized);
+  const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ minimized }));
   }, [minimized]);
 
+  // Listen for roll results to trigger pulse animation on the floating button
+  useEffect(() => {
+    const handler = () => {
+      setPulse(true);
+      setTimeout(() => setPulse(false), 600);
+    };
+    window.addEventListener('codex-dice-rolled', handler);
+    return () => window.removeEventListener('codex-dice-rolled', handler);
+  }, []);
+
   if (!open) {
     return (
-      <button
+      <motion.button
         onClick={() => setOpen(true)}
         title="Open Dice Roller"
         style={{
@@ -42,9 +54,16 @@ export default function FloatingDiceRoller({ characterId, activeConditions = [],
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.5), 0 0 12px rgba(201,168,76,0.1)',
-          transition: 'all 0.2s',
+          boxShadow: pulse
+            ? '0 4px 24px rgba(0,0,0,0.5), 0 0 24px rgba(201,168,76,0.4)'
+            : '0 4px 24px rgba(0,0,0,0.5), 0 0 12px rgba(201,168,76,0.1)',
+          transition: 'box-shadow 0.3s',
         }}
+        animate={pulse
+          ? { scale: [1, 1.2, 0.95, 1.1, 1], borderColor: 'rgba(201,168,76,0.8)' }
+          : { scale: 1, borderColor: 'rgba(201,168,76,0.3)' }
+        }
+        transition={pulse ? { duration: 0.5 } : { duration: 0.2 }}
         onMouseEnter={e => {
           e.currentTarget.style.borderColor = 'rgba(201,168,76,0.6)';
           e.currentTarget.style.color = 'rgba(201,168,76,1)';
@@ -56,8 +75,20 @@ export default function FloatingDiceRoller({ characterId, activeConditions = [],
           e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.5), 0 0 12px rgba(201,168,76,0.1)';
         }}
       >
-        <Dices size={22} />
-      </button>
+        {/* Idle dice tumble animation — gentle rocking */}
+        <motion.div
+          animate={{ rotate: [0, -8, 8, -5, 5, -2, 0] }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            repeatDelay: 2,
+            ease: 'easeInOut',
+          }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <Dices size={22} />
+        </motion.div>
+      </motion.button>
     );
   }
 
@@ -93,7 +124,13 @@ export default function FloatingDiceRoller({ characterId, activeConditions = [],
           flexShrink: 0,
         }}
       >
-        <Dices size={16} style={{ color: 'rgba(201,168,76,0.6)' }} />
+        <motion.div
+          animate={{ rotate: [0, -6, 6, -3, 0] }}
+          transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
+          style={{ display: 'flex', alignItems: 'center' }}
+        >
+          <Dices size={16} style={{ color: 'rgba(201,168,76,0.6)' }} />
+        </motion.div>
         <span style={{
           flex: 1,
           fontFamily: 'var(--font-display, "Cinzel", serif)',
@@ -143,11 +180,8 @@ export default function FloatingDiceRoller({ characterId, activeConditions = [],
             <DiceRoller
               characterId={characterId}
               activeConditions={activeConditions}
-              diceHistory={diceHistory}
-              onDiceHistoryChange={onDiceHistoryChange}
               sessionActive={sessionActive}
               playerUuid={playerUuid}
-              isDM={isDM}
             />
           </Suspense>
         </div>

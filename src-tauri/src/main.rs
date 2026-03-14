@@ -326,6 +326,10 @@ fn main() {
             commands::session_mgmt::start_session,
             commands::session_mgmt::end_session,
             commands::session_mgmt::get_session_log,
+            commands::session_mgmt::log_session_event,
+            commands::session_mgmt::save_session_snapshot,
+            commands::session_mgmt::get_latest_incomplete_session,
+            commands::session_mgmt::mark_session_complete,
             // Session WebSocket (DM server + player client)
             commands::session_ws_cmds::ws_start_server,
             commands::session_ws_cmds::ws_stop_server,
@@ -354,6 +358,13 @@ fn main() {
             commands::monsters::kill_monster,
             commands::monsters::get_encounter_monsters,
             commands::monsters::search_srd_monsters,
+            // Shop system
+            commands::session_mgmt::create_shop,
+            commands::session_mgmt::get_shops,
+            commands::session_mgmt::add_shop_item,
+            commands::session_mgmt::get_shop_items,
+            commands::session_mgmt::update_shop_item_quantity,
+            commands::session_mgmt::delete_shop,
             // Session recap (M-12)
             commands::session_mgmt::generate_session_recap,
             // Handouts (M-13)

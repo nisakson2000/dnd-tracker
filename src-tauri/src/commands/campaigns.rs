@@ -43,6 +43,12 @@ pub fn create_campaign(
     let ctype = campaign_type.unwrap_or_else(|| "homebrew".to_string());
 
     with_campaign_conn(&state, |conn| {
+        let count: i64 = conn.query_row("SELECT COUNT(*) FROM campaigns", [], |row| row.get(0))
+            .map_err(|e| format!("Failed to count campaigns: {}", e))?;
+        if count >= 20 {
+            return Err("Campaign limit reached (max 20). Delete or archive an existing campaign first.".to_string());
+        }
+
         conn.execute(
             "INSERT INTO campaigns (id, name, description, ruleset, campaign_type, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)",
             params![id, name, description, ruleset, ctype, now],

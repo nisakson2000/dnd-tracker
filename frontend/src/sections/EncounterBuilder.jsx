@@ -208,8 +208,29 @@ export default function EncounterBuilder({ characterId }) { // eslint-disable-li
     handleSearch(searchQuery);
   }, [filterType, filterCR]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Add monster to encounter ──
+  // ── Add monster to encounter with full stat block ──
   const addMonster = useCallback((monster) => {
+    // Build the full stat_block_json for downstream features
+    // (initiative auto-roll reads DEX, legendary actions, etc.)
+    const statBlock = {
+      name: monster.name,
+      size: monster.size,
+      type: monster.type,
+      cr: monster.cr,
+      ac: monster.ac,
+      hp: monster.hp,
+      speed: monster.speed,
+      str: monster.str,
+      dex: monster.dex,
+      con: monster.con,
+      int: monster.int,
+      wis: monster.wis,
+      cha: monster.cha,
+      attacks: monster.attacks || [],
+      traits: monster.traits || [],
+      actions: monster.actions || [],
+    };
+
     setEncounterMonsters(prev => {
       const existing = prev.find(m => m.name === monster.name);
       if (existing) {
@@ -217,8 +238,14 @@ export default function EncounterBuilder({ characterId }) { // eslint-disable-li
           m.name === monster.name ? { ...m, count: m.count + 1 } : m
         );
       }
-      return [...prev, { ...monster, count: 1 }];
+      return [...prev, {
+        ...monster,
+        count: 1,
+        stat_block_json: JSON.stringify(statBlock),
+      }];
     });
+
+    toast.success(`Added ${monster.name} to encounter`, { duration: 1500, icon: '+' });
   }, []);
 
   // ── Remove / adjust count ──
@@ -292,7 +319,7 @@ export default function EncounterBuilder({ characterId }) { // eslint-disable-li
         if (existing) {
           existing.count += 1;
         } else {
-          built.push({ ...monster, count: 1 });
+          built.push({ ...monster, count: 1, stat_block_json: JSON.stringify(monster) });
         }
         currentXP += monsterXP;
       }
@@ -300,7 +327,7 @@ export default function EncounterBuilder({ characterId }) { // eslint-disable-li
       if (built.length === 0) {
         // fallback: add one random monster
         const m = eligible[Math.floor(Math.random() * eligible.length)];
-        built.push({ ...m, count: 1 });
+        built.push({ ...m, count: 1, stat_block_json: JSON.stringify(m) });
       }
 
       setEncounterMonsters(built);
@@ -356,7 +383,7 @@ export default function EncounterBuilder({ characterId }) { // eslint-disable-li
               name: monster.name,
               hpMax: monster.hp,
               ac: monster.ac,
-              statBlockJson: JSON.stringify(monster),
+              statBlockJson: monster.stat_block_json || JSON.stringify(monster),
             });
           }
         }
@@ -650,43 +677,88 @@ export default function EncounterBuilder({ characterId }) { // eslint-disable-li
 
         {/* Results Grid */}
         <div style={{
-          maxHeight: 240, overflowY: 'auto',
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 6,
+          maxHeight: 280, overflowY: 'auto',
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 6,
         }}>
-          {searchResults.map((m, idx) => (
-            <motion.div
-              key={`${m.name}-${idx}`}
-              whileHover={{ scale: 1.01 }}
-              onClick={() => addMonster(m)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '8px 10px', borderRadius: 8,
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.05)',
-                cursor: 'pointer', transition: 'border-color 0.15s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(155,89,182,0.3)'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {m.name}
+          {searchResults.map((m, idx) => {
+            const xpVal = getMonsterXP(m.cr);
+            const alreadyAdded = encounterMonsters.some(em => em.name === m.name);
+            return (
+              <motion.div
+                key={`${m.name}-${idx}`}
+                whileHover={{ scale: 1.01 }}
+                style={{
+                  display: 'flex', alignItems: 'stretch', gap: 0,
+                  borderRadius: 8,
+                  background: alreadyAdded ? 'rgba(155,89,182,0.06)' : 'rgba(255,255,255,0.02)',
+                  border: alreadyAdded ? '1px solid rgba(155,89,182,0.2)' : '1px solid rgba(255,255,255,0.05)',
+                  transition: 'border-color 0.15s',
+                  overflow: 'hidden',
+                }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(155,89,182,0.3)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = alreadyAdded ? 'rgba(155,89,182,0.2)' : 'rgba(255,255,255,0.05)'}
+              >
+                {/* Monster info area — clickable */}
+                <div
+                  onClick={() => addMonster(m)}
+                  style={{
+                    flex: 1, minWidth: 0, padding: '8px 10px',
+                    cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 3,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                      {m.name}
+                    </div>
+                    {alreadyAdded && (
+                      <span style={{
+                        fontSize: 9, color: '#c084fc', fontWeight: 700,
+                        padding: '1px 5px', borderRadius: 4,
+                        background: 'rgba(155,89,182,0.15)',
+                        fontFamily: 'var(--font-mono)', flexShrink: 0,
+                      }}>
+                        x{encounterMonsters.find(em => em.name === m.name)?.count || 0}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-mute)', fontFamily: 'var(--font-ui)' }}>
+                    {m.size} {m.type} · CR {m.cr} · {xpVal.toLocaleString()} XP
+                  </div>
+                  {/* Stat preview row */}
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 1 }}>
+                    <span style={{ fontSize: 10, color: '#60a5fa', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Shield size={8} /> {m.ac}
+                    </span>
+                    <span style={{ fontSize: 10, color: '#4ade80', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Heart size={8} /> {m.hp}
+                    </span>
+                    {m.speed && (
+                      <span style={{ fontSize: 10, color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
+                        {m.speed}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--text-mute)', fontFamily: 'var(--font-ui)' }}>
-                  {m.type} · CR {m.cr}
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, flexShrink: 0 }}>
-                <span style={{ fontSize: 10, color: '#60a5fa', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Shield size={8} /> {m.ac}
-                </span>
-                <span style={{ fontSize: 10, color: '#4ade80', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Heart size={8} /> {m.hp}
-                </span>
-              </div>
-              <Plus size={12} style={{ color: '#c084fc', opacity: 0.5, flexShrink: 0 }} />
-            </motion.div>
-          ))}
+                {/* Quick Add button */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); addMonster(m); }}
+                  title={`Quick Add ${m.name} — full stat block will be imported`}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: 36, flexShrink: 0,
+                    background: 'rgba(155,89,182,0.08)',
+                    border: 'none', borderLeft: '1px solid rgba(255,255,255,0.04)',
+                    cursor: 'pointer', transition: 'background 0.15s',
+                    color: '#c084fc',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(155,89,182,0.2)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(155,89,182,0.08)'}
+                >
+                  <Plus size={14} />
+                </button>
+              </motion.div>
+            );
+          })}
           {searchResults.length === 0 && !searching && (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 16, color: 'var(--text-mute)', fontSize: 12 }}>
               No monsters found

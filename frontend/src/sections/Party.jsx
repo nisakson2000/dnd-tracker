@@ -163,13 +163,14 @@ function PartyStatsOverview({ members }) {
 
 // ─── Main ────────────────────────────────────────────────────────────────────
 
-export default function Party({ characterId, character, onBugReport }) {
+export default function Party({ characterId, character, activeConditions, onBugReport }) {
   const { mode: appMode } = useAppMode();
   const party = useParty();
   const {
     wsStatus: status, mode, roomCode, hostIp, joinIp, joinInput, members, myClientId, autoSync,
+    wasConnected, reconnecting, hostInfo,
     setJoinIp, setJoinInput, setAutoSync,
-    connect, sendUpdate, handleHost, handleLeave,
+    connect, sendUpdate, handleHost, handleLeave, manualReconnect,
     onBugReportRef,
   } = party;
 
@@ -181,16 +182,63 @@ export default function Party({ characterId, character, onBugReport }) {
     onBugReportRef.current = onBugReport;
   }, [onBugReport, onBugReportRef]);
 
-  const charSnapshot = useMemo(() => ({
-    id: characterId,
-    name: character?.name || 'Unknown',
-    race: character?.race || '',
-    primary_class: character?.primary_class || '',
-    level: character?.level || 1,
-    hp: character?.current_hp ?? character?.max_hp ?? 0,
-    max_hp: character?.max_hp ?? 0,
-    ac: character?.armor_class ?? 10,
-  }), [characterId, character?.name, character?.race, character?.primary_class, character?.level, character?.current_hp, character?.max_hp, character?.armor_class]);
+  const charSnapshot = useMemo(() => {
+    const abilityScores = character?.ability_scores || {};
+    const wisMod = abilityScores.WIS?.modifier ?? 0;
+    const profBonus = character?.proficiency_bonus ?? 2;
+    const skills = character?.skills || {};
+    const perceptionProf = skills.Perception?.proficiency ?? false;
+    const passivePerception = 10 + wisMod + (perceptionProf ? profBonus : 0);
+
+    return {
+      id: characterId,
+      name: character?.name || 'Unknown',
+      race: character?.race || '',
+      primary_class: character?.primary_class || '',
+      level: character?.level || 1,
+      hp: character?.current_hp ?? character?.max_hp ?? 0,
+      max_hp: character?.max_hp ?? 0,
+      ac: character?.armor_class ?? 10,
+      ability_scores: {
+        STR: abilityScores.STR?.modifier ?? 0,
+        DEX: abilityScores.DEX?.modifier ?? 0,
+        CON: abilityScores.CON?.modifier ?? 0,
+        INT: abilityScores.INT?.modifier ?? 0,
+        WIS: wisMod,
+        CHA: abilityScores.CHA?.modifier ?? 0,
+      },
+      saving_throws: {
+        STR: !!character?.saving_throws?.STR,
+        DEX: !!character?.saving_throws?.DEX,
+        CON: !!character?.saving_throws?.CON,
+        INT: !!character?.saving_throws?.INT,
+        WIS: !!character?.saving_throws?.WIS,
+        CHA: !!character?.saving_throws?.CHA,
+      },
+      proficiency_bonus: profBonus,
+      conditions: activeConditions || [],
+      spell_save_dc: character?.spell_save_dc ?? null,
+      passive_perception: passivePerception,
+      temp_hp: character?.temp_hp ?? 0,
+      equipped_weapons: [],
+      spell_slots: {},
+      prepared_spells: [],
+      feature_charges: [],
+      class_resources: [],
+      currency: character?.currency || { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 },
+      death_saves: { successes: 0, failures: 0 },
+      concentration_spell: null,
+      inspiration: character?.inspiration ? true : false,
+      attacks: [],
+      dm_name: localStorage.getItem('codex-dm-name') || '',
+    };
+  }, [
+    characterId, character?.name, character?.race, character?.primary_class,
+    character?.level, character?.current_hp, character?.max_hp, character?.armor_class,
+    character?.ability_scores, character?.saving_throws, character?.proficiency_bonus,
+    character?.skills, character?.spell_save_dc, activeConditions,
+    character?.temp_hp, character?.currency, character?.inspiration,
+  ]);
 
   // Connect when room code + mode are ready
   // Pass params directly to avoid connRef race condition (child effects fire before parent effects)
@@ -202,14 +250,18 @@ export default function Party({ characterId, character, onBugReport }) {
   const prevStatsRef = useRef(null);
   useEffect(() => {
     if (status !== 'connected' || !autoSync) return;
-    const key = `${character?.current_hp}|${character?.max_hp}|${character?.armor_class}|${character?.level}|${character?.name}|${character?.race}|${character?.primary_class}`;
+    const condKey = (activeConditions || []).join(',');
+    const key = `${character?.current_hp}|${character?.max_hp}|${character?.armor_class}|${character?.level}|${character?.name}|${character?.race}|${character?.primary_class}|${character?.proficiency_bonus}|${character?.spell_save_dc}|${JSON.stringify(character?.ability_scores)}|${JSON.stringify(character?.saving_throws)}|${condKey}|${character?.temp_hp}|${JSON.stringify(character?.currency)}|${character?.inspiration}`;
     if (prevStatsRef.current === key) return;
     prevStatsRef.current = key;
     sendUpdate(charSnapshot);
   }, [
-    status, autoSync, sendUpdate,
+    status, autoSync, sendUpdate, charSnapshot,
     character?.current_hp, character?.max_hp, character?.armor_class,
     character?.level, character?.name, character?.race, character?.primary_class,
+    character?.proficiency_bonus, character?.spell_save_dc,
+    character?.ability_scores, character?.saving_throws, activeConditions,
+    character?.temp_hp, character?.currency, character?.inspiration,
   ]);
 
   const handleJoin = () => {
@@ -386,10 +438,44 @@ export default function Party({ characterId, character, onBugReport }) {
         </div>
       )}
 
-      {status === 'disconnected' && !mode && (
-        <div className="card border-red-400/20 bg-red-400/5 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-red-400/80"><WifiOff size={16} /> Connection lost</div>
-          <button onClick={() => connect(charSnapshot)} className="btn-secondary text-xs border-red-400/30 text-red-400">Reconnect</button>
+      {/* Campaign & DM info — shown to joining players */}
+      {hostInfo && (hostInfo.campaignName || hostInfo.dmName) && mode === 'join' && (
+        <div className="bg-[#0d0d12] border border-purple-400/20 rounded-lg px-4 py-3">
+          <div className="flex items-center gap-3">
+            <Crown size={16} className="text-purple-400/70 shrink-0" />
+            <div>
+              {hostInfo.campaignName && (
+                <div className="font-display text-sm text-amber-100">{hostInfo.campaignName}</div>
+              )}
+              {hostInfo.dmName && (
+                <div className="text-xs text-purple-300/60 mt-0.5">Dungeon Master: <span className="text-purple-300/90 font-medium">{hostInfo.dmName}</span></div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reconnect banner — shows when disconnected after being previously connected */}
+      {status === 'disconnected' && (wasConnected || !mode) && (
+        <div className="card border-red-400/20 bg-red-400/5" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="flex items-center gap-2 text-sm text-red-400/80">
+              <WifiOff size={16} />
+              {reconnecting ? 'Reconnecting...' : 'Connection lost'}
+            </div>
+            <button
+              onClick={manualReconnect}
+              disabled={reconnecting}
+              className="btn-secondary text-xs border-red-400/30 text-red-400 flex items-center gap-1.5"
+              style={{ opacity: reconnecting ? 0.5 : 1 }}
+            >
+              <RefreshCw size={12} className={reconnecting ? 'animate-spin' : ''} />
+              {reconnecting ? 'Retrying...' : 'Reconnect'}
+            </button>
+          </div>
+          <div style={{ fontSize: 11, color: 'rgba(252,165,165,0.5)' }}>
+            Your character data is saved locally. {reconnecting ? 'Attempting to rejoin the session...' : 'Click Reconnect to rejoin the party.'}
+          </div>
         </div>
       )}
 
@@ -397,6 +483,8 @@ export default function Party({ characterId, character, onBugReport }) {
       {isHostDM && status === 'connected' && otherMembers.length > 0 && (
         <PartyStatsOverview members={otherMembers} />
       )}
+
+      {/* DM Campaign Tools are now in the floating DmToolbar (top-right) */}
 
       {me && (
         <div>

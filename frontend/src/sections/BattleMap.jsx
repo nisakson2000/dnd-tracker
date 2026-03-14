@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Grid3X3, Plus, Trash2, MousePointer, Ruler, Eye, EyeOff,
   Pencil, Eraser, Image, RotateCcw, Users, Hexagon, Square,
-  ZoomIn, ZoomOut, Move, ChevronDown,
+  ZoomIn, ZoomOut, Move, ChevronDown, Radio,
 } from 'lucide-react';
+import { useCampaignSyncSafe } from '../contexts/CampaignSyncContext';
 
 /* ── Constants ── */
 const STORAGE_KEY = 'codex_battle_map_state';
@@ -130,6 +131,13 @@ export default function BattleMap() {
   const wrapRef = useRef(null);
   const fileRef = useRef(null);
   const tokensRef = useRef([]);
+
+  // Campaign sync for battle map broadcasting (DM side)
+  const campaignSync = useCampaignSyncSafe() || {};
+  const {
+    isHost, sendBattleMapSync, sendBattleMapTokenMove,
+    sendBattleMapFogUpdate, sendBattleMapDrawingUpdate, sendBattleMapClear,
+  } = campaignSync;
 
   // Core state
   const [state, setState] = useState(loadState);
@@ -408,7 +416,11 @@ export default function BattleMap() {
       setMeasureEnd({ col, row });
     } else if (tool === 'fog') {
       const key = `${col},${row}`;
-      patch({ fog: { ...fog, [key]: !fog[key] } });
+      const newFog = { ...fog, [key]: !fog[key] };
+      patch({ fog: newFog });
+      if (isHost && sendBattleMapFogUpdate) {
+        sendBattleMapFogUpdate({ fog: newFog });
+      }
     } else if (tool === 'draw') {
       setIsDrawing(true);
       setCurrentStroke({ points: [{ x, y }], color: drawColor, width: 2 });
@@ -418,12 +430,17 @@ export default function BattleMap() {
       const kept = drawings.filter(stroke =>
         !stroke.points.some(p => Math.hypot(p.x - x, p.y - y) < threshold)
       );
-      if (kept.length !== drawings.length) patch({ drawings: kept });
+      if (kept.length !== drawings.length) {
+        patch({ drawings: kept });
+        if (isHost && sendBattleMapDrawingUpdate) {
+          sendBattleMapDrawingUpdate({ drawings: kept });
+        }
+      }
     } else if (tool === 'pan') {
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
     }
-  }, [tool, canvasXY, snapToGrid, hitToken, cellCenter, fog, drawColor, drawings, patch]);
+  }, [tool, canvasXY, snapToGrid, hitToken, cellCenter, fog, drawColor, drawings, patch, isHost, sendBattleMapFogUpdate, sendBattleMapDrawingUpdate]);
 
   const handleMouseMove = useCallback((e) => {
     const { x, y } = canvasXY(e);
@@ -453,14 +470,28 @@ export default function BattleMap() {
   }, [draggingToken, dragOffset, tool, measureStart, isDrawing, currentStroke, isPanning, panStart, canvasXY, snapToGrid, bgImage, bgOffset, patch]);
 
   const handleMouseUp = useCallback(() => {
-    if (draggingToken) setDraggingToken(null);
+    if (draggingToken) {
+      // Broadcast token move to players
+      if (isHost && sendBattleMapTokenMove) {
+        const moved = tokensRef.current.find(t => t.id === draggingToken);
+        if (moved) {
+          sendBattleMapTokenMove({ token_id: moved.id, col: moved.col, row: moved.row });
+        }
+      }
+      setDraggingToken(null);
+    }
     if (isDrawing && currentStroke) {
-      patch({ drawings: [...drawings, currentStroke] });
+      const newDrawings = [...drawings, currentStroke];
+      patch({ drawings: newDrawings });
       setCurrentStroke(null);
       setIsDrawing(false);
+      // Broadcast drawing update to players
+      if (isHost && sendBattleMapDrawingUpdate) {
+        sendBattleMapDrawingUpdate({ drawings: newDrawings });
+      }
     }
     if (isPanning) { setIsPanning(false); setPanStart(null); }
-  }, [draggingToken, isDrawing, currentStroke, isPanning, drawings, patch]);
+  }, [draggingToken, isDrawing, currentStroke, isPanning, drawings, patch, isHost, sendBattleMapTokenMove, sendBattleMapDrawingUpdate]);
 
   /* ── Right-click context menu ── */
   const handleContextMenu = useCallback((e) => {
@@ -760,13 +791,32 @@ export default function BattleMap() {
 
         <div style={{ flex: 1 }} />
 
+        {/* Sync to Players (DM only) */}
+        {isHost && sendBattleMapSync && (
+          <TBtn icon={Radio} label="Sync to Players" small onClick={() => {
+            sendBattleMapSync({
+              tokens, fog, gridW, gridH, cellPx, hexMode, drawings,
+            });
+          }} style={{ color: '#c9a84c', borderColor: 'rgba(201,168,76,0.25)' }} />
+        )}
+
         {/* Clear fog */}
         {Object.values(fog).some(Boolean) && (
-          <TBtn icon={EyeOff} label="Clear Fog" small onClick={() => patch({ fog: {} })} />
+          <TBtn icon={EyeOff} label="Clear Fog" small onClick={() => {
+            patch({ fog: {} });
+            if (isHost && sendBattleMapFogUpdate) {
+              sendBattleMapFogUpdate({ fog: {} });
+            }
+          }} />
         )}
 
         {/* Reset */}
-        <TBtn icon={RotateCcw} label="Reset All" small onClick={resetAll}
+        <TBtn icon={RotateCcw} label="Reset All" small onClick={() => {
+          resetAll();
+          if (isHost && sendBattleMapClear) {
+            sendBattleMapClear();
+          }
+        }}
           style={{ color: 'rgba(239,68,68,0.7)', borderColor: 'rgba(239,68,68,0.15)' }} />
       </div>
 

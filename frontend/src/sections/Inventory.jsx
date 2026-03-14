@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Minus, Trash2, Package, Coins, Search, ArrowRightLeft, FlaskConical, ArrowDownAZ, ArrowDownWideNarrow, Shield, Swords, Sparkles, AlertTriangle, ChevronUp, ChevronDown, Zap, Pencil } from 'lucide-react';
+import { Plus, Minus, Trash2, Package, Coins, Search, ArrowRightLeft, FlaskConical, Shield, Swords, Sparkles, AlertTriangle, ChevronUp, ChevronDown, Zap, Pencil, Weight, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getItems, addItem, updateItem, deleteItem, getCurrency, updateCurrency } from '../api/inventory';
-import { getOverview } from '../api/overview';
+import { getOverview, updateOverview } from '../api/overview';
 import { useAutosave } from '../hooks/useAutosave';
 import SaveIndicator from '../components/SaveIndicator';
 import HelpTooltip from '../components/HelpTooltip';
@@ -96,6 +96,59 @@ function getCharacterProficiencies(characterClass, characterRace) {
 
 function calcMod(score) { return Math.floor(((typeof score === 'number' && !isNaN(score) ? score : 10) - 10) / 2); }
 
+// --- Item Tag System ---
+const TAG_STYLES = {
+  magical:    { bg: 'bg-purple-900/30', text: 'text-purple-300', border: 'border-purple-500/30' },
+  consumable: { bg: 'bg-emerald-900/30', text: 'text-emerald-300', border: 'border-emerald-500/30' },
+  'quest item': { bg: 'bg-yellow-900/30', text: 'text-yellow-300', border: 'border-yellow-500/30' },
+  equipped:   { bg: 'bg-blue-900/30', text: 'text-blue-300', border: 'border-blue-500/30' },
+  attuned:    { bg: 'bg-pink-900/30', text: 'text-pink-300', border: 'border-pink-500/30' },
+};
+const ALL_TAGS = ['magical', 'consumable', 'quest item', 'equipped', 'attuned'];
+
+function getItemTags(item) {
+  const tags = [];
+  if (item.rarity && item.rarity.toLowerCase() !== 'common' && item.rarity.trim() !== '') tags.push('magical');
+  if (['potion', 'scroll', 'consumable'].includes((item.item_type || '').toLowerCase())) tags.push('consumable');
+  if ((item.description || '').toLowerCase().includes('quest')) tags.push('quest item');
+  if (item.equipped) tags.push('equipped');
+  if (item.attuned || item.attunement_status) tags.push('attuned');
+  return tags;
+}
+
+// --- Equipment Comparison Helper ---
+function getEquipmentStats(item) {
+  const stats = {};
+  // Weapon damage
+  if (item.item_type === 'weapon' && item.description) {
+    const dmgMatch = item.description.match(/(\d+d\d+(?:\s*\+\s*\d+)?)\s*([\w]+)?/i);
+    if (dmgMatch) {
+      stats.damage = dmgMatch[1];
+      stats.damageType = dmgMatch[2] || '';
+    }
+  }
+  // Armor AC
+  if (item.item_type === 'armor') {
+    const armorInfo = ARMOR_AC_TABLE[item.name];
+    if (armorInfo) {
+      stats.ac = armorInfo.base || armorInfo.bonus || 0;
+      stats.isShield = !!armorInfo.bonus;
+    }
+  }
+  stats.weight = item.weight || 0;
+  stats.value = item.value_gp || 0;
+  return stats;
+}
+
+function parseDiceAvg(diceStr) {
+  if (!diceStr) return 0;
+  // Parse "XdY+Z" format
+  const match = diceStr.replace(/\s/g, '').match(/(\d+)d(\d+)(?:\+(\d+))?/);
+  if (!match) return 0;
+  const [, count, sides, bonus] = match;
+  return (parseInt(count) * (parseInt(sides) + 1) / 2) + (parseInt(bonus) || 0);
+}
+
 export default function Inventory({ characterId, character }) {
   const [items, setItems] = useState([]);
   const [currency, setCurrency] = useState({ cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 });
@@ -111,6 +164,8 @@ export default function Inventory({ characterId, character }) {
   const [convertFrom, setConvertFrom] = useState('gp');
   const [convertTo, setConvertTo] = useState('sp');
   const [convertAmount, setConvertAmount] = useState('');
+  const [activeTagFilter, setActiveTagFilter] = useState(null);
+  const [comparisonItem, setComparisonItem] = useState(null);
 
   const load = async () => {
     try {
@@ -317,6 +372,10 @@ export default function Inventory({ characterId, character }) {
       const q = searchQuery.toLowerCase();
       return (item.name || '').toLowerCase().includes(q) || (item.item_type || '').toLowerCase().includes(q) || (item.description || '').toLowerCase().includes(q);
     });
+    // Tag filter
+    if (activeTagFilter) {
+      filtered = filtered.filter(item => getItemTags(item).includes(activeTagFilter));
+    }
     return [...filtered].sort((a, b) => {
       if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
       if (sortBy === 'weight') return (b.weight * b.quantity) - (a.weight * a.quantity);
@@ -324,13 +383,48 @@ export default function Inventory({ characterId, character }) {
       if (sortBy === 'type') return (a.item_type || '').localeCompare(b.item_type || '');
       return 0;
     });
-  }, [items, searchQuery, sortBy]);
+  }, [items, searchQuery, sortBy, activeTagFilter]);
+
+  // Find the currently equipped item of a given type for comparison
+  const getEquippedOfType = useCallback((itemType, itemName) => {
+    if (itemType === 'weapon') return items.find(i => i.equipped && i.item_type === 'weapon' && i.id !== comparisonItem?.id);
+    if (itemType === 'armor') {
+      const isShield = itemName === 'Shield';
+      return items.find(i => i.equipped && i.item_type === 'armor' && (isShield ? i.name === 'Shield' : i.name !== 'Shield') && i.id !== comparisonItem?.id);
+    }
+    return null;
+  }, [items, comparisonItem]);
+
+  // Encumbrance check helper — call after adding items or changing quantity
+  const checkEncumbrance = (newTotalWeight) => {
+    const cap = carryCapacity;
+    if (cap <= 0) return;
+    if (newTotalWeight > cap) {
+      toast(`Heavily Over Capacity! Carrying ${newTotalWeight.toFixed(1)}/${cap} lbs\nSpeed -20 ft, Disadvantage on checks, attacks, and STR/DEX/CON saves`, {
+        icon: '\u26A0\uFE0F', duration: 5000,
+        style: { background: '#1a1520', color: '#f87171', border: '1px solid rgba(239,68,68,0.4)', whiteSpace: 'pre-line' }
+      });
+    } else if (newTotalWeight > strScore * 10) {
+      toast(`Heavily Encumbered! Carrying ${newTotalWeight.toFixed(1)}/${cap} lbs\nSpeed -20 ft, Disadvantage on checks, attacks, and STR/DEX/CON saves`, {
+        icon: '\u26A0\uFE0F', duration: 4000,
+        style: { background: '#1a1520', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', whiteSpace: 'pre-line' }
+      });
+    } else if (newTotalWeight > strScore * 5) {
+      toast(`Encumbered! Carrying ${newTotalWeight.toFixed(1)}/${cap} lbs\nSpeed -10 ft`, {
+        icon: '\uD83C\uDFCB\uFE0F', duration: 3000,
+        style: { background: '#1a1520', color: '#fbbf24', border: '1px solid rgba(234,179,8,0.3)', whiteSpace: 'pre-line' }
+      });
+    }
+  };
 
   const handleAdd = async (itemData) => {
     try {
       await addItem(characterId, itemData);
       toast.success('Item added');
       setShowAdd(false);
+      // Check encumbrance with projected new weight
+      const addedWeight = (parseFloat(itemData.weight) || 0) * (parseInt(itemData.quantity) || 1);
+      if (addedWeight > 0) checkEncumbrance(totalWeight + addedWeight);
       load();
     } catch (err) { toast.error(err.message); }
   };
@@ -351,7 +445,7 @@ export default function Inventory({ characterId, character }) {
 
   const handleToggle = async (item, field) => {
     if (field === 'attuned' && !item.attuned && attunedCount >= 3) {
-      toast.error('Cannot attune more than 3 items (PHB p.138)');
+      toast.error('Maximum 3 attuned items (D&D 5e limit)');
       return;
     }
     try {
@@ -369,28 +463,77 @@ export default function Inventory({ characterId, character }) {
     } catch (err) { toast.error(err.message); }
   };
 
-  const handleUseItem = async (item) => {
-    const effectText = CONSUMABLE_EFFECTS[item.name];
-    if (item.quantity <= 1) {
-      try {
+  const handleUseConsumable = useCallback(async (item) => {
+    try {
+      // Check if it's a healing potion
+      const healingDice = {
+        'Potion of Healing': '2d4+2',
+        'Potion of Greater Healing': '4d4+4',
+        'Potion of Superior Healing': '8d4+8',
+        'Potion of Supreme Healing': '10d4+20',
+      };
+
+      const potionKey = Object.keys(healingDice).find(k =>
+        item.name?.toLowerCase().includes(k.toLowerCase())
+      );
+
+      if (potionKey) {
+        // Roll healing
+        const dice = healingDice[potionKey];
+        const diceMatch = dice.match(/(\d+)d(\d+)\+(\d+)/);
+        if (diceMatch) {
+          const [, count, sides, bonus] = diceMatch.map(Number);
+          let total = parseInt(bonus) || 0;
+          for (let i = 0; i < count; i++) {
+            total += Math.floor(Math.random() * sides) + 1;
+          }
+
+          // Apply healing
+          try {
+            const ovData = await getOverview(characterId);
+            const currentHp = ovData.overview?.current_hp || 0;
+            const maxHp = ovData.overview?.max_hp || currentHp;
+            const newHp = Math.min(maxHp, currentHp + total);
+            await updateOverview(characterId, { current_hp: newHp });
+
+            toast.success(`${item.name}: Healed ${total} HP! (${currentHp} \u2192 ${newHp})`, { duration: 4000 });
+          } catch (e) {
+            toast.success(`${item.name}: Healed ${total} HP!`, { duration: 3000 });
+          }
+        }
+      } else {
+        // Non-healing consumable — just show effect
+        const effect = CONSUMABLE_EFFECTS[item.name] || item.description || 'Item used.';
+        toast(`Used ${item.name}: ${effect}`, {
+          icon: '\uD83E\uDDEA', duration: 3000,
+          style: { background: '#1a1520', color: '#86efac', border: '1px solid rgba(74,222,128,0.3)' }
+        });
+      }
+
+      // Decrement quantity or delete
+      const qty = item.quantity ?? 1;
+      if (qty <= 1) {
         await deleteItem(characterId, item.id);
-        toast.success(`Used last ${item.name}${effectText ? ` \u2014 ${effectText}` : ''}`, { icon: '\u2728', duration: 4000 });
-        load();
-      } catch (err) { toast.error(err.message); }
-    } else {
-      try {
-        await updateItem(characterId, item.id, { ...item, quantity: item.quantity - 1 });
-        toast.success(`Used ${item.name} (${item.quantity - 1} left)${effectText ? ` \u2014 ${effectText}` : ''}`, { icon: '\u2728', duration: 4000 });
-        load();
-      } catch (err) { toast.error(err.message); }
+        setItems(prev => prev.filter(i => i.id !== item.id));
+      } else {
+        await updateItem(characterId, item.id, { ...item, quantity: qty - 1 });
+        setItems(prev => prev.map(i => i.id === item.id ? { ...i, quantity: qty - 1 } : i));
+      }
+    } catch (e) {
+      console.error('Failed to use consumable:', e);
+      toast.error('Failed to use item');
     }
-  };
+  }, [characterId]);
 
   const handleQuantityChange = async (item, delta) => {
     const newQty = item.quantity + delta;
     if (newQty <= 0) return;
     try {
       await updateItem(characterId, item.id, { ...item, quantity: newQty });
+      // Check encumbrance when increasing quantity
+      if (delta > 0 && item.weight > 0) {
+        checkEncumbrance(totalWeight + (item.weight * delta));
+      }
       load();
     } catch (err) { toast.error(err.message); }
   };
@@ -535,21 +678,52 @@ export default function Inventory({ characterId, character }) {
         )}
       </div>
 
-      {/* Search + Sort */}
+      {/* Search + Sort + Tag Filter */}
       {items.length > 0 && (
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-200/30 pointer-events-none" />
-            <input className="input w-full pl-10" placeholder="Search items by name, type, or description..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-200/30 pointer-events-none" />
+              <input className="input w-full pl-10" placeholder="Search items by name, type, or description..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-amber-200/40">Sort:</span>
+              {[['name', 'Name'], ['weight', 'Weight'], ['value', 'Value'], ['type', 'Type']].map(([key, label]) => (
+                <button key={key} onClick={() => setSortBy(key)}
+                  className={`text-xs px-2.5 py-1 rounded ${sortBy === key ? 'bg-gold/20 text-gold border border-gold/30' : 'bg-amber-200/5 text-amber-200/40 border border-amber-200/10'}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
+          {/* Tag Filter */}
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-amber-200/40">Sort:</span>
-            {[['name', 'Name'], ['weight', 'Weight'], ['value', 'Value'], ['type', 'Type']].map(([key, label]) => (
-              <button key={key} onClick={() => setSortBy(key)}
-                className={`text-xs px-2.5 py-1 rounded ${sortBy === key ? 'bg-gold/20 text-gold border border-gold/30' : 'bg-amber-200/5 text-amber-200/40 border border-amber-200/10'}`}>
-                {label}
+            <Tag size={12} className="text-amber-200/30" />
+            <span className="text-xs text-amber-200/40">Filter:</span>
+            {ALL_TAGS.map(tag => {
+              const count = items.filter(i => getItemTags(i).includes(tag)).length;
+              if (count === 0) return null;
+              const style = TAG_STYLES[tag];
+              const isActive = activeTagFilter === tag;
+              return (
+                <button
+                  key={tag}
+                  onClick={() => setActiveTagFilter(isActive ? null : tag)}
+                  className={`text-xs px-2 py-0.5 rounded-full border transition-all capitalize ${
+                    isActive
+                      ? `${style.bg} ${style.text} ${style.border} ring-1 ring-current/20`
+                      : 'bg-amber-200/5 text-amber-200/40 border-amber-200/10 hover:border-amber-200/20'
+                  }`}
+                >
+                  {tag} <span className="opacity-60">({count})</span>
+                </button>
+              );
+            })}
+            {activeTagFilter && (
+              <button onClick={() => setActiveTagFilter(null)} className="text-xs text-amber-200/30 hover:text-amber-200/60 ml-1 underline">
+                Clear
               </button>
-            ))}
+            )}
           </div>
         </div>
       )}
@@ -676,31 +850,55 @@ export default function Inventory({ characterId, character }) {
       </div>
 
       {/* Encumbrance */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-amber-200/60">Carry Weight<HelpTooltip text={HELP.encumbrance} /></span>
-          <span className={`text-sm font-medium ${heavilyEncumbered ? 'text-red-400' : encumbered ? 'text-yellow-400' : 'text-emerald-400'}`}>
-            {totalWeight.toFixed(1)} / {carryCapacity} lbs
-            {heavilyEncumbered && ' (Heavily Encumbered!)'}
-            {encumbered && !heavilyEncumbered && ' (Encumbered)'}
-          </span>
-        </div>
-        <div className="hp-bar-container" role="progressbar" aria-label={`Carry weight: ${totalWeight.toFixed(1)} of ${carryCapacity} lbs`} aria-valuenow={totalWeight} aria-valuemin={0} aria-valuemax={carryCapacity}>
-          <div className={`hp-bar-fill ${heavilyEncumbered ? 'hp-critical' : encumbered ? 'hp-low' : 'hp-high'}`}
-            style={{ width: `${Math.min(100, (totalWeight / carryCapacity) * 100)}%` }} />
-        </div>
-        {encumbered && (
-          <div className={`mt-2 text-xs font-medium px-3 py-1.5 rounded border ${
-            heavilyEncumbered
-              ? 'bg-red-900/20 text-red-400 border-red-500/20'
-              : 'bg-yellow-900/20 text-yellow-400 border-yellow-500/20'
-          }`}>
-            {heavilyEncumbered
-              ? 'Speed -20 ft, Disadvantage on ability checks, attack rolls, and STR/DEX/CON saving throws'
-              : 'Speed -10 ft'}
+      {(() => {
+        const pct = carryCapacity > 0 ? (totalWeight / carryCapacity) * 100 : 0;
+        const barColor = pct > 100 ? 'bg-red-500' : pct > 75 ? 'bg-orange-500' : pct > 50 ? 'bg-yellow-500' : 'bg-emerald-500';
+        const textColor = pct > 100 ? 'text-red-400' : pct > 75 ? 'text-orange-400' : pct > 50 ? 'text-yellow-400' : 'text-emerald-400';
+        const glowColor = pct > 100 ? 'shadow-[0_0_8px_rgba(239,68,68,0.3)]' : pct > 75 ? 'shadow-[0_0_8px_rgba(249,115,22,0.2)]' : '';
+        return (
+          <div className={`card ${glowColor}`}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Weight size={14} className={textColor} />
+                <span className="text-sm text-amber-200/60">Carry Weight<HelpTooltip text={HELP.encumbrance} /></span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] text-amber-200/30 uppercase tracking-wider">STR {strScore} x 15</span>
+                <span className={`text-sm font-medium ${textColor}`}>
+                  {totalWeight.toFixed(1)} / {carryCapacity} lbs
+                  {pct > 100 && ' (Over Capacity!)'}
+                  {heavilyEncumbered && pct <= 100 && ' (Heavily Encumbered!)'}
+                  {encumbered && !heavilyEncumbered && pct <= 100 && ' (Encumbered)'}
+                </span>
+              </div>
+            </div>
+            <div className="relative h-3 bg-[#0d0d14] rounded-full border border-amber-200/10 overflow-hidden" role="progressbar" aria-label={`Carry weight: ${totalWeight.toFixed(1)} of ${carryCapacity} lbs`} aria-valuenow={totalWeight} aria-valuemin={0} aria-valuemax={carryCapacity}>
+              <div className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                style={{ width: `${Math.min(100, pct)}%` }} />
+              {/* Threshold markers */}
+              <div className="absolute top-0 left-1/2 w-px h-full bg-amber-200/15" title="50%" />
+              <div className="absolute top-0 left-3/4 w-px h-full bg-amber-200/15" title="75%" />
+            </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-[9px] text-amber-200/20">0 lbs</span>
+              <span className="text-[9px] text-amber-200/20">50%</span>
+              <span className="text-[9px] text-amber-200/20">75%</span>
+              <span className="text-[9px] text-amber-200/20">{carryCapacity} lbs</span>
+            </div>
+            {encumbered && (
+              <div className={`mt-2 text-xs font-medium px-3 py-1.5 rounded border ${
+                heavilyEncumbered
+                  ? 'bg-red-900/20 text-red-400 border-red-500/20'
+                  : 'bg-yellow-900/20 text-yellow-400 border-yellow-500/20'
+              }`}>
+                {heavilyEncumbered
+                  ? 'Speed -20 ft, Disadvantage on ability checks, attack rolls, and STR/DEX/CON saving throws'
+                  : 'Speed -10 ft'}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        );
+      })()}
 
       {/* Items */}
       <div className="card">
@@ -732,10 +930,21 @@ export default function Inventory({ characterId, character }) {
               const rarityColor = { common: 'border-l-gray-400/60', uncommon: 'border-l-emerald-400/70', rare: 'border-l-blue-400/70', 'very rare': 'border-l-purple-400/70', legendary: 'border-l-orange-400/70' };
               const leftBorder = item.rarity ? (rarityColor[item.rarity.toLowerCase()] || typeColor[item.item_type] || 'border-l-amber-200/20') : (typeColor[item.item_type] || 'border-l-amber-200/20');
               const consumableEffect = item.item_type === 'consumable' ? CONSUMABLE_EFFECTS[item.name] : null;
+              const itemTags = getItemTags(item);
+              // Equipment comparison: find currently equipped item of same type
+              const equippedCounterpart = !item.equipped && (item.item_type === 'weapon' || item.item_type === 'armor')
+                ? getEquippedOfType(item.item_type, item.name)
+                : null;
               return (
-              <div key={item.id} className={`bg-[#0d0d12] rounded p-3 border border-l-[3px] ${leftBorder} flex items-start gap-3 ${item.attuned ? 'border-purple-500/30 shadow-[0_0_8px_rgba(168,85,247,0.15)]' : 'border-gold/10'}`} title={item.description || undefined}>
+              <div
+                key={item.id}
+                className={`bg-[#0d0d12] rounded p-3 border border-l-[3px] ${leftBorder} flex items-start gap-3 ${item.attuned ? 'border-purple-500/30 shadow-[0_0_8px_rgba(168,85,247,0.15)]' : 'border-gold/10'} relative`}
+                title={item.description || undefined}
+                onMouseEnter={() => equippedCounterpart && setComparisonItem(item)}
+                onMouseLeave={() => setComparisonItem(null)}
+              >
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="text-amber-100 font-medium">{item.name}</span>
                     {item.quantity > 1 && <span className="text-xs text-amber-200/40">x{item.quantity}</span>}
                     {item.quantity > 0 && item.quantity <= 5 && (item.item_type === 'consumable') && (
@@ -748,6 +957,15 @@ export default function Inventory({ characterId, character }) {
                     {item.rarity && <span className="text-xs text-amber-200/30 capitalize">{item.rarity}</span>}
                     {item.equipped && <span className="text-xs bg-emerald-800/40 text-emerald-300 px-1.5 py-0.5 rounded">Equipped</span>}
                     {item.attuned && <span className="text-xs bg-purple-800/40 text-purple-300 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Sparkles size={10} />Attuned</span>}
+                    {/* Item Tags */}
+                    {itemTags.filter(t => t !== 'equipped' && t !== 'attuned').map(tag => {
+                      const style = TAG_STYLES[tag];
+                      return (
+                        <span key={tag} className={`text-[10px] px-1.5 py-0.5 rounded-full border capitalize ${style.bg} ${style.text} ${style.border}`}>
+                          {tag}
+                        </span>
+                      );
+                    })}
                   </div>
                   <div className="text-xs text-amber-200/40">
                     <span>{item.weight > 0 ? `${item.weight} lb` : '\u2014'}</span>
@@ -789,11 +1007,79 @@ export default function Inventory({ characterId, character }) {
                       );
                     } catch { return null; }
                   })()}
+                  {/* Equipment Comparison Tooltip */}
+                  {comparisonItem?.id === item.id && equippedCounterpart && (() => {
+                    const currentStats = getEquipmentStats(equippedCounterpart);
+                    const newStats = getEquipmentStats(item);
+                    const comparisons = [];
+                    if (item.item_type === 'weapon') {
+                      const currentAvg = parseDiceAvg(currentStats.damage);
+                      const newAvg = parseDiceAvg(newStats.damage);
+                      if (currentStats.damage || newStats.damage) {
+                        const diff = newAvg - currentAvg;
+                        comparisons.push({
+                          label: 'Damage',
+                          current: currentStats.damage || '—',
+                          next: newStats.damage || '—',
+                          diff: diff !== 0 ? (diff > 0 ? `+${diff.toFixed(1)} avg` : `${diff.toFixed(1)} avg`) : 'same',
+                          positive: diff > 0,
+                          negative: diff < 0,
+                        });
+                      }
+                    }
+                    if (item.item_type === 'armor') {
+                      const currentAC = currentStats.ac || 0;
+                      const newAC = newStats.ac || 0;
+                      const diff = newAC - currentAC;
+                      comparisons.push({
+                        label: currentStats.isShield || newStats.isShield ? 'Shield Bonus' : 'Base AC',
+                        current: currentAC || '—',
+                        next: newAC || '—',
+                        diff: diff !== 0 ? (diff > 0 ? `+${diff}` : `${diff}`) : 'same',
+                        positive: diff > 0,
+                        negative: diff < 0,
+                      });
+                    }
+                    // Weight comparison
+                    const wDiff = newStats.weight - currentStats.weight;
+                    comparisons.push({
+                      label: 'Weight',
+                      current: `${currentStats.weight} lb`,
+                      next: `${newStats.weight} lb`,
+                      diff: wDiff !== 0 ? (wDiff > 0 ? `+${wDiff} lb` : `${wDiff} lb`) : 'same',
+                      positive: wDiff < 0, // lighter is better
+                      negative: wDiff > 0,
+                    });
+                    if (comparisons.length === 0) return null;
+                    return (
+                      <div className="mt-2 p-2 bg-amber-950/30 border border-amber-500/20 rounded text-xs">
+                        <div className="text-amber-200/50 font-medium mb-1.5 flex items-center gap-1">
+                          <ArrowRightLeft size={10} /> vs. equipped: {equippedCounterpart.name}
+                        </div>
+                        <div className="grid grid-cols-4 gap-x-3 gap-y-1">
+                          <span className="text-amber-200/30"></span>
+                          <span className="text-amber-200/30 text-center">Current</span>
+                          <span className="text-amber-200/30 text-center">This</span>
+                          <span className="text-amber-200/30 text-center">Diff</span>
+                          {comparisons.map(c => (
+                            <React.Fragment key={c.label}>
+                              <span className="text-amber-200/50">{c.label}</span>
+                              <span className="text-amber-200/40 text-center">{c.current}</span>
+                              <span className="text-amber-100 text-center">{c.next}</span>
+                              <span className={`text-center font-medium ${c.positive ? 'text-emerald-400' : c.negative ? 'text-red-400' : 'text-amber-200/30'}`}>
+                                {c.diff}
+                              </span>
+                            </React.Fragment>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="flex flex-col gap-1 items-end">
                   <div className="flex gap-1">
-                    {item.item_type === 'consumable' && (
-                      <button onClick={() => handleUseItem(item)} className="btn-primary text-xs px-2 py-1 flex items-center gap-1" title={`Use ${item.name}${consumableEffect ? ` \u2014 ${consumableEffect}` : ''}`}>
+                    {(item.item_type === 'consumable' || Object.keys(CONSUMABLE_EFFECTS).some(k => item.name?.toLowerCase().includes(k.toLowerCase()))) && (
+                      <button onClick={(e) => { e.stopPropagation(); handleUseConsumable(item); }} className="btn-primary text-xs px-2 py-1 flex items-center gap-1" title={`Use ${item.name}${consumableEffect ? ` \u2014 ${consumableEffect}` : ''}`}>
                         <FlaskConical size={11} /> Use
                       </button>
                     )}

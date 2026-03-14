@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Dice5, Copy, ChevronDown, ChevronUp, BarChart3, Save, X, Play, Pencil, Check, Trash2, Clock, ClipboardCopy, RotateCcw, Radio, EyeOff } from 'lucide-react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { Dice5, Save, X, Play, Pencil, Check, ClipboardCopy, Radio } from 'lucide-react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -7,12 +7,11 @@ import { invoke } from '@tauri-apps/api/core';
 import HelpTooltip from '../components/HelpTooltip';
 import { HELP } from '../data/helpText';
 import { computeConditionEffects } from '../data/conditionEffects';
+import { rollDie, parseAndRollExpression, validateExpression } from '../utils/dice';
 
 /* ── Storage keys ── */
 const getMacrosKey = (charId) => charId ? `codex_dice_macros_${charId}` : 'codex_dice_macros';
-const getHistoryKey = (charId) => charId ? `codex_dice_history_${charId}` : 'codex_dice_history';
 const MAX_MACROS = 30;
-const MAX_HISTORY = 50;
 
 /* ── localStorage helpers ── */
 function loadFromStorage(key, fallback = []) {
@@ -39,220 +38,216 @@ const DIE_TIPS = {
   100: 'd100 — Percentile rolls, Wild Magic table, random loot',
 };
 
-/* ── Standard Array for stat generation ── */
-const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8];
-const ABILITY_NAMES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+/* ── Dice face SVG components ── */
+const D6_DOTS = {
+  1: [[50,50]],
+  2: [[25,25],[75,75]],
+  3: [[25,25],[50,50],[75,75]],
+  4: [[25,25],[75,25],[25,75],[75,75]],
+  5: [[25,25],[75,25],[50,50],[25,75],[75,75]],
+  6: [[25,25],[75,25],[25,50],[75,50],[25,75],[75,75]],
+};
 
-/* ── Point Buy costs (8-15 range, PHB rules) ── */
-const POINT_BUY_COSTS = { 8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9 };
-const POINT_BUY_TOTAL = 27;
-
-/* ── Core dice functions ── */
-function rollDie(sides) {
-  return Math.floor(Math.random() * sides) + 1;
+function D6Face({ value, size = 40 }) {
+  const dots = D6_DOTS[value] || [];
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: 'block' }}>
+      <rect x="2" y="2" width="96" height="96" rx="14" fill="none" stroke="rgba(201,168,76,0.4)" strokeWidth="3" />
+      {dots.map(([cx, cy], i) => (
+        <circle key={i} cx={cx} cy={cy} r="9" fill="rgba(201,168,76,0.85)" />
+      ))}
+    </svg>
+  );
 }
 
-/**
- * Advanced expression parser.
- * Supports: 2d6+1d8+5, 4d6kh3, 2d20kl1, flat modifiers, subtraction
- * Returns null on invalid input.
- *
- * Result: { groups: [{ count, sides, keep, keepMode, rolls, kept, subtotal }], modifier, total, breakdown }
- */
-function parseAndRollExpression(expr) {
-  const cleaned = expr.replace(/\s+/g, '').toLowerCase();
-  if (!cleaned) return null;
+function DieFace({ sides, value, size = 48 }) {
+  if (sides === 6 && value >= 1 && value <= 6) {
+    return <D6Face value={value} size={size} />;
+  }
+  // For other dice, show a polygon shape with the number
+  const shapes = {
+    4:   'M50,8 L92,88 L8,88 Z',
+    8:   'M50,5 L95,50 L50,95 L5,50 Z',
+    10:  'M50,2 L90,35 L80,90 L20,90 L10,35 Z',
+    12:  'M50,3 L85,22 L95,60 L72,92 L28,92 L5,60 L15,22 Z',
+    20:  'M50,2 L88,18 L98,58 L75,92 L25,92 L2,58 L12,18 Z',
+    100: 'M50,2 L90,18 L98,55 L80,88 L20,88 L2,55 L10,18 Z',
+  };
+  const path = shapes[sides] || shapes[20];
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: 'block' }}>
+      <path d={path} fill="none" stroke="rgba(201,168,76,0.4)" strokeWidth="2.5" />
+      <text x="50" y="56" textAnchor="middle" dominantBaseline="middle"
+        fill="rgba(201,168,76,0.9)" fontSize={value >= 100 ? '22' : value >= 10 ? '28' : '34'}
+        fontWeight="700" fontFamily="var(--font-display, 'Cinzel', serif)">
+        {value}
+      </text>
+    </svg>
+  );
+}
 
-  // Tokenize: split on + or - but keep the sign
-  const tokens = [];
-  let current = '';
-  let sign = '+';
-  for (let i = 0; i < cleaned.length; i++) {
-    const ch = cleaned[i];
-    if ((ch === '+' || ch === '-') && i > 0) {
-      tokens.push({ sign, token: current });
-      sign = ch;
-      current = '';
-    } else if (ch === '+' || ch === '-') {
-      sign = ch;
-    } else {
-      current += ch;
+/* ── Particle effect CSS (injected once) ── */
+const PARTICLE_STYLE_ID = 'codex-dice-particles';
+function ensureParticleStyles() {
+  if (document.getElementById(PARTICLE_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = PARTICLE_STYLE_ID;
+  style.textContent = `
+    @keyframes crit-glow {
+      0%, 100% { text-shadow: 0 0 20px rgba(255,215,0,0.6), 0 0 40px rgba(255,215,0,0.3); }
+      50% { text-shadow: 0 0 30px rgba(255,215,0,0.9), 0 0 60px rgba(255,215,0,0.5), 0 0 80px rgba(255,215,0,0.2); }
     }
-  }
-  if (current) tokens.push({ sign, token: current });
-
-  if (tokens.length === 0) return null;
-
-  const groups = [];
-  let flatModifier = 0;
-  let totalResult = 0;
-  const breakdownParts = [];
-
-  for (const { sign, token } of tokens) {
-    const signMul = sign === '-' ? -1 : 1;
-
-    // Match dice: NdX, NdXkhY, NdXklY
-    const diceMatch = token.match(/^(\d+)?d(\d+)(?:k([hl])(\d+))?$/);
-    if (diceMatch) {
-      const count = parseInt(diceMatch[1]) || 1;
-      const sides = parseInt(diceMatch[2]);
-      const keepMode = diceMatch[3] || null; // 'h' or 'l' or null
-      const keepCount = diceMatch[4] ? parseInt(diceMatch[4]) : null;
-
-      if (count > 100 || sides > 1000 || count < 1 || sides < 1) return null;
-      if (keepCount !== null && (keepCount < 1 || keepCount > count)) return null;
-
-      const rolls = Array.from({ length: count }, () => rollDie(sides));
-      let kept = [...rolls];
-      let dropped = [];
-
-      if (keepMode && keepCount !== null) {
-        const sorted = rolls.map((v, i) => ({ v, i })).sort((a, b) => b.v - a.v);
-        if (keepMode === 'h') {
-          // Keep highest
-          const keptIndices = new Set(sorted.slice(0, keepCount).map(x => x.i));
-          kept = rolls.filter((_, i) => keptIndices.has(i));
-          dropped = rolls.map((v, i) => ({ v, i, drop: !keptIndices.has(i) }));
-        } else {
-          // Keep lowest
-          const keptIndices = new Set(sorted.slice(-keepCount).map(x => x.i));
-          kept = rolls.filter((_, i) => keptIndices.has(i));
-          dropped = rolls.map((v, i) => ({ v, i, drop: !keptIndices.has(i) }));
-        }
-      }
-
-      const subtotal = kept.reduce((s, v) => s + v, 0) * signMul;
-      totalResult += subtotal;
-
-      // Build breakdown string
-      let bk = `[${rolls.map((v, i) => {
-        if (dropped.length > 0) {
-          const info = dropped.find(d => d.i === i);
-          return info && info.drop ? `~~${v}~~` : `**${v}**`;
-        }
-        return String(v);
-      }).join(', ')}]`;
-      if (keepMode) {
-        bk += ` keep ${keepMode === 'h' ? 'highest' : 'lowest'} ${keepCount}`;
-      }
-
-      groups.push({
-        count, sides, keepMode, keepCount, rolls, kept, dropped,
-        subtotal: Math.abs(subtotal), sign: signMul,
-        expr: `${count}d${sides}${keepMode ? `k${keepMode}${keepCount}` : ''}`,
-      });
-
-      breakdownParts.push(`${sign === '-' ? '- ' : (breakdownParts.length > 0 ? '+ ' : '')}${bk}`);
-    } else {
-      // Flat modifier
-      const num = parseInt(token);
-      if (isNaN(num)) return null;
-      flatModifier += num * signMul;
-      totalResult += num * signMul;
-      breakdownParts.push(`${sign === '-' ? '- ' : (breakdownParts.length > 0 ? '+ ' : '')}${num}`);
+    @keyframes crit-miss-glow {
+      0%, 100% { text-shadow: 0 0 20px rgba(239,68,68,0.6), 0 0 40px rgba(239,68,68,0.3); }
+      50% { text-shadow: 0 0 30px rgba(239,68,68,0.9), 0 0 60px rgba(239,68,68,0.5), 0 0 80px rgba(239,68,68,0.2); }
     }
-  }
-
-  if (groups.length === 0 && flatModifier === 0) return null;
-
-  return { groups, modifier: flatModifier, total: totalResult, breakdownParts };
+    @keyframes dice-spin {
+      0% { transform: rotateY(0deg) rotateX(0deg) scale(1); }
+      25% { transform: rotateY(180deg) rotateX(90deg) scale(1.1); }
+      50% { transform: rotateY(360deg) rotateX(180deg) scale(1); }
+      75% { transform: rotateY(540deg) rotateX(270deg) scale(1.1); }
+      100% { transform: rotateY(720deg) rotateX(360deg) scale(1); }
+    }
+    @keyframes dice-tumble {
+      0% { transform: rotate(0deg) scale(1); }
+      20% { transform: rotate(72deg) scale(1.05); }
+      40% { transform: rotate(144deg) scale(0.95); }
+      60% { transform: rotate(216deg) scale(1.05); }
+      80% { transform: rotate(288deg) scale(0.95); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+    @keyframes sparkle-burst {
+      0% { transform: translate(0,0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+    }
+    @keyframes shatter-piece {
+      0% { transform: translate(0,0) rotate(0deg) scale(1); opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.3); opacity: 0; }
+    }
+    @keyframes crack-flash {
+      0% { opacity: 0.8; }
+      50% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .dice-rolling {
+      animation: dice-tumble 0.6s ease-in-out;
+    }
+    .sparkle-particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: sparkle-burst 0.8s ease-out forwards;
+    }
+    .shatter-particle {
+      position: absolute;
+      pointer-events: none;
+      animation: shatter-piece 0.7s ease-out forwards;
+    }
+  `;
+  document.head.appendChild(style);
 }
 
-/**
- * Validate an expression string without rolling it.
- */
-function validateExpression(expr) {
-  const cleaned = expr.replace(/\s+/g, '').toLowerCase();
-  if (!cleaned) return false;
-  // Quick regex to verify structure
-  const pattern = /^[+-]?(\d*d\d+(k[hl]\d+)?|\d+)([+-](\d*d\d+(k[hl]\d+)?|\d+))*$/;
-  return pattern.test(cleaned);
+/* ── Sparkle / Shatter particle generators ── */
+function CritParticles({ type }) {
+  const particles = useRef(
+    Array.from({ length: type === 'nat20' ? 18 : 12 }, (_, i) => {
+      const angle = (i / (type === 'nat20' ? 18 : 12)) * 360 + (Math.random() * 30 - 15);
+      const dist = 40 + Math.random() * 60;
+      const rad = (angle * Math.PI) / 180;
+      return {
+        key: i,
+        tx: Math.cos(rad) * dist,
+        ty: Math.sin(rad) * dist,
+        rot: Math.random() * 360,
+        size: type === 'nat20' ? 4 + Math.random() * 5 : 3 + Math.random() * 4,
+        delay: Math.random() * 0.15,
+        color: type === 'nat20'
+          ? `hsl(${40 + Math.random() * 20}, 100%, ${60 + Math.random() * 30}%)`
+          : `hsl(${0 + Math.random() * 10}, ${80 + Math.random() * 20}%, ${45 + Math.random() * 20}%)`,
+      };
+    })
+  ).current;
+
+  return (
+    <div style={{ position: 'absolute', top: '50%', left: '50%', pointerEvents: 'none', zIndex: 10 }}>
+      {particles.map(p => (
+        <div
+          key={p.key}
+          className={type === 'nat20' ? 'sparkle-particle' : 'shatter-particle'}
+          style={{
+            '--tx': `${p.tx}px`,
+            '--ty': `${p.ty}px`,
+            '--rot': `${p.rot}deg`,
+            width: p.size,
+            height: p.size,
+            background: p.color,
+            borderRadius: type === 'nat20' ? '50%' : '2px',
+            animationDelay: `${p.delay}s`,
+            boxShadow: type === 'nat20' ? `0 0 6px ${p.color}` : 'none',
+          }}
+        />
+      ))}
+    </div>
+  );
 }
 
-/**
- * Simple parse for expression validation (no rolling).
- * Returns { count, sides, modifier } for simple NdX+M expressions (legacy compat).
- */
-function parseSimpleRoll(expr) { // eslint-disable-line no-unused-vars
-  const match = expr.match(/^(\d+)?d(\d+)([+-]\d+)?$/i);
-  if (!match) return null;
-  const count = parseInt(match[1]) || 1;
-  const sides = parseInt(match[2]);
-  const modifier = parseInt(match[3]) || 0;
-  if (count > 100 || sides > 100 || count < 1 || sides < 1) return null;
-  return { count, sides, modifier };
+/* ── Rolling animation overlay ── */
+function RollingOverlay({ sides }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.5 }}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '20px 0',
+      }}
+    >
+      <div className="dice-rolling" style={{ perspective: '200px' }}>
+        <svg width="64" height="64" viewBox="0 0 100 100">
+          {sides === 6 ? (
+            <rect x="10" y="10" width="80" height="80" rx="14" fill="none" stroke="rgba(201,168,76,0.6)" strokeWidth="3" />
+          ) : sides === 4 ? (
+            <path d="M50,8 L92,88 L8,88 Z" fill="none" stroke="rgba(201,168,76,0.6)" strokeWidth="3" />
+          ) : sides === 8 ? (
+            <path d="M50,5 L95,50 L50,95 L5,50 Z" fill="none" stroke="rgba(201,168,76,0.6)" strokeWidth="3" />
+          ) : (
+            <path d="M50,2 L88,18 L98,58 L75,92 L25,92 L2,58 L12,18 Z" fill="none" stroke="rgba(201,168,76,0.6)" strokeWidth="3" />
+          )}
+          <text x="50" y="55" textAnchor="middle" dominantBaseline="middle"
+            fill="rgba(201,168,76,0.7)" fontSize="22" fontWeight="700"
+            fontFamily="var(--font-display, 'Cinzel', serif)">
+            ?
+          </text>
+        </svg>
+      </div>
+    </motion.div>
+  );
 }
 
-function rollStatBlock() {
-  const stats = [];
-  for (let i = 0; i < 6; i++) {
-    const dice = Array.from({ length: 4 }, () => rollDie(6));
-    const minVal = Math.min(...dice);
-    const minIdx = dice.indexOf(minVal);
-    const total = dice.reduce((s, v) => s + v, 0) - minVal;
-    stats.push({ dice, droppedIdx: minIdx, total });
-  }
-  return stats;
-}
-
-/* ── Timestamp formatting ── */
-function formatTime(ts) {
-  return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatTimeAgo(ts) {
-  const diff = Date.now() - ts;
-  if (diff < 60000) return 'just now';
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-  return new Date(ts).toLocaleDateString();
-}
+/* ── Core dice functions imported from utils/dice.js ── */
 
 
-export default function DiceRoller({ characterId, activeConditions = [], diceHistory, onDiceHistoryChange, sessionActive = false, playerUuid = '', isDM = false }) {
-  // Use lifted state if provided, else local state (fallback)
-  const [localHistory, setLocalHistory] = useState([]);
-  const history = diceHistory || localHistory;
-  const setHistory = onDiceHistoryChange || setLocalHistory;
-
+export default function DiceRoller({ characterId, activeConditions = [], sessionActive = false, playerUuid = '' }) {
   const [customExpr, setCustomExpr] = useState('');
   const [rollLabel, setRollLabel] = useState('');
   const [lastRoll, setLastRoll] = useState(null);
   const [rolling, setRolling] = useState(false);
+  const [rollingSides, setRollingSides] = useState(20);
   const [rollMode, setRollMode] = useState('normal');
   const [broadcastOn, setBroadcastOn] = useState(false);
-  const [dmSecretRoll, setDmSecretRoll] = useState(false);
-  const [statBlockResult, setStatBlockResult] = useState(null);
-  const [showStatBlock, setShowStatBlock] = useState(false);
-  const [statMode, setStatMode] = useState('roll'); // 'roll' | 'standard' | 'pointbuy'
-  const [showStats, setShowStats] = useState(false);
   const [macros, setMacros] = useState([]);
   const [editingMacro, setEditingMacro] = useState(null); // { id, name, expr }
-  const [pointBuyScores, setPointBuyScores] = useState([8, 8, 8, 8, 8, 8]);
   const condEffects = computeConditionEffects(activeConditions);
-  const historyInitialized = useRef(false);
+
+  useEffect(() => { ensureParticleStyles(); }, []);
 
   // Load macros from per-character localStorage
   useEffect(() => {
     setMacros(loadFromStorage(getMacrosKey(characterId)));
   }, [characterId]);
-
-  // Load persistent history from localStorage on mount
-  useEffect(() => {
-    if (historyInitialized.current) return;
-    historyInitialized.current = true;
-    const saved = loadFromStorage(getHistoryKey(characterId));
-    if (saved.length > 0 && history.length === 0) {
-      setHistory(() => saved.slice(0, MAX_HISTORY));
-    }
-  }, [characterId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Persist history to localStorage when it changes
-  useEffect(() => {
-    if (history.length > 0) {
-      saveToStorage(getHistoryKey(characterId), history.slice(0, MAX_HISTORY));
-    }
-  }, [history, characterId]);
 
   const saveMacros = useCallback((newMacros) => {
     setMacros(newMacros);
@@ -298,11 +293,18 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
     }
   }, [condEffects.netAttackMode]);
 
+  // Extract die sides from expression for animation
+  const extractSides = (expr) => {
+    const match = expr.match(/d(\d+)/i);
+    return match ? parseInt(match[1], 10) : 20;
+  };
+
   /**
    * Advanced roll handler: parses complex expressions and produces detailed results.
    */
   const doAdvancedRoll = useCallback((expression, autoLabel = '') => {
     setRolling(true);
+    setRollingSides(extractSides(expression));
     setTimeout(() => {
       const result = parseAndRollExpression(expression);
       if (!result) {
@@ -347,6 +349,7 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
           dropped: g.dropped,
           subtotal: g.subtotal,
           sign: g.sign,
+          sides: g.sides,
         })),
         modifier,
         total: advInfo ? finalTotal : total,
@@ -357,11 +360,10 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
       };
 
       setLastRoll(entry);
-      setHistory(prev => [entry, ...prev].slice(0, MAX_HISTORY));
       setRolling(false);
 
       // Broadcast roll to session if toggle is on and not a DM secret roll
-      if (broadcastOn && sessionActive && !(isDM && dmSecretRoll)) {
+      if (broadcastOn && sessionActive) {
         try {
           invoke('ws_broadcast_event', {
             eventJson: JSON.stringify({
@@ -377,8 +379,8 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
       }
 
       if (rollLabel) setRollLabel('');
-    }, 300);
-  }, [rollMode, rollLabel, setHistory, broadcastOn, sessionActive, isDM, dmSecretRoll, playerUuid]);
+    }, 650); // Slightly longer to allow animation to play
+  }, [rollMode, rollLabel, broadcastOn, sessionActive, playerUuid]);
 
   /**
    * Legacy simple roll for quick buttons.
@@ -401,32 +403,9 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
     }
   };
 
-  const handleRollStats = () => {
-    const result = rollStatBlock();
-    setStatBlockResult(result);
-    setShowStatBlock(true);
-    const grandTotal = result.reduce((s, r) => s + r.total, 0);
-    const entry = {
-      id: Date.now().toString(),
-      timestamp: Date.now(),
-      expr: '4d6kh3 x6',
-      label: 'Stat Block Roll',
-      rolls: result.map(r => r.total),
-      groups: [],
-      modifier: 0,
-      total: grandTotal,
-      isNat20: false,
-      isNat1: false,
-      advInfo: null,
-      breakdownParts: [],
-    };
-    setHistory(prev => [entry, ...prev].slice(0, MAX_HISTORY));
-  };
-
   const handleCopyRoll = async (entry) => {
-    const time = formatTime(entry.timestamp || parseInt(entry.id));
     const label = entry.label ? ` (${entry.label})` : '';
-    const line = `[${time}] ${entry.expr}: ${entry.total}${label}`;
+    const line = `${entry.expr}: ${entry.total}${label}`;
     try {
       await navigator.clipboard.writeText(line);
       toast.success('Roll copied to clipboard');
@@ -435,103 +414,15 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
     }
   };
 
-  const handleCopyHistory = async () => {
-    if (history.length === 0) { toast.error('No rolls to copy'); return; }
-    const lines = history.slice().reverse().map(entry => {
-      const time = formatTime(entry.timestamp || parseInt(entry.id));
-      const label = entry.label ? ` (${entry.label})` : '';
-      return `[${time}] ${entry.expr}: ${entry.total}${label}`;
-    });
-    try {
-      await navigator.clipboard.writeText(lines.join('\n'));
-      toast.success('Roll history copied to clipboard');
-    } catch {
-      toast.error('Failed to copy — clipboard access denied');
-    }
+  /* ── Hover animation variants for die buttons ── */
+  const dieButtonVariants = {
+    idle: { rotate: 0, scale: 1 },
+    hover: {
+      rotate: [0, -6, 6, -4, 4, -2, 2, 0],
+      scale: [1, 1.08, 1.05, 1.08, 1.05, 1.03, 1.01, 1.05],
+      transition: { duration: 0.6, repeat: Infinity, repeatType: 'loop' },
+    },
   };
-
-  const handleClearHistory = () => {
-    setHistory([]);
-    try { localStorage.removeItem(getHistoryKey(characterId)); } catch { /* ignore */ }
-  };
-
-  /* ── Point Buy helpers ── */
-  const pointBuySpent = useMemo(() =>
-    pointBuyScores.reduce((sum, score) => sum + (POINT_BUY_COSTS[score] || 0), 0),
-    [pointBuyScores]
-  );
-
-  const handlePointBuyChange = (idx, delta) => {
-    setPointBuyScores(prev => {
-      const next = [...prev];
-      const newVal = next[idx] + delta;
-      if (newVal < 8 || newVal > 15) return prev;
-      const newCost = POINT_BUY_COSTS[newVal] - POINT_BUY_COSTS[next[idx]];
-      if (pointBuySpent + newCost > POINT_BUY_TOTAL) return prev;
-      next[idx] = newVal;
-      return next;
-    });
-  };
-
-  /* ── Roll statistics ── */
-  const rollStats = useMemo(() => {
-    if (history.length === 0) return null;
-
-    let totalRolls = history.length;
-    let nat20Count = 0;
-    let nat1Count = 0;
-    let highestRoll = -Infinity;
-    let highestExpr = '';
-    let lowestRoll = Infinity;
-    let lowestExpr = '';
-    let totalSum = 0;
-
-    const byType = {};
-
-    for (const entry of history) {
-      totalSum += entry.total;
-      if (entry.isNat20) nat20Count++;
-      if (entry.isNat1) nat1Count++;
-      if (entry.total > highestRoll) { highestRoll = entry.total; highestExpr = entry.expr; }
-      if (entry.total < lowestRoll) { lowestRoll = entry.total; lowestExpr = entry.expr; }
-
-      // Per-die-type stats for single-die quick rolls
-      const match = entry.expr.match(/^1?d(\d+)/i);
-      if (match) {
-        const dieType = `d${match[1]}`;
-        if (!byType[dieType]) byType[dieType] = { rolls: [], total: 0 };
-        const val = entry.rolls?.[0];
-        if (val != null) {
-          byType[dieType].rolls.push(val);
-          byType[dieType].total += val;
-        }
-      }
-    }
-
-    const perDie = {};
-    for (const [dieType, data] of Object.entries(byType)) {
-      if (data.rolls.length >= 3) {
-        perDie[dieType] = {
-          count: data.rolls.length,
-          average: (data.total / data.rolls.length).toFixed(1),
-          highest: Math.max(...data.rolls),
-          lowest: Math.min(...data.rolls),
-        };
-      }
-    }
-
-    return {
-      totalRolls,
-      nat20Count,
-      nat1Count,
-      highestRoll: highestRoll === -Infinity ? null : highestRoll,
-      highestExpr,
-      lowestRoll: lowestRoll === Infinity ? null : lowestRoll,
-      lowestExpr,
-      average: (totalSum / totalRolls).toFixed(1),
-      perDie,
-    };
-  }, [history]);
 
   return (
     <div className="space-y-6 max-w-none">
@@ -568,26 +459,6 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
               />
             </button>
           </div>
-          {isDM && broadcastOn && (
-            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-amber-200/10">
-              <EyeOff size={12} className={dmSecretRoll ? 'text-purple-400' : 'text-amber-200/20'} />
-              <span className="text-xs text-amber-200/40">DM Secret Roll</span>
-              <button
-                onClick={() => setDmSecretRoll(s => !s)}
-                className={`relative w-8 h-4 rounded-full transition-colors ${
-                  dmSecretRoll ? 'bg-purple-600' : 'bg-amber-200/10'
-                }`}
-              >
-                <span
-                  className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform"
-                  style={{ left: dmSecretRoll ? '16px' : '2px' }}
-                />
-              </button>
-              <span className="text-xs text-amber-200/20">
-                {dmSecretRoll ? 'Next roll stays hidden' : 'Off'}
-              </span>
-            </div>
-          )}
         </div>
       )}
 
@@ -657,9 +528,9 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
           )}
           <div className="flex gap-2">
             {[
-              { mode: 'normal', label: 'Normal', icon: '⚖' },
-              { mode: 'advantage', label: 'Advantage', icon: '↑' },
-              { mode: 'disadvantage', label: 'Disadvantage', icon: '↓' },
+              { mode: 'normal', label: 'Normal', icon: '\u2696' },
+              { mode: 'advantage', label: 'Advantage', icon: '\u2191' },
+              { mode: 'disadvantage', label: 'Disadvantage', icon: '\u2193' },
             ].map(({ mode, label, icon }) => (
               <button
                 key={mode}
@@ -679,19 +550,25 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
         </div>
       </div>
 
-      {/* Quick Roll Buttons */}
+      {/* Quick Roll Buttons — with shake-to-roll hover animation */}
       <div className="card">
         <h3 className="font-display text-amber-100 mb-3">Quick Roll</h3>
         <div className="flex flex-wrap gap-3">
           {DICE.map(sides => (
-            <button key={sides} onClick={() => handleQuickRoll(sides)}
-              className="w-16 h-16 rounded-lg bg-[#0d0d12] border-2 border-gold/20 hover:border-gold/50 transition-all flex flex-col items-center justify-center group hover:shadow-[0_0_15px_rgba(201,168,76,0.2)]"
+            <motion.button
+              key={sides}
+              onClick={() => handleQuickRoll(sides)}
+              className="w-16 h-16 rounded-lg bg-[#0d0d12] border-2 border-gold/20 hover:border-gold/50 transition-colors flex flex-col items-center justify-center group hover:shadow-[0_0_15px_rgba(201,168,76,0.2)]"
               aria-label={`Roll d${sides}`}
               title={`Roll 1d${sides} — ${DIE_TIPS[sides]}`}
+              variants={dieButtonVariants}
+              initial="idle"
+              whileHover="hover"
+              whileTap={{ scale: 0.9, rotate: 15 }}
             >
               <span className="text-lg font-display text-gold group-hover:text-amber-100 transition-colors">d{sides}</span>
               <span className="text-[9px] text-amber-200/30 group-hover:text-amber-200/50">{DIE_LABELS[sides]}</span>
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
@@ -774,132 +651,6 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
         )}
       </div>
 
-      {/* Stat Rolling Mode */}
-      <div className="card">
-        <h3 className="font-display text-amber-100 mb-3">Ability Score Generation</h3>
-        <p className="text-xs text-amber-200/30 mb-3">Roll for stats, use the Standard Array, or calculate via Point Buy.</p>
-        <div className="flex gap-2 mb-4">
-          {[
-            { mode: 'roll', label: '4d6 Drop Lowest' },
-            { mode: 'standard', label: 'Standard Array' },
-            { mode: 'pointbuy', label: 'Point Buy' },
-          ].map(({ mode, label }) => (
-            <button
-              key={mode}
-              onClick={() => { setStatMode(mode); if (mode !== 'roll') setShowStatBlock(true); }}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
-                statMode === mode
-                  ? 'bg-purple-800/50 text-purple-200 border border-purple-500/40'
-                  : 'bg-[#0d0d12] text-amber-200/40 border border-amber-200/10 hover:text-amber-200/60'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {statMode === 'roll' && (
-          <button onClick={handleRollStats}
-            className="px-4 py-2 rounded-lg bg-[#0d0d12] border-2 border-purple-500/30 hover:border-purple-400/60 transition-all text-sm font-display text-purple-300 hover:text-purple-200 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)]"
-          >
-            Roll 4d6kh3 x6
-          </button>
-        )}
-
-        {statMode === 'standard' && showStatBlock && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {STANDARD_ARRAY.map((score, i) => (
-              <div key={i} className="bg-[#0d0d12] rounded-lg border border-purple-500/20 p-3 text-center">
-                <div className="text-xs text-purple-300/60 mb-1">{ABILITY_NAMES[i]}</div>
-                <div className="text-3xl font-display text-amber-100">{score}</div>
-              </div>
-            ))}
-            <div className="col-span-full text-center text-xs text-amber-200/30 mt-1">
-              Assign these scores to your abilities as you choose. Total: {STANDARD_ARRAY.reduce((a, b) => a + b, 0)}
-            </div>
-          </div>
-        )}
-
-        {statMode === 'pointbuy' && showStatBlock && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-amber-200/60">
-                Points spent: <span className={`font-bold ${pointBuySpent > POINT_BUY_TOTAL ? 'text-red-400' : pointBuySpent === POINT_BUY_TOTAL ? 'text-emerald-400' : 'text-amber-100'}`}>{pointBuySpent}</span>
-                <span className="text-amber-200/30">/{POINT_BUY_TOTAL}</span>
-              </span>
-              <button onClick={() => setPointBuyScores([8, 8, 8, 8, 8, 8])} className="text-xs text-amber-200/30 hover:text-amber-200/60 flex items-center gap-1">
-                <RotateCcw size={10} /> Reset
-              </button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {ABILITY_NAMES.map((name, i) => (
-                <div key={name} className="bg-[#0d0d12] rounded-lg border border-purple-500/20 p-3 text-center">
-                  <div className="text-xs text-purple-300/60 mb-1">{name}</div>
-                  <div className="flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => handlePointBuyChange(i, -1)}
-                      disabled={pointBuyScores[i] <= 8}
-                      className="w-6 h-6 rounded bg-[#1a1a24] border border-amber-200/10 text-amber-200/50 hover:text-amber-100 disabled:opacity-20 disabled:cursor-not-allowed text-sm font-bold"
-                    >-</button>
-                    <span className="text-2xl font-display text-amber-100 w-8 text-center">{pointBuyScores[i]}</span>
-                    <button
-                      onClick={() => handlePointBuyChange(i, 1)}
-                      disabled={pointBuyScores[i] >= 15}
-                      className="w-6 h-6 rounded bg-[#1a1a24] border border-amber-200/10 text-amber-200/50 hover:text-amber-100 disabled:opacity-20 disabled:cursor-not-allowed text-sm font-bold"
-                    >+</button>
-                  </div>
-                  <div className="text-[10px] text-amber-200/25 mt-1">Cost: {POINT_BUY_COSTS[pointBuyScores[i]]}</div>
-                </div>
-              ))}
-            </div>
-            <div className="text-center text-xs text-amber-200/30 mt-3">
-              Modifier: {pointBuyScores.map(s => { const mod = Math.floor((s - 10) / 2); return mod >= 0 ? `+${mod}` : `${mod}`; }).join(' / ')}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Stat Block Result (from 4d6kh3 rolls) */}
-      <AnimatePresence>
-        {showStatBlock && statBlockResult && statMode === 'roll' && (
-          <motion.div
-            className="card"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-display text-purple-200">Ability Score Rolls <span className="text-xs text-amber-200/30 font-normal">(4d6 drop lowest)</span></h3>
-              <button onClick={() => setShowStatBlock(false)} className="text-xs text-amber-200/30 hover:text-amber-200/60 transition-colors">Hide</button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {statBlockResult.map((stat, i) => (
-                <div key={i} className="bg-[#0d0d12] rounded-lg border border-purple-500/20 p-3 text-center">
-                  <div className="text-3xl font-display text-amber-100 mb-1">{stat.total}</div>
-                  <div className="flex items-center justify-center gap-1.5 text-sm">
-                    {stat.dice.map((val, j) => (
-                      <span
-                        key={j}
-                        className={j === stat.droppedIdx
-                          ? 'text-red-400/40 line-through text-xs'
-                          : 'text-amber-200/60'}
-                      >
-                        {val}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 text-center text-sm text-amber-200/40">
-              Total: <span className="text-amber-100 font-bold">{statBlockResult.reduce((s, r) => s + r.total, 0)}</span>
-              <span className="ml-3">Avg: <span className="text-amber-100">{(statBlockResult.reduce((s, r) => s + r.total, 0) / 6).toFixed(1)}</span></span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Custom Expression */}
       <div className="card">
         <h3 className="font-display text-amber-100 mb-2">Custom Roll</h3>
@@ -916,14 +667,31 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
         </div>
       </div>
 
+      {/* Rolling Animation */}
+      <AnimatePresence>
+        {rolling && (
+          <motion.div
+            key="rolling-overlay"
+            className="card text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            <RollingOverlay sides={rollingSides} />
+            <div className="text-sm text-amber-200/40 mt-1 font-display">Rolling...</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Last Roll Result */}
       <AnimatePresence mode="wait">
-        {lastRoll && (
+        {lastRoll && !rolling && (
           <motion.div
             key={lastRoll.id}
             aria-live="polite"
             aria-label={`Roll result: ${lastRoll.expr} = ${lastRoll.total}${lastRoll.isNat20 ? ', Natural 20!' : ''}${lastRoll.isNat1 ? ', Natural 1' : ''}`}
-            className={`card text-center overflow-hidden ${lastRoll.isNat20 ? 'border-gold shadow-[0_0_40px_rgba(201,168,76,0.4)]' : lastRoll.isNat1 ? 'border-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)]' : ''}`}
+            className={`card text-center overflow-hidden relative ${lastRoll.isNat20 ? 'border-gold shadow-[0_0_40px_rgba(201,168,76,0.4)]' : lastRoll.isNat1 ? 'border-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)]' : ''}`}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={lastRoll.isNat20 || lastRoll.isNat1 ? {
               scale: 1, opacity: 1,
@@ -935,6 +703,10 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
               x: { duration: 0.4, delay: 0.1 },
             } : { type: 'spring', damping: 15 }}
           >
+            {/* Particle effects for crits */}
+            {lastRoll.isNat20 && <CritParticles type="nat20" />}
+            {lastRoll.isNat1 && <CritParticles type="nat1" />}
+
             {lastRoll.isNat20 && (
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
@@ -969,13 +741,35 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
             )}
             {lastRoll.label && <div className="text-xs text-gold/60 mb-1">{lastRoll.label}</div>}
             <div className="text-sm text-amber-200/50 mb-2">{lastRoll.expr}</div>
+
+            {/* Die face visual + total */}
             <motion.div
-              className={`text-6xl font-display ${lastRoll.isNat20 ? 'text-gold' : lastRoll.isNat1 ? 'text-red-400' : 'text-amber-100'}`}
-              initial={{ rotateX: 90 }}
-              animate={{ rotateX: 0 }}
+              className="flex flex-col items-center gap-2"
+              initial={{ rotateX: 90, opacity: 0 }}
+              animate={{ rotateX: 0, opacity: 1 }}
+              transition={{ type: 'spring', damping: 12, delay: 0.05 }}
             >
-              {rolling ? '...' : lastRoll.total}
+              {/* Show die face visuals for simple rolls */}
+              {lastRoll.groups && lastRoll.groups.length === 1 && !lastRoll.advInfo &&
+                lastRoll.groups[0].kept.length <= 6 && lastRoll.groups[0].sides && (
+                <div className="flex gap-2 justify-center mb-1">
+                  {lastRoll.groups[0].kept.map((val, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ rotateY: 180, opacity: 0 }}
+                      animate={{ rotateY: 0, opacity: 1 }}
+                      transition={{ delay: 0.1 + i * 0.08, type: 'spring', damping: 14 }}
+                    >
+                      <DieFace sides={lastRoll.groups[0].sides} value={val} size={42} />
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+              <div className={`text-6xl font-display ${lastRoll.isNat20 ? 'text-gold' : lastRoll.isNat1 ? 'text-red-400' : 'text-amber-100'}`}>
+                {lastRoll.total}
+              </div>
             </motion.div>
+
             {/* Advantage/disadvantage detail */}
             {lastRoll.advInfo && (
               <div className="text-sm text-amber-200/40 mt-2">
@@ -1032,150 +826,6 @@ export default function DiceRoller({ characterId, activeConditions = [], diceHis
         )}
       </AnimatePresence>
 
-      {/* Roll History */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-display text-amber-100">
-            Roll History
-            {history.length > 0 && <span className="text-amber-200/30 text-sm font-normal ml-2">({history.length} {history.length === 1 ? 'roll' : 'rolls'})</span>}
-          </h3>
-          {history.length > 0 && (
-            <div className="flex items-center gap-3">
-              <button onClick={handleCopyHistory} className="text-xs text-amber-200/30 hover:text-amber-200/60 transition-colors flex items-center gap-1" title="Copy roll history to clipboard">
-                <Copy size={12} /> Copy All
-              </button>
-              <button onClick={handleClearHistory} className="text-xs text-amber-200/30 hover:text-red-400/60 transition-colors flex items-center gap-1">
-                <Trash2 size={12} /> Clear
-              </button>
-            </div>
-          )}
-        </div>
-        {history.length === 0 ? (
-          <p className="text-sm text-amber-200/30">No rolls yet. Click a die above or type a custom expression to get started!</p>
-        ) : (
-          <div className="space-y-1 max-h-[400px] overflow-y-auto">
-            {history.map(entry => {
-              const ts = entry.timestamp || parseInt(entry.id);
-              return (
-                <div key={entry.id} className={`group flex items-center justify-between py-1.5 px-2 rounded text-sm ${
-                  entry.isNat20 ? 'bg-gold/10 text-gold' : entry.isNat1 ? 'bg-red-900/20 text-red-300' : 'text-amber-200/60'
-                } hover:bg-amber-200/5`}>
-                  <span className="flex items-center gap-2 min-w-0">
-                    <span className="text-[10px] text-amber-200/20 flex-shrink-0 flex items-center gap-0.5" title={new Date(ts).toLocaleString()}>
-                      <Clock size={9} className="opacity-50" />
-                      {formatTimeAgo(ts)}
-                    </span>
-                    {entry.label && <span className="text-xs text-gold/50 truncate max-w-[120px]">{entry.label}</span>}
-                    <span className="truncate">{entry.expr}</span>
-                  </span>
-                  <span className="flex items-center gap-2 flex-shrink-0">
-                    {entry.advInfo && <span className="text-xs text-amber-200/30">{entry.advInfo.roll1},{entry.advInfo.roll2}</span>}
-                    {!entry.advInfo && entry.rolls && entry.rolls.length > 1 && entry.rolls.length <= 8 && (
-                      <span className="text-xs text-amber-200/30">[{entry.rolls.join(',')}]</span>
-                    )}
-                    <span className="font-bold">{entry.total}</span>
-                    {entry.isNat20 && <span className="text-[10px] font-bold">NAT20</span>}
-                    {entry.isNat1 && <span className="text-[10px] font-bold">NAT1</span>}
-                    <button
-                      onClick={() => handleCopyRoll(entry)}
-                      className="opacity-0 group-hover:opacity-100 text-amber-200/20 hover:text-amber-200/60 transition-all"
-                      title="Copy this roll"
-                    >
-                      <ClipboardCopy size={11} />
-                    </button>
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Roll Statistics Panel */}
-      {rollStats && rollStats.totalRolls > 0 && (
-        <div className="card">
-          <button
-            onClick={() => setShowStats(s => !s)}
-            className="w-full flex items-center justify-between"
-          >
-            <h3 className="font-display text-amber-100 flex items-center gap-2">
-              <BarChart3 size={16} className="text-gold/60" />
-              Roll Statistics
-            </h3>
-            {showStats ? <ChevronUp size={16} className="text-amber-200/40" /> : <ChevronDown size={16} className="text-amber-200/40" />}
-          </button>
-          <AnimatePresence>
-            {showStats && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
-                {/* Summary stats */}
-                <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                  <div className="bg-[#0d0d12] rounded-lg border border-amber-200/5 p-3 text-center">
-                    <div className="text-2xl font-display text-amber-100">{rollStats.totalRolls}</div>
-                    <div className="text-[10px] text-amber-200/30">Total Rolls</div>
-                  </div>
-                  <div className="bg-[#0d0d12] rounded-lg border border-amber-200/5 p-3 text-center">
-                    <div className="text-2xl font-display text-amber-100">{rollStats.average}</div>
-                    <div className="text-[10px] text-amber-200/30">Average Roll</div>
-                  </div>
-                  <div className="bg-[#0d0d12] rounded-lg border border-gold/15 p-3 text-center">
-                    <div className="text-2xl font-display text-gold">{rollStats.nat20Count}</div>
-                    <div className="text-[10px] text-gold/40">Nat 20s</div>
-                  </div>
-                  <div className="bg-[#0d0d12] rounded-lg border border-red-500/15 p-3 text-center">
-                    <div className="text-2xl font-display text-red-400">{rollStats.nat1Count}</div>
-                    <div className="text-[10px] text-red-400/40">Nat 1s</div>
-                  </div>
-                </div>
-
-                {/* Highest / Lowest */}
-                {rollStats.highestRoll !== null && (
-                  <div className="flex gap-3 mb-4">
-                    <div className="flex-1 bg-[#0d0d12] rounded-lg border border-emerald-500/10 p-2 px-3 flex items-center justify-between">
-                      <span className="text-xs text-amber-200/30">Highest</span>
-                      <span className="text-sm">
-                        <span className="text-emerald-300 font-bold">{rollStats.highestRoll}</span>
-                        <span className="text-amber-200/20 ml-1.5 text-xs">{rollStats.highestExpr}</span>
-                      </span>
-                    </div>
-                    <div className="flex-1 bg-[#0d0d12] rounded-lg border border-red-500/10 p-2 px-3 flex items-center justify-between">
-                      <span className="text-xs text-amber-200/30">Lowest</span>
-                      <span className="text-sm">
-                        <span className="text-red-300 font-bold">{rollStats.lowestRoll}</span>
-                        <span className="text-amber-200/20 ml-1.5 text-xs">{rollStats.lowestExpr}</span>
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Per-die-type breakdown */}
-                {Object.keys(rollStats.perDie).length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-xs text-amber-200/25 mb-1">Per-Die Breakdown (3+ rolls)</div>
-                    {Object.entries(rollStats.perDie).sort((a, b) => {
-                      const order = ['d4','d6','d8','d10','d12','d20','d100'];
-                      return order.indexOf(a[0]) - order.indexOf(b[0]);
-                    }).map(([dieType, data]) => (
-                      <div key={dieType} className="flex items-center gap-4 py-2 px-3 rounded bg-[#0d0d12] border border-amber-200/5 text-sm">
-                        <span className="font-display text-gold w-10">{dieType}</span>
-                        <span className="text-amber-200/50">{data.count} rolls</span>
-                        <span className="text-amber-200/50">Avg: <span className="text-amber-100">{data.average}</span></span>
-                        <span className="text-amber-200/50">Hi: <span className="text-emerald-300">{data.highest}</span></span>
-                        <span className="text-amber-200/50">Lo: <span className="text-red-300">{data.lowest}</span></span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
     </div>
   );
 }

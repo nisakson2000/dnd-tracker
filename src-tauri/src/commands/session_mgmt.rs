@@ -5,6 +5,26 @@ use uuid::Uuid;
 use crate::campaign_db;
 use crate::db::AppState;
 
+/// Log a session event to the event_log table.
+#[tauri::command]
+pub fn log_session_event(
+    session_id: String,
+    event_type: String,
+    payload_json: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let campaign_id = require_active_campaign(&state)?;
+    let now = chrono::Utc::now().timestamp();
+
+    with_campaign_conn(&state, |conn| {
+        conn.execute(
+            "INSERT INTO event_log (campaign_id, event_type, payload_json, session_id, ts) VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![campaign_id, event_type, payload_json, session_id, now],
+        ).map_err(|e| format!("Failed to log session event: {}", e))?;
+        Ok(())
+    })
+}
+
 /// Ensure the campaign_conn is initialized.
 fn ensure_campaign_conn(state: &AppState) -> Result<(), String> {
     let mut conn_guard = state.campaign_conn.lock().map_err(|_| {
@@ -250,5 +270,228 @@ pub fn generate_session_recap(
 
         let _ = current_round; // suppress unused warning
         Ok(markdown)
+    })
+}
+
+// ── Session crash-recovery snapshots ──
+
+#[tauri::command]
+pub fn save_session_snapshot(
+    campaign_id: String,
+    session_id: String,
+    state_json: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    with_campaign_conn(&state, |conn| {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS session_snapshots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                campaign_id TEXT NOT NULL,
+                session_id TEXT NOT NULL UNIQUE,
+                state_json TEXT NOT NULL,
+                created_at INTEGER NOT NULL,
+                is_complete INTEGER DEFAULT 0
+            )",
+            [],
+        ).map_err(|e| format!("Failed to create session_snapshots table: {}", e))?;
+
+        conn.execute(
+            "INSERT INTO session_snapshots (campaign_id, session_id, state_json, created_at, is_complete)
+             VALUES (?1, ?2, ?3, strftime('%s','now'), 0)
+             ON CONFLICT(session_id) DO UPDATE SET state_json=excluded.state_json, created_at=strftime('%s','now')",
+            params![campaign_id, session_id, state_json],
+        ).map_err(|e| format!("Failed to save session snapshot: {}", e))?;
+
+        Ok(())
+    })
+}
+
+#[tauri::command]
+pub fn get_latest_incomplete_session(
+    campaign_id: String,
+    state: State<'_, AppState>,
+) -> Result<Option<String>, String> {
+    with_campaign_conn(&state, |conn| {
+        // Ensure table exists
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS session_snapshots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                campaign_id TEXT NOT NULL,
+                session_id TEXT NOT NULL UNIQUE,
+                state_json TEXT NOT NULL,
+                created_at INTEGER NOT NULL,
+                is_complete INTEGER DEFAULT 0
+            )",
+            [],
+        ).map_err(|e| format!("Failed to create session_snapshots table: {}", e))?;
+
+        let result: Result<String, _> = conn.query_row(
+            "SELECT state_json FROM session_snapshots WHERE campaign_id = ?1 AND is_complete = 0 ORDER BY created_at DESC LIMIT 1",
+            params![campaign_id],
+            |row| row.get(0),
+        );
+        match result {
+            Ok(json) => Ok(Some(json)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(format!("Failed to query incomplete session: {}", e)),
+        }
+    })
+}
+
+#[tauri::command]
+pub fn mark_session_complete(
+    session_id: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    with_campaign_conn(&state, |conn| {
+        conn.execute(
+            "UPDATE session_snapshots SET is_complete = 1 WHERE session_id = ?1",
+            params![session_id],
+        ).map_err(|e| format!("Failed to mark session complete: {}", e))?;
+        Ok(())
+    })
+}
+
+// ── Shop System ──
+
+fn ensure_shop_tables(conn: &rusqlite::Connection) -> Result<(), String> {
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS shops (
+            id TEXT PRIMARY KEY,
+            campaign_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            shop_type TEXT DEFAULT 'general',
+            description TEXT DEFAULT ''
+        )", [],
+    ).map_err(|e| format!("Failed to create shops table: {}", e))?;
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS shop_items (
+            id TEXT PRIMARY KEY,
+            shop_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            price_gp REAL NOT NULL,
+            quantity INTEGER DEFAULT -1,
+            item_type TEXT DEFAULT 'gear',
+            rarity TEXT DEFAULT 'common'
+        )", [],
+    ).map_err(|e| format!("Failed to create shop_items table: {}", e))?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn create_shop(
+    campaign_id: String,
+    name: String,
+    shop_type: String,
+    description: String,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    with_campaign_conn(&state, |conn| {
+        ensure_shop_tables(conn)?;
+        let id = Uuid::new_v4().to_string();
+        conn.execute(
+            "INSERT INTO shops (id, campaign_id, name, shop_type, description) VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![id, campaign_id, name, shop_type, description],
+        ).map_err(|e| format!("Failed to create shop: {}", e))?;
+        Ok(id)
+    })
+}
+
+#[tauri::command]
+pub fn get_shops(
+    campaign_id: String,
+    state: State<'_, AppState>,
+) -> Result<Vec<serde_json::Value>, String> {
+    with_campaign_conn(&state, |conn| {
+        ensure_shop_tables(conn)?;
+        let mut stmt = conn.prepare(
+            "SELECT id, name, shop_type, description FROM shops WHERE campaign_id = ?1"
+        ).map_err(|e| format!("Failed to query shops: {}", e))?;
+        let rows = stmt.query_map(params![campaign_id], |row| {
+            Ok(serde_json::json!({
+                "id": row.get::<_, String>(0)?,
+                "name": row.get::<_, String>(1)?,
+                "shop_type": row.get::<_, String>(2)?,
+                "description": row.get::<_, String>(3)?,
+            }))
+        }).map_err(|e| format!("Failed to read shops: {}", e))?;
+        rows.collect::<Result<Vec<_>, _>>().map_err(|e| format!("Failed to collect shops: {}", e))
+    })
+}
+
+#[tauri::command]
+pub fn add_shop_item(
+    shop_id: String,
+    name: String,
+    description: String,
+    price_gp: f64,
+    quantity: i32,
+    item_type: String,
+    rarity: String,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    with_campaign_conn(&state, |conn| {
+        ensure_shop_tables(conn)?;
+        let id = Uuid::new_v4().to_string();
+        conn.execute(
+            "INSERT INTO shop_items (id, shop_id, name, description, price_gp, quantity, item_type, rarity) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            params![id, shop_id, name, description, price_gp, quantity, item_type, rarity],
+        ).map_err(|e| format!("Failed to add shop item: {}", e))?;
+        Ok(id)
+    })
+}
+
+#[tauri::command]
+pub fn get_shop_items(
+    shop_id: String,
+    state: State<'_, AppState>,
+) -> Result<Vec<serde_json::Value>, String> {
+    with_campaign_conn(&state, |conn| {
+        ensure_shop_tables(conn)?;
+        let mut stmt = conn.prepare(
+            "SELECT id, name, description, price_gp, quantity, item_type, rarity FROM shop_items WHERE shop_id = ?1"
+        ).map_err(|e| format!("Failed to query shop items: {}", e))?;
+        let rows = stmt.query_map(params![shop_id], |row| {
+            Ok(serde_json::json!({
+                "id": row.get::<_, String>(0)?,
+                "name": row.get::<_, String>(1)?,
+                "description": row.get::<_, String>(2)?,
+                "price_gp": row.get::<_, f64>(3)?,
+                "quantity": row.get::<_, i32>(4)?,
+                "item_type": row.get::<_, String>(5)?,
+                "rarity": row.get::<_, String>(6)?,
+            }))
+        }).map_err(|e| format!("Failed to read shop items: {}", e))?;
+        rows.collect::<Result<Vec<_>, _>>().map_err(|e| format!("Failed to collect shop items: {}", e))
+    })
+}
+
+#[tauri::command]
+pub fn update_shop_item_quantity(
+    item_id: String,
+    new_quantity: i32,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    with_campaign_conn(&state, |conn| {
+        conn.execute(
+            "UPDATE shop_items SET quantity = ?1 WHERE id = ?2",
+            params![new_quantity, item_id],
+        ).map_err(|e| format!("Failed to update shop item quantity: {}", e))?;
+        Ok(())
+    })
+}
+
+#[tauri::command]
+pub fn delete_shop(
+    shop_id: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    with_campaign_conn(&state, |conn| {
+        conn.execute("DELETE FROM shop_items WHERE shop_id = ?1", params![shop_id])
+            .map_err(|e| format!("Failed to delete shop items: {}", e))?;
+        conn.execute("DELETE FROM shops WHERE id = ?1", params![shop_id])
+            .map_err(|e| format!("Failed to delete shop: {}", e))?;
+        Ok(())
     })
 }

@@ -3,12 +3,13 @@ import { Link } from 'react-router-dom';
 import {
   ScrollText, BookOpen, Shield, Sparkles, Swords,
   BookMarked, Users, Map, Globe, Dice5, ArrowLeft, User, Download,
-  Library, Settings2, Heart, Bell, Bug, Crown, LayoutDashboard,
-  Star, Search, X, Zap, Wifi, BookCopy, MapPin, Radio, Lightbulb, PieChart, Music, Grid3X3,
-  Calendar, Hammer, Clock, Package,
+  Library, Settings2, Heart, Bug, Crown, LayoutDashboard,
+  Star, Search, X, Zap, Wifi, MapPin, Lightbulb, Grid3X3,
+  Calendar, Hammer, Package,
 } from 'lucide-react';
 import { useAppMode } from '../contexts/ModeContext';
 import { useSession } from '../contexts/SessionContext';
+import { getSectionShortcutLabel } from '../utils/keyboardShortcuts';
 
 function isAssistantEnabled() {
   try {
@@ -34,7 +35,6 @@ const PLAYER_SECTION_GROUPS = [
     items: [
       { id: 'campaign-map', label: 'Campaign Map',      icon: MapPin },
       { id: 'journal',    label: 'Campaign Journal',   icon: BookMarked },
-      { id: 'downtime',   label: 'Downtime',           icon: Clock },
     ],
   },
   {
@@ -48,7 +48,6 @@ const PLAYER_SECTION_GROUPS = [
       { id: 'export',     label: 'Export & Import',    icon: Download },
       { id: 'bugreport', label: 'Bug Report',         icon: Bug },
       { id: 'featurerequest', label: 'Feature Request', icon: Lightbulb },
-      { id: 'updates',    label: 'Updates',            icon: Bell },
     ],
   },
 ];
@@ -91,13 +90,11 @@ const DM_SECTION_GROUPS = [
     label: 'Tools',
     items: [
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
-      { id: 'soundboard', label: 'Soundboard',         icon: Music },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
       { id: 'export',     label: 'Export & Import',    icon: Download },
       { id: 'bugreport', label: 'Bug Report',         icon: Bug },
       { id: 'featurerequest', label: 'Feature Request', icon: Lightbulb },
-      { id: 'updates',    label: 'Updates',            icon: Bell },
     ],
   },
 ];
@@ -125,7 +122,7 @@ function loadPinned() {
   return [];
 }
 
-export default function Sidebar({ character, activeSection, onSelect, onBack, activeConditionCount = 0, portrait = '', updateAvailable = false }) {
+export default function Sidebar({ character, activeSection, onSelect, onBack, activeConditionCount = 0, portrait = '' }) {
   const { mode: appMode } = useAppMode();
   const { campaignType } = useSession();
   const [, forceUpdate] = useState(0);
@@ -334,9 +331,6 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
                         {activeConditionCount}
                       </span>
                     )}
-                    {id === 'updates' && updateAvailable && (
-                      <span style={{ marginLeft: 'auto', width: '7px', height: '7px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 6px rgba(251,191,36,0.5)' }} />
-                    )}
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); togglePin(id); }}
@@ -366,6 +360,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
             {group.items.filter(item => !item.conditional || item.conditional()).map(({ id, label, icon: Icon }) => { // eslint-disable-line no-unused-vars
               const active = activeSection === id;
               const isPinned = pinnedIds.includes(id);
+              const shortcutHint = getSectionShortcutLabel(id);
               return (
                 <div
                   key={id}
@@ -390,13 +385,15 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
                   >
                     <Icon size={14} />
                     {label}
-                    {id === 'combat' && activeConditionCount > 0 && (
-                      <span style={{ marginLeft: 'auto', width: '18px', height: '18px', borderRadius: '50%', background: '#dc2626', color: 'white', fontSize: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
-                        {activeConditionCount}
+                    {shortcutHint && (
+                      <span style={{ marginLeft: 'auto', opacity: 0.4, fontSize: '10px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+                        {shortcutHint}
                       </span>
                     )}
-                    {id === 'updates' && updateAvailable && (
-                      <span style={{ marginLeft: 'auto', width: '7px', height: '7px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 6px rgba(251,191,36,0.5)' }} />
+                    {id === 'combat' && activeConditionCount > 0 && (
+                      <span style={{ marginLeft: shortcutHint ? '6px' : 'auto', width: '18px', height: '18px', borderRadius: '50%', background: '#dc2626', color: 'white', fontSize: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                        {activeConditionCount}
+                      </span>
                     )}
                   </button>
                   <button

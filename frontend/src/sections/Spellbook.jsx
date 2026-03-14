@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Pencil, ChevronDown, ChevronRight, ChevronUp, Sparkles, RotateCcw, Search, Lock, Coins, Info, CheckSquare, Square, Wand2, Coffee, Moon, BookOpen, Filter, Zap, Crosshair, CircleDot, ShieldAlert } from 'lucide-react';
+import { Plus, Trash2, Pencil, ChevronDown, ChevronRight, ChevronUp, Sparkles, RotateCcw, Search, Lock, Coins, Info, CheckSquare, Square, Wand2, Coffee, Moon, BookOpen, Filter, Zap, Crosshair, CircleDot, ShieldAlert, Pin, PinOff, Flame, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getSpells, addSpell, updateSpell, deleteSpell, getSpellSlots, updateSpellSlots, resetSpellSlots } from '../api/spells';
 import { getOverview } from '../api/overview';
@@ -29,6 +29,25 @@ const SCHOOL_COLORS = {
   'Transmutation': 'bg-orange-900/30 text-orange-300 border-orange-500/20',
 };
 
+// Damage type filter options
+const DAMAGE_TYPES = ['Fire', 'Cold', 'Lightning', 'Thunder', 'Acid', 'Poison', 'Necrotic', 'Radiant', 'Force', 'Psychic'];
+
+const DAMAGE_TYPE_COLORS = {
+  'Fire': 'bg-red-900/30 text-red-300 border-red-500/20',
+  'Cold': 'bg-sky-900/30 text-sky-300 border-sky-500/20',
+  'Lightning': 'bg-yellow-900/30 text-yellow-300 border-yellow-500/20',
+  'Thunder': 'bg-indigo-900/30 text-indigo-300 border-indigo-500/20',
+  'Acid': 'bg-lime-900/30 text-lime-300 border-lime-500/20',
+  'Poison': 'bg-green-900/30 text-green-300 border-green-500/20',
+  'Necrotic': 'bg-gray-900/30 text-gray-300 border-gray-500/20',
+  'Radiant': 'bg-amber-900/30 text-amber-300 border-amber-500/20',
+  'Force': 'bg-violet-900/30 text-violet-300 border-violet-500/20',
+  'Psychic': 'bg-fuchsia-900/30 text-fuchsia-300 border-fuchsia-500/20',
+};
+
+// Casting time filter options
+const CASTING_TIMES = ['Action', 'Bonus Action', 'Reaction', '1 Minute', '10 Minutes', '1 Hour'];
+
 export default function Spellbook({ characterId, onSpellSlotsChange }) {
   const { PROFICIENCY_BONUS, CLASSES, SPELL_SLOTS } = useRuleset();
   const [spells, setSpells] = useState([]);
@@ -48,6 +67,14 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
   const [concentrationFilter, setConcentrationFilter] = useState('all'); // 'all' | 'yes' | 'no'
   const [ritualFilter, setRitualFilter] = useState('all'); // 'all' | 'yes'
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [damageTypeFilter, setDamageTypeFilter] = useState('all'); // 'all' | damage type name
+  const [castingTimeFilter, setCastingTimeFilter] = useState('all'); // 'all' | casting time string
+  const [pinnedSpells, setPinnedSpells] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`codex_pinned_spells_${characterId}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [concentratingOn, setConcentratingOn] = useState(null); // spell id
   const [expandedSpell, setExpandedSpell] = useState(null);
@@ -61,6 +88,17 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
   useEffect(() => {
     try { sessionStorage.setItem(`codex_quickcast_${characterId}`, quickCastOpen ? 'open' : 'closed'); } catch (err) { if (import.meta.env.DEV) console.warn('QuickCast persist:', err); }
   }, [quickCastOpen, characterId]);
+
+  // Persist pinned spells to localStorage
+  useEffect(() => {
+    try { localStorage.setItem(`codex_pinned_spells_${characterId}`, JSON.stringify(pinnedSpells)); } catch (err) { if (import.meta.env.DEV) console.warn('Pinned spells persist:', err); }
+  }, [pinnedSpells, characterId]);
+
+  const togglePinSpell = (spellId) => {
+    setPinnedSpells(prev =>
+      prev.includes(spellId) ? prev.filter(id => id !== spellId) : [...prev, spellId]
+    );
+  };
 
   // Daily spell tracking (session-based)
   const dailyKey = `codex_spellscast_${characterId}`;
@@ -120,8 +158,24 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
     if (concentrationFilter === 'yes' && !s.concentration) return false;
     if (concentrationFilter === 'no' && s.concentration) return false;
     if (ritualFilter === 'yes' && !s.ritual) return false;
+    if (damageTypeFilter !== 'all') {
+      const desc = (s.description || '').toLowerCase();
+      const name = (s.name || '').toLowerCase();
+      const keyword = damageTypeFilter.toLowerCase();
+      if (!desc.includes(keyword) && !name.includes(keyword)) return false;
+    }
+    if (castingTimeFilter !== 'all') {
+      const ct = (s.casting_time || '').toLowerCase();
+      const filterVal = castingTimeFilter.toLowerCase();
+      if (!ct.includes(filterVal)) return false;
+    }
     return true;
-  }), [spells, searchQuery, levelFilter, preparedFilter, schoolFilter, componentFilter, concentrationFilter, ritualFilter]);
+  }), [spells, searchQuery, levelFilter, preparedFilter, schoolFilter, componentFilter, concentrationFilter, ritualFilter, damageTypeFilter, castingTimeFilter]);
+
+  // Pinned spells (filtered but shown separately at top)
+  const pinnedSpellsList = useMemo(() => {
+    return filteredSpells.filter(s => pinnedSpells.includes(s.id));
+  }, [filteredSpells, pinnedSpells]);
 
   const spellsByLevel = useMemo(() => {
     const byLevel = {};
@@ -535,6 +589,16 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
                 {pf === 'all' ? 'All' : pf}
               </button>
             ))}
+            <span className="text-amber-200/15 mx-0.5">|</span>
+            <button
+              onClick={() => setConcentrationFilter(concentrationFilter === 'yes' ? 'all' : 'yes')}
+              className={`text-xs px-2.5 py-1 rounded-full border transition-all flex items-center gap-1 ${
+                concentrationFilter === 'yes' ? 'bg-purple-900/30 border-purple-500/30 text-purple-300 shadow-[0_0_6px_rgba(168,85,247,0.15)]' : 'border-amber-200/10 text-amber-200/30 hover:text-amber-200/50'
+              }`}
+              title="Show only concentration spells"
+            >
+              <CircleDot size={10} /> Concentration
+            </button>
             <button
               onClick={() => setShowAdvancedFilters(prev => !prev)}
               className={`text-xs px-2.5 py-1 rounded-full border transition-all flex items-center gap-1 ml-auto ${
@@ -577,6 +641,32 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
                   className={`text-xs px-2 py-0.5 rounded border transition-all ${ritualFilter === 'yes' ? 'bg-blue-900/30 border-blue-500/30 text-blue-300' : 'border-amber-200/10 text-amber-200/30'}`}>
                   Ritual
                 </button>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-amber-200/40 flex items-center gap-1"><Flame size={10} /> Damage:</span>
+                <button onClick={() => setDamageTypeFilter('all')}
+                  className={`text-xs px-2 py-0.5 rounded border transition-all ${damageTypeFilter === 'all' ? 'bg-gold/15 border-gold/30 text-gold' : 'border-amber-200/10 text-amber-200/30'}`}>
+                  All
+                </button>
+                {DAMAGE_TYPES.map(dt => (
+                  <button key={dt} onClick={() => setDamageTypeFilter(damageTypeFilter === dt ? 'all' : dt)}
+                    className={`text-xs px-2 py-0.5 rounded border transition-all ${damageTypeFilter === dt ? DAMAGE_TYPE_COLORS[dt] : 'border-amber-200/10 text-amber-200/30'}`}>
+                    {dt}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-amber-200/40 flex items-center gap-1"><Clock size={10} /> Cast Time:</span>
+                <button onClick={() => setCastingTimeFilter('all')}
+                  className={`text-xs px-2 py-0.5 rounded border transition-all ${castingTimeFilter === 'all' ? 'bg-gold/15 border-gold/30 text-gold' : 'border-amber-200/10 text-amber-200/30'}`}>
+                  All
+                </button>
+                {CASTING_TIMES.map(ct => (
+                  <button key={ct} onClick={() => setCastingTimeFilter(castingTimeFilter === ct ? 'all' : ct)}
+                    className={`text-xs px-2 py-0.5 rounded border transition-all ${castingTimeFilter === ct ? 'bg-gold/15 border-gold/30 text-gold' : 'border-amber-200/10 text-amber-200/30'}`}>
+                    {ct}
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -927,6 +1017,23 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
         </div>
       )}
 
+      {/* Pinned / Favorite Spells */}
+      {pinnedSpellsList.length > 0 && (
+        <div className="card border-amber-500/20 bg-gradient-to-b from-amber-950/15 to-transparent">
+          <div className="flex items-center gap-2 mb-3">
+            <Pin size={14} className="text-amber-400" />
+            <h3 className="font-display text-amber-100">Pinned Spells</h3>
+            <span className="text-xs text-amber-200/40 font-normal">{'\u2014'} Quick access</span>
+            <span className="text-amber-200/40 text-sm ml-auto">({pinnedSpellsList.length})</span>
+          </div>
+          <div className="space-y-2">
+            {pinnedSpellsList.map(spell => (
+              <SpellRow key={`pinned-${spell.id}`} spell={spell} level={spell.level} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} setEditingSpell={setEditingSpell} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} isPinned={true} onTogglePin={togglePinSpell} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Cantrips \u2014 pinned at top */}
       {(spellsByLevel[0] || []).length > 0 && (
         <div className="card border-purple-500/20">
@@ -937,7 +1044,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
           </div>
           <div className="space-y-2">
             {spellsByLevel[0].map(spell => (
-              <SpellRow key={spell.id} spell={spell} level={0} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} setEditingSpell={setEditingSpell} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} />
+              <SpellRow key={spell.id} spell={spell} level={0} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} setEditingSpell={setEditingSpell} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} isPinned={pinnedSpells.includes(spell.id)} onTogglePin={togglePinSpell} />
             ))}
           </div>
           {/* Cantrip Scaling Display */}
@@ -983,7 +1090,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
             {isExpanded && (
               <div className="mt-3 space-y-2">
                 {levelSpells.map(spell => (
-                  <SpellRow key={spell.id} spell={spell} level={level} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} setEditingSpell={setEditingSpell} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} />
+                  <SpellRow key={spell.id} spell={spell} level={level} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} setEditingSpell={setEditingSpell} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} isPinned={pinnedSpells.includes(spell.id)} onTogglePin={togglePinSpell} />
                 ))}
               </div>
             )}
@@ -1008,7 +1115,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
   );
 }
 
-function SpellRow({ spell, level, spells, slots, concentratingOn, setConcentratingOn, handleUpdateSpell, setConfirmDelete, setEditingSpell, expandedSpell, setExpandedSpell, castSpell }) {
+function SpellRow({ spell, level, spells, slots, concentratingOn, setConcentratingOn, handleUpdateSpell, setConfirmDelete, setEditingSpell, expandedSpell, setExpandedSpell, castSpell, isPinned = false, onTogglePin }) {
   const [showUpcast, setShowUpcast] = useState(false);
 
   // Material component cost detection
@@ -1108,6 +1215,11 @@ function SpellRow({ spell, level, spells, slots, concentratingOn, setConcentrati
           )}
         </div>
         <div className="flex items-center gap-1.5">
+          {onTogglePin && (
+            <button onClick={() => onTogglePin(spell.id)} className={`transition-colors ${isPinned ? 'text-amber-400 hover:text-amber-300' : 'text-amber-200/20 hover:text-amber-200/50'}`} aria-label={isPinned ? `Unpin spell ${spell.name}` : `Pin spell ${spell.name}`} title={isPinned ? 'Unpin spell' : 'Pin spell for quick access'}>
+              {isPinned ? <PinOff size={13} /> : <Pin size={13} />}
+            </button>
+          )}
           <button onClick={() => setEditingSpell(spell)} className="text-amber-200/30 hover:text-amber-200/70 transition-colors" aria-label={`Edit spell ${spell.name}`} title="Edit spell">
             <Pencil size={13} />
           </button>

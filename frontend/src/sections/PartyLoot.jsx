@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Coins, Users, ArrowRight, Dices, Plus, Trash2, Search, ChevronDown, ChevronUp, ScrollText, Scale, X, Check, Archive } from 'lucide-react';
+import { Package, Coins, Users, ArrowRight, Dices, Plus, Trash2, Search, ChevronDown, ChevronUp, ScrollText, Scale, X, Check, Archive, Sparkles, Send, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { listCharacters } from '../api/characters';
 import { addItem, getCurrency, updateCurrency } from '../api/inventory';
@@ -69,6 +69,144 @@ function rollDice(count, sides) {
   return total;
 }
 
+// ── Smart Loot Tables (DMG approximation) ──
+const INDIVIDUAL_TREASURE = {
+  '0-4':   { cp: { count: 5, sides: 6, mult: 1 }, sp: { count: 3, sides: 6, mult: 1 }, gp: null, gems: 0 },
+  '5-10':  { cp: { count: 4, sides: 6, mult: 100 }, sp: { count: 6, sides: 6, mult: 10 }, gp: { count: 2, sides: 6, mult: 10 }, gems: 0.1 },
+  '11-16': { cp: null, sp: { count: 4, sides: 6, mult: 100 }, gp: { count: 1, sides: 6, mult: 100 }, gems: 0.3 },
+  '17+':   { cp: null, sp: null, gp: { count: 12, sides: 6, mult: 100 }, gems: 0.5 },
+};
+
+const HOARD_TREASURE = {
+  '0-4':   { gp_range: [20, 200], items: { common: 2, uncommon: 0 } },
+  '5-10':  { gp_range: [200, 2000], items: { common: 1, uncommon: 2, rare: 0 } },
+  '11-16': { gp_range: [2000, 20000], items: { uncommon: 1, rare: 2, very_rare: 0 } },
+  '17+':   { gp_range: [20000, 200000], items: { rare: 1, very_rare: 2, legendary: 1 } },
+};
+
+const ITEM_TEMPLATES = {
+  common: [
+    { name: 'Potion of Healing', item_type: 'consumable', value_gp: 50, weight: 0.5, description: 'Restores 2d4+2 HP' },
+    { name: 'Scroll of Detect Magic', item_type: 'consumable', value_gp: 25, weight: 0, description: '1st-level spell scroll' },
+    { name: 'Driftglobe', item_type: 'wondrous', value_gp: 75, weight: 1, description: 'Follows you and sheds light. Can cast Daylight 1/day.' },
+    { name: 'Cloak of Many Fashions', item_type: 'wondrous', value_gp: 50, weight: 1, description: 'Change appearance of cloak at will.' },
+    { name: 'Unbreakable Arrow', item_type: 'weapon', value_gp: 30, weight: 0.05, description: 'Cannot be broken except by magical means.' },
+  ],
+  uncommon: [
+    { name: 'Cloak of Protection', item_type: 'wondrous', value_gp: 500, weight: 1, description: '+1 to AC and saving throws. Requires attunement.' },
+    { name: 'Potion of Greater Healing', item_type: 'consumable', value_gp: 150, weight: 0.5, description: 'Restores 4d4+4 HP' },
+    { name: 'Bag of Holding', item_type: 'wondrous', value_gp: 400, weight: 15, description: 'Interior holds up to 500 lbs / 64 cu ft.' },
+    { name: 'Boots of Elvenkind', item_type: 'wondrous', value_gp: 500, weight: 1, description: 'Advantage on Stealth checks (movement).' },
+    { name: 'Gauntlets of Ogre Power', item_type: 'wondrous', value_gp: 800, weight: 2, description: 'STR becomes 19. Requires attunement.' },
+    { name: '+1 Weapon', item_type: 'weapon', value_gp: 500, weight: 3, description: '+1 to attack and damage rolls.' },
+  ],
+  rare: [
+    { name: 'Flame Tongue Longsword', item_type: 'weapon', value_gp: 5000, weight: 3, description: 'Deals extra 2d6 fire damage. Requires attunement.' },
+    { name: 'Potion of Superior Healing', item_type: 'consumable', value_gp: 500, weight: 0.5, description: 'Restores 8d4+8 HP' },
+    { name: 'Cloak of Displacement', item_type: 'wondrous', value_gp: 6000, weight: 1, description: 'Attacks have disadvantage against you. Requires attunement.' },
+    { name: 'Amulet of Health', item_type: 'wondrous', value_gp: 8000, weight: 1, description: 'CON becomes 19. Requires attunement.' },
+    { name: '+2 Weapon', item_type: 'weapon', value_gp: 4000, weight: 3, description: '+2 to attack and damage rolls.' },
+    { name: 'Ring of Protection', item_type: 'wondrous', value_gp: 3500, weight: 0, description: '+1 to AC and saving throws. Requires attunement.' },
+  ],
+  very_rare: [
+    { name: 'Dancing Sword', item_type: 'weapon', value_gp: 20000, weight: 3, description: 'Can animate and fight on its own. Requires attunement.' },
+    { name: 'Staff of Power', item_type: 'weapon', value_gp: 25000, weight: 4, description: '+2 to AC/saves/spell attacks, multiple spells. Requires attunement.' },
+    { name: 'Robe of Stars', item_type: 'wondrous', value_gp: 20000, weight: 3, description: '+1 saves, store Magic Missiles. Requires attunement.' },
+    { name: '+3 Weapon', item_type: 'weapon', value_gp: 18000, weight: 3, description: '+3 to attack and damage rolls.' },
+    { name: 'Belt of Giant Strength (Fire)', item_type: 'wondrous', value_gp: 22000, weight: 2, description: 'STR becomes 25. Requires attunement.' },
+  ],
+  legendary: [
+    { name: 'Vorpal Sword', item_type: 'weapon', value_gp: 50000, weight: 3, description: 'On a natural 20, decapitates creature (special). Requires attunement.' },
+    { name: 'Holy Avenger', item_type: 'weapon', value_gp: 60000, weight: 3, description: '+3, deals extra radiant to fiends/undead, aura. Requires attunement by Paladin.' },
+    { name: 'Robe of the Archmagi', item_type: 'wondrous', value_gp: 55000, weight: 3, description: '+2 AC, advantage on saves vs magic, +2 spell DC. Requires attunement by sorcerer/warlock/wizard.' },
+    { name: 'Ring of Three Wishes', item_type: 'wondrous', value_gp: 75000, weight: 0, description: 'Cast Wish up to 3 times.' },
+    { name: 'Luck Blade', item_type: 'weapon', value_gp: 45000, weight: 3, description: '+1 weapon, +1 saves, reroll 1 attack/ability/save per day. Wishes.' },
+  ],
+};
+
+const GEM_TABLE = [
+  { name: 'Agate', value_gp: 10 }, { name: 'Turquoise', value_gp: 10 },
+  { name: 'Moonstone', value_gp: 50 }, { name: 'Onyx', value_gp: 50 },
+  { name: 'Jade', value_gp: 100 }, { name: 'Pearl', value_gp: 100 },
+  { name: 'Topaz', value_gp: 500 }, { name: 'Black Opal', value_gp: 1000 },
+  { name: 'Ruby', value_gp: 5000 }, { name: 'Diamond', value_gp: 5000 },
+];
+
+function getCRTier(cr) {
+  const n = parseFloat(cr) || 0;
+  if (n <= 4) return '0-4';
+  if (n <= 10) return '5-10';
+  if (n <= 16) return '11-16';
+  return '17+';
+}
+
+function rollDiceExpr(dice) {
+  if (!dice) return 0;
+  return rollDice(dice.count, dice.sides) * dice.mult;
+}
+
+function pickRandom(arr, count) {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(count, arr.length));
+}
+
+function generateIndividualTreasure(cr) {
+  const tier = getCRTier(cr);
+  const table = INDIVIDUAL_TREASURE[tier];
+  const result = { cp: 0, sp: 0, gp: 0, gems: [], items: [] };
+  if (table.cp) result.cp = rollDiceExpr(table.cp);
+  if (table.sp) result.sp = rollDiceExpr(table.sp);
+  if (table.gp) result.gp = rollDiceExpr(table.gp);
+  if (table.gems > 0 && Math.random() < table.gems) {
+    const gemValue = tier === '0-4' ? 10 : tier === '5-10' ? 50 : tier === '11-16' ? 100 : 500;
+    const possible = GEM_TABLE.filter(g => g.value_gp <= gemValue * 2);
+    const gem = possible[Math.floor(Math.random() * possible.length)];
+    if (gem) result.gems.push({ ...gem, quantity: 1 });
+  }
+  return result;
+}
+
+function generateHoardTreasure(cr) {
+  const tier = getCRTier(cr);
+  const table = HOARD_TREASURE[tier];
+  const result = { gp: 0, gems: [], items: [] };
+  // Gold in range
+  const [minGP, maxGP] = table.gp_range;
+  result.gp = Math.floor(minGP + Math.random() * (maxGP - minGP));
+  // Magic items by rarity
+  for (const [rarity, count] of Object.entries(table.items)) {
+    if (count <= 0) continue;
+    const rarityKey = rarity.replace('_', ' ');
+    const templateKey = rarity; // matches ITEM_TEMPLATES keys
+    const templates = ITEM_TEMPLATES[templateKey] || ITEM_TEMPLATES[rarity.replace('_', ' ')] || [];
+    if (templates.length > 0) {
+      const picked = pickRandom(templates, count);
+      picked.forEach(item => {
+        result.items.push({ ...item, rarity: rarityKey, quantity: 1 });
+      });
+    } else {
+      // Fallback generic items
+      for (let i = 0; i < count; i++) {
+        result.items.push({
+          name: `${rarityKey.charAt(0).toUpperCase() + rarityKey.slice(1)} Magic Item`,
+          item_type: 'wondrous', rarity: rarityKey, quantity: 1,
+          value_gp: minGP * 0.1, weight: 1,
+          description: `A ${rarityKey} magic item (DM: replace with specific item)`,
+        });
+      }
+    }
+  }
+  // Add some gems for hoards
+  const gemCount = Math.floor(Math.random() * 3) + 1;
+  const gemValue = tier === '0-4' ? 10 : tier === '5-10' ? 50 : tier === '11-16' ? 500 : 1000;
+  const possible = GEM_TABLE.filter(g => g.value_gp <= gemValue * 2);
+  for (let i = 0; i < gemCount && possible.length > 0; i++) {
+    const gem = possible[Math.floor(Math.random() * possible.length)];
+    result.gems.push({ ...gem, quantity: rollDice(1, 4) });
+  }
+  return result;
+}
+
 let _nextId = Date.now();
 function uid() { return `loot-${_nextId++}-${Math.random().toString(36).slice(2, 8)}`; }
 
@@ -127,6 +265,14 @@ export default function PartyLoot({ characterId }) {
   const [selectedCR, setSelectedCR] = useState('CR 0-4');
   const [showLog, setShowLog] = useState(false);
   const [tab, setTab] = useState('loot'); // loot | treasury | distribute | log
+
+  // Smart Loot Generator
+  const [showSmartLoot, setShowSmartLoot] = useState(false);
+  const [smartCR, setSmartCR] = useState(5);
+  const [smartPartyLevel, setSmartPartyLevel] = useState(5);
+  const [smartType, setSmartType] = useState('hoard'); // 'hoard' | 'individual'
+  const [smartResult, setSmartResult] = useState(null);
+  const [smartEditing, setSmartEditing] = useState({}); // { index: editedName }
 
   // ── Load data ──
   useEffect(() => {
@@ -334,6 +480,76 @@ export default function PartyLoot({ characterId }) {
     setShowQuickLoot(false);
   };
 
+  // ── Smart Loot Generator ──
+  const handleGenerateSmartLoot = () => {
+    if (smartType === 'individual') {
+      const result = generateIndividualTreasure(smartCR);
+      setSmartResult({ type: 'individual', ...result });
+    } else {
+      const result = generateHoardTreasure(smartCR);
+      setSmartResult({ type: 'hoard', ...result });
+    }
+    setSmartEditing({});
+    toast.success('Treasure generated! Review and edit before adding.');
+  };
+
+  const handleAddSmartLootToPool = () => {
+    if (!smartResult) return;
+    // Add currency to treasury
+    const newTreasury = { ...treasury };
+    if (smartResult.cp) newTreasury.cp = (newTreasury.cp || 0) + smartResult.cp;
+    if (smartResult.sp) newTreasury.sp = (newTreasury.sp || 0) + smartResult.sp;
+    if (smartResult.gp) newTreasury.gp = (newTreasury.gp || 0) + smartResult.gp;
+    saveTreasury(newTreasury);
+
+    // Add items and gems to loot
+    const newItems = [];
+    if (smartResult.gems) {
+      smartResult.gems.forEach(gem => {
+        newItems.push({
+          id: uid(),
+          name: `Gem (${gem.name})`,
+          item_type: 'misc',
+          rarity: 'common',
+          quantity: gem.quantity || 1,
+          weight: 0,
+          value_gp: gem.value_gp,
+          description: `A ${gem.name} gemstone worth ${gem.value_gp} GP`,
+          looted_from: `CR ${smartCR} ${smartResult.type} treasure`,
+        });
+      });
+    }
+    if (smartResult.items) {
+      smartResult.items.forEach((item, idx) => {
+        const editedName = smartEditing[idx];
+        newItems.push({
+          id: uid(),
+          name: editedName || item.name,
+          item_type: item.item_type || 'wondrous',
+          rarity: item.rarity || 'common',
+          quantity: item.quantity || 1,
+          weight: item.weight || 0,
+          value_gp: item.value_gp || 0,
+          description: item.description || '',
+          looted_from: `CR ${smartCR} ${smartResult.type} treasure`,
+        });
+      });
+    }
+    if (newItems.length > 0) saveItems([...items, ...newItems]);
+
+    // Log it
+    const coinParts = [];
+    if (smartResult.cp) coinParts.push(`${smartResult.cp} CP`);
+    if (smartResult.sp) coinParts.push(`${smartResult.sp} SP`);
+    if (smartResult.gp) coinParts.push(`${smartResult.gp} GP`);
+    const itemNames = newItems.map(i => i.name).join(', ');
+    addLogEntry(`Smart Loot (CR ${smartCR} ${smartResult.type}): ${coinParts.join(', ')}${itemNames ? ` + ${itemNames}` : ''}`);
+
+    toast.success(`Added ${smartResult.type} treasure to party loot!`);
+    setSmartResult(null);
+    setSmartEditing({});
+  };
+
   // ── Treasury currency update ──
   const updateTreasuryField = (denom, value) => {
     const updated = { ...treasury, [denom]: Math.max(0, parseInt(value) || 0) };
@@ -382,7 +598,10 @@ export default function PartyLoot({ characterId }) {
           </div>
         </h2>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button style={btnSecondary} onClick={() => setShowQuickLoot(!showQuickLoot)}>
+          <button style={btnSecondary} onClick={() => { setShowSmartLoot(!showSmartLoot); if (!showSmartLoot) setShowQuickLoot(false); }}>
+            <Sparkles size={13} /> Smart Loot
+          </button>
+          <button style={btnSecondary} onClick={() => { setShowQuickLoot(!showQuickLoot); if (!showQuickLoot) setShowSmartLoot(false); }}>
             <Dices size={13} /> Quick Loot
           </button>
           <button style={btnPrimary} onClick={() => setShowAddForm(true)}>
@@ -485,6 +704,177 @@ export default function PartyLoot({ characterId }) {
                 {selectedCR === 'CR 5-10' && 'Rolls 1d6 x 100 GP + uncommon items (cloaks, greater potions)'}
                 {selectedCR === 'CR 11-16' && 'Rolls 1d6 x 1,000 GP + rare items (magic weapons, diamonds)'}
               </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ══════════ Smart Loot Generator Panel ══════════ */}
+      <AnimatePresence>
+        {showSmartLoot && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{ ...cardStyle, borderColor: 'rgba(192,132,252,0.2)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <h3 style={{ fontSize: '14px', fontFamily: 'var(--font-display, Cinzel, serif)', color: '#e8dcc8', display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
+                  <Sparkles size={16} style={{ color: '#c084fc' }} /> Smart Loot Generator
+                </h3>
+                <button onClick={() => setShowSmartLoot(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(228,216,196,0.4)', padding: 4 }}>
+                  <X size={14} />
+                </button>
+              </div>
+
+              {/* Inputs row */}
+              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', marginBottom: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={labelStyle}>Encounter CR</div>
+                  <input type="number" min={0} max={30} step={1}
+                    style={{ ...inputStyle, textAlign: 'center' }}
+                    value={smartCR}
+                    onChange={e => setSmartCR(parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={labelStyle}>Party Level (avg)</div>
+                  <input type="number" min={1} max={20}
+                    style={{ ...inputStyle, textAlign: 'center' }}
+                    value={smartPartyLevel}
+                    onChange={e => setSmartPartyLevel(parseInt(e.target.value) || 1)}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={labelStyle}>Type</div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button
+                      onClick={() => setSmartType('individual')}
+                      style={{
+                        ...btnSecondary, flex: 1, justifyContent: 'center', fontSize: '10px',
+                        ...(smartType === 'individual' ? { background: 'rgba(192,132,252,0.12)', borderColor: 'rgba(192,132,252,0.3)', color: '#c084fc' } : {}),
+                      }}
+                    >
+                      Individual
+                    </button>
+                    <button
+                      onClick={() => setSmartType('hoard')}
+                      style={{
+                        ...btnSecondary, flex: 1, justifyContent: 'center', fontSize: '10px',
+                        ...(smartType === 'hoard' ? { background: 'rgba(192,132,252,0.12)', borderColor: 'rgba(192,132,252,0.3)', color: '#c084fc' } : {}),
+                      }}
+                    >
+                      Hoard
+                    </button>
+                  </div>
+                </div>
+                <button style={{ ...btnPrimary, background: 'linear-gradient(135deg, rgba(192,132,252,0.25), rgba(192,132,252,0.15))', color: '#c084fc' }}
+                  onClick={handleGenerateSmartLoot}>
+                  <Dices size={14} /> Generate
+                </button>
+              </div>
+
+              {/* Tier info */}
+              <div style={{ fontSize: '10px', color: 'rgba(228,216,196,0.3)', marginBottom: 8 }}>
+                CR Tier: {getCRTier(smartCR)} | {smartType === 'individual' ? 'Per-monster individual treasure' : 'Treasure hoard (boss/lair)'}
+                {smartType === 'hoard' && ` | GP range: ${HOARD_TREASURE[getCRTier(smartCR)].gp_range[0].toLocaleString()}-${HOARD_TREASURE[getCRTier(smartCR)].gp_range[1].toLocaleString()}`}
+              </div>
+
+              {/* Generated Result */}
+              {smartResult && (
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(192,132,252,0.15)', borderRadius: 8, padding: 14, marginTop: 8 }}>
+                  <div style={{ ...labelStyle, color: 'rgba(192,132,252,0.6)', marginBottom: 8 }}>Generated Treasure</div>
+
+                  {/* Currency */}
+                  <div style={{ display: 'flex', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
+                    {smartResult.cp > 0 && (
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: COIN_STYLES.cp.color, background: COIN_STYLES.cp.bg, padding: '3px 8px', borderRadius: 4 }}>
+                        {smartResult.cp.toLocaleString()} CP
+                      </span>
+                    )}
+                    {smartResult.sp > 0 && (
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: COIN_STYLES.sp.color, background: COIN_STYLES.sp.bg, padding: '3px 8px', borderRadius: 4 }}>
+                        {smartResult.sp.toLocaleString()} SP
+                      </span>
+                    )}
+                    {smartResult.gp > 0 && (
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: COIN_STYLES.gp.color, background: COIN_STYLES.gp.bg, padding: '3px 8px', borderRadius: 4 }}>
+                        {smartResult.gp.toLocaleString()} GP
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Gems */}
+                  {smartResult.gems && smartResult.gems.length > 0 && (
+                    <div style={{ marginBottom: 10 }}>
+                      <div style={{ fontSize: '10px', color: 'rgba(228,216,196,0.4)', marginBottom: 4 }}>Gems</div>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {smartResult.gems.map((gem, i) => (
+                          <span key={i} style={{
+                            fontSize: '11px', padding: '3px 8px', borderRadius: 4,
+                            background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)',
+                            color: '#fbbf24',
+                          }}>
+                            {gem.quantity > 1 ? `${gem.quantity}x ` : ''}{gem.name} ({gem.value_gp} GP ea.)
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Magic Items (editable) */}
+                  {smartResult.items && smartResult.items.length > 0 && (
+                    <div style={{ marginBottom: 10 }}>
+                      <div style={{ fontSize: '10px', color: 'rgba(228,216,196,0.4)', marginBottom: 4 }}>Magic Items (click name to edit)</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {smartResult.items.map((item, idx) => {
+                          const rarity = RARITY_COLORS[(item.rarity || 'common').toLowerCase()] || RARITY_COLORS.common;
+                          return (
+                            <div key={idx} style={{
+                              display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 6,
+                              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                              borderLeft: `3px solid ${rarity.border}`,
+                            }}>
+                              <span style={{
+                                fontSize: '9px', padding: '1px 6px', borderRadius: 3,
+                                background: rarity.bg, color: rarity.text, border: `1px solid ${rarity.border}`,
+                                fontWeight: 600, textTransform: 'capitalize', flexShrink: 0,
+                              }}>
+                                {item.rarity}
+                              </span>
+                              <input
+                                style={{ ...inputStyle, flex: 1, fontSize: '12px', fontWeight: 500, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', padding: '3px 6px' }}
+                                value={smartEditing[idx] !== undefined ? smartEditing[idx] : item.name}
+                                onChange={e => setSmartEditing(prev => ({ ...prev, [idx]: e.target.value }))}
+                                title="Edit item name before adding to loot"
+                              />
+                              <Edit3 size={10} style={{ color: 'rgba(228,216,196,0.25)', flexShrink: 0 }} />
+                              <span style={{ fontSize: '10px', color: 'rgba(228,216,196,0.3)', flexShrink: 0 }}>
+                                {item.item_type}
+                              </span>
+                              {item.value_gp > 0 && (
+                                <span style={{ fontSize: '10px', color: '#f0c850', flexShrink: 0 }}>{item.value_gp.toLocaleString()} gp</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                    <button style={btnPrimary} onClick={handleAddSmartLootToPool}>
+                      <Package size={13} /> Add to Party Loot
+                    </button>
+                    <button style={btnSecondary} onClick={handleGenerateSmartLoot}>
+                      <Dices size={13} /> Re-roll
+                    </button>
+                    <button style={btnSecondary} onClick={() => { setSmartResult(null); setSmartEditing({}); }}>
+                      <X size={12} /> Discard
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
