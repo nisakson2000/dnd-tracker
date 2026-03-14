@@ -4,6 +4,63 @@ All updates relevant to **Player Mode**. For DM-specific changes, see `MASTERUPD
 
 ---
 
+## V0.5.9 — Player Combat HUD, Automation & Polish
+**Released:** March 13, 2026
+
+### Player Combat HUD
+- Full tabbed combat interface — Attack, Spell, Items, Features tabs during your turn
+- Attack tab — equipped weapons with attack bonus + damage dice, Extra Attack support, crit detection
+- Spell tab — prepared spells grouped by level, slot tracking, upcast selector, concentration enforcement
+- Items tab — use consumable items (potions auto-heal, scrolls cast spells, quantity decrements)
+- Features tab — class resource tracking (Ki, Rage, Bardic Inspiration, etc.) with use/spend buttons
+- Action economy bar — Action, Bonus Action, Reaction toggles that reset each turn
+- End Turn button — signals DM to advance initiative
+- Grapple & shove — special combat actions with contested Athletics checks
+- Exhaustion auto-effects — levels 1-6 with auto penalties and warning banners
+
+### Player Session Experience
+- Turn notifications — audio chime, window title flash, gold banner when it's your turn
+- Death saves — dramatic d20 roll overlay with nat 1 (2 failures) and nat 20 (stabilize + 1 HP)
+- Concentration tracking — active concentration spell shown, auto-dropped on failed CON save
+- Shared combat log — see all attacks, damage, kills, spell casts from other players
+- Equipment selection — choose weapons/armor before combat starts
+- Reaction prompts — Opportunity Attack, Counterspell, Shield with 5-second countdown
+- Player-to-player healing — healers target allies, HP auto-applies
+- Cover indicator — see when DM applies cover bonuses to your AC
+- Monster HP tiers — see "Healthy/Bloodied/Critical" instead of exact numbers
+- Loot persistence — accepted loot writes items and gold to your inventory
+- XP notifications — see XP awards with level-up prompt when threshold crossed
+- Rest sync — HP, spell slots, features auto-reset when DM triggers rest
+- Warlock short rest spell slot recovery
+- Inspiration — DM grants, spend for advantage on next roll
+- Quest journal — floating journal panel for tracking quests and NPCs during play
+- Mood overlay — colored vignette and ambient audio matching DM's scene mood
+- DM name & campaign name shown on session join
+
+### Dice Roller
+- Animated dice — tumbling animation on roll, d6 pip faces, shake-on-hover buttons
+- Particle effects — gold sparkle burst on nat 20, red shatter on nat 1
+- Idle rocking animation on floating dice button
+
+### New Features
+- Keyboard shortcuts — Ctrl+1-9 for sections, Ctrl+R quick roll, `?` for help overlay
+- In-character chat — floating panel with IC/OOC modes, /roll commands, class-colored names
+- Combat stats dashboard — damage dealt/taken, hit rate %, crits, kills, healing
+- PDF character export — generates print-ready character sheet
+- Print-friendly stylesheet — clean B&W print layout
+- Offline action queue — queues actions when disconnected, replays on reconnect
+- Mobile responsive CSS — touch-friendly breakpoints at 768px/480px
+- Auto-populate character stats — one-click fill from class/race
+- Multiclass support — editable secondary class
+- Auto-encumbrance warnings — weight checks after adding items
+- Consumable use system — potions auto-heal, attunement limit (max 3)
+- Community campaigns show quest count + estimated completion time
+- Player presence indicators — green/yellow/red connection status dots
+- Session crash recovery — periodic snapshots with recovery banner
+- Condition auto-effects — advantage/disadvantage applied based on active conditions
+
+---
+
 ## V0.5.0 — Multiplayer Campaign Engine & Party Tools
 **Released:** March 13, 2026
 

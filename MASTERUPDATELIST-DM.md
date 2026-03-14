@@ -4,6 +4,55 @@ All updates relevant to **DM Mode**. For Player-specific changes, see `MASTERUPD
 
 ---
 
+## V0.5.9 — Campaign Engine, Combat Automation & DM Tools
+**Released:** March 13, 2026
+
+### V4 Campaign Engine (Full DM↔Player Sync)
+- 22+ sync event types — conditions, HP, rest, loot, XP, spell slots, death saves, concentration
+- Expanded character snapshots with weapons, spell slots, features, currency synced to DM
+- Shared combat log — all combat actions visible to entire party
+- Equipment selection overlay before combat starts
+- XP auto-distribution on encounter end with level-up detection
+- Rest sync — trigger long/short rest for all players at once
+- Condition tick on turn advance — expired conditions auto-removed
+- Consequence system — one-click damage, conditions, item/gold loss on failed checks
+- Quest completion rewards — pre-filled XP/gold/items auto-distributed to party
+
+### DM Combat Tools
+- Cover system — half/three-quarter/full cover toggles per combatant with AC modifiers
+- Auto-concentration saves — damage to concentrating player auto-sends CON save
+- Legendary & lair actions — pip tracking, crown icons, lair action reminders
+- Death save triggers — prompt unconscious players, track 3 success/failure pips
+- Reaction prompts — Opportunity Attack, Counterspell, Shield with 5-second timer
+- Inspiration grant — star button per player, synced to their character
+- Monster HP tiers — players see "Healthy/Bloodied/Critical" instead of exact numbers
+- Encounter difficulty meter — Easy/Medium/Hard/Deadly based on party level vs CR
+- Initiative auto-roll — d20 + DEX mod for all combatants
+- Monster condition persistence to database and sync to players
+- Exhaustion badges — color-coded levels 1-6 per player
+- Player presence dots — green/yellow/red connection status indicators
+
+### DM Session Tools
+- Mood/music sync — 7 scene moods + 9 ambient sounds synced to all players
+- Travel calculator — distance, speed, terrain inputs with encounter rolls per day
+- Random encounter quick-start with monster picker
+- Session crash recovery — 30-second periodic snapshots with recovery banner
+- Session recap generator — compiles action log into markdown recap
+- Quick NPC generator — random name, race, occupation, personality traits
+- Smart loot tables — CR-based treasure generation (individual vs hoard)
+- One-click monster import with full stat blocks from SRD search
+- DM name display — collected on campaign creation, shown to joining players
+- Campaign auto-select — removed dropdown, auto-loads active campaign
+- Shop & trading system — create shops, players browse and buy items
+- Battle map sync — token moves, fog, drawings broadcast to player view
+
+### Safety Caps
+- Max 20 players per room
+- Max 20 campaigns per account
+- Attunement limit enforcement (max 3 items)
+
+---
+
 ## V0.5.0 — Multiplayer Campaign Engine & Party Tools
 **Released:** March 13, 2026
 

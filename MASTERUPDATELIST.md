@@ -4,6 +4,78 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.5.9 — Campaign Engine, Combat Automation & Polish
+**Released:** March 13, 2026
+
+### V4 Campaign Engine (DM↔Player Full Sync)
+- Full data sync pipeline — conditions, HP, rest, loot, XP, spell slots now flow between DM and players
+- 22+ new sync event types (hp_change, rest_sync, xp_award, death_save, concentration, reactions, etc.)
+- Expanded character snapshots with equipped weapons, spell slots, features, currency, death saves
+- Player Combat HUD — tabbed interface (Attack/Spell/Items/Features) with action economy bar
+- Death Save system — dramatic d20 overlay, nat 1/nat 20 handling, 3 success/failure tracking
+- Concentration tracking — auto CON save on damage, auto-drop on fail
+- Shared combat log — all players see attacks, damage, kills, and spell casts in real-time
+- Turn notifications — audio chime, window title flash, gold banner on your turn
+- Equipment selection overlay before combat starts
+- Loot persistence — accepted loot writes items and gold to player inventory
+- XP auto-distribution on encounter end with level-up detection
+- Rest sync — DM triggers long/short rest, all players reset HP/slots/features
+- Warlock Pact Magic slots recover on short rest
+- Condition tick on turn advance — expired conditions auto-removed
+- Reaction system — DM sends reaction prompts (Opportunity Attack, Counterspell, Shield) with 5s timer
+- Player-to-player healing — healers target allies, HP auto-applies
+- Inspiration sync — DM grants, player spends for advantage
+- Monster condition persistence to DB and sync to players
+- Quest completion rewards — pre-filled XP/gold/items auto-distributed
+- Consequence system — one-click damage, conditions, item/gold loss on failed checks
+
+### V5 Features (12)
+- Player presence & connection status — green/yellow/red dots, disconnect toasts
+- Condition auto-effects in combat — advantage/disadvantage applied based on active conditions
+- Encounter difficulty live tracker — Easy/Medium/Hard/Deadly meter in DM combat panel
+- Monster HP tiers for players — "Healthy/Bloodied/Critical" instead of exact numbers
+- Initiative auto-roll — d20 + DEX mod for players and monsters
+- Player quest journal & NPC directory — floating journal panel with localStorage persistence
+- Multiclass support — editable secondary class with combined spell slot computation
+- Session crash recovery — 30-second periodic snapshots with recovery banner
+- Battle map token sync — DM token moves, fog, drawings sync to player view
+- Shop & trading system — DM creates shops, players browse and buy
+
+### Combat Automation
+- Auto-damage application — incoming player attacks shown with "Apply to monster" dropdown
+- Auto-concentration saves — damage to concentrating player auto-sends CON save prompt
+- Legendary & lair actions — pip tracking, crown icons, lair action reminders
+- Travel calculator — distance/speed/terrain inputs with encounter rolls per day
+- Smart loot tables — CR-based treasure generation (individual vs hoard)
+- Session recap generator — compiles action log into markdown recap
+- Quick NPC generator — random name, race, occupation, personality, voice
+- Auto-encumbrance warnings — weight checks after adding items
+- One-click monster import — full stat blocks from SRD search
+- Auto-populate character stats — fills HP, saves, speed from class/race
+- Auto-level detection — XP threshold checking with level-up notification
+- Enhanced rest summaries — detailed itemized rest effects
+
+### Polish & New Features
+- Animated dice roller — tumbling animation, d6 pip faces, gold particle burst on nat 20, red shatter on nat 1
+- Keyboard shortcuts — Ctrl+1-9 for sections, Ctrl+R quick roll, `?` for help overlay, hints in sidebar
+- In-character chat — floating panel with IC/OOC modes, /roll commands, class-colored names
+- Mood/music sync — 7 scene moods + 9 ambient sounds with colored vignette overlays and Web Audio
+- Cover system — half/three-quarter/full cover toggles with AC modifiers synced to players
+- Grapple & shove mechanics — special combat actions with contested Athletics checks
+- Exhaustion auto-effects — levels 1-6 with auto penalties, color-coded badges, warning banners
+- Combat stats dashboard — damage dealt/taken, hit rate %, crits, kills, healing, session duration
+- Mobile responsive CSS — touch-friendly breakpoints at 768px/480px, stacking grids
+- Print-friendly stylesheet — clean B&W print layout, hides UI chrome
+- PDF character export — generates print-ready character sheet with ExportButton component
+- Offline action queue — queues actions when disconnected, replays on reconnect
+- Community campaigns show quest count + estimated completion time/sessions
+- DM name collected on campaign creation, shown to joining players with campaign name
+- Campaign auto-select for DM sessions (removed unnecessary dropdown)
+- Player/campaign caps — max 20 players per room, max 20 campaigns
+- Attunement limit enforcement — max 3 attuned items
+
+---
+
 ## V0.5.5 — OTA Live Updates, UX Improvements & Report System
 **Released:** March 13, 2026
 

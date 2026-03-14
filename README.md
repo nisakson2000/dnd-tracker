@@ -1,6 +1,6 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.5.5**
+**Current Version: V0.5.9**
 
 A native desktop application for managing D&D 5e characters with full ruleset support, a 2,000+ article encyclopedia, real-time multiplayer sessions, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
@@ -17,13 +17,30 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - **Player Session View** — see active scene, initiative, chat, roll dice, receive handouts, take actions
 - **D&D Beyond Import** — multi-step import wizard for D&D Beyond JSON character exports
 
+### V4 Campaign Engine (DM↔Player Sync)
+- **Full Data Sync** — conditions, HP, rest, loot, XP, spell slots, and 22+ event types synced between DM and players in real-time
+- **Player Combat HUD** — tabbed interface with Attack, Spell, Items, and Features tabs during combat turns
+- **Death Save System** — dramatic d20 roll overlay with nat 1/nat 20 handling, 3 success/failure tracking
+- **Concentration Tracking** — auto-sends CON save on damage to concentrating player, auto-drops on fail
+- **Shared Combat Log** — all players see attacks, damage, kills, and spell casts in real-time feed
+- **Turn Notifications** — audio chime, window title flash, gold banner when it's your turn
+- **Equipment Selection** — players choose weapons/armor before combat starts
+- **Expanded Snapshots** — equipped weapons, spell slots, features, currency, death saves, and more synced to DM
+
 ### DM Session Tools
 - **Character Arc Manager** — track character arcs (hooks, development, complications, climax, resolution)
 - **Handouts Manager** — create and reveal handouts to players with visibility toggle
 - **Monster Panel** — search SRD monsters, add to encounter, track HP/damage/conditions
 - **Quest Generator** — AI-powered quest generation via Ollama (party level, setting, theme)
-- **Session Recap** — AI-powered session summary generator
+- **Session Recap** — AI-powered session summary generator + auto-generated recap from action log
 - **World State Manager** — track world state by category (politics, geography, events, factions)
+- **DM Name Display** — DM name collected on campaign creation, shown to joining players
+- **Cover System** — half/three-quarter/full cover toggles per combatant with AC modifiers
+- **Mood/Music Sync** — 7 scene moods + 9 ambient sounds synced to players with visual overlays
+- **Consequence System** — one-click damage, conditions, item/gold loss on failed checks
+- **Travel Calculator** — distance, speed, terrain inputs with encounter rolls per travel day
+- **Random Encounter** — quick-start mid-scene encounters with monster picker
+- **Legendary & Lair Actions** — pip tracking and lair action reminders for boss fights
 
 ### Character Sheet
 - **Dice Rolling on Stats** — hover any ability score, saving throw, or skill to reveal dice icon; click to roll
@@ -69,8 +86,9 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - **Low Charges Warning** — amber pulsing border at 1 use remaining
 
 ### Dice Roller
+- **Animated Dice** — tumbling animation on roll, d6 pip faces, shake-on-hover buttons
+- **Particle Effects** — gold sparkle burst on nat 20, red shatter on nat 1
 - **Saved Roll Macros** — save up to 20 frequently used rolls, one-click re-roll
-- **Enhanced Crit Visuals** — "CRITICAL HIT!" / "CRITICAL MISS!" with glow and shake
 - Quick-roll buttons (d4–d100), custom expressions, advantage/disadvantage
 - Roll labels, persistent history, 4d6kh3 stat roller, statistics panel
 
@@ -179,14 +197,52 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - **Rate-limited & deduplicated** — max 1 auto-report per 10 minutes, identical errors merged
 - **Session context** — reports include app version, OS, screen size, stack traces, and timestamps
 
+### In-Character Chat
+- **Floating Chat Panel** — IC and OOC modes with class-colored names
+- **/roll Command** — type `/roll 2d6+3` inline to roll and share results
+- **Persistent History** — last 50 messages saved per room in localStorage
+
+### Keyboard Shortcuts
+- **Section Navigation** — Ctrl+1 through Ctrl+9 for quick section switching
+- **Quick Actions** — Ctrl+R (quick roll d20), Ctrl+K (search sections), Ctrl+D (dice), Ctrl+S (save)
+- **Shortcuts Help** — press `?` to see all available shortcuts
+- **Sidebar Hints** — shortcut labels shown next to each section name
+
+### Combat Stats Dashboard
+- **Session Statistics** — damage dealt/taken, hit rate %, critical hits, kills, healing done
+- **Highest Damage** — tracks your biggest single hit
+- **Session Duration** — elapsed time since session start
+
+### PDF & Print Export
+- **PDF Character Export** — generates a print-ready character sheet in a new window
+- **Print Stylesheet** — clean black & white print layout, hides UI chrome
+- **Text Export** — plain text character sheet for clipboard
+
+### Mobile & Responsive
+- **Touch-Friendly** — 44px minimum touch targets, no sticky hover states
+- **Responsive Breakpoints** — layouts adapt at 768px and 480px
+- **Full-Screen Modals** — modals fill screen on mobile devices
+
 ### Additional Features
 - Arcane Encyclopedia — 2,000+ article searchable wiki with FTS5, grid/list views, keyboard shortcuts, cross-ref hover previews, drop cap typography
-- Community Campaigns — browse and import adventures from the 5etools homebrew repository
+- Community Campaigns — browse and import adventures from the 5etools homebrew repository with quest count and estimated completion time
 - Party Connect — LAN sync with room codes, auto-reconnect, DM party stats overview, persistent connection across navigation
-- LAN Dev Presence — UDP broadcast peer discovery with version-aware sync, instant update push notifications between devs, "builds synced" indicator
+- In-Character Chat — floating IC/OOC chat with /roll commands and class-colored names
+- Offline Action Queue — queues actions when disconnected, replays on reconnect
+- Exhaustion Auto-Effects — levels 1-6 with auto-applied penalties and warning banners
+- Grapple & Shove — special combat actions with contested Athletics checks
+- Cover System — half/three-quarter/full cover with AC modifiers synced to players
+- Mood & Music Sync — DM sets scene mood with colored vignette overlays and ambient audio for players
+- Session Crash Recovery — periodic session snapshots with recovery banner on reconnect
+- Auto-Encumbrance Warnings — weight checks after adding items
+- Smart Loot Tables — CR-based treasure generation for encounters
+- Quick NPC Generator — random name, race, occupation, and personality traits
+- Auto-Populate Character Stats — one-click fill of HP, saves, speed from class and race
+- Multiclass Support — editable secondary class with combined spell slot computation
+- LAN Dev Presence — UDP broadcast peer discovery with version-aware sync
 - Update Detection — checks for updates on launch, banner with one-click "UPDATE NOW" and reload
-- Rest Mechanics (Long/Short Rest with proper D&D rules)
-- Level-Up System with animated overlay and class-specific gains
+- Rest Mechanics (Long/Short Rest with proper D&D rules, Warlock short rest slot recovery)
+- Level-Up System with animated overlay, class-specific gains, and auto-detection
 - Frontend error logging — console errors, unhandled exceptions, and promise rejections captured to log file
 - 6 UI Themes, font/density controls, auto-save, auto-backup, crash recovery
 - Beginner Tutorial Wizard, contextual help tooltips
