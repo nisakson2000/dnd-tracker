@@ -419,6 +419,23 @@ export default function DMCampaignList() {
                     <Trash2 size={14} />
                   </button>
 
+                  {c.session_count > 0 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigate(`/dm/session/${c.id}`); }}
+                      title="Resume last session"
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '4px',
+                        padding: '4px 10px', borderRadius: '6px',
+                        background: 'rgba(74,222,128,0.1)',
+                        border: '1px solid rgba(74,222,128,0.2)',
+                        color: '#4ade80', fontSize: '10px', fontWeight: 600,
+                        cursor: 'pointer', fontFamily: 'var(--font-ui)',
+                      }}
+                    >
+                      <ChevronRight size={11} /> Resume
+                    </button>
+                  )}
+
                   <ChevronRight size={16} style={{ color: 'var(--text-mute)', flexShrink: 0 }} />
                 </motion.div>
               ))}

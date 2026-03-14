@@ -6,7 +6,7 @@ import {
   Library, ChevronRight, ChevronLeft, Scroll, Check, X,
   Search, Users, Upload, ClipboardList, Flag, FileJson,
   Sparkles, Coins, BookOpen, AlertTriangle, Moon,
-  Clock, CheckCircle, XCircle, Zap, Save, Download, Archive,
+  Clock, CheckCircle, XCircle, Zap, Save, Download,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
@@ -496,10 +496,10 @@ function DDBImportCard({ index, onClick }) {
 
 // ─── DM Campaign Card ────────────────────────────────────────────────────────
 
-function CampaignCard({ char, index, onEnter, onDelete, onExport, onArchive }) {
+function CampaignCard({ char, index, onEnter, onDelete, onExport }) {
   const [hovered, setHovered] = useState(false);
   const isDraft = char.status === 'draft';
-  const color = char.status === 'archived' ? '#6b7280' : isDraft ? '#4ade80' : '#9b59b6';
+  const color = isDraft ? '#4ade80' : '#9b59b6';
 
   return (
     <motion.div
@@ -566,19 +566,6 @@ function CampaignCard({ char, index, onEnter, onDelete, onExport, onArchive }) {
           <button
             style={{
               border: 'none', cursor: 'pointer', width: 28, height: 28, borderRadius: 8,
-              background: 'rgba(0,0,0,0.45)', color: char.status === 'archived' ? 'rgba(74,222,128,0.5)' : 'rgba(200,175,130,0.45)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
-            }}
-            title={char.status === 'archived' ? 'Unarchive campaign' : 'Archive campaign'}
-            onMouseEnter={e => { e.currentTarget.style.color = char.status === 'archived' ? '#4ade80' : '#fbbf24'; e.currentTarget.style.background = 'rgba(0,0,0,0.55)'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = char.status === 'archived' ? 'rgba(74,222,128,0.5)' : 'rgba(200,175,130,0.45)'; e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; }}
-            onClick={e => { e.stopPropagation(); onArchive?.(char); }}
-          >
-            <Archive size={12} />
-          </button>
-          <button
-            style={{
-              border: 'none', cursor: 'pointer', width: 28, height: 28, borderRadius: 8,
               background: 'rgba(0,0,0,0.45)', color: 'rgba(220,80,80,0.45)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
             }}
@@ -592,17 +579,6 @@ function CampaignCard({ char, index, onEnter, onDelete, onExport, onArchive }) {
         </motion.div>
 
         {/* Status badge */}
-        {char.status === 'archived' && (
-          <div style={{
-            position: 'absolute', top: 8, right: 10,
-            fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.08em',
-            color: '#6b7280', background: 'rgba(107,114,128,0.18)',
-            border: '1px solid rgba(107,114,128,0.3)',
-            padding: '2px 8px', borderRadius: 99, textTransform: 'uppercase',
-          }}>
-            Archived
-          </div>
-        )}
         {isDraft && (
           <div style={{
             position: 'absolute', top: 8, right: 10,
@@ -2305,7 +2281,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const [charSearch, setCharSearch] = useState('');
-  const [showArchived, setShowArchived] = useState(false);
   const [showDDBImport, setShowDDBImport] = useState(false);
   const [sessionPrepChar, setSessionPrepChar] = useState(null);
   const [postSessionChar, setPostSessionChar] = useState(null);
@@ -2513,17 +2488,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleArchiveCampaign = async (campaign) => {
-    const isArchived = campaign.status === 'archived';
-    try {
-      await invoke('archive_campaign', { campaignId: campaign.id, archived: !isArchived });
-      toast.success(isArchived ? `"${campaign.name}" restored!` : `"${campaign.name}" archived!`);
-      load();
-    } catch (err) {
-      toast.error(`Failed: ${err.message || err}`);
-    }
-  };
-
   const handleImportCampaign = async () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -2549,11 +2513,8 @@ export default function Dashboard() {
   };
 
   // ── Derived stats for quick stats bar ──
-  const archivedCount = isDM ? characters.filter(c => c.status === 'archived').length : 0;
   const filteredCharacters = characters
     .filter(c => {
-      // Hide archived campaigns unless toggled
-      if (isDM && c.status === 'archived' && !showArchived) return false;
       if (!charSearch.trim()) return true;
       const q = charSearch.trim().toLowerCase();
       return (c.name || '').toLowerCase().includes(q)
@@ -2825,27 +2786,6 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {/* Archived toggle — always visible when archived campaigns exist */}
-        {!loading && isDM && archivedCount > 0 && (
-          <div style={{ textAlign: 'center', marginBottom: 16 }}>
-            <button
-              onClick={() => setShowArchived(v => !v)}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: showArchived ? 'rgba(201,168,76,0.7)' : 'rgba(200,175,130,0.3)',
-                fontSize: 11, fontFamily: 'var(--font-heading)', letterSpacing: '0.08em',
-                display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 8px',
-                borderRadius: 6, transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => e.target.style.color = 'rgba(201,168,76,0.7)'}
-              onMouseLeave={e => { if (!showArchived) e.target.style.color = 'rgba(200,175,130,0.3)'; }}
-            >
-              <Archive size={11} />
-              {showArchived ? 'Hide' : 'Show'} archived ({archivedCount})
-            </button>
-          </div>
-        )}
-
         {/* Grid / states */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: '80px 0', fontSize: 14, fontFamily: 'var(--font-heading)', color: 'rgba(200,175,130,0.22)', letterSpacing: '0.15em' }}>
@@ -2868,7 +2808,6 @@ export default function Dashboard() {
                 onEnter={id => navigate(`/character/${id}`)}
                 onDelete={setDeleteTarget}
                 onExport={handleExportCampaign}
-                onArchive={handleArchiveCampaign}
               />
             ) : (
               <CharacterCard

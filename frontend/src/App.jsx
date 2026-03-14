@@ -956,28 +956,11 @@ function AppContent() {
       <Toaster
         position="bottom-right"
         toastOptions={{
-          duration: 3000,
-          style: {
-            background: 'rgba(12,10,20,0.95)',
-            color: 'rgba(255,255,255,0.88)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            fontFamily: 'var(--font-ui)',
-            fontSize: '13px',
-            borderRadius: '10px',
-            backdropFilter: 'blur(16px)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03)',
-            padding: '10px 14px',
-          },
-          success: {
-            iconTheme: { primary: '#4ade80', secondary: 'rgba(12,10,20,0.95)' },
-            style: { borderColor: 'rgba(74,222,128,0.15)' },
-          },
-          error: {
-            iconTheme: { primary: '#ef4444', secondary: 'rgba(12,10,20,0.95)' },
-            style: { borderColor: 'rgba(239,68,68,0.15)' },
-          },
-          ariaProps: { role: 'status', 'aria-live': 'polite' },
+          duration: 4000,
+          style: { background: '#1a1520', color: '#e2e0d8', border: '1px solid rgba(255,255,255,0.1)', fontFamily: 'var(--font-ui, "DM Sans", sans-serif)', fontSize: '13px' },
         }}
+        containerStyle={{ bottom: 20, right: 20 }}
+        gutter={8}
       />
 
       {/* Step 0: Bootup video */}

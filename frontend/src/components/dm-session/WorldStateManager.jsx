@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import toast from 'react-hot-toast';
 import { Globe, Plus, Eye, EyeOff, Trash2, Save, X, Loader2 } from 'lucide-react';
 
 const CATEGORIES = ['general', 'politics', 'geography', 'events', 'factions'];
@@ -77,6 +78,12 @@ export default function WorldStateManager({ campaignId }) {
       });
       resetForm();
       await fetchEntries();
+      // Broadcast update to players if visible
+      if (formVisibility === 'players') {
+        invoke('ws_broadcast_event', {
+          eventJson: JSON.stringify({ type: 'WorldStateChanged', key: formKey.trim(), action: editingId ? 'updated' : 'created' }),
+        }).catch(() => {});
+      }
     } catch (err) {
       console.error('[WorldStateManager] set_world_state:', err);
     } finally {
@@ -97,6 +104,10 @@ export default function WorldStateManager({ campaignId }) {
     try {
       await invoke('reveal_world_state', { campaignId, key });
       await fetchEntries();
+      // Broadcast to players
+      invoke('ws_broadcast_event', {
+        eventJson: JSON.stringify({ type: 'WorldStateChanged', key, action: 'revealed' }),
+      }).catch(() => {});
     } catch (err) {
       console.error('[WorldStateManager] reveal_world_state:', err);
     }

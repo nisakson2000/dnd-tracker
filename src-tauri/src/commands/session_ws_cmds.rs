@@ -88,6 +88,7 @@ pub async fn ws_reject_player(
 }
 
 /// Broadcast any GameEvent to all connected players.
+/// Supports both typed GameEvent variants and arbitrary JSON events (for extensibility).
 #[tauri::command]
 pub async fn ws_broadcast_event(
     event_json: String,
@@ -98,10 +99,22 @@ pub async fn ws_broadcast_event(
         .as_ref()
         .ok_or("Session server is not running.".to_string())?;
 
-    let event: GameEvent = serde_json::from_str(&event_json)
-        .map_err(|e| format!("Invalid event JSON: {}", e))?;
-
-    server.broadcast(&event).await;
+    // Try deserializing as a typed GameEvent first; if that fails,
+    // validate it's at least valid JSON and broadcast raw
+    match serde_json::from_str::<GameEvent>(&event_json) {
+        Ok(event) => {
+            server.broadcast(&event).await;
+        }
+        Err(_) => {
+            // Validate it's valid JSON
+            let _: serde_json::Value = serde_json::from_str(&event_json)
+                .map_err(|e| format!("Invalid event JSON: {}", e))?;
+            // Buffer for reconnection replay
+            server.buffer_event(&event_json).await;
+            // Broadcast raw JSON to all clients
+            server.broadcast_raw(&event_json).await;
+        }
+    }
     Ok(())
 }
 

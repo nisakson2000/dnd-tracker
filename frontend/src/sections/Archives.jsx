@@ -20,7 +20,7 @@ export default function Archives() {
 
   const handleRestore = async (c) => {
     try {
-      await invoke('archive_campaign', { campaignId: c.id, archived: false });
+      await invoke('update_campaign_status', { campaignId: c.id, status: 'active' });
       toast.success(`"${c.name}" restored!`);
       load();
     } catch (err) {

@@ -312,9 +312,9 @@ fn main() {
             commands::campaigns::set_active_campaign_id,
             commands::campaigns::delete_campaign,
             commands::campaigns::update_campaign,
-            commands::campaigns::archive_campaign,
             commands::campaigns::export_campaign,
             commands::campaigns::import_campaign,
+            commands::campaigns::update_campaign_status,
             // Scenes
             commands::scenes::create_scene,
             commands::scenes::list_scenes,
@@ -375,6 +375,7 @@ fn main() {
             commands::session_mgmt::delete_shop,
             // Session recap (M-12)
             commands::session_mgmt::generate_session_recap,
+            commands::session_mgmt::export_session_markdown,
             // Handouts (M-13)
             commands::handouts::create_handout,
             commands::handouts::list_handouts,
@@ -392,6 +393,10 @@ fn main() {
             commands::campaign_extras::set_campaign_setting,
             // AI Quest generation (M-20)
             commands::ollama::generate_quest,
+            commands::ollama::generate_npc,
+            commands::ollama::generate_location,
+            commands::ollama::generate_lore,
+            commands::ollama::generate_encounter,
             // World State
             commands::world_state::set_world_state,
             commands::world_state::get_world_state,

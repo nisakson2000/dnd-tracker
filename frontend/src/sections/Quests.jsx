@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Map, CheckSquare, Square, XCircle, Star, Coins, Package, User, MapPin, Clock, ChevronDown, ChevronRight, Flag, Scroll, MessageSquarePlus, Crosshair, Compass, EyeOff, Eye, Shuffle } from 'lucide-react';
+import { Plus, Trash2, Edit2, Map, CheckSquare, Square, XCircle, Star, Coins, Package, User, MapPin, Clock, ChevronDown, ChevronRight, Flag, Scroll, MessageSquarePlus, Crosshair, Compass, EyeOff, Eye, Shuffle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
+import { invoke } from '@tauri-apps/api/core';
 import { getQuests, addQuest, updateQuest, deleteQuest } from '../api/quests';
 import { getNPCs } from '../api/npcs';
 import { getOverview, updateOverview } from '../api/overview';
@@ -162,6 +163,7 @@ export default function Quests({ characterId }) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [quickGenData, setQuickGenData] = useState(null);
+  const [aiGenerating, setAiGenerating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [sortBy, setSortBy] = useState('status');
   // viewMode reserved for future cards/timeline toggle
@@ -735,12 +737,72 @@ export default function Quests({ characterId }) {
         {isDM && (
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { setEditing(null); setQuickGenData(generateRandomQuest()); setShowForm(true); }}
+              disabled={aiGenerating}
+              onClick={async () => {
+                setAiGenerating(true);
+                toast('Generating with AI...', { icon: '🤖' });
+                try {
+                  const result = await invoke('generate_quest', { prompt: 'Generate a random quest', partyLevel: 5, setting: '' });
+                  // Result is markdown string — parse into quest fields
+                  const lines = result.split('\n').map(l => l.trim()).filter(Boolean);
+                  let title = '';
+                  let description = '';
+                  const objectives = [];
+                  let pastTitle = false;
+                  for (const line of lines) {
+                    if (!title && /^#+\s+/.test(line)) {
+                      title = line.replace(/^#+\s+/, '');
+                      pastTitle = true;
+                      continue;
+                    }
+                    if (pastTitle && !description && !/^\d+[\.\)]/.test(line) && !/^-\s/.test(line)) {
+                      description = line;
+                      continue;
+                    }
+                    const numMatch = line.match(/^\d+[\.\)]\s*(.*)/);
+                    const bulletMatch = line.match(/^-\s+(.*)/);
+                    if (numMatch) objectives.push(numMatch[1]);
+                    else if (bulletMatch) objectives.push(bulletMatch[1]);
+                  }
+                  if (!title) title = lines[0] || 'Untitled Quest';
+                  const aiQuest = {
+                    title,
+                    description: description || '',
+                    quest_type: 'main',
+                    status: 'active',
+                    objectives: objectives.length > 0
+                      ? objectives.map(o => ({ text: o, done: false }))
+                      : [{ text: 'Complete the quest', done: false }],
+                    reward_gold: '',
+                    reward_xp: '',
+                    reward_items: '',
+                    difficulty: 'medium',
+                    quest_giver: '',
+                    location: '',
+                    priority: 'Medium',
+                    session_notes: '',
+                    secret_notes: '',
+                    deadline: '',
+                  };
+                  setEditing(null);
+                  setQuickGenData(aiQuest);
+                  setShowForm(true);
+                  toast.success('AI quest generated!');
+                } catch (err) {
+                  console.warn('AI quest generation failed, using template fallback:', err);
+                  toast('AI unavailable — using template', { icon: '⚡' });
+                  setEditing(null);
+                  setQuickGenData(generateRandomQuest());
+                  setShowForm(true);
+                } finally {
+                  setAiGenerating(false);
+                }
+              }}
               className="text-xs flex items-center gap-1"
-              style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(74,222,128,0.25)', background: 'rgba(74,222,128,0.08)', color: '#4ade80', fontFamily: 'var(--font-heading)', letterSpacing: '0.04em', cursor: 'pointer' }}
-              title="Generate a random quest with title, type, and objectives"
+              style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(74,222,128,0.25)', background: 'rgba(74,222,128,0.08)', color: '#4ade80', fontFamily: 'var(--font-heading)', letterSpacing: '0.04em', cursor: 'pointer', opacity: aiGenerating ? 0.6 : 1 }}
+              title="Generate a random quest with AI (falls back to template if unavailable)"
             >
-              <Shuffle size={12} /> Quick Generate
+              {aiGenerating ? <Loader2 size={12} className="animate-spin" /> : <Shuffle size={12} />} Quick Generate
             </button>
             <button onClick={() => { setEditing(null); setQuickGenData(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
               <Plus size={12} /> New Quest

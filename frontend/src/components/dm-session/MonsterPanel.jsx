@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
  * - Add monsters to encounter
  * - Track HP, damage/heal, kill
  */
-export default function MonsterPanel({ encounterId, onMonsterChange }) {
+export default function MonsterPanel({ encounterId, onMonsterChange, onBroadcast }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -77,10 +77,19 @@ export default function MonsterPanel({ encounterId, onMonsterChange }) {
   const handleHpChange = async (monsterId, delta) => {
     try {
       const newHp = await invoke('update_monster_hp', { monsterId, hpDelta: delta });
+      const monster = monsters.find(m => m.id === monsterId);
       setMonsters(prev => prev.map(m =>
         m.id === monsterId ? { ...m, hp_current: newHp } : m
       ));
       setDamageInputs(prev => ({ ...prev, [monsterId]: '' }));
+      // Broadcast HP change to players
+      onBroadcast?.({
+        type: 'HpDelta',
+        target_id: monsterId,
+        target_name: monster?.name || 'Monster',
+        delta,
+        source: 'DM',
+      });
     } catch (e) {
       toast.error('Failed to update HP');
       console.error(e);
@@ -90,11 +99,18 @@ export default function MonsterPanel({ encounterId, onMonsterChange }) {
   // Kill monster
   const handleKill = async (monsterId) => {
     try {
+      const monster = monsters.find(m => m.id === monsterId);
       await invoke('kill_monster', { monsterId });
       setMonsters(prev => prev.map(m =>
         m.id === monsterId ? { ...m, alive: false, hp_current: 0 } : m
       ));
       toast.success('Monster killed');
+      // Broadcast kill to players
+      onBroadcast?.({
+        type: 'MonsterKilled',
+        monster_id: monsterId,
+        monster_name: monster?.name || 'Monster',
+      });
     } catch (e) {
       toast.error('Failed to kill monster');
       console.error(e);
@@ -240,7 +256,7 @@ export default function MonsterPanel({ encounterId, onMonsterChange }) {
               let statBlock = null;
               try {
                 statBlock = m.stat_block_json ? (typeof m.stat_block_json === 'string' ? JSON.parse(m.stat_block_json) : m.stat_block_json) : null;
-              } catch { /* ignore */ }
+              } catch (e) { console.warn('Corrupted stat block for', m.name, e); }
 
               return (
                 <div

@@ -4,15 +4,20 @@ import { motion } from 'framer-motion';
 import {
   Square, Clock, Users, Swords, MapPin, ChevronRight,
   SkipForward, ScrollText, Dice5, Shield, Star, Eye, Zap, ChevronDown, ChevronUp, X, Check, Moon, Sun,
-  Play, StopCircle, Skull, Heart, Send, MessageCircle,
+  Play, StopCircle, Skull, Heart, Send, MessageCircle, Download, Sparkles, Loader2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
+import ENCOUNTER_PROMPTS, { ENCOUNTER_CATEGORIES } from '../data/encounterPrompts';
 import { listen } from '@tauri-apps/api/event';
 import { useSession } from '../contexts/SessionContext';
 import HandoutsManager from '../components/dm-session/HandoutsManager';
 import WorldStateManager from '../components/dm-session/WorldStateManager';
 import CharacterArcManager from '../components/dm-session/CharacterArcManager';
+import StoryPanel from '../components/dm-session/StoryPanel';
+import QuestRunner from '../components/dm-session/QuestRunner';
+import { useCampaignSync } from '../contexts/CampaignSyncContext';
+import { History, AlertCircle, BookMarked, Megaphone } from 'lucide-react';
 
 function formatTimer(seconds) {
   const h = Math.floor(seconds / 3600);
@@ -32,8 +37,15 @@ export default function DMSession() {
     broadcastEvent,
   } = useSession();
 
+  const {
+    promptResults, promptHistory, clearPromptHistory,
+    sendPrompt, connectedPlayerMap, resolvePlayerName,
+    sendEvent: syncSendEvent,
+  } = useCampaignSync();
+
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [ending, setEnding] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [scenes, setScenes] = useState([]);
   const timerRef = useRef(null);
 
@@ -59,8 +71,43 @@ export default function DMSession() {
   // Chat state
   const [chatInput, setChatInput] = useState('');
 
+  // Quick Checks state
+  const [quickCheckAbility, setQuickCheckAbility] = useState('');
+  const [quickCheckSkill, setQuickCheckSkill] = useState('');
+  const [quickCheckDC, setQuickCheckDC] = useState('');
+  const [quickCheckAdvantage, setQuickCheckAdvantage] = useState('normal'); // 'normal' | 'advantage' | 'disadvantage'
+  const [showPromptHistory, setShowPromptHistory] = useState(false);
+  // Suggestions state
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  // Narrative flow
+  const [showNarrativeFlow, setShowNarrativeFlow] = useState(false);
+  const [narrativeBroadcastText, setNarrativeBroadcastText] = useState('');
+  // Chat history
+  const [showChatHistory, setShowChatHistory] = useState(false);
+  // Quest panel
+  const [showQuestRunner, setShowQuestRunner] = useState(false);
+  const [quests, setQuests] = useState([]);
+  const [questNpcs, setQuestNpcs] = useState([]);
+  // Debounce refs
+  const startSessionDebounce = useRef(false);
+  const endSessionDebounce = useRef(false);
+  const startEncounterDebounce = useRef(false);
+  const endEncounterDebounce = useRef(false);
+
+  // Random Encounter Engine state
+  const [showEncounterEngine, setShowEncounterEngine] = useState(false);
+  const [encounterCategory, setEncounterCategory] = useState('');
+  const [encounterSearch, setEncounterSearch] = useState('');
+  const [encounterCustomPrompt, setEncounterCustomPrompt] = useState('');
+  const [encounterGenerating, setEncounterGenerating] = useState(false);
+  const [encounterResult, setEncounterResult] = useState(null);
+  const [encounterMode, setEncounterMode] = useState('library'); // 'library' | 'custom'
+
   // Encounter handlers
   const handleStartEncounter = async () => {
+    if (startEncounterDebounce.current) return;
+    startEncounterDebounce.current = true;
+    setTimeout(() => { startEncounterDebounce.current = false; }, 2000);
     if (!currentScene?.id) {
       toast.error('Select a scene first');
       return;
@@ -95,6 +142,9 @@ export default function DMSession() {
   };
 
   const handleEndEncounter = async () => {
+    if (endEncounterDebounce.current) return;
+    endEncounterDebounce.current = true;
+    setTimeout(() => { endEncounterDebounce.current = false; }, 2000);
     if (!activeEncounterId) return;
     try {
       await invoke('end_encounter', { encounterId: activeEncounterId });
@@ -159,6 +209,28 @@ export default function DMSession() {
     await broadcastEvent({ type: 'ChatMessage', sender: 'DM', message: msg, timestamp: ts });
   };
 
+  const handleSendQuickCheck = () => {
+    if (!quickCheckAbility && !quickCheckSkill) {
+      toast.error('Select an ability or skill');
+      return;
+    }
+    const dc = parseInt(quickCheckDC) || 0;
+    const promptData = {
+      label: quickCheckSkill
+        ? `${quickCheckSkill} Check${dc ? ` (DC ${dc})` : ''}`
+        : `${quickCheckAbility} Check${dc ? ` (DC ${dc})` : ''}`,
+      ability: quickCheckAbility || undefined,
+      skill: quickCheckSkill || undefined,
+      dc: dc || undefined,
+      proficiency_required: !!quickCheckSkill,
+      advantage: quickCheckAdvantage === 'advantage' || undefined,
+      disadvantage: quickCheckAdvantage === 'disadvantage' || undefined,
+    };
+    sendPrompt('roll_check', promptData);
+    dispatch({ type: 'LOG_ACTION', payload: `Sent ${promptData.label} to players` });
+    toast.success(`Quick Check sent: ${promptData.label}`);
+  };
+
   // Action request handlers (DM approves/denies player requests)
   const handleApproveAction = async (request) => {
     dispatch({ type: 'REMOVE_PENDING_ACTION', payload: request.requestId });
@@ -215,6 +287,50 @@ export default function DMSession() {
       console.error(e);
     } finally {
       setRestingShort(false);
+    }
+  };
+
+  // Random Encounter Engine handlers
+  const handleGenerateEncounter = async (prompt) => {
+    setEncounterGenerating(true);
+    setEncounterResult(null);
+    try {
+      const result = await invoke('generate_encounter', {
+        prompt,
+        encounterType: encounterCategory || null,
+        partyLevel: null,
+        setting: null,
+      });
+      // Try to parse as JSON, fall back to raw text
+      let parsed;
+      try {
+        // Extract JSON from markdown code blocks if present
+        const jsonMatch = result.match(/```(?:json)?\s*([\s\S]*?)```/);
+        parsed = JSON.parse(jsonMatch ? jsonMatch[1] : result);
+      } catch {
+        parsed = { opening_narration: result, player_text: result, mood: 'mysterious' };
+      }
+      setEncounterResult(parsed);
+      toast.success('Encounter generated!');
+    } catch (err) {
+      toast.error(`Generation failed: ${err}`);
+    }
+    setEncounterGenerating(false);
+  };
+
+  const handleInjectEncounter = async () => {
+    if (!encounterResult) return;
+    const text = encounterResult.player_text || encounterResult.opening_narration || 'Something stirs...';
+    try {
+      await broadcastEvent({
+        type: 'NarrativeText',
+        text,
+        mood: encounterResult.mood || 'mysterious',
+      });
+      dispatch({ type: 'LOG_ACTION', payload: `Injected encounter: ${text.slice(0, 60)}...` });
+      toast.success('Encounter injected to players!');
+    } catch {
+      toast.error('Failed to inject encounter');
     }
   };
 
@@ -345,6 +461,32 @@ export default function DMSession() {
     return () => clearInterval(timerRef.current);
   }, []);
 
+  // Restore timer from localStorage on mount (crash recovery)
+  useEffect(() => {
+    const key = `codex-session-timer-${sessionId || campaignId}`;
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        const { elapsed, savedAt } = JSON.parse(saved);
+        // Only restore if saved within last 2 hours
+        if (elapsed > 0 && Date.now() - savedAt < 7200000) {
+          setElapsedSeconds(elapsed);
+        }
+      }
+    } catch { /* ignore parse errors */ }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Persist timer to localStorage every 30s for crash recovery
+  useEffect(() => {
+    const key = `codex-session-timer-${sessionId || campaignId}`;
+    const saveInterval = setInterval(() => {
+      if (elapsedSeconds > 0) {
+        localStorage.setItem(key, JSON.stringify({ elapsed: elapsedSeconds, savedAt: Date.now() }));
+      }
+    }, 30000);
+    return () => clearInterval(saveInterval);
+  }, [elapsedSeconds, sessionId, campaignId]);
+
   // Load scenes on mount
   useEffect(() => {
     invoke('list_scenes')
@@ -352,7 +494,21 @@ export default function DMSession() {
       .catch(e => console.error('Failed to load scenes:', e));
   }, []);
 
+  // Load quests for quest runner
+  useEffect(() => {
+    if (!campaignId) return;
+    invoke('list_campaign_quests', { campaignId })
+      .then(setQuests)
+      .catch(e => console.warn('Failed to load quests:', e));
+    invoke('list_campaign_npcs', { campaignId })
+      .then(setQuestNpcs)
+      .catch(e => console.warn('Failed to load NPCs:', e));
+  }, [campaignId]);
+
   const handleEndSession = async () => {
+    if (endSessionDebounce.current) return;
+    endSessionDebounce.current = true;
+    setTimeout(() => { endSessionDebounce.current = false; }, 2000);
     setEnding(true);
     try {
       await invoke('end_session', { sessionId });
@@ -362,6 +518,8 @@ export default function DMSession() {
       }).catch(() => {});
       await invoke('ws_stop_server').catch(() => {});
       dispatch({ type: 'END_SESSION' });
+      // Clean up saved timer
+      localStorage.removeItem(`codex-session-timer-${sessionId || campaignId}`);
       toast.success(`Session ended after ${formatTimer(elapsedSeconds)}`);
       navigate(`/dm/lobby/${campaignId}`);
     } catch (e) {
@@ -370,6 +528,32 @@ export default function DMSession() {
     } finally {
       setEnding(false);
     }
+  };
+
+  const handleExportSession = async () => {
+    if (!sessionId) {
+      toast.error('No active session to export');
+      return;
+    }
+    setExporting(true);
+    try {
+      const markdown = await invoke('export_session_markdown', { sessionId });
+      // Create a downloadable file
+      const blob = new Blob([markdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const date = new Date().toISOString().split('T')[0];
+      a.download = `session-${campaignName || 'campaign'}-${date}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Session log exported!');
+    } catch (err) {
+      toast.error(`Export failed: ${err}`);
+    }
+    setExporting(false);
   };
 
   const handleNextTurn = () => {
@@ -394,9 +578,13 @@ export default function DMSession() {
   const handleSelectScene = (scene) => {
     dispatch({ type: 'SET_SCENE', payload: scene });
     dispatch({ type: 'LOG_ACTION', payload: `Scene changed to: ${scene.name}` });
-    // Broadcast scene change to players
     invoke('ws_broadcast_event', {
-      eventJson: JSON.stringify({ type: 'SceneAdvance', campaign_id: campaignId, scene_id: scene.id, scene_name: scene.name }),
+      eventJson: JSON.stringify({
+        type: 'SceneAdvance', campaign_id: campaignId,
+        scene_id: scene.id, scene_name: scene.name,
+        player_description: scene.player_description || scene.description || '',
+        mood: scene.mood || '', phase: scene.phase || '',
+      }),
     }).catch(() => {});
   };
 
@@ -699,6 +887,30 @@ export default function DMSession() {
                     }}>
                       {currentScene.description}
                     </p>
+                  )}
+                  {currentScene.mood && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', fontSize: '11px', color: 'var(--text-mute)' }}>
+                      <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'rgba(155,89,182,0.1)', border: '1px solid rgba(155,89,182,0.2)', color: '#c084fc', fontSize: '10px', fontWeight: 600 }}>
+                        {currentScene.mood}
+                      </span>
+                      {currentScene.phase && (
+                        <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)', color: '#c9a84c', fontSize: '10px', fontWeight: 600, textTransform: 'capitalize' }}>
+                          {currentScene.phase}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {currentScene.player_description && (
+                    <div style={{ marginTop: '8px', padding: '8px 10px', borderRadius: '6px', background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.1)', fontSize: '11px', color: 'var(--text-dim)', lineHeight: 1.5 }}>
+                      <div style={{ fontSize: '9px', fontWeight: 700, color: '#4ade80', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Player-visible</div>
+                      {currentScene.player_description}
+                    </div>
+                  )}
+                  {currentScene.dm_notes && (
+                    <div style={{ marginTop: '6px', padding: '8px 10px', borderRadius: '6px', background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.1)', fontSize: '11px', color: '#c4b5fd', lineHeight: 1.5 }}>
+                      <div style={{ fontSize: '9px', fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>DM Notes</div>
+                      {currentScene.dm_notes}
+                    </div>
                   )}
                 </>
               ) : (
@@ -1032,6 +1244,116 @@ export default function DMSession() {
             </div>
           </div>
 
+          {/* Story & Narration */}
+          <StoryPanel
+            campaignId={campaignId}
+            onBroadcast={async (evt) => {
+              try {
+                await invoke('ws_broadcast_event', { eventJson: JSON.stringify(evt) });
+              } catch { /* no players connected */ }
+            }}
+          />
+
+          {/* Prompt Results Panel */}
+          {Object.keys(promptResults).length > 0 && (
+            <div style={panelStyle}>
+              <div style={panelHeaderStyle}>
+                <Dice5 size={12} /> Prompt Results
+              </div>
+              <div style={{ padding: '8px 12px', maxHeight: '200px', overflowY: 'auto' }}>
+                {Object.entries(promptResults).map(([promptId, results]) => {
+                  if (!results || results.length === 0) return null;
+                  const historyEntry = promptHistory.find(h => h.prompt_id === promptId);
+                  const dc = historyEntry?.dc;
+                  const passCount = dc ? results.filter(r => (r.total || r.roll_total || 0) >= dc).length : 0;
+                  return (
+                    <div key={promptId} style={{ marginBottom: '8px', padding: '6px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ fontSize: '10px', fontWeight: 600, color: '#c9a84c', marginBottom: '4px' }}>
+                        {historyEntry?.label || promptId.slice(0, 12)}
+                        {dc ? <span style={{ color: 'var(--text-mute)', marginLeft: '6px' }}>DC {dc}</span> : null}
+                        {dc ? <span style={{ marginLeft: '8px', color: passCount > 0 ? '#4ade80' : '#ef4444', fontWeight: 700 }}>{passCount}/{results.length} passed</span> : null}
+                      </div>
+                      {results.map((r, i) => {
+                        const total = r.total || r.roll_total || 0;
+                        const passed = dc ? total >= dc : null;
+                        return (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '2px 0', fontSize: '11px' }}>
+                            <span style={{ fontWeight: 600, color: 'var(--text)', minWidth: '60px' }}>{r.name || resolvePlayerName(r.client_id)}</span>
+                            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-dim)' }}>{r.breakdown || `${total}`}</span>
+                            <span style={{ fontWeight: 700, fontFamily: 'var(--font-mono)', color: passed === true ? '#4ade80' : passed === false ? '#ef4444' : '#c9a84c' }}>{total}</span>
+                            {passed !== null && (
+                              <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 5px', borderRadius: '3px', background: passed ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: passed ? '#4ade80' : '#ef4444' }}>
+                                {passed ? 'PASS' : 'FAIL'}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Quest Runner */}
+          <QuestRunner
+            quests={quests}
+            npcs={questNpcs}
+            scenes={scenes}
+            onAdvanceBeat={async () => {
+              // TODO: advance beat via backend
+              toast.success('Beat advanced');
+            }}
+            onBroadcast={async (text) => {
+              try {
+                await broadcastEvent({ type: 'NarrativeText', text, campaign_id: campaignId });
+                dispatch({ type: 'LOG_ACTION', payload: `Broadcast: ${text.slice(0, 60)}...` });
+                toast.success('Narration broadcast to players');
+              } catch { toast.error('Broadcast failed'); }
+            }}
+            onLoadEncounter={(enc) => toast(`Loading encounter: ${enc.length} monsters`, { icon: '\u2694\uFE0F' })}
+            onRevealNpcs={(ids) => {
+              ids.forEach(id => {
+                broadcastEvent({ type: 'NPCDiscovered', campaign_id: campaignId, npc_id: id }).catch(() => {});
+              });
+              toast.success(`Revealed ${ids.length} NPC(s)`);
+            }}
+            onSetScene={(sceneId) => {
+              const scene = scenes.find(s => s.id === sceneId);
+              if (scene) handleSelectScene(scene);
+            }}
+          />
+
+          {/* Prompt History */}
+          {showPromptHistory && (
+            <div style={panelStyle}>
+              <div style={{ ...panelHeaderStyle, justifyContent: 'space-between' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><History size={12} /> Prompt History</span>
+                <button onClick={() => setShowPromptHistory(false)} style={{ background: 'none', border: 'none', color: 'var(--text-mute)', cursor: 'pointer' }}><X size={12} /></button>
+              </div>
+              <div style={{ padding: '8px 12px', maxHeight: '250px', overflowY: 'auto' }}>
+                {promptHistory.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '12px', fontSize: '11px', color: 'var(--text-mute)' }}>No prompts sent yet</div>
+                ) : promptHistory.map((h, i) => (
+                  <div key={h.prompt_id || i} style={{ padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.03)', fontSize: '11px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontWeight: 600, color: '#c9a84c' }}>{h.label || h.prompt_type}</span>
+                      <span style={{ fontSize: '10px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)' }}>
+                        {h.sent_at ? new Date(h.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                      </span>
+                    </div>
+                    {h.results && h.results.length > 0 && (
+                      <div style={{ marginTop: '2px', fontSize: '10px', color: 'var(--text-dim)' }}>
+                        {h.results.length} response(s) — {h.dc ? `${h.results.filter(r => (r.total || r.roll_total || 0) >= h.dc).length}/${h.results.length} passed` : 'no DC'}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Handouts */}
           <HandoutsManager campaignId={campaignId} />
 
@@ -1040,6 +1362,29 @@ export default function DMSession() {
 
           {/* Character Arcs */}
           <CharacterArcManager campaignId={campaignId} />
+
+          {/* Chat History */}
+          {showChatHistory && (
+            <div style={panelStyle}>
+              <div style={{ ...panelHeaderStyle, justifyContent: 'space-between' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><MessageCircle size={12} /> Chat ({chatMessages.length})</span>
+                <button onClick={() => setShowChatHistory(false)} style={{ background: 'none', border: 'none', color: 'var(--text-mute)', cursor: 'pointer' }}><X size={12} /></button>
+              </div>
+              <div style={{ padding: '8px 12px', maxHeight: '200px', overflowY: 'auto' }}>
+                {chatMessages.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '12px', fontSize: '11px', color: 'var(--text-mute)' }}>No messages yet</div>
+                ) : chatMessages.map((msg, i) => (
+                  <div key={i} style={{ padding: '3px 0', borderBottom: i < chatMessages.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none', fontSize: '11px' }}>
+                    <span style={{ color: 'var(--text-mute)', fontSize: '10px', fontFamily: 'var(--font-mono)', marginRight: '6px' }}>
+                      {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </span>
+                    <span style={{ fontWeight: 600, color: msg.sender === 'DM' ? '#c084fc' : '#c9a84c', marginRight: '4px' }}>{msg.sender}:</span>
+                    <span style={{ color: 'var(--text-dim)' }}>{msg.message}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Action Log */}
           <div style={panelStyle}>
@@ -1289,6 +1634,54 @@ export default function DMSession() {
           }}
         >
           <Moon size={10} /> {restingLong ? 'Resting...' : 'Long Rest'}
+        </button>
+        <span style={{ opacity: 0.3 }}>|</span>
+        <button
+          onClick={() => setShowEncounterEngine(true)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '6px 14px', borderRadius: 8,
+            background: 'rgba(192,132,252,0.1)',
+            border: '1px solid rgba(192,132,252,0.25)',
+            color: '#c084fc', fontSize: 12, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'var(--font-ui)',
+          }}
+        >
+          <Sparkles size={13} /> Random Encounter
+        </button>
+        <span style={{ opacity: 0.3 }}>|</span>
+        {/* Quick Checks */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <select value={quickCheckAbility} onChange={e => { setQuickCheckAbility(e.target.value); setQuickCheckSkill(''); }} style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text)', fontSize: '10px', fontFamily: 'var(--font-ui)', outline: 'none' }}>
+            <option value="">Ability...</option>
+            {['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'].map(a => <option key={a} value={a.toLowerCase()}>{a.slice(0,3)}</option>)}
+          </select>
+          <select value={quickCheckSkill} onChange={e => setQuickCheckSkill(e.target.value)} style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text)', fontSize: '10px', fontFamily: 'var(--font-ui)', outline: 'none' }}>
+            <option value="">Skill...</option>
+            {['Acrobatics','Animal Handling','Arcana','Athletics','Deception','History','Insight','Intimidation','Investigation','Medicine','Nature','Perception','Performance','Persuasion','Religion','Sleight of Hand','Stealth','Survival'].map(s => <option key={s} value={s.toLowerCase().replace(/ /g,'_')}>{s}</option>)}
+          </select>
+          <input type="number" value={quickCheckDC} onChange={e => setQuickCheckDC(e.target.value)} placeholder="DC" style={{ width: '36px', padding: '2px 4px', borderRadius: '4px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text)', fontSize: '10px', fontFamily: 'var(--font-mono)', outline: 'none', textAlign: 'center' }} />
+          <select value={quickCheckAdvantage} onChange={e => setQuickCheckAdvantage(e.target.value)} style={{ padding: '2px 4px', borderRadius: '4px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: quickCheckAdvantage === 'advantage' ? '#4ade80' : quickCheckAdvantage === 'disadvantage' ? '#ef4444' : 'var(--text)', fontSize: '10px', fontFamily: 'var(--font-ui)', outline: 'none' }}>
+            <option value="normal">Normal</option>
+            <option value="advantage">Adv</option>
+            <option value="disadvantage">Dis</option>
+          </select>
+          <button onClick={handleSendQuickCheck} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.25)', color: '#c9a84c', fontSize: '10px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' }}>
+            <Dice5 size={10} /> Check
+          </button>
+        </div>
+        <span style={{ opacity: 0.3 }}>|</span>
+        <button onClick={() => setShowPromptHistory(!showPromptHistory)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <History size={10} /> History
+        </button>
+        <button onClick={() => setShowQuestRunner(!showQuestRunner)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', color: '#c9a84c', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <BookMarked size={10} /> Quests
+        </button>
+        <button onClick={() => setShowChatHistory(!showChatHistory)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showChatHistory ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showChatHistory ? 'rgba(167,139,250,0.3)' : 'rgba(255,255,255,0.08)'}`, color: showChatHistory ? '#a78bfa' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <MessageCircle size={10} /> Chat{chatMessages.length > 0 ? ` (${chatMessages.length})` : ''}
+        </button>
+        <button onClick={handleExportSession} disabled={exporting || !sessionId} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-mute)', fontSize: '10px', cursor: exporting ? 'wait' : 'pointer', fontFamily: 'var(--font-mono)', opacity: exporting ? 0.5 : 1 }}>
+          <Download size={10} /> {exporting ? 'Exporting...' : 'Export'}
         </button>
         <span style={{ opacity: 0.3 }}>|</span>
         {/* Chat input */}

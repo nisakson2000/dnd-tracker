@@ -3,6 +3,7 @@ import { Plus, Trash2, Edit2, Users, Search, Copy, ScrollText, Pin, ChevronDown,
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
+import { invoke } from '@tauri-apps/api/core';
 import { getNPCs, addNPC, updateNPC, deleteNPC } from '../api/npcs';
 import { getQuests } from '../api/quests';
 import { checkOllamaStatus, streamChat } from '../api/assistant';
@@ -199,6 +200,7 @@ export default function NPCs({ characterId }) {
   const [aiChatNpc, setAiChatNpc] = useState(null);
   const [dispositionFilter, setDispositionFilter] = useState('all');
   const [quickGenData, setQuickGenData] = useState(null);
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   const load = useCallback(async () => {
     try { setNpcs((await getNPCs(characterId)).map(enrichNpc)); }
@@ -576,15 +578,55 @@ export default function NPCs({ characterId }) {
         </h2>
         {isDM && (
           <div className="flex items-center gap-2">
-            <button onClick={() => { setEditing(null); setQuickGenData(generateRandomNpc()); setShowForm(true); }}
+            <button
+              disabled={aiGenerating}
+              onClick={async () => {
+                setAiGenerating(true);
+                toast('Generating with AI...', { icon: '🤖' });
+                try {
+                  const result = await invoke('generate_npc', { race: null, occupation: null, setting: null, partyLevel: null });
+                  const parsed = JSON.parse(result);
+                  const aiNpc = {
+                    name: parsed.name || '',
+                    role: (parsed.role || 'neutral').toLowerCase(),
+                    race: parsed.race || '',
+                    npc_class: parsed.class || parsed.npc_class || parsed.occupation || '',
+                    location: parsed.location || '',
+                    description: parsed.description || parsed.appearance || '',
+                    notes_text: parsed.personality || parsed.notes || '',
+                    status: 'alive',
+                    relationship: parsed.relationship || 'Unknown',
+                    quest_hook: parsed.quest_hook || parsed.hook || '',
+                    disposition: parsed.disposition || 'Neutral',
+                    last_seen_location: parsed.location || '',
+                    last_encountered: new Date().toISOString().split('T')[0],
+                    faction: parsed.faction || '',
+                    pinned: false,
+                    conversation_log: [],
+                  };
+                  setEditing(null);
+                  setQuickGenData(aiNpc);
+                  setShowForm(true);
+                  toast.success('AI NPC generated!');
+                } catch (err) {
+                  console.warn('AI NPC generation failed, using template fallback:', err);
+                  toast('AI unavailable — using template', { icon: '⚡' });
+                  setEditing(null);
+                  setQuickGenData(generateRandomNpc());
+                  setShowForm(true);
+                } finally {
+                  setAiGenerating(false);
+                }
+              }}
               className="text-xs flex items-center gap-1"
               style={{
                 padding: '5px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500,
                 background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.12))',
                 color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.25)',
+                opacity: aiGenerating ? 0.6 : 1,
               }}
-              title="Generate a random NPC with name, race, trait, occupation, and voice tag">
-              <Shuffle size={12} /> Quick Generate
+              title="Generate a random NPC with AI (falls back to template if unavailable)">
+              {aiGenerating ? <Loader2 size={12} className="animate-spin" /> : <Shuffle size={12} />} Quick Generate
             </button>
             <button onClick={() => { setEditing(null); setQuickGenData(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
               <Plus size={12} /> Add NPC

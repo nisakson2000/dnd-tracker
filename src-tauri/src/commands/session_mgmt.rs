@@ -273,6 +273,220 @@ pub fn generate_session_recap(
     })
 }
 
+/// Export a comprehensive, formatted markdown session log.
+#[tauri::command]
+pub fn export_session_markdown(
+    session_id: String,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    with_campaign_conn(&state, |conn| {
+        // Query all events for this session
+        let mut stmt = conn.prepare(
+            "SELECT event_type, payload_json, ts FROM event_log WHERE session_id = ?1 ORDER BY ts ASC"
+        ).map_err(|e| format!("Failed to query session log: {}", e))?;
+
+        let rows: Vec<(String, String, i64)> = stmt.query_map(params![session_id], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1).unwrap_or_else(|_| "{}".to_string()),
+                row.get::<_, i64>(2)?,
+            ))
+        })
+        .map_err(|e| format!("Failed to read session log: {}", e))?
+        .filter_map(|r| r.ok())
+        .collect();
+
+        if rows.is_empty() {
+            return Ok("# Session Log\n\n*No events were recorded for this session.*".to_string());
+        }
+
+        // Get campaign_id from the first event, then look up campaign name
+        let campaign_id: Option<String> = conn.query_row(
+            "SELECT campaign_id FROM event_log WHERE session_id = ?1 LIMIT 1",
+            params![session_id],
+            |row| row.get(0),
+        ).ok();
+
+        let campaign_name = if let Some(ref cid) = campaign_id {
+            conn.query_row(
+                "SELECT name FROM campaigns WHERE id = ?1",
+                params![cid],
+                |row| row.get::<_, String>(0),
+            ).unwrap_or_else(|_| "Unknown Campaign".to_string())
+        } else {
+            "Unknown Campaign".to_string()
+        };
+
+        // Compute start/end times
+        let start_ts = rows.first().map(|(_, _, ts)| *ts).unwrap_or(0);
+        let end_ts = rows.last().map(|(_, _, ts)| *ts).unwrap_or(0);
+
+        let start_dt = chrono::DateTime::from_timestamp(start_ts, 0).unwrap_or_default();
+        let date_str = start_dt.format("%Y-%m-%d %H:%M").to_string();
+
+        let duration_secs = if end_ts > start_ts { end_ts - start_ts } else { 0 };
+        let duration_hours = duration_secs / 3600;
+        let duration_mins = (duration_secs % 3600) / 60;
+        let duration_str = format!("{}h {}m", duration_hours, duration_mins);
+
+        // Build header
+        let mut md = String::new();
+        md.push_str(&format!("# Session Log — {}\n", campaign_name));
+        md.push_str(&format!("**Session ID:** {}\n", session_id));
+        md.push_str(&format!("**Date:** {}\n", date_str));
+        md.push_str(&format!("**Duration:** {}\n", duration_str));
+        md.push_str("\n---\n\n## Timeline\n");
+
+        // Counters for summary
+        let mut total_events: usize = 0;
+        let mut combat_rounds: usize = 0;
+        let mut skill_checks: usize = 0;
+        let mut rest_periods: usize = 0;
+
+        for (event_type, payload_json, ts) in &rows {
+            total_events += 1;
+
+            let payload: serde_json::Value = serde_json::from_str(payload_json)
+                .unwrap_or(serde_json::json!({}));
+
+            let time_str = {
+                let dt = chrono::DateTime::from_timestamp(*ts, 0).unwrap_or_default();
+                dt.format("%H:%M:%S").to_string()
+            };
+
+            let (heading, details) = match event_type.as_str() {
+                "session_start" => {
+                    ("Session Started".to_string(), None)
+                }
+                "session_end" => {
+                    ("Session Ended".to_string(), None)
+                }
+                "encounter_start" => {
+                    ("Combat Began".to_string(), None)
+                }
+                "encounter_end" => {
+                    ("Combat Ended".to_string(), None)
+                }
+                "scene_advance" => {
+                    let scene_name = payload["scene_name"].as_str()
+                        .or_else(|| payload["name"].as_str())
+                        .unwrap_or("Unknown Scene");
+                    (format!("Scene: {}", scene_name), None)
+                }
+                "hp_change" => {
+                    let target = payload["target"].as_str()
+                        .or_else(|| payload["name"].as_str())
+                        .unwrap_or("Unknown");
+                    let amount = payload["amount"].as_i64().unwrap_or(0);
+                    let sign = if amount >= 0 { "+" } else { "" };
+                    (format!("HP Change: {} {}{}", target, sign, amount), None)
+                }
+                "condition_applied" => {
+                    let condition = payload["condition"].as_str().unwrap_or("Unknown");
+                    let target = payload["target"].as_str()
+                        .or_else(|| payload["name"].as_str())
+                        .unwrap_or("Unknown");
+                    (format!("Condition Applied: {} on {}", condition, target), None)
+                }
+                "condition_removed" => {
+                    let condition = payload["condition"].as_str().unwrap_or("Unknown");
+                    let target = payload["target"].as_str()
+                        .or_else(|| payload["name"].as_str())
+                        .unwrap_or("Unknown");
+                    (format!("Condition Removed: {} from {}", condition, target), None)
+                }
+                "rest" => {
+                    rest_periods += 1;
+                    let rest_type = payload["rest_type"].as_str()
+                        .or_else(|| payload["type"].as_str())
+                        .unwrap_or("Long");
+                    (format!("{} Rest Completed", rest_type), None)
+                }
+                "xp_award" => {
+                    let amount = payload["amount"].as_u64().unwrap_or(0);
+                    (format!("XP Awarded: {}", amount), None)
+                }
+                "quest_update" => {
+                    let details_text = payload["details"].as_str()
+                        .or_else(|| payload["description"].as_str())
+                        .or_else(|| payload["quest_name"].as_str())
+                        .unwrap_or("Quest updated");
+                    (format!("Quest Updated: {}", details_text), None)
+                }
+                "chat" => {
+                    let sender = payload["sender"].as_str()
+                        .or_else(|| payload["from"].as_str())
+                        .unwrap_or("Unknown");
+                    let message = payload["message"].as_str()
+                        .or_else(|| payload["text"].as_str())
+                        .unwrap_or("");
+                    (format!("Chat — {}: {}", sender, message), None)
+                }
+                "skill_check" => {
+                    skill_checks += 1;
+                    let skill = payload["skill"].as_str().unwrap_or("Unknown");
+                    let dc = payload["dc"].as_u64().unwrap_or(0);
+                    (format!("Skill Check: {} DC {}", skill, dc), None)
+                }
+                "narration" => {
+                    let text = payload["text"].as_str()
+                        .or_else(|| payload["narration"].as_str())
+                        .or_else(|| payload["message"].as_str())
+                        .unwrap_or("");
+                    let truncated = if text.len() > 100 {
+                        format!("{}...", &text[..100])
+                    } else {
+                        text.to_string()
+                    };
+                    (format!("Narration: {}", truncated), None)
+                }
+                "round_start" | "round_advance" => {
+                    combat_rounds += 1;
+                    let round = payload["round"].as_u64().unwrap_or(0);
+                    (format!("Round {} Advanced", round), None)
+                }
+                other => {
+                    // Capitalize and format the event_type
+                    let formatted = other.replace('_', " ");
+                    let capitalized: String = formatted.split_whitespace()
+                        .map(|word| {
+                            let mut chars = word.chars();
+                            match chars.next() {
+                                None => String::new(),
+                                Some(c) => {
+                                    let upper: String = c.to_uppercase().collect();
+                                    upper + chars.as_str()
+                                }
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                        .join(" ");
+                    let detail = payload["description"].as_str()
+                        .or_else(|| payload["text"].as_str())
+                        .or_else(|| payload["message"].as_str())
+                        .map(|s| s.to_string());
+                    (capitalized, detail)
+                }
+            };
+
+            md.push_str(&format!("\n### {} — {}\n", time_str, heading));
+            if let Some(detail) = details {
+                md.push_str(&format!("{}\n", detail));
+            }
+        }
+
+        // Summary section
+        md.push_str("\n---\n\n## Summary\n");
+        md.push_str(&format!("- **Total Events:** {}\n", total_events));
+        md.push_str(&format!("- **Combat Rounds:** {}\n", combat_rounds));
+        md.push_str(&format!("- **Skill Checks:** {}\n", skill_checks));
+        md.push_str(&format!("- **Rest Periods:** {}\n", rest_periods));
+        md.push_str("\n---\n*Exported from The Codex — D&D Companion*\n");
+
+        Ok(md)
+    })
+}
+
 /// List all sessions for the active campaign (distinct session_ids from event_log).
 #[tauri::command]
 pub fn list_sessions(

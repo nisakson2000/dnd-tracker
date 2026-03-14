@@ -178,6 +178,10 @@ export default function DmActionPanel() {
   const [hpMode, setHpMode] = useState('heal'); // 'heal' | 'damage' | 'set'
   const [hpTarget, setHpTarget] = useState('');
 
+  // Narration broadcast
+  const [narrationText, setNarrationText] = useState('');
+  const [sendingNarration, setSendingNarration] = useState(false);
+
   // Results tracking
   const [actionLog, setActionLog] = useState([]);
 
@@ -566,6 +570,71 @@ export default function DmActionPanel() {
       {/* ── TAB: Quick Actions ── */}
       {tab === 'quick' && (
         <div className="space-y-3">
+          {/* Narration Broadcast */}
+          <div>
+            <div style={smallLabel}>Narrate to Players</div>
+            <textarea
+              value={narrationText}
+              onChange={e => setNarrationText(e.target.value)}
+              placeholder="Describe the scene, set the mood..."
+              rows={2}
+              style={{
+                width: '100%', resize: 'vertical', padding: '6px 8px', borderRadius: 6,
+                background: 'rgba(201,168,76,0.04)', border: '1px solid rgba(201,168,76,0.15)',
+                color: '#e2e0d8', fontSize: 11, fontFamily: 'var(--font-ui)',
+                outline: 'none',
+              }}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && e.ctrlKey && narrationText.trim()) {
+                  e.preventDefault();
+                  (async () => {
+                    setSendingNarration(true);
+                    try {
+                      // Send via Party Connect for CampaignSync listeners
+                      sendEvent('narration', { text: narrationText.trim() });
+                      // Also send via WebSocket for PlayerSession listeners
+                      await invoke('ws_broadcast_event', {
+                        eventJson: JSON.stringify({ type: 'NarrativeText', text: narrationText.trim() }),
+                      });
+                      toast.success('Narration sent to players');
+                      setNarrationText('');
+                    } catch (err) {
+                      toast.error(`Failed: ${err?.message || err}`);
+                    }
+                    setSendingNarration(false);
+                  })();
+                }
+              }}
+            />
+            <button
+              disabled={!narrationText.trim() || sendingNarration}
+              onClick={async () => {
+                setSendingNarration(true);
+                try {
+                  sendEvent('narration', { text: narrationText.trim() });
+                  await invoke('ws_broadcast_event', {
+                    eventJson: JSON.stringify({ type: 'NarrativeText', text: narrationText.trim() }),
+                  });
+                  toast.success('Narration sent to players');
+                  setNarrationText('');
+                } catch (err) {
+                  toast.error(`Failed: ${err?.message || err}`);
+                }
+                setSendingNarration(false);
+              }}
+              className="px-3 py-1.5 rounded transition-all"
+              style={{
+                marginTop: 4, fontSize: 10, fontWeight: 600, width: '100%',
+                background: narrationText.trim() ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${narrationText.trim() ? 'rgba(201,168,76,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                color: narrationText.trim() ? '#c9a84c' : 'rgba(255,255,255,0.2)',
+                cursor: narrationText.trim() ? 'pointer' : 'not-allowed',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+              }}
+            >
+              <Send size={10} /> {sendingNarration ? 'Sending...' : 'Broadcast Narration'} <span style={{ fontSize: 8, opacity: 0.5 }}>(Ctrl+Enter)</span>
+            </button>
+          </div>
           <div>
             <div style={smallLabel}>Group Checks</div>
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>

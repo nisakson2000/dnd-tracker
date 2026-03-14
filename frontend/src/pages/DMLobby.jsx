@@ -268,6 +268,9 @@ export default function DMLobby() {
   };
 
   const handleStartSession = async () => {
+    if (scenes.length === 0) {
+      toast('Starting without scenes — you can add them during the session', { icon: '\u26A0\uFE0F', duration: 3000 });
+    }
     setStarting(true);
     try {
       const result = await invoke('start_session');
@@ -436,6 +439,21 @@ export default function DMLobby() {
               }}>
                 {campaign?.ruleset === 'dnd5e-2024' ? '2024 PHB' : campaign?.ruleset === 'dnd5e-2014' ? '2014 PHB' : campaign?.ruleset}
               </span>
+            </div>
+          </div>
+
+          {/* Pre-session Checklist */}
+          <div style={{ padding: '12px 16px', borderRadius: '8px', background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.1)', marginBottom: '12px' }}>
+            <div style={{ fontSize: '10px', fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>Pre-session Checklist</div>
+            <div style={{ display: 'grid', gap: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: scenes.length > 0 ? '#4ade80' : '#fbbf24' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: scenes.length > 0 ? '#4ade80' : '#fbbf24' }} />
+                {scenes.length > 0 ? `${scenes.length} scene(s) created` : 'No scenes created (recommended)'}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: connectedPlayers.length > 0 ? '#4ade80' : '#fbbf24' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: connectedPlayers.length > 0 ? '#4ade80' : '#fbbf24' }} />
+                {connectedPlayers.length > 0 ? `${connectedPlayers.length} player(s) connected` : 'No players connected (recommended)'}
+              </div>
             </div>
           </div>
 

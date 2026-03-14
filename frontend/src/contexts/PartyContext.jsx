@@ -42,6 +42,7 @@ export function PartyProvider({ children }) {
   const eventListenersRef = useRef(new Map());
   const presenceIntervalRef = useRef(null);
   const membersRef = useRef([]);
+  const seqCounterRef = useRef(0);
 
   // Keep connRef in sync
   useEffect(() => {
@@ -80,6 +81,16 @@ export function PartyProvider({ children }) {
         setReconnecting(false);
         setMembers(msg.members || []);
         setMyClientId(msg.you);
+        // Request state catch-up on reconnect
+        if (reconnectCountRef.current > 0 || wasConnected) {
+          // We're reconnecting — request full state from DM
+          setTimeout(() => {
+            const code = connRef.current.roomCode;
+            invoke('party_ipc_send', {
+              message: JSON.stringify({ type: 'event', event: 'state_request', data: {}, room: code }),
+            }).catch(() => {});
+          }, 500);
+        }
         // Extract host/DM info from members (host is the first member or the one with dm_name)
         const hostMember = (msg.members || []).find(m => m.character?.dm_name) || (msg.members || [])[0];
         if (hostMember?.character) {
@@ -310,27 +321,35 @@ export function PartyProvider({ children }) {
       await invoke('party_ipc_send', {
         message: JSON.stringify({ type: 'update', room: code, character: charSnapshot }),
       });
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.warn('[Party] sendUpdate failed:', err);
+    }
   }, []);
 
   const sendEvent = useCallback(async (eventName, data) => {
     const code = connRef.current.roomCode;
     if (!connectedRef.current || !code) return;
     try {
+      const seq = ++seqCounterRef.current;
       await invoke('party_ipc_send', {
-        message: JSON.stringify({ type: 'event', event: eventName, data, room: code }),
+        message: JSON.stringify({ type: 'event', event: eventName, data, room: code, seq }),
       });
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.warn('[Party] sendEvent failed:', err);
+    }
   }, []);
 
   const sendTargetedEvent = useCallback(async (eventName, data, targetClientIds) => {
     const code = connRef.current.roomCode;
     if (!connectedRef.current || !code) return;
     try {
+      const seq = ++seqCounterRef.current;
       await invoke('party_ipc_send', {
-        message: JSON.stringify({ type: 'targeted_event', event: eventName, data, targets: targetClientIds, room: code }),
+        message: JSON.stringify({ type: 'targeted_event', event: eventName, data, targets: targetClientIds, room: code, seq }),
       });
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.warn('[Party] sendTargetedEvent failed:', err);
+    }
   }, []);
 
   const onPartyEvent = useCallback((eventType, handler) => {
@@ -356,7 +375,9 @@ export function PartyProvider({ children }) {
       await invoke('party_ipc_send', {
         message: JSON.stringify({ type: 'bug_report', room: code, report }),
       });
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.warn('[Party] sendBugReport failed:', err);
+    }
   }, []);
 
   const sendChatMessage = useCallback(async (chatData) => {
@@ -372,7 +393,9 @@ export function PartyProvider({ children }) {
       await invoke('party_ipc_send', {
         message: JSON.stringify({ type: 'ic_chat', room: code, data: msgWithId }),
       });
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.warn('[Party] sendChatMessage failed:', err);
+    }
   }, []);
 
   const manualReconnect = useCallback(async () => {

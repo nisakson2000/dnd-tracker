@@ -553,3 +553,330 @@ pub async fn ollama_generate_stream(
     }
     Ok(())
 }
+
+// ── AI NPC Generation ──
+
+#[tauri::command]
+pub async fn generate_npc(
+    race: Option<String>,
+    occupation: Option<String>,
+    setting: Option<String>,
+    party_level: Option<i32>,
+) -> Result<String, String> {
+    let setting_str = setting.as_deref().unwrap_or("fantasy");
+    let level_str = party_level
+        .map(|l| format!("The party is level {}.", l))
+        .unwrap_or_default();
+    let race_str = race
+        .as_deref()
+        .map(|r| format!("The NPC's race must be {}.", r))
+        .unwrap_or_default();
+    let occupation_str = occupation
+        .as_deref()
+        .map(|o| format!("The NPC's occupation/class must be {}.", o))
+        .unwrap_or_default();
+
+    let system_prompt = format!(
+        "You are a D&D Dungeon Master's assistant. Generate a single D&D NPC for a {} setting. {} {} {}\n\
+        Respond with ONLY valid JSON (no markdown, no code fences) using exactly these fields:\n\
+        {{\n  \
+          \"name\": \"string\",\n  \
+          \"race\": \"string\",\n  \
+          \"npc_class\": \"string\",\n  \
+          \"description\": \"string — a vivid 2-3 sentence physical and personality description\",\n  \
+          \"disposition\": \"string — one of: friendly, neutral, hostile, fearful, mysterious\",\n  \
+          \"location\": \"string — where this NPC can typically be found\",\n  \
+          \"quest_hook\": \"string — a short quest or favor this NPC might offer\",\n  \
+          \"notes_text\": \"string — DM-only notes about secrets or hidden motives\",\n  \
+          \"faction\": \"string — faction or guild affiliation, or empty string\",\n  \
+          \"role\": \"string — narrative role such as ally, villain, merchant, informant\",\n  \
+          \"status\": \"string — one of: alive, dead, missing, unknown\"\n\
+        }}",
+        setting_str, level_str, race_str, occupation_str
+    );
+
+    let url = format!("{}/api/generate", OLLAMA_URL);
+
+    let resp = client(120)?
+        .post(&url)
+        .json(&serde_json::json!({
+            "model": "llama3.2",
+            "prompt": system_prompt,
+            "stream": false,
+            "options": {
+                "num_predict": 2048,
+                "temperature": 0.85,
+            },
+        }))
+        .send()
+        .await
+        .map_err(|e| format!("Failed to reach Ollama: {}", e))?;
+
+    if !resp.status().is_success() {
+        let text = resp.text().await.unwrap_or_default();
+        return Err(format!("Ollama error: {}", text));
+    }
+
+    let body: serde_json::Value = resp.json().await
+        .map_err(|e| format!("Failed to parse response: {}", e))?;
+    let response_text = body["response"]
+        .as_str()
+        .unwrap_or("*Failed to generate NPC. Make sure Ollama is running with a model installed.*")
+        .to_string();
+
+    Ok(response_text)
+}
+
+// ── AI Location Generation ──
+
+#[tauri::command]
+pub async fn generate_location(
+    location_type: Option<String>,
+    setting: Option<String>,
+    party_level: Option<i32>,
+) -> Result<String, String> {
+    let setting_str = setting.as_deref().unwrap_or("fantasy");
+    let level_str = party_level
+        .map(|l| format!("The party is level {}.", l))
+        .unwrap_or_default();
+    let type_str = location_type.as_deref().unwrap_or("any");
+
+    let body_guidance = match type_str.to_lowercase().as_str() {
+        "dungeon" | "cave" | "ruin" | "ruins" | "tomb" | "temple" => {
+            "The body should be filled-in markdown with these sections: \
+            ## Entrance, ## Levels/Rooms (describe at least 3), ## Known Hazards, \
+            ## Inhabitants, ## Treasure, ## History. \
+            Fill every section with vivid, specific details — never leave a section blank."
+        }
+        "town" | "city" | "village" | "hamlet" | "settlement" => {
+            "The body should be filled-in markdown with these sections: \
+            ## Population, ## Government, ## Notable Landmarks (at least 3), \
+            ## Economy, ## Dangers, ## Key NPCs (at least 2 with names and roles). \
+            Fill every section with vivid, specific details — never leave a section blank."
+        }
+        "tavern" | "inn" | "pub" | "bar" => {
+            "The body should be filled-in markdown with these sections: \
+            ## Type, ## Owner (name, race, personality), ## Notable Features, \
+            ## Atmosphere, ## Menu Specials (at least 3 items), ## Rumors Heard Here (at least 3). \
+            Fill every section with vivid, specific details — never leave a section blank."
+        }
+        _ => {
+            "The body should be filled-in markdown with descriptive sections appropriate for this \
+            type of location. Include at least 4 sections covering appearance, inhabitants, \
+            dangers, and notable features. Fill every section with vivid, specific details."
+        }
+    };
+
+    let system_prompt = format!(
+        "You are a D&D Dungeon Master's assistant. Generate a D&D location of type \"{}\" for a {} setting. {}\n\
+        Respond with ONLY valid JSON (no markdown, no code fences) using exactly these fields:\n\
+        {{\n  \
+          \"title\": \"string — the location name\",\n  \
+          \"category\": \"string — the location type (e.g. dungeon, town, tavern, wilderness, etc.)\",\n  \
+          \"body\": \"string — filled-in markdown content with all sections populated\",\n  \
+          \"discovery_type\": \"string — one of: known, rumored, hidden, discovered\",\n  \
+          \"related_to_text\": \"string — a comma-separated list of related locations, NPCs, or factions\"\n\
+        }}\n\n\
+        {}",
+        type_str, setting_str, level_str, body_guidance
+    );
+
+    let url = format!("{}/api/generate", OLLAMA_URL);
+
+    let resp = client(120)?
+        .post(&url)
+        .json(&serde_json::json!({
+            "model": "llama3.2",
+            "prompt": system_prompt,
+            "stream": false,
+            "options": {
+                "num_predict": 2048,
+                "temperature": 0.85,
+            },
+        }))
+        .send()
+        .await
+        .map_err(|e| format!("Failed to reach Ollama: {}", e))?;
+
+    if !resp.status().is_success() {
+        let text = resp.text().await.unwrap_or_default();
+        return Err(format!("Ollama error: {}", text));
+    }
+
+    let body: serde_json::Value = resp.json().await
+        .map_err(|e| format!("Failed to parse response: {}", e))?;
+    let response_text = body["response"]
+        .as_str()
+        .unwrap_or("*Failed to generate location. Make sure Ollama is running with a model installed.*")
+        .to_string();
+
+    Ok(response_text)
+}
+
+// ── AI Lore Generation ──
+
+#[tauri::command]
+pub async fn generate_lore(
+    category: Option<String>,
+    topic: Option<String>,
+    setting: Option<String>,
+) -> Result<String, String> {
+    let setting_str = setting.as_deref().unwrap_or("fantasy");
+    let category_str = category.as_deref().unwrap_or("general");
+    let topic_str = topic.as_deref().unwrap_or("");
+
+    let body_guidance = match category_str.to_lowercase().as_str() {
+        "deity" | "god" | "religion" | "pantheon" => {
+            "The body should be filled-in markdown with sections: \
+            ## Domain & Portfolio, ## Holy Symbol, ## Worship & Rituals, \
+            ## Clergy & Temples, ## Mythology & Origin, ## Relationships with Other Deities. \
+            Fill every section with vivid, specific details."
+        }
+        "history" | "event" | "war" | "era" => {
+            "The body should be filled-in markdown with sections: \
+            ## Overview, ## Key Figures, ## Timeline of Events, \
+            ## Causes, ## Consequences, ## Legacy & Modern Impact. \
+            Fill every section with vivid, specific details."
+        }
+        "faction" | "guild" | "organization" | "order" => {
+            "The body should be filled-in markdown with sections: \
+            ## Purpose & Goals, ## Leadership, ## Membership & Ranks, \
+            ## Headquarters, ## Allies & Enemies, ## Secret Activities. \
+            Fill every section with vivid, specific details."
+        }
+        "legend" | "myth" | "prophecy" | "artifact" => {
+            "The body should be filled-in markdown with sections: \
+            ## The Legend, ## Origin, ## Known Versions of the Tale, \
+            ## Evidence & Sightings, ## Significance, ## What the Scholars Say. \
+            Fill every section with vivid, specific details."
+        }
+        _ => {
+            "The body should be filled-in markdown with descriptive sections appropriate for this \
+            type of lore entry. Include at least 4 sections with vivid, specific details. \
+            Never leave a section blank or use placeholder text."
+        }
+    };
+
+    let topic_line = if topic_str.is_empty() {
+        String::new()
+    } else {
+        format!("The topic/subject is: \"{}\".", topic_str)
+    };
+
+    let system_prompt = format!(
+        "You are a D&D Dungeon Master's assistant. Generate a lore entry in the \"{}\" category for a {} setting. {}\n\
+        Respond with ONLY valid JSON (no markdown, no code fences) using exactly these fields:\n\
+        {{\n  \
+          \"title\": \"string — the lore entry title\",\n  \
+          \"category\": \"string — the lore category\",\n  \
+          \"body\": \"string — filled-in markdown content with all sections populated\",\n  \
+          \"discovery_type\": \"string — one of: known, rumored, hidden, discovered\",\n  \
+          \"related_to_text\": \"string — a comma-separated list of related lore entries, locations, or NPCs\"\n\
+        }}\n\n\
+        {}",
+        category_str, setting_str, topic_line, body_guidance
+    );
+
+    let url = format!("{}/api/generate", OLLAMA_URL);
+
+    let resp = client(120)?
+        .post(&url)
+        .json(&serde_json::json!({
+            "model": "llama3.2",
+            "prompt": system_prompt,
+            "stream": false,
+            "options": {
+                "num_predict": 2048,
+                "temperature": 0.85,
+            },
+        }))
+        .send()
+        .await
+        .map_err(|e| format!("Failed to reach Ollama: {}", e))?;
+
+    if !resp.status().is_success() {
+        let text = resp.text().await.unwrap_or_default();
+        return Err(format!("Ollama error: {}", text));
+    }
+
+    let body: serde_json::Value = resp.json().await
+        .map_err(|e| format!("Failed to parse response: {}", e))?;
+    let response_text = body["response"]
+        .as_str()
+        .unwrap_or("*Failed to generate lore. Make sure Ollama is running with a model installed.*")
+        .to_string();
+
+    Ok(response_text)
+}
+
+// ── AI Encounter Generation ──
+
+#[tauri::command]
+pub async fn generate_encounter(
+    prompt: String,
+    encounter_type: Option<String>,
+    party_level: Option<i32>,
+    setting: Option<String>,
+) -> Result<String, String> {
+    let setting_str = setting.as_deref().unwrap_or("fantasy");
+    let level_str = party_level
+        .map(|l| format!("The party is level {}.", l))
+        .unwrap_or_default();
+    let type_str = encounter_type.as_deref().unwrap_or("any");
+
+    let type_guidance = match type_str.to_lowercase().as_str() {
+        "combat" => "This is a combat encounter. Focus on enemy tactics, terrain advantages, and escalation.",
+        "social" => "This is a social encounter. Focus on NPC motivations, persuasion opportunities, and social stakes.",
+        "exploration" => "This is an exploration encounter. Focus on discovery, environmental puzzles, and hidden secrets.",
+        "environmental" => "This is an environmental encounter. Focus on natural hazards, survival challenges, and terrain effects.",
+        "moral_dilemma" => "This is a moral dilemma encounter. Focus on difficult choices, competing values, and consequences with no clear right answer.",
+        "mystery" => "This is a mystery encounter. Focus on clues, red herrings, deduction, and revelations.",
+        _ => "Generate any type of encounter that fits the prompt.",
+    };
+
+    let system_prompt = format!(
+        "You are a D&D Dungeon Master's assistant. Generate a complete encounter package for a {} setting. {} {}\n\
+        Respond with ONLY valid JSON (no markdown, no code fences) using exactly these fields:\n\
+        {{\n  \
+          \"opening_narration\": \"string — 2-4 sentences of read-aloud flavor text for the DM\",\n  \
+          \"player_text\": \"string — a shorter version of the narration suitable for player screens\",\n  \
+          \"mechanics\": \"string — what checks or actions are immediately in play, include DCs\",\n  \
+          \"outcomes\": [\"string — 2-3 branching outcomes with consequences\"],\n  \
+          \"loot\": \"string — what the party can gain\",\n  \
+          \"consequence_if_ignored\": \"string — what happens if the players walk away\",\n  \
+          \"mood\": \"string — one of: tense, comedic, mysterious, dangerous, tragic, chaotic\"\n\
+        }}",
+        setting_str, level_str, type_guidance
+    );
+
+    let url = format!("{}/api/generate", OLLAMA_URL);
+
+    let resp = client(120)?
+        .post(&url)
+        .json(&serde_json::json!({
+            "model": "llama3.2",
+            "prompt": format!("{}\n\nEncounter concept: {}", system_prompt, prompt),
+            "stream": false,
+            "options": {
+                "num_predict": 2048,
+                "temperature": 0.85,
+            },
+        }))
+        .send()
+        .await
+        .map_err(|e| format!("Failed to reach Ollama: {}", e))?;
+
+    if !resp.status().is_success() {
+        let text = resp.text().await.unwrap_or_default();
+        return Err(format!("Ollama error: {}", text));
+    }
+
+    let body: serde_json::Value = resp.json().await
+        .map_err(|e| format!("Failed to parse response: {}", e))?;
+    let response_text = body["response"]
+        .as_str()
+        .unwrap_or("*Failed to generate encounter. Make sure Ollama is running with a model installed.*")
+        .to_string();
+
+    Ok(response_text)
+}

@@ -109,7 +109,7 @@ pub fn list_campaigns(
 ) -> Result<Vec<serde_json::Value>, String> {
     with_campaign_conn(&state, |conn| {
         let mut stmt = conn.prepare(
-            "SELECT id, name, description, ruleset, created_at, updated_at, last_session, active_scene_id, campaign_type FROM campaigns ORDER BY updated_at DESC"
+            "SELECT id, name, description, ruleset, created_at, updated_at, last_session, active_scene_id, campaign_type, status FROM campaigns ORDER BY updated_at DESC"
         ).map_err(|e| format!("Failed to query campaigns: {}", e))?;
 
         let rows = stmt.query_map([], |row| {
@@ -123,6 +123,7 @@ pub fn list_campaigns(
                 "last_session": row.get::<_, Option<i64>>(6).unwrap_or(None),
                 "active_scene_id": row.get::<_, Option<String>>(7).unwrap_or(None),
                 "campaign_type": row.get::<_, String>(8).unwrap_or_else(|_| "homebrew".to_string()),
+                "status": row.get::<_, String>(9).unwrap_or_else(|_| "active".to_string()),
             }))
         }).map_err(|e| format!("Failed to list campaigns: {}", e))?;
 
@@ -147,7 +148,7 @@ pub fn select_campaign(
 ) -> Result<serde_json::Value, String> {
     let campaign = with_campaign_conn(&state, |conn| {
         let mut stmt = conn.prepare(
-            "SELECT id, name, description, ruleset, created_at, updated_at, last_session, active_scene_id, campaign_type FROM campaigns WHERE id = ?1"
+            "SELECT id, name, description, ruleset, created_at, updated_at, last_session, active_scene_id, campaign_type, status FROM campaigns WHERE id = ?1"
         ).map_err(|e| format!("Failed to query campaign: {}", e))?;
 
         let mut campaign = stmt.query_row(params![campaign_id], |row| {
@@ -161,6 +162,7 @@ pub fn select_campaign(
                 "last_session": row.get::<_, Option<i64>>(6).unwrap_or(None),
                 "active_scene_id": row.get::<_, Option<String>>(7).unwrap_or(None),
                 "campaign_type": row.get::<_, String>(8).unwrap_or_else(|_| "homebrew".to_string()),
+                "status": row.get::<_, String>(9).unwrap_or_else(|_| "active".to_string()),
             }))
         }).map_err(|e| format!("Campaign not found: {}", e))?;
 
@@ -264,122 +266,115 @@ pub fn update_campaign(
 }
 
 #[tauri::command]
-pub fn archive_campaign(
-    campaign_id: String,
-    archived: bool,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
-    let now = chrono::Utc::now().timestamp();
-    let status = if archived { "archived" } else { "active" };
-
-    with_campaign_conn(&state, |conn| {
-        // Ensure the status column exists (migration)
-        let _ = conn.execute("ALTER TABLE campaigns ADD COLUMN status TEXT DEFAULT 'active'", []);
-
-        let rows = conn.execute(
-            "UPDATE campaigns SET status = ?1, updated_at = ?2 WHERE id = ?3",
-            params![status, now, campaign_id],
-        ).map_err(|e| format!("Failed to archive campaign: {}", e))?;
-
-        if rows == 0 {
-            return Err("Campaign not found.".to_string());
-        }
-        Ok(())
-    })
-}
-
-#[tauri::command]
 pub fn export_campaign(
     campaign_id: String,
     state: State<'_, AppState>,
 ) -> Result<serde_json::Value, String> {
     with_campaign_conn(&state, |conn| {
-        // Campaign metadata
-        let campaign: serde_json::Value = conn.prepare(
+        // Campaign metadata — with fallback for campaigns created before dual-creation system
+        let campaign: serde_json::Value = match conn.prepare(
             "SELECT id, name, description, ruleset, campaign_type, created_at FROM campaigns WHERE id = ?1"
-        ).map_err(|e| format!("Query error: {}", e))?
-        .query_row(params![campaign_id], |row| {
-            Ok(serde_json::json!({
-                "id": row.get::<_, String>(0)?,
-                "name": row.get::<_, String>(1)?,
-                "description": row.get::<_, String>(2).unwrap_or_default(),
-                "ruleset": row.get::<_, String>(3).unwrap_or_else(|_| "dnd5e-2024".to_string()),
-                "campaign_type": row.get::<_, String>(4).unwrap_or_else(|_| "homebrew".to_string()),
-                "created_at": row.get::<_, i64>(5)?,
-            }))
-        }).map_err(|e| format!("Campaign not found: {}", e))?;
+        ).and_then(|mut stmt| {
+            stmt.query_row(params![campaign_id], |row| {
+                Ok(serde_json::json!({
+                    "id": row.get::<_, String>(0)?,
+                    "name": row.get::<_, String>(1)?,
+                    "description": row.get::<_, String>(2).unwrap_or_default(),
+                    "ruleset": row.get::<_, String>(3).unwrap_or_else(|_| "dnd5e-2024".to_string()),
+                    "campaign_type": row.get::<_, String>(4).unwrap_or_else(|_| "homebrew".to_string()),
+                    "created_at": row.get::<_, i64>(5)?,
+                }))
+            })
+        }) {
+            Ok(c) => c,
+            Err(_) => {
+                // Fallback: build minimal campaign record from campaign_id
+                serde_json::json!({
+                    "id": campaign_id,
+                    "name": campaign_id.clone(),
+                    "description": "",
+                    "ruleset": "dnd5e-2024",
+                    "campaign_type": "homebrew",
+                    "created_at": 0,
+                })
+            }
+        };
 
         // Scenes
-        let mut scenes_stmt = conn.prepare(
+        let scenes: Vec<serde_json::Value> = match conn.prepare(
             "SELECT id, name, description, location, phase, dm_notes, sort_order, completed, player_visible, player_description, mood FROM scenes WHERE campaign_id = ?1 ORDER BY sort_order"
-        ).map_err(|e| format!("Query error: {}", e))?;
-        let scenes: Vec<serde_json::Value> = scenes_stmt.query_map(params![campaign_id], |row| {
-            Ok(serde_json::json!({
-                "id": row.get::<_, String>(0)?,
-                "name": row.get::<_, String>(1)?,
-                "description": row.get::<_, String>(2).unwrap_or_default(),
-                "location": row.get::<_, String>(3).unwrap_or_default(),
-                "phase": row.get::<_, String>(4).unwrap_or_default(),
-                "dm_notes": row.get::<_, String>(5).unwrap_or_default(),
-                "sort_order": row.get::<_, i64>(6).unwrap_or(0),
-                "completed": row.get::<_, i64>(7).unwrap_or(0),
-                "player_visible": row.get::<_, i64>(8).unwrap_or(0),
-                "player_description": row.get::<_, String>(9).unwrap_or_default(),
-                "mood": row.get::<_, String>(10).unwrap_or_default(),
-            }))
-        }).map_err(|e| format!("Query error: {}", e))?
-        .filter_map(|r| r.ok()).collect();
+        ) {
+            Ok(mut stmt) => stmt.query_map(params![campaign_id], |row| {
+                Ok(serde_json::json!({
+                    "id": row.get::<_, String>(0)?,
+                    "name": row.get::<_, String>(1)?,
+                    "description": row.get::<_, String>(2).unwrap_or_default(),
+                    "location": row.get::<_, String>(3).unwrap_or_default(),
+                    "phase": row.get::<_, String>(4).unwrap_or_default(),
+                    "dm_notes": row.get::<_, String>(5).unwrap_or_default(),
+                    "sort_order": row.get::<_, i64>(6).unwrap_or(0),
+                    "completed": row.get::<_, i64>(7).unwrap_or(0),
+                    "player_visible": row.get::<_, i64>(8).unwrap_or(0),
+                    "player_description": row.get::<_, String>(9).unwrap_or_default(),
+                    "mood": row.get::<_, String>(10).unwrap_or_default(),
+                }))
+            }).map(|rows| rows.filter_map(|r| r.ok()).collect()).unwrap_or_default(),
+            Err(_) => Vec::new(),
+        };
 
         // NPCs
-        let mut npcs_stmt = conn.prepare(
+        let npcs: Vec<serde_json::Value> = match conn.prepare(
             "SELECT id, name, role, race, location, description, dm_notes, visibility, known_info_json, status FROM campaign_npcs WHERE campaign_id = ?1"
-        ).map_err(|e| format!("Query error: {}", e))?;
-        let npcs: Vec<serde_json::Value> = npcs_stmt.query_map(params![campaign_id], |row| {
-            Ok(serde_json::json!({
-                "name": row.get::<_, String>(1)?,
-                "role": row.get::<_, String>(2).unwrap_or_default(),
-                "race": row.get::<_, String>(3).unwrap_or_default(),
-                "location": row.get::<_, String>(4).unwrap_or_default(),
-                "description": row.get::<_, String>(5).unwrap_or_default(),
-                "dm_notes": row.get::<_, String>(6).unwrap_or_default(),
-                "visibility": row.get::<_, String>(7).unwrap_or_else(|_| "dm_only".to_string()),
-                "known_info_json": row.get::<_, String>(8).unwrap_or_else(|_| "[]".to_string()),
-                "status": row.get::<_, String>(9).unwrap_or_else(|_| "alive".to_string()),
-            }))
-        }).map_err(|e| format!("Query error: {}", e))?
-        .filter_map(|r| r.ok()).collect();
+        ) {
+            Ok(mut stmt) => stmt.query_map(params![campaign_id], |row| {
+                Ok(serde_json::json!({
+                    "name": row.get::<_, String>(1)?,
+                    "role": row.get::<_, String>(2).unwrap_or_default(),
+                    "race": row.get::<_, String>(3).unwrap_or_default(),
+                    "location": row.get::<_, String>(4).unwrap_or_default(),
+                    "description": row.get::<_, String>(5).unwrap_or_default(),
+                    "dm_notes": row.get::<_, String>(6).unwrap_or_default(),
+                    "visibility": row.get::<_, String>(7).unwrap_or_else(|_| "dm_only".to_string()),
+                    "known_info_json": row.get::<_, String>(8).unwrap_or_else(|_| "[]".to_string()),
+                    "status": row.get::<_, String>(9).unwrap_or_else(|_| "alive".to_string()),
+                }))
+            }).map(|rows| rows.filter_map(|r| r.ok()).collect()).unwrap_or_default(),
+            Err(_) => Vec::new(),
+        };
 
         // Quests
-        let mut quests_stmt = conn.prepare(
+        let quests: Vec<serde_json::Value> = match conn.prepare(
             "SELECT title, giver, description, status, visibility, objectives_json, reward_xp, reward_gold, reward_items_json FROM campaign_quests WHERE campaign_id = ?1"
-        ).map_err(|e| format!("Query error: {}", e))?;
-        let quests: Vec<serde_json::Value> = quests_stmt.query_map(params![campaign_id], |row| {
-            Ok(serde_json::json!({
-                "title": row.get::<_, String>(0)?,
-                "giver": row.get::<_, String>(1).unwrap_or_default(),
-                "description": row.get::<_, String>(2).unwrap_or_default(),
-                "status": row.get::<_, String>(3).unwrap_or_default(),
-                "visibility": row.get::<_, String>(4).unwrap_or_else(|_| "dm_only".to_string()),
-                "objectives_json": row.get::<_, String>(5).unwrap_or_else(|_| "[]".to_string()),
-                "reward_xp": row.get::<_, i64>(6).unwrap_or(0),
-                "reward_gold": row.get::<_, i64>(7).unwrap_or(0),
-                "reward_items_json": row.get::<_, String>(8).unwrap_or_else(|_| "[]".to_string()),
-            }))
-        }).map_err(|e| format!("Query error: {}", e))?
-        .filter_map(|r| r.ok()).collect();
+        ) {
+            Ok(mut stmt) => stmt.query_map(params![campaign_id], |row| {
+                Ok(serde_json::json!({
+                    "title": row.get::<_, String>(0)?,
+                    "giver": row.get::<_, String>(1).unwrap_or_default(),
+                    "description": row.get::<_, String>(2).unwrap_or_default(),
+                    "status": row.get::<_, String>(3).unwrap_or_default(),
+                    "visibility": row.get::<_, String>(4).unwrap_or_else(|_| "dm_only".to_string()),
+                    "objectives_json": row.get::<_, String>(5).unwrap_or_else(|_| "[]".to_string()),
+                    "reward_xp": row.get::<_, i64>(6).unwrap_or(0),
+                    "reward_gold": row.get::<_, i64>(7).unwrap_or(0),
+                    "reward_items_json": row.get::<_, String>(8).unwrap_or_else(|_| "[]".to_string()),
+                }))
+            }).map(|rows| rows.filter_map(|r| r.ok()).collect()).unwrap_or_default(),
+            Err(_) => Vec::new(),
+        };
 
         // Handouts
-        let mut handouts_stmt = conn.prepare(
+        let handouts: Vec<serde_json::Value> = match conn.prepare(
             "SELECT title, content, revealed FROM handouts WHERE campaign_id = ?1"
-        ).map_err(|e| format!("Query error: {}", e))?;
-        let handouts: Vec<serde_json::Value> = handouts_stmt.query_map(params![campaign_id], |row| {
-            Ok(serde_json::json!({
-                "title": row.get::<_, String>(0)?,
-                "content": row.get::<_, String>(1).unwrap_or_default(),
-                "revealed": row.get::<_, i64>(2).unwrap_or(0),
-            }))
-        }).map_err(|e| format!("Query error: {}", e))?
-        .filter_map(|r| r.ok()).collect();
+        ) {
+            Ok(mut stmt) => stmt.query_map(params![campaign_id], |row| {
+                Ok(serde_json::json!({
+                    "title": row.get::<_, String>(0)?,
+                    "content": row.get::<_, String>(1).unwrap_or_default(),
+                    "revealed": row.get::<_, i64>(2).unwrap_or(0),
+                }))
+            }).map(|rows| rows.filter_map(|r| r.ok()).collect()).unwrap_or_default(),
+            Err(_) => Vec::new(),
+        };
 
         Ok(serde_json::json!({
             "_format": "codex-campaign-export",
@@ -390,6 +385,27 @@ pub fn export_campaign(
             "quests": quests,
             "handouts": handouts,
         }))
+    })
+}
+
+#[tauri::command]
+pub fn update_campaign_status(
+    campaign_id: String,
+    status: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let now = chrono::Utc::now().timestamp();
+
+    with_campaign_conn(&state, |conn| {
+        let rows = conn.execute(
+            "UPDATE campaigns SET status = ?1, updated_at = ?2 WHERE id = ?3",
+            params![status, now, campaign_id],
+        ).map_err(|e| format!("Failed to update campaign status: {}", e))?;
+
+        if rows == 0 {
+            return Err("Campaign not found.".to_string());
+        }
+        Ok(())
     })
 }
 

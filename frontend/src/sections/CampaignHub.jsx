@@ -373,7 +373,7 @@ export default function CampaignHub({ characterId, character, onNavigate }) {
   const handlePublish = async () => {
     setPublishing(true);
     try {
-      await invoke('archive_campaign', { campaignId: characterId, archived: false });
+      await invoke('update_campaign_status', { campaignId: characterId, status: 'active' });
       dispatch({ type: 'SET_CAMPAIGN', payload: { id: characterId, name: character?.name || 'Campaign', campaign_type: 'homebrew', status: 'active' } });
       toast.success('Campaign published! You can now run live sessions.');
     } catch (err) {

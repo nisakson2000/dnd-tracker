@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Plus, Trash2, Edit2, Globe, Search, MapPin, Users, Star, Clock, Sparkles, Bug, Package, Tag, Link, Shield, BookOpen, Eye, HelpCircle, MessageCircle, XCircle, ChevronDown, ChevronRight, Sun, ScrollText, Hash, Shuffle } from 'lucide-react';
+import { Plus, Trash2, Edit2, Globe, Search, MapPin, Users, Star, Clock, Sparkles, Bug, Package, Tag, Link, Shield, BookOpen, Eye, HelpCircle, MessageCircle, XCircle, ChevronDown, ChevronRight, Sun, ScrollText, Hash, Shuffle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
+import { invoke } from '@tauri-apps/api/core';
 import { getLoreNotes, addLoreNote, updateLoreNote, deleteLoreNote } from '../api/lore';
 import { getNPCs } from '../api/npcs';
 import { getQuests } from '../api/quests';
@@ -174,6 +175,7 @@ export default function Lore({ characterId }) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [quickGenData, setQuickGenData] = useState(null);
+  const [aiGenerating, setAiGenerating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [discoveryFilter, setDiscoveryFilter] = useState('all');
@@ -514,12 +516,43 @@ export default function Lore({ characterId }) {
         {isDM && (
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { setEditing(null); setQuickGenData(generateRandomLoreNote()); setShowForm(true); }}
+              disabled={aiGenerating}
+              onClick={async () => {
+                setAiGenerating(true);
+                toast('Generating with AI...', { icon: '🤖' });
+                try {
+                  const result = await invoke('generate_location', { locationType: null, setting: null, partyLevel: null });
+                  const parsed = JSON.parse(result);
+                  const aiLore = {
+                    title: parsed.title || parsed.name || '',
+                    category: parsed.category || parsed.type || 'Location',
+                    body: parsed.body || parsed.description || '',
+                    related_to_text: parsed.related_to || '',
+                    discovery_type: parsed.discovery_type || 'Confirmed',
+                    source_npc: parsed.source_npc || '',
+                    source_date: '',
+                    session_number: '',
+                    linked_entries: [],
+                  };
+                  setEditing(null);
+                  setQuickGenData(aiLore);
+                  setShowForm(true);
+                  toast.success('AI lore generated!');
+                } catch (err) {
+                  console.warn('AI lore generation failed, using template fallback:', err);
+                  toast('AI unavailable — using template', { icon: '⚡' });
+                  setEditing(null);
+                  setQuickGenData(generateRandomLoreNote());
+                  setShowForm(true);
+                } finally {
+                  setAiGenerating(false);
+                }
+              }}
               className="text-xs flex items-center gap-1"
-              style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(74,222,128,0.25)', background: 'rgba(74,222,128,0.08)', color: '#4ade80', fontFamily: 'var(--font-heading)', letterSpacing: '0.04em', cursor: 'pointer' }}
-              title="Generate a random lore entry with category and template"
+              style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(74,222,128,0.25)', background: 'rgba(74,222,128,0.08)', color: '#4ade80', fontFamily: 'var(--font-heading)', letterSpacing: '0.04em', cursor: 'pointer', opacity: aiGenerating ? 0.6 : 1 }}
+              title="Generate a random lore entry with AI (falls back to template if unavailable)"
             >
-              <Shuffle size={12} /> Quick Generate
+              {aiGenerating ? <Loader2 size={12} className="animate-spin" /> : <Shuffle size={12} />} Quick Generate
             </button>
             <button onClick={() => { setEditing(null); setQuickGenData(null); setShowForm(true); }} className="btn-primary text-xs flex items-center gap-1">
               <Plus size={12} /> New Note

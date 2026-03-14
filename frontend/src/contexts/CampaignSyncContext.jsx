@@ -50,6 +50,13 @@ export function CampaignSyncProvider({ children }) {
   const [currentMood, setCurrentMood] = useState(null);
   const [dmSessionActive, setDmSessionActive] = useState(false);
   const [ambientSound, setAmbientSound] = useState(null);
+  const [latestQuestUpdate, setLatestQuestUpdate] = useState(null);
+  const [pendingRestRequest, setPendingRestRequest] = useState(null);
+  const [whisperMessages, setWhisperMessages] = useState([]);
+  const [pendingSkillCheck, setPendingSkillCheck] = useState(null);
+  const [skillCheckResults, setSkillCheckResults] = useState([]);
+  const [promptHistory, setPromptHistory] = useState([]);
+  const [connectedPlayerMap, setConnectedPlayerMap] = useState({});
 
   const isHost = mode === 'host';
 
@@ -88,6 +95,11 @@ export function CampaignSyncProvider({ children }) {
         ...prev,
         [prompt_id]: [...(prev[prompt_id] || []), { client_id: msg.client_id, ...response }],
       }));
+      setPromptHistory(prev => prev.map(h =>
+        h.prompt_id === prompt_id
+          ? { ...h, results: [...(h.results || []), { client_id: msg.client_id, ...response }] }
+          : h
+      ));
     }));
 
     unsubs.push(onPartyEvent('combat_start', (msg) => {
@@ -281,9 +293,66 @@ export function CampaignSyncProvider({ children }) {
       setPendingPurchases(prev => [...prev, msg.data]);
     }));
 
+    unsubs.push(onPartyEvent('narration', (msg) => {
+      setSharedCombatLog(prev => [...prev, { type: 'narration', text: msg.data?.text || '', timestamp: msg.timestamp }].slice(-50));
+    }));
+
+    unsubs.push(onPartyEvent('quest_update', (msg) => {
+      setLatestQuestUpdate(msg.data);
+    }));
+
+    unsubs.push(onPartyEvent('player_use_item', (msg) => {
+      setSharedCombatLog(prev => [...prev, { type: 'item_used', text: msg.data?.text || `${msg.data?.player_name || 'Player'} uses ${msg.data?.item_name || 'an item'}`, timestamp: msg.timestamp }].slice(-50));
+    }));
+
+    unsubs.push(onPartyEvent('rest_request', (msg) => {
+      setPendingRestRequest(msg.data);
+    }));
+
+    unsubs.push(onPartyEvent('player_whisper', (msg) => {
+      setWhisperMessages(prev => [...prev, { client_id: msg.client_id, ...msg.data, timestamp: msg.timestamp }].slice(-50));
+    }));
+
+    // Skill check flow: DM prompts players to roll
+    unsubs.push(onPartyEvent('skill_check_prompt', (msg) => {
+      setPendingSkillCheck(msg.data);
+    }));
+
+    // Skill check result: player sends back their roll
+    unsubs.push(onPartyEvent('skill_check_result', (msg) => {
+      setSkillCheckResults(prev => [...prev, { client_id: msg.client_id, ...msg.data, timestamp: msg.timestamp }].slice(-30));
+    }));
+
     // DM session lifecycle events — lock player editing during live sessions
     unsubs.push(onPartyEvent('session_start', () => setDmSessionActive(true)));
     unsubs.push(onPartyEvent('session_end', () => setDmSessionActive(false)));
+
+    unsubs.push(onPartyEvent('state_request', (msg) => {
+      if (isHostRef.current) {
+        // DM side: send full state snapshot to reconnecting player
+        const snapshot = {
+          combatActive, initiativeOrder, currentTurn, round,
+          activePrompts: activePrompts.filter(p => true), // Send active prompts
+          currentMood, dmSessionActive,
+        };
+        sendTargetedEvent('full_state_snapshot', snapshot, [msg.client_id]);
+      }
+    }));
+
+    unsubs.push(onPartyEvent('full_state_snapshot', (msg) => {
+      if (!isHostRef.current && msg.data) {
+        // Player side: restore state from DM's snapshot
+        const s = msg.data;
+        if (s.combatActive !== undefined) setCombatActive(s.combatActive);
+        if (s.initiativeOrder) setInitiativeOrder(s.initiativeOrder);
+        if (s.currentTurn !== undefined) setCurrentTurn(s.currentTurn);
+        if (s.round !== undefined) setRound(s.round);
+        if (s.activePrompts) setActivePrompts(s.activePrompts);
+        if (s.currentMood !== undefined) setCurrentMood(s.currentMood);
+        if (s.dmSessionActive !== undefined) setDmSessionActive(s.dmSessionActive);
+        toast.success('Reconnected — state restored');
+      }
+    }));
 
     return () => unsubs.forEach(fn => fn());
   }, [onPartyEvent]);
@@ -306,6 +375,7 @@ export function CampaignSyncProvider({ children }) {
     }
     // Initialize results tracking
     setPromptResults(prev => ({ ...prev, [data.prompt_id]: [] }));
+    setPromptHistory(prev => [{ ...data, sent_at: Date.now(), results: [] }, ...prev].slice(0, 50));
     return data.prompt_id;
   }, [sendEvent, sendTargetedEvent]);
 
@@ -411,6 +481,18 @@ export function CampaignSyncProvider({ children }) {
   const removeIncomingAttack = useCallback((id) => { setIncomingAttacks(prev => prev.filter(a => a.id !== id)); }, []);
   const clearIncomingAttacks = useCallback(() => { setIncomingAttacks([]); }, []);
   const clearMood = useCallback(() => { setCurrentMood(null); setAmbientSound(null); }, []);
+  const clearQuestUpdate = useCallback(() => { setLatestQuestUpdate(null); }, []);
+  const clearRestRequest = useCallback(() => { setPendingRestRequest(null); }, []);
+  const clearWhisperMessages = useCallback(() => { setWhisperMessages([]); }, []);
+  const clearSkillCheck = useCallback(() => { setPendingSkillCheck(null); }, []);
+  const clearSkillCheckResults = useCallback(() => { setSkillCheckResults([]); }, []);
+  const clearPromptHistory = useCallback(() => { setPromptHistory([]); }, []);
+  const registerPlayer = useCallback((clientId, playerName) => {
+    setConnectedPlayerMap(prev => ({ ...prev, [clientId]: playerName }));
+  }, []);
+  const resolvePlayerName = useCallback((clientId) => {
+    return connectedPlayerMap[clientId] || clientId;
+  }, [connectedPlayerMap]);
 
   // DM action functions
   const sendHpChange = useCallback((delta, source, targetClientIds) => {
@@ -498,6 +580,23 @@ export function CampaignSyncProvider({ children }) {
     setAmbientSound(ambient || null);
   }, [sendEvent]);
 
+  // Skill check helpers
+  const sendSkillCheckPrompt = useCallback((skill, ability, dc, description, targetClientIds) => {
+    const data = { skill, ability, dc, description, prompt_id: `sk_${Date.now()}` };
+    if (targetClientIds?.length > 0) {
+      sendTargetedEvent('skill_check_prompt', data, targetClientIds);
+    } else {
+      sendEvent('skill_check_prompt', data);
+    }
+    setSkillCheckResults([]);
+    return data.prompt_id;
+  }, [sendEvent, sendTargetedEvent]);
+
+  const sendSkillCheckResult = useCallback((promptId, skill, roll, modifier, total, success) => {
+    sendEvent('skill_check_result', { prompt_id: promptId, skill, roll, modifier, total, success });
+    setPendingSkillCheck(null);
+  }, [sendEvent]);
+
   // Shop helpers
   const sendShopOpen = useCallback((shopData) => sendEvent('shop_open', shopData), [sendEvent]);
   const sendShopClose = useCallback(() => {
@@ -535,6 +634,13 @@ export function CampaignSyncProvider({ children }) {
     pendingLevelUp, clearLevelUp,
     currentMood, ambientSound, sendMoodChange, sendAmbientChange, clearMood,
     dmSessionActive,
+    latestQuestUpdate, clearQuestUpdate,
+    pendingRestRequest, clearRestRequest,
+    whisperMessages, clearWhisperMessages,
+    pendingSkillCheck, clearSkillCheck, sendSkillCheckPrompt,
+    skillCheckResults, clearSkillCheckResults, sendSkillCheckResult,
+    promptHistory, clearPromptHistory,
+    connectedPlayerMap, registerPlayer, resolvePlayerName,
   }), [activePrompts, promptResults, broadcasts, latestBroadcast,
        combatActive, initiativeOrder, currentTurn, round, isMyTurn, isHost,
        sendBroadcast, sendPrompt, respondToPrompt,
@@ -562,7 +668,14 @@ export function CampaignSyncProvider({ children }) {
        incomingAttacks, removeIncomingAttack, clearIncomingAttacks,
        pendingLevelUp, clearLevelUp,
        currentMood, ambientSound, sendMoodChange, sendAmbientChange, clearMood,
-       dmSessionActive]);
+       dmSessionActive,
+       latestQuestUpdate, clearQuestUpdate,
+       pendingRestRequest, clearRestRequest,
+       whisperMessages, clearWhisperMessages,
+       pendingSkillCheck, clearSkillCheck, sendSkillCheckPrompt,
+       skillCheckResults, clearSkillCheckResults, sendSkillCheckResult,
+       promptHistory, clearPromptHistory,
+       connectedPlayerMap, registerPlayer, resolvePlayerName]);
 
   return <CampaignSyncContext.Provider value={value}>{children}</CampaignSyncContext.Provider>;
 }

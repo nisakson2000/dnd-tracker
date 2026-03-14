@@ -237,6 +237,8 @@ pub struct SessionServer {
     shutdown_tx: Option<broadcast::Sender<()>>,
     /// Port the server is running on
     pub port: u16,
+    /// Recent event buffer for reconnection replay (last 50 events)
+    pub event_buffer: Arc<Mutex<Vec<String>>>,
 }
 
 impl SessionServer {
@@ -247,7 +249,23 @@ impl SessionServer {
             pending: Arc::new(Mutex::new(HashMap::new())),
             shutdown_tx: None,
             port: SESSION_PORT,
+            event_buffer: Arc::new(Mutex::new(Vec::new())),
         }
+    }
+
+    /// Buffer an event for replay on reconnection (keeps last 50)
+    pub async fn buffer_event(&self, event_json: &str) {
+        let mut buf = self.event_buffer.lock().await;
+        buf.push(event_json.to_string());
+        if buf.len() > 50 {
+            let excess = buf.len() - 50;
+            buf.drain(..excess);
+        }
+    }
+
+    /// Get buffered events for replay
+    pub async fn get_buffered_events(&self) -> Vec<String> {
+        self.event_buffer.lock().await.clone()
     }
 
     /// Start the WebSocket server on the given port.
@@ -327,11 +345,25 @@ impl SessionServer {
                 return;
             }
         };
+        // Buffer for reconnection replay
+        self.buffer_event(&text).await;
         let clients = self.clients.lock().await;
         let msg = Message::Text(text);
         for (uuid, tx) in clients.iter() {
             if tx.send(msg.clone()).is_err() {
                 eprintln!("[session_ws] Failed to send to client {}", uuid);
+            }
+        }
+    }
+
+    /// Broadcast raw JSON string to all connected clients (for extensible event types).
+    pub async fn broadcast_raw(&self, json: &str) {
+        self.buffer_event(json).await;
+        let clients = self.clients.lock().await;
+        let msg = Message::Text(json.to_string());
+        for (uuid, tx) in clients.iter() {
+            if tx.send(msg.clone()).is_err() {
+                eprintln!("[session_ws] Failed to send raw to client {}", uuid);
             }
         }
     }
