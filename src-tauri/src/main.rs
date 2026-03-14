@@ -4,6 +4,7 @@
 mod commands;
 mod db;
 mod campaign_db;
+mod migrations;
 mod party;
 mod dev_presence;
 mod session_ws;

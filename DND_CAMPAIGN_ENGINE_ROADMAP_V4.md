@@ -77,50 +77,13 @@ Factions, locations, NPC relationships, dialogue system, calendar DB tables, wea
 
 ---
 
-### M1: Schema Migration Runner (1 day)
+### ~~M1: Schema Migration Runner~~ ✅ COMPLETE
 
-**Problem:** `campaign_db.rs:193-201` uses ad-hoc `ALTER TABLE` with ignored errors. No version tracking. Adding new tables requires editing a monolithic SQL block and hoping ALTER statements are idempotent.
+Versioned migration system replacing ad-hoc schema management.
 
-**New file:** `src-tauri/src/migrations.rs`
-
-```rust
-pub fn run_migrations(conn: &Connection, migrations: &[(&str, &str)]) -> Result<(), String> {
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS schema_versions (
-            version INTEGER PRIMARY KEY,
-            name TEXT NOT NULL,
-            applied_at INTEGER NOT NULL
-        )", []
-    ).map_err(|e| format!("Migration table failed: {}", e))?;
-
-    let current: i64 = conn.query_row(
-        "SELECT COALESCE(MAX(version), 0) FROM schema_versions", [], |r| r.get(0)
-    ).unwrap_or(0);
-
-    for (i, (name, sql)) in migrations.iter().enumerate() {
-        let version = (i + 1) as i64;
-        if version <= current { continue; }
-        conn.execute_batch(sql)
-            .map_err(|e| format!("Migration {} '{}' failed: {}", version, name, e))?;
-        conn.execute(
-            "INSERT INTO schema_versions (version, name, applied_at) VALUES (?1, ?2, ?3)",
-            params![version, name, chrono::Utc::now().timestamp()],
-        ).map_err(|e| format!("Failed to record migration: {}", e))?;
-    }
-    Ok(())
-}
-```
-
-**Changes:**
-- `campaign_db.rs`: Replace `execute_batch` monolith (lines 12-190) + ALTER block (193-201) with `run_migrations(conn, CAMPAIGN_MIGRATIONS)`
-- `db.rs`: Replace `migrate_character_db()` with same pattern
-- Add `mod migrations;` to `main.rs`
-
-**Validation:**
-1. Open app → `schema_versions` table has entries for all existing schema
-2. Add a new migration entry → restart app → auto-applied, version incremented
-3. Restart again → migration not re-applied (idempotent)
-4. Corrupt a migration SQL → app shows error, does not partially apply
+- `src-tauri/src/migrations.rs` — New. `run_migrations()` runner with `schema_versions` tracking table. `CAMPAIGN_MIGRATIONS` array with baseline schema as migration #1. Future migrations append to this array.
+- `src-tauri/src/campaign_db.rs` — Reduced from 205 → 16 lines. Opens DB and calls `run_migrations()`.
+- `src-tauri/src/main.rs` — Added `mod migrations;`
 
 ---
 
@@ -2256,7 +2219,7 @@ I8 (export) ───────→ all migrations
 ## Optimal Build Sequence
 
 ```
-Week 1-2:    M1 → M2 → M3 → M4 → M5 → M6               (Layer 1: all DB migrations)
+Week 1-2:    ~~M1~~ ✅ → M2 → M3 → M4 → M5 → M6          (Layer 1: all DB migrations)
                                                             Release v0.6.0
 
 Week 3:      W1 + W2 + W4 + W5                            (Layer 2: parallel wiring, independent)
@@ -2303,8 +2266,8 @@ Week 19:     S1 + S2 + S3 + S4 + S5                       (Infrastructure: backu
 | Features already built (just need migration) | 6 |
 | Features cut from original roadmap | 7 |
 | Releases | 6 (v0.6.0 through v1.1.0) |
-| **Total items** | **55** |
-| **Total estimated time** | **~19 weeks** |
+| **Total items** | **55 (1 complete, 54 remaining)** |
+| **Total estimated time** | **~19 weeks (~18 remaining)** |
 
 ---
 
