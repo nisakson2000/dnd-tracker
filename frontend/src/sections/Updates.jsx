@@ -22,6 +22,7 @@ export default function Updates() {
   const {
     updateAvailable,
     latestVersion,
+    downloadUrl,
     checking, lastChecked,
     checkResult, checkForUpdates,
     dismissUpdate,
@@ -82,9 +83,10 @@ export default function Updates() {
   }, []);
 
   // Only show current version — full history on GitHub
-  const recentVersions = CHANGELOG.filter(
-    e => e.version === currentVersion || e.version === `v${currentVersion}` || `v${e.version}` === currentVersion,
-  );
+  // Normalize both sides so V0.8.0 matches 0.8.0, v0.8.0, etc.
+  const norm = s => (s || '').replace(/^[Vv]/, '').trim();
+  const currentNorm = norm(currentVersion);
+  const recentVersions = CHANGELOG.filter(e => norm(e.version) === currentNorm);
   const displayVersions = recentVersions.length > 0 ? recentVersions : CHANGELOG.slice(0, 1);
 
   // ── Install update flow ─────────────────────────────
@@ -106,16 +108,7 @@ export default function Updates() {
         });
       }, 120);
 
-      // Fetch manifest for download URL
-      const res = await fetch(
-        'https://raw.githubusercontent.com/nisakson2000/dnd-tracker/main/version.json',
-        { cache: 'no-store' },
-      );
-      if (!res.ok) throw new Error('Failed to fetch update manifest');
-      const data = await res.json();
-      const downloadUrl = data.download || '';
-
-      if (!downloadUrl) throw new Error('No installer URL found in release manifest.');
+      if (!downloadUrl) throw new Error('No download URL available — try checking for updates again.');
 
       if (tickerRef.current) { clearInterval(tickerRef.current); tickerRef.current = null; }
       setProgress(70);
@@ -157,7 +150,7 @@ export default function Updates() {
       setUpdateError(err.message || 'Download failed');
       setPhase(PHASE.ERROR);
     }
-  }, [latestVersion, dismissUpdate]);
+  }, [latestVersion, downloadUrl, dismissUpdate]);
 
   const resetUpdate = () => {
     setPhase(PHASE.IDLE);
@@ -494,7 +487,7 @@ export default function Updates() {
       <div className="space-y-3">
         {displayVersions.map((entry) => {
           const isExpanded = expandedVersion === entry.version;
-          const isCurrent = entry.version === currentVersion || entry.version === `v${currentVersion}` || `v${entry.version}` === currentVersion;
+          const isCurrent = norm(entry.version) === currentNorm;
 
           return (
             <div

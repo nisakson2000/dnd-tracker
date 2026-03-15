@@ -1,14 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { APP_VERSION } from '../version';
 
-// Same neutral manifest URL as UpdateScreen — no repo name exposed
 const VERSION_MANIFEST_URL =
   'https://raw.githubusercontent.com/nisakson2000/dnd-tracker/main/version.json';
 
 const DISMISSED_KEY = 'codex_dismissed_update_version';
 
+/** Strip leading V/v and normalize to bare "x.y.z" */
+function normalizeVersion(str) {
+  return (str || '').replace(/^[Vv]/, '').trim();
+}
+
 function parseVersion(str) {
-  const m = str.match(/V?(\d+)\.(\d+)\.(\d+)/);
+  const m = normalizeVersion(str).match(/^(\d+)\.(\d+)\.(\d+)/);
   if (!m) return null;
   return { major: +m[1], minor: +m[2], patch: +m[3] };
 }
@@ -20,10 +24,17 @@ function isNewer(remote, local) {
   return remote.patch > local.patch;
 }
 
+/** Build the GitHub release page URL from a bare version string */
+function releaseUrl(version) {
+  return `https://github.com/nisakson2000/dnd-tracker/releases/tag/v${normalizeVersion(version)}`;
+}
+
 // checkResult: null | 'up_to_date' | 'update_available' | 'offline'
 export function useUpdateCheck() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [latestVersion, setLatestVersion] = useState(null);
+  const [latestNotes, setLatestNotes] = useState('');
+  const [downloadUrl, setDownloadUrl] = useState('');
   const [checking, setChecking] = useState(false);
   const [lastChecked, setLastChecked] = useState(null);
   const [checkResult, setCheckResult] = useState(null);
@@ -33,26 +44,25 @@ export function useUpdateCheck() {
     setChecking(true);
     setCheckResult(null);
     try {
-      const controller = new AbortController();
-      const timeoutId = AbortSignal.timeout
-        ? null
-        : setTimeout(() => controller.abort(), 5000);
-      const signal = AbortSignal.timeout ? AbortSignal.timeout(5000) : controller.signal;
-      const res = await fetch(VERSION_MANIFEST_URL, {
+      // Cache-bust to defeat GitHub CDN caching (~5 min TTL)
+      const url = `${VERSION_MANIFEST_URL}?_=${Date.now()}`;
+      const res = await fetch(url, {
         cache: 'no-store',
-        signal,
+        signal: AbortSignal.timeout?.(8000),
       });
-      if (timeoutId) clearTimeout(timeoutId);
       if (!res.ok) throw new Error('fetch failed');
       const data = await res.json();
 
       if (!mountedRef.current) return;
 
-      // App version check
-      const remoteVer = data.version || null;
+      const remoteVer = normalizeVersion(data.version);
       let hasAppUpdate = false;
       if (remoteVer) {
         setLatestVersion(remoteVer);
+        setLatestNotes(data.notes || '');
+        // Build download URL dynamically — no need to hardcode in version.json
+        setDownloadUrl(data.download || releaseUrl(remoteVer));
+
         const remote = parseVersion(remoteVer);
         const local = parseVersion(APP_VERSION);
         hasAppUpdate = isNewer(remote, local);
@@ -74,7 +84,7 @@ export function useUpdateCheck() {
 
   // Dismiss update — persists so the prompt won't loop after install or dismiss
   const dismissUpdate = useCallback((version) => {
-    const ver = version || latestVersion;
+    const ver = version ? normalizeVersion(version) : latestVersion;
     if (ver) {
       localStorage.setItem(DISMISSED_KEY, ver);
     }
@@ -82,7 +92,7 @@ export function useUpdateCheck() {
     setCheckResult('up_to_date');
   }, [latestVersion]);
 
-  // Check once on mount — no auto-polling (user triggers manually or from Updates page)
+  // Check once on mount
   useEffect(() => {
     mountedRef.current = true;
     checkForUpdates();
@@ -92,6 +102,8 @@ export function useUpdateCheck() {
   return {
     updateAvailable,
     latestVersion,
+    latestNotes,
+    downloadUrl,
     checking, lastChecked,
     checkResult, checkForUpdates,
     dismissUpdate,
