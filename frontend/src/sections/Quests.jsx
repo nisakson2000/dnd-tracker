@@ -9,6 +9,7 @@ import { getOverview, updateOverview } from '../api/overview';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
 import { useAppMode } from '../contexts/ModeContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const DIFFICULTIES = ['trivial', 'easy', 'medium', 'hard', 'deadly'];
 const DIFFICULTY_COLORS = {
@@ -461,7 +462,7 @@ export default function Quests({ characterId }) {
     const hasRewards = Number(quest.xp_reward) > 0 || Number(quest.gold_reward) > 0 || quest.item_rewards;
 
     return (
-      <div className={`card ${quest.status === 'failed' ? 'border-l-3 border-l-red-500' : ''} ${typeStyle ? `border-l-3 ${typeStyle.borderColor}` : ''}`}>
+      <div className={`card card-hover-lift ${quest.status === 'failed' ? 'border-l-3 border-l-red-500' : ''} ${typeStyle ? `border-l-3 ${typeStyle.borderColor}` : ''}`}>
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -868,9 +869,18 @@ export default function Quests({ characterId }) {
         </div>
       )}
 
-      {showForm && (
-        <QuestForm quest={editing} initialData={quickGenData} onSubmit={handleSave} onCancel={() => { setShowForm(false); setEditing(null); setQuickGenData(null); }} />
-      )}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+          >
+            <QuestForm quest={editing} initialData={quickGenData} onSubmit={handleSave} onCancel={() => { setShowForm(false); setEditing(null); setQuickGenData(null); }} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Session Note Modal */}
       {sessionNoteQuest && (

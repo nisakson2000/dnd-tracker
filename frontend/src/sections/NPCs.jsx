@@ -390,7 +390,7 @@ export default function NPCs({ characterId }) {
     const relColors = RELATIONSHIP_COLORS[npc.relationship] || null;
     const dispColor = DISPOSITION_COLORS[npc.disposition] || DISPOSITION_COLORS.Neutral;
     return (
-      <div className={`card ${colors.cardBg} border ${colors.cardBorder} border-l-3 ${dispColor.border}`}>
+      <div className={`card card-hover-lift ${colors.cardBg} border ${colors.cardBorder} border-l-3 ${dispColor.border}`}>
         <div className="flex items-start gap-3">
           {/* Avatar */}
           <div className={`w-11 h-11 rounded-full ${colors.bg} border-2 ${colors.border} flex items-center justify-center flex-shrink-0 shadow-lg relative`}>
@@ -731,9 +731,18 @@ export default function NPCs({ characterId }) {
         renderNPCList(sorted)
       )}
 
-      {showForm && (
-        <NPCForm npc={editing} initialData={quickGenData} onSubmit={handleSave} onCancel={() => { setShowForm(false); setEditing(null); setQuickGenData(null); }} />
-      )}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+          >
+            <NPCForm npc={editing} initialData={quickGenData} onSubmit={handleSave} onCancel={() => { setShowForm(false); setEditing(null); setQuickGenData(null); }} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Conversation log modal */}
       {conversationNpc && (

@@ -9,6 +9,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
 import { HELP } from '../data/helpText';
 import { calcMod } from '../utils/dndHelpers';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Subclasses that grant third-caster spellcasting
 const THIRD_CASTER_SUBCLASSES = {
@@ -1103,7 +1104,18 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
       })}
 
       {/* Add Spell Modal */}
-      {showAdd && <SpellForm onSubmit={handleAddSpell} onCancel={() => setShowAdd(false)} />}
+      <AnimatePresence>
+        {showAdd && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+          >
+            <SpellForm onSubmit={handleAddSpell} onCancel={() => setShowAdd(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Edit Spell Modal */}
       {editingSpell && <SpellForm spell={editingSpell} onSubmit={handleEditSpell} onCancel={() => setEditingSpell(null)} />}

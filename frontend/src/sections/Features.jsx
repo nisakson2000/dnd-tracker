@@ -10,6 +10,7 @@ import { HELP } from '../data/helpText';
 import { CLASS_FEATURES } from '../data/classFeatures';
 import { useAppMode } from '../contexts/ModeContext';
 import { searchArticles } from '../api/wiki';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const RECHARGE_OPTIONS = ['', 'short_rest', 'long_rest', 'dawn', 'recharge_5_6', 'recharge_6', 'manual'];
 const RECHARGE_LABELS = { '': 'None', 'short_rest': 'Short Rest', 'long_rest': 'Long Rest', 'dawn': 'At Dawn', 'recharge_5_6': 'Recharge 5-6', 'recharge_6': 'Recharge 6', 'manual': 'Manual' };
@@ -566,19 +567,28 @@ export default function Features({ characterId, character }) {
         </div>
 
         {/* Advanced filters row */}
-        {showFilters && (
-          <div className="flex items-center gap-4 flex-wrap pl-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-amber-200/30 uppercase tracking-wider">Recharge:</span>
-              {['all', 'short_rest', 'long_rest', 'dawn', 'recharge_5_6', 'recharge_6', 'none'].map(r => (
-                <button key={r} onClick={() => setRechargeFilter(r)}
-                  className={`text-xs px-2.5 py-1 rounded ${rechargeFilter === r ? 'bg-gold/20 text-gold border border-gold/30' : 'text-amber-200/40 border border-amber-200/10'}`}>
-                  {r === 'all' ? 'All' : r === 'none' ? 'No Recharge' : RECHARGE_LABELS[r] || r}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.15 }}
+            >
+              <div className="flex items-center gap-4 flex-wrap pl-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-amber-200/30 uppercase tracking-wider">Recharge:</span>
+                  {['all', 'short_rest', 'long_rest', 'dawn', 'recharge_5_6', 'recharge_6', 'none'].map(r => (
+                    <button key={r} onClick={() => setRechargeFilter(r)}
+                      className={`text-xs px-2.5 py-1 rounded ${rechargeFilter === r ? 'bg-gold/20 text-gold border border-gold/30' : 'text-amber-200/40 border border-amber-200/10'}`}>
+                      {r === 'all' ? 'All' : r === 'none' ? 'No Recharge' : RECHARGE_LABELS[r] || r}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Class Feature Progression Panel */}
@@ -689,7 +699,18 @@ export default function Features({ characterId, character }) {
         </div>
       )}
 
-      {showAdd && <FeatureForm onSubmit={handleAdd} onCancel={() => setShowAdd(false)} />}
+      <AnimatePresence>
+        {showAdd && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+          >
+            <FeatureForm onSubmit={handleAdd} onCancel={() => setShowAdd(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
       {editingFeature && <FeatureForm initialData={editingFeature} onSubmit={handleEdit} onCancel={() => setEditingFeature(null)} />}
 
       <ConfirmDialog

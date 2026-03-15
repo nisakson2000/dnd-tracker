@@ -749,6 +749,31 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 .reset-btn:hover { background: rgba(239,68,68,0.14); border-color: rgba(239,68,68,0.35); }
 .reset-btn:active { transform: scale(0.98); }
 
+/* ── Card hover lift — subtle lift on hover ── */
+.card-hover-lift {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.card-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ── HP change flash effects ── */
+@keyframes hp-flash-heal {
+  0% { background-color: rgba(74, 222, 128, 0.15); }
+  100% { background-color: transparent; }
+}
+@keyframes hp-flash-damage {
+  0% { background-color: rgba(239, 68, 68, 0.15); }
+  100% { background-color: transparent; }
+}
+.hp-flash-heal {
+  animation: hp-flash-heal 0.6s ease-out;
+}
+.hp-flash-damage {
+  animation: hp-flash-damage 0.6s ease-out;
+}
+
 /* ── Performance: GPU-accelerated animated elements ── */
 .hp-fill, .sidebar-hp-fill, .party-mini-bar-fill, .toggle::after {
   will-change: width, transform;

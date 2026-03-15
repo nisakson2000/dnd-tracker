@@ -331,7 +331,7 @@ export default function Lore({ characterId }) {
 
     return (
       <div
-        className={`card border-l-[3px] ${borderLeftColor} relative transition-all duration-200 ${isRumorOrSpec ? 'bg-amber-900/[0.03]' : ''} ${isDebunked ? (discStyle?.cardBg || '') + ' opacity-75' : ''} ${isHovered && !isExpanded ? 'ring-1 ring-amber-200/10' : ''}`}
+        className={`card card-hover-lift border-l-[3px] ${borderLeftColor} relative transition-all duration-200 ${isRumorOrSpec ? 'bg-amber-900/[0.03]' : ''} ${isDebunked ? (discStyle?.cardBg || '') + ' opacity-75' : ''} ${isHovered && !isExpanded ? 'ring-1 ring-amber-200/10' : ''}`}
         onMouseEnter={() => setHoveredNote(note.id)}
         onMouseLeave={() => setHoveredNote(null)}
       >
