@@ -1456,6 +1456,12 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 <div className="space-y-1 text-[11px] text-amber-200/60">
                   <div className="flex justify-between"><span>Unarmored base</span><span className="text-amber-100">10</span></div>
                   <div className="flex justify-between"><span>DEX modifier</span><span className="text-amber-100">{modStr(dexMod)}</span></div>
+                  {(() => {
+                    const armorMagicTotal = itemMagicBonuses.filter(i => i.item_type === 'armor').reduce((s, i) => s + i.magic_bonus, 0);
+                    return armorMagicTotal > 0 && (
+                      <div className="flex justify-between"><span className="text-purple-400/70">Magic armor/shield</span><span className="text-purple-400/70">+{armorMagicTotal}</span></div>
+                    );
+                  })()}
                   <div className="border-t border-amber-200/10 my-1" />
                   <div className="flex justify-between"><span>Unarmored total</span><span className="text-gold font-bold">{10 + dexMod}</span></div>
                   {overview.armor_class !== 10 + dexMod && (

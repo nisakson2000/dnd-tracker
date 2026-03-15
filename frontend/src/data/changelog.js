@@ -3,6 +3,30 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.7.0',
+    date: '03/14/2026',
+    time: '11:59 PM',
+    title: 'Accurate Dice Modifiers, Magic Items & Polish',
+    changes: [
+      'Accurate Dice Modifiers — all roll types (ability checks, saving throws, skills, attacks) now correctly chain ability modifier + proficiency + item bonuses + condition effects',
+      'Magic Weapon Bonus — equipped +1/+2/+3 weapons auto-add magic bonus to attack AND damage rolls',
+      'Magic Armor Bonus — equipped +1/+2/+3 armor/shields auto-add magic bonus to AC with breakdown tooltip',
+      'Extra Damage Display — weapons with extra damage (e.g., "2d6 fire") now shown in attack roll results',
+      'Advantage/Disadvantage — proper 5e cancellation rules (advantage + disadvantage = straight roll)',
+      'Item Save Bonuses — items like Cloak of Protection add save bonus to all saving throw rolls',
+      'Item Stat Bonuses — items like Gauntlets of Ogre Power apply ability score bonuses to rolls',
+      'Multiplayer Roll Accuracy — item bonuses synced in character snapshot for accurate remote rolls',
+      'Magic Item Properties Form — set magic bonus, extra damage, save bonus, and special properties on items',
+      'HP Undo — 10-second undo window after damage or healing with one-click restore',
+      'Enter Key Submit — press Enter to submit item forms and attack forms',
+      'Quest Search & Filter — search quests by name, filter by status (active/completed/failed)',
+      'DM Mode Gating — DM mode restricted to dev builds only for safety',
+      'Form Validation — empty item/combatant names blocked with error feedback',
+      'Negative Currency Prevention — currency fields clamped to 0 minimum',
+      'NaN Weight Fix — null/undefined weight no longer breaks encumbrance calculation',
+    ],
+  },
+  {
     version: 'V0.6.5',
     date: '03/14/2026',
     time: '11:59 PM',

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Plus, Trash2, Swords, Dice5, Timer, X, Search, Minus, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ScrollText, ArrowRight, Filter, Heart, Shield, ShieldOff, Skull, Activity, Zap, AlertTriangle, Cross, Lightbulb } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAttacks, addAttack, deleteAttack, getConditions, updateConditions, getCombatNotes, updateCombatNotes } from '../api/combat';
+import { getItems } from '../api/inventory';
 import { useAutosave } from '../hooks/useAutosave';
 import SaveIndicator from '../components/SaveIndicator';
 import HelpTooltip from '../components/HelpTooltip';
@@ -317,6 +318,8 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [rollResults, setRollResults] = useState({});
   const [dmgModifiers, setDmgModifiers] = useState({}); // 'resist' | 'vuln' | null per attack id
+  const [weaponMagicBonus, setWeaponMagicBonus] = useState(0); // highest equipped weapon magic_bonus
+  const [weaponExtraDamage, setWeaponExtraDamage] = useState(''); // e.g. "2d6 fire"
   const rollTimeoutRefs = useRef({});
 
   // --- All combat sessionStorage state consolidated into one hook ---
@@ -493,7 +496,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
 
   const addCombatant = () => {
     const name = newCombatantName.trim();
-    if (!name) return;
+    if (!name) { toast.error('Combatant name is required'); return; }
     const init = parseInt(newCombatantInit) || 0;
     const hp = parseInt(newCombatantHP) || 0;
     setCombatants(prev => [...prev, {
@@ -722,7 +725,20 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       setNotes(notesData);
       const activeConds = condData.filter(c => c.active);
       onConditionsChange?.(activeConds.length, activeConds.map(c => c.name));
-    } catch (err) { toast.error('Failed to load combat data: ' + err.message); }
+      // Load equipped weapon magic bonuses
+      try {
+        const items = await getItems(characterId);
+        const equippedWeapons = items.filter(i => i.equipped && i.item_type === 'weapon');
+        let bestMagic = 0;
+        let extraDmg = '';
+        for (const w of equippedWeapons) {
+          if (w.magic_bonus > bestMagic) bestMagic = w.magic_bonus;
+          if (w.extra_damage && !extraDmg) extraDmg = w.extra_damage;
+        }
+        setWeaponMagicBonus(bestMagic);
+        setWeaponExtraDamage(extraDmg);
+      } catch { /* non-critical */ }
+    } catch (err) { toast.error('Failed to load combat data: ' + (err?.message || 'Unknown error')); }
     finally { setLoading(false); }
   };
 
@@ -822,12 +838,13 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   // --- Crit animation state ---
   const [critAnimations, setCritAnimations] = useState({});
 
-  // Inline attack roll (enhanced with flanking, combat log, crit animation)
+  // Inline attack roll (enhanced with flanking, magic bonus, combat log, crit animation)
   const rollAttack = (atk) => {
     const bonus = parseBonus(atk.attack_bonus);
+    const magicBonus = weaponMagicBonus || 0;
     const d20 = rollDie(20);
     const flankBonus = flankingEnabled ? 2 : 0;
-    const total = d20 + bonus + flankBonus;
+    const total = d20 + bonus + magicBonus + flankBonus;
     const isNat20 = d20 === 20;
     const isNat1 = d20 === 1;
 
@@ -835,14 +852,14 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     const dmg = parseDamage(atk.damage_dice);
     if (dmg) {
       const rolls = Array.from({ length: isNat20 ? dmg.count * 2 : dmg.count }, () => rollDie(dmg.sides));
-      const dmgTotal = rolls.reduce((s, r) => s + r, 0) + dmg.mod;
-      dmgResult = { rolls, total: dmgTotal, crit: isNat20 };
+      const dmgTotal = rolls.reduce((s, r) => s + r, 0) + dmg.mod + magicBonus;
+      dmgResult = { rolls, total: dmgTotal, crit: isNat20, extraDamage: weaponExtraDamage || '' };
     }
 
     const ts = Date.now();
     setRollResults(prev => ({
       ...prev,
-      [atk.id]: { d20, bonus, flankBonus, total, isNat20, isNat1, damage: dmgResult, ts },
+      [atk.id]: { d20, bonus, magicBonus, flankBonus, total, isNat20, isNat1, damage: dmgResult, ts },
     }));
 
     // Track combat stats
@@ -863,9 +880,10 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     }
 
     // Combat log
-    const dmgStr = dmgResult ? ` for ${dmgResult.total} damage${dmgResult.crit ? ' (CRIT!)' : ''}` : '';
+    const extraStr = dmgResult?.extraDamage ? ` + ${dmgResult.extraDamage}` : '';
+    const dmgStr = dmgResult ? ` for ${dmgResult.total} damage${extraStr}${dmgResult.crit ? ' (CRIT!)' : ''}` : '';
     const critStr = isNat20 ? ' [NAT 20]' : isNat1 ? ' [NAT 1]' : '';
-    logEvent('attack', `${atk.name || 'Attack'}: rolled ${d20} + ${bonus}${flankBonus ? ` + ${flankBonus} flanking` : ''} = ${total}${critStr}${dmgStr}`);
+    logEvent('attack', `${atk.name || 'Attack'}: rolled ${d20} + ${bonus}${magicBonus ? ` + ${magicBonus} magic` : ''}${flankBonus ? ` + ${flankBonus} flanking` : ''} = ${total}${critStr}${dmgStr}`);
 
     // Clear previous timeout for this attack if any
     if (rollTimeoutRefs.current[atk.id]) {
@@ -1527,7 +1545,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3">
                         <span className="text-amber-100 font-medium">{atk.name || 'Unnamed Attack'}</span>
-                        <span className="text-gold text-sm">{atk.attack_bonus ?? '+0'}{flankingEnabled && <span className="text-gold/60 text-xs ml-0.5">(+2)</span>}</span>
+                        <span className="text-gold text-sm">{atk.attack_bonus ?? '+0'}{weaponMagicBonus > 0 && <span className="text-purple-400/70 text-xs ml-0.5">(+{weaponMagicBonus})</span>}{flankingEnabled && <span className="text-gold/60 text-xs ml-0.5">(+2)</span>}</span>
                         <span className="text-amber-200/60 text-sm">{atk.damage_dice ?? '\u2014'} {atk.damage_type && <span className="text-amber-200/40">{atk.damage_type}</span>}</span>
                         {atk.attack_range && <span className="text-amber-200/30 text-xs">{atk.attack_range}</span>}
                       </div>
@@ -1549,7 +1567,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                         }`}>
                           {result.d20}
                         </span>
-                        <span className="text-amber-200/40">+ {result.bonus}{result.flankBonus ? ` + ${result.flankBonus}` : ''} =</span>
+                        <span className="text-amber-200/40">+ {result.bonus}{result.magicBonus ? ` + ${result.magicBonus}` : ''}{result.flankBonus ? ` + ${result.flankBonus}` : ''} =</span>
                         <span className={`font-bold ${result.isNat20 ? 'text-gold' : result.isNat1 ? 'text-red-400' : 'text-amber-100'}`}>
                           {result.total}
                         </span>
@@ -1577,6 +1595,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                                 {displayTotal}
                               </span>
                               {result.damage.crit && !mod && <span className="text-gold text-xs">CRIT!</span>}
+                              {result.damage.extraDamage && <span className="text-red-400/70 text-xs ml-1">+ {result.damage.extraDamage}</span>}
                             </button>
                             <button
                               onClick={() => setDmgModifiers(prev => ({ ...prev, [atk.id]: prev[atk.id] === 'resist' ? null : 'resist' }))}

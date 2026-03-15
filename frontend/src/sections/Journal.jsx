@@ -1684,7 +1684,7 @@ function JournalForm({ entry, isNew, nextSessionNumber = 1, onSubmit, onCancel }
     setForm(prev => ({ ...prev, [f]: v }));
   };
   const handleSubmit = () => {
-    if (!form.title.trim()) { setTitleError(true); return; }
+    if (!form.title?.trim()) { setTitleError(true); toast.error('Entry title is required'); return; }
     const { _mood, _xp, _gold, ...rest } = form;
     const displayTags = getDisplayTags(rest.tags).join(', ');
     let finalTags = setMoodInTags(displayTags, _mood);

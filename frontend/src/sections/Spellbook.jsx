@@ -220,6 +220,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
 
   const handleAddSpell = async (spellData) => {
     try {
+      spellData = { ...spellData, level: Math.min(9, Math.max(0, parseInt(spellData.level) || 0)) };
       await addSpell(characterId, spellData);
       toast.success('Spell added');
       load();

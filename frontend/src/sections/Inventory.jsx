@@ -195,7 +195,7 @@ export default function Inventory({ characterId, character }) {
   const { trigger: triggerCurrency, saving: savingCurrency, lastSaved: currencySaved } = useAutosave(saveCurrencyFn);
 
   const updateCurrencyField = (field, value) => {
-    const updated = { ...currency, [field]: parseInt(value) || 0 };
+    const updated = { ...currency, [field]: Math.max(0, parseInt(value) || 0) };
     setCurrency(updated);
     triggerCurrency(updated);
   };
@@ -289,7 +289,7 @@ export default function Inventory({ characterId, character }) {
   };
 
   const attunedCount = items.filter(i => i.attuned).length;
-  const totalWeight = items.reduce((sum, i) => sum + (i.weight * i.quantity), 0);
+  const totalWeight = items.reduce((sum, i) => sum + ((i.weight || 0) * (i.quantity || 1)), 0);
   const carryCapacity = strScore * 15;
   const encumbered = totalWeight > strScore * 5;
   const heavilyEncumbered = totalWeight > strScore * 10;
@@ -1322,7 +1322,7 @@ function ItemForm({ onSubmit, onCancel, character, initialData }) {
   };
 
   const handleFormSubmit = () => {
-    if (!form.name) return;
+    if (!form.name || !form.name.trim()) { toast.error('Item name is required'); return; }
     onSubmit(isEditing ? { ...form } : { ...form, attuned: false, equipped: false });
   };
 

@@ -1304,7 +1304,7 @@ function NPCForm({ npc, initialData, onSubmit, onCancel }) {
     });
   };
   const handleSubmit = () => {
-    if (!form.name.trim()) { setNameError(true); setActiveTab('basics'); return; }
+    if (!form.name?.trim()) { setNameError(true); setActiveTab('basics'); toast.error('NPC name is required'); return; }
     onSubmit(form);
   };
 
