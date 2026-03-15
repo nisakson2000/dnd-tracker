@@ -3,6 +3,27 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.8.0',
+    date: '03/15/2026',
+    time: '4:00 PM',
+    title: 'Player Mode Overhaul: Decomposed Architecture, Combat Animations & Polish',
+    changes: [
+      'PlayerSession decomposed into focused modules for reliability and maintainability',
+      'WebSocket heartbeat (15s ping/pong) with automatic disconnect detection',
+      'Message acknowledgment system for critical events (HP changes, turn advances)',
+      'Reconnection replay — missed events replayed seamlessly on rejoin',
+      'Interactive battle map — players can drag their own token with distance measurement',
+      'Damage/healing floating number animations with critical hit effects',
+      'Audio feedback via Web Audio API — damage, heal, crit, roll, and turn chime sounds',
+      'Enhanced chat — /roll dice commands, /me emotes, sender colors, timestamps',
+      'Session transcript export to markdown via file dialog',
+      'Keyboard shortcuts — Space (end turn), R (quick roll), Tab (cycle tabs), Escape (dismiss)',
+      'DM Mode now gated by passphrase instead of dev-only builds',
+      'Removed standalone Dice Roller section from navigation (still in character sheet)',
+      'Unified app version — removed separate DM Mode version tracking',
+    ],
+  },
+  {
     version: 'V0.7.1',
     date: '03/15/2026',
     time: '12:00 AM',
