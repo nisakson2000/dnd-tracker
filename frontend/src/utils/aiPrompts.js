@@ -6,7 +6,7 @@
  */
 
 // ── Shared system preamble ──
-const DM_PREAMBLE = `You are an expert Dungeon Master's creative writing assistant for a D&D 5e campaign. Write vivid, evocative content that a DM can read aloud or use as reference. Use second person sparingly — prefer atmospheric third-person narration. Never break character or mention you are an AI. Keep output in clean markdown.`;
+const DM_PREAMBLE = `You are an expert Dungeon Master's creative writing assistant for a D&D 5e campaign. Write vivid, evocative content that a DM can read aloud or use as reference. Use second person sparingly — prefer atmospheric third-person narration. Never break character or mention you are an AI. Keep output in clean markdown. Always include 2-3 specific sensory anchors in every response: textures, sounds, scents, temperatures, lighting. Vary pacing — linger on atmosphere in calm moments, tighten prose during danger. Use evocative verbs and concrete nouns over abstract descriptions.`;
 
 // ── Context formatters ──
 function fmtNpcs(npcs) {
@@ -31,7 +31,11 @@ function fmtWeather(weather) {
 
 function fmtScene(scene) {
   if (!scene) return '';
-  return `\n\nCURRENT SCENE: "${scene.name}"${scene.location ? ` at ${scene.location}` : ''}${scene.phase ? ` (${scene.phase} phase)` : ''}${scene.mood ? ` — mood: ${scene.mood}` : ''}${scene.description ? `\nScene description: ${scene.description.slice(0, 200)}` : ''}`;
+  let out = `\n\nCURRENT SCENE: "${scene.name}"${scene.location ? ` at ${scene.location}` : ''}`;
+  if (scene.phase) out += `\nPhase: ${scene.phase} — tailor tone and pacing to this phase (e.g., "exploration" = lingering detail, "combat" = terse and urgent, "social" = character-driven)`;
+  if (scene.mood) out += `\nMood: ${scene.mood} — let this mood permeate sensory details, word choice, and NPC demeanor`;
+  if (scene.description) out += `\nScene description: ${scene.description.slice(0, 200)}`;
+  return out;
 }
 
 function fmtPlayers(players) {
@@ -52,7 +56,7 @@ function fmtEconomy(economy) {
 
 // ── Module 1: Scene Description ──
 export function buildScenePrompt(ctx) {
-  const system = DM_PREAMBLE + `\n\nYou specialize in creating atmospheric scene descriptions for D&D sessions. Include sensory details: what the characters see, hear, smell, and feel. Write 2-3 paragraphs.`;
+  const system = DM_PREAMBLE + `\n\nYou specialize in creating atmospheric scene descriptions for D&D sessions. Include sensory details: what the characters see, hear, smell, and feel. Write 2-3 paragraphs. For every scene, explicitly convey: ambient sounds (dripping water, distant thunder, murmuring crowds), lighting quality (flickering torchlight, pale moonbeams, harsh noon sun), air quality (stale dungeon air, crisp forest breeze, smoke-thick tavern haze), temperature (bone-chilling cold, oppressive heat, comfortable warmth), and ground feel underfoot (slick cobblestones, soft loam, gritty sand).`;
 
   let prompt = `Generate a vivid scene description for the following setting:`;
   prompt += fmtScene(ctx.scene);
@@ -66,7 +70,7 @@ export function buildScenePrompt(ctx) {
 
 // ── Module 2: NPC Dialogue ──
 export function buildNpcDialoguePrompt(ctx) {
-  const system = DM_PREAMBLE + `\n\nYou specialize in writing NPC dialogue and personality. Write dialogue that reveals character, advances the story, and gives the DM options for roleplay. Include speech patterns, mannerisms, and suggested responses to common player questions.`;
+  const system = DM_PREAMBLE + `\n\nYou specialize in writing NPC dialogue and personality. Write dialogue that reveals character, advances the story, and gives the DM options for roleplay. Include speech patterns, mannerisms, and suggested responses to common player questions. For each NPC, establish: speech mannerisms (stutters, formal diction, slang, repeated phrases), vocal quality (raspy, melodic, clipped, booming, whispery), emotional undercurrents beneath their words (nervousness masked by bravado, grief behind cheerfulness), and body language cues during dialogue (fidgeting hands, averted gaze, leaning forward conspiratorially).`;
 
   let prompt = `Generate dialogue and roleplay notes for this NPC:`;
   if (ctx.npc) {
@@ -139,7 +143,7 @@ export function buildBackstoryPrompt(ctx) {
 
 // ── Module 6: Villain Monologue ──
 export function buildVillainMonologuePrompt(ctx) {
-  const system = DM_PREAMBLE + `\n\nYou write dramatic villain monologues and speeches. The villain should be menacing, intelligent, and reveal just enough of their plan to tantalize the players. Include stage directions for dramatic delivery.`;
+  const system = DM_PREAMBLE + `\n\nYou write dramatic villain monologues and speeches. The villain should be menacing, intelligent, and reveal just enough of their plan to tantalize the players. Include stage directions for dramatic delivery. Set the dramatic staging: describe where the villain stands relative to the party, the lighting on their face (half-shadow, backlit by flames, illuminated by an eerie glow), and physical intimidation details (towering height, casual displays of power, uncomfortably close proximity). Indicate vocal tone shifts throughout the monologue (dropping to a whisper, rising to a roar, cold and measured). Mark dramatic pauses with [beat] to guide the DM's pacing.`;
 
   let prompt = `Create a villain monologue:`;
   if (ctx.villain) {
@@ -190,7 +194,7 @@ export function buildNarrativeExpansionPrompt(ctx) {
 
 // ── Module 9: Lore Generation ──
 export function buildLorePrompt(ctx) {
-  const system = DM_PREAMBLE + `\n\nYou create rich world lore, history, legends, and cultural details for D&D settings. Write lore that feels lived-in and can be revealed to players through in-game discoveries.`;
+  const system = DM_PREAMBLE + `\n\nYou create rich world lore, history, legends, and cultural details for D&D settings. Write lore that feels lived-in and can be revealed to players through in-game discoveries. For each piece of lore, suggest how players might discover it in-game: ancient inscriptions on crumbling stone, a scholar's marginalia in a dusty tome, a tavern legend passed between cups, a dying sage's whispered confession, or faded murals in a forgotten shrine. When describing artifacts or legendary locations, include sensory details — the weight and texture of a relic, the smell of ancient parchment, the sound an enchanted object makes, the unsettling aura of a cursed place.`;
 
   let prompt = `Generate world lore for this campaign:`;
   if (ctx.campaignName) prompt += `\n\nCampaign: ${ctx.campaignName}`;

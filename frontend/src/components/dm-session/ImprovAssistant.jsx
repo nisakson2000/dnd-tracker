@@ -94,6 +94,60 @@ const SECRETS = [
   'Has a twin they pretend does not exist',
 ];
 
+const APPEARANCES = [
+  'Tall and gaunt with hollow cheeks',
+  'Stocky, barrel-chested with powerful arms',
+  'Slender with sharp features and quick eyes',
+  'Weathered face with deep laugh lines',
+  'Scarred across the left cheek, wiry build',
+  'Round-faced with a warm, infectious smile',
+  'Angular features, unnervingly pale',
+  'Sun-darkened skin, calloused hands',
+  'Towering figure with a shaved head',
+  'Slight build, moves with feline grace',
+  'Missing two fingers on the left hand',
+  'Wild unkempt hair, paint-stained clothes',
+  'Immaculate appearance, not a hair out of place',
+  'Hunched posture, darting nervous eyes',
+  'Broad-shouldered with a booming presence',
+];
+
+const CLOTHING = [
+  'worn traveling leathers',
+  'a fine embroidered doublet',
+  'a patched wool cloak over simple clothes',
+  'mud-splattered work clothes',
+  'layered robes with arcane symbols',
+  'polished half-plate with a unit insignia',
+  'a hooded cloak that conceals most features',
+  'colorful mismatched fabrics',
+  'a bloodstained apron',
+  'dark formal attire with silver buttons',
+  'furs and bone jewelry',
+  'a merchant\'s vest with many pockets',
+  'priestly vestments',
+  'a sea-worn captain\'s coat',
+  'nondescript peasant garb',
+];
+
+const MOTIVATIONS = [
+  'Seeking revenge for a past wrong',
+  'Trying to pay off a massive debt',
+  'Searching for a missing loved one',
+  'Protecting a dangerous secret',
+  'Gathering information for a patron',
+  'Running from their past',
+  'Attempting to prove their innocence',
+  'Building a new life after exile',
+  'Pursuing forbidden knowledge',
+  'Trying to broker peace between factions',
+  'Hoarding wealth for retirement',
+  'Testing adventurers for a powerful sponsor',
+  'Hiding their true noble identity',
+  'Atoning for a terrible mistake',
+  'Waiting for a signal to act',
+];
+
 const VOICE_HINTS = [
   'Gruff and raspy','High-pitched and fast','Whispered and cautious',
   'Thick rural accent','Booming and theatrical','Nasally and whiny',
@@ -294,8 +348,11 @@ function generateNPC() {
     name: `${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`,
     race: pickWeighted(RACES),
     occupation: pick(OCCUPATIONS),
+    appearance: pick(APPEARANCES),
+    clothing: pick(CLOTHING),
     trait: pick(TRAITS),
     quirk: pick(QUIRKS),
+    motivation: pick(MOTIVATIONS),
     secret: pick(SECRETS),
     voice: pick(VOICE_HINTS),
   };
@@ -467,8 +524,11 @@ function NPCCard({ data }) {
       <Field label="Name">{data.name}</Field>
       <Field label="Race">{data.race}</Field>
       <Field label="Occupation">{data.occupation}</Field>
+      <Field label="Appearance">{data.appearance}</Field>
+      <Field label="Clothing">{data.clothing}</Field>
       <Field label="Personality">{data.trait}</Field>
       <Field label="Quirk">{data.quirk}</Field>
+      <Field label="Motivation">{data.motivation}</Field>
       <Field label="Secret">{data.secret}</Field>
       <Field label="Voice Hint">{data.voice}</Field>
     </>
@@ -511,7 +571,7 @@ function EventCard({ data }) {
 /* ─────────────────── FORMAT FOR CLIPBOARD ─────────────────── */
 
 function formatNPC(d) {
-  return `NPC: ${d.name}\nRace: ${d.race}\nOccupation: ${d.occupation}\nPersonality: ${d.trait}\nQuirk: ${d.quirk}\nSecret: ${d.secret}\nVoice: ${d.voice}`;
+  return `NPC: ${d.name}\nRace: ${d.race}\nOccupation: ${d.occupation}\nAppearance: ${d.appearance}\nClothing: ${d.clothing}\nPersonality: ${d.trait}\nQuirk: ${d.quirk}\nMotivation: ${d.motivation}\nSecret: ${d.secret}\nVoice: ${d.voice}`;
 }
 
 function formatLocation(d) {

@@ -584,6 +584,10 @@ pub async fn generate_npc(
           \"race\": \"string\",\n  \
           \"npc_class\": \"string\",\n  \
           \"description\": \"string — a vivid 2-3 sentence physical and personality description\",\n  \
+          \"appearance\": \"string — 2-3 sentence physical description covering build, facial features, any scars or distinguishing marks, and clothing style\",\n  \
+          \"mannerisms\": \"string — a specific behavioral quirk or habit this NPC displays (e.g. always polishes a coin, taps their teeth when thinking, refuses to make eye contact)\",\n  \
+          \"voice\": \"string — description of accent, tone, and speech pattern (e.g. gravelly whisper with clipped sentences, sing-song elvish lilt, booming baritone that fills any room)\",\n  \
+          \"catchphrase\": \"string — a signature phrase, greeting, or saying this NPC is known for\",\n  \
           \"disposition\": \"string — one of: friendly, neutral, hostile, fearful, mysterious\",\n  \
           \"location\": \"string — where this NPC can typically be found\",\n  \
           \"quest_hook\": \"string — a short quest or favor this NPC might offer\",\n  \
@@ -674,6 +678,10 @@ pub async fn generate_location(
           \"title\": \"string — the location name\",\n  \
           \"category\": \"string — the location type (e.g. dungeon, town, tavern, wilderness, etc.)\",\n  \
           \"body\": \"string — filled-in markdown content with all sections populated\",\n  \
+          \"atmosphere\": \"string — the overall mood or feeling of this place (e.g. oppressive, welcoming, eerie, sacred, foreboding, lively)\",\n  \
+          \"sensory_details\": \"string — what you hear, smell, and physically feel when you first enter this place (e.g. the drip of water on stone, the acrid tang of old smoke, a bone-deep chill)\",\n  \
+          \"inhabitants_hint\": \"string — who or what might live here, presented as clues the party could notice (tracks, sounds, remnants) rather than a plain list\",\n  \
+          \"hook\": \"string — a compelling reason adventurers would seek out or stumble upon this location\",\n  \
           \"discovery_type\": \"string — one of: known, rumored, hidden, discovered\",\n  \
           \"related_to_text\": \"string — a comma-separated list of related locations, NPCs, or factions\"\n\
         }}\n\n\
@@ -770,6 +778,8 @@ pub async fn generate_lore(
           \"title\": \"string — the lore entry title\",\n  \
           \"category\": \"string — the lore category\",\n  \
           \"body\": \"string — filled-in markdown content with all sections populated\",\n  \
+          \"discovery_method\": \"string — how players would learn about this lore (e.g. found in an ancient tome, revealed through NPC exposition, carved as an inscription on a ruin, experienced in a prophetic dream)\",\n  \
+          \"sensory_anchor\": \"string — a distinctive sensory detail tied to this lore that makes it memorable (e.g. the smell of brimstone whenever the artifact activates, a faint humming heard near the sealed door, the taste of copper on the tongue when the curse is near)\",\n  \
           \"discovery_type\": \"string — one of: known, rumored, hidden, discovered\",\n  \
           \"related_to_text\": \"string — a comma-separated list of related lore entries, locations, or NPCs\"\n\
         }}\n\n\
@@ -840,8 +850,10 @@ pub async fn generate_encounter(
         {{\n  \
           \"opening_narration\": \"string — 2-4 sentences of read-aloud flavor text for the DM\",\n  \
           \"player_text\": \"string — a shorter version of the narration suitable for player screens\",\n  \
+          \"sensory_details\": \"string — what the party sees, hears, and smells as the encounter begins (e.g. torchlight guttering in a sudden draft, the crunch of bone underfoot, a sweet rotting scent)\",\n  \
           \"mechanics\": \"string — what checks or actions are immediately in play, include DCs\",\n  \
           \"outcomes\": [\"string — 2-3 branching outcomes with consequences\"],\n  \
+          \"escalation\": \"string — how the situation gets worse if the party hesitates or does nothing (reinforcements arrive, the ritual completes, the fire spreads, etc.)\",\n  \
           \"loot\": \"string — what the party can gain\",\n  \
           \"consequence_if_ignored\": \"string — what happens if the players walk away\",\n  \
           \"mood\": \"string — one of: tense, comedic, mysterious, dangerous, tragic, chaotic\"\n\

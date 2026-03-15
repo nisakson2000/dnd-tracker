@@ -108,6 +108,21 @@ const BARKEEP_LAST = [
 
 const BARKEEP_RACES = ['Human', 'Dwarf', 'Halfling', 'Half-Orc', 'Half-Elf', 'Gnome', 'Tiefling', 'Goliath', 'Dragonborn', 'Firbolg'];
 
+const BARKEEP_APPEARANCES = [
+  'one-eyed with an eyepatch',
+  'burly with a magnificent braided beard',
+  'surprisingly young with ink-stained fingers',
+  'elderly with steady hands and sharp eyes',
+  'scarred veteran who limps slightly',
+  'tall and thin with a hawkish nose',
+  'round and jolly with rosy cheeks',
+  'muscular with tattoos covering both arms',
+  'small and wiry with a gold tooth',
+  'broad-shouldered with a missing ear',
+  'immaculately groomed with a waxed mustache',
+  'weathered and sun-beaten with calloused hands',
+];
+
 const BARKEEP_PERSONALITIES = [
   'gruff but secretly kind-hearted — grunts at compliments but sneaks extra portions to hungry travellers',
   'chatty and nosy — knows everyone\'s business and isn\'t shy about sharing',
@@ -204,6 +219,25 @@ const PATRON_ACTIVITIES = [
   'watching the door intently, as if waiting for someone specific',
 ];
 
+const PATRON_DIALOGUE = [
+  '"You didn\'t hear this from me, but... the barkeep\'s been acting strange lately."',
+  '"Buy me a drink and I\'ll tell you something worth ten times the price."',
+  '"I wouldn\'t go down that road if I were you. Not after dark."',
+  '"You look like the type who can handle themselves. I might have a job for you."',
+  '"This? Oh, it\'s nothing. Just a scratch. You should see the other guy."',
+  '"I\'ve been waiting here three days for someone who isn\'t coming."',
+  '"That bard doesn\'t know the half of it. I was THERE when it happened."',
+  '"Keep your voice down. See that one by the fire? They\'ve been watching us."',
+  '"Best stew in the county, but don\'t ask about the meat. Trust me."',
+  '"I used to be an adventurer too, you know. Funny how that works out."',
+  '"If you\'re headed north, take the long way around. The bridge is... compromised."',
+  '"Gold? I don\'t need gold. I need someone brave. Or stupid. Either works."',
+  '"Last group that came through here asking questions? Never seen again."',
+  '"Pull up a chair. You look like you could use a friend — or at least a drink."',
+  '"That symbol on your gear... I\'ve seen it before. In a place I\'d rather forget."',
+  '"Shh — act natural. I think we\'re being listened to."',
+];
+
 const PATRON_HOOKS = [
   'Needs an escort to a nearby town — the roads have become dangerous',
   'Has a treasure map but can\'t read the ancient script on it',
@@ -221,6 +255,23 @@ const PATRON_HOOKS = [
   'Knows where a legendary weapon is buried but the graveyard is cursed',
   'Has a bounty notice for a creature that\'s been terrorising the local farms',
   'Received a threatening letter signed with a symbol nobody in town recognizes',
+];
+
+const TAVERN_SPECIALTIES = [
+  'Dragon\'s Breath Ale (spicy, glows faintly)',
+  'Honeyed Mead from the Northern Reaches',
+  'Mystery Stew (don\'t ask what\'s in it)',
+  'Frostfire Whiskey — burns cold going down',
+  'Elven Starlight Wine (shimmers like liquid silver)',
+  'Dwarven Forge Stout — thick enough to stand a spoon in',
+  'Pixie Dust Punch — mildly hallucinogenic, entirely legal',
+  'Smoked Owlbear Brisket with pepper glaze',
+  'Basilisk Eye Soup (no actual basilisk — probably)',
+  'Halfling Honey Cakes with clotted cream',
+  'The Barkeep\'s Secret Blend — changes flavor with each sip',
+  'Wyrmwood Smoked Sausages with grainy mustard',
+  'Celestial Cider — brewed under a full moon, faintly warm to the touch',
+  'Infernal Hot Wings — a challenge posted on the wall for anyone who can finish them',
 ];
 
 const FEATURES = [
@@ -270,9 +321,13 @@ function generateTavern() {
   const barkeep = {
     name: `${pick(BARKEEP_FIRST)} ${pick(BARKEEP_LAST)}`,
     race: pick(BARKEEP_RACES),
+    appearance: pick(BARKEEP_APPEARANCES),
     personality: pick(BARKEEP_PERSONALITIES),
     secret: pick(BARKEEP_SECRETS),
   };
+
+  // tavern specialty
+  const specialty = pick(TAVERN_SPECIALTIES);
 
   // menu: 3-4 drinks + 3-4 foods
   const drinkCount = roll(3, 4);
@@ -302,13 +357,14 @@ function generateTavern() {
     race: pick(PATRON_RACES),
     occupation: pick(PATRON_OCCUPATIONS),
     activity: pick(PATRON_ACTIVITIES),
+    dialogue: pick(PATRON_DIALOGUE),
     hook: pick(PATRON_HOOKS),
   }));
 
   const feature = pick(FEATURES);
   const rumor = pick(RUMORS);
 
-  return { name, atmosphere, barkeep, drinks, foods: uniqueFoods, patrons, feature, rumor };
+  return { name, atmosphere, barkeep, specialty, drinks, foods: uniqueFoods, patrons, feature, rumor };
 }
 
 /* ── collapsible section ─────────────────────────────── */
@@ -346,8 +402,11 @@ export default function TavernGenerator() {
       '',
       `**Atmosphere:** ${tavern.atmosphere}`,
       '',
+      `**House Specialty:** ${tavern.specialty}`,
+      '',
       `## Barkeep: ${tavern.barkeep.name}`,
       `- **Race:** ${tavern.barkeep.race}`,
+      `- **Appearance:** ${tavern.barkeep.appearance}`,
       `- **Personality:** ${tavern.barkeep.personality}`,
       `- **Secret:** ${tavern.barkeep.secret}`,
       '',
@@ -361,6 +420,7 @@ export default function TavernGenerator() {
       ...tavern.patrons.map(p => [
         `### ${p.name} — ${p.race} ${p.occupation}`,
         `- ${p.activity}`,
+        `- *${p.dialogue}*`,
         `- **Quest hook:** ${p.hook}`,
       ].join('\n')),
       '',
@@ -426,10 +486,22 @@ export default function TavernGenerator() {
             The atmosphere is {tavern.atmosphere}.
           </div>
 
+          {/* house specialty */}
+          <div style={{
+            padding: '8px 12px', borderRadius: '8px', marginBottom: '10px',
+            background: 'rgba(167,139,250,0.06)',
+            border: '1px solid rgba(167,139,250,0.15)',
+            fontSize: '13px', color: 'var(--text)',
+            lineHeight: 1.6,
+          }}>
+            <strong style={{ color: '#a78bfa' }}>House Specialty:</strong> {tavern.specialty}
+          </div>
+
           {/* barkeep */}
           <Section title={`Barkeep: ${tavern.barkeep.name}`} icon={User} iconColor="#60a5fa" defaultOpen>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div><strong style={{ color: '#60a5fa' }}>Race:</strong> {tavern.barkeep.race}</div>
+              <div><strong style={{ color: '#60a5fa' }}>Appearance:</strong> {tavern.barkeep.appearance}</div>
               <div><strong style={{ color: '#60a5fa' }}>Personality:</strong> {tavern.barkeep.personality}</div>
               <div style={{
                 marginTop: '4px', padding: '6px 10px', borderRadius: '6px',
@@ -512,6 +584,13 @@ export default function TavernGenerator() {
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--text-mute)', marginBottom: '4px' }}>
                     {p.activity}
+                  </div>
+                  <div style={{
+                    fontSize: '11px', fontStyle: 'italic', color: 'var(--text-mute)',
+                    marginBottom: '4px', paddingLeft: '8px',
+                    borderLeft: '2px solid rgba(255,255,255,0.08)',
+                  }}>
+                    {p.dialogue}
                   </div>
                   <div style={{
                     fontSize: '11px', padding: '4px 8px', borderRadius: '4px',
