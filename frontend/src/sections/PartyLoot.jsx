@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Coins, Users, ArrowRight, Dices, Plus, Trash2, Search, ChevronDown, ChevronUp, ScrollText, Scale, X, Check, Archive, Sparkles, Send, Edit3 } from 'lucide-react';
+import { Package, Coins, Users, ArrowRight, Dices, Plus, Trash2, Search, ChevronDown, ChevronUp, ScrollText, Scale, X, Check, Archive, Sparkles, Send, Edit3, ArrowLeftRight, Wallet, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { listCharacters } from '../api/characters';
-import { addItem, getCurrency, updateCurrency } from '../api/inventory';
+import { getItems, addItem, getCurrency, updateCurrency } from '../api/inventory';
 import { rollDice } from '../utils/dice';
 
 // ── Storage helpers ──
@@ -202,6 +202,20 @@ function generateHoardTreasure(cr) {
   return result;
 }
 
+// ── Currency conversion (auto-convert up denominations) ──
+function convertCurrency(currency) {
+  let totalGP = (currency.cp || 0) * 0.01 + (currency.sp || 0) * 0.1 +
+                (currency.ep || 0) * 0.5 + (currency.gp || 0) + (currency.pp || 0) * 10;
+  const pp = Math.floor(totalGP / 10);
+  totalGP -= pp * 10;
+  const gp = Math.floor(totalGP);
+  totalGP -= gp;
+  const sp = Math.floor(totalGP * 10);
+  totalGP -= sp * 0.1;
+  const cp = Math.round(totalGP * 100);
+  return { cp, sp, ep: 0, gp, pp };
+}
+
 let _nextId = Date.now();
 function uid() { return `loot-${_nextId++}-${Math.random().toString(36).slice(2, 8)}`; }
 
@@ -259,7 +273,18 @@ export default function PartyLoot({ characterId }) {
   const [showQuickLoot, setShowQuickLoot] = useState(false);
   const [selectedCR, setSelectedCR] = useState('CR 0-4');
   const [showLog, setShowLog] = useState(false);
-  const [tab, setTab] = useState('loot'); // loot | treasury | distribute | log
+  const [tab, setTab] = useState('loot'); // loot | treasury | distribute | transfer | currency-pool | log
+
+  // Transfer Items state
+  const [transferCharId, setTransferCharId] = useState('');
+  const [transferCharItems, setTransferCharItems] = useState([]);
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [transferTargetCharId, setTransferTargetCharId] = useState('');
+
+  // Currency Pool state
+  const [charCurrencies, setCharCurrencies] = useState({}); // { charId: { cp, sp, ep, gp, pp } }
+  const [currencyPoolLoading, setCurrencyPoolLoading] = useState(false);
+  const [showConvertPreview, setShowConvertPreview] = useState(false);
 
   // Smart Loot Generator
   const [showSmartLoot, setShowSmartLoot] = useState(false);
@@ -452,6 +477,175 @@ export default function PartyLoot({ characterId }) {
     toast.success(`Split currency among ${successCount} character(s)`);
   };
 
+  // ── Fetch character inventory for transfer ──
+  const fetchCharInventory = useCallback(async (charId) => {
+    if (!charId) { setTransferCharItems([]); return; }
+    setTransferLoading(true);
+    try {
+      const charItems = await getItems(charId);
+      setTransferCharItems(charItems || []);
+    } catch (err) {
+      toast.error(`Failed to load inventory: ${err?.message || err}`);
+      setTransferCharItems([]);
+    }
+    setTransferLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (tab === 'transfer' && transferCharId) {
+      fetchCharInventory(transferCharId);
+    }
+  }, [tab, transferCharId, fetchCharInventory]);
+
+  // ── Transfer item from character to party loot ──
+  const transferToParty = (item, charId) => {
+    const charName = characters.find(c => c.id === charId)?.name || 'Unknown';
+    const newItem = {
+      ...item, id: uid(), source: `From ${charName}`,
+      looted_from: `Transferred from ${charName}`,
+      addedAt: new Date().toISOString(),
+    };
+    const updated = [...items, newItem];
+    saveItems(updated);
+    addLogEntry(`Transferred ${item.name} from ${charName} to party loot`);
+    toast.success(`${item.name} added to party loot from ${charName}`);
+  };
+
+  // ── Transfer item from party loot to character ──
+  const transferToCharacter = async (item, targetCharId) => {
+    const charName = characters.find(c => c.id === targetCharId)?.name || 'Unknown';
+    try {
+      await addItem(targetCharId, {
+        name: item.name,
+        item_type: item.item_type || 'misc',
+        rarity: item.rarity || 'common',
+        weight: item.weight || 0,
+        value_gp: item.value_gp || 0,
+        quantity: item.quantity || 1,
+        description: item.description || '',
+        attunement: false,
+        attuned: false,
+        equipped: false,
+        stat_modifiers: '{}',
+      });
+      // Remove from party loot
+      const updated = items.filter(l => l.id !== item.id);
+      saveItems(updated);
+      addLogEntry(`Gave ${item.name} to ${charName}`);
+      toast.success(`${item.name} given to ${charName}`);
+    } catch (err) {
+      toast.error(`Transfer failed: ${err?.message || err}`);
+    }
+  };
+
+  // ── Fetch all party currency for pooling ──
+  const fetchAllCurrency = useCallback(async () => {
+    setCurrencyPoolLoading(true);
+    const currencies = {};
+    for (const char of characters) {
+      try {
+        const cur = await getCurrency(char.id);
+        currencies[char.id] = cur || { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 };
+      } catch {
+        currencies[char.id] = { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 };
+      }
+    }
+    setCharCurrencies(currencies);
+    setCurrencyPoolLoading(false);
+  }, [characters]);
+
+  useEffect(() => {
+    if (tab === 'currency-pool' && characters.length > 0) {
+      fetchAllCurrency();
+    }
+  }, [tab, characters, fetchAllCurrency]);
+
+  // ── Pool all party currency into treasury ──
+  const handlePoolAll = async () => {
+    const totals = { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 };
+    for (const charId of Object.keys(charCurrencies)) {
+      const cur = charCurrencies[charId];
+      for (const d of ['cp', 'sp', 'ep', 'gp', 'pp']) {
+        totals[d] += (cur[d] || 0);
+      }
+    }
+
+    // Zero out each character's currency
+    for (const char of characters) {
+      try {
+        await updateCurrency(char.id, { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 });
+      } catch (err) {
+        toast.error(`Failed to clear ${char.name}'s currency: ${err?.message || err}`);
+      }
+    }
+
+    // Add to treasury
+    const newTreasury = { ...treasury };
+    for (const d of ['cp', 'sp', 'ep', 'gp', 'pp']) {
+      newTreasury[d] = (newTreasury[d] || 0) + totals[d];
+    }
+    saveTreasury(newTreasury);
+
+    const denomStr = ['cp', 'sp', 'ep', 'gp', 'pp']
+      .filter(d => totals[d] > 0)
+      .map(d => `${totals[d]} ${d.toUpperCase()}`)
+      .join(', ');
+    addLogEntry(`Pooled all party currency into treasury: ${denomStr || '0'}`);
+    toast.success('All party currency pooled into treasury');
+    fetchAllCurrency();
+  };
+
+  // ── Split treasury evenly among all characters ──
+  const handleSplitEvenly = async () => {
+    if (characters.length === 0) return;
+    const count = characters.length;
+
+    // Convert treasury to optimal denominations first
+    const converted = convertCurrency(treasury);
+    // Calculate total in CP for even splitting
+    const totalCP = (converted.cp || 0) + (converted.sp || 0) * 10 +
+                    (converted.gp || 0) * 100 + (converted.pp || 0) * 1000;
+    const perCharCP = Math.floor(totalCP / count);
+    const remainderCP = totalCP - perCharCP * count;
+
+    // Convert per-char amount back to denominations
+    const perCharCurrency = convertCurrency({ cp: perCharCP, sp: 0, ep: 0, gp: 0, pp: 0 });
+
+    for (const char of characters) {
+      try {
+        const existing = await getCurrency(char.id);
+        const updated = {};
+        for (const d of ['cp', 'sp', 'ep', 'gp', 'pp']) {
+          updated[d] = (existing[d] || 0) + (perCharCurrency[d] || 0);
+        }
+        await updateCurrency(char.id, updated);
+      } catch (err) {
+        toast.error(`Failed to give currency to ${char.name}: ${err?.message || err}`);
+      }
+    }
+
+    // Set treasury to remainder
+    const remainderCurrency = convertCurrency({ cp: remainderCP, sp: 0, ep: 0, gp: 0, pp: 0 });
+    saveTreasury(remainderCurrency);
+
+    const perCharStr = ['cp', 'sp', 'ep', 'gp', 'pp']
+      .filter(d => perCharCurrency[d] > 0)
+      .map(d => `${perCharCurrency[d]} ${d.toUpperCase()}`)
+      .join(', ');
+    addLogEntry(`Split treasury evenly: ${perCharStr || '0'} each to ${characters.map(c => c.name).join(', ')}`);
+    toast.success(`Treasury split evenly among ${count} character(s)`);
+    fetchAllCurrency();
+  };
+
+  // ── Convert treasury denominations ──
+  const handleConvertTreasury = () => {
+    const converted = convertCurrency(treasury);
+    saveTreasury(converted);
+    addLogEntry('Converted treasury denominations (auto-converted up)');
+    toast.success('Treasury denominations converted');
+    setShowConvertPreview(false);
+  };
+
   // ── Quick Loot ──
   const handleQuickLoot = () => {
     const table = QUICK_LOOT_TABLES[selectedCR];
@@ -611,6 +805,8 @@ export default function PartyLoot({ characterId }) {
           { key: 'loot', label: 'Bag of Holding', icon: Package },
           { key: 'treasury', label: 'Treasury', icon: Coins },
           { key: 'distribute', label: 'Distribute', icon: Users },
+          { key: 'transfer', label: 'Transfer', icon: ArrowLeftRight },
+          { key: 'currency-pool', label: 'Currency Pool', icon: Wallet },
           { key: 'log', label: 'Loot Log', icon: ScrollText },
         ].map(({ key, label, icon: Icon }) => (
           <button
@@ -1318,6 +1514,445 @@ export default function PartyLoot({ characterId }) {
                 </button>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════ TAB: Transfer Items ══════════ */}
+      {tab === 'transfer' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* ── Transfer from Character to Party ── */}
+          <div style={cardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <ArrowLeftRight size={16} style={{ color: '#4ade80' }} />
+              <h3 style={{ fontSize: '15px', fontFamily: 'var(--font-display, Cinzel, serif)', color: '#e8dcc8', margin: 0 }}>
+                Transfer from Character
+              </h3>
+            </div>
+
+            {/* Character Dropdown */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={labelStyle}>Select Character</div>
+              <select
+                style={inputStyle}
+                value={transferCharId}
+                onChange={e => { setTransferCharId(e.target.value); setTransferCharItems([]); }}
+              >
+                <option value="">-- Choose a character --</option>
+                {characters.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Character's Inventory */}
+            {transferCharId && (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <div style={labelStyle}>
+                    {characters.find(c => c.id === parseInt(transferCharId))?.name || 'Character'}'s Inventory
+                  </div>
+                  <button
+                    style={{ ...btnSecondary, fontSize: '10px', padding: '3px 8px' }}
+                    onClick={() => fetchCharInventory(transferCharId)}
+                  >
+                    <RefreshCw size={10} /> Refresh
+                  </button>
+                </div>
+
+                {transferLoading ? (
+                  <div style={{ textAlign: 'center', padding: 20, fontSize: '12px', color: 'rgba(228,216,196,0.4)' }}>
+                    Loading inventory...
+                  </div>
+                ) : transferCharItems.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 20 }}>
+                    <Package size={24} style={{ color: 'rgba(228,216,196,0.12)', margin: '0 auto 8px' }} />
+                    <p style={{ fontSize: '12px', color: 'rgba(228,216,196,0.3)' }}>No items in this character's inventory.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 300, overflowY: 'auto' }}>
+                    {transferCharItems.map(item => {
+                      const rarity = RARITY_COLORS[(item.rarity || 'common').toLowerCase()] || RARITY_COLORS.common;
+                      return (
+                        <div
+                          key={item.id}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 6,
+                            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                            borderLeft: `3px solid ${rarity.border}`,
+                          }}
+                        >
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e8dcc8' }}>{item.name}</span>
+                              <span style={{
+                                fontSize: '9px', padding: '1px 5px', borderRadius: 3,
+                                background: rarity.bg, color: rarity.text, border: `1px solid ${rarity.border}`,
+                                fontWeight: 600, textTransform: 'capitalize',
+                              }}>
+                                {item.rarity || 'common'}
+                              </span>
+                              {item.quantity > 1 && (
+                                <span style={{ fontSize: '10px', color: 'rgba(228,216,196,0.4)' }}>x{item.quantity}</span>
+                              )}
+                            </div>
+                            {item.description && (
+                              <div style={{ fontSize: '10px', color: 'rgba(228,216,196,0.3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {item.description}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            style={{
+                              ...btnSecondary, fontSize: '10px', flexShrink: 0,
+                              background: 'rgba(74,222,128,0.08)', borderColor: 'rgba(74,222,128,0.25)', color: '#4ade80',
+                            }}
+                            onClick={() => transferToParty(item, parseInt(transferCharId))}
+                          >
+                            <ArrowRight size={11} /> Party
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ── Transfer from Party to Character ── */}
+          <div style={cardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <Send size={16} style={{ color: '#60a5fa' }} />
+              <h3 style={{ fontSize: '15px', fontFamily: 'var(--font-display, Cinzel, serif)', color: '#e8dcc8', margin: 0 }}>
+                Give to Character
+              </h3>
+            </div>
+
+            {/* Target Character Dropdown */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={labelStyle}>Target Character</div>
+              <select
+                style={inputStyle}
+                value={transferTargetCharId}
+                onChange={e => setTransferTargetCharId(e.target.value)}
+              >
+                <option value="">-- Choose a character --</option>
+                {characters.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Party Loot Items with transfer buttons */}
+            {items.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 20 }}>
+                <Archive size={24} style={{ color: 'rgba(228,216,196,0.12)', margin: '0 auto 8px' }} />
+                <p style={{ fontSize: '12px', color: 'rgba(228,216,196,0.3)' }}>No items in party loot to transfer.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 300, overflowY: 'auto' }}>
+                {items.map(item => {
+                  const rarity = RARITY_COLORS[(item.rarity || 'common').toLowerCase()] || RARITY_COLORS.common;
+                  const targetName = characters.find(c => c.id === parseInt(transferTargetCharId))?.name;
+                  return (
+                    <div
+                      key={item.id}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 6,
+                        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                        borderLeft: `3px solid ${rarity.border}`,
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: '12px', fontWeight: 600, color: '#e8dcc8' }}>{item.name}</span>
+                          <span style={{
+                            fontSize: '9px', padding: '1px 5px', borderRadius: 3,
+                            background: rarity.bg, color: rarity.text, border: `1px solid ${rarity.border}`,
+                            fontWeight: 600, textTransform: 'capitalize',
+                          }}>
+                            {item.rarity || 'common'}
+                          </span>
+                          {(item.quantity || 1) > 1 && (
+                            <span style={{ fontSize: '10px', color: 'rgba(228,216,196,0.4)' }}>x{item.quantity || 1}</span>
+                          )}
+                        </div>
+                        {item.description && (
+                          <div style={{ fontSize: '10px', color: 'rgba(228,216,196,0.3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {item.description}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        style={{
+                          ...btnSecondary, fontSize: '10px', flexShrink: 0,
+                          ...(transferTargetCharId
+                            ? { background: 'rgba(96,165,250,0.08)', borderColor: 'rgba(96,165,250,0.25)', color: '#60a5fa' }
+                            : { opacity: 0.4, cursor: 'not-allowed' }),
+                        }}
+                        onClick={() => transferTargetCharId && transferToCharacter(item, parseInt(transferTargetCharId))}
+                        disabled={!transferTargetCharId}
+                        title={transferTargetCharId ? `Give to ${targetName}` : 'Select a target character first'}
+                      >
+                        <ArrowRight size={11} /> {targetName || 'Select...'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {!transferTargetCharId && items.length > 0 && (
+              <div style={{ marginTop: 8, fontSize: '11px', color: 'rgba(228,216,196,0.3)', fontStyle: 'italic' }}>
+                Select a target character above to enable transfer buttons.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════ TAB: Currency Pool ══════════ */}
+      {tab === 'currency-pool' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* ── Party Currency Overview ── */}
+          <div style={cardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <Wallet size={16} style={{ color: '#f0c850' }} />
+              <h3 style={{ fontSize: '15px', fontFamily: 'var(--font-display, Cinzel, serif)', color: '#e8dcc8', margin: 0 }}>
+                Party Currency Overview
+              </h3>
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+                <button style={{ ...btnSecondary, fontSize: '10px' }} onClick={fetchAllCurrency}>
+                  <RefreshCw size={10} /> Refresh
+                </button>
+              </div>
+            </div>
+
+            {currencyPoolLoading ? (
+              <div style={{ textAlign: 'center', padding: 20, fontSize: '12px', color: 'rgba(228,216,196,0.4)' }}>
+                Loading party currency...
+              </div>
+            ) : characters.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 20 }}>
+                <Users size={24} style={{ color: 'rgba(228,216,196,0.12)', margin: '0 auto 8px' }} />
+                <p style={{ fontSize: '12px', color: 'rgba(228,216,196,0.3)' }}>No characters found.</p>
+              </div>
+            ) : (
+              <>
+                {/* Character currency table */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16 }}>
+                  {/* Header */}
+                  <div style={{
+                    display: 'grid', gridTemplateColumns: '1.5fr repeat(5, 1fr) 1fr', gap: 8,
+                    padding: '6px 12px', borderRadius: 6,
+                    background: 'rgba(255,255,255,0.03)',
+                  }}>
+                    <div style={{ ...labelStyle, marginBottom: 0 }}>Character</div>
+                    {['cp', 'sp', 'ep', 'gp', 'pp'].map(d => (
+                      <div key={d} style={{ ...labelStyle, marginBottom: 0, textAlign: 'center', color: COIN_STYLES[d].color }}>
+                        {COIN_STYLES[d].label}
+                      </div>
+                    ))}
+                    <div style={{ ...labelStyle, marginBottom: 0, textAlign: 'right' }}>Total GP</div>
+                  </div>
+
+                  {/* Character rows */}
+                  {characters.map(char => {
+                    const cur = charCurrencies[char.id] || { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 };
+                    const charTotal = Object.entries(cur).reduce((sum, [k, v]) => sum + (v * (CURRENCY_RATES[k] || 0)), 0);
+                    return (
+                      <div
+                        key={char.id}
+                        style={{
+                          display: 'grid', gridTemplateColumns: '1.5fr repeat(5, 1fr) 1fr', gap: 8,
+                          padding: '8px 12px', borderRadius: 6,
+                          background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)',
+                        }}
+                      >
+                        <div style={{ fontSize: '12px', color: '#e8dcc8', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{
+                            width: 20, height: 20, borderRadius: 5,
+                            background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '9px', fontWeight: 700, color: 'rgba(228,216,196,0.5)',
+                          }}>
+                            {char.name?.[0] || '?'}
+                          </div>
+                          {char.name}
+                        </div>
+                        {['cp', 'sp', 'ep', 'gp', 'pp'].map(d => (
+                          <div key={d} style={{ fontSize: '12px', color: COIN_STYLES[d].color, textAlign: 'center', fontWeight: 500 }}>
+                            {cur[d] || 0}
+                          </div>
+                        ))}
+                        <div style={{ fontSize: '12px', color: '#f0c850', textAlign: 'right', fontWeight: 600 }}>
+                          {charTotal.toFixed(2)}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Treasury row */}
+                  <div style={{
+                    display: 'grid', gridTemplateColumns: '1.5fr repeat(5, 1fr) 1fr', gap: 8,
+                    padding: '8px 12px', borderRadius: 6,
+                    background: 'rgba(240,200,80,0.04)', border: '1px solid rgba(240,200,80,0.12)',
+                    marginTop: 4,
+                  }}>
+                    <div style={{ fontSize: '12px', color: '#f0c850', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Coins size={14} /> Treasury
+                    </div>
+                    {['cp', 'sp', 'ep', 'gp', 'pp'].map(d => (
+                      <div key={d} style={{ fontSize: '12px', color: COIN_STYLES[d].color, textAlign: 'center', fontWeight: 600 }}>
+                        {treasury[d] || 0}
+                      </div>
+                    ))}
+                    <div style={{ fontSize: '12px', color: '#f0c850', textAlign: 'right', fontWeight: 700 }}>
+                      {treasuryTotalGP.toFixed(2)}
+                    </div>
+                  </div>
+
+                  {/* Grand total row */}
+                  <div style={{
+                    display: 'grid', gridTemplateColumns: '1.5fr repeat(5, 1fr) 1fr', gap: 8,
+                    padding: '8px 12px', borderRadius: 6,
+                    background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.08)',
+                  }}>
+                    <div style={{ fontSize: '11px', color: 'rgba(228,216,196,0.5)', fontWeight: 600 }}>GRAND TOTAL</div>
+                    {['cp', 'sp', 'ep', 'gp', 'pp'].map(d => {
+                      const total = (treasury[d] || 0) + characters.reduce((sum, c) => sum + ((charCurrencies[c.id] || {})[d] || 0), 0);
+                      return (
+                        <div key={d} style={{ fontSize: '12px', color: COIN_STYLES[d].color, textAlign: 'center', fontWeight: 700 }}>
+                          {total}
+                        </div>
+                      );
+                    })}
+                    <div style={{ fontSize: '12px', color: '#f0c850', textAlign: 'right', fontWeight: 700 }}>
+                      {(treasuryTotalGP + characters.reduce((sum, c) => {
+                        const cur = charCurrencies[c.id] || {};
+                        return sum + Object.entries(cur).reduce((s, [k, v]) => s + (v * (CURRENCY_RATES[k] || 0)), 0);
+                      }, 0)).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* ── Pool / Split Actions ── */}
+          <div style={cardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <Coins size={16} style={{ color: '#c084fc' }} />
+              <h3 style={{ fontSize: '15px', fontFamily: 'var(--font-display, Cinzel, serif)', color: '#e8dcc8', margin: 0 }}>
+                Pool & Split Actions
+              </h3>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {/* Pool All */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 8,
+                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '13px', color: '#e8dcc8', fontWeight: 600, marginBottom: 2 }}>Pool All Currency</div>
+                  <div style={{ fontSize: '11px', color: 'rgba(228,216,196,0.35)' }}>
+                    Collect all party members' currency into the treasury. Sets each character's wallet to 0.
+                  </div>
+                </div>
+                <button
+                  style={{
+                    ...btnPrimary, flexShrink: 0,
+                    background: 'linear-gradient(135deg, rgba(74,222,128,0.25), rgba(74,222,128,0.15))', color: '#4ade80',
+                    ...(characters.length === 0 ? { opacity: 0.4, cursor: 'not-allowed' } : {}),
+                  }}
+                  onClick={handlePoolAll}
+                  disabled={characters.length === 0}
+                >
+                  <ArrowRight size={13} /> Pool All
+                </button>
+              </div>
+
+              {/* Split Evenly */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 8,
+                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '13px', color: '#e8dcc8', fontWeight: 600, marginBottom: 2 }}>Split Treasury Evenly</div>
+                  <div style={{ fontSize: '11px', color: 'rgba(228,216,196,0.35)' }}>
+                    Divide the entire treasury equally among all {characters.length} party member{characters.length !== 1 ? 's' : ''}. Remainder stays in treasury.
+                  </div>
+                  {characters.length > 0 && treasuryTotalGP > 0 && (
+                    <div style={{ fontSize: '10px', color: 'rgba(228,216,196,0.3)', marginTop: 4 }}>
+                      Each receives approx. {(treasuryTotalGP / characters.length).toFixed(2)} GP equivalent
+                    </div>
+                  )}
+                </div>
+                <button
+                  style={{
+                    ...btnPrimary, flexShrink: 0,
+                    background: 'linear-gradient(135deg, rgba(96,165,250,0.25), rgba(96,165,250,0.15))', color: '#60a5fa',
+                    ...(characters.length === 0 || treasuryTotalGP === 0 ? { opacity: 0.4, cursor: 'not-allowed' } : {}),
+                  }}
+                  onClick={handleSplitEvenly}
+                  disabled={characters.length === 0 || treasuryTotalGP === 0}
+                >
+                  <Users size={13} /> Split Evenly
+                </button>
+              </div>
+
+              {/* Convert Denominations */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 8,
+                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '13px', color: '#e8dcc8', fontWeight: 600, marginBottom: 2 }}>Convert Denominations</div>
+                  <div style={{ fontSize: '11px', color: 'rgba(228,216,196,0.35)' }}>
+                    Auto-convert treasury coins upward (10 CP = 1 SP, 10 SP = 1 GP, 10 GP = 1 PP). Removes EP.
+                  </div>
+                  {showConvertPreview && (
+                    <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <span style={{ fontSize: '10px', color: 'rgba(228,216,196,0.4)' }}>Preview:</span>
+                      {(() => {
+                        const converted = convertCurrency(treasury);
+                        return ['cp', 'sp', 'gp', 'pp'].filter(d => converted[d] > 0).map(d => (
+                          <span key={d} style={{ fontSize: '11px', fontWeight: 600, color: COIN_STYLES[d].color, background: COIN_STYLES[d].bg, padding: '2px 6px', borderRadius: 3 }}>
+                            {converted[d]} {COIN_STYLES[d].label}
+                          </span>
+                        ));
+                      })()}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  {!showConvertPreview ? (
+                    <button
+                      style={{ ...btnSecondary }}
+                      onClick={() => setShowConvertPreview(true)}
+                    >
+                      <RefreshCw size={12} /> Preview
+                    </button>
+                  ) : (
+                    <>
+                      <button style={btnSecondary} onClick={() => setShowConvertPreview(false)}>
+                        <X size={12} /> Cancel
+                      </button>
+                      <button
+                        style={{
+                          ...btnPrimary,
+                          background: 'linear-gradient(135deg, rgba(240,200,80,0.25), rgba(240,200,80,0.15))', color: '#f0c850',
+                        }}
+                        onClick={handleConvertTreasury}
+                      >
+                        <Check size={12} /> Convert
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

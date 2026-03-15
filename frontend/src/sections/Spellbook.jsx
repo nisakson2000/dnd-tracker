@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Pencil, ChevronDown, ChevronRight, ChevronUp, Sparkles, RotateCcw, Search, Lock, Coins, Info, CheckSquare, Square, Wand2, Coffee, Moon, BookOpen, Filter, Zap, Crosshair, CircleDot, ShieldAlert, Pin, PinOff, Flame, Clock, Loader2 } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Plus, Trash2, Pencil, ChevronDown, ChevronRight, ChevronUp, Sparkles, RotateCcw, Search, Lock, Coins, Info, CheckSquare, Square, Wand2, Coffee, Moon, BookOpen, Filter, Zap, Crosshair, CircleDot, ShieldAlert, Pin, PinOff, Flame, Clock, Loader2, Dice5 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getSpells, addSpell, updateSpell, deleteSpell, getSpellSlots, updateSpellSlots, resetSpellSlots } from '../api/spells';
 import { getOverview } from '../api/overview';
@@ -9,6 +9,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
 import { HELP } from '../data/helpText';
 import { calcMod } from '../utils/dndHelpers';
+import { rollDie } from '../utils/dice';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Subclasses that grant third-caster spellcasting
@@ -76,13 +77,34 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
     } catch { return []; }
   });
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const [concentratingOn, setConcentratingOn] = useState(null); // spell id
+  const [concentratingOn, setConcentratingOn] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`codex_concentration_${characterId}`);
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  });
   const [expandedSpell, setExpandedSpell] = useState(null);
   const [quickCastOpen, setQuickCastOpen] = useState(() => {
     try { return sessionStorage.getItem(`codex_quickcast_${characterId}`) !== 'closed'; } catch { return true; }
   });
   const [quickCastPending, setQuickCastPending] = useState(null); // { spell, level } for upcast selector
   const [concentrationConfirm, setConcentrationConfirm] = useState(null); // { spell, level, oldSpell }
+  const [spellRollResult, setSpellRollResult] = useState(null); // { d20, bonus, total, isNat20, isNat1, label }
+  const spellRollTimerRef = useRef(null);
+  const [spellAdvMode, setSpellAdvMode] = useState('normal'); // 'normal' | 'advantage' | 'disadvantage'
+
+  const rollSpellAttack = (bonus, label = 'Spell Attack') => {
+    const d20a = rollDie(20);
+    const d20b = spellAdvMode !== 'normal' ? rollDie(20) : d20a;
+    let d20;
+    if (spellAdvMode === 'advantage') d20 = Math.max(d20a, d20b);
+    else if (spellAdvMode === 'disadvantage') d20 = Math.min(d20a, d20b);
+    else d20 = d20a;
+    const total = d20 + bonus;
+    if (spellRollTimerRef.current) clearTimeout(spellRollTimerRef.current);
+    setSpellRollResult({ d20, d20a, d20b, rollMode: spellAdvMode, bonus, total, isNat20: d20 === 20, isNat1: d20 === 1, label });
+    spellRollTimerRef.current = setTimeout(() => setSpellRollResult(null), 4000);
+  };
 
   // Persist quick cast open state
   useEffect(() => {
@@ -93,6 +115,17 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
   useEffect(() => {
     try { localStorage.setItem(`codex_pinned_spells_${characterId}`, JSON.stringify(pinnedSpells)); } catch (err) { if (import.meta.env.DEV) console.warn('Pinned spells persist:', err); }
   }, [pinnedSpells, characterId]);
+
+  // Persist concentration state to localStorage
+  useEffect(() => {
+    try {
+      if (concentratingOn != null) {
+        localStorage.setItem(`codex_concentration_${characterId}`, JSON.stringify(concentratingOn));
+      } else {
+        localStorage.removeItem(`codex_concentration_${characterId}`);
+      }
+    } catch {}
+  }, [concentratingOn, characterId]);
 
   const togglePinSpell = (spellId) => {
     setPinnedSpells(prev =>
@@ -354,6 +387,38 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
     const concentrationSpells = spells.filter(s => s.concentration).length;
     return { cantrips, leveled, prepared, alwaysPrepared, rituals, concentrationSpells, total: spells.length };
   }, [spells]);
+
+  // Prepared spell limit for prepared casters
+  const preparedLimit = useMemo(() => {
+    if (!charData) return null;
+    const cls = charData.overview.primary_class;
+    const level = charData.overview.level || 1;
+
+    // Mapping of prepared caster classes to their spellcasting ability
+    const PREPARED_CASTERS = {
+      'Cleric': 'WIS',
+      'Druid': 'WIS',
+      'Wizard': 'INT',
+      'Paladin': 'CHA',
+      'Ranger': 'WIS',
+    };
+
+    const ability = PREPARED_CASTERS[cls];
+    if (!ability) return null;
+
+    const abilScore = charData?.ability_scores?.find(a => a.ability === ability);
+    const mod = calcMod(abilScore?.score || 10);
+
+    // Paladin/Ranger use half level (rounded down), others use full level
+    const halfCasters = ['Paladin', 'Ranger'];
+    const levelContribution = halfCasters.includes(cls) ? Math.floor(level / 2) : level;
+    const max = Math.max(1, mod + levelContribution);
+
+    // Count currently prepared non-cantrip spells (exclude always_prepared since those are free)
+    const currentPrepared = spells.filter(s => s.level > 0 && s.prepared && !s.always_prepared).length;
+
+    return { current: currentPrepared, max, ability };
+  }, [charData, spells]);
 
   // Daily spell tracking summary
   const dailySummary = useMemo(() => {
@@ -692,7 +757,57 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
           </div>
           <div className="card text-center">
             <div className="text-xs text-amber-200/50">Spell Attack<HelpTooltip text={HELP.spellAttack} /></div>
-            <div className="text-xl font-display text-purple-300">+{spellAttack}</div>
+            <div className="flex items-center justify-center gap-2">
+              <div className="text-xl font-display text-purple-300">+{spellAttack}</div>
+              <button
+                onClick={() => rollSpellAttack(spellAttack)}
+                className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 hover:border-purple-500/50 transition-all flex items-center justify-center group"
+                title="Roll spell attack"
+              >
+                <Dice5 size={14} className="text-purple-300 group-hover:text-purple-100 transition-colors" />
+              </button>
+            </div>
+            {/* Advantage/Disadvantage toggles */}
+            <div className="flex items-center justify-center gap-1.5 mt-1.5">
+              <button
+                onClick={() => setSpellAdvMode(m => m === 'advantage' ? 'normal' : 'advantage')}
+                className={`text-[9px] px-1.5 py-0.5 rounded border transition-all ${
+                  spellAdvMode === 'advantage' ? 'bg-green-900/50 text-green-300 border-green-500/40' : 'bg-white/5 text-amber-200/30 border-amber-200/10 hover:text-amber-200/50'
+                }`}
+              >ADV</button>
+              <button
+                onClick={() => setSpellAdvMode(m => m === 'disadvantage' ? 'normal' : 'disadvantage')}
+                className={`text-[9px] px-1.5 py-0.5 rounded border transition-all ${
+                  spellAdvMode === 'disadvantage' ? 'bg-red-900/50 text-red-300 border-red-500/40' : 'bg-white/5 text-amber-200/30 border-amber-200/10 hover:text-amber-200/50'
+                }`}
+              >DIS</button>
+            </div>
+            {/* Spell roll result */}
+            {spellRollResult && (
+              <div className={`mt-2 px-2 py-1.5 rounded-lg border text-xs ${
+                spellRollResult.isNat20 ? 'bg-gold/10 border-gold/30' : spellRollResult.isNat1 ? 'bg-red-900/20 border-red-500/30' : 'bg-white/[0.03] border-purple-500/20'
+              }`}>
+                <div className="flex items-center justify-center gap-1.5">
+                  {spellRollResult.rollMode !== 'normal' ? (
+                    <span className={`${spellRollResult.rollMode === 'advantage' ? 'text-green-300' : 'text-red-300'}`}>
+                      {spellRollResult.d20a === spellRollResult.d20
+                        ? <>{spellRollResult.d20a}, <span className="line-through opacity-50">{spellRollResult.d20b}</span></>
+                        : <><span className="line-through opacity-50">{spellRollResult.d20a}</span>, {spellRollResult.d20b}</>
+                      }
+                      <span className="ml-1 opacity-60">({spellRollResult.rollMode === 'advantage' ? 'ADV' : 'DIS'})</span>
+                    </span>
+                  ) : (
+                    <span className="text-amber-200/50">{spellRollResult.d20}</span>
+                  )}
+                  <span className="text-amber-200/40">+ {spellRollResult.bonus} =</span>
+                  <span className={`font-bold ${spellRollResult.isNat20 ? 'text-gold' : spellRollResult.isNat1 ? 'text-red-400' : 'text-purple-200'}`}>
+                    {spellRollResult.total}
+                  </span>
+                </div>
+                {spellRollResult.isNat20 && <div className="text-gold font-bold mt-0.5">NAT 20!</div>}
+                {spellRollResult.isNat1 && <div className="text-red-400 font-bold mt-0.5">NAT 1!</div>}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -707,6 +822,22 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
             {spellSummary.leveled > 0 && (
               <span className="text-xs bg-emerald-900/20 text-emerald-400 px-2.5 py-1 rounded border border-emerald-500/15">
                 {spellSummary.prepared} prepared
+              </span>
+            )}
+            {preparedLimit && (
+              <span
+                className={`text-xs px-2.5 py-1 rounded border flex items-center gap-1 ${
+                  preparedLimit.current > preparedLimit.max
+                    ? 'bg-yellow-900/30 text-yellow-300 border-yellow-500/25'
+                    : preparedLimit.current === preparedLimit.max
+                    ? 'bg-emerald-900/20 text-emerald-400 border-emerald-500/15'
+                    : 'bg-amber-200/5 text-amber-200/50 border-amber-200/10'
+                }`}
+                title={`Prepared spell limit based on ${preparedLimit.ability} modifier + class level. Always-prepared spells don't count against this limit.`}
+              >
+                <BookOpen size={10} />
+                {preparedLimit.current}/{preparedLimit.max} Prepared
+                {preparedLimit.current > preparedLimit.max && ' (over limit)'}
               </span>
             )}
             {spellSummary.alwaysPrepared > 0 && (

@@ -18,8 +18,6 @@ export function ModeProvider({ children }) {
   const setMode = useCallback((m) => {
     setModeState(m);
 
-    // When DM mode is selected, navigate to /dm/campaigns
-    // When Player mode is selected, navigate to /
     // navigateFn may not be available yet on first render (before BrowserRouter mounts)
     if (navigateFn) {
       // Both modes start at Dashboard — DM accesses campaigns from sidebar

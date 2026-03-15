@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Plus, Trash2, ScrollText, RotateCcw, RefreshCw, Search, ChevronDown, ChevronUp, Pin, PinOff, Zap, ChevronsDown, ChevronsUp, Coffee, Moon, Clock, ArrowRight, Star, Eye, Shield, Lock, Filter, Pencil, Dices, BookOpen, Loader2 } from 'lucide-react';
+import { Plus, Trash2, ScrollText, RotateCcw, RefreshCw, Search, ChevronDown, ChevronUp, Pin, PinOff, Zap, ChevronsDown, ChevronsUp, Coffee, Moon, Clock, ArrowRight, Star, Eye, Shield, Lock, Filter, Pencil, Dices, BookOpen, Loader2, Library } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { getFeatures, addFeature, updateFeature, deleteFeature } from '../api/features';
@@ -8,6 +8,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
 import { HELP } from '../data/helpText';
 import { CLASS_FEATURES } from '../data/classFeatures';
+import { FEAT_CATALOG, FEAT_CATEGORIES } from '../data/featCatalog';
 import { useAppMode } from '../contexts/ModeContext';
 import { searchArticles } from '../api/wiki';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -80,6 +81,9 @@ export default function Features({ characterId, character }) {
   const [showProgression, setShowProgression] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [restoredIds, setRestoredIds] = useState(new Set());
+  const [showFeatBrowser, setShowFeatBrowser] = useState(false);
+  const [featSearch, setFeatSearch] = useState('');
+  const [featCategory, setFeatCategory] = useState('all');
 
   // Usage history (session-based)
   const historyKey = `codex_feature_history_${characterId}`;
@@ -416,6 +420,9 @@ export default function Features({ characterId, character }) {
           </div>
         </h2>
         <div className="flex items-center gap-2">
+          <button onClick={() => setShowFeatBrowser(true)} className="btn-secondary text-xs flex items-center gap-1">
+            <Library size={12} /> Browse Feats
+          </button>
           {isDM && (
             <button onClick={() => setShowAdd(true)} className="btn-primary text-xs flex items-center gap-1">
               <Plus size={12} /> Add Feature
@@ -720,6 +727,141 @@ export default function Features({ characterId, character }) {
         onConfirm={() => handleDelete(confirmDelete.id)}
         onCancel={() => setConfirmDelete(null)}
       />
+
+      {/* ── Feat Browser Modal ── */}
+      {showFeatBrowser && (
+        <ModalPortal>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(8px)' }}
+            onClick={() => setShowFeatBrowser(false)}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{ width: '100%', maxWidth: 680, maxHeight: '80vh', display: 'flex', flexDirection: 'column', borderRadius: 16, overflow: 'hidden', background: 'rgba(14,12,24,0.97)', border: '1px solid rgba(201,168,76,0.22)', boxShadow: '0 40px 100px rgba(0,0,0,0.85)' }}
+            >
+              {/* Header */}
+              <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid rgba(201,168,76,0.12)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <h3 className="font-display text-amber-100 text-lg flex items-center gap-2">
+                    <Library size={18} /> Feat Catalog
+                  </h3>
+                  <button onClick={() => setShowFeatBrowser(false)} className="text-amber-200/30 hover:text-amber-200/70" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                    <span style={{ fontSize: 20 }}>&times;</span>
+                  </button>
+                </div>
+                {/* Search */}
+                <div style={{ position: 'relative', marginBottom: 10 }}>
+                  <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(200,175,130,0.3)' }} />
+                  <input
+                    className="input w-full"
+                    style={{ paddingLeft: 34 }}
+                    placeholder="Search feats by name or description..."
+                    value={featSearch}
+                    onChange={e => setFeatSearch(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                {/* Category filters */}
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => setFeatCategory('all')}
+                    className={`text-xs px-3 py-1 rounded ${featCategory === 'all' ? 'bg-gold/20 text-gold border border-gold/30' : 'text-amber-200/40 border border-amber-200/10'}`}
+                  >
+                    All ({FEAT_CATALOG.length})
+                  </button>
+                  {FEAT_CATEGORIES.map(cat => {
+                    const count = FEAT_CATALOG.filter(f => f.category === cat).length;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setFeatCategory(cat)}
+                        className={`text-xs px-3 py-1 rounded ${featCategory === cat ? 'bg-gold/20 text-gold border border-gold/30' : 'text-amber-200/40 border border-amber-200/10'}`}
+                      >
+                        {cat} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Feat list (scrollable) */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+                {FEAT_CATALOG
+                  .filter(f => {
+                    const matchCat = featCategory === 'all' || f.category === featCategory;
+                    const matchSearch = !featSearch.trim() ||
+                      f.name.toLowerCase().includes(featSearch.toLowerCase()) ||
+                      f.description.toLowerCase().includes(featSearch.toLowerCase());
+                    return matchCat && matchSearch;
+                  })
+                  .map(feat => {
+                    const alreadyHas = features.some(f => f.name === feat.name && f.feature_type === 'feat');
+                    return (
+                      <div
+                        key={feat.id}
+                        style={{
+                          padding: '10px 20px',
+                          borderBottom: '1px solid rgba(255,255,255,0.04)',
+                          opacity: alreadyHas ? 0.5 : 1,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <span style={{ fontFamily: 'var(--font-heading)', fontSize: 13, color: '#f0e4c8', fontWeight: 600 }}>
+                            {feat.name}
+                          </span>
+                          <span style={{
+                            fontSize: 9, padding: '1px 6px', borderRadius: 4,
+                            background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.15)',
+                            color: 'rgba(201,168,76,0.5)', fontFamily: 'var(--font-heading)', letterSpacing: '0.05em',
+                          }}>
+                            {feat.category}
+                          </span>
+                          {feat.prerequisite && (
+                            <span style={{ fontSize: 10, color: 'rgba(248,113,113,0.6)', fontStyle: 'italic' }}>
+                              Req: {feat.prerequisite}
+                            </span>
+                          )}
+                          <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
+                            {alreadyHas ? (
+                              <span style={{ fontSize: 10, color: 'rgba(74,222,128,0.6)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                                <Eye size={10} /> Already added
+                              </span>
+                            ) : (
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await addFeature(characterId, {
+                                      name: feat.name,
+                                      description: feat.description,
+                                      feature_type: 'feat',
+                                      source: feat.source || 'PHB',
+                                      source_level: 0,
+                                      uses_total: 0,
+                                      uses_remaining: 0,
+                                      recharge: '',
+                                    });
+                                    toast.success(`${feat.name} added!`);
+                                    load();
+                                  } catch (err) { toast.error(err.message); }
+                                }}
+                                className="btn-primary text-xs flex items-center gap-1"
+                                style={{ padding: '3px 10px' }}
+                              >
+                                <Plus size={11} /> Add
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <div style={{ fontSize: 12, color: 'rgba(200,175,130,0.5)', lineHeight: 1.5 }}>
+                          {feat.description}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          </div>
+        </ModalPortal>
+      )}
     </div>
   );
 }

@@ -87,7 +87,7 @@ export default function Backstory({ characterId, onPortraitChange }) {
   const [loading, setLoading] = useState(true);
   const [dragOver, setDragOver] = useState(false);
   const [npcs, setNpcs] = useState([]);
-  const [expandedSections, setExpandedSections] = useState(new Set(['backstory', 'personality', 'goals']));
+  const [expandedSections, setExpandedSections] = useState(new Set(['personality']));
   const [showAchieved, setShowAchieved] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -258,12 +258,42 @@ export default function Backstory({ characterId, onPortraitChange }) {
 
   if (loading || !data || !extra) return <div className="text-amber-200/40">Loading backstory...</div>;
 
+  // Content indicators for collapsed sections
+  const sectionHints = {
+    backstory: (() => {
+      const text = data.backstory_text || '';
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      return words > 0 ? `${words} words` : 'Empty';
+    })(),
+    goals: (() => {
+      const total = goalsProgress.short.total + goalsProgress.long.total;
+      const done = goalsProgress.short.done + goalsProgress.long.done;
+      return total > 0 ? `${done}/${total} complete` : 'No goals';
+    })(),
+    relations: (() => {
+      const allies = (extra?.backstory_allies || []).length;
+      const enemies = (extra?.backstory_enemies || []).length;
+      const parts = [];
+      if (allies > 0) parts.push(`${allies} all${allies > 1 ? 'ies' : 'y'}`);
+      if (enemies > 0) parts.push(`${enemies} enem${enemies > 1 ? 'ies' : 'y'}`);
+      return parts.length > 0 ? parts.join(' \u00B7 ') : 'None';
+    })(),
+    arc: `${(extra?.character_arc || []).length} entries`,
+    personality: (() => {
+      const filled = PERSONALITY_CARDS.filter(({ key }) => data[key]?.trim()).length;
+      return `${filled}/4 filled`;
+    })(),
+  };
+
   const renderSectionHeader = (id, title, SectionIcon, children) => (
     <button onClick={() => toggleSection(id)} className="flex items-center gap-2 w-full text-left group">
       {expandedSections.has(id) ? <ChevronDown size={14} className="text-amber-200/30" /> : <ChevronRight size={14} className="text-amber-200/30" />}
       {SectionIcon && <SectionIcon size={15} className="text-gold/60" />}
       <h3 className="font-display text-amber-100">{title}</h3>
       {children}
+      {!expandedSections.has(id) && sectionHints[id] && (
+        <span className="text-xs text-amber-200/30 ml-2 font-mono">{sectionHints[id]}</span>
+      )}
     </button>
   );
 

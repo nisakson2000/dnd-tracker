@@ -16,6 +16,7 @@ import { addQuest, addNpc } from '../utils/playerJournal';
 import { LiveSessionProvider } from '../contexts/LiveSessionContext';
 import { useSession } from '../contexts/SessionContext';
 import PlayerNotification from '../components/party/PlayerNotification';
+import PlayerWelcome, { shouldShowPlayerWelcome } from '../components/PlayerWelcome';
 import PlayerActionOverlay from '../components/party/PlayerActionOverlay';
 import SharedCombatBar from '../components/party/SharedCombatBar';
 import DmToolbar from '../components/party/DmToolbar';
@@ -63,6 +64,9 @@ const PartyLoot = lazy(() => import('../sections/PartyLoot'));
 const AiModulesSection = lazy(() => import('../sections/AiModulesSection'));
 const Archives = lazy(() => import('../sections/Archives'));
 const DmGuide = lazy(() => import('../sections/DmGuide'));
+const Companions = lazy(() => import('../sections/Companions'));
+const RollableTables = lazy(() => import('../components/RollableTablePanel'));
+const SessionPrep = lazy(() => import('../sections/SessionPrep'));
 const DevTools = import.meta.env.DEV ? lazy(() => import('../sections/DevTools')) : null;
 
 class SectionErrorBoundary extends React.Component {
@@ -89,6 +93,7 @@ const SECTIONS = {
   inventory: Inventory,
   features: Features,
   combat: Combat,
+  companions: Companions,
   journal: Journal,
   npcs: NPCs,
   quests: Quests,
@@ -115,6 +120,8 @@ const SECTIONS = {
   'ai-modules': AiModulesSection,
   'archives': Archives,
   'dm-guide': DmGuide,
+  'random-tables': RollableTables,
+  'session-prep': SessionPrep,
   ...(DevTools ? { devtools: DevTools } : {}),
 };
 
@@ -125,6 +132,7 @@ const SECTION_LABELS = {
   inventory: 'Inventory',
   features: 'Features & Traits',
   combat: 'Combat',
+  companions: 'Companions',
   journal: 'Campaign Journal',
   npcs: 'NPCs',
   quests: 'Quests',
@@ -151,6 +159,8 @@ const SECTION_LABELS = {
   'party-loot': 'Party Loot',
   'archives': 'Archives',
   'dm-guide': 'Create a Campaign Tutorial',
+  'random-tables': 'Random Tables',
+  'session-prep': 'Session Prep',
 };
 
 const SHORTCUT_SECTIONS = SECTION_ORDER;
@@ -1143,6 +1153,7 @@ export default function CharacterView() {
   const [showRestModal, setShowRestModal] = useState(false);
   const [restTab, setRestTab] = useState('short'); // 'short' | 'long'
   const [combatMode, setCombatMode] = useState(false);
+  const [showPlayerWelcome, setShowPlayerWelcome] = useState(false);
   const [campaignStats, setCampaignStats] = useState({ session_count: 0, total_hours: 0 });
   const { showOverlay, levelUpInfo, triggerLevelUp, dismiss } = useLevelUp();
   useCrashRecovery();
@@ -1154,6 +1165,13 @@ export default function CharacterView() {
     return () => { invoke('dev_set_active_section', { section: null }).catch(e => console.warn('[CharacterView] dev presence cleanup:', e)); };
   }, [activeSection]);
   const { errors, clearErrors } = useErrorLog();
+
+  // Listen for section navigation events from Settings quick actions
+  useEffect(() => {
+    const handler = (e) => { if (e.detail) setActiveSection(e.detail); };
+    window.addEventListener('codex-section-navigate', handler);
+    return () => window.removeEventListener('codex-section-navigate', handler);
+  }, []);
 
   /* ── #218  Session timer ── */
   useEffect(() => {
@@ -1320,7 +1338,12 @@ export default function CharacterView() {
     }
   };
 
-  // Quick Journal helpers
+  // Show player welcome on first visit (player mode only)
+  useEffect(() => {
+    if (!loading && character && appMode !== 'dm' && shouldShowPlayerWelcome()) {
+      setShowPlayerWelcome(true);
+    }
+  }, [loading, character, appMode]);
 
   // Helper: check if event target is an input field (don't fire shortcuts while typing)
   const isTyping = useCallback((e) => {
@@ -1824,6 +1847,7 @@ export default function CharacterView() {
           onDismiss={dismiss}
         />
       </div>
+      {showPlayerWelcome && <PlayerWelcome onClose={() => setShowPlayerWelcome(false)} />}
       <PlayerNotification />
       <PlayerActionOverlay activeConditions={activeConditions} characterId={characterId} />
       <SharedCombatBar />

@@ -39,6 +39,10 @@ export default function Updates() {
   const [tauriInstalling, setTauriInstalling] = useState(false);
   const tickerRef = useRef(null);
 
+  // Normalize version strings so V0.8.0 matches 0.8.0, v0.8.0, etc.
+  const norm = s => (s || '').replace(/^[Vv]/, '').trim();
+  const currentNorm = norm(currentVersion);
+
   // Combined check: version.json + Tauri native updater
   const handleCheckForUpdates = useCallback(async () => {
     checkForUpdates();
@@ -85,9 +89,6 @@ export default function Updates() {
   }, [currentNorm]);
 
   // Only show current version — full history on GitHub
-  // Normalize both sides so V0.8.0 matches 0.8.0, v0.8.0, etc.
-  const norm = s => (s || '').replace(/^[Vv]/, '').trim();
-  const currentNorm = norm(currentVersion);
   const recentVersions = CHANGELOG.filter(e => norm(e.version) === currentNorm);
   const displayVersions = recentVersions.length > 0 ? recentVersions : CHANGELOG.slice(0, 1);
 

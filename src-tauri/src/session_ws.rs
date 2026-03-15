@@ -326,6 +326,7 @@ impl SessionServer {
         let clients = self.clients.clone();
         let client_names = self.client_names.clone();
         let pending = self.pending.clone();
+        let last_pong = self.last_pong.clone();
 
         eprintln!("[session_ws] Server started on port {}", port);
 
@@ -343,10 +344,11 @@ impl SessionServer {
                                 let clients = clients.clone();
                                 let client_names = client_names.clone();
                                 let pending = pending.clone();
+                                let last_pong = last_pong.clone();
                                 let app = app_handle.clone();
                                 let mut conn_shutdown = shutdown_tx.subscribe();
                                 tokio::spawn(async move {
-                                    handle_connection(stream, clients, client_names, pending, app, &mut conn_shutdown).await;
+                                    handle_connection(stream, clients, client_names, pending, last_pong, app, &mut conn_shutdown).await;
                                 });
                             }
                             Err(e) => {
@@ -362,9 +364,11 @@ impl SessionServer {
             }
         });
 
-        // Spawn heartbeat task - ping all clients every 15s
+        // Spawn heartbeat task - ping all clients every 15s, evict dead clients after 45s
         {
             let hb_clients = self.clients.clone();
+            let hb_names = self.client_names.clone();
+            let hb_pongs = self.last_pong.clone();
             tokio::spawn(async move {
                 let mut interval = tokio::time::interval(std::time::Duration::from_secs(15));
                 interval.tick().await; // skip first immediate tick
@@ -373,6 +377,34 @@ impl SessionServer {
                         _ = interval.tick() => {
                             let ping = serde_json::to_string(&GameEvent::Ping {}).unwrap_or_default();
                             let msg = Message::Text(ping);
+
+                            // Check for dead clients (no pong in 45s)
+                            let now = std::time::Instant::now();
+                            let dead_timeout = std::time::Duration::from_secs(45);
+                            let mut dead_clients = Vec::new();
+                            {
+                                let pongs = hb_pongs.lock().await;
+                                for (uuid, last) in pongs.iter() {
+                                    if now.duration_since(*last) > dead_timeout {
+                                        dead_clients.push(uuid.clone());
+                                    }
+                                }
+                            }
+
+                            // Evict dead clients
+                            if !dead_clients.is_empty() {
+                                let mut clients = hb_clients.lock().await;
+                                let mut names = hb_names.lock().await;
+                                let mut pongs = hb_pongs.lock().await;
+                                for uuid in &dead_clients {
+                                    eprintln!("[session_ws] Heartbeat timeout: evicting dead client {}", uuid);
+                                    clients.remove(uuid);
+                                    names.remove(uuid);
+                                    pongs.remove(uuid);
+                                }
+                            }
+
+                            // Ping remaining clients
                             let clients = hb_clients.lock().await;
                             for (uuid, tx) in clients.iter() {
                                 if tx.send(msg.clone()).is_err() {
@@ -570,6 +602,7 @@ async fn handle_connection(
     clients: Arc<Mutex<HashMap<String, mpsc::UnboundedSender<Message>>>>,
     client_names: Arc<Mutex<HashMap<String, String>>>,
     pending: Arc<Mutex<HashMap<String, PendingPlayer>>>,
+    last_pong: Arc<Mutex<HashMap<String, std::time::Instant>>>,
     app: AppHandle,
     shutdown_rx: &mut broadcast::Receiver<()>,
 ) {
@@ -619,9 +652,16 @@ async fn handle_connection(
                         );
                         player_uuid = uuid.clone();
 
-                        // Store as pending
+                        // Store as pending (close old connection if UUID already exists)
                         {
                             let mut pend = pending.lock().await;
+                            if let Some(old) = pend.remove(&uuid) {
+                                eprintln!(
+                                    "[session_ws] Duplicate UUID {}, closing old connection",
+                                    uuid
+                                );
+                                let _ = old.sender.send(Message::Close(None));
+                            }
                             pend.insert(
                                 uuid.clone(),
                                 PendingPlayer {
@@ -630,6 +670,17 @@ async fn handle_connection(
                                     sender: outgoing_tx.clone(),
                                 },
                             );
+                        }
+                        // Also close old approved connection with same UUID
+                        {
+                            let mut cl = clients.lock().await;
+                            if let Some(old_sender) = cl.remove(&uuid) {
+                                eprintln!(
+                                    "[session_ws] Duplicate UUID {} in approved clients, closing old",
+                                    uuid
+                                );
+                                let _ = old_sender.send(Message::Close(None));
+                            }
                         }
 
                         // Emit Tauri event so DM frontend can show approval UI
@@ -673,8 +724,8 @@ async fn handle_connection(
                         }
                         if let Ok(text) = msg.to_text() {
                             if text.len() > MAX_MESSAGE_SIZE {
-                                eprintln!("[session_ws] Oversized message from {}", player_uuid);
-                                continue;
+                                eprintln!("[session_ws] Oversized message from {}, disconnecting", player_uuid);
+                                break;
                             }
                             match serde_json::from_str::<GameEvent>(text) {
                                 Ok(GameEvent::Ping {}) => {
@@ -682,7 +733,29 @@ async fn handle_connection(
                                         .unwrap_or_default();
                                     let _ = outgoing_tx.send(Message::Text(pong));
                                 }
-                                Ok(event) => {
+                                Ok(GameEvent::Pong {}) => {
+                                    // Update last pong time for heartbeat timeout tracking
+                                    let mut pongs = last_pong.lock().await;
+                                    pongs.insert(player_uuid.clone(), std::time::Instant::now());
+                                }
+                                Ok(ref event) => {
+                                    // Validate player_uuid in event matches connection UUID (anti-spoof)
+                                    let event_uuid = match event {
+                                        GameEvent::CharUpdate { player_uuid: ref u, .. } => Some(u.as_str()),
+                                        GameEvent::RollBroadcast { player_uuid: ref u, .. } => Some(u.as_str()),
+                                        GameEvent::ConcentrationUpdate { player_uuid: ref u, .. } => Some(u.as_str()),
+                                        _ => None,
+                                    };
+                                    if let Some(eu) = event_uuid {
+                                        if eu != player_uuid {
+                                            eprintln!(
+                                                "[session_ws] UUID mismatch: connection={} event={}, dropping",
+                                                player_uuid, eu
+                                            );
+                                            continue;
+                                        }
+                                    }
+
                                     // Only forward events from approved clients
                                     // Hold lock during emit to prevent TOCTOU race
                                     let cl = clients.lock().await;
@@ -731,6 +804,10 @@ async fn handle_connection(
     {
         let mut names = client_names.lock().await;
         names.remove(&player_uuid);
+    }
+    {
+        let mut pongs = last_pong.lock().await;
+        pongs.remove(&player_uuid);
     }
 
     let _ = app.emit(

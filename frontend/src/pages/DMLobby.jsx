@@ -11,6 +11,8 @@ import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useSession } from '../contexts/SessionContext';
+import { useAppMode } from '../contexts/ModeContext';
+import { rulesetMatch, rulesetLabel } from '../utils/rulesetUtils';
 import ConfirmDialog from '../components/ConfirmDialog';
 import SessionRecap from '../components/dm-session/SessionRecap';
 import HandoutsManager from '../components/dm-session/HandoutsManager';
@@ -55,6 +57,10 @@ export default function DMLobby() {
   const { id: campaignId } = useParams();
   const navigate = useNavigate();
   const { dispatch } = useSession();
+  const { mode, setMode } = useAppMode();
+
+  // Ensure DM mode is active when this page loads
+  useEffect(() => { if (mode !== 'dm') setMode('dm'); }, [mode, setMode]);
 
   const [campaign, setCampaign] = useState(null);
   const [scenes, setScenes] = useState([]);
@@ -223,20 +229,53 @@ export default function DMLobby() {
         const player = event.payload;
         toast(`${player.name || 'A player'} wants to join!`, { icon: '🎲' });
 
+        // Parse character summary to extract ruleset
+        let playerRuleset = null;
+        try {
+          const summary = typeof player.character_summary === 'string'
+            ? JSON.parse(player.character_summary)
+            : player.character_summary;
+          if (summary) playerRuleset = summary.ruleset;
+        } catch (_) { /* summary may not be valid JSON */ }
+
+        const campaignRuleset = campaignSettings.default_ruleset || campaign?.ruleset;
+        const rulesetsCompatible = !playerRuleset || rulesetMatch(playerRuleset, campaignRuleset);
+
         if (campaignSettings.auto_approve_players === 'true') {
-          invoke('ws_approve_player', { player_uuid: player.uuid, snapshot_json: null })
-            .then(() => toast.success(`Auto-approved ${player.name || 'player'}`))
-            .catch(e => console.error('Auto-approve failed:', e));
+          if (!rulesetsCompatible) {
+            // Reject automatically — edition mismatch
+            const msg = `Edition mismatch: your character uses ${rulesetLabel(playerRuleset)} but this campaign uses ${rulesetLabel(campaignRuleset)}`;
+            invoke('ws_reject_player', { player_uuid: player.uuid, reason: msg })
+              .then(() => toast.error(`Rejected ${player.name || 'player'}: edition mismatch`))
+              .catch(e => console.error('Auto-reject failed:', e));
+          } else {
+            const snapshot = JSON.stringify({
+              type: 'FullStateSnapshot',
+              campaign_id: campaign?.id || '',
+              state: {
+                campaign_name: campaign?.name || '',
+                scene: null,
+                initiative: [],
+                round: 0,
+                current_turn: 0,
+                encounter_active: false,
+              },
+            });
+            invoke('ws_approve_player', { player_uuid: player.uuid, snapshot_json: snapshot })
+              .then(() => toast.success(`Auto-approved ${player.name || 'player'}`))
+              .catch(e => console.error('Auto-approve failed:', e));
+          }
         } else {
           setPendingPlayers(prev => {
             if (prev.find(p => p.uuid === player.uuid)) return prev;
-            return [...prev, player];
+            const entry = rulesetsCompatible ? player : { ...player, rulesetMismatch: true };
+            return [...prev, entry];
           });
         }
       });
     })();
     return () => { if (unlisten) unlisten(); };
-  }, [campaignSettings.auto_approve_players]);
+  }, [campaignSettings.auto_approve_players, campaignSettings.default_ruleset, campaign]);
 
   // Cleanup: stop WS server on unmount
   useEffect(() => {
@@ -247,7 +286,19 @@ export default function DMLobby() {
 
   const handleApprovePlayer = async (uuid) => {
     try {
-      await invoke('ws_approve_player', { player_uuid: uuid, snapshot_json: null });
+      const snapshot = JSON.stringify({
+        type: 'FullStateSnapshot',
+        campaign_id: campaign?.id || '',
+        state: {
+          campaign_name: campaign?.name || '',
+          scene: null,
+          initiative: [],
+          round: 0,
+          current_turn: 0,
+          encounter_active: false,
+        },
+      });
+      await invoke('ws_approve_player', { player_uuid: uuid, snapshot_json: snapshot });
       setPendingPlayers(prev => prev.filter(p => p.uuid !== uuid));
       toast.success('Player approved');
     } catch (e) {

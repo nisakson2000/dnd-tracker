@@ -18,6 +18,7 @@ import StoryPanel from '../components/dm-session/StoryPanel';
 import QuestRunner from '../components/dm-session/QuestRunner';
 import QuickReferencePanel from '../components/dm-session/QuickReferencePanel';
 import { useCampaignSyncSafe } from '../contexts/CampaignSyncContext';
+import { rulesetMatch, rulesetLabel } from '../utils/rulesetUtils';
 import { History, AlertCircle, BookMarked, Megaphone, BookOpen } from 'lucide-react';
 
 function formatTimer(seconds) {
@@ -91,6 +92,7 @@ export default function DMSession() {
   const [showQuickRef, setShowQuickRef] = useState(false);
   const [quests, setQuests] = useState([]);
   const [questNpcs, setQuestNpcs] = useState([]);
+  const [campaignRuleset, setCampaignRuleset] = useState(null);
   // Debounce refs
   const startSessionDebounce = useRef(false);
   const endSessionDebounce = useRef(false);
@@ -429,16 +431,49 @@ export default function DMSession() {
     return () => { if (unlisten) unlisten(); };
   }, [dispatch]);
 
+  // Load campaign ruleset for join-request validation
+  useEffect(() => {
+    invoke('get_campaign_setting', { key: 'default_ruleset' })
+      .then(val => setCampaignRuleset(val || '5e-2014'))
+      .catch(() => {
+        // Fallback: try loading campaign object for its ruleset field
+        invoke('select_campaign', { campaignId })
+          .then(c => setCampaignRuleset(c?.ruleset || '5e-2014'))
+          .catch(() => setCampaignRuleset('5e-2014'));
+      });
+  }, [campaignId]);
+
   // Listen for join requests — auto-approve with current game state snapshot
   const gameStateRef = useRef({ currentScene, initiative, round, currentTurn, sessionId, campaignName, campaignId });
   gameStateRef.current = { currentScene, initiative, round, currentTurn, sessionId, campaignName, campaignId };
   useEffect(() => {
     let unlisten;
     listen('session-join-request', (event) => {
-      const { player_uuid, display_name } = event.payload || {};
+      const { player_uuid, display_name, character_summary } = event.payload || {};
       dispatch({ type: 'LOG_ACTION', payload: `${display_name || 'Player'} requested to join` });
       toast(`${display_name || 'Player'} wants to join!`, { icon: '👤', duration: 5000 });
 
+      // --- Ruleset validation ---
+      let playerRuleset = null;
+      try {
+        const summary = typeof character_summary === 'string'
+          ? JSON.parse(character_summary)
+          : character_summary;
+        if (summary) playerRuleset = summary.ruleset;
+      } catch (_) { /* summary may not be valid JSON */ }
+
+      if (playerRuleset && campaignRuleset && !rulesetMatch(playerRuleset, campaignRuleset)) {
+        const msg = `Edition mismatch: your character uses ${rulesetLabel(playerRuleset)} but this campaign uses ${rulesetLabel(campaignRuleset)}`;
+        invoke('ws_reject_player', { player_uuid, reason: msg })
+          .then(() => {
+            toast.error(`Rejected ${display_name || 'player'}: edition mismatch`);
+            dispatch({ type: 'LOG_ACTION', payload: `Rejected ${display_name || 'Player'} — ruleset mismatch (${rulesetLabel(playerRuleset)} vs ${rulesetLabel(campaignRuleset)})` });
+          })
+          .catch(e => console.error('Ruleset reject failed:', e));
+        return;
+      }
+
+      // --- Rulesets match (or unknown) — auto-approve ---
       const gs = gameStateRef.current;
       const snapshot = JSON.stringify({
         type: 'FullStateSnapshot',

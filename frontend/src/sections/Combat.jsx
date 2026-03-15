@@ -6,6 +6,7 @@ import { getItems } from '../api/inventory';
 import { useAutosave } from '../hooks/useAutosave';
 import SaveIndicator from '../components/SaveIndicator';
 import HelpTooltip from '../components/HelpTooltip';
+import RuleTooltip from '../components/RuleTooltip';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
 import { useRuleset } from '../contexts/RulesetContext';
@@ -321,6 +322,12 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   const [weaponMagicBonus, setWeaponMagicBonus] = useState(0); // highest equipped weapon magic_bonus
   const [weaponExtraDamage, setWeaponExtraDamage] = useState(''); // e.g. "2d6 fire"
   const rollTimeoutRefs = useRef({});
+  const [attackAdvOverrides, setAttackAdvOverrides] = useState({}); // per-attack: 'advantage' | 'disadvantage' | null
+  const [attackBonusInputs, setAttackBonusInputs] = useState({}); // per-attack situational bonus
+
+  // Compute condition effects from active conditions in the main component
+  const activeConditionNames = useMemo(() => conditions.filter(c => c.active).map(c => c.name), [conditions]);
+  const condEffects = useMemo(() => computeConditionEffects(activeConditionNames, character?.exhaustion_level || 0), [activeConditionNames, character?.exhaustion_level]);
 
   // --- All combat sessionStorage state consolidated into one hook ---
   const {
@@ -838,13 +845,32 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   // --- Crit animation state ---
   const [critAnimations, setCritAnimations] = useState({});
 
-  // Inline attack roll (enhanced with flanking, magic bonus, combat log, crit animation)
+  // Inline attack roll (enhanced with flanking, magic bonus, combat log, crit animation, advantage/disadvantage, situational bonus)
   const rollAttack = (atk) => {
     const bonus = parseBonus(atk.attack_bonus);
     const magicBonus = weaponMagicBonus || 0;
-    const d20 = rollDie(20);
     const flankBonus = flankingEnabled ? 2 : 0;
-    const total = d20 + bonus + magicBonus + flankBonus;
+    const sitBonus = parseInt(attackBonusInputs[atk.id]) || 0;
+
+    // Determine advantage/disadvantage from conditions + per-attack override
+    const override = attackAdvOverrides[atk.id] || null;
+    let hasAdv = condEffects.attackAdvantage || override === 'advantage';
+    let hasDis = condEffects.attackDisadvantage || override === 'disadvantage';
+    // D&D rule: advantage + disadvantage cancel out
+    let rollMode = 'normal';
+    if (hasAdv && hasDis) rollMode = 'normal';
+    else if (hasAdv) rollMode = 'advantage';
+    else if (hasDis) rollMode = 'disadvantage';
+
+    // Roll d20(s)
+    const d20a = rollDie(20);
+    const d20b = (rollMode !== 'normal') ? rollDie(20) : d20a;
+    let d20;
+    if (rollMode === 'advantage') d20 = Math.max(d20a, d20b);
+    else if (rollMode === 'disadvantage') d20 = Math.min(d20a, d20b);
+    else d20 = d20a;
+
+    const total = d20 + bonus + magicBonus + flankBonus + sitBonus;
     const isNat20 = d20 === 20;
     const isNat1 = d20 === 1;
 
@@ -857,9 +883,10 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     }
 
     const ts = Date.now();
+    const modeLabel = rollMode === 'advantage' ? 'ADV' : rollMode === 'disadvantage' ? 'DIS' : null;
     setRollResults(prev => ({
       ...prev,
-      [atk.id]: { d20, bonus, magicBonus, flankBonus, total, isNat20, isNat1, damage: dmgResult, ts },
+      [atk.id]: { d20, d20a, d20b, rollMode, bonus, magicBonus, flankBonus, sitBonus, total, isNat20, isNat1, damage: dmgResult, ts },
     }));
 
     // Track combat stats
@@ -883,7 +910,9 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     const extraStr = dmgResult?.extraDamage ? ` + ${dmgResult.extraDamage}` : '';
     const dmgStr = dmgResult ? ` for ${dmgResult.total} damage${extraStr}${dmgResult.crit ? ' (CRIT!)' : ''}` : '';
     const critStr = isNat20 ? ' [NAT 20]' : isNat1 ? ' [NAT 1]' : '';
-    logEvent('attack', `${atk.name || 'Attack'}: rolled ${d20} + ${bonus}${magicBonus ? ` + ${magicBonus} magic` : ''}${flankBonus ? ` + ${flankBonus} flanking` : ''} = ${total}${critStr}${dmgStr}`);
+    const modeStr = modeLabel ? ` [${modeLabel}: ${d20a}, ${d20b}]` : '';
+    const sitStr = sitBonus ? ` + ${sitBonus} bonus` : '';
+    logEvent('attack', `${atk.name || 'Attack'}: rolled ${d20} + ${bonus}${magicBonus ? ` + ${magicBonus} magic` : ''}${flankBonus ? ` + ${flankBonus} flanking` : ''}${sitStr} = ${total}${modeStr}${critStr}${dmgStr}`);
 
     // Clear previous timeout for this attack if any
     if (rollTimeoutRefs.current[atk.id]) {
@@ -1517,6 +1546,16 @@ export default function Combat({ characterId, character, onConditionsChange }) {
             Flanking: +2 {flankingEnabled ? 'ON' : 'OFF'}
           </button>
         </div>
+        {/* Condition effects banner */}
+        {condEffects.netAttackMode !== 'normal' && (
+          <div className={`text-xs px-3 py-1.5 rounded-lg mb-2 border ${
+            condEffects.netAttackMode === 'advantage'
+              ? 'bg-green-900/20 border-green-500/20 text-green-300'
+              : 'bg-red-900/20 border-red-500/20 text-red-300'
+          }`}>
+            Conditions: {condEffects.netAttackMode === 'advantage' ? 'Advantage' : 'Disadvantage'} on attack rolls
+          </div>
+        )}
         <p className="text-xs text-amber-200/30 mb-3">Click the dice icon to roll attack + damage instantly. Click damage to re-roll damage only.</p>
         {attacks.length === 0 ? (
           <p className="text-sm text-amber-200/30">No attacks configured. Add your weapons and cantrips here so you can quickly reference them during combat.</p>
@@ -1525,6 +1564,8 @@ export default function Combat({ characterId, character, onConditionsChange }) {
             {attacks.map(atk => {
               const result = rollResults[atk.id];
               const critAnim = critAnimations[atk.id];
+              const advOverride = attackAdvOverrides[atk.id] || null;
+              const sitBonus = attackBonusInputs[atk.id] || '';
               return (
                 <div key={atk.id} className={`bg-[#0a0a10] rounded-lg border transition-all ${
                   result?.isNat20 ? 'border-gold/60 shadow-[0_0_20px_rgba(201,168,76,0.2)]' :
@@ -1549,6 +1590,35 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                         <span className="text-amber-200/60 text-sm">{atk.damage_dice ?? '\u2014'} {atk.damage_type && <span className="text-amber-200/40">{atk.damage_type}</span>}</span>
                         {atk.attack_range && <span className="text-amber-200/30 text-xs">{atk.attack_range}</span>}
                       </div>
+                      {/* Advantage/Disadvantage toggles + Situational bonus */}
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <button
+                          onClick={() => setAttackAdvOverrides(prev => ({ ...prev, [atk.id]: prev[atk.id] === 'advantage' ? null : 'advantage' }))}
+                          className={`text-[10px] px-2 py-0.5 rounded border transition-all ${
+                            advOverride === 'advantage' ? 'bg-green-900/50 text-green-300 border-green-500/40' : 'bg-white/5 text-amber-200/35 border-amber-200/10 hover:text-amber-200/60'
+                          }`}
+                          title="Toggle advantage (e.g., target is Prone, Help action, Invisible)"
+                        >
+                          ADV
+                        </button>
+                        <button
+                          onClick={() => setAttackAdvOverrides(prev => ({ ...prev, [atk.id]: prev[atk.id] === 'disadvantage' ? null : 'disadvantage' }))}
+                          className={`text-[10px] px-2 py-0.5 rounded border transition-all ${
+                            advOverride === 'disadvantage' ? 'bg-red-900/50 text-red-300 border-red-500/40' : 'bg-white/5 text-amber-200/35 border-amber-200/10 hover:text-amber-200/60'
+                          }`}
+                          title="Toggle disadvantage (e.g., long range, obscured target)"
+                        >
+                          DIS
+                        </button>
+                        <input
+                          type="number"
+                          value={sitBonus}
+                          onChange={e => setAttackBonusInputs(prev => ({ ...prev, [atk.id]: e.target.value }))}
+                          className="w-14 text-[10px] px-1.5 py-0.5 rounded border border-amber-200/10 bg-white/5 text-amber-200/60 placeholder:text-amber-200/20 text-center"
+                          placeholder="+/-"
+                          title="Situational bonus (Bless, Guidance, Bardic Inspiration, etc.)"
+                        />
+                      </div>
                     </div>
                     <button onClick={() => setConfirmDelete(atk)} className="text-red-400/50 hover:text-red-400 flex-shrink-0" aria-label={`Delete ${atk.name || 'attack'}`}>
                       <Trash2 size={14} />
@@ -1562,12 +1632,25 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                     }`}>
                       <div className="flex items-center gap-2">
                         <span className="text-amber-200/50 text-xs">ATK:</span>
-                        <span className={`text-xs px-1.5 py-0.5 rounded ${
-                          result.isNat20 ? 'bg-gold/20 text-gold font-bold' : result.isNat1 ? 'bg-red-900/40 text-red-300 font-bold' : 'bg-white/5 text-amber-200/40'
-                        }`}>
-                          {result.d20}
-                        </span>
-                        <span className="text-amber-200/40">+ {result.bonus}{result.magicBonus ? ` + ${result.magicBonus}` : ''}{result.flankBonus ? ` + ${result.flankBonus}` : ''} =</span>
+                        {/* Show both d20s when advantage/disadvantage */}
+                        {result.rollMode && result.rollMode !== 'normal' ? (
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${
+                            result.rollMode === 'advantage' ? 'bg-green-900/30 text-green-300' : 'bg-red-900/30 text-red-300'
+                          }`} title={`${result.rollMode === 'advantage' ? 'ADV' : 'DIS'}: rolled ${result.d20a} and ${result.d20b}, used ${result.d20}`}>
+                            {result.d20a === result.d20
+                              ? <>{result.d20a}, <span className="line-through opacity-50">{result.d20b}</span></>
+                              : <><span className="line-through opacity-50">{result.d20a}</span>, {result.d20b}</>
+                            }
+                            <span className="ml-1 opacity-60">({result.rollMode === 'advantage' ? 'ADV' : 'DIS'})</span>
+                          </span>
+                        ) : (
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${
+                            result.isNat20 ? 'bg-gold/20 text-gold font-bold' : result.isNat1 ? 'bg-red-900/40 text-red-300 font-bold' : 'bg-white/5 text-amber-200/40'
+                          }`}>
+                            {result.d20}
+                          </span>
+                        )}
+                        <span className="text-amber-200/40">+ {result.bonus}{result.magicBonus ? ` + ${result.magicBonus}` : ''}{result.flankBonus ? ` + ${result.flankBonus}` : ''}{result.sitBonus ? ` + ${result.sitBonus}` : ''} =</span>
                         <span className={`font-bold ${result.isNat20 ? 'text-gold' : result.isNat1 ? 'text-red-400' : 'text-amber-100'}`}>
                           {result.total}
                         </span>
@@ -2216,16 +2299,17 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDur
           <div className="flex flex-wrap gap-1.5">
             <span className="text-xs text-red-400/60 font-semibold mr-1">Active:</span>
             {conditions.filter(c => c.active).map(c => (
-              <button
-                key={c.name}
-                onClick={() => onToggle(c.name)}
-                className="text-xs text-red-200 bg-red-900/40 px-2 py-0.5 rounded border border-red-500/20 hover:bg-red-800/50 hover:border-red-400/40 transition-all cursor-pointer group flex items-center gap-1"
-                title={`Click to remove ${c.name}`}
-              >
-                {CONDITION_ICONS[c.name] || ''} {c.name}
-                {c.rounds_remaining > 0 && <span className="ml-1 text-red-300/70">({c.rounds_remaining}r)</span>}
-                <X size={10} className="text-red-400/0 group-hover:text-red-400/80 transition-colors" />
-              </button>
+              <RuleTooltip key={c.name} term={c.name}>
+                <button
+                  onClick={() => onToggle(c.name)}
+                  className="text-xs text-red-200 bg-red-900/40 px-2 py-0.5 rounded border border-red-500/20 hover:bg-red-800/50 hover:border-red-400/40 transition-all cursor-pointer group flex items-center gap-1"
+                  title={`Click to remove ${c.name}`}
+                >
+                  {CONDITION_ICONS[c.name] || ''} {c.name}
+                  {c.rounds_remaining > 0 && <span className="ml-1 text-red-300/70">({c.rounds_remaining}r)</span>}
+                  <X size={10} className="text-red-400/0 group-hover:text-red-400/80 transition-colors" />
+                </button>
+              </RuleTooltip>
             ))}
           </div>
 

@@ -334,19 +334,41 @@ pub fn init_character_tables(conn: &Connection) -> SqlResult<()> {
             related_to TEXT DEFAULT '',
             created_at TEXT DEFAULT '',
             updated_at TEXT DEFAULT ''
+        );
+
+        CREATE TABLE IF NOT EXISTS companions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            creature_type TEXT DEFAULT 'familiar',
+            species TEXT DEFAULT '',
+            hp_current INTEGER DEFAULT 1,
+            hp_max INTEGER DEFAULT 1,
+            ac INTEGER DEFAULT 10,
+            speed TEXT DEFAULT '30 ft.',
+            str_score INTEGER DEFAULT 10,
+            dex_score INTEGER DEFAULT 10,
+            con_score INTEGER DEFAULT 10,
+            int_score INTEGER DEFAULT 10,
+            wis_score INTEGER DEFAULT 10,
+            cha_score INTEGER DEFAULT 10,
+            attacks_json TEXT DEFAULT '[]',
+            abilities_json TEXT DEFAULT '[]',
+            senses TEXT DEFAULT '',
+            notes TEXT DEFAULT '',
+            active INTEGER DEFAULT 1
         );"
     )?;
     Ok(())
 }
 
-/// Safely add a column if it doesn't exist (ALTER TABLE is a no-op when column exists in SQLite
-/// only if we catch the error, so we just ignore "duplicate column" errors)
+/// Safely add a column if it doesn't exist (ALTER TABLE is a no-op when column exists in SQLite,
+/// only if we catch the error, so we just ignore duplicate-column errors)
 fn add_column_if_missing(conn: &Connection, table: &str, column: &str, col_type: &str, default: &str) {
     let sql = format!(
         "ALTER TABLE {} ADD COLUMN {} {} DEFAULT {}",
         table, column, col_type, default
     );
-    // SQLite returns "duplicate column name" error if already exists — safe to ignore
+    // SQLite returns duplicate-column-name error if already exists — safe to ignore
     let _ = conn.execute(&sql, []);
 }
 
@@ -394,6 +416,10 @@ pub fn migrate_character_db(conn: &Connection) -> SqlResult<()> {
     add_column_if_missing(conn, "items", "equipment_slot", "TEXT", "''");
     add_column_if_missing(conn, "items", "stat_modifiers", "TEXT", "'{}'");
     add_column_if_missing(conn, "items", "rarity", "TEXT", "'common'");
+    add_column_if_missing(conn, "items", "magic_bonus", "INTEGER", "0");
+    add_column_if_missing(conn, "items", "extra_damage", "TEXT", "''");
+    add_column_if_missing(conn, "items", "save_bonus", "INTEGER", "0");
+    add_column_if_missing(conn, "items", "special_properties", "TEXT", "''");
 
     // ── Automation engine columns ──
     add_column_if_missing(conn, "character_overview", "hp_calc_method", "TEXT", "'auto'");

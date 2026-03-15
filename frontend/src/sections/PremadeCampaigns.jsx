@@ -11,6 +11,7 @@ import { addLoreNote } from '../api/lore';
 import { addJournalEntry } from '../api/journal';
 import { addItem } from '../api/inventory';
 import { getOverview, updateOverview } from '../api/overview';
+import { fetchAndParseAdventure } from '../data/campaignFetcher';
 
 // Bundled starter adventures
 import goblinMine from '../data/campaigns/goblin-mine.json';
@@ -62,11 +63,7 @@ async function fetchAdventureList() {
     }));
 }
 
-async function fetchAndParseAdventure(url) {
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`Failed to fetch adventure: ${resp.status}`);
-  return resp.json();
-}
+// fetchAndParseAdventure imported from ../data/campaignFetcher
 
 /**
  * Parse a 5etools homebrew adventure JSON into our data structures.

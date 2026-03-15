@@ -9,6 +9,7 @@ import { getRuleset } from '../data/rulesets';
 import { APP_VERSION } from '../version';
 import { modStr } from '../utils/dndHelpers';
 import { ABILITIES } from '../utils/dndHelpers';
+import { PREMADE_CHARACTERS } from '../data/premadeCharacters';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const ABILITY_NAMES = { STR: 'Strength', DEX: 'Dexterity', CON: 'Constitution', INT: 'Intelligence', WIS: 'Wisdom', CHA: 'Charisma' };
@@ -1134,6 +1135,36 @@ function StepBackground({ backgrounds, selected, setSelected }) {
   );
 }
 
+// ─── Subclass Selection Step ─────────────────────────────────────────────────
+
+function StepSubclass({ classData, selected, setSelected }) {
+  const subclasses = classData?.subclasses || [];
+  return (
+    <div>
+      <h2 className="font-display text-2xl text-amber-100 mb-2">Choose Your Subclass</h2>
+      <p className="text-sm text-amber-200/50 mb-6">
+        {classData?.name} characters choose their subclass at level 1.
+        This defines your specialization and grants unique features as you level up.
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {subclasses.map(sc => (
+          <button
+            key={sc}
+            onClick={() => setSelected(sc)}
+            className={`text-left p-4 rounded-lg border transition-all ${
+              selected === sc
+                ? 'bg-gold/10 border-gold/40 text-amber-100'
+                : 'bg-[#0a0a10] border-amber-200/10 text-amber-200/60 hover:border-amber-200/25'
+            }`}
+          >
+            <div className="font-display text-sm">{sc}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Setup Page ────────────────────────────────────────────────────────
 
 const RUNE_CHARS = ['ᚠ','ᚢ','ᚦ','ᚨ','ᚱ','ᚲ','ᚷ','ᚹ','ᚺ','ᚾ','ᛁ','ᛃ','ᛇ','ᛈ','ᛉ','ᛊ','ᛏ','ᛒ','ᛖ','ᛗ'];
@@ -1152,8 +1183,11 @@ export default function CharacterSetup() {
   const [scores, setScores] = useState(null);
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [selectedBackground, setSelectedBackground] = useState('');
+  const [selectedSubclass, setSelectedSubclass] = useState('');
   const [saving, setSaving] = useState(false);
   const [_quickStartApplied, setQuickStartApplied] = useState(false);
+  const [showQuickBuild, setShowQuickBuild] = useState(false);
+  const [quickBuildBusy, setQuickBuildBusy] = useState(false);
 
   // Load character overview
   useEffect(() => {
@@ -1213,6 +1247,152 @@ export default function CharacterSetup() {
     setStep(2);
   };
 
+  // ── Quick Build: one-click full character creation ──
+  const handleQuickBuild = async (template) => {
+    if (quickBuildBusy) return;
+    setQuickBuildBusy(true);
+    try {
+      // 1. Update overview with all core stats
+      await invoke('update_overview', {
+        characterId,
+        payload: {
+          name: template.name,
+          race: template.race,
+          subrace: '',
+          primary_class: template.className,
+          primary_subclass: '',
+          level: 1,
+          background: template.background || '',
+          alignment: '',
+          experience_points: 0,
+          max_hp: template.hp,
+          current_hp: template.hp,
+          temp_hp: 0,
+          armor_class: template.ac,
+          speed: template.speed,
+          hit_dice_total: `1d${classData?.hitDie || 10}`,
+          hit_dice_used: 0,
+          death_save_successes: 0,
+          death_save_failures: 0,
+          inspiration: false,
+          senses: '',
+          languages: 'Common',
+          proficiencies_armor: '',
+          proficiencies_weapons: '',
+          proficiencies_tools: '',
+          campaign_name: overview?.campaign_name || '',
+          exhaustion_level: 0,
+          ruleset: rulesetId,
+          multiclass_data: '[]',
+        },
+      });
+
+      // 2. Update ability scores
+      await invoke('update_ability_scores', {
+        characterId,
+        payload: ABILITIES.map(a => ({ ability: a, score: template.scores[a] || 10 })),
+      });
+
+      // 3. Update skills
+      const allSkillNames = Object.keys(SKILL_ABILITIES);
+      await invoke('update_skills', {
+        characterId,
+        payload: allSkillNames.map(name => ({
+          name,
+          proficient: (template.skills || []).includes(name),
+          expertise: false,
+        })),
+      });
+
+      // 4. Add equipment
+      for (const item of template.equipment || []) {
+        await invoke('add_item', {
+          characterId,
+          payload: {
+            name: item.name,
+            item_type: item.item_type || 'gear',
+            weight: item.weight || 0,
+            value_gp: item.value_gp || 0,
+            quantity: item.quantity || 1,
+            description: item.description || '',
+            attunement: false,
+            attuned: false,
+            equipped: item.equipped || false,
+            equipment_slot: '',
+            stat_modifiers: null,
+            rarity: null,
+          },
+        }).catch(() => {});
+      }
+
+      // 5. Add features
+      for (const feat of template.features || []) {
+        await invoke('add_feature', {
+          characterId,
+          payload: {
+            name: feat.name || '',
+            source: feat.source || template.className || '',
+            source_level: feat.source_level ?? 1,
+            feature_type: feat.feature_type || 'class',
+            description: feat.description || '',
+            uses_total: feat.uses_total ?? 0,
+            uses_remaining: feat.uses_total ?? 0,
+            recharge: feat.recharge || 'none',
+          },
+        }).catch(() => {});
+      }
+
+      // 6. Add spells
+      for (const spell of template.spells || []) {
+        await invoke('add_spell', {
+          characterId,
+          payload: {
+            name: spell.name,
+            level: spell.level ?? 0,
+            school: spell.school || '',
+            casting_time: spell.casting_time || '1 action',
+            range: spell.range || '',
+            duration: spell.duration || '',
+            description: spell.description || '',
+            prepared: spell.prepared || false,
+          },
+        }).catch(() => {});
+      }
+
+      // 7. Set currency
+      if (template.currency) {
+        await invoke('update_currency', {
+          characterId,
+          payload: {
+            cp: template.currency.cp || 0,
+            sp: template.currency.sp || 0,
+            ep: template.currency.ep || 0,
+            gp: template.currency.gp || 0,
+            pp: template.currency.pp || 0,
+          },
+        }).catch(() => {});
+      }
+
+      // 8. Set backstory
+      if (template.backstory) {
+        await invoke('update_backstory', {
+          characterId,
+          payload: { backstory_text: template.backstory },
+        }).catch(() => {});
+      }
+
+      toast.success(`${template.name} is ready for adventure!`);
+      navigate(`/character/${characterId}`);
+    } catch (err) {
+      toast.error(`Quick build failed: ${err.message || err}`);
+    } finally {
+      setQuickBuildBusy(false);
+    }
+  };
+
+  // Does this class pick a subclass at level 1? (Cleric, Sorcerer, Warlock)
+  const needsSubclassAtOne = classData?.subclassLevel === 1 && classData?.subclasses?.length > 0;
+
   // Steps depend on edition
   const steps = is2024
     ? [
@@ -1221,6 +1401,7 @@ export default function CharacterSetup() {
         { id: 'abilities', label: 'Abilities' },
         { id: 'autoapply', label: 'Defaults' },
         { id: 'skills', label: 'Skills' },
+        ...(needsSubclassAtOne ? [{ id: 'subclass', label: 'Subclass' }] : []),
         { id: 'summary', label: 'Summary' },
         { id: 'review', label: 'Review' },
       ]
@@ -1229,6 +1410,7 @@ export default function CharacterSetup() {
         { id: 'abilities', label: 'Abilities' },
         { id: 'autoapply', label: 'Defaults' },
         { id: 'skills', label: 'Skills' },
+        ...(needsSubclassAtOne ? [{ id: 'subclass', label: 'Subclass' }] : []),
         { id: 'summary', label: 'Summary' },
         { id: 'review', label: 'Review' },
       ];
@@ -1243,6 +1425,7 @@ export default function CharacterSetup() {
     if (currentStep.id === 'quickstart') return true; // Can always proceed from quickstart
     if (currentStep.id === 'abilities') return scores && Object.keys(scores).length === 6;
     if (currentStep.id === 'skills') return selectedSkills.length === (classData?.skillChoices?.count || 2);
+    if (currentStep.id === 'subclass') return !!selectedSubclass;
     if (currentStep.id === 'background') return !!selectedBackground;
     return true;
   };
@@ -1253,16 +1436,24 @@ export default function CharacterSetup() {
     setSaving(true);
 
     try {
-      const conMod = mod(scores?.CON || 10);
+      // Apply 2024 background ability bonuses before computing derived stats
+      const finalScores = { ...scores };
+      if (is2024 && backgroundData?.abilityBonuses) {
+        for (const [ability, bonus] of Object.entries(backgroundData.abilityBonuses)) {
+          finalScores[ability] = (finalScores[ability] || 10) + bonus;
+        }
+      }
+
+      const conMod = mod(finalScores?.CON || 10);
       const hp = classData ? classData.hitDie + conMod : 10;
-      const ac = 10 + mod(scores?.DEX || 10);
+      const ac = 10 + mod(finalScores?.DEX || 10);
       const bgSkills = backgroundData?.skillProficiencies || [];
       const allSkills = [...new Set([...selectedSkills, ...bgSkills])];
 
       // 1. Update ability scores
       await invoke('update_ability_scores', {
         characterId,
-        payload: ABILITIES.map(a => ({ ability: a, score: scores?.[a] || 10 })),
+        payload: ABILITIES.map(a => ({ ability: a, score: finalScores?.[a] || 10 })),
       });
 
       // 2. Update saving throws
@@ -1294,7 +1485,7 @@ export default function CharacterSetup() {
           race: overview.race || '',
           subrace: overview.subrace || '',
           primary_class: overview.primary_class || '',
-          primary_subclass: overview.primary_subclass || '',
+          primary_subclass: selectedSubclass || overview.primary_subclass || '',
           level: 1,
           background: selectedBackground || overview.background || '',
           alignment: overview.alignment || '',
@@ -1323,7 +1514,9 @@ export default function CharacterSetup() {
 
       // 5. Add starting equipment from class
       if (classData?.startingEquipment) {
+        const autoEquipTypes = ['weapon', 'armor', 'shield'];
         for (const item of classData.startingEquipment) {
+          const shouldEquip = autoEquipTypes.includes(item.item_type?.toLowerCase());
           await invoke('add_item', {
             characterId,
             payload: {
@@ -1335,7 +1528,7 @@ export default function CharacterSetup() {
               description: '',
               attunement: false,
               attuned: false,
-              equipped: false,
+              equipped: shouldEquip,
               equipment_slot: '',
               stat_modifiers: null,
               rarity: null,
@@ -1452,7 +1645,153 @@ export default function CharacterSetup() {
         </div>
       </div>
 
+      {/* Quick Build Banner */}
+      {!showQuickBuild && (
+        <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: 620, padding: '0 24px', flexShrink: 0 }}>
+          <motion.button
+            onClick={() => setShowQuickBuild(true)}
+            whileHover={{ y: -1, boxShadow: `0 4px 20px rgba(201,168,76,0.25)` }}
+            whileTap={{ scale: 0.99 }}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+              padding: '14px 20px', borderRadius: 12, cursor: 'pointer',
+              background: 'linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(240,216,120,0.04) 100%)',
+              border: '1.5px solid rgba(201,168,76,0.3)',
+              marginBottom: 16, transition: 'all 0.2s',
+            }}
+          >
+            <div style={{
+              width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: `linear-gradient(135deg, ${accent}, #f0d878)`,
+              boxShadow: `0 0 12px rgba(201,168,76,0.3)`,
+              flexShrink: 0,
+            }}>
+              <Zap size={18} style={{ color: '#12101c' }} />
+            </div>
+            <div style={{ flex: 1, textAlign: 'left' }}>
+              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 14, color: '#efe0c0', fontWeight: 700, letterSpacing: '0.04em' }}>
+                Quick Build — One-click character
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.4)', marginTop: 2 }}>
+                Create a fully equipped, ready-to-play character in seconds
+              </div>
+            </div>
+            <ChevronRight size={16} style={{ color: accent, opacity: 0.5, flexShrink: 0 }} />
+          </motion.button>
+        </div>
+      )}
+
+      {/* Quick Build Expanded Panel */}
+      <AnimatePresence>
+        {showQuickBuild && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: 620, padding: '0 24px', overflow: 'hidden', flexShrink: 0, flex: 1, overflowY: 'auto' }}
+          >
+            <div style={{
+              borderRadius: 14, padding: '24px 20px',
+              background: 'rgba(11,9,20,0.95)',
+              border: '1.5px solid rgba(201,168,76,0.3)',
+              boxShadow: '0 0 30px rgba(201,168,76,0.06), inset 0 1px 0 rgba(201,168,76,0.08)',
+              marginBottom: 16,
+            }}>
+              {/* Header */}
+              <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 48, height: 48, borderRadius: 14,
+                  background: `linear-gradient(135deg, ${accent}, #f0d878)`,
+                  boxShadow: `0 0 24px rgba(201,168,76,0.3)`,
+                  marginBottom: 12,
+                }}>
+                  <Zap size={24} style={{ color: '#12101c' }} />
+                </div>
+                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 20, color: '#efe0c0', marginBottom: 4, fontWeight: 700 }}>
+                  Quick Build
+                </h2>
+                <p style={{ fontSize: 12, color: 'rgba(200,175,130,0.4)', maxWidth: 380, margin: '0 auto' }}>
+                  Create a ready-to-play character in seconds — fully equipped with gear, features, spells, and backstory.
+                </p>
+              </div>
+
+              {/* Character Grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: 10,
+                marginBottom: 16,
+              }}>
+                {PREMADE_CHARACTERS.map(template => (
+                  <motion.button
+                    key={template.id}
+                    onClick={() => handleQuickBuild(template)}
+                    disabled={quickBuildBusy}
+                    whileHover={!quickBuildBusy ? { y: -3, boxShadow: `0 6px 20px rgba(201,168,76,0.2)` } : {}}
+                    whileTap={!quickBuildBusy ? { scale: 0.97 } : {}}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                      padding: '16px 10px 14px', borderRadius: 12, cursor: quickBuildBusy ? 'wait' : 'pointer',
+                      background: 'rgba(201,168,76,0.04)',
+                      border: '1px solid rgba(201,168,76,0.15)',
+                      transition: 'all 0.2s',
+                      opacity: quickBuildBusy ? 0.5 : 1,
+                    }}
+                    onMouseEnter={e => { if (!quickBuildBusy) e.currentTarget.style.borderColor = `${accent}50`; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(201,168,76,0.15)'; }}
+                  >
+                    <span style={{ fontSize: 28, lineHeight: 1 }}>{template.icon}</span>
+                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: 12, color: '#efe0c0', fontWeight: 600, textAlign: 'center', letterSpacing: '0.02em' }}>
+                      {template.name}
+                    </div>
+                    <div style={{ fontSize: 10, color: 'rgba(200,175,130,0.35)', fontFamily: 'var(--font-heading)', letterSpacing: '0.04em' }}>
+                      {template.race} {template.className}
+                    </div>
+                    <div style={{ fontSize: 9, color: 'rgba(200,175,130,0.25)', textAlign: 'center', lineHeight: 1.4, marginTop: 2, minHeight: 26 }}>
+                      {template.flavor}
+                    </div>
+                    <div style={{
+                      display: 'flex', gap: 6, marginTop: 4, fontSize: 9, fontFamily: 'var(--font-mono)', color: 'rgba(200,175,130,0.2)',
+                    }}>
+                      <span>HP {template.hp}</span>
+                      <span>AC {template.ac}</span>
+                    </div>
+                    <div style={{
+                      marginTop: 6, padding: '4px 14px', borderRadius: 6,
+                      background: `linear-gradient(135deg, ${accent}, #f0d878)`,
+                      fontFamily: 'var(--font-heading)', fontSize: 10, fontWeight: 700,
+                      color: '#12101c', letterSpacing: '0.06em',
+                    }}>
+                      {quickBuildBusy ? 'BUILDING...' : 'CREATE'}
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+
+              {/* Collapse button */}
+              <div style={{ textAlign: 'center' }}>
+                <button
+                  onClick={() => setShowQuickBuild(false)}
+                  style={{
+                    border: 'none', background: 'none', cursor: 'pointer',
+                    color: 'rgba(200,175,130,0.3)', fontFamily: 'var(--font-heading)',
+                    fontSize: 11, letterSpacing: '0.05em', padding: '6px 16px',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.color = 'rgba(200,175,130,0.55)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(200,175,130,0.3)'}
+                >
+                  Close Quick Build — use step-by-step wizard instead
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Content */}
+      {!showQuickBuild && (<>
       <div style={{ position: 'relative', zIndex: 10, flex: 1, width: '100%', maxWidth: 620, padding: '0 24px', overflowY: 'auto', overflowX: 'hidden' }}>
         <AnimatePresence mode="wait">
           <motion.div
@@ -1488,6 +1827,9 @@ export default function CharacterSetup() {
             )}
             {currentStep.id === 'skills' && (
               <StepSkills classData={classData} backgroundData={backgroundData} selectedSkills={selectedSkills} setSelectedSkills={setSelectedSkills} scores={scores} />
+            )}
+            {currentStep.id === 'subclass' && (
+              <StepSubclass classData={classData} selected={selectedSubclass} setSelected={setSelectedSubclass} />
             )}
             {currentStep.id === 'summary' && (
               <StepReviewSummary
@@ -1544,6 +1886,7 @@ export default function CharacterSetup() {
           </motion.button>
         </div>
       )}
+      </>)}
 
       {/* Version */}
       <div style={{ position: 'fixed', bottom: 12, right: 16, fontFamily: 'var(--font-heading)', fontSize: 9, letterSpacing: '0.1em', color: 'rgba(200,175,130,0.12)' }}>

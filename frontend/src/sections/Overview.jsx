@@ -11,6 +11,7 @@ import { getSpells } from '../api/spells';
 import { useAutosave } from '../hooks/useAutosave';
 import SaveIndicator from '../components/SaveIndicator';
 import HelpTooltip from '../components/HelpTooltip';
+import RuleTooltip from '../components/RuleTooltip';
 import { useRuleset } from '../contexts/RulesetContext';
 import { useCampaignSyncSafe } from '../contexts/CampaignSyncContext';
 import { HELP } from '../data/helpText';
@@ -44,6 +45,29 @@ function calcAutoHP(className, level, conMod) {
   return Math.max(1, hpAtOne + hpAfterOne);
 }
 
+// Extracted outside the component to prevent focus loss on re-render
+function SectionToggle({ id, title, summary, icon: CardIcon, helpTooltip, rightContent, children, collapsedSections, toggleCollapse }) {
+  const isCollapsed = collapsedSections.has(id);
+  return (
+    <>
+      <button
+        onClick={() => toggleCollapse(id)}
+        className="w-full flex items-center gap-2 text-left group mb-1"
+      >
+        {isCollapsed ? <ChevronRight size={14} className="text-amber-200/30 flex-shrink-0" /> : <ChevronDown size={14} className="text-amber-200/30 flex-shrink-0" />}
+        {CardIcon && <CardIcon size={15} className="text-gold/60 flex-shrink-0" />}
+        <h3 className="font-display text-amber-100 flex-shrink-0">{title}</h3>
+        {helpTooltip}
+        {isCollapsed && summary && (
+          <span className="text-xs text-amber-200/35 ml-2 truncate font-mono">{summary}</span>
+        )}
+        {!isCollapsed && rightContent && <span className="ml-auto">{rightContent}</span>}
+      </button>
+      {!isCollapsed && children}
+    </>
+  );
+}
+
 export default function Overview({ characterId, character, onCharacterUpdate, onLevelUp, activeConditions = [] }) {
   const { PROFICIENCY_BONUS, SKILLS, RACES, CLASSES, CONDITIONS, EXHAUSTION_LEVELS, ancestryLabel } = useRuleset();
   const syncCtx = useCampaignSyncSafe();
@@ -62,6 +86,37 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const [diceHintDismissed, setDiceHintDismissed] = useState(() => !!localStorage.getItem('codex-dice-hint-dismissed'));
   const prevLevelRef = useRef(null);
   const subclassTimeoutRef = useRef(null);
+
+  // Collapsible sections state (Phase 2)
+  const DEFAULT_COLLAPSED = new Set(['multiclass', 'passive-skills', 'damage-mods', 'proficiencies', 'features', 'notes', 'goals']);
+  const [collapsedSections, setCollapsedSections] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`codex-overview-collapsed-${characterId}`);
+      if (stored) return new Set(JSON.parse(stored));
+    } catch {}
+    return new Set(DEFAULT_COLLAPSED);
+  });
+
+  const toggleCollapse = useCallback((section) => {
+    setCollapsedSections(prev => {
+      const next = new Set(prev);
+      if (next.has(section)) next.delete(section);
+      else next.add(section);
+      try { localStorage.setItem(`codex-overview-collapsed-${characterId}`, JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  }, [characterId]);
+
+  const collapseAll = useCallback(() => {
+    const all = new Set(['multiclass', 'passive-skills', 'damage-mods', 'proficiencies', 'features', 'notes', 'goals', 'ability-scores', 'saving-throws', 'skills', 'hp', 'hit-dice', 'inspiration-exhaustion']);
+    setCollapsedSections(all);
+    try { localStorage.setItem(`codex-overview-collapsed-${characterId}`, JSON.stringify([...all])); } catch {}
+  }, [characterId]);
+
+  const expandAll = useCallback(() => {
+    setCollapsedSections(new Set());
+    try { localStorage.setItem(`codex-overview-collapsed-${characterId}`, JSON.stringify([])); } catch {}
+  }, [characterId]);
 
   const loadData = async () => {
     try {
@@ -119,6 +174,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     return () => {
       if (subclassTimeoutRef.current) clearTimeout(subclassTimeoutRef.current);
       if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+      if (diceResultTimerRef.current) clearTimeout(diceResultTimerRef.current);
     };
   }, []);
 
@@ -164,6 +220,16 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const smartDamageAppliedRef = useRef(false);
   const [lastHpAction, setLastHpAction] = useState(null); // { prevHp, prevTempHp, label, timestamp }
   const undoTimerRef = useRef(null);
+
+  // ── Dice Roll Center Popup ──
+  const [diceResult, setDiceResult] = useState(null); // { label, d20, mod, total, nat20, nat1, mode }
+  const diceResultTimerRef = useRef(null);
+
+  // ── Value-change flash tracking ──
+  const prevSaveModsRef = useRef({});
+  const prevSkillModsRef = useRef({});
+  const [flashedSaves, setFlashedSaves] = useState({});
+  const [flashedSkills, setFlashedSkills] = useState({});
 
   // ── Automation Engine State ──
   const [showHPCalc, setShowHPCalc] = useState(false);
@@ -430,7 +496,8 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const applyHeal = () => {
     const heal = parseInt(healAmount) || 0;
     if (heal <= 0) return;
-    const newCurrent = Math.min(overview.max_hp, overview.current_hp + heal);
+    const healCap = condEffects.hpMaxHalved ? Math.floor(overview.max_hp / 2) : overview.max_hp;
+    const newCurrent = Math.min(healCap, overview.current_hp + heal);
     const actualHeal = newCurrent - overview.current_hp;
     // Save undo state
     setLastHpAction({ prevHp: overview.current_hp, prevTempHp: overview.temp_hp || 0, label: `${actualHeal} heal` });
@@ -473,23 +540,23 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     const hasAdvDis = advantage || disadvantage;
     const d20b = hasAdvDis ? Math.floor(Math.random() * 20) + 1 : d20a;
     let d20;
+    let mode = '';
     if (advantage && disadvantage) {
-      d20 = d20a; // Cancel out per 5e rules
+      d20 = d20a;
+      mode = 'ADV+DIS cancel';
     } else if (advantage) {
       d20 = Math.max(d20a, d20b);
+      mode = `ADV: ${d20a}, ${d20b}`;
     } else if (disadvantage) {
       d20 = Math.min(d20a, d20b);
+      mode = `DIS: ${d20a}, ${d20b}`;
     } else {
       d20 = d20a;
     }
     const total = d20 + mod;
-    const natText = d20 === 20 ? ' — NAT 20!' : d20 === 1 ? ' — NAT 1!' : '';
-    const modeText = advantage && disadvantage ? ' [ADV+DIS cancel]' : advantage ? ` [ADV: ${d20a}, ${d20b}]` : disadvantage ? ` [DIS: ${d20a}, ${d20b}]` : '';
-    toast(`${label}: ${d20} + (${modStr(mod)}) = ${total}${natText}${modeText}`, {
-      icon: '🎲',
-      duration: 4000,
-      style: { background: d20 === 20 ? '#1a2e1a' : d20 === 1 ? '#2e1a1a' : '#1a1520', color: '#fde68a', border: '1px solid rgba(201,168,76,0.3)', fontFamily: 'monospace' },
-    });
+    if (diceResultTimerRef.current) clearTimeout(diceResultTimerRef.current);
+    setDiceResult({ label, d20, mod, total, nat20: d20 === 20, nat1: d20 === 1, mode });
+    diceResultTimerRef.current = setTimeout(() => setDiceResult(null), 3000);
   };
 
   const rollAbilityCheck = (ability, mod) => {
@@ -498,15 +565,21 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
 
   const rollSavingThrow = (ability, mod, isAutoFail, hasDis) => {
     if (isAutoFail) {
-      toast(`${ABILITY_NAMES[ability]} Save: AUTO-FAIL`, { icon: '💀', duration: 3000, style: { background: '#2e1a1a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)', fontFamily: 'monospace' } });
+      // Show auto-fail in the dice result popup AND toast
+      if (diceResultTimerRef.current) clearTimeout(diceResultTimerRef.current);
+      setDiceResult({ label: `${ABILITY_NAMES[ability]} Save`, d20: 0, mod: 0, total: 0, nat20: false, nat1: false, mode: 'AUTO-FAIL (condition)', autoFail: true });
+      diceResultTimerRef.current = setTimeout(() => setDiceResult(null), 3000);
       return;
     }
-    rollDice(`${ABILITY_NAMES[ability]} Save`, mod, { disadvantage: hasDis });
+    // Check for exhaustion 3+ save disadvantage on all saves
+    const disFromAll = condEffects.saveDisadvantageAll;
+    rollDice(`${ABILITY_NAMES[ability]} Save`, mod, { disadvantage: hasDis || disFromAll });
   };
 
-  const rollSkillCheck = (skillName, ability, mod) => {
-    const hasDis = condEffects.checkDisadvantage;
-    rollDice(`${skillName} (${ability})`, mod, { disadvantage: hasDis });
+  const rollSkillCheck = (skillName, ability, mod, { advantage = false, disadvantage = false } = {}) => {
+    const condDis = condEffects.checkDisadvantage;
+    // Merge manual and condition-based advantage/disadvantage
+    rollDice(`${skillName} (${ability})`, mod, { disadvantage: condDis || disadvantage, advantage });
   };
 
   /** Shared helper: apply all cascading effects of a level change to `updated` object (mutates it). */
@@ -732,9 +805,17 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     return map;
   }, [saves]);
 
-  const condEffects = useMemo(() => computeConditionEffects(activeConditions), [activeConditions]);
+  const condEffects = useMemo(() => computeConditionEffects(activeConditions, overview?.exhaustion_level || 0), [activeConditions, overview?.exhaustion_level]);
+  const effectiveMaxHP = condEffects.hpMaxHalved ? Math.floor((overview?.max_hp || 0) / 2) : (overview?.max_hp || 0);
 
-  const profBonus = PROFICIENCY_BONUS[overview?.level] || 2;
+  const { multiclassData, totalLevel } = useMemo(() => {
+    let mc = [];
+    try { mc = JSON.parse(overview?.multiclass_data || '[]'); } catch { mc = []; }
+    if (!Array.isArray(mc)) mc = [];
+    return { multiclassData: mc, totalLevel: getTotalLevel(overview?.level, mc) };
+  }, [overview?.multiclass_data, overview?.level]);
+
+  const profBonus = PROFICIENCY_BONUS[totalLevel] || 2;
 
   // Proficiency count: saves + skills with proficiency
   const proficiencyCount = useMemo(() => {
@@ -804,6 +885,105 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     return { capacity: str * 15, heavy: str * 10, encumbered: str * 5 };
   }, [abilityMap.STR]);
 
+  // ── Collapsed section summaries ──
+  const abilitySummary = useMemo(() => {
+    return ABILITIES.map(ab => {
+      const score = (abilityMap[ab] || 10) + (itemStatBonuses[ab] || 0);
+      return `${ab} ${modStr(calcMod(score))}`;
+    }).join(' \u00B7 ');
+  }, [abilityMap, itemStatBonuses]);
+
+  const saveSummary = useMemo(() => {
+    const profs = saves.filter(s => s.proficient).length;
+    return `${profs} proficiencie${profs !== 1 ? 's' : ''}${itemSaveBonus > 0 ? ` \u00B7 +${itemSaveBonus} from items` : ''}`;
+  }, [saves, itemSaveBonus]);
+
+  const skillSummary = useMemo(() => {
+    const profs = skills.filter(s => s.proficient).length;
+    const experts = skills.filter(s => s.expertise).length;
+    return `${profs} proficient${experts > 0 ? ` \u00B7 ${experts} expertise` : ''}`;
+  }, [skills]);
+
+  const passiveSummary = `Perc ${passivePerc} \u00B7 Invest ${passiveInvestigation} \u00B7 Insight ${passiveInsight}`;
+
+  const hpSummary = useMemo(() => {
+    if (!overview) return '';
+    const parts = [`${overview.current_hp}/${effectiveMaxHP} HP`];
+    if (overview.temp_hp > 0) parts.push(`${overview.temp_hp} Temp`);
+    return parts.join(' \u00B7 ');
+  }, [overview?.current_hp, effectiveMaxHP, overview?.temp_hp]);
+
+  const hitDiceSummary = useMemo(() => {
+    if (!overview?.hit_dice_total) return 'No hit dice set';
+    return `${overview.hit_dice_total} (${overview.hit_dice_used || 0} used)`;
+  }, [overview?.hit_dice_total, overview?.hit_dice_used]);
+
+  const inspirationExhaustionSummary = useMemo(() => {
+    const parts = [];
+    parts.push(overview?.inspiration ? 'Inspired' : 'Not inspired');
+    parts.push(overview?.exhaustion_level > 0 ? `Exhaustion ${overview.exhaustion_level}` : 'No exhaustion');
+    return parts.join(' \u00B7 ');
+  }, [overview?.inspiration, overview?.exhaustion_level]);
+
+  const damageModSummary = useMemo(() => {
+    const r = parsedDamageModifiers.resistances.length;
+    const i = parsedDamageModifiers.immunities.length;
+    const v = parsedDamageModifiers.vulnerabilities.length;
+    if (r + i + v === 0) return 'None';
+    const parts = [];
+    if (r > 0) parts.push(`${r} resistance${r > 1 ? 's' : ''}`);
+    if (i > 0) parts.push(`${i} immunit${i > 1 ? 'ies' : 'y'}`);
+    if (v > 0) parts.push(`${v} vulnerabilit${v > 1 ? 'ies' : 'y'}`);
+    return parts.join(' \u00B7 ');
+  }, [parsedDamageModifiers]);
+
+  // ── Flash detection: track saving throw & skill modifier changes ──
+  useEffect(() => {
+    if (!saves.length || !abilities.length) return;
+    const currentSaveMods = {};
+    ABILITIES.forEach(ab => {
+      const score = abilityMap[ab] || 10;
+      const itemBonus = itemStatBonuses[ab] || 0;
+      const prof = saveMap[ab] || false;
+      currentSaveMods[ab] = calcMod(score + itemBonus) + (prof ? profBonus : 0) + itemSaveBonus;
+    });
+    const prev = prevSaveModsRef.current;
+    if (Object.keys(prev).length > 0) {
+      const changed = {};
+      for (const ab of ABILITIES) {
+        if (prev[ab] !== undefined && prev[ab] !== currentSaveMods[ab]) changed[ab] = true;
+      }
+      if (Object.keys(changed).length > 0) {
+        setFlashedSaves(changed);
+        setTimeout(() => setFlashedSaves({}), 1200);
+      }
+    }
+    prevSaveModsRef.current = currentSaveMods;
+  }, [abilityMap, saveMap, profBonus, itemSaveBonus, itemStatBonuses]);
+
+  useEffect(() => {
+    if (!skills.length || !abilities.length) return;
+    const currentSkillMods = {};
+    for (const sk of skills) {
+      const ability = Object.entries(SKILLS).find(([name]) => name === sk.name)?.[1] || 'STR';
+      const score = abilityMap[ability] || 10;
+      const skillItemBonus = itemStatBonuses[ability] || 0;
+      currentSkillMods[sk.name] = calcMod(score + skillItemBonus) + (sk.expertise ? profBonus * 2 : sk.proficient ? profBonus : 0);
+    }
+    const prev = prevSkillModsRef.current;
+    if (Object.keys(prev).length > 0) {
+      const changed = {};
+      for (const name of Object.keys(currentSkillMods)) {
+        if (prev[name] !== undefined && prev[name] !== currentSkillMods[name]) changed[name] = true;
+      }
+      if (Object.keys(changed).length > 0) {
+        setFlashedSkills(changed);
+        setTimeout(() => setFlashedSkills({}), 1200);
+      }
+    }
+    prevSkillModsRef.current = currentSkillMods;
+  }, [abilityMap, skills, profBonus, itemStatBonuses, SKILLS]);
+
   // Death save outcome toasts
   useEffect(() => {
     if (!overview) return;
@@ -845,13 +1025,77 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     return <div className="text-amber-200/40">Loading character sheet...</div>;
   }
 
-  const hpPercent = overview.max_hp > 0 ? (overview.current_hp / overview.max_hp) * 100 : 0;
+  const hpPercent = effectiveMaxHP > 0 ? (Math.min(overview.current_hp, effectiveMaxHP) / effectiveMaxHP) * 100 : 0;
+
+  // SectionToggle is now defined outside the component to prevent focus loss on re-render
+
   return (
     <div className="space-y-6 max-w-none">
+      {/* Dice Roll Center Popup */}
+      {diceResult && (
+        <div
+          onClick={() => { setDiceResult(null); if (diceResultTimerRef.current) clearTimeout(diceResultTimerRef.current); }}
+          style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', animation: 'dice-fade-in 0.15s ease-out' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              padding: '24px 36px', borderRadius: '16px', textAlign: 'center', minWidth: '260px',
+              background: diceResult.autoFail ? 'linear-gradient(135deg, #2e1a1a, #1a0a0a)' : diceResult.nat20 ? 'linear-gradient(135deg, #1a2e1a, #0a1a0a)' : diceResult.nat1 ? 'linear-gradient(135deg, #2e1a1a, #1a0a0a)' : 'linear-gradient(135deg, #1a1520, #0c0a14)',
+              border: `1px solid ${diceResult.autoFail ? 'rgba(239,68,68,0.4)' : diceResult.nat20 ? 'rgba(74,222,128,0.4)' : diceResult.nat1 ? 'rgba(239,68,68,0.4)' : 'rgba(201,168,76,0.3)'}`,
+              boxShadow: diceResult.autoFail ? '0 0 40px rgba(239,68,68,0.2)' : diceResult.nat20 ? '0 0 40px rgba(74,222,128,0.2)' : diceResult.nat1 ? '0 0 40px rgba(239,68,68,0.2)' : '0 0 40px rgba(201,168,76,0.1)',
+              animation: 'dice-scale-in 0.2s ease-out',
+            }}
+          >
+            <div style={{ fontSize: '12px', color: 'rgba(201,168,76,0.7)', fontFamily: 'var(--font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+              {diceResult.label}
+            </div>
+            <div style={{ fontSize: '48px', fontWeight: 800, fontFamily: 'var(--font-display)', color: diceResult.autoFail ? '#ef4444' : diceResult.nat20 ? '#4ade80' : diceResult.nat1 ? '#ef4444' : '#fde68a', lineHeight: 1 }}>
+              {diceResult.autoFail ? 'FAIL' : diceResult.total}
+            </div>
+            {!diceResult.autoFail && (
+              <div style={{ fontSize: '14px', color: 'rgba(253,230,138,0.6)', fontFamily: 'monospace', marginTop: '8px' }}>
+                {diceResult.d20} + ({modStr(diceResult.mod)})
+              </div>
+            )}
+            {(diceResult.nat20 || diceResult.nat1) && (
+              <div style={{ fontSize: '16px', fontWeight: 700, fontFamily: 'var(--font-display)', marginTop: '6px', color: diceResult.nat20 ? '#4ade80' : '#ef4444' }}>
+                {diceResult.nat20 ? 'NAT 20!' : 'NAT 1!'}
+              </div>
+            )}
+            {diceResult.mode && (
+              <div style={{ fontSize: '11px', color: 'rgba(253,230,138,0.4)', marginTop: '4px' }}>
+                [{diceResult.mode}]
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Flash animation + dice popup keyframes */}
+      <style>{`
+        @keyframes value-flash {
+          0% { background-color: rgba(201,168,76,0.3); }
+          100% { background-color: transparent; }
+        }
+        @keyframes dice-fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes dice-scale-in {
+          from { transform: scale(0.8); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-display text-amber-100">Character Sheet</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-display text-amber-100">Character Sheet</h2>
+            <button onClick={collapseAll} className="text-[10px] text-amber-200/30 hover:text-amber-200/60 transition-colors px-1.5 py-0.5 rounded hover:bg-white/[0.03]" title="Collapse all sections">Collapse All</button>
+            <button onClick={expandAll} className="text-[10px] text-amber-200/30 hover:text-amber-200/60 transition-colors px-1.5 py-0.5 rounded hover:bg-white/[0.03]" title="Expand all sections">Expand All</button>
+          </div>
           <p className="text-xs text-amber-200/40 mt-1">Your character's core stats, abilities, and vitals. This is the hub for everything that defines who your character is mechanically.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -941,9 +1185,11 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             <span className="text-sm font-display text-red-300 font-semibold">Active Conditions</span>
             <div className="flex gap-1.5 ml-2">
               {activeConditions.map(name => (
-                <span key={name} className="text-xs bg-red-900/50 text-red-200 px-2 py-0.5 rounded border border-red-500/30">
-                  {name}
-                </span>
+                <RuleTooltip key={name} term={name}>
+                  <span className="text-xs bg-red-900/50 text-red-200 px-2 py-0.5 rounded border border-red-500/30">
+                    {name}
+                  </span>
+                </RuleTooltip>
               ))}
             </div>
           </div>
@@ -991,6 +1237,26 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             {condEffects.autoCritMelee && (
               <div className="text-xs text-orange-300/90 flex items-center gap-1.5">
                 <span className="text-orange-500">&#x26A0;</span> Melee hits auto-crit against you
+              </div>
+            )}
+            {condEffects.speedHalved && condEffects.speedOverride !== 0 && (
+              <div className="text-xs text-orange-300/90 flex items-center gap-1.5">
+                <span className="text-orange-500">&#x25BC;</span> Speed halved (Exhaustion)
+              </div>
+            )}
+            {condEffects.saveDisadvantageAll && (
+              <div className="text-xs text-red-300/90 flex items-center gap-1.5">
+                <span className="text-red-500">&#x25BC;</span> Disadvantage on all saving throws (Exhaustion)
+              </div>
+            )}
+            {condEffects.hpMaxHalved && (
+              <div className="text-xs text-red-300/90 flex items-center gap-1.5">
+                <span className="text-red-500">&#x2716;</span> Hit point maximum halved (Exhaustion)
+              </div>
+            )}
+            {condEffects.dead && (
+              <div className="text-xs text-red-400 font-bold flex items-center gap-1.5">
+                <Skull size={12} className="text-red-500" /> DEAD — Exhaustion level 6
               </div>
             )}
           </div>
@@ -1105,16 +1371,23 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
 
           return (
             <div className="mt-4 pt-4 border-t border-gold/10">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-xs text-amber-200/50 font-display tracking-wider uppercase">Multiclass</div>
+              <button
+                onClick={() => toggleCollapse('multiclass')}
+                className="w-full flex items-center justify-between mb-2"
+              >
+                <div className="flex items-center gap-2">
+                  {collapsedSections.has('multiclass') ? <ChevronRight size={12} className="text-amber-200/30" /> : <ChevronDown size={12} className="text-amber-200/30" />}
+                  <div className="text-xs text-amber-200/50 font-display tracking-wider uppercase">Multiclass</div>
+                </div>
                 {mc.length > 0 && (
                   <div className="text-xs text-amber-200/40">
                     Total Level: {totalLevel} ({overview.primary_class || 'Primary'} {overview.level}
                     {mc.map((cls, i) => ` + ${cls.class || '?'} ${cls.level || '?'}`).join('')})
                   </div>
                 )}
-              </div>
+              </button>
 
+              {!collapsedSections.has('multiclass') && (<>
               {mc.length > 0 && (
                 <div className="space-y-2 mb-3">
                   {mc.map((cls, i) => (
@@ -1173,6 +1446,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                   </div>
                 </div>
               )}
+              </>)}
             </div>
           );
         })()}
@@ -1198,7 +1472,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           )}
           {/* Ability Scores */}
           <div className="card">
-            <h3 className="font-display text-amber-100 mb-4">Ability Scores<HelpTooltip text={HELP.modifier} /></h3>
+            <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="ability-scores" title="Ability Scores" summary={abilitySummary} helpTooltip={<HelpTooltip text={HELP.modifier} />}>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
               {ABILITIES.map(ab => {
                 const score = abilityMap[ab] || 10;
@@ -1208,27 +1482,31 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 return (
                   <div key={ab} className={`text-center p-4 rounded-lg bg-[#0a0a10] border ${itemBonus ? 'border-green-500/25' : 'border-gold/15'} hover:border-gold/30 transition-all group/ab cursor-pointer`} onClick={() => rollAbilityCheck(ab, mod)} title={`Click to roll ${ABILITY_NAMES[ab]} check${itemBonus ? ` (includes ${itemBonus > 0 ? '+' : ''}${itemBonus} from items)` : ''}`}>
                     <div className="text-[11px] text-amber-200/50 font-display tracking-widest mb-2">{ab}</div>
-                    <div className="text-3xl font-bold text-gold mb-1 hover:text-amber-300 hover:scale-110 transition-all relative">
-                      {modStr(mod)}
-                      <Dices size={12} className="absolute -top-1 -right-1 text-gold/0 group-hover/ab:text-gold/70 transition-all duration-200 group-hover/ab:animate-pulse" />
+                    {/* Base score — big yellow number (editable) */}
+                    <div className="relative">
+                      <input
+                        type="number" min={1} max={30}
+                        className="text-3xl font-bold text-gold text-center w-16 mx-auto hover:text-amber-300 transition-all"
+                        aria-label={`${ABILITY_NAMES[ab]} score`}
+                        style={{ border: 'none', background: 'transparent', outline: 'none', boxShadow: 'none' }}
+                        value={localAbilities[ab] ?? score}
+                        onClick={e => e.stopPropagation()}
+                        onChange={e => setLocalAbilities(prev => ({ ...prev, [ab]: e.target.value }))}
+                        onBlur={e => {
+                          const val = Math.max(1, Math.min(30, parseInt(e.target.value.trim()) || 10));
+                          setLocalAbilities(prev => ({ ...prev, [ab]: val }));
+                          updateAbility(ab, val);
+                        }}
+                      />
+                      <Dices size={12} className="absolute top-0 -right-1 text-gold/0 group-hover/ab:text-gold/70 transition-all duration-200 group-hover/ab:animate-pulse" />
                     </div>
-                    <input
-                      type="number" min={1} max={30}
-                      className="input text-center w-16 mx-auto text-sm"
-                      aria-label={`${ABILITY_NAMES[ab]} score`}
-                      style={{ border: 'none', background: 'transparent', outline: 'none', boxShadow: 'none' }}
-                      value={localAbilities[ab] ?? score}
-                      onClick={e => e.stopPropagation()}
-                      onChange={e => setLocalAbilities(prev => ({ ...prev, [ab]: e.target.value }))}
-                      onBlur={e => {
-                        const val = Math.max(1, Math.min(30, parseInt(e.target.value.trim()) || 10));
-                        setLocalAbilities(prev => ({ ...prev, [ab]: val }));
-                        updateAbility(ab, val);
-                      }}
-                    />
+                    {/* Modifier below */}
+                    <div className={`text-lg font-semibold mt-1 ${mod >= 0 ? 'text-amber-200/70' : 'text-red-400/80'}`}>
+                      {modStr(mod)}
+                    </div>
                     {itemBonus ? (
                       <div className="text-[10px] text-green-400/70 mt-1" title="Bonus from equipped items">
-                        {ABILITY_NAMES[ab]} +{itemBonus}
+                        +{itemBonus} from gear
                       </div>
                     ) : (
                       <div className="text-[10px] text-amber-200/30 mt-1">{ABILITY_NAMES[ab]}</div>
@@ -1253,18 +1531,18 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 })}
               </div>
             </div>
+            </SectionToggle>
           </div>
 
           {/* Saving Throws */}
           <div className="card">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="font-display text-amber-100">Saving Throws<HelpTooltip text={HELP.savingThrows} /></h3>
-              {proficiencyCount > 0 && (
+            <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="saving-throws" title="Saving Throws" summary={saveSummary} helpTooltip={<HelpTooltip text={HELP.savingThrows} />}
+              rightContent={proficiencyCount > 0 && (
                 <span className="text-[10px] font-display tracking-wide text-gold/60 bg-gold/8 border border-gold/15 px-2 py-0.5 rounded-full">
                   {proficiencyCount} proficienc{proficiencyCount === 1 ? 'y' : 'ies'} active
                 </span>
               )}
-            </div>
+            >
             <p className="text-xs text-amber-200/30 mb-3">
               Click to mark proficiency — adds +{profBonus} to the roll.
               {itemSaveBonus > 0 && <span className="text-green-400/70 ml-1">(+{itemSaveBonus} from items)</span>}
@@ -1298,7 +1576,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 const prof = saveMap[ab] || false;
                 const mod = calcMod(effectiveScore) + (prof ? profBonus : 0) + itemSaveBonus;
                 const isAutoFail = condEffects.autoFailSaves.has(ab);
-                const hasDis = condEffects.saveDisadvantage.has(ab);
+                const hasDis = condEffects.saveDisadvantage.has(ab) || condEffects.saveDisadvantageAll;
                 return (
                   <div
                     key={ab}
@@ -1314,6 +1592,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                     <div className={`prof-circle${prof ? ' active' : ''}`} />
                     <span
                       className={`text-sm font-semibold w-8 text-right transition-colors cursor-pointer hover:scale-110 ${isAutoFail ? 'text-red-400 line-through' : prof ? 'text-gold hover:text-amber-300' : 'text-amber-200/35 hover:text-amber-200/60'}`}
+                      style={flashedSaves[ab] ? { animation: 'value-flash 1.2s ease-out', borderRadius: '4px' } : undefined}
                       onClick={(e) => { e.stopPropagation(); rollSavingThrow(ab, mod, isAutoFail, hasDis); }}
                       title={`Click to roll ${ABILITY_NAMES[ab]} saving throw`}
                     >
@@ -1340,16 +1619,15 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 );
               })}
             </div>
+            </SectionToggle>
           </div>
 
           {/* Skills */}
           <div className="card">
-            <h3 className="font-display text-amber-100 mb-1">
-              Skills
-              {condEffects.checkDisadvantage && (
-                <span className="text-xs text-red-400 font-normal ml-2 bg-red-900/30 px-2 py-0.5 rounded border border-red-500/20">Disadvantage on all checks</span>
-              )}
-            </h3>
+            <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="skills" title="Skills" summary={skillSummary}>
+            {condEffects.checkDisadvantage && (
+              <span className="text-xs text-red-400 font-normal ml-2 bg-red-900/30 px-2 py-0.5 rounded border border-red-500/20">Disadvantage on all checks</span>
+            )}
             {/* Legend */}
             <div className="flex items-center gap-3.5 mb-3 text-[11px] text-amber-200/35">
               <span className="inline-flex items-center gap-1.5">
@@ -1391,6 +1669,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                       className={`text-[13px] font-semibold w-[30px] text-right flex-shrink-0 transition-colors cursor-pointer hover:scale-110 ${
                         state === 'expertise' ? 'text-purple-300 hover:text-purple-200' : state === 'proficient' ? 'text-gold hover:text-amber-300' : 'text-amber-200/35 hover:text-amber-200/60'
                       }`}
+                      style={flashedSkills[skillName] ? { animation: 'value-flash 1.2s ease-out', borderRadius: '4px' } : undefined}
                       onClick={(e) => { e.stopPropagation(); rollSkillCheck(skillName, ability, mod); }}
                       title={`Click to roll ${skillName} check`}
                     >{modStr(mod)}</span>
@@ -1413,11 +1692,12 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 );
               })}
             </div>
+            </SectionToggle>
           </div>
 
           {/* Passive Skills */}
           <div className="card">
-            <h3 className="font-display text-amber-100 mb-3">Passive Skills</h3>
+            <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="passive-skills" title="Passive Skills" summary={passiveSummary}>
             <div className="space-y-2">
               <div className="flex items-center gap-3 py-2 px-3 rounded-lg bg-[#0a0a10] border border-amber-200/8">
                 <Eye size={16} className="text-amber-200/50 flex-shrink-0" />
@@ -1435,6 +1715,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 <span className="text-lg font-display text-amber-100 font-bold">{passiveInsight}</span>
               </div>
             </div>
+            </SectionToggle>
           </div>
         </div>
 
@@ -1445,7 +1726,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             <div className="card text-center border-gold/25 shadow-[0_0_12px_rgba(201,168,76,0.06)]" title={`Proficiency bonus: +${profBonus} (levels ${profBonus === 2 ? '1-4' : profBonus === 3 ? '5-8' : profBonus === 4 ? '9-12' : profBonus === 5 ? '13-16' : '17-20'})`}>
               <div className="text-xs text-gold/70 mb-1 font-semibold">Proficiency<HelpTooltip text={HELP.proficiencyBonus} /></div>
               <div className="text-3xl font-display text-gold font-bold">{modStr(profBonus)}</div>
-              <div className="text-[10px] text-gold/40 mt-0.5">Level {overview.level}</div>
+              <div className="text-[10px] text-gold/40 mt-0.5">Level {totalLevel}</div>
             </div>
             <div className="card text-center group relative" title={`AC Breakdown: Base 10 + DEX mod (${modStr(dexMod)}) = ${10 + dexMod}. Current AC: ${overview.armor_class}${overview.armor_class !== 10 + dexMod ? ' (armor/shield/magic may apply)' : ''}`}>
               <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Shield size={12} /> AC<HelpTooltip text={HELP.ac} /></div>
@@ -1486,6 +1767,11 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                   <div className="text-2xl font-display text-red-400 line-through">{overview.speed}</div>
                   <div className="text-lg font-display text-red-300 font-bold">0 ft</div>
                   <div className="text-[10px] text-red-400/70 mt-0.5">Condition</div>
+                </>
+              ) : condEffects.speedHalved ? (
+                <>
+                  <div className="text-2xl font-display text-orange-400">{Math.floor(overview.speed / 2)}</div>
+                  <div className="text-[10px] text-orange-400/70 mt-0.5">Halved ({overview.speed} base)</div>
                 </>
               ) : (
                 <>
@@ -1609,22 +1895,22 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
 
           {/* HP Section */}
           <div className="card">
-            <div className="flex items-center gap-2 mb-3">
-              <Heart size={16} className="text-red-400" />
-              <h3 className="font-display text-amber-100">Hit Points<HelpTooltip text={HELP.hp} /></h3>
-              <div className="ml-auto flex items-center gap-2">
-                {overview.hp_calc_method !== 'manual' && (
-                  <span className="text-[9px] text-emerald-400/50 bg-emerald-400/8 border border-emerald-400/15 px-1.5 py-0.5 rounded font-display tracking-wide">AUTO</span>
-                )}
-                <button
-                  onClick={() => setShowHPCalc(!showHPCalc)}
-                  className="text-[10px] text-amber-200/40 hover:text-gold transition-colors flex items-center gap-1"
-                  title="Open HP calculator"
-                >
-                  <Calculator size={11} /> {showHPCalc ? 'Hide' : 'Calculate HP'}
-                </button>
-              </div>
-            </div>
+            <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="hp" title="Hit Points" summary={hpSummary} icon={Heart} helpTooltip={<HelpTooltip text={HELP.hp} />}
+              rightContent={
+                <div className="flex items-center gap-2">
+                  {overview.hp_calc_method !== 'manual' && (
+                    <span className="text-[9px] text-emerald-400/50 bg-emerald-400/8 border border-emerald-400/15 px-1.5 py-0.5 rounded font-display tracking-wide">AUTO</span>
+                  )}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowHPCalc(!showHPCalc); }}
+                    className="text-[10px] text-amber-200/40 hover:text-gold transition-colors flex items-center gap-1"
+                    title="Open HP calculator"
+                  >
+                    <Calculator size={11} /> {showHPCalc ? 'Hide' : 'Calculate HP'}
+                  </button>
+                </div>
+              }
+            >
             <div className="grid grid-cols-3 gap-4 mb-3">
               <div>
                 <label className="label">Max HP</label>
@@ -1907,6 +2193,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 </span>
               </div>
             </div>
+            </SectionToggle>
           </div>
 
           {/* Prominent Death Saves - visible at 0 HP */}
@@ -2009,9 +2296,9 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           )}
 
           {/* Hit Dice & Death Saves */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className={`grid grid-cols-1 ${overview.current_hp > 0 ? 'md:grid-cols-2' : ''} gap-6`}>
             <div className="card">
-              <h3 className="font-display text-amber-100 mb-1">Hit Dice<HelpTooltip text={HELP.hitDice} /></h3>
+              <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="hit-dice" title="Hit Dice" summary={hitDiceSummary} helpTooltip={<HelpTooltip text={HELP.hitDice} />}>
               <p className="text-xs text-amber-200/30 mb-3">Spend during short rests to heal. Total = your class die (e.g., "3d10"). Half recover on long rest.</p>
               <div className="flex items-center gap-4">
                 <div>
@@ -2043,145 +2330,147 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                   <input type="number" className="input w-20" min={0} value={overview.hit_dice_used} onChange={e => updateField('hit_dice_used', parseInt(e.target.value) || 0)} />
                 </div>
               </div>
+              </SectionToggle>
             </div>
 
-            <div className="card">
-              <h3 className="font-display text-amber-100 mb-1">Death Saves<HelpTooltip text={HELP.deathSaves} /></h3>
-              <p className="text-xs text-amber-200/30 mb-3">Click circles to track saves when at 0 HP. Three of either = outcome.</p>
-              <div className="flex gap-8">
-                <div>
-                  <label className="label text-emerald-400/70 mb-1.5">Successes</label>
-                  <div className="flex gap-2.5">
-                    {[1,2,3].map(i => (
-                      <button key={i}
-                        onClick={() => updateField('death_save_successes', overview.death_save_successes === i ? i-1 : i)}
-                        className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
-                          i <= overview.death_save_successes
-                            ? 'bg-emerald-500 border-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.3)]'
-                            : 'border-emerald-400/25 hover:border-emerald-400/50'
-                        }`}
-                        title={i <= overview.death_save_successes ? 'Click to remove success' : 'Click to mark success'}
-                      >
-                        {i <= overview.death_save_successes && <Check size={14} className="text-white" strokeWidth={3} />}
-                      </button>
-                    ))}
+            {/* Compact Death Saves — hidden at 0 HP since the prominent panel is showing */}
+            {overview.current_hp > 0 && (
+              <div className="card">
+                <h3 className="font-display text-amber-100 mb-1">Death Saves<HelpTooltip text={HELP.deathSaves} /></h3>
+                <p className="text-xs text-amber-200/30 mb-3">Click circles to track saves when at 0 HP. Three of either = outcome.</p>
+                <div className="flex gap-8">
+                  <div>
+                    <label className="label text-emerald-400/70 mb-1.5">Successes</label>
+                    <div className="flex gap-2.5">
+                      {[1,2,3].map(i => (
+                        <button key={i}
+                          onClick={() => updateField('death_save_successes', overview.death_save_successes === i ? i-1 : i)}
+                          className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
+                            i <= overview.death_save_successes
+                              ? 'bg-emerald-500 border-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.3)]'
+                              : 'border-emerald-400/25 hover:border-emerald-400/50'
+                          }`}
+                          title={i <= overview.death_save_successes ? 'Click to remove success' : 'Click to mark success'}
+                        >
+                          {i <= overview.death_save_successes && <Check size={14} className="text-white" strokeWidth={3} />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="label text-red-400/70 mb-1.5">Failures</label>
+                    <div className="flex gap-2.5">
+                      {[1,2,3].map(i => (
+                        <button key={i}
+                          onClick={() => updateField('death_save_failures', overview.death_save_failures === i ? i-1 : i)}
+                          className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
+                            i <= overview.death_save_failures
+                              ? 'bg-red-500 border-red-400 shadow-[0_0_8px_rgba(239,68,68,0.3)]'
+                              : 'border-red-400/25 hover:border-red-400/50'
+                          }`}
+                          title={i <= overview.death_save_failures ? 'Click to remove failure' : 'Click to mark failure'}
+                        >
+                          {i <= overview.death_save_failures && <span className="text-white text-sm font-bold">&times;</span>}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <label className="label text-red-400/70 mb-1.5">Failures</label>
-                  <div className="flex gap-2.5">
-                    {[1,2,3].map(i => (
-                      <button key={i}
-                        onClick={() => updateField('death_save_failures', overview.death_save_failures === i ? i-1 : i)}
-                        className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
-                          i <= overview.death_save_failures
-                            ? 'bg-red-500 border-red-400 shadow-[0_0_8px_rgba(239,68,68,0.3)]'
-                            : 'border-red-400/25 hover:border-red-400/50'
-                        }`}
-                        title={i <= overview.death_save_failures ? 'Click to remove failure' : 'Click to mark failure'}
-                      >
-                        {i <= overview.death_save_failures && <span className="text-white text-sm font-bold">&times;</span>}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <p className="text-xs text-amber-200/25 mt-3">
+                  At 0 HP, roll d20 each turn: 10+ = success, 9 or less = failure. Nat 20 = regain 1 HP. Nat 1 = two failures.
+                </p>
               </div>
-              <p className="text-xs text-amber-200/25 mt-3">
-                At 0 HP, roll d20 each turn: 10+ = success, 9 or less = failure. Nat 20 = regain 1 HP. Nat 1 = two failures.
-              </p>
-            </div>
+            )}
           </div>
 
-          {/* Inspiration & Exhaustion */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="card">
-              <h3 className="font-display text-amber-100 mb-1">Inspiration<HelpTooltip text={HELP.inspiration} /></h3>
-              <p className="text-xs text-amber-200/30 mb-3">Click the star to toggle. Spend to gain advantage on one roll.</p>
-              <button
-                onClick={() => updateField('inspiration', !overview.inspiration)}
-                className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all ${
-                  overview.inspiration
-                    ? 'bg-gold/20 border-gold text-gold shadow-[0_0_12px_rgba(201,168,76,0.3)]'
-                    : 'border-amber-200/20 text-amber-200/20 hover:border-amber-200/40'
-                }`}
-                title={overview.inspiration ? 'Inspired! Click to spend' : 'No inspiration — click when your DM awards it'}
-              >
-                <Star size={20} fill={overview.inspiration ? 'currentColor' : 'none'} />
-              </button>
-              <p className={`text-xs mt-2 ${overview.inspiration ? 'text-gold/60' : 'text-amber-200/20'}`}>
-                {overview.inspiration ? 'Inspired! Use it for advantage on a roll.' : 'Not inspired'}
-              </p>
-            </div>
-
-            <div className="card">
-              <h3 className="font-display text-amber-100 mb-1">Exhaustion<HelpTooltip text={HELP.exhaustion} /></h3>
-              <p className="text-xs text-amber-200/30 mb-3">Click a level to set. Effects stack. One level removed per long rest.</p>
-              <div className="flex gap-1.5 flex-wrap">
-                {EXHAUSTION_LEVELS.map((effect, i) => {
-                  const lvl = i + 1;
-                  return (
-                    <button key={lvl}
-                      onClick={() => updateField('exhaustion_level', overview.exhaustion_level === lvl ? lvl-1 : lvl)}
-                      className={`w-9 h-9 rounded text-xs font-bold transition-all ${
-                        lvl <= overview.exhaustion_level
-                          ? 'bg-red-700/50 border-2 border-red-500 text-red-200 shadow-[0_0_6px_rgba(239,68,68,0.2)]'
-                          : 'border-2 border-amber-200/15 text-amber-200/25 hover:border-amber-200/30'
-                      }`}
-                      title={`Level ${lvl}: ${effect}`}
-                    >
-                      {lvl}
-                    </button>
-                  );
-                })}
-              </div>
-              {overview.exhaustion_level > 0 && (
-                <div className="mt-3 p-3 rounded-lg border-2 border-red-500/25 bg-red-950/30 shadow-[0_0_16px_rgba(239,68,68,0.06)]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle size={14} className="text-red-400" />
-                    <span className="text-xs font-display text-red-300 font-semibold tracking-wide">
-                      Exhaustion Level {overview.exhaustion_level} — Active Effects
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    {EXHAUSTION_LEVELS.slice(0, overview.exhaustion_level).map((effect, i) => (
-                      <div key={i} className="flex items-start gap-2 text-xs">
-                        <span className={`flex-shrink-0 mt-0.5 w-4 h-4 rounded text-center font-bold leading-4 ${i === overview.exhaustion_level - 1 ? 'bg-red-600/50 text-red-200 border border-red-500/40' : 'bg-red-900/40 text-red-300/60 border border-red-500/20'}`}>{i + 1}</span>
-                        <span className={`${i === overview.exhaustion_level - 1 ? 'text-red-200 font-medium' : 'text-red-300/50'}`}>{effect}</span>
-                      </div>
-                    ))}
-                  </div>
-                  {overview.exhaustion_level >= 4 && (
-                    <div className="mt-2 pt-2 border-t border-red-500/15 text-[10px] text-red-400/70 flex items-center gap-1">
-                      <Skull size={10} /> {overview.exhaustion_level >= 6 ? 'LETHAL — Character dies at level 6!' : 'Dangerously high exhaustion!'}
-                    </div>
-                  )}
+          {/* Inspiration & Exhaustion (combined) */}
+          <div className="card">
+            <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="inspiration-exhaustion" title="Inspiration & Exhaustion" summary={inspirationExhaustionSummary}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Inspiration */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <h4 className="text-sm font-display text-amber-100">Inspiration<HelpTooltip text={HELP.inspiration} /></h4>
                 </div>
-              )}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => updateField('inspiration', !overview.inspiration)}
+                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${
+                      overview.inspiration
+                        ? 'bg-gold/20 border-gold text-gold shadow-[0_0_12px_rgba(201,168,76,0.3)]'
+                        : 'border-amber-200/20 text-amber-200/20 hover:border-amber-200/40'
+                    }`}
+                    title={overview.inspiration ? 'Inspired! Click to spend' : 'No inspiration — click when your DM awards it'}
+                  >
+                    <Star size={18} fill={overview.inspiration ? 'currentColor' : 'none'} />
+                  </button>
+                  <p className={`text-xs ${overview.inspiration ? 'text-gold/60' : 'text-amber-200/20'}`}>
+                    {overview.inspiration ? 'Inspired! Use it for advantage on a roll.' : 'Not inspired — click star when your DM awards it'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Exhaustion */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <h4 className="text-sm font-display text-amber-100">Exhaustion<HelpTooltip text={HELP.exhaustion} /></h4>
+                </div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {EXHAUSTION_LEVELS.map((effect, i) => {
+                    const lvl = i + 1;
+                    return (
+                      <button key={lvl}
+                        onClick={() => updateField('exhaustion_level', overview.exhaustion_level === lvl ? lvl-1 : lvl)}
+                        className={`w-9 h-9 rounded text-xs font-bold transition-all ${
+                          lvl <= overview.exhaustion_level
+                            ? 'bg-red-700/50 border-2 border-red-500 text-red-200 shadow-[0_0_6px_rgba(239,68,68,0.2)]'
+                            : 'border-2 border-amber-200/15 text-amber-200/25 hover:border-amber-200/30'
+                        }`}
+                        title={`Level ${lvl}: ${effect}`}
+                      >
+                        {lvl}
+                      </button>
+                    );
+                  })}
+                </div>
+                {overview.exhaustion_level > 0 && (
+                  <div className="mt-3 p-3 rounded-lg border-2 border-red-500/25 bg-red-950/30 shadow-[0_0_16px_rgba(239,68,68,0.06)]">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle size={14} className="text-red-400" />
+                      <span className="text-xs font-display text-red-300 font-semibold tracking-wide">
+                        Exhaustion Level {overview.exhaustion_level} — Active Effects
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      {EXHAUSTION_LEVELS.slice(0, overview.exhaustion_level).map((effect, i) => (
+                        <div key={i} className="flex items-start gap-2 text-xs">
+                          <span className={`flex-shrink-0 mt-0.5 w-4 h-4 rounded text-center font-bold leading-4 ${i === overview.exhaustion_level - 1 ? 'bg-red-600/50 text-red-200 border border-red-500/40' : 'bg-red-900/40 text-red-300/60 border border-red-500/20'}`}>{i + 1}</span>
+                          <span className={`${i === overview.exhaustion_level - 1 ? 'text-red-200 font-medium' : 'text-red-300/50'}`}>{effect}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {overview.exhaustion_level >= 4 && (
+                      <div className="mt-2 pt-2 border-t border-red-500/15 text-[10px] text-red-400/70 flex items-center gap-1">
+                        <Skull size={10} /> {overview.exhaustion_level >= 6 ? 'LETHAL — Character dies at level 6!' : 'Dangerously high exhaustion!'}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
+            </SectionToggle>
           </div>
 
           {/* Quick Notes / Scratchpad */}
           <div className="card">
-            <button
-              onClick={() => setNotesOpen(!notesOpen)}
-              className="w-full flex items-center justify-between text-left"
-            >
-              <h3 className="font-display text-amber-100 flex items-center gap-2">
-                <StickyNote size={16} className="text-amber-200/40" />
-                Quick Notes
-              </h3>
-              {notesOpen ? <ChevronUp size={16} className="text-amber-200/40" /> : <ChevronDown size={16} className="text-amber-200/40" />}
-            </button>
-            {notesOpen && (
-              <div className="mt-3">
-                <textarea
-                  className="input w-full min-h-[120px] resize-y text-sm"
-                  placeholder="Jot down session notes, reminders, loot..."
-                  value={overview.notes || ''}
-                  onChange={e => updateField('notes', e.target.value)}
-                />
-              </div>
-            )}
+            <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="notes" title="Quick Notes" icon={StickyNote} summary={overview.notes ? `${overview.notes.slice(0, 40)}${overview.notes.length > 40 ? '...' : ''}` : 'Empty'}>
+              <textarea
+                className="input w-full min-h-[120px] resize-y text-sm"
+                placeholder="Jot down session notes, reminders, loot..."
+                value={overview.notes || ''}
+                onChange={e => updateField('notes', e.target.value)}
+              />
+            </SectionToggle>
           </div>
         </div>
       </div>
@@ -2198,7 +2487,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         if (raceTraits.length === 0 && classFeatures.length === 0) return null;
         return (
           <div className="card">
-            <h3 className="font-display text-amber-100 mb-3">Features & Traits</h3>
+            <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="features" title="Features & Traits" summary={`${raceTraits.length + classFeatures.length} total`}>
             {raceTraits.length > 0 && (
               <div className="mb-4">
                 <h4 className="text-xs font-semibold uppercase tracking-widest text-amber-200/40 mb-2">
@@ -2232,13 +2521,14 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 </div>
               </div>
             )}
+            </SectionToggle>
           </div>
         );
       })()}
 
       {/* Misc fields */}
       <div className="card">
-        <h3 className="font-display text-amber-100 mb-1">Proficiencies & Senses</h3>
+        <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="proficiencies" title="Proficiencies & Senses" summary={`${overview.senses || 'No senses'} \u00B7 ${overview.languages || 'No languages'}`}>
         <p className="text-xs text-amber-200/30 mb-3">Record what your character can see, speak, and use. Check your class and race for these.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -2262,22 +2552,13 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             <input className="input w-full" value={overview.proficiencies_tools} onChange={e => updateField('proficiencies_tools', e.target.value)} />
           </div>
         </div>
+        </SectionToggle>
       </div>
 
       {/* Personal Goals (Character Arcs) */}
       <div className="card">
-        <button
-          onClick={() => setGoalsOpen(!goalsOpen)}
-          className="w-full flex items-center justify-between text-left"
-        >
-          <h3 className="font-display text-amber-100 flex items-center gap-2">
-            <Compass size={16} className="text-amber-200/40" />
-            Personal Goals
-          </h3>
-          {goalsOpen ? <ChevronUp size={16} className="text-amber-200/40" /> : <ChevronDown size={16} className="text-amber-200/40" />}
-        </button>
-        {goalsOpen && (
-          <div className="mt-3 space-y-3">
+        <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="goals" title="Personal Goals" icon={Compass} summary={`${personalArcs.length} goal${personalArcs.length !== 1 ? 's' : ''}`}>
+          <div className="space-y-3">
             {arcsLoading ? (
               <div className="flex items-center gap-2 text-amber-200/40 text-sm py-4 justify-center">
                 <Loader2 size={14} className="animate-spin" /> Loading goals...
@@ -2418,12 +2699,12 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
               </>
             )}
           </div>
-        )}
+        </SectionToggle>
       </div>
 
       {/* Damage Modifiers (Resistances, Immunities, Vulnerabilities) */}
       <div className="card">
-        <h3 className="font-display text-amber-100 mb-1">Damage Modifiers</h3>
+        <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="damage-mods" title="Damage Modifiers" summary={damageModSummary}>
         <p className="text-xs text-amber-200/30 mb-3">Track resistances, immunities, and vulnerabilities from your race, class, or magic items.</p>
 
         {/* Category display */}
@@ -2490,6 +2771,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             ))}
           </select>
         </div>
+        </SectionToggle>
       </div>
 
       {/* Level-Up Summary */}
@@ -2551,6 +2833,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
       {showShortRest && (
         <ShortRestModal
           overview={overview}
+          conScore={abilityMap.CON || 10}
           onRest={handleShortRest}
           onCancel={() => setShowShortRest(false)}
         />
@@ -2629,9 +2912,15 @@ function XPProgress({ xp, level, onXPChange, locked }) {
   );
 }
 
-function ShortRestModal({ overview, onRest, onCancel }) {
+function ShortRestModal({ overview, conScore, onRest, onCancel }) {
   const [diceToSpend, setDiceToSpend] = useState(0);
   const available = Math.max(0, overview.level - overview.hit_dice_used);
+  const hitDie = overview.hit_dice_total?.replace(/^\d+/, '') || 'd10';
+  const hitDieSize = parseInt(hitDie.replace('d', '')) || 10;
+  const conMod = calcMod(conScore || 10);
+  const avgPerDie = Math.max(1, Math.floor(hitDieSize / 2) + 1 + conMod);
+  const expectedHeal = diceToSpend * avgPerDie;
+  const hpMissing = Math.max(0, (overview.max_hp || 0) - (overview.current_hp || 0));
 
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onCancel(); };
@@ -2645,35 +2934,63 @@ function ShortRestModal({ overview, onRest, onCancel }) {
       <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="font-display text-lg text-amber-100 mb-2">Short Rest</h3>
         <p className="text-sm text-amber-200/50 mb-4">
-          Rest for at least 1 hour. You may spend hit dice to recover HP.
-          Roll each die and add your CON modifier to regain that much HP.
+          Spend hit dice to recover HP. Each die rolls 1{hitDie} + CON ({modStr(conMod)}).
         </p>
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-sm text-amber-200/60">
-            <span>Available Hit Dice</span>
-            <span className="text-amber-100 font-display">{available} / {overview.level}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm text-amber-200/60">
-            <span>Current HP</span>
-            <span className="text-amber-100">{overview.current_hp} / {overview.max_hp}</span>
+        <div className="space-y-4">
+          {/* HP Bar */}
+          <div>
+            <div className="flex items-center justify-between text-sm mb-1">
+              <span className="text-amber-200/60">HP</span>
+              <span className="text-amber-100 font-display">{overview.current_hp}{expectedHeal > 0 ? <span className="text-green-400"> +{Math.min(expectedHeal, hpMissing)} avg</span> : ''} / {overview.max_hp}</span>
+            </div>
+            <div className="h-2 bg-[#0a0a10] rounded-full overflow-hidden border border-amber-200/10">
+              <div className="h-full rounded-full relative" style={{ width: `${Math.min(100, ((overview.current_hp + Math.min(expectedHeal, hpMissing)) / overview.max_hp) * 100)}%` }}>
+                <div className="h-full bg-green-500/70 rounded-full" style={{ width: `${(overview.current_hp / (overview.current_hp + Math.min(expectedHeal, hpMissing) || 1)) * 100}%` }} />
+                {expectedHeal > 0 && <div className="absolute right-0 top-0 h-full bg-green-400/30 rounded-r-full" style={{ width: `${(Math.min(expectedHeal, hpMissing) / (overview.current_hp + Math.min(expectedHeal, hpMissing))) * 100}%` }} />}
+              </div>
+            </div>
           </div>
 
-          {available > 0 && (
-            <div>
-              <label className="label">Hit Dice to Spend</label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="range" min={0} max={available}
-                  value={diceToSpend} onChange={e => setDiceToSpend(parseInt(e.target.value))}
-                  className="flex-1"
-                />
-                <span className="text-lg font-display text-gold w-8 text-center">{diceToSpend}</span>
-              </div>
-              <p className="text-xs text-amber-200/30 mt-1">
-                Each die: roll {overview.hit_dice_total?.replace(/^\d+/, '1') || '1d10'} + CON modifier, add to current HP
-              </p>
+          {/* Hit Dice Counter */}
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-amber-200/60">Hit Dice Available</span>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: overview.level }, (_, i) => (
+                <div key={i} className={`w-3 h-3 rounded-sm ${i < available ? 'bg-gold/70' : 'bg-amber-200/10'}`} title={i < available ? 'Available' : 'Spent'} />
+              ))}
+              <span className="text-xs text-amber-200/40 ml-2">{available}/{overview.level}</span>
             </div>
+          </div>
+
+          {available > 0 ? (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-amber-200/60">Dice to Spend</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setDiceToSpend(d => Math.max(0, d - 1))}
+                    disabled={diceToSpend <= 0}
+                    className="w-8 h-8 rounded-lg bg-[#0a0a10] border border-gold/20 text-gold font-bold text-lg flex items-center justify-center disabled:opacity-30 hover:border-gold/40 transition-all"
+                  >−</button>
+                  <span className="text-2xl font-display text-gold w-10 text-center">{diceToSpend}</span>
+                  <button
+                    onClick={() => setDiceToSpend(d => Math.min(available, d + 1))}
+                    disabled={diceToSpend >= available}
+                    className="w-8 h-8 rounded-lg bg-[#0a0a10] border border-gold/20 text-gold font-bold text-lg flex items-center justify-center disabled:opacity-30 hover:border-gold/40 transition-all"
+                  >+</button>
+                </div>
+              </div>
+              {diceToSpend > 0 && (
+                <p className="text-xs text-green-400/70 bg-green-900/15 rounded p-2 text-center">
+                  Rolling {diceToSpend}{hitDie} + {conMod >= 0 ? '+' : ''}{conMod} each — avg {expectedHeal} HP ({Math.min(expectedHeal, hpMissing)} effective)
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-amber-200/30 bg-amber-900/10 rounded p-2 text-center">
+              No hit dice remaining — take a long rest to recover them.
+            </p>
           )}
 
           {overview.primary_class === 'Warlock' && (
@@ -2685,7 +3002,9 @@ function ShortRestModal({ overview, onRest, onCancel }) {
 
         <div className="flex gap-3 justify-end mt-4">
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
-          <button onClick={() => onRest(diceToSpend)} className="btn-primary text-sm">Rest</button>
+          <button onClick={() => onRest(diceToSpend)} className="btn-primary text-sm" disabled={diceToSpend === 0 && overview.current_hp >= overview.max_hp}>
+            {diceToSpend > 0 ? `Spend ${diceToSpend} ${diceToSpend === 1 ? 'Die' : 'Dice'} & Rest` : 'Rest'}
+          </button>
         </div>
       </div>
       </div>

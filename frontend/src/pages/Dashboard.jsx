@@ -6,7 +6,7 @@ import {
   Library, ChevronRight, ChevronLeft, Scroll, Check, X,
   Search, Users, Upload, ClipboardList, Flag, FileJson,
   Sparkles, Coins, BookOpen, AlertTriangle, Moon,
-  Clock, CheckCircle, XCircle, Zap, Save, Download,
+  Clock, CheckCircle, XCircle, Zap, Save, Download, Dices,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
@@ -41,6 +41,27 @@ const CLASSES = [
   { id: 'Sorcerer',  color: '#e74c3c', bg: 'rgba(231,76,60,0.12)',   sym: '✦',  flavor: 'Born of magic' },
   { id: 'Warlock',   color: '#9b59b6', bg: 'rgba(155,89,182,0.12)',  sym: '👁', flavor: 'Patron\'s vessel' },
   { id: 'Wizard',    color: '#3498db', bg: 'rgba(52,152,219,0.12)',  sym: '📖', flavor: 'Arcane scholar' },
+];
+
+// ─── NPC & Encounter quick-gen data ─────────────────────────────────────────
+
+const NPC_NAMES = ['Grim', 'Aldric', 'Seraphina', 'Thorne', 'Isolde', 'Bramwell', 'Lyra', 'Corwin', 'Elara', 'Magnus'];
+const NPC_TRAITS = ['grumpy', 'jovial', 'suspicious', 'generous', 'mysterious', 'nervous', 'boisterous', 'quiet', 'cunning', 'noble'];
+const NPC_ROLES = ['innkeeper', 'blacksmith', 'merchant', 'guard', 'scholar', 'thief', 'priest', 'farmer', 'noble', 'wanderer'];
+
+const ENCOUNTER_HOOKS = [
+  'A band of goblins ambush from the treeline',
+  'An injured traveler stumbles out of the fog',
+  'A merchant cart has been overturned, its guards missing',
+  'Strange lights flicker in the abandoned watchtower',
+  'A bridge troll demands a riddle contest for passage',
+  'Wolves circle the campsite as night falls',
+  'A mysterious stranger offers a map to buried treasure',
+  'The road ahead is blocked by a fresh landslide',
+  'Bandits disguised as pilgrims approach the party',
+  'A dragon\'s shadow passes overhead, circling twice',
+  'An old well emanates faint cries for help',
+  'A courier rushes past, dropping a sealed letter',
 ];
 
 const RUNE_CHARS = ['ᚠ','ᚢ','ᚦ','ᚨ','ᚱ','ᚲ','ᚷ','ᚹ','ᚺ','ᚾ','ᛁ','ᛃ','ᛇ','ᛈ','ᛉ','ᛊ','ᛏ','ᛒ','ᛖ','ᛗ','ᛚ','ᛜ','ᛞ','ᛟ'];
@@ -2944,11 +2965,175 @@ export default function Dashboard() {
               </button>
             ))}
           </div>
+
+          {/* ─── Quick Actions Section ─────────────────────────────────── */}
+          {!isDM && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.42 }}
+              style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 18, marginTop: 4 }}
+            >
+              <motion.button
+                whileHover={{ scale: 1.06, background: 'rgba(201,168,76,0.15)' }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => {
+                  const roll = Math.floor(Math.random() * 20) + 1;
+                  toast(roll === 20 ? `d20: NAT 20!` : roll === 1 ? `d20: Critical fail... 1` : `d20: ${roll}`, {
+                    icon: roll === 20 ? '🎉' : roll === 1 ? '💀' : '🎲',
+                    style: { background: '#1a1425', color: '#f0e4c8', border: '1px solid rgba(201,168,76,0.3)', fontFamily: 'var(--font-heading)' },
+                  });
+                }}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '6px 16px', borderRadius: 99, cursor: 'pointer',
+                  background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.18)',
+                  fontFamily: 'var(--font-heading)', fontSize: 11, color: 'rgba(200,175,130,0.6)', letterSpacing: '0.04em',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <Dices size={12} style={{ color: 'rgba(201,168,76,0.55)' }} />
+                Quick Roll d20
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.06, background: 'rgba(201,168,76,0.15)' }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => {
+                  if (characters.length > 0) {
+                    toast('Open a character to rest', {
+                      icon: '🌙',
+                      style: { background: '#1a1425', color: '#f0e4c8', border: '1px solid rgba(201,168,76,0.3)', fontFamily: 'var(--font-heading)' },
+                    });
+                  }
+                }}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '6px 16px', borderRadius: 99, cursor: 'pointer',
+                  background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.18)',
+                  fontFamily: 'var(--font-heading)', fontSize: 11, color: 'rgba(200,175,130,0.6)', letterSpacing: '0.04em',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <Moon size={12} style={{ color: 'rgba(201,168,76,0.55)' }} />
+                Long Rest All
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.06, background: 'rgba(201,168,76,0.15)' }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => {
+                  if (characters.length > 0) {
+                    const recent = [...characters].sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''))[0];
+                    navigate(`/character/${recent.id}?section=random-tables`);
+                  }
+                }}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '6px 16px', borderRadius: 99, cursor: 'pointer',
+                  background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.18)',
+                  fontFamily: 'var(--font-heading)', fontSize: 11, color: 'rgba(200,175,130,0.6)', letterSpacing: '0.04em',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <BookOpen size={12} style={{ color: 'rgba(201,168,76,0.55)' }} />
+                Random Table
+              </motion.button>
+            </motion.div>
+          )}
+
+          {isDM && (
+            <>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+                style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10, marginTop: 4 }}
+              >
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '5px 14px', borderRadius: 99,
+                  background: 'rgba(155,89,182,0.06)', border: '1px solid rgba(155,89,182,0.14)',
+                  fontFamily: 'var(--font-heading)', fontSize: 11, color: 'rgba(192,132,252,0.5)', letterSpacing: '0.04em',
+                }}>
+                  <Library size={11} style={{ color: 'rgba(155,89,182,0.55)' }} />
+                  {characters.length} {characters.length === 1 ? 'Campaign' : 'Campaigns'}
+                </div>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '5px 14px', borderRadius: 99,
+                  background: 'rgba(155,89,182,0.06)', border: '1px solid rgba(155,89,182,0.14)',
+                  fontFamily: 'var(--font-heading)', fontSize: 11, color: 'rgba(192,132,252,0.5)', letterSpacing: '0.04em',
+                }}>
+                  <Zap size={11} style={{ color: 'rgba(155,89,182,0.55)' }} />
+                  {characters.filter(c => c.status !== 'draft').length} Active
+                </div>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '5px 14px', borderRadius: 99,
+                  background: 'rgba(155,89,182,0.06)', border: '1px solid rgba(155,89,182,0.14)',
+                  fontFamily: 'var(--font-heading)', fontSize: 11, color: 'rgba(192,132,252,0.5)', letterSpacing: '0.04em',
+                }}>
+                  <Clock size={11} style={{ color: 'rgba(155,89,182,0.55)' }} />
+                  {characters.filter(c => c.status === 'draft').length} Draft
+                </div>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.42 }}
+                style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}
+              >
+                <motion.button
+                  whileHover={{ scale: 1.06, background: 'rgba(155,89,182,0.15)' }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => {
+                    const name = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
+                    const trait = NPC_TRAITS[Math.floor(Math.random() * NPC_TRAITS.length)];
+                    const role = NPC_ROLES[Math.floor(Math.random() * NPC_ROLES.length)];
+                    toast(`${name} — a ${trait} ${role}`, {
+                      icon: '🎭',
+                      duration: 5000,
+                      style: { background: '#1a1425', color: '#f0e4c8', border: '1px solid rgba(155,89,182,0.3)', fontFamily: 'var(--font-heading)' },
+                    });
+                  }}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '6px 16px', borderRadius: 99, cursor: 'pointer',
+                    background: 'rgba(155,89,182,0.06)', border: '1px solid rgba(155,89,182,0.18)',
+                    fontFamily: 'var(--font-heading)', fontSize: 11, color: 'rgba(192,132,252,0.6)', letterSpacing: '0.04em',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <Users size={12} style={{ color: 'rgba(155,89,182,0.55)' }} />
+                  Quick NPC
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.06, background: 'rgba(155,89,182,0.15)' }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => {
+                    const hook = ENCOUNTER_HOOKS[Math.floor(Math.random() * ENCOUNTER_HOOKS.length)];
+                    toast(hook, {
+                      icon: '⚔️',
+                      duration: 5000,
+                      style: { background: '#1a1425', color: '#f0e4c8', border: '1px solid rgba(155,89,182,0.3)', fontFamily: 'var(--font-heading)' },
+                    });
+                  }}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '6px 16px', borderRadius: 99, cursor: 'pointer',
+                    background: 'rgba(155,89,182,0.06)', border: '1px solid rgba(155,89,182,0.18)',
+                    fontFamily: 'var(--font-heading)', fontSize: 11, color: 'rgba(192,132,252,0.6)', letterSpacing: '0.04em',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <Dices size={12} style={{ color: 'rgba(155,89,182,0.55)' }} />
+                  Quick Encounter
+                </motion.button>
+              </motion.div>
+            </>
+          )}
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 20 }}>
             {filteredCharacters.map((c, i) => isDM ? (
               <CampaignCard
                 key={c.id} char={c} index={i}
-                onEnter={id => navigate(`/character/${id}`)}
+                onEnter={id => navigate(`/dm/lobby/${id}`)}
                 onDelete={setDeleteTarget}
                 onExport={handleExportCampaign}
               />

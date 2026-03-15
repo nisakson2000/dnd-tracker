@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo, Component, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-// eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion';
 import { invoke } from '@tauri-apps/api/core';
-import { Search, Wand2, Sword, Users, ScrollText, BookOpen, Sparkles, Clock, ArrowRight } from 'lucide-react';
+import { Search, Wand2, Sword, Users, ScrollText, BookOpen, Sparkles, Clock, ArrowRight, HelpCircle } from 'lucide-react';
 import { ModeProvider, useAppMode } from './contexts/ModeContext';
 import { SessionProvider } from './contexts/SessionContext';
 import { useDevUpdateCheck } from './hooks/useDevUpdateCheck';
@@ -17,7 +16,7 @@ const CharacterView = lazy(() => import('./pages/CharacterView'));
 const WikiPage = lazy(() => import('./pages/WikiPage'));
 const WikiArticlePage = lazy(() => import('./pages/WikiArticlePage'));
 const CharacterSetup = lazy(() => import('./pages/CharacterSetup'));
-import BootupVideo from './components/BootupVideo';
+// BootupVideo removed — app launches directly to mode select
 import SessionMonitor from './components/SessionMonitor';
 
 // Lazy-loaded standalone pages
@@ -313,6 +312,8 @@ function DevBanner({ onOpenDevSettings }) {
 
 // ─── Command Palette (Ctrl+K) ────────────────────────────────────────────────
 
+import { GLOSSARY } from './data/helpText';
+
 const PALETTE_CATEGORIES = [
   { key: 'spells',   label: 'Spells',   icon: Wand2,      color: '#a78bfa', section: 'spellbook', command: 'get_spells',          nameField: 'name',  subtitleField: (i) => `Level ${i.level} ${i.school}` },
   { key: 'items',    label: 'Items',    icon: Sword,      color: '#f59e0b', section: 'inventory', command: 'get_items',           nameField: 'name',  subtitleField: (i) => i.item_type || 'Item' },
@@ -441,6 +442,9 @@ function CommandPalette({ characterId }) {
     if (!open) setCache({}); // eslint-disable-line react-hooks/set-state-in-effect
   }, [open]);
 
+  // Static rules category for glossary search
+  const RULES_CATEGORY = { key: 'rules', label: 'Rules', icon: HelpCircle, color: '#c9a84c', section: 'rules', nameField: 'term', subtitleField: (i) => i.category || '' };
+
   // Build filtered results
   const filteredResults = useMemo(() => {
     if (!query.trim()) return [];
@@ -461,6 +465,23 @@ function CommandPalette({ characterId }) {
       if (matched.length > 0) {
         groups.push({ category: cat, items: matched });
       }
+    }
+    // Always search rules/glossary (no character required)
+    const rulesMatched = GLOSSARY
+      .filter(entry => fuzzyMatch(entry.term, query) || fuzzyMatch(entry.definition, query))
+      .map(entry => ({
+        ...entry,
+        _name: entry.term,
+        _subtitle: entry.category,
+        _definition: entry.definition,
+        _category: RULES_CATEGORY,
+        _score: fuzzyScore(entry.term, query) + (fuzzyMatch(entry.definition, query) ? 0.5 : 0),
+        _isRule: true,
+      }))
+      .sort((a, b) => b._score - a._score)
+      .slice(0, 6);
+    if (rulesMatched.length > 0) {
+      groups.push({ category: RULES_CATEGORY, items: rulesMatched });
     }
     return groups;
   }, [query, cache]);
@@ -595,8 +616,7 @@ function CommandPalette({ characterId }) {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={charId ? 'Search spells, items, NPCs, quests...' : 'Open a character first to search'}
-            disabled={!charId}
+            placeholder={charId ? 'Search spells, items, NPCs, quests, rules...' : 'Search rules and mechanics...'}
             style={{
               flex: 1, background: 'none', border: 'none', outline: 'none',
               color: 'rgba(255,255,255,0.9)', fontSize: '15px',
@@ -629,13 +649,13 @@ function CommandPalette({ characterId }) {
             </div>
           )}
 
-          {/* No character */}
-          {!charId && !loading && (
+          {/* No character hint */}
+          {!charId && !loading && !query.trim() && (
             <div style={{
               padding: '32px 20px', textAlign: 'center',
               color: 'rgba(255,255,255,0.3)', fontSize: '13px',
             }}>
-              Open a character to search across spells, items, NPCs, and more.
+              Search rules and mechanics, or open a character to search spells, items, and more.
             </div>
           )}
 
@@ -717,7 +737,7 @@ function CommandPalette({ characterId }) {
                   const isSelected = globalIdx === selectedIdx;
                   return (
                     <button
-                      key={`${group.category.key}-${item.id}`}
+                      key={`${group.category.key}-${item.id || item.term || item._name}`}
                       data-idx={globalIdx}
                       onClick={() => selectResult(item)}
                       onMouseEnter={() => setSelectedIdx(globalIdx)}
@@ -743,14 +763,22 @@ function CommandPalette({ characterId }) {
                         }}>
                           {item._name}
                         </div>
-                        {item._subtitle && (
+                        {item._isRule && item._definition ? (
+                          <div style={{
+                            fontSize: '11px', color: 'rgba(255,255,255,0.35)',
+                            lineHeight: 1.4, maxHeight: isSelected ? 60 : 16,
+                            overflow: 'hidden', transition: 'max-height 0.2s',
+                          }}>
+                            {item._definition}
+                          </div>
+                        ) : item._subtitle ? (
                           <div style={{
                             fontSize: '11px', color: 'rgba(255,255,255,0.3)',
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                           }}>
                             {item._subtitle}
                           </div>
-                        )}
+                        ) : null}
                       </div>
                       {isSelected && (
                         <ArrowRight size={14} style={{ color: catColor, opacity: 0.6, flexShrink: 0 }} />
@@ -764,7 +792,7 @@ function CommandPalette({ characterId }) {
         </div>
 
         {/* Footer hint */}
-        {charId && (
+        {(
           <div style={{
             padding: '10px 20px', borderTop: '1px solid rgba(255,255,255,0.05)',
             display: 'flex', alignItems: 'center', gap: '16px',
@@ -930,7 +958,7 @@ function DevSyncGate({ onReady }) {
 }
 
 function AppContent() {
-  const [bootupDone, setBootupDone] = useState(false);
+  const [bootupDone, setBootupDone] = useState(true);
   const [syncDone, setSyncDone] = useState(!import.meta.env.DEV);
   const [updateDone, setUpdateDone] = useState(true); // Tauri updater handles updates via Dashboard banner now
   const { mode } = useAppMode();
@@ -965,11 +993,8 @@ function AppContent() {
         visibleToasts={4}
       />
 
-      {/* Step 0: Bootup video */}
-      {!bootupDone && <BootupVideo onDone={() => setBootupDone(true)} />}
-
-      {/* Step 0.5: Dev sync gate — force pull if behind remote (dev builds only) */}
-      {import.meta.env.DEV && bootupDone && !syncDone && <DevSyncGate onReady={handleSyncReady} />}
+      {/* Dev sync gate — force pull if behind remote (dev builds only) */}
+      {import.meta.env.DEV && !syncDone && <DevSyncGate onReady={handleSyncReady} />}
 
       {/* Mode selection (if no mode chosen yet) */}
       {syncDone && updateDone && !mode && <ModeSelect />}
@@ -989,7 +1014,7 @@ function AppContent() {
                   <Route path="/wiki" element={<WikiPage />} />
                   <Route path="/wiki/:slug" element={<WikiArticlePage />} />
                   <Route path="/updates" element={<UpdatesPage />} />
-                  <Route path="/dm/campaigns" element={<Navigate to="/" replace />} />
+                  <Route path="/dm/campaigns" element={<DMCampaignList />} />
                   {/* DM routes — gated by passphrase on ModeSelect */}
                   <Route path="/dm/lobby/:id" element={<DMLobby />} />
                   <Route path="/dm/session/:id" element={<DMSession />} />

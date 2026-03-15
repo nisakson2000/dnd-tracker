@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Settings2, Palette, Type, LayoutGrid, RotateCcw, Zap, Sliders } from 'lucide-react';
+import { Settings2, Palette, Type, LayoutGrid, RotateCcw, Zap, Sliders, Bug, Lightbulb, Download, ChevronDown, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -335,10 +335,16 @@ export default function Settings() {
     applyV3Settings(DEFAULTS);
   };
 
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showTypography, setShowTypography] = useState(false);
+  const [showLayout, setShowLayout] = useState(false);
+
+  const navigateToSection = (sectionId) => {
+    window.dispatchEvent(new CustomEvent('codex-section-navigate', { detail: sectionId }));
+  };
+
   const tabs = [
     { id: 'interface', label: 'Interface', icon: Palette },
-    { id: 'typography', label: 'Typography', icon: Type },
-    { id: 'layout', label: 'Layout', icon: LayoutGrid },
     { id: 'ai', label: 'AI Assistant', icon: Zap },
   ];
 
@@ -458,66 +464,8 @@ export default function Settings() {
           </div>
 
           <PreferencesSection />
-        </div>
-      )}
 
-      {/* ── TYPOGRAPHY TAB ── */}
-      {activeTab === 'typography' && (
-        <div>
-          <div className="sp-sec">Display Font</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '16px' }}>
-            {DISPLAY_FONTS.map(f => (
-              <div
-                key={f.family}
-                className={`fpick ${settings.displayFont === f.family ? 'on' : ''}`}
-                onClick={() => update({ displayFont: f.family })}
-                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ displayFont: f.family }); } }}
-                tabIndex={0}
-                role="button"
-                aria-pressed={settings.displayFont === f.family}
-              >
-                <div className="fpick-name" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>{f.label || f.family}</div>
-                <div className="fpick-sample" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>The Codex</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="sp-sec">Body Font</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '16px' }}>
-            {BODY_FONTS.map(f => (
-              <div
-                key={f.family}
-                className={`fpick ${settings.bodyFont === f.family ? 'on' : ''}`}
-                onClick={() => update({ bodyFont: f.family })}
-                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ bodyFont: f.family }); } }}
-                tabIndex={0}
-                role="button"
-                aria-pressed={settings.bodyFont === f.family}
-              >
-                <div className="fpick-name" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>{f.label || f.family}</div>
-                <div className="fpick-sample" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>Character Sheet</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="sp-sec">Text Font</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '16px' }}>
-            {TEXT_FONTS.map(f => (
-              <div
-                key={f.family}
-                className={`fpick ${settings.textFont === f.family ? 'on' : ''}`}
-                onClick={() => update({ textFont: f.family })}
-                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ textFont: f.family }); } }}
-                tabIndex={0}
-                role="button"
-                aria-pressed={settings.textFont === f.family}
-              >
-                <div className="fpick-name" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>{f.label || f.family}</div>
-                <div className="fpick-sample" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>The quick brown fox jumps over the lazy dog.</div>
-              </div>
-            ))}
-          </div>
-
+          {/* Font Size (moved from Typography) */}
           <div className="sp-sec">Font Size</div>
           <div className="sl-row">
             <div className="sl-header">
@@ -529,12 +477,8 @@ export default function Settings() {
               <span>Tiny</span><span>Default</span><span>Large</span>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* ── LAYOUT TAB ── */}
-      {activeTab === 'layout' && (
-        <div>
+          {/* Density (moved from Layout) */}
           <div className="sp-sec">Density</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '16px' }}>
             {[{ v: 0.6, label: 'Compact', icon: '▪▪▪', desc: 'Best for smaller screens (≤24")' }, { v: 1, label: 'Normal', icon: '▪ ▪ ▪', desc: 'Default spacing' }, { v: 1.2, label: 'Spacious', icon: '▪  ▪  ▪', desc: 'Extra breathing room' }].map(d => (
@@ -554,6 +498,7 @@ export default function Settings() {
             ))}
           </div>
 
+          {/* Sidebar Width (moved from Layout) */}
           <div className="sp-sec">Sidebar Width</div>
           <div className="sl-row">
             <div className="sl-header">
@@ -563,58 +508,136 @@ export default function Settings() {
             <input type="range" min={160} max={280} value={settings.sidebarWidth} step={4} onChange={e => update({ sidebarWidth: +e.target.value })} />
           </div>
 
-          <div className="sp-sec">Panel Border Radius</div>
-          <div className="sl-row">
-            <div className="sl-header">
-              <span className="sl-label">Roundness</span>
-              <span className="sl-val">{settings.borderRadius}px</span>
-            </div>
-            <input type="range" min={0} max={20} value={settings.borderRadius} step={2} onChange={e => update({ borderRadius: +e.target.value })} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '10px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)' }}>
-              <span>Sharp</span><span>Rounded</span><span>Pill</span>
-            </div>
-          </div>
+          {/* ── Typography (collapsible) ── */}
+          <button
+            onClick={() => setShowTypography(!showTypography)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '10px 0', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', fontWeight: 600, borderTop: '1px solid var(--border)', marginTop: 8 }}
+          >
+            {showTypography ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            <Type size={13} /> Typography
+          </button>
+          {showTypography && (
+            <div style={{ paddingLeft: 4 }}>
+              <div className="sp-sec">Display Font</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '16px' }}>
+                {DISPLAY_FONTS.map(f => (
+                  <div
+                    key={f.family}
+                    className={`fpick ${settings.displayFont === f.family ? 'on' : ''}`}
+                    onClick={() => update({ displayFont: f.family })}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ displayFont: f.family }); } }}
+                    tabIndex={0}
+                    role="button"
+                    aria-pressed={settings.displayFont === f.family}
+                  >
+                    <div className="fpick-name" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>{f.label || f.family}</div>
+                    <div className="fpick-sample" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>The Codex</div>
+                  </div>
+                ))}
+              </div>
 
-          <div className="sp-sec">Effects</div>
-          <div className="sl-row">
-            <div className="sl-header">
-              <span className="sl-label">Glow intensity</span>
-              <span className="sl-val">{settings.glowIntensity}%</span>
-            </div>
-            <input type="range" min={0} max={100} value={settings.glowIntensity} step={5} onChange={e => update({ glowIntensity: +e.target.value })} />
-          </div>
+              <div className="sp-sec">Body Font</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '16px' }}>
+                {BODY_FONTS.map(f => (
+                  <div
+                    key={f.family}
+                    className={`fpick ${settings.bodyFont === f.family ? 'on' : ''}`}
+                    onClick={() => update({ bodyFont: f.family })}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ bodyFont: f.family }); } }}
+                    tabIndex={0}
+                    role="button"
+                    aria-pressed={settings.bodyFont === f.family}
+                  >
+                    <div className="fpick-name" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>{f.label || f.family}</div>
+                    <div className="fpick-sample" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>Character Sheet</div>
+                  </div>
+                ))}
+              </div>
 
-          <div className="sl-row">
-            <div className="sl-header">
-              <span className="sl-label">Backdrop blur</span>
-              <span className="sl-val">{settings.panelBlur}px</span>
+              <div className="sp-sec">Text Font</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '16px' }}>
+                {TEXT_FONTS.map(f => (
+                  <div
+                    key={f.family}
+                    className={`fpick ${settings.textFont === f.family ? 'on' : ''}`}
+                    onClick={() => update({ textFont: f.family })}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ textFont: f.family }); } }}
+                    tabIndex={0}
+                    role="button"
+                    aria-pressed={settings.textFont === f.family}
+                  >
+                    <div className="fpick-name" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>{f.label || f.family}</div>
+                    <div className="fpick-sample" style={{ fontFamily: `'${f.family}', ${f.fallback}` }}>The quick brown fox jumps over the lazy dog.</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <input type="range" min={0} max={32} value={settings.panelBlur} step={4} onChange={e => update({ panelBlur: +e.target.value })} />
-          </div>
+          )}
 
-          <div className="sl-row">
-            <div className="sl-header">
-              <span className="sl-label">Panel darkness</span>
-              <span className="sl-val">{settings.panelOpacity}%</span>
-            </div>
-            <input type="range" min={1} max={15} value={settings.panelOpacity} step={1} onChange={e => update({ panelOpacity: +e.target.value })} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '10px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)' }}>
-              <span>Ghost</span><span>Glass</span><span>Solid</span>
-            </div>
-          </div>
+          {/* ── Advanced (collapsible) — glow, blur, panel darkness, brightness, border radius ── */}
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '10px 0', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', fontWeight: 600, borderTop: '1px solid var(--border)', marginTop: 8 }}
+          >
+            {showAdvanced ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            <Sliders size={13} /> Advanced
+          </button>
+          {showAdvanced && (
+            <div style={{ paddingLeft: 4 }}>
+              <div className="sp-sec">Panel Border Radius</div>
+              <div className="sl-row">
+                <div className="sl-header">
+                  <span className="sl-label">Roundness</span>
+                  <span className="sl-val">{settings.borderRadius}px</span>
+                </div>
+                <input type="range" min={0} max={20} value={settings.borderRadius} step={2} onChange={e => update({ borderRadius: +e.target.value })} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '10px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)' }}>
+                  <span>Sharp</span><span>Rounded</span><span>Pill</span>
+                </div>
+              </div>
 
-          <div className="sl-row">
-            <div className="sl-header">
-              <span className="sl-label">Brightness</span>
-              <span className="sl-val">{settings.brightness ?? 100}%</span>
-            </div>
-            <input type="range" min={40} max={130} value={settings.brightness ?? 100} step={5} onChange={e => update({ brightness: +e.target.value })} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '10px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)' }}>
-              <span>Dim</span><span>Normal</span><span>Bright</span>
-            </div>
-          </div>
+              <div className="sp-sec">Effects</div>
+              <div className="sl-row">
+                <div className="sl-header">
+                  <span className="sl-label">Glow intensity</span>
+                  <span className="sl-val">{settings.glowIntensity}%</span>
+                </div>
+                <input type="range" min={0} max={100} value={settings.glowIntensity} step={5} onChange={e => update({ glowIntensity: +e.target.value })} />
+              </div>
 
-          <button className="reset-btn" onClick={() => setShowResetConfirm(true)}>↺ Reset all to defaults</button>
+              <div className="sl-row">
+                <div className="sl-header">
+                  <span className="sl-label">Backdrop blur</span>
+                  <span className="sl-val">{settings.panelBlur}px</span>
+                </div>
+                <input type="range" min={0} max={32} value={settings.panelBlur} step={4} onChange={e => update({ panelBlur: +e.target.value })} />
+              </div>
+
+              <div className="sl-row">
+                <div className="sl-header">
+                  <span className="sl-label">Panel darkness</span>
+                  <span className="sl-val">{settings.panelOpacity}%</span>
+                </div>
+                <input type="range" min={1} max={15} value={settings.panelOpacity} step={1} onChange={e => update({ panelOpacity: +e.target.value })} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '10px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)' }}>
+                  <span>Ghost</span><span>Glass</span><span>Solid</span>
+                </div>
+              </div>
+
+              <div className="sl-row">
+                <div className="sl-header">
+                  <span className="sl-label">Brightness</span>
+                  <span className="sl-val">{settings.brightness ?? 100}%</span>
+                </div>
+                <input type="range" min={40} max={130} value={settings.brightness ?? 100} step={5} onChange={e => update({ brightness: +e.target.value })} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '10px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)' }}>
+                  <span>Dim</span><span>Normal</span><span>Bright</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <button className="reset-btn" onClick={() => setShowResetConfirm(true)} style={{ marginTop: 16 }}>↺ Reset all to defaults</button>
         </div>
       )}
 
@@ -622,6 +645,45 @@ export default function Settings() {
       {activeTab === 'ai' && (
         <AiSettingsTab />
       )}
+
+      {/* ── Feedback & Export ── */}
+      <div style={{ borderTop: '1px solid var(--border)', marginTop: 24, paddingTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-dim)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Quick Actions</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <button
+            onClick={() => navigateToSection('export')}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', cursor: 'pointer', transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--text)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
+          >
+            <Download size={14} /> Export & Import
+          </button>
+          <button
+            onClick={() => navigateToSection('bugreport')}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', cursor: 'pointer', transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--text)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
+          >
+            <Bug size={14} /> Bug Report
+          </button>
+          <button
+            onClick={() => navigateToSection('featurerequest')}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', cursor: 'pointer', transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--text)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
+          >
+            <Lightbulb size={14} /> Feature Request
+          </button>
+          <button
+            onClick={() => navigateToSection('party-connect')}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', cursor: 'pointer', transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--text)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
+          >
+            <Sliders size={14} /> Party Connect
+          </button>
+        </div>
+      </div>
 
       <ConfirmDialog
         show={showResetConfirm}

@@ -44,6 +44,7 @@ export default function PlayerJoin() {
         level: charData?.level || 1,
         hp: charData?.current_hp || 0,
         maxHp: charData?.max_hp || 0,
+        ruleset: charData?.ruleset || '5e-2014',
       });
 
       // Generate a UUID for this player

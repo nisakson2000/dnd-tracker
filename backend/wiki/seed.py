@@ -41,6 +41,8 @@ SEED_FILES = [
     "magic_items_very_rare.json",
     "magic_items_legendary.json",
     "tools_detailed.json",
+    "consumables.json",
+    "services_lifestyle.json",
     # Spells (by level)
     "spells_cantrips.json",
     "spells_1st.json",

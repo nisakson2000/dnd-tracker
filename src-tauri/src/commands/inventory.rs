@@ -18,6 +18,10 @@ pub struct ItemData {
     pub equipment_slot: String,
     pub stat_modifiers: Option<String>,
     pub rarity: Option<String>,
+    pub magic_bonus: Option<i64>,
+    pub extra_damage: Option<String>,
+    pub save_bonus: Option<i64>,
+    pub special_properties: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -39,7 +43,8 @@ pub fn get_items(
             .prepare(
                 "SELECT id, name, item_type, weight, value_gp, quantity, description,
                         attunement, attuned, equipped, equipment_slot,
-                        stat_modifiers, rarity
+                        stat_modifiers, rarity,
+                        magic_bonus, extra_damage, save_bonus, special_properties
                  FROM items",
             )
             .map_err(|e| e.to_string())?;
@@ -59,6 +64,10 @@ pub fn get_items(
                     equipment_slot: row.get(10).unwrap_or_default(),
                     stat_modifiers: row.get::<_, Option<String>>(11).unwrap_or(Some("{}".to_string())),
                     rarity: row.get::<_, Option<String>>(12).unwrap_or(Some("common".to_string())),
+                    magic_bonus: row.get::<_, Option<i64>>(13).unwrap_or(Some(0)),
+                    extra_damage: row.get::<_, Option<String>>(14).unwrap_or(Some(String::new())),
+                    save_bonus: row.get::<_, Option<i64>>(15).unwrap_or(Some(0)),
+                    special_properties: row.get::<_, Option<String>>(16).unwrap_or(Some(String::new())),
                 })
             })
             .map_err(|e| e.to_string())?
@@ -78,14 +87,19 @@ pub fn add_item(
         conn.execute(
             "INSERT INTO items (name, item_type, weight, value_gp, quantity, description,
                                 attunement, attuned, equipped, equipment_slot,
-                                stat_modifiers, rarity)
-             VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)",
+                                stat_modifiers, rarity,
+                                magic_bonus, extra_damage, save_bonus, special_properties)
+             VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16)",
             rusqlite::params![
                 payload.name, payload.item_type, payload.weight, payload.value_gp,
                 payload.quantity, payload.description, payload.attunement as i64,
                 payload.attuned as i64, payload.equipped as i64, payload.equipment_slot,
                 payload.stat_modifiers.clone().unwrap_or_else(|| "{}".to_string()),
                 payload.rarity.clone().unwrap_or_else(|| "common".to_string()),
+                payload.magic_bonus.unwrap_or(0),
+                payload.extra_damage.clone().unwrap_or_default(),
+                payload.save_bonus.unwrap_or(0),
+                payload.special_properties.clone().unwrap_or_default(),
             ],
         )
         .map_err(|e| e.to_string())?;
@@ -107,14 +121,19 @@ pub fn update_item(
                 "UPDATE items SET name=?1, item_type=?2, weight=?3, value_gp=?4,
                     quantity=?5, description=?6, attunement=?7, attuned=?8,
                     equipped=?9, equipment_slot=?10,
-                    stat_modifiers=?11, rarity=?12
-                 WHERE id=?13",
+                    stat_modifiers=?11, rarity=?12,
+                    magic_bonus=?13, extra_damage=?14, save_bonus=?15, special_properties=?16
+                 WHERE id=?17",
                 rusqlite::params![
                     payload.name, payload.item_type, payload.weight, payload.value_gp,
                     payload.quantity, payload.description, payload.attunement as i64,
                     payload.attuned as i64, payload.equipped as i64, payload.equipment_slot,
                     payload.stat_modifiers.clone().unwrap_or_else(|| "{}".to_string()),
                     payload.rarity.clone().unwrap_or_else(|| "common".to_string()),
+                    payload.magic_bonus.unwrap_or(0),
+                    payload.extra_damage.clone().unwrap_or_default(),
+                    payload.save_bonus.unwrap_or(0),
+                    payload.special_properties.clone().unwrap_or_default(),
                     item_id,
                 ],
             )

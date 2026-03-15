@@ -313,21 +313,29 @@ export default function Inventory({ characterId, character }) {
       if (armorInfo) {
         if (armorInfo.bonus) {
           // Shield
-          shieldBonus = armorInfo.bonus;
+          shieldBonus = armorInfo.bonus + (item.magic_bonus || 0);
         } else {
           armorFound = true;
+          const mb = item.magic_bonus || 0;
           if (armorInfo.type === 'light') {
-            baseAC = armorInfo.base + dexMod;
+            baseAC = armorInfo.base + dexMod + mb;
           } else if (armorInfo.type === 'medium') {
-            baseAC = armorInfo.base + Math.min(dexMod, armorInfo.maxDex || 2);
+            baseAC = armorInfo.base + Math.min(dexMod, armorInfo.maxDex || 2) + mb;
           } else if (armorInfo.type === 'heavy') {
-            baseAC = armorInfo.base;
+            baseAC = armorInfo.base + mb;
           }
         }
       }
     }
     return { total: baseAC + shieldBonus, base: baseAC, shield: shieldBonus, hasArmor: armorFound, hasShield: shieldBonus > 0 };
   }, [items, dexScore]);
+
+  // --- Sync calculated AC back to Overview when armor/shield is equipped ---
+  useEffect(() => {
+    if (!loading && items.length > 0 && (calculatedAC.hasArmor || calculatedAC.hasShield)) {
+      updateOverview(characterId, { armor_class: calculatedAC.total }).catch(() => {});
+    }
+  }, [calculatedAC.total, loading, characterId]);
 
   // --- Aggregate stat modifiers from all equipped items ---
   const equippedStatBonuses = useMemo(() => {
@@ -1281,6 +1289,15 @@ function ItemForm({ onSubmit, onCancel, character, initialData }) {
     };
   });
   const [selectedCatalogItem, setSelectedCatalogItem] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(() => {
+    if (!initialData) return false;
+    return (initialData.rarity && initialData.rarity !== 'common') ||
+      (initialData.magic_bonus && initialData.magic_bonus > 0) ||
+      (initialData.save_bonus && initialData.save_bonus > 0) ||
+      (initialData.extra_damage && initialData.extra_damage.length > 0) ||
+      (initialData.special_properties && initialData.special_properties.length > 0) ||
+      (initialData.attunement === true);
+  });
   const update = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
 
   useEffect(() => {
@@ -1315,6 +1332,13 @@ function ItemForm({ onSubmit, onCancel, character, initialData }) {
             found.ac_formula ? `AC: ${found.ac_formula}` : '',
             found.properties && found.properties !== '\u2014' ? found.properties : '',
           ].filter(Boolean).join(' \u00B7 '),
+          rarity: found.rarity || prev.rarity,
+          magic_bonus: found.magic_bonus ?? prev.magic_bonus,
+          save_bonus: found.save_bonus ?? prev.save_bonus,
+          extra_damage: found.extra_damage || prev.extra_damage,
+          attunement: found.attunement ?? prev.attunement,
+          stat_modifiers: found.stat_modifiers || prev.stat_modifiers,
+          special_properties: found.special_properties || prev.special_properties,
         }));
         break;
       }
@@ -1411,87 +1435,105 @@ function ItemForm({ onSubmit, onCancel, character, initialData }) {
             <div><label className="label">Qty</label><input type="number" className="input w-full" min={1} value={form.quantity} onChange={e => update('quantity', parseInt(e.target.value) || 1)} /></div>
           </div>
           <textarea className="input w-full h-16 resize-none" placeholder="Description / properties" value={form.description} onChange={e => update('description', e.target.value)} />
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Rarity</label>
-              <select className="input w-full" value={form.rarity} onChange={e => update('rarity', e.target.value)}>
-                {['common', 'uncommon', 'rare', 'very rare', 'legendary'].map(r => (
-                  <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="label">Stat Bonuses</label>
-              {(() => {
-                let mods = {};
-                try { mods = JSON.parse(form.stat_modifiers || '{}'); } catch {}
-                const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
-                const updateMods = (newMods) => {
-                  const cleaned = Object.fromEntries(Object.entries(newMods).filter(([, v]) => v !== 0 && v !== ''));
-                  update('stat_modifiers', Object.keys(cleaned).length ? JSON.stringify(cleaned) : '{}');
-                };
-                return (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                    {ABILITIES.map(ab => (
-                      <div key={ab} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <span style={{ fontSize: 10, color: 'rgba(200,175,130,0.5)', textTransform: 'uppercase', width: 24 }}>{ab}</span>
-                        <input
-                          type="number"
-                          className="input"
-                          style={{ width: 48, padding: '2px 4px', fontSize: 12, textAlign: 'center' }}
-                          value={mods[ab] || ''}
-                          placeholder="0"
-                          onChange={e => {
-                            const val = e.target.value === '' ? '' : parseInt(e.target.value) || 0;
-                            updateMods({ ...mods, [ab]: val });
-                          }}
-                        />
-                      </div>
+
+          {/* Advanced fields toggle */}
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="w-full flex items-center gap-2 text-xs text-amber-200/50 hover:text-amber-200/70 transition-colors py-1.5 px-2 rounded hover:bg-white/[0.03]"
+          >
+            <span style={{ fontSize: 10, transition: 'transform 0.15s', transform: showAdvanced ? 'rotate(90deg)' : 'rotate(0deg)', display: 'inline-block' }}>&#9654;</span>
+            Magic & Advanced Properties
+            {!showAdvanced && (form.rarity !== 'common' || form.magic_bonus > 0 || form.attunement) && (
+              <span className="text-[10px] text-purple-400/60 ml-auto">has values</span>
+            )}
+          </button>
+
+          {showAdvanced && (
+            <div className="space-y-3 pt-1 pl-1 border-l-2 border-purple-500/15 ml-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Rarity</label>
+                  <select className="input w-full" value={form.rarity} onChange={e => update('rarity', e.target.value)}>
+                    {['common', 'uncommon', 'rare', 'very rare', 'legendary'].map(r => (
+                      <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
                     ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Stat Bonuses</label>
+                  {(() => {
+                    let mods = {};
+                    try { mods = JSON.parse(form.stat_modifiers || '{}'); } catch {}
+                    const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+                    const updateMods = (newMods) => {
+                      const cleaned = Object.fromEntries(Object.entries(newMods).filter(([, v]) => v !== 0 && v !== ''));
+                      update('stat_modifiers', Object.keys(cleaned).length ? JSON.stringify(cleaned) : '{}');
+                    };
+                    return (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {ABILITIES.map(ab => (
+                          <div key={ab} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <span style={{ fontSize: 10, color: 'rgba(200,175,130,0.5)', textTransform: 'uppercase', width: 24 }}>{ab}</span>
+                            <input
+                              type="number"
+                              className="input"
+                              style={{ width: 48, padding: '2px 4px', fontSize: 12, textAlign: 'center' }}
+                              value={mods[ab] || ''}
+                              placeholder="0"
+                              onChange={e => {
+                                const val = e.target.value === '' ? '' : parseInt(e.target.value) || 0;
+                                updateMods({ ...mods, [ab]: val });
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+              {/* Magic bonus, extra damage, save bonus — shown for weapons, armor, wondrous */}
+              {['weapon', 'armor', 'wondrous'].includes(form.item_type) && (
+                <div className="space-y-2 pt-2 border-t border-amber-200/8">
+                  <div className="text-[10px] text-amber-200/30 uppercase tracking-wider">Magic Properties</div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="label">Magic Bonus</label>
+                      <select className="input w-full" value={form.magic_bonus} onChange={e => update('magic_bonus', parseInt(e.target.value) || 0)}>
+                        <option value={0}>None</option>
+                        <option value={1}>+1</option>
+                        <option value={2}>+2</option>
+                        <option value={3}>+3</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="label">Save Bonus</label>
+                      <select className="input w-full" value={form.save_bonus} onChange={e => update('save_bonus', parseInt(e.target.value) || 0)} title="Bonus to all saving throws (e.g., Cloak of Protection)">
+                        <option value={0}>None</option>
+                        <option value={1}>+1</option>
+                        <option value={2}>+2</option>
+                        <option value={3}>+3</option>
+                      </select>
+                    </div>
+                    {form.item_type === 'weapon' && (
+                      <div>
+                        <label className="label">Extra Damage</label>
+                        <input className="input w-full" placeholder="e.g. 2d6 fire" value={form.extra_damage} onChange={e => update('extra_damage', e.target.value)} title="Additional damage dice (e.g., Flame Tongue: 2d6 fire)" />
+                      </div>
+                    )}
                   </div>
-                );
-              })()}
-            </div>
-          </div>
-          {/* Magic bonus, extra damage, save bonus — shown for weapons, armor, wondrous */}
-          {['weapon', 'armor', 'wondrous'].includes(form.item_type) && (
-            <div className="space-y-2 pt-2 border-t border-amber-200/8">
-              <div className="text-[10px] text-amber-200/30 uppercase tracking-wider">Magic Properties</div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="label">Magic Bonus</label>
-                  <select className="input w-full" value={form.magic_bonus} onChange={e => update('magic_bonus', parseInt(e.target.value) || 0)}>
-                    <option value={0}>None</option>
-                    <option value={1}>+1</option>
-                    <option value={2}>+2</option>
-                    <option value={3}>+3</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="label">Save Bonus</label>
-                  <select className="input w-full" value={form.save_bonus} onChange={e => update('save_bonus', parseInt(e.target.value) || 0)} title="Bonus to all saving throws (e.g., Cloak of Protection)">
-                    <option value={0}>None</option>
-                    <option value={1}>+1</option>
-                    <option value={2}>+2</option>
-                    <option value={3}>+3</option>
-                  </select>
-                </div>
-                {form.item_type === 'weapon' && (
                   <div>
-                    <label className="label">Extra Damage</label>
-                    <input className="input w-full" placeholder="e.g. 2d6 fire" value={form.extra_damage} onChange={e => update('extra_damage', e.target.value)} title="Additional damage dice (e.g., Flame Tongue: 2d6 fire)" />
+                    <label className="label">Special Properties</label>
+                    <input className="input w-full" placeholder="e.g. On hit: DC 15 CON save or poisoned" value={form.special_properties} onChange={e => update('special_properties', e.target.value)} />
                   </div>
-                )}
-              </div>
-              <div>
-                <label className="label">Special Properties</label>
-                <input className="input w-full" placeholder="e.g. On hit: DC 15 CON save or poisoned" value={form.special_properties} onChange={e => update('special_properties', e.target.value)} />
-              </div>
+                </div>
+              )}
+              <label className="flex items-center gap-2 text-sm text-amber-200/60">
+                <input type="checkbox" checked={form.attunement} onChange={e => update('attunement', e.target.checked)} /> Requires Attunement
+              </label>
             </div>
           )}
-          <label className="flex items-center gap-2 text-sm text-amber-200/60">
-            <input type="checkbox" checked={form.attunement} onChange={e => update('attunement', e.target.checked)} /> Requires Attunement
-          </label>
         </div>
         <div className="flex gap-3 justify-end mt-4">
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>

@@ -143,6 +143,11 @@ fn main() {
                 conn
             };
 
+            // Pre-initialize campaign DB at startup so errors surface immediately
+            if let Err(e) = campaign_db::init_campaign_db(&app_data_dir) {
+                eprintln!("[init] Campaign DB pre-init failed (will retry lazily): {}", e);
+            }
+
             app.manage(AppState::new(app_data_dir.clone(), wiki_conn));
             app.manage(party::PartyServer::new());
             app.manage(party::PartyIpcClient::new());
@@ -217,6 +222,11 @@ fn main() {
             commands::npcs::add_npc,
             commands::npcs::update_npc,
             commands::npcs::delete_npc,
+            // Companions
+            commands::companions::get_companions,
+            commands::companions::add_companion,
+            commands::companions::update_companion,
+            commands::companions::delete_companion,
             // Quests
             commands::quests::get_quests,
             commands::quests::add_quest,

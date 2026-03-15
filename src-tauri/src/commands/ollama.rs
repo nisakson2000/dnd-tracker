@@ -218,8 +218,42 @@ pub async fn ollama_auto_install(
 
         let _ = on_progress.send(InstallProgress { stage: "Starting Ollama...".into(), percent: 95, done: false });
 
-        // Wait a moment for Ollama to initialize
-        tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+        // Kill the auto-launched Ollama GUI/tray process (the installer starts it with a visible window)
+        let _ = std::process::Command::new("taskkill")
+            .args(["/F", "/IM", "ollama app.exe"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status();
+        let _ = std::process::Command::new("taskkill")
+            .args(["/F", "/IM", "ollama.exe"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status();
+
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+
+        // Restart Ollama serve in the background with no visible window
+        let mut paths: Vec<std::path::PathBuf> = vec![];
+        if let Ok(user) = std::env::var("USERNAME") {
+            paths.push(std::path::PathBuf::from(r"C:\Users").join(&user).join(r"AppData\Local\Programs\Ollama\ollama.exe"));
+        }
+        paths.push(std::path::PathBuf::from(r"C:\Program Files\Ollama\ollama.exe"));
+        for p in &paths {
+            if p.exists() {
+                let _ = std::process::Command::new(p)
+                    .arg("serve")
+                    .creation_flags(CREATE_NO_WINDOW)
+                    .stdin(std::process::Stdio::null())
+                    .stdout(std::process::Stdio::null())
+                    .stderr(std::process::Stdio::null())
+                    .spawn();
+                break;
+            }
+        }
+
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
 
         let _ = on_progress.send(InstallProgress { stage: "Ollama installed!".into(), percent: 100, done: true });
 

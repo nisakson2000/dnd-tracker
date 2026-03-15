@@ -5,7 +5,7 @@ import {
   BookMarked, Users, Map, Globe, ArrowLeft, User, Download,
   Library, Settings2, Heart, Bug, Crown, LayoutDashboard,
   Star, Search, X, Zap, Wifi, MapPin, Lightbulb, Grid3X3,
-  Calendar, Hammer, Package, HelpCircle,
+  Calendar, Hammer, Package, HelpCircle, Dices, PawPrint, ClipboardList,
 } from 'lucide-react';
 import { useAppMode } from '../contexts/ModeContext';
 import { useSession } from '../contexts/SessionContext';
@@ -28,6 +28,7 @@ const PLAYER_SECTION_GROUPS = [
       { id: 'combat',     label: 'Combat',             icon: Swords },
       { id: 'spellbook',  label: 'Spellbook',          icon: Sparkles },
       { id: 'inventory',  label: 'Inventory',          icon: Shield },
+      { id: 'companions', label: 'Companions',         icon: PawPrint },
     ],
   },
   {
@@ -41,13 +42,10 @@ const PLAYER_SECTION_GROUPS = [
     label: 'Tools',
     items: [
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
-      { id: 'party-connect', label: 'Party Connect',   icon: Wifi },
+      { id: 'random-tables', label: 'Random Tables',   icon: Dices },
       { id: 'ai-modules', label: 'AI Modules',        icon: Sparkles },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
-      { id: 'export',     label: 'Export & Import',    icon: Download },
-      { id: 'bugreport', label: 'Bug Report',         icon: Bug },
-      { id: 'featurerequest', label: 'Feature Request', icon: Lightbulb },
     ],
   },
 ];
@@ -58,6 +56,7 @@ const DM_SECTION_GROUPS = [
     label: 'Campaign',
     items: [
       { id: 'campaign-hub', label: 'Campaign Hub',     icon: LayoutDashboard },
+      { id: 'session-prep', label: 'Session Prep',     icon: ClipboardList },
       { id: 'npcs',         label: 'NPCs',             icon: Users },
       { id: 'quests',       label: 'Quests & Plot',    icon: Map },
       { id: 'lore',         label: 'Lore & Locations', icon: Globe },
@@ -93,6 +92,7 @@ const DM_SECTION_GROUPS = [
     label: 'Tools',
     items: [
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
+      { id: 'random-tables', label: 'Random Tables',   icon: Dices },
       { id: 'ai-modules', label: 'AI Modules',        icon: Sparkles },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },

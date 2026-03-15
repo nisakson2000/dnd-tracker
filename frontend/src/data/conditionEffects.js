@@ -102,10 +102,10 @@ export const CONDITION_EFFECTS = {
 };
 
 /**
- * Compute aggregate effects from a list of active condition names.
+ * Compute aggregate effects from a list of active condition names + exhaustion level.
  * Returns a summary object with all net modifiers.
  */
-export function computeConditionEffects(activeConditionNames = []) {
+export function computeConditionEffects(activeConditionNames = [], exhaustionLevel = 0) {
   const effects = {
     // Attack rolls
     attackAdvantage: false,
@@ -124,6 +124,12 @@ export function computeConditionEffects(activeConditionNames = []) {
     // Other
     cantAct: false,
     resistAll: false,
+    // Exhaustion-specific
+    speedHalved: false,
+    saveDisadvantageAll: false,
+    hpMaxHalved: false,
+    dead: false,
+    exhaustionLevel: 0,
     // Active effect list for display
     activeEffects: [],
   };
@@ -150,6 +156,35 @@ export function computeConditionEffects(activeConditionNames = []) {
 
     effects.activeEffects.push({ name, ...cond });
   }
+
+  // ── Exhaustion effects (5e RAW) ──
+  const exh = Math.max(0, Math.min(6, exhaustionLevel || 0));
+  if (exh >= 1) {
+    effects.checkDisadvantage = true;
+    effects.activeEffects.push({ name: 'Exhaustion 1', shortTag: 'DIS on ability checks', summary: 'Disadvantage on ability checks.' });
+  }
+  if (exh >= 2) {
+    effects.speedHalved = true;
+    effects.activeEffects.push({ name: 'Exhaustion 2', shortTag: 'Speed halved', summary: 'Speed halved.' });
+  }
+  if (exh >= 3) {
+    effects.attackDisadvantage = true;
+    effects.saveDisadvantageAll = true;
+    effects.activeEffects.push({ name: 'Exhaustion 3', shortTag: 'DIS on attacks & saves', summary: 'Disadvantage on attack rolls and saving throws.' });
+  }
+  if (exh >= 4) {
+    effects.hpMaxHalved = true;
+    effects.activeEffects.push({ name: 'Exhaustion 4', shortTag: 'HP max halved', summary: 'Hit point maximum halved.' });
+  }
+  if (exh >= 5) {
+    effects.speedOverride = 0;
+    effects.activeEffects.push({ name: 'Exhaustion 5', shortTag: 'Speed 0', summary: 'Speed reduced to 0.' });
+  }
+  if (exh >= 6) {
+    effects.dead = true;
+    effects.activeEffects.push({ name: 'Exhaustion 6', shortTag: 'Death', summary: 'Character dies.' });
+  }
+  effects.exhaustionLevel = exh;
 
   // D&D rule: if you have both advantage and disadvantage, they cancel out
   if (effects.attackAdvantage && effects.attackDisadvantage) {

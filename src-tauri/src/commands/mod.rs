@@ -39,6 +39,7 @@ pub mod character_arcs;
 pub mod github_reports;
 pub mod ota_update;
 pub mod combat_log;
+pub mod companions;
 pub mod factions;
 pub mod simulation;
 pub mod npc_memory;
