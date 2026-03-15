@@ -1,8 +1,9 @@
 import { useState, lazy, Suspense } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Sword, Crown, Dice5, Shield, Heart, Sparkles, Users, X, Bell } from 'lucide-react';
+import { BookOpen, Sword, Crown, Dice5, Shield, Heart, Sparkles, Users, X, Bell, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { invoke } from '@tauri-apps/api/core';
 import { useAppMode } from '../contexts/ModeContext';
 import { useUpdateCheck } from '../hooks/useUpdateCheck';
 import { APP_VERSION, DM_MODE_VERSION } from '../version';
@@ -22,6 +23,8 @@ export default function ModeSelect() {
   const [showBetaWarning, setShowBetaWarning] = useState(false);
   const [showTutorials, setShowTutorials] = useState(false);
   const [showUpdates, setShowUpdates] = useState(false);
+  const [showDevGate, setShowDevGate] = useState(false);
+  const [devPassphrase, setDevPassphrase] = useState('');
   const { updateAvailable, dmUpdateAvailable } = useUpdateCheck();
 
   const modes = [
@@ -125,11 +128,8 @@ export default function ModeSelect() {
                   if (import.meta.env.DEV || devUnlocked) {
                     setShowBetaWarning(true);
                   } else {
-                    toast('DM Mode is currently in development. Available to devs only!', {
-                      icon: '🔒',
-                      duration: 4000,
-                      style: { background: '#1a1520', color: '#c9a84c', border: '1px solid rgba(155,89,182,0.3)', fontFamily: 'Cinzel, Georgia, serif' },
-                    });
+                    setShowDevGate(true);
+                    setDevPassphrase('');
                   }
                 } else {
                   setMode(m.id);
@@ -360,6 +360,129 @@ export default function ModeSelect() {
                     }}
                   >
                     Enter DM Mode
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Dev Passphrase Gate */}
+      <AnimatePresence>
+        {showDevGate && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 200,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(8px)',
+              padding: 16,
+            }}
+            onClick={e => e.target === e.currentTarget && setShowDevGate(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 300 }}
+              style={{
+                width: 380, maxWidth: '100%', borderRadius: 16, overflow: 'hidden',
+                background: 'linear-gradient(160deg, #0d0b18 0%, #110e1e 100%)',
+                border: '1px solid rgba(155,89,182,0.25)',
+                boxShadow: '0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(155,89,182,0.08)',
+              }}
+            >
+              <div style={{ height: 3, background: 'linear-gradient(90deg, transparent, #9b59b6, transparent)' }} />
+              <div style={{ padding: '28px 24px 24px', textAlign: 'center' }}>
+                <div style={{
+                  width: 52, height: 52, borderRadius: '50%', margin: '0 auto 16px',
+                  background: 'rgba(155,89,182,0.08)', border: '1px solid rgba(155,89,182,0.2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Lock size={24} color="#c084fc" />
+                </div>
+                <h3 style={{
+                  fontFamily: 'var(--font-heading, "Cinzel", serif)', fontSize: 18,
+                  color: '#efe0c0', margin: '0 0 8px', letterSpacing: '0.02em',
+                }}>
+                  Developer Access
+                </h3>
+                <p style={{
+                  fontSize: 12, color: 'rgba(224,213,192,0.5)', lineHeight: 1.6,
+                  margin: '0 0 20px', fontFamily: 'var(--font-text, var(--font-ui, sans-serif))',
+                }}>
+                  DM Mode is in early development. Enter the dev passphrase to unlock.
+                </p>
+                <input
+                  autoFocus
+                  type="password"
+                  value={devPassphrase}
+                  onChange={e => setDevPassphrase(e.target.value)}
+                  onKeyDown={async e => {
+                    if (e.key === 'Enter' && devPassphrase) {
+                      try {
+                        const valid = await invoke('verify_dev_passphrase', { passphrase: devPassphrase });
+                        if (valid) {
+                          localStorage.setItem('codex-dev-unlocked', 'true');
+                          setShowDevGate(false);
+                          setShowBetaWarning(true);
+                          toast.success('Dev access unlocked!');
+                        } else {
+                          toast.error('Invalid passphrase');
+                          setDevPassphrase('');
+                        }
+                      } catch {
+                        toast.error('Verification failed');
+                      }
+                    }
+                    if (e.key === 'Escape') setShowDevGate(false);
+                  }}
+                  placeholder="Enter passphrase..."
+                  style={{
+                    width: '100%', padding: '10px 14px', borderRadius: 8,
+                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(155,89,182,0.2)',
+                    color: '#efe0c0', fontSize: 13, fontFamily: 'var(--font-mono, monospace)',
+                    outline: 'none', textAlign: 'center', letterSpacing: '0.1em',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <div style={{ display: 'flex', gap: 10, marginTop: 16, justifyContent: 'center' }}>
+                  <button
+                    onClick={() => setShowDevGate(false)}
+                    style={{
+                      padding: '8px 20px', borderRadius: 8,
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                      color: 'rgba(224,213,192,0.5)', fontSize: 12, cursor: 'pointer',
+                      fontFamily: 'var(--font-ui, sans-serif)',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!devPassphrase) return;
+                      try {
+                        const valid = await invoke('verify_dev_passphrase', { passphrase: devPassphrase });
+                        if (valid) {
+                          localStorage.setItem('codex-dev-unlocked', 'true');
+                          setShowDevGate(false);
+                          setShowBetaWarning(true);
+                          toast.success('Dev access unlocked!');
+                        } else {
+                          toast.error('Invalid passphrase');
+                          setDevPassphrase('');
+                        }
+                      } catch {
+                        toast.error('Verification failed');
+                      }
+                    }}
+                    style={{
+                      padding: '8px 20px', borderRadius: 8,
+                      background: 'rgba(155,89,182,0.15)', border: '1px solid rgba(155,89,182,0.3)',
+                      color: '#c084fc', fontSize: 12, cursor: 'pointer',
+                      fontFamily: 'var(--font-ui, sans-serif)', fontWeight: 600,
+                    }}
+                  >
+                    Unlock
                   </button>
                 </div>
               </div>
