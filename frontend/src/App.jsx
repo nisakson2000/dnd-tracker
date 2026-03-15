@@ -962,6 +962,7 @@ function AppContent() {
         }}
         containerStyle={{ bottom: 20, right: 20 }}
         gutter={8}
+        visibleToasts={4}
       />
 
       {/* Step 0: Bootup video */}
