@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react';
 import { Settings2, Palette, Type, LayoutGrid, RotateCcw, Zap, Sliders } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { invoke } from '@tauri-apps/api/core';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { checkOllamaStatus, pullModel } from '../api/assistant';
+import { APP_VERSION } from '../version';
 
 const PRESET_THEMES = [
   { id: 'midnight-glass', label: 'Midnight Glass', accent: '#7c3aed', bg: '#04040b', swatches: ['#7c3aed','#a78bfa','#60a5fa'] },
@@ -312,6 +314,10 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState('interface');
   const [customHex, setCustomHex] = useState(settings.accent);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [devTapCount, setDevTapCount] = useState(0);
+  const [showDevInput, setShowDevInput] = useState(false);
+  const [devPassphrase, setDevPassphrase] = useState('');
+  const [devUnlocked, setDevUnlocked] = useState(() => { try { return localStorage.getItem('codex-dev-unlocked') === 'true'; } catch { return false; } });
 
   const update = useCallback((updates) => {
     setSettings(prev => {
@@ -624,6 +630,69 @@ export default function Settings() {
         onConfirm={() => { resetAll(); setShowResetConfirm(false); }}
         onCancel={() => setShowResetConfirm(false)}
       />
+
+      {/* Dev access gate - click version 5 times to reveal */}
+      <div
+        onClick={() => {
+          const next = devTapCount + 1;
+          setDevTapCount(next);
+          if (next >= 5 && !devUnlocked) {
+            setShowDevInput(true);
+            setDevTapCount(0);
+          }
+        }}
+        style={{ marginTop: 24, textAlign: 'center', cursor: 'default', userSelect: 'none' }}
+      >
+        <span style={{ fontSize: 10, color: 'var(--text-mute)', fontFamily: 'var(--font-mono)' }}>
+          {APP_VERSION} {devUnlocked ? '(Dev)' : ''}
+        </span>
+      </div>
+
+      {showDevInput && !devUnlocked && (
+        <div style={{
+          marginTop: 12, padding: 16, borderRadius: 10,
+          background: 'rgba(155,89,182,0.06)', border: '1px solid rgba(155,89,182,0.15)',
+        }}>
+          <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 8 }}>Enter dev passphrase:</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              type="password"
+              value={devPassphrase}
+              onChange={e => setDevPassphrase(e.target.value)}
+              onKeyDown={async e => {
+                if (e.key === 'Enter' && devPassphrase) {
+                  try {
+                    const valid = await invoke('verify_dev_passphrase', { passphrase: devPassphrase });
+                    if (valid) {
+                      localStorage.setItem('codex-dev-unlocked', 'true');
+                      setDevUnlocked(true);
+                      setShowDevInput(false);
+                      toast.success('Dev access unlocked');
+                    } else {
+                      toast.error('Invalid passphrase');
+                    }
+                  } catch { toast.error('Verification failed'); }
+                  setDevPassphrase('');
+                }
+              }}
+              placeholder="Passphrase..."
+              style={{
+                flex: 1, padding: '6px 10px', borderRadius: 6,
+                background: 'var(--bg-input)', border: '1px solid var(--border)',
+                color: 'var(--text)', fontSize: 12, fontFamily: 'var(--font-mono)',
+                outline: 'none',
+              }}
+            />
+            <button
+              onClick={() => { setShowDevInput(false); setDevPassphrase(''); }}
+              style={{
+                padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)',
+                background: 'none', color: 'var(--text-mute)', fontSize: 11, cursor: 'pointer',
+              }}
+            >Cancel</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

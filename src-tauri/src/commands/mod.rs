@@ -45,3 +45,4 @@ pub mod npc_memory;
 pub mod consequence_engine;
 pub mod story_engine;
 pub mod advanced_systems;
+pub mod auth;

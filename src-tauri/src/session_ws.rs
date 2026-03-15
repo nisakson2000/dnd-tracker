@@ -61,18 +61,22 @@ pub enum GameEvent {
         campaign_id: String,
         combatant_id: String,
         round: u32,
+        message_id: Option<u64>,
     },
     HpDelta {
         campaign_id: String,
         target_id: String,
         delta: i32,
         source: String,
+        damage_type: Option<String>,
+        message_id: Option<u64>,
     },
     ConditionApplied {
         campaign_id: String,
         target_id: String,
         condition: String,
         duration: Option<u32>,
+        message_id: Option<u64>,
     },
     ConditionRemoved {
         campaign_id: String,
@@ -102,6 +106,7 @@ pub enum GameEvent {
         campaign_id: String,
         amount: u32,
         reason: String,
+        message_id: Option<u64>,
     },
     MonsterKilled {
         campaign_id: String,
@@ -205,6 +210,38 @@ pub enum GameEvent {
         whisper_target: Option<String>,
         timestamp: Option<i64>,
     },
+    // Phase 3A: Message acknowledgment
+    Ack {
+        message_id: u64,
+    },
+
+    // Phase 3C: DM authority for HP changes
+    PlayerHpRequest {
+        player_uuid: String,
+        delta: i32,
+        reason: String,
+    },
+    RollRequest {
+        player_uuid: String,
+        expression: String,
+        label: String,
+        nonce: Option<String>,
+    },
+
+    // Phase 3D: Delta sync
+    CharDelta {
+        player_uuid: String,
+        changes: serde_json::Value,
+    },
+
+    // Phase 2A: Battle map token movement
+    BattleMapTokenMove {
+        player_uuid: String,
+        token_id: String,
+        col: i32,
+        row: i32,
+    },
+
     Ping {},
     Pong {},
 }
@@ -239,6 +276,8 @@ pub struct SessionServer {
     pub port: u16,
     /// Recent event buffer for reconnection replay (last 50 events)
     pub event_buffer: Arc<Mutex<Vec<String>>>,
+    /// Last pong received time per client (for heartbeat timeout)
+    pub last_pong: Arc<Mutex<HashMap<String, std::time::Instant>>>,
 }
 
 impl SessionServer {
@@ -250,6 +289,7 @@ impl SessionServer {
             shutdown_tx: None,
             port: SESSION_PORT,
             event_buffer: Arc::new(Mutex::new(Vec::new())),
+            last_pong: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -263,8 +303,7 @@ impl SessionServer {
         }
     }
 
-    /// Get buffered events for replay (reserved for reconnection support)
-    #[allow(dead_code)]
+    /// Get buffered events for replay (used for reconnection support)
     pub async fn get_buffered_events(&self) -> Vec<String> {
         self.event_buffer.lock().await.clone()
     }
@@ -289,6 +328,9 @@ impl SessionServer {
         let pending = self.pending.clone();
 
         eprintln!("[session_ws] Server started on port {}", port);
+
+        // Subscribe for heartbeat shutdown before main spawn moves shutdown_tx
+        let mut hb_shutdown = shutdown_tx.subscribe();
 
         tokio::spawn(async move {
             let mut shutdown_rx = shutdown_tx.subscribe();
@@ -319,6 +361,32 @@ impl SessionServer {
                 }
             }
         });
+
+        // Spawn heartbeat task - ping all clients every 15s
+        {
+            let hb_clients = self.clients.clone();
+            tokio::spawn(async move {
+                let mut interval = tokio::time::interval(std::time::Duration::from_secs(15));
+                interval.tick().await; // skip first immediate tick
+                loop {
+                    tokio::select! {
+                        _ = interval.tick() => {
+                            let ping = serde_json::to_string(&GameEvent::Ping {}).unwrap_or_default();
+                            let msg = Message::Text(ping);
+                            let clients = hb_clients.lock().await;
+                            for (uuid, tx) in clients.iter() {
+                                if tx.send(msg.clone()).is_err() {
+                                    eprintln!("[session_ws] Heartbeat: client {} unreachable", uuid);
+                                }
+                            }
+                        }
+                        _ = hb_shutdown.recv() => {
+                            break;
+                        }
+                    }
+                }
+            });
+        }
 
         let ip = get_local_ip();
         Ok(format!("{}:{}", ip, port))
@@ -415,12 +483,25 @@ impl SessionServer {
             let _ = player.sender.send(Message::Text(snap_text));
         }
 
+        // Replay buffered events for reconnecting players
+        let buffered = self.event_buffer.lock().await;
+        for event_json in buffered.iter() {
+            let _ = player.sender.send(Message::Text(event_json.clone()));
+        }
+        drop(buffered);
+
         // Move to approved clients — acquire both locks atomically
         {
             let mut clients = self.clients.lock().await;
             let mut names = self.client_names.lock().await;
             clients.insert(player_uuid.to_string(), player.sender);
             names.insert(player_uuid.to_string(), player.display_name);
+        }
+
+        // Track pong time for heartbeat
+        {
+            let mut pongs = self.last_pong.lock().await;
+            pongs.insert(player_uuid.to_string(), std::time::Instant::now());
         }
 
         Ok(())
@@ -719,6 +800,9 @@ pub async fn connect_to_dm(
         let _ = ws_tx.close().await;
     });
 
+    // Clone sender for Pong responses in incoming listener
+    let pong_tx = outgoing_tx.clone();
+
     // Spawn incoming listener
     tokio::spawn(async move {
         loop {
@@ -753,7 +837,9 @@ pub async fn connect_to_dm(
                                         break;
                                     }
                                     Ok(GameEvent::Ping {}) => {
-                                        // Auto-respond with Pong — not forwarded to frontend
+                                        // Auto-respond with Pong
+                                        let pong = serde_json::to_string(&GameEvent::Pong {}).unwrap_or_default();
+                                        let _ = pong_tx.send(Message::Text(pong));
                                     }
                                     Ok(event) => {
                                         let _ = app_clone.emit(

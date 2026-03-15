@@ -42,7 +42,6 @@ const Features = lazy(() => import('../sections/Features'));
 const Combat = lazy(() => import('../sections/Combat'));
 const NPCs = lazy(() => import('../sections/NPCs'));
 const Quests = lazy(() => import('../sections/Quests'));
-const DiceRoller = lazy(() => import('../sections/DiceRoller'));
 const Settings = lazy(() => import('../sections/Settings'));
 const BugReport = lazy(() => import('../sections/BugReport'));
 const FeatureRequest = lazy(() => import('../sections/FeatureRequest'));
@@ -94,7 +93,6 @@ const SECTIONS = {
   npcs: NPCs,
   quests: Quests,
   lore: Lore,
-  dice: DiceRoller,
   rules: RulesReference,
   settings: Settings,
   export: ExportImport,
@@ -131,7 +129,6 @@ const SECTION_LABELS = {
   npcs: 'NPCs',
   quests: 'Quests',
   lore: 'Lore & World',
-  dice: 'Dice Roller',
   rules: 'Rules Reference',
   settings: 'Settings',
   export: 'Export & Import',

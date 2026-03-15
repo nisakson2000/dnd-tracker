@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ScrollText, BookOpen, Shield, Sparkles, Swords,
-  BookMarked, Users, Map, Globe, Dice5, ArrowLeft, User, Download,
+  BookMarked, Users, Map, Globe, ArrowLeft, User, Download,
   Library, Settings2, Heart, Bug, Crown, LayoutDashboard,
   Star, Search, X, Zap, Wifi, MapPin, Lightbulb, Grid3X3,
   Calendar, Hammer, Package, HelpCircle,
@@ -40,7 +40,6 @@ const PLAYER_SECTION_GROUPS = [
   {
     label: 'Tools',
     items: [
-      { id: 'dice',       label: 'Dice Roller',        icon: Dice5 },
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
       { id: 'party-connect', label: 'Party Connect',   icon: Wifi },
       { id: 'ai-modules', label: 'AI Modules',        icon: Sparkles },

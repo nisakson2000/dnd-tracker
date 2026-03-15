@@ -121,7 +121,8 @@ export default function ModeSelect() {
               whileHover={{ y: -8, boxShadow: `0 20px 60px rgba(0,0,0,0.6), 0 0 40px ${m.color}15` }}
               onClick={() => {
                 if (m.id === 'dm') {
-                  if (import.meta.env.DEV) {
+                  const devUnlocked = (() => { try { return localStorage.getItem('codex-dev-unlocked') === 'true'; } catch { return false; } })();
+                  if (import.meta.env.DEV || devUnlocked) {
                     setShowBetaWarning(true);
                   } else {
                     toast('DM Mode is currently in development. Available to devs only!', {
@@ -162,7 +163,7 @@ export default function ModeSelect() {
                   <div>
                     <div style={{ fontFamily: 'var(--font-heading, "Cinzel", serif)', fontSize: 18, color: '#efe0c0', letterSpacing: '0.02em', display: 'flex', alignItems: 'center', gap: 10 }}>
                       {m.title}
-                      {m.id === 'dm' && !import.meta.env.DEV && (
+                      {m.id === 'dm' && !import.meta.env.DEV && (() => { try { return localStorage.getItem('codex-dev-unlocked') !== 'true'; } catch { return true; } })() && (
                         <span style={{
                           fontSize: 9, padding: '2px 8px', borderRadius: 6,
                           background: 'rgba(155,89,182,0.15)', border: '1px solid rgba(155,89,182,0.3)',

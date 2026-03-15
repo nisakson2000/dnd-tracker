@@ -539,6 +539,8 @@ fn main() {
             commands::advanced_systems::add_artifact_xp,
             commands::advanced_systems::update_artifact_profile,
             commands::advanced_systems::delete_artifact_profile,
+            // Auth
+            commands::auth::verify_dev_passphrase,
             // OTA frontend updates
             commands::ota_update::ota_has_update,
             commands::ota_update::ota_download_update,
