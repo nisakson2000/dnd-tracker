@@ -2403,6 +2403,7 @@ export default function Dashboard() {
 
   // Tauri native updater — checks GitHub Releases for signed binary updates
   // Checks on mount and every 5 minutes so mid-session updates are detected
+  const normVer = s => (s || '').replace(/^[Vv]/, '').trim();
   useEffect(() => {
     let cancelled = false;
     const doCheck = async () => {
@@ -2410,7 +2411,8 @@ export default function Dashboard() {
         const { check } = await import('@tauri-apps/plugin-updater');
         const update = await check();
         if (cancelled) return;
-        if (update?.available) {
+        // Only show if remote version is actually newer (not just a rebuilt same version)
+        if (update?.available && normVer(update.version) !== normVer(currentVersion)) {
           setTauriUpdate({ available: true, version: update.version, body: update.body, update });
         }
       } catch (e) {
@@ -2420,7 +2422,7 @@ export default function Dashboard() {
     doCheck();
     const interval = setInterval(doCheck, 5 * 60 * 1000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, []);
+  }, [currentVersion]);
 
   const handleTauriUpdate = async () => {
     if (!tauriUpdate?.update) return;

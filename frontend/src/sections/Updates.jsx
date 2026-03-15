@@ -45,11 +45,12 @@ export default function Updates() {
     try {
       const { check } = await import('@tauri-apps/plugin-updater');
       const update = await check();
-      if (update?.available) {
+      // Only show if remote version is actually newer (not just a rebuilt same version)
+      if (update?.available && norm(update.version) !== currentNorm) {
         setTauriUpdate({ available: true, version: update.version, body: update.body, update });
       }
     } catch { /* expected in dev */ }
-  }, [checkForUpdates]);
+  }, [checkForUpdates, currentNorm]);
 
   const handleTauriUpdate = useCallback(async () => {
     if (!tauriUpdate?.update) return;
@@ -75,12 +76,13 @@ export default function Updates() {
       try {
         const { check } = await import('@tauri-apps/plugin-updater');
         const update = await check();
-        if (update?.available) {
+        // Only show if remote version is actually newer (not just a rebuilt same version)
+        if (update?.available && norm(update.version) !== currentNorm) {
           setTauriUpdate({ available: true, version: update.version, body: update.body, update });
         }
       } catch { /* expected in dev */ }
     })();
-  }, []);
+  }, [currentNorm]);
 
   // Only show current version — full history on GitHub
   // Normalize both sides so V0.8.0 matches 0.8.0, v0.8.0, etc.
