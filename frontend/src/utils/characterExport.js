@@ -3,11 +3,7 @@
  * Generates printable character sheet (PDF via browser print) and plain text export.
  */
 
-import { calcMod } from './dndHelpers';
-
-function modStr(mod) {
-  return mod >= 0 ? `+${mod}` : `${mod}`;
-}
+import { calcMod, modStr } from './dndHelpers';
 
 function escapeHtml(str) {
   if (!str) return '';

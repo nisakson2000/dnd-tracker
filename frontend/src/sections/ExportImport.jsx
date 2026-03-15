@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { exportCharacter } from '../api/export';
 import { invoke } from '@tauri-apps/api/core';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { calcMod, modStr } from '../utils/dndHelpers';
 
 function generateTextSummary(data) {
   const o = data.overview;
@@ -21,11 +22,10 @@ function generateTextSummary(data) {
 
   // Ability Scores
   lines.push('── Ability Scores ──');
-  const modStr = (score) => { const m = Math.floor((score - 10) / 2); return m >= 0 ? `+${m}` : `${m}`; };
   const abOrder = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
   abOrder.forEach(ab => {
     const score = abs[ab] || 10;
-    lines.push(`  ${ab}: ${score} (${modStr(score)})`);
+    lines.push(`  ${ab}: ${score} (${modStr(calcMod(score))})`);
   });
   lines.push('');
 
@@ -38,7 +38,7 @@ function generateTextSummary(data) {
   // HP & Combat
   lines.push('── Combat Stats ──');
   lines.push(`  HP: ${o.current_hp}/${o.max_hp}${o.temp_hp > 0 ? ` (+${o.temp_hp} temp)` : ''}`);
-  lines.push(`  AC: ${o.armor_class}  |  Speed: ${o.speed}ft  |  Initiative: ${modStr(abs.DEX ? Math.floor((abs.DEX - 10) / 2) : 0)}`);
+  lines.push(`  AC: ${o.armor_class}  |  Speed: ${o.speed}ft  |  Initiative: ${modStr(calcMod(abs.DEX || 10))}`);
   lines.push(`  Hit Dice: ${o.hit_dice_total} (${o.hit_dice_used} used)`);
   if (o.exhaustion_level > 0) lines.push(`  Exhaustion: Level ${o.exhaustion_level}`);
   lines.push('');

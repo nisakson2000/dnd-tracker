@@ -12,6 +12,7 @@ import { useCampaignSync } from '../../contexts/CampaignSyncContext';
 import { useParty } from '../../contexts/PartyContext';
 import { useLiveSession } from '../../contexts/LiveSessionContext';
 import { CONDITION_EFFECTS } from '../../data/conditionEffects';
+import { ABILITIES } from '../../utils/dndHelpers';
 
 // ── Constants ──
 
@@ -63,7 +64,6 @@ const SKILLS = [
   'Sleight of Hand', 'Stealth', 'Survival',
 ];
 
-const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
 const SOCIAL_SKILLS = ['Persuasion', 'Deception', 'Intimidation', 'Insight'];
 const COIN_TYPES = ['cp', 'sp', 'gp', 'pp'];
 

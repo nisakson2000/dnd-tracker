@@ -4,6 +4,7 @@ import { Package, Coins, Users, ArrowRight, Dices, Plus, Trash2, Search, Chevron
 import toast from 'react-hot-toast';
 import { listCharacters } from '../api/characters';
 import { addItem, getCurrency, updateCurrency } from '../api/inventory';
+import { rollDice } from '../utils/dice';
 
 // ── Storage helpers ──
 const LOOT_KEY = id => `party-loot-${id}`;
@@ -62,12 +63,6 @@ const QUICK_LOOT_TABLES = {
     ],
   },
 };
-
-function rollDice(count, sides) {
-  let total = 0;
-  for (let i = 0; i < count; i++) total += Math.floor(Math.random() * sides) + 1;
-  return total;
-}
 
 // ── Smart Loot Tables (DMG approximation) ──
 const INDIVIDUAL_TREASURE = {

@@ -3,6 +3,7 @@ import { Dice5, List, HelpCircle, MessageSquare, Send, Check, X, Users, User, Za
 import toast from 'react-hot-toast';
 import { useCampaignSync } from '../../contexts/CampaignSyncContext';
 import { useParty } from '../../contexts/PartyContext';
+import { ABILITIES } from '../../utils/dndHelpers';
 
 const TABS = [
   { id: 'quick', label: 'Quick', icon: Zap },
@@ -13,7 +14,6 @@ const TABS = [
 ];
 
 const ROLL_TYPES = ['Ability Check', 'Saving Throw', 'Skill Check'];
-const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
 const SKILLS = [
   'Acrobatics', 'Animal Handling', 'Arcana', 'Athletics', 'Deception',
   'History', 'Insight', 'Intimidation', 'Investigation', 'Medicine',

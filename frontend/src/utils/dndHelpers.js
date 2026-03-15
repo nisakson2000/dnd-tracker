@@ -9,6 +9,11 @@ export function calcMod(score) {
   return Math.floor((s - 10) / 2);
 }
 
+/** Format a numeric modifier with a leading sign: +2, -1, +0, etc. */
+export function modStr(mod) {
+  return mod >= 0 ? `+${mod}` : `${mod}`;
+}
+
 /** Calculate proficiency bonus from character level (5e rules). */
 export function calcProfBonus(level) {
   const lvl = parseInt(level) || 1;

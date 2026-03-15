@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useAppMode } from '../contexts/ModeContext';
 import { useParty } from '../contexts/PartyContext';
+import { modStr } from '../utils/dndHelpers';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -30,10 +31,6 @@ function hpBarColor(hp, maxHp) {
 }
 
 // ─── Member card ─────────────────────────────────────────────────────────────
-
-function modStr(mod) {
-  return mod >= 0 ? `+${mod}` : `${mod}`;
-}
 
 function MemberCard({ member, isYou, colorIndex = 0 }) {
   const [expanded, setExpanded] = useState(false);

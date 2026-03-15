@@ -9,14 +9,13 @@ import { getOverview, updateOverview } from '../api/overview';
 import { getAttacks, getConditions, updateConditions } from '../api/combat';
 import { getSpells, getSpellSlots, updateSpellSlots } from '../api/spells';
 import { parseAndRollExpression } from '../utils/dice';
-import { calcMod, calcProfBonus, ABILITIES } from '../utils/dndHelpers';
+import { calcMod, calcProfBonus, ABILITIES, modStr } from '../utils/dndHelpers';
 
 const ABILITY_COLORS = {
   STR: 'var(--str-c)', DEX: 'var(--dex-c)', CON: 'var(--con-c)',
   INT: 'var(--int-c)', WIS: 'var(--wis-c)', CHA: 'var(--cha-c)',
 };
 
-function modStr(m) { return m >= 0 ? `+${m}` : `${m}`; }
 const calcProf = calcProfBonus;
 
 // Shared inline style fragments

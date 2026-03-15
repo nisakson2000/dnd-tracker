@@ -18,7 +18,7 @@ import SubclassSelectModal from '../components/SubclassSelectModal';
 import ModalPortal from '../components/ModalPortal';
 import { computeConditionEffects, CONDITION_EFFECTS } from '../data/conditionEffects';
 import { autoPopulateStats } from '../utils/autoPopulate';
-import { calcMod, calcProfBonus, ABILITIES } from '../utils/dndHelpers';
+import { calcMod, calcProfBonus, ABILITIES, modStr } from '../utils/dndHelpers';
 
 const DAMAGE_TYPES = [
   'Acid', 'Bludgeoning', 'Cold', 'Fire', 'Force', 'Lightning', 'Necrotic',
@@ -26,10 +26,6 @@ const DAMAGE_TYPES = [
   'Nonmagical Bludgeoning', 'Nonmagical Piercing', 'Nonmagical Slashing',
 ];
 const ABILITY_NAMES = { STR: 'Strength', DEX: 'Dexterity', CON: 'Constitution', INT: 'Intelligence', WIS: 'Wisdom', CHA: 'Charisma' };
-
-function modStr(mod) {
-  return mod >= 0 ? `+${mod}` : `${mod}`;
-}
 
 /** Standard hit die size per class */
 const CLASS_HIT_DIE = {

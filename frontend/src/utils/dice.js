@@ -8,6 +8,15 @@ export function rollDie(sides) {
 }
 
 /**
+ * Roll multiple dice and return the sum.
+ */
+export function rollDice(count, sides) {
+  let total = 0;
+  for (let i = 0; i < count; i++) total += rollDie(sides);
+  return total;
+}
+
+/**
  * Advanced expression parser.
  * Supports: 2d6+1d8+5, 4d6kh3, 2d20kl1, flat modifiers, subtraction
  * Returns null on invalid input.

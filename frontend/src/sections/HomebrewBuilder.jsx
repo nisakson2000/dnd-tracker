@@ -4,6 +4,7 @@ import { Hammer, Wand2, Shield, Package, Plus, Save, Download, Upload, Trash2, S
 import toast from 'react-hot-toast';
 import { addSpell } from '../api/spells';
 import { addItem } from '../api/inventory';
+import { ABILITIES, calcMod, modStr } from '../utils/dndHelpers';
 
 /* ═══════════════════════════════════════════════════════════════════
    Storage helpers
@@ -24,7 +25,6 @@ function saveLibrary(lib) {
 const SIZES = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan'];
 const MONSTER_TYPES = ['Aberration', 'Beast', 'Celestial', 'Construct', 'Dragon', 'Elemental', 'Fey', 'Fiend', 'Giant', 'Humanoid', 'Monstrosity', 'Ooze', 'Plant', 'Undead'];
 const ALIGNMENTS = ['Lawful Good', 'Neutral Good', 'Chaotic Good', 'Lawful Neutral', 'True Neutral', 'Chaotic Neutral', 'Lawful Evil', 'Neutral Evil', 'Chaotic Evil', 'Unaligned'];
-const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
 const DAMAGE_TYPES = ['Acid', 'Bludgeoning', 'Cold', 'Fire', 'Force', 'Lightning', 'Necrotic', 'Piercing', 'Poison', 'Psychic', 'Radiant', 'Slashing', 'Thunder'];
 const CONDITIONS = ['Blinded', 'Charmed', 'Deafened', 'Exhaustion', 'Frightened', 'Grappled', 'Incapacitated', 'Invisible', 'Paralyzed', 'Petrified', 'Poisoned', 'Prone', 'Restrained', 'Stunned', 'Unconscious'];
 const SPELL_SCHOOLS = ['Abjuration', 'Conjuration', 'Divination', 'Enchantment', 'Evocation', 'Illusion', 'Necromancy', 'Transmutation'];
@@ -85,14 +85,6 @@ const SPELL_DMG_REF = {
   8: { avg: 54, example: 'Sunburst (12d6, AoE)' },
   9: { avg: 70, example: 'Meteor Swarm (40d6, AoE)' },
 };
-
-function abilityMod(score) {
-  return Math.floor((score - 10) / 2);
-}
-function modStr(score) {
-  const m = abilityMod(score);
-  return m >= 0 ? `+${m}` : `${m}`;
-}
 
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -391,7 +383,7 @@ function MonsterBuilder({ onSave }) {
                 onChange={e => setM(prev => ({ ...prev, abilities: { ...prev.abilities, [ab]: Number(e.target.value) || 0 } }))}
               />
               <div style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
-                {modStr(m.abilities[ab])}
+                {modStr(calcMod(m.abilities[ab]))}
               </div>
             </div>
           ))}
@@ -498,7 +490,7 @@ function MonsterBuilder({ onSave }) {
               {ABILITIES.map(ab => (
                 <div key={ab}>
                   <div style={{ fontSize: '10px', fontWeight: 700, color: '#c9a84c' }}>{ab}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text)' }}>{m.abilities[ab]} ({modStr(m.abilities[ab])})</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text)' }}>{m.abilities[ab]} ({modStr(calcMod(m.abilities[ab]))})</div>
                 </div>
               ))}
             </div>

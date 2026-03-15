@@ -12,6 +12,7 @@ import { HELP, ACTION_ECONOMY } from '../data/helpText';
 import { CONDITION_EFFECTS, computeConditionEffects } from '../data/conditionEffects';
 import { calculateEffectiveDamage, applyDamageToHp, calculateHealingResult, resolveDeathSave, checkConcentration } from '../utils/damageEngine';
 import { insertCombatLog } from '../api/combatLog';
+import { rollDie } from '../utils/dice';
 
 const CONDITION_ICONS = {
   'Blinded': '\u{1F441}', 'Charmed': '\u{1F495}', 'Deafened': '\u{1F507}',
@@ -20,10 +21,6 @@ const CONDITION_ICONS = {
   'Petrified': '\u{1FAA8}', 'Poisoned': '\u{1F922}', 'Prone': '\u{2B07}',
   'Restrained': '\u{26D3}', 'Stunned': '\u{2B50}', 'Unconscious': '\u{1F480}',
 };
-
-function rollDie(sides) {
-  return Math.floor(Math.random() * sides) + 1;
-}
 
 function parseBonus(str) {
   const n = parseInt(str);

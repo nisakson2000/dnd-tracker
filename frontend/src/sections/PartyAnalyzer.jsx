@@ -7,10 +7,9 @@ import {
 } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import toast from 'react-hot-toast';
+import { ABILITIES } from '../utils/dndHelpers';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
 
 const ABILITY_FULL = {
   STR: 'Strength', DEX: 'Dexterity', CON: 'Constitution',
