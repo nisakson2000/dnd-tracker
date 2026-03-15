@@ -353,7 +353,7 @@ export default function DMSession() {
       }
     })();
     return () => {
-      invoke('ws_stop_server').catch(() => {});
+      invoke('ws_stop_server').catch(() => {}); // Cleanup on unmount — safe to ignore
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -516,8 +516,8 @@ export default function DMSession() {
       // Broadcast session end to all players
       await invoke('ws_broadcast_event', {
         eventJson: JSON.stringify({ type: 'SessionEnd', campaign_id: campaignId }),
-      }).catch(() => {});
-      await invoke('ws_stop_server').catch(() => {});
+      }).catch(e => console.warn('[DMSession] Failed to broadcast session end:', e));
+      await invoke('ws_stop_server').catch(e => console.warn('[DMSession] Failed to stop WS server:', e));
       dispatch({ type: 'END_SESSION' });
       // Clean up saved timer
       localStorage.removeItem(`codex-session-timer-${sessionId || campaignId}`);
@@ -573,7 +573,7 @@ export default function DMSession() {
         combatant_id: combatant?.id || combatant?.name || '',
         round: nextRound,
       }),
-    }).catch(() => {});
+    }).catch(e => console.warn('[DMSession] Broadcast failed:', e));
   };
 
   const handleSelectScene = (scene) => {
@@ -586,7 +586,7 @@ export default function DMSession() {
         player_description: scene.player_description || scene.description || '',
         mood: scene.mood || '', phase: scene.phase || '',
       }),
-    }).catch(() => {});
+    }).catch(e => console.warn('[DMSession] Broadcast failed:', e));
   };
 
   // M-14: Award XP
@@ -608,7 +608,7 @@ export default function DMSession() {
           amount: parseInt(xpAmount) || 0, reason: xpReason || 'Encounter',
           player_ids: xpSelectedPlayers,
         }),
-      }).catch(() => {});
+      }).catch(e => console.warn('[DMSession] Broadcast failed:', e));
       setShowXpModal(false);
       setXpAmount('');
       setXpReason('');
@@ -633,7 +633,7 @@ export default function DMSession() {
           type: 'InspirationAwarded', campaign_id: campaignId,
           player_id: playerId, inspired: newVal,
         }),
-      }).catch(() => {});
+      }).catch(e => console.warn('[DMSession] Broadcast failed:', e));
     } catch (e) {
       toast.error('Failed to toggle inspiration');
       console.error(e);
@@ -1323,7 +1323,7 @@ export default function DMSession() {
             onLoadEncounter={(enc) => toast(`Loading encounter: ${enc.length} monsters`, { icon: '\u2694\uFE0F' })}
             onRevealNpcs={(ids) => {
               ids.forEach(id => {
-                broadcastEvent({ type: 'NPCDiscovered', campaign_id: campaignId, npc_id: id }).catch(() => {});
+                broadcastEvent({ type: 'NPCDiscovered', campaign_id: campaignId, npc_id: id }).catch(e => console.warn('[DMSession] Broadcast failed:', e));
               });
               toast.success(`Revealed ${ids.length} NPC(s)`);
             }}

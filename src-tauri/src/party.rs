@@ -159,7 +159,16 @@ impl PartyServer {
                 .collect()
         };
         for id in stale_ids {
-            self.remove_client(&id).await;
+            // Re-check staleness before removing to avoid racing with a fresh heartbeat
+            let still_stale = {
+                let clients = self.clients.read().await;
+                clients.get(&id).map_or(false, |c| {
+                    Instant::now().duration_since(c.last_seen).as_secs() > CLIENT_TIMEOUT_SECS
+                })
+            };
+            if still_stale {
+                self.remove_client(&id).await;
+            }
         }
     }
 

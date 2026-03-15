@@ -8,8 +8,7 @@ import HelpTooltip from '../components/HelpTooltip';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
 import { HELP } from '../data/helpText';
-
-function calcMod(score) { const s = typeof score === 'number' && !isNaN(score) ? score : 10; return Math.floor((s - 10) / 2); }
+import { calcMod } from '../utils/dndHelpers';
 
 // Subclasses that grant third-caster spellcasting
 const THIRD_CASTER_SUBCLASSES = {

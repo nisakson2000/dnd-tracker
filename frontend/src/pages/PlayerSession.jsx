@@ -13,6 +13,7 @@ import { listen } from '@tauri-apps/api/event';
 import { useSession } from '../contexts/SessionContext';
 import { useCampaignSyncSafe } from '../contexts/CampaignSyncContext';
 import { CONDITION_EFFECTS } from '../data/conditionEffects';
+import { SKILL_ABILITY_MAP } from '../utils/dndHelpers';
 import { getOverview, updateOverview } from '../api/overview';
 import { getItems, getCurrency } from '../api/inventory';
 import { getSpellSlots, updateSpellSlots } from '../api/spells';
@@ -234,13 +235,6 @@ export default function PlayerSession() {
     setSkillCheckRolling(true);
     const roll = Math.floor(Math.random() * 20) + 1;
     // Compute ability modifier from character sheet
-    const SKILL_ABILITY_MAP = {
-      Athletics: 'Strength',
-      Acrobatics: 'Dexterity', 'Sleight of Hand': 'Dexterity', Stealth: 'Dexterity',
-      Arcana: 'Intelligence', History: 'Intelligence', Investigation: 'Intelligence', Nature: 'Intelligence', Religion: 'Intelligence',
-      'Animal Handling': 'Wisdom', Insight: 'Wisdom', Medicine: 'Wisdom', Perception: 'Wisdom', Survival: 'Wisdom',
-      Deception: 'Charisma', Intimidation: 'Charisma', Performance: 'Charisma', Persuasion: 'Charisma',
-    };
     const abilityName = skillCheckPrompt.ability || SKILL_ABILITY_MAP[skillCheckPrompt.skill] || '';
     const abilityEntry = charAbilities.find(a => a.ability?.toLowerCase() === abilityName.toLowerCase());
     const modifier = abilityEntry ? Math.floor(((abilityEntry.score || 10) - 10) / 2) : 0;

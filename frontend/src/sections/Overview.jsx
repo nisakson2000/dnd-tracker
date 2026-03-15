@@ -18,8 +18,7 @@ import SubclassSelectModal from '../components/SubclassSelectModal';
 import ModalPortal from '../components/ModalPortal';
 import { computeConditionEffects, CONDITION_EFFECTS } from '../data/conditionEffects';
 import { autoPopulateStats } from '../utils/autoPopulate';
-
-const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+import { calcMod, calcProfBonus, ABILITIES } from '../utils/dndHelpers';
 
 const DAMAGE_TYPES = [
   'Acid', 'Bludgeoning', 'Cold', 'Fire', 'Force', 'Lightning', 'Necrotic',
@@ -28,24 +27,8 @@ const DAMAGE_TYPES = [
 ];
 const ABILITY_NAMES = { STR: 'Strength', DEX: 'Dexterity', CON: 'Constitution', INT: 'Intelligence', WIS: 'Wisdom', CHA: 'Charisma' };
 
-function calcMod(score) {
-  const s = typeof score === 'number' && !isNaN(score) ? score : 10;
-  return Math.floor((s - 10) / 2);
-}
-
 function modStr(mod) {
   return mod >= 0 ? `+${mod}` : `${mod}`;
-}
-
-// ── Automation Engine Helpers ──
-
-/** Proficiency bonus from level (D&D 5e standard) */
-function calcProfBonus(level) {
-  if (level >= 17) return 6;
-  if (level >= 13) return 5;
-  if (level >= 9) return 4;
-  if (level >= 5) return 3;
-  return 2;
 }
 
 /** Standard hit die size per class */

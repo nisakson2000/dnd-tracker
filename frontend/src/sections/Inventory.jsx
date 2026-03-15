@@ -11,6 +11,7 @@ import ModalPortal from '../components/ModalPortal';
 import { HELP } from '../data/helpText';
 import { ITEM_CATALOG } from '../data/itemCatalog';
 import { useCampaignSyncSafe } from '../contexts/CampaignSyncContext';
+import { calcMod } from '../utils/dndHelpers';
 
 // --- Standard 5e Armor AC values ---
 const ARMOR_AC_TABLE = {
@@ -95,7 +96,6 @@ function getCharacterProficiencies(characterClass, characterRace) {
   };
 }
 
-function calcMod(score) { return Math.floor(((typeof score === 'number' && !isNaN(score) ? score : 10) - 10) / 2); }
 
 // --- Item Tag System ---
 const TAG_STYLES = {

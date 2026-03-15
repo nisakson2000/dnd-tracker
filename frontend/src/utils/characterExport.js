@@ -3,10 +3,7 @@
  * Generates printable character sheet (PDF via browser print) and plain text export.
  */
 
-function calcMod(score) {
-  const s = typeof score === 'number' && !isNaN(score) ? score : 10;
-  return Math.floor((s - 10) / 2);
-}
+import { calcMod } from './dndHelpers';
 
 function modStr(mod) {
   return mod >= 0 ? `+${mod}` : `${mod}`;

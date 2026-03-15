@@ -9,24 +9,15 @@ import { getOverview, updateOverview } from '../api/overview';
 import { getAttacks, getConditions, updateConditions } from '../api/combat';
 import { getSpells, getSpellSlots, updateSpellSlots } from '../api/spells';
 import { parseAndRollExpression } from '../utils/dice';
+import { calcMod, calcProfBonus, ABILITIES } from '../utils/dndHelpers';
 
-const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
 const ABILITY_COLORS = {
   STR: 'var(--str-c)', DEX: 'var(--dex-c)', CON: 'var(--con-c)',
   INT: 'var(--int-c)', WIS: 'var(--wis-c)', CHA: 'var(--cha-c)',
 };
 
-function calcMod(score) {
-  return Math.floor(((typeof score === 'number' ? score : 10) - 10) / 2);
-}
 function modStr(m) { return m >= 0 ? `+${m}` : `${m}`; }
-function calcProf(level) {
-  if (level >= 17) return 6;
-  if (level >= 13) return 5;
-  if (level >= 9) return 4;
-  if (level >= 5) return 3;
-  return 2;
-}
+const calcProf = calcProfBonus;
 
 // Shared inline style fragments
 const S = {

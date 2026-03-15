@@ -1,12 +1,7 @@
 // Auto-populate character stats from class/race/level selection
 // Uses existing CLASSES and RACES data from the ruleset
 
-/**
- * Calculate the modifier for an ability score.
- */
-function calcMod(score) {
-  return Math.floor(((typeof score === 'number' && !isNaN(score) ? score : 10) - 10) / 2);
-}
+import { calcMod, calcProfBonus } from './dndHelpers';
 
 /**
  * Calculate auto HP: max hit die at level 1, then (avg + CON mod) per subsequent level.
@@ -17,17 +12,6 @@ function calcAutoHP(hitDie, level, conMod) {
   const hpAtOne = hitDie + conMod;
   const hpAfterOne = (level - 1) * (avg + conMod);
   return Math.max(1, hpAtOne + hpAfterOne);
-}
-
-/**
- * Calculate proficiency bonus from total level.
- */
-function calcProfBonus(level) {
-  if (level >= 17) return 6;
-  if (level >= 13) return 5;
-  if (level >= 9) return 4;
-  if (level >= 5) return 3;
-  return 2;
 }
 
 /**

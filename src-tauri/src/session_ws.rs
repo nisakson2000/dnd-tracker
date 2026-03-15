@@ -414,13 +414,11 @@ impl SessionServer {
             let _ = player.sender.send(Message::Text(snap_text));
         }
 
-        // Move to approved clients
+        // Move to approved clients — acquire both locks atomically
         {
             let mut clients = self.clients.lock().await;
-            clients.insert(player_uuid.to_string(), player.sender);
-        }
-        {
             let mut names = self.client_names.lock().await;
+            clients.insert(player_uuid.to_string(), player.sender);
             names.insert(player_uuid.to_string(), player.display_name);
         }
 
@@ -604,11 +602,9 @@ async fn handle_connection(
                                 }
                                 Ok(event) => {
                                     // Only forward events from approved clients
-                                    let is_approved = {
-                                        let cl = clients.lock().await;
-                                        cl.contains_key(&player_uuid)
-                                    };
-                                    if is_approved {
+                                    // Hold lock during emit to prevent TOCTOU race
+                                    let cl = clients.lock().await;
+                                    if cl.contains_key(&player_uuid) {
                                         let _ = app.emit(
                                             "session-game-event",
                                             serde_json::json!({
@@ -617,6 +613,7 @@ async fn handle_connection(
                                             }),
                                         );
                                     }
+                                    drop(cl);
                                 }
                                 Err(e) => {
                                     eprintln!("[session_ws] Bad message from {}: {}", player_uuid, e);
