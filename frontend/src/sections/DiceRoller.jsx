@@ -366,17 +366,19 @@ export default function DiceRoller({ characterId, activeConditions = [], session
       const allRolls = groups.flatMap(g => g.kept);
 
       // Handle adv/dis for simple 1d20 expressions
-      const isSingleD20 = groups.length === 1 && groups[0].count === 1 && groups[0].sides === 20 && !groups[0].keepMode;
+      const isSingleD20 = groups.length > 0 && groups[0].count === 1 && groups[0].sides === 20 && !groups[0].keepMode && groups.length === 1;
       if (isSingleD20 && rollMode !== 'normal') {
-        const roll1 = groups[0].rolls[0];
-        const roll2 = rollDie(20);
-        const chosen = rollMode === 'advantage' ? Math.max(roll1, roll2) : Math.min(roll1, roll2);
-        finalTotal = chosen + modifier;
-        advInfo = { roll1, roll2, mode: rollMode, chosen };
+        const roll1 = groups[0].rolls?.[0];
+        if (roll1 != null) {
+          const roll2 = rollDie(20);
+          const chosen = rollMode === 'advantage' ? Math.max(roll1, roll2) : Math.min(roll1, roll2);
+          finalTotal = chosen + modifier;
+          advInfo = { roll1, roll2, mode: rollMode, chosen };
+        }
       }
 
-      const isNat20 = isSingleD20 && (advInfo ? advInfo.chosen === 20 : groups[0].rolls[0] === 20);
-      const isNat1 = isSingleD20 && (advInfo ? advInfo.chosen === 1 : groups[0].rolls[0] === 1);
+      const isNat20 = isSingleD20 && (advInfo ? advInfo.chosen === 20 : groups[0].rolls?.[0] === 20);
+      const isNat1 = isSingleD20 && (advInfo ? advInfo.chosen === 1 : groups[0].rolls?.[0] === 1);
 
       const modeTag = advInfo ? (advInfo.mode === 'advantage' ? ' (ADV)' : ' (DIS)') : '';
       const label = rollLabel || autoLabel;

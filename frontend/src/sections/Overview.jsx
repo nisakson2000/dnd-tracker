@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { TrendingUp, TrendingDown, Heart, Shield, ShieldOff, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles, Skull, Search, Brain, Swords, AlertTriangle, ChevronDown, ChevronUp, ChevronRight, StickyNote, Flame, Waves, Wind, Target, Wand2, Calculator, Package, Dices, X, Plus, Trash2, Compass, Loader2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Heart, Shield, ShieldOff, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles, Skull, Search, Brain, Swords, AlertTriangle, ChevronDown, ChevronUp, ChevronRight, StickyNote, Flame, Waves, Wind, Target, Wand2, Calculator, Package, Dices, X, Plus, Trash2, Compass, Loader2, RotateCcw } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { getTotalLevel, getHitDiceBreakdown } from '../utils/multiclass';
 import toast from 'react-hot-toast';
@@ -55,6 +55,8 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const [loading, setLoading] = useState(true);
   const [localAbilities, setLocalAbilities] = useState({});
   const [itemStatBonuses, setItemStatBonuses] = useState({});
+  const [itemSaveBonus, setItemSaveBonus] = useState(0);
+  const [itemMagicBonuses, setItemMagicBonuses] = useState([]); // [{name, magic_bonus, item_type}]
   const [showSubclassModal, setShowSubclassModal] = useState(false);
   const [showLevelConfirm, setShowLevelConfirm] = useState(null);
   const [diceHintDismissed, setDiceHintDismissed] = useState(() => !!localStorage.getItem('codex-dice-hint-dismissed'));
@@ -73,10 +75,12 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
       data.ability_scores.forEach(a => { localAb[a.ability] = String(a.score); });
       setLocalAbilities(localAb);
       prevLevelRef.current = data.overview.level;
-      // Load equipped item stat bonuses
+      // Load equipped item stat bonuses, save bonuses, and magic bonuses
       try {
         const allItems = await getItems(characterId);
         const bonuses = {};
+        let totalSaveBonus = 0;
+        const magicItems = [];
         for (const item of allItems.filter(i => i.equipped)) {
           try {
             const mods = typeof item.stat_modifiers === 'string'
@@ -89,8 +93,18 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
               }
             }
           } catch (err) { if (import.meta.env.DEV) console.warn('Failed to parse item stat_modifiers:', err); }
+          // Accumulate save bonus from items like Cloak of Protection
+          if (item.save_bonus && typeof item.save_bonus === 'number' && item.save_bonus > 0) {
+            totalSaveBonus += item.save_bonus;
+          }
+          // Track magic bonus items for attack/AC display
+          if (item.magic_bonus && typeof item.magic_bonus === 'number' && item.magic_bonus > 0) {
+            magicItems.push({ name: item.name, magic_bonus: item.magic_bonus, item_type: item.item_type });
+          }
         }
         setItemStatBonuses(bonuses);
+        setItemSaveBonus(totalSaveBonus);
+        setItemMagicBonuses(magicItems);
       } catch (err) { if (import.meta.env.DEV) console.warn('Failed to load item stat bonuses:', err); }
     } catch (err) {
       toast.error(`Failed to load: ${err.message}`);
@@ -104,6 +118,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   useEffect(() => {
     return () => {
       if (subclassTimeoutRef.current) clearTimeout(subclassTimeoutRef.current);
+      if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
     };
   }, []);
 
@@ -147,6 +162,8 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const [damageType, setDamageType] = useState(''); // selected damage type for auto-modifier detection
   const prevHpRef = useRef(null);
   const smartDamageAppliedRef = useRef(false);
+  const [lastHpAction, setLastHpAction] = useState(null); // { prevHp, prevTempHp, label, timestamp }
+  const undoTimerRef = useRef(null);
 
   // ── Automation Engine State ──
   const [showHPCalc, setShowHPCalc] = useState(false);
@@ -327,6 +344,10 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     const tempAbsorbed = oldTemp - newTemp;
 
     smartDamageAppliedRef.current = true; // prevent duplicate concentration toast from useEffect
+    // Save undo state
+    setLastHpAction({ prevHp: overview.current_hp, prevTempHp: overview.temp_hp || 0, label: `${dmg} damage` });
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    undoTimerRef.current = setTimeout(() => setLastHpAction(null), 10000);
     const updated = { ...overview, temp_hp: newTemp, current_hp: newCurrent };
     // If HP drops to 0, activate death save mode (clear previous saves)
     if (newCurrent === 0 && overview.current_hp > 0) {
@@ -411,6 +432,10 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     if (heal <= 0) return;
     const newCurrent = Math.min(overview.max_hp, overview.current_hp + heal);
     const actualHeal = newCurrent - overview.current_hp;
+    // Save undo state
+    setLastHpAction({ prevHp: overview.current_hp, prevTempHp: overview.temp_hp || 0, label: `${actualHeal} heal` });
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    undoTimerRef.current = setTimeout(() => setLastHpAction(null), 10000);
     const updated = { ...overview, current_hp: newCurrent };
     // If healing from 0 HP, clear death saves and exit death save mode
     if (overview.current_hp === 0 && newCurrent > 0) {
@@ -443,14 +468,24 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
     setShowTempHpInput(false);
   };
 
-  const rollDice = (label, mod, { disadvantage = false } = {}) => {
+  const rollDice = (label, mod, { disadvantage = false, advantage = false } = {}) => {
     const d20a = Math.floor(Math.random() * 20) + 1;
-    const d20b = disadvantage ? Math.floor(Math.random() * 20) + 1 : d20a;
-    const d20 = disadvantage ? Math.min(d20a, d20b) : d20a;
+    const hasAdvDis = advantage || disadvantage;
+    const d20b = hasAdvDis ? Math.floor(Math.random() * 20) + 1 : d20a;
+    let d20;
+    if (advantage && disadvantage) {
+      d20 = d20a; // Cancel out per 5e rules
+    } else if (advantage) {
+      d20 = Math.max(d20a, d20b);
+    } else if (disadvantage) {
+      d20 = Math.min(d20a, d20b);
+    } else {
+      d20 = d20a;
+    }
     const total = d20 + mod;
     const natText = d20 === 20 ? ' — NAT 20!' : d20 === 1 ? ' — NAT 1!' : '';
-    const disText = disadvantage ? ` [DIS: ${d20a}, ${d20b}]` : '';
-    toast(`${label}: ${d20} + (${modStr(mod)}) = ${total}${natText}${disText}`, {
+    const modeText = advantage && disadvantage ? ' [ADV+DIS cancel]' : advantage ? ` [ADV: ${d20a}, ${d20b}]` : disadvantage ? ` [DIS: ${d20a}, ${d20b}]` : '';
+    toast(`${label}: ${d20} + (${modStr(mod)}) = ${total}${natText}${modeText}`, {
       icon: '🎲',
       duration: 4000,
       style: { background: d20 === 20 ? '#1a2e1a' : d20 === 1 ? '#2e1a1a' : '#1a1520', color: '#fde68a', border: '1px solid rgba(201,168,76,0.3)', fontFamily: 'monospace' },
@@ -458,7 +493,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   };
 
   const rollAbilityCheck = (ability, mod) => {
-    rollDice(`${ABILITY_NAMES[ability]} Check`, mod);
+    rollDice(`${ABILITY_NAMES[ability]} Check`, mod, { disadvantage: condEffects.checkDisadvantage });
   };
 
   const rollSavingThrow = (ability, mod, isAutoFail, hasDis) => {
@@ -1230,7 +1265,10 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 </span>
               )}
             </div>
-            <p className="text-xs text-amber-200/30 mb-3">Click to mark proficiency — adds +{profBonus} to the roll.</p>
+            <p className="text-xs text-amber-200/30 mb-3">
+              Click to mark proficiency — adds +{profBonus} to the roll.
+              {itemSaveBonus > 0 && <span className="text-green-400/70 ml-1">(+{itemSaveBonus} from items)</span>}
+            </p>
             {(() => {
               const noSavesSet = saves.every(s => !s.proficient);
               const classData = CLASSES.find(c => c.name === overview.primary_class);
@@ -1255,8 +1293,10 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             <div className="space-y-0.5">
               {ABILITIES.map(ab => {
                 const score = abilityMap[ab] || 10;
+                const itemBonus = itemStatBonuses[ab] || 0;
+                const effectiveScore = score + itemBonus;
                 const prof = saveMap[ab] || false;
-                const mod = calcMod(score) + (prof ? profBonus : 0);
+                const mod = calcMod(effectiveScore) + (prof ? profBonus : 0) + itemSaveBonus;
                 const isAutoFail = condEffects.autoFailSaves.has(ab);
                 const hasDis = condEffects.saveDisadvantage.has(ab);
                 return (
@@ -1329,7 +1369,8 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
               {sortedSkillEntries.map(([skillName, ability]) => {
                 const sk = skills.find(s => s.name === skillName);
                 const score = abilityMap[ability] || 10;
-                const mod = calcMod(score) + (sk?.expertise ? profBonus * 2 : sk?.proficient ? profBonus : 0);
+                const skillItemBonus = itemStatBonuses[ability] || 0;
+                const mod = calcMod(score + skillItemBonus) + (sk?.expertise ? profBonus * 2 : sk?.proficient ? profBonus : 0);
                 const state = sk?.expertise ? 'expertise' : sk?.proficient ? 'proficient' : 'none';
                 return (
                   <div key={skillName} className="flex items-center gap-2 py-[5px] px-1.5 rounded group hover:bg-white/[0.025] transition-colors select-none">
@@ -1790,6 +1831,23 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                   <span className="text-[10px] text-blue-300/50">Current: {overview.temp_hp} (keeps higher)</span>
                 )}
               </div>
+            )}
+            {/* Undo last HP change (10-second window) */}
+            {lastHpAction && (
+              <button
+                onClick={() => {
+                  const restored = { ...overview, current_hp: lastHpAction.prevHp, temp_hp: lastHpAction.prevTempHp };
+                  setOverview(restored);
+                  triggerOverview(restored);
+                  toast.success(`Undid ${lastHpAction.label}. HP restored to ${lastHpAction.prevHp}/${overview.max_hp}`);
+                  setLastHpAction(null);
+                  if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+                }}
+                className="flex items-center gap-1.5 text-[10px] font-medium px-3 py-1 mt-1 rounded bg-amber-900/15 border border-amber-500/20 text-amber-400/70 hover:bg-amber-900/25 hover:text-amber-300 transition-all w-fit"
+                title="Undo the last damage or healing applied"
+              >
+                <RotateCcw size={10} /> Undo {lastHpAction.label}
+              </button>
             )}
             {/* HP bar with color states and temp HP segment */}
             <div className="hp-bar-bg" style={{ marginTop: '10px' }} role="progressbar" aria-label={`HP: ${overview.current_hp} of ${overview.max_hp}`} aria-valuenow={overview.current_hp} aria-valuemin={0} aria-valuemax={overview.max_hp}>

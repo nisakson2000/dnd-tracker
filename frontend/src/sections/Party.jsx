@@ -4,7 +4,9 @@ import toast from 'react-hot-toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useAppMode } from '../contexts/ModeContext';
 import { useParty } from '../contexts/PartyContext';
-import { modStr } from '../utils/dndHelpers';
+import { modStr, calcMod, calcProfBonus } from '../utils/dndHelpers';
+import { getOverview } from '../api/overview';
+import { getItems } from '../api/inventory';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -279,13 +281,13 @@ function PartyStatsOverview({ members }) {
 
   if (withHp.length === 0) return null;
 
-  const hpPercentages = withHp.map(m => (m.character.hp / m.character.max_hp) * 100);
-  const avgHpPct = Math.round(hpPercentages.reduce((a, b) => a + b, 0) / hpPercentages.length);
+  const hpPercentages = withHp.map(m => (m.character.hp / (m.character.max_hp || 1)) * 100);
+  const avgHpPct = Math.round(hpPercentages.reduce((a, b) => a + b, 0) / (hpPercentages.length || 1));
 
   let lowestMember = withHp[0];
   let lowestPct = 100;
   withHp.forEach(m => {
-    const pct = (m.character.hp / m.character.max_hp) * 100;
+    const pct = (m.character.hp / (m.character.max_hp || 1)) * 100;
     if (pct < lowestPct) { lowestPct = pct; lowestMember = m; }
   });
   lowestPct = Math.round(lowestPct);
@@ -355,18 +357,82 @@ export default function Party({ characterId, character, activeConditions, onBugR
   const [copied, setCopied] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
+  // Load full character data (abilities, saves, skills) from DB for accurate snapshot
+  const [charAbilities, setCharAbilities] = useState([]);
+  const [charSaves, setCharSaves] = useState([]);
+  const [charSkills, setCharSkills] = useState([]);
+  const [charItemSaveBonus, setCharItemSaveBonus] = useState(0);
+  const [charItemStatBonuses, setCharItemStatBonuses] = useState({});
+
+  useEffect(() => {
+    if (!characterId) return;
+    let cancelled = false;
+    getOverview(characterId).then(data => {
+      if (cancelled) return;
+      setCharAbilities(data.ability_scores || []);
+      setCharSaves(data.saving_throws || []);
+      setCharSkills(data.skills || []);
+    }).catch(() => {});
+    // Load equipped item bonuses (stat modifiers + save bonus)
+    getItems(characterId).then(items => {
+      if (cancelled) return;
+      let totalSaveBonus = 0;
+      const statBonuses = {};
+      for (const item of items.filter(i => i.equipped)) {
+        if (item.save_bonus && typeof item.save_bonus === 'number' && item.save_bonus > 0) {
+          totalSaveBonus += item.save_bonus;
+        }
+        // Parse stat_modifiers (e.g., Belt of Giant Strength: {"str": 2})
+        try {
+          const mods = typeof item.stat_modifiers === 'string'
+            ? JSON.parse(item.stat_modifiers || '{}')
+            : (item.stat_modifiers || {});
+          for (const [stat, value] of Object.entries(mods)) {
+            const key = stat.toUpperCase();
+            if (typeof value === 'number' && value !== 0) {
+              statBonuses[key] = (statBonuses[key] || 0) + value;
+            }
+          }
+        } catch (err) { /* ignore parse errors */ }
+      }
+      setCharItemSaveBonus(totalSaveBonus);
+      setCharItemStatBonuses(statBonuses);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [characterId, character?.level, character?.primary_class]);
+
   // Wire up the bug report callback
   useEffect(() => {
     onBugReportRef.current = onBugReport;
   }, [onBugReport, onBugReportRef]);
 
   const charSnapshot = useMemo(() => {
-    const abilityScores = character?.ability_scores || {};
-    const wisMod = abilityScores.WIS?.modifier ?? 0;
-    const profBonus = character?.proficiency_bonus ?? 2;
-    const skills = character?.skills || {};
-    const perceptionProf = skills.Perception?.proficiency ?? false;
-    const passivePerception = 10 + wisMod + (perceptionProf ? profBonus : 0);
+    // Build ability modifier map from loaded data (including item stat bonuses)
+    const abilityModMap = {};
+    for (const ab of charAbilities) {
+      const itemBonus = charItemStatBonuses[ab.ability] || 0;
+      abilityModMap[ab.ability] = calcMod((ab.score || 10) + itemBonus);
+    }
+    const profBonus = calcProfBonus(character?.level || 1);
+    const wisMod = abilityModMap.WIS ?? 0;
+
+    // Build saving throw proficiency map
+    const saveMap = {};
+    for (const sv of charSaves) {
+      saveMap[sv.ability] = !!sv.proficient;
+    }
+
+    // Build skill proficiency map
+    const skillMap = {};
+    for (const sk of charSkills) {
+      if (sk.proficient || sk.expertise) {
+        skillMap[sk.name] = { proficient: !!sk.proficient, expertise: !!sk.expertise };
+      }
+    }
+
+    const perceptionSkill = charSkills.find(s => s.name === 'Perception');
+    const perceptionProf = perceptionSkill?.proficient || perceptionSkill?.expertise;
+    const passivePerception = 10 + wisMod + (perceptionProf ? (perceptionSkill?.expertise ? profBonus * 2 : profBonus) : 0);
 
     return {
       id: characterId,
@@ -378,20 +444,20 @@ export default function Party({ characterId, character, activeConditions, onBugR
       max_hp: character?.max_hp ?? 0,
       ac: character?.armor_class ?? 10,
       ability_scores: {
-        STR: abilityScores.STR?.modifier ?? 0,
-        DEX: abilityScores.DEX?.modifier ?? 0,
-        CON: abilityScores.CON?.modifier ?? 0,
-        INT: abilityScores.INT?.modifier ?? 0,
-        WIS: wisMod,
-        CHA: abilityScores.CHA?.modifier ?? 0,
+        STR: abilityModMap.STR ?? 0,
+        DEX: abilityModMap.DEX ?? 0,
+        CON: abilityModMap.CON ?? 0,
+        INT: abilityModMap.INT ?? 0,
+        WIS: abilityModMap.WIS ?? 0,
+        CHA: abilityModMap.CHA ?? 0,
       },
       saving_throws: {
-        STR: !!character?.saving_throws?.STR,
-        DEX: !!character?.saving_throws?.DEX,
-        CON: !!character?.saving_throws?.CON,
-        INT: !!character?.saving_throws?.INT,
-        WIS: !!character?.saving_throws?.WIS,
-        CHA: !!character?.saving_throws?.CHA,
+        STR: saveMap.STR ?? false,
+        DEX: saveMap.DEX ?? false,
+        CON: saveMap.CON ?? false,
+        INT: saveMap.INT ?? false,
+        WIS: saveMap.WIS ?? false,
+        CHA: saveMap.CHA ?? false,
       },
       proficiency_bonus: profBonus,
       conditions: activeConditions || [],
@@ -403,6 +469,8 @@ export default function Party({ characterId, character, activeConditions, onBugR
       prepared_spells: character?.prepared_spells || [],
       feature_charges: character?.feature_charges || [],
       class_resources: character?.class_resources || [],
+      skills: skillMap,
+      item_save_bonus: charItemSaveBonus,
       currency: character?.currency || { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 },
       death_saves: character?.death_saves || { successes: 0, failures: 0 },
       concentration_spell: character?.concentration_spell || null,
@@ -415,8 +483,8 @@ export default function Party({ characterId, character, activeConditions, onBugR
   }, [
     characterId, character?.name, character?.race, character?.primary_class,
     character?.level, character?.current_hp, character?.max_hp, character?.armor_class,
-    character?.ability_scores, character?.saving_throws, character?.proficiency_bonus,
-    character?.skills, character?.spell_save_dc, activeConditions,
+    charAbilities, charSaves, charSkills, charItemSaveBonus, charItemStatBonuses,
+    character?.spell_save_dc, activeConditions,
     character?.temp_hp, character?.currency, character?.inspiration,
   ]);
 
@@ -431,7 +499,7 @@ export default function Party({ characterId, character, activeConditions, onBugR
   useEffect(() => {
     if (status !== 'connected') return;
     const condKey = (activeConditions || []).join(',');
-    const key = `${character?.current_hp}|${character?.max_hp}|${character?.armor_class}|${character?.level}|${character?.name}|${character?.race}|${character?.primary_class}|${character?.proficiency_bonus}|${character?.spell_save_dc}|${JSON.stringify(character?.ability_scores)}|${JSON.stringify(character?.saving_throws)}|${condKey}|${character?.temp_hp}|${JSON.stringify(character?.currency)}|${character?.inspiration}`;
+    const key = `${character?.current_hp}|${character?.max_hp}|${character?.armor_class}|${character?.level}|${character?.name}|${character?.race}|${character?.primary_class}|${character?.spell_save_dc}|${JSON.stringify(charAbilities)}|${JSON.stringify(charSaves)}|${JSON.stringify(charSkills)}|${condKey}|${character?.temp_hp}|${JSON.stringify(character?.currency)}|${character?.inspiration}`;
     if (prevStatsRef.current === key) return;
     prevStatsRef.current = key;
     sendUpdate(charSnapshot);
@@ -439,9 +507,8 @@ export default function Party({ characterId, character, activeConditions, onBugR
     status, sendUpdate, charSnapshot,
     character?.current_hp, character?.max_hp, character?.armor_class,
     character?.level, character?.name, character?.race, character?.primary_class,
-    character?.proficiency_bonus, character?.spell_save_dc,
-    character?.ability_scores, character?.saving_throws, activeConditions,
-    character?.temp_hp, character?.currency, character?.inspiration,
+    character?.spell_save_dc, charAbilities, charSaves, charSkills,
+    activeConditions, character?.temp_hp, character?.currency, character?.inspiration,
   ]);
 
   const handleJoin = () => {

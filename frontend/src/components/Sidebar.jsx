@@ -139,7 +139,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
     return () => window.removeEventListener('codex-ai-settings-changed', handler);
   }, []);
 
-  const isDM = appMode === 'dm';
+  const isDM = appMode === 'dm' && (import.meta.env.DEV || false);
   const { campaignStatus } = useSession();
   const isDraft = campaignStatus === 'draft';
   // Filter DM sidebar items based on campaign type and status (draft = building, active = running)

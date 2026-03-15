@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Map, CheckSquare, Square, XCircle, Star, Coins, Package, User, MapPin, Clock, ChevronDown, ChevronRight, Flag, Scroll, MessageSquarePlus, Crosshair, Compass, EyeOff, Eye, Shuffle, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, Map, CheckSquare, Square, XCircle, Star, Coins, Package, User, MapPin, Clock, ChevronDown, ChevronRight, Flag, Scroll, MessageSquarePlus, Crosshair, Compass, EyeOff, Eye, Shuffle, Loader2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { invoke } from '@tauri-apps/api/core';
@@ -167,7 +167,7 @@ export default function Quests({ characterId }) {
   const [aiGenerating, setAiGenerating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [sortBy, setSortBy] = useState('status');
-  // viewMode reserved for future cards/timeline toggle
+  const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [sessionNoteQuest, setSessionNoteQuest] = useState(null);
   const [expandedQuests, setExpandedQuests] = useState(new Set());
@@ -383,6 +383,14 @@ export default function Quests({ characterId }) {
   const sortedQuests = useMemo(() => {
     let list = [...quests];
     if (typeFilter !== 'all') list = list.filter(q => q.quest_type === typeFilter);
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter(quest =>
+        (quest.title || '').toLowerCase().includes(q) ||
+        (quest.quest_giver || quest.giver || '').toLowerCase().includes(q) ||
+        (quest.description || '').toLowerCase().includes(q)
+      );
+    }
     return list.sort((a, b) => {
       if (sortBy === 'name') return (a.title || '').localeCompare(b.title || '');
       if (sortBy === 'status') {
@@ -400,7 +408,7 @@ export default function Quests({ characterId }) {
       }
       return 0;
     });
-  }, [quests, sortBy, typeFilter]);
+  }, [quests, sortBy, typeFilter, searchQuery]);
 
   const active = useMemo(() => sortedQuests.filter(q => q.status === 'active'), [sortedQuests]);
   const completed = useMemo(() => sortedQuests.filter(q => q.status === 'completed'), [sortedQuests]);
@@ -829,8 +837,19 @@ export default function Quests({ characterId }) {
         </div>
       )}
 
-      {/* Filters & Sort */}
+      {/* Search & Filters */}
       <div className="space-y-2">
+        {/* Search */}
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-200/30" />
+          <input
+            type="text"
+            placeholder="Search quests..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="input w-full text-sm pl-9"
+          />
+        </div>
         {/* Quest type filter */}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs text-amber-200/40">Type:</span>
@@ -860,6 +879,14 @@ export default function Quests({ characterId }) {
       <QuestSection title="Active Quests" titleClass="text-amber-100/70" quests={active} />
       <QuestSection title="Completed" titleClass="text-amber-100/40" quests={completed} wrapperClass="opacity-60" />
       <QuestSection title="Failed" titleClass="text-red-400/60" quests={failed} wrapperClass="opacity-50" />
+
+      {quests.length > 0 && sortedQuests.length === 0 && (
+        <div className="card border-dashed border-amber-200/10 text-center py-8">
+          <Search size={24} className="mx-auto text-amber-200/15 mb-2" />
+          <p className="text-sm text-amber-200/30">No quests match your search</p>
+          <button onClick={() => { setSearchQuery(''); setTypeFilter('all'); }} className="text-xs text-gold/50 hover:text-gold mt-2">Clear filters</button>
+        </div>
+      )}
 
       {quests.length === 0 && (
         <div className="card border-dashed border-amber-200/10 text-center py-12">

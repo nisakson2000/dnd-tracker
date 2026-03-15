@@ -6,19 +6,15 @@ import { useCampaignSync } from '../../contexts/CampaignSyncContext';
 import { useParty } from '../../contexts/PartyContext';
 import { parseAndRollExpression } from '../../utils/dice';
 
+// Maps skill names to ability abbreviation (matches snapshot format)
 const SKILL_TO_ABILITY = {
-  acrobatics: 'dexterity', animal_handling: 'wisdom', arcana: 'intelligence',
-  athletics: 'strength', deception: 'charisma', history: 'intelligence',
-  insight: 'wisdom', intimidation: 'charisma', investigation: 'intelligence',
-  medicine: 'wisdom', nature: 'intelligence', perception: 'wisdom',
-  performance: 'charisma', persuasion: 'charisma', religion: 'intelligence',
-  sleight_of_hand: 'dexterity', stealth: 'dexterity', survival: 'wisdom',
+  Acrobatics: 'DEX', 'Animal Handling': 'WIS', Arcana: 'INT',
+  Athletics: 'STR', Deception: 'CHA', History: 'INT',
+  Insight: 'WIS', Intimidation: 'CHA', Investigation: 'INT',
+  Medicine: 'WIS', Nature: 'INT', Perception: 'WIS',
+  Performance: 'CHA', Persuasion: 'CHA', Religion: 'INT',
+  'Sleight of Hand': 'DEX', Stealth: 'DEX', Survival: 'WIS',
 };
-
-function getAbilityModifier(score) {
-  if (score == null) return 0;
-  return Math.floor((score - 10) / 2);
-}
 
 export default function PlayerPromptPopup() {
   const { activePrompts, respondToPrompt } = useCampaignSync();
@@ -41,28 +37,60 @@ export default function PlayerPromptPopup() {
   const computeRollModifiers = () => {
     let modifier = 0;
     let proficiency = 0;
+    let itemBonus = 0;
+    let expertise = false;
     const parts = [];
+    const rollType = prompt.roll_type || '';
+    const isSave = rollType === 'Saving Throw';
+    const isSkillCheck = rollType === 'Skill Check';
 
     if (character) {
-      // Determine which ability to use
-      let abilityKey = prompt.ability; // e.g. 'strength', 'dexterity'
+      const abilityScores = character.ability_scores || {};
+      const profBonus = character.proficiency_bonus || 2;
+
+      // Determine which ability key to use (snapshot uses 'STR', 'DEX', etc.)
+      let abilityKey = prompt.ability; // Already 'WIS', 'STR' format from DM
       if (!abilityKey && prompt.skill) {
         abilityKey = SKILL_TO_ABILITY[prompt.skill];
       }
 
-      if (abilityKey && character[abilityKey] != null) {
-        modifier = getAbilityModifier(character[abilityKey]);
+      // Ability modifier — snapshot stores modifiers directly, not raw scores
+      if (abilityKey && abilityScores[abilityKey] != null) {
+        modifier = abilityScores[abilityKey];
       }
 
-      if (prompt.proficiency_required && character.proficiency_bonus) {
-        proficiency = character.proficiency_bonus;
+      // Proficiency — auto-detect from character data, don't require DM to set it
+      if (isSave) {
+        // Saving throw proficiency
+        const savingThrows = character.saving_throws || {};
+        if (savingThrows[abilityKey]) {
+          proficiency = profBonus;
+        }
+        // Item save bonus (e.g., Cloak of Protection)
+        const saveBonusFromItems = character.item_save_bonus || 0;
+        if (saveBonusFromItems > 0) {
+          itemBonus = saveBonusFromItems;
+        }
+      } else if (isSkillCheck && prompt.skill) {
+        // Skill proficiency & expertise
+        const skills = character.skills || {};
+        const skillData = skills[prompt.skill];
+        if (skillData?.expertise) {
+          proficiency = profBonus * 2;
+          expertise = true;
+        } else if (skillData?.proficient) {
+          proficiency = profBonus;
+        }
       }
     }
 
-    if (modifier !== 0) parts.push(`${modifier >= 0 ? '+' : ''}${modifier} ${prompt.ability || prompt.skill || 'ability'}`);
-    if (proficiency !== 0) parts.push(`+${proficiency} prof`);
+    const abilityLabel = prompt.skill || prompt.ability || 'ability';
+    if (modifier !== 0) parts.push(`${modifier >= 0 ? '+' : ''}${modifier} ${abilityLabel}`);
+    if (proficiency !== 0) parts.push(`+${proficiency} ${expertise ? 'expertise' : 'prof'}`);
+    if (itemBonus !== 0) parts.push(`+${itemBonus} items`);
 
-    return { modifier, proficiency, totalMod: modifier + proficiency, parts };
+    const totalMod = modifier + proficiency + itemBonus;
+    return { modifier, proficiency, totalMod, parts };
   };
 
   // Build dice expression based on advantage/disadvantage

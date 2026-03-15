@@ -1,6 +1,6 @@
 # The Codex — D&D Companion App
 
-**Current Version: V0.6.5**
+**Current Version: V0.7.0**
 
 A native desktop application for managing D&D 5e characters with full ruleset support, a 2,000+ article encyclopedia, real-time multiplayer sessions, Player/DM modes, and everything you need to play — no account, no internet, no subscriptions. Built with React + Tauri 2 (Rust).
 
@@ -18,6 +18,7 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - **D&D Beyond Import** — multi-step import wizard for D&D Beyond JSON character exports
 
 ### V4 Campaign Engine (DM↔Player Sync)
+- **Accurate Multiplayer Rolls** — player prompts auto-detect proficiency, expertise, ability modifiers, and item bonuses from character snapshot
 - **Full Data Sync** — conditions, HP, rest, loot, XP, spell slots, and 22+ event types synced between DM and players in real-time
 - **Player Combat HUD** — tabbed interface with Attack, Spell, Items, and Features tabs during combat turns
 - **Death Save System** — dramatic d20 roll overlay with nat 1/nat 20 handling, 3 success/failure tracking
@@ -74,6 +75,12 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - **Legendary & Lair Actions** — pip tracking and lair action reminders for boss fights
 
 ### Character Sheet
+- **Accurate Dice Modifiers** — all rolls include ability modifiers, proficiency, expertise, item stat bonuses, save bonuses, and condition effects per 5e RAW
+- **Advantage/Disadvantage** — full support including 5e cancellation rule (both = normal roll)
+- **Item Bonuses in Rolls** — equipped items with stat modifiers (e.g., Belt of Giant Strength +2 STR) auto-apply to all related rolls
+- **Save Bonuses** — items like Cloak of Protection auto-add to all saving throws with "(+N from items)" indicator
+- **Magic Item Properties** — weapons/armor track magic bonus (+1/+2/+3), extra damage dice, save bonuses, and special properties
+- **HP Undo** — 10-second undo window after applying damage or healing to reverse accidental changes
 - **Dice Rolling on Stats** — hover any ability score, saving throw, or skill to reveal dice icon; click to roll
 - **Floating Dice Roller** — accessible from any page via floating button (bottom-right), no longer a sidebar section
 - Ability Scores, Saving Throws, Skills (proficiency + expertise), HP tracking with color-coded bar
@@ -140,9 +147,11 @@ A native desktop application for managing D&D 5e characters with full ruleset su
 - Objectives with progress bars, difficulty ratings, failed quest section
 
 ### Inventory
+- **Magic Item Properties** — track magic bonus (+1/+2/+3), extra damage dice, save bonuses, and special properties on weapons/armor/wondrous items
 - **Currency Auto-Conversion** — consolidate all denominations to GP
 - **Encumbrance Speed Penalties** — detailed penalty display below carry weight
 - **Consumable Warnings** — red "LOW" indicator at quantity ≤ 3
+- **Enter Key Submit** — press Enter to submit item forms quickly
 - 40+ preloaded weapons/armor, currency tracking, attunement (max 3)
 
 ### Journal

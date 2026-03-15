@@ -57,7 +57,7 @@ export function parseAndRollExpression(expr) {
     const diceMatch = token.match(/^(\d+)?d(\d+)(?:k([hl])(\d+))?$/);
     if (diceMatch) {
       const count = parseInt(diceMatch[1]) || 1;
-      const sides = parseInt(diceMatch[2]);
+      const sides = parseInt(diceMatch[2]) || 6;
       const keepMode = diceMatch[3] || null;
       const keepCount = diceMatch[4] ? parseInt(diceMatch[4]) : null;
 

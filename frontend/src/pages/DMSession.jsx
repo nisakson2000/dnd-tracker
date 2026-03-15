@@ -391,7 +391,7 @@ export default function DMSession() {
       switch (gameEvent.type) {
         case 'RollBroadcast': {
           const label = gameEvent.label ? ` (${gameEvent.label})` : '';
-          const playerName = players.find(p => p.id === gameEvent.player_uuid)?.name || from || 'Player';
+          const playerName = (players || []).find(p => p.id === gameEvent.player_uuid)?.name || from || 'Player';
           dispatch({
             type: 'LOG_ACTION',
             payload: `${playerName} rolled ${gameEvent.expression} → ${gameEvent.total}${label}`,
@@ -403,12 +403,12 @@ export default function DMSession() {
           break;
         }
         case 'ConcentrationUpdate': {
-          const playerName = players.find(p => p.id === gameEvent.player_uuid)?.name || from || 'Player';
+          const playerName = (players || []).find(p => p.id === gameEvent.player_uuid)?.name || from || 'Player';
           dispatch({ type: 'LOG_ACTION', payload: `${playerName} ${gameEvent.spell ? 'concentrating on ' + gameEvent.spell : 'dropped concentration'}` });
           break;
         }
         case 'ActionRequest': {
-          const playerName = players.find(p => p.id === gameEvent.player_uuid)?.name || from || 'Player';
+          const playerName = (players || []).find(p => p.id === gameEvent.player_uuid)?.name || from || 'Player';
           toast(`${playerName} requests: ${gameEvent.description || gameEvent.action_type}`, {
             icon: '\u2753', duration: 6000,
             style: { background: '#1a1520', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' },
@@ -417,7 +417,7 @@ export default function DMSession() {
           break;
         }
         case 'ChatMessage': {
-          const senderName = players.find(p => p.id === from)?.name || gameEvent.sender || from || 'Player';
+          const senderName = (players || []).find(p => p.id === from)?.name || gameEvent.sender || from || 'Player';
           dispatch({ type: 'ADD_CHAT_MESSAGE', payload: { sender: senderName, message: gameEvent.message, timestamp: gameEvent.timestamp } });
           dispatch({ type: 'LOG_ACTION', payload: `${senderName}: ${gameEvent.message}` });
           break;
@@ -1337,7 +1337,7 @@ export default function DMSession() {
               toast.success(`Revealed ${ids.length} NPC(s)`);
             }}
             onSetScene={(sceneId) => {
-              const scene = scenes.find(s => s.id === sceneId);
+              const scene = (scenes || []).find(s => s.id === sceneId);
               if (scene) handleSelectScene(scene);
             }}
           />

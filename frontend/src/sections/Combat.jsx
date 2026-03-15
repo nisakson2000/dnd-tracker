@@ -195,7 +195,7 @@ function CombatSuggestions({ character, combatants, conditions, deathSaves, conc
 
     // 1. Low HP — suggest healing
     if (character?.current_hp > 0 && character?.max_hp > 0) {
-      const hpRatio = character.current_hp / character.max_hp;
+      const hpRatio = character.current_hp / (character.max_hp || 1);
       if (hpRatio <= 0.25) {
         tips.push({ id: 'low-hp', icon: '\u2764\uFE0F', text: 'HP critical! Consider a healing potion, healing spell, or disengaging to safety.', priority: 1 });
       } else if (hpRatio <= 0.5) {
@@ -1999,12 +1999,14 @@ function AttackForm({ onSubmit, onCancel }) {
     return () => window.removeEventListener('keydown', handler);
   }, [onCancel]);
 
+  const onKeyDown = (e) => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit(); } };
+
   return (
     <ModalPortal>
       <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onCancel()}>
       <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="font-display text-lg text-amber-100 mb-4">Add Attack</h3>
-        <div className="space-y-3">
+        <div className="space-y-3" onKeyDown={onKeyDown}>
           <div>
             <input className={`input w-full ${nameError ? 'border-red-500' : ''}`} placeholder="Weapon name" value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
             {nameError && <p className="text-red-400 text-xs mt-1">Name required</p>}

@@ -665,6 +665,31 @@ export default function Inventory({ characterId, character }) {
               );
             } catch { return null; }
           })()}
+          {/* Magic properties display */}
+          {(item.magic_bonus > 0 || item.extra_damage || item.save_bonus > 0 || item.special_properties) && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {item.magic_bonus > 0 && (
+                <span className="text-[10px] bg-purple-900/20 text-purple-400/70 px-1.5 py-0.5 rounded font-mono">
+                  +{item.magic_bonus} {item.item_type === 'weapon' ? 'attack/dmg' : item.item_type === 'armor' ? 'AC' : 'magic'}
+                </span>
+              )}
+              {item.extra_damage && (
+                <span className="text-[10px] bg-red-900/20 text-red-400/70 px-1.5 py-0.5 rounded font-mono">
+                  +{item.extra_damage}
+                </span>
+              )}
+              {item.save_bonus > 0 && (
+                <span className="text-[10px] bg-blue-900/20 text-blue-400/70 px-1.5 py-0.5 rounded font-mono">
+                  +{item.save_bonus} saves
+                </span>
+              )}
+              {item.special_properties && (
+                <span className="text-[10px] bg-amber-900/20 text-amber-400/70 px-1.5 py-0.5 rounded italic truncate max-w-[200px]" title={item.special_properties}>
+                  {item.special_properties}
+                </span>
+              )}
+            </div>
+          )}
           {comparisonItem?.id === item.id && equippedCounterpart && (() => {
             const currentStats = getEquipmentStats(equippedCounterpart);
             const newStats = getEquipmentStats(item);
@@ -1242,12 +1267,17 @@ function ItemForm({ onSubmit, onCancel, character, initialData }) {
         stat_modifiers: typeof initialData.stat_modifiers === 'string'
           ? initialData.stat_modifiers
           : JSON.stringify(initialData.stat_modifiers || {}),
+        magic_bonus: initialData.magic_bonus || 0,
+        extra_damage: initialData.extra_damage || '',
+        save_bonus: initialData.save_bonus || 0,
+        special_properties: initialData.special_properties || '',
       };
     }
     return {
       name: '', item_type: 'misc', weight: 0, value_gp: 0,
       quantity: 1, description: '', attunement: false, equipment_slot: '',
       rarity: 'common', stat_modifiers: '{}',
+      magic_bonus: 0, extra_damage: '', save_bonus: 0, special_properties: '',
     };
   });
   const [selectedCatalogItem, setSelectedCatalogItem] = useState('');
@@ -1291,12 +1321,17 @@ function ItemForm({ onSubmit, onCancel, character, initialData }) {
     }
   };
 
+  const handleFormSubmit = () => {
+    if (!form.name) return;
+    onSubmit(isEditing ? { ...form } : { ...form, attuned: false, equipped: false });
+  };
+
   return (
     <ModalPortal>
       <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onCancel()}>
       <div className="bg-[#14121c] border border-gold/30 rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
         <h3 className="font-display text-lg text-amber-100 mb-4">{isEditing ? 'Edit Item' : 'Add Item'}</h3>
-        <div className="space-y-3">
+        <div className="space-y-3" onKeyDown={e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') { e.preventDefault(); handleFormSubmit(); } }}>
           <select className="input w-full" value={form.item_type} onChange={e => { update('item_type', e.target.value); setSelectedCatalogItem(''); }}>
             {['weapon','armor','wondrous','consumable','misc'].map(t => (
               <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
@@ -1418,13 +1453,49 @@ function ItemForm({ onSubmit, onCancel, character, initialData }) {
               })()}
             </div>
           </div>
+          {/* Magic bonus, extra damage, save bonus — shown for weapons, armor, wondrous */}
+          {['weapon', 'armor', 'wondrous'].includes(form.item_type) && (
+            <div className="space-y-2 pt-2 border-t border-amber-200/8">
+              <div className="text-[10px] text-amber-200/30 uppercase tracking-wider">Magic Properties</div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="label">Magic Bonus</label>
+                  <select className="input w-full" value={form.magic_bonus} onChange={e => update('magic_bonus', parseInt(e.target.value) || 0)}>
+                    <option value={0}>None</option>
+                    <option value={1}>+1</option>
+                    <option value={2}>+2</option>
+                    <option value={3}>+3</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Save Bonus</label>
+                  <select className="input w-full" value={form.save_bonus} onChange={e => update('save_bonus', parseInt(e.target.value) || 0)} title="Bonus to all saving throws (e.g., Cloak of Protection)">
+                    <option value={0}>None</option>
+                    <option value={1}>+1</option>
+                    <option value={2}>+2</option>
+                    <option value={3}>+3</option>
+                  </select>
+                </div>
+                {form.item_type === 'weapon' && (
+                  <div>
+                    <label className="label">Extra Damage</label>
+                    <input className="input w-full" placeholder="e.g. 2d6 fire" value={form.extra_damage} onChange={e => update('extra_damage', e.target.value)} title="Additional damage dice (e.g., Flame Tongue: 2d6 fire)" />
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="label">Special Properties</label>
+                <input className="input w-full" placeholder="e.g. On hit: DC 15 CON save or poisoned" value={form.special_properties} onChange={e => update('special_properties', e.target.value)} />
+              </div>
+            </div>
+          )}
           <label className="flex items-center gap-2 text-sm text-amber-200/60">
             <input type="checkbox" checked={form.attunement} onChange={e => update('attunement', e.target.checked)} /> Requires Attunement
           </label>
         </div>
         <div className="flex gap-3 justify-end mt-4">
           <button onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
-          <button onClick={() => form.name && onSubmit(isEditing ? { ...form } : { ...form, attuned: false, equipped: false })} className="btn-primary text-sm">{isEditing ? 'Save Changes' : 'Add Item'}</button>
+          <button onClick={handleFormSubmit} className="btn-primary text-sm">{isEditing ? 'Save Changes' : 'Add Item'}</button>
         </div>
       </div>
       </div>

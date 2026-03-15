@@ -712,15 +712,15 @@ export default function PlayerSession() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 {hpEditMode ? (
                   <>
-                    <button onClick={() => { const v = parseInt(hpDelta) || 5; handleHpChange(-v); }}
+                    <button onClick={() => { const parsed = parseInt(hpDelta); const v = isNaN(parsed) ? 5 : parsed; handleHpChange(-v); }}
                       style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', padding: '1px 6px', cursor: 'pointer', color: '#ef4444', fontSize: '11px', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
                       <Minus size={10} />
                     </button>
                     <input type="number" value={hpDelta} onChange={e => setHpDelta(e.target.value)} placeholder="5"
-                      onKeyDown={e => { if (e.key === 'Enter') { const v = parseInt(hpDelta) || 0; if (v > 0) handleHpChange(-v); else if (v < 0) handleHpChange(Math.abs(v)); } }}
+                      onKeyDown={e => { if (e.key === 'Enter') { const parsed = parseInt(hpDelta); const v = isNaN(parsed) ? 0 : parsed; if (v > 0) handleHpChange(-v); else if (v < 0) handleHpChange(Math.abs(v)); } }}
                       style={{ width: '36px', padding: '1px 4px', borderRadius: '4px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'var(--text)', fontSize: '11px', fontFamily: 'var(--font-mono)', textAlign: 'center', outline: 'none' }}
                     />
-                    <button onClick={() => { const v = parseInt(hpDelta) || 5; handleHpChange(v); }}
+                    <button onClick={() => { const parsed = parseInt(hpDelta); const v = isNaN(parsed) ? 5 : parsed; handleHpChange(v); }}
                       style={{ background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: '4px', padding: '1px 6px', cursor: 'pointer', color: '#4ade80', fontSize: '11px', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
                       <Plus size={10} />
                     </button>

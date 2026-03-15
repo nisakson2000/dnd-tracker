@@ -2,6 +2,7 @@ import { useState, lazy, Suspense } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Sword, Crown, Dice5, Shield, Heart, Sparkles, Users, X, Bell } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAppMode } from '../contexts/ModeContext';
 import { useUpdateCheck } from '../hooks/useUpdateCheck';
 import { APP_VERSION, DM_MODE_VERSION } from '../version';
@@ -120,7 +121,15 @@ export default function ModeSelect() {
               whileHover={{ y: -8, boxShadow: `0 20px 60px rgba(0,0,0,0.6), 0 0 40px ${m.color}15` }}
               onClick={() => {
                 if (m.id === 'dm') {
-                  setShowBetaWarning(true);
+                  if (import.meta.env.DEV) {
+                    setShowBetaWarning(true);
+                  } else {
+                    toast('DM Mode is currently in development. Available to devs only!', {
+                      icon: '🔒',
+                      duration: 4000,
+                      style: { background: '#1a1520', color: '#c9a84c', border: '1px solid rgba(155,89,182,0.3)', fontFamily: 'Cinzel, Georgia, serif' },
+                    });
+                  }
                 } else {
                   setMode(m.id);
                 }
@@ -151,8 +160,18 @@ export default function ModeSelect() {
                     {m.icon}
                   </div>
                   <div>
-                    <div style={{ fontFamily: 'var(--font-heading, "Cinzel", serif)', fontSize: 18, color: '#efe0c0', letterSpacing: '0.02em' }}>
+                    <div style={{ fontFamily: 'var(--font-heading, "Cinzel", serif)', fontSize: 18, color: '#efe0c0', letterSpacing: '0.02em', display: 'flex', alignItems: 'center', gap: 10 }}>
                       {m.title}
+                      {m.id === 'dm' && !import.meta.env.DEV && (
+                        <span style={{
+                          fontSize: 9, padding: '2px 8px', borderRadius: 6,
+                          background: 'rgba(155,89,182,0.15)', border: '1px solid rgba(155,89,182,0.3)',
+                          color: '#c084fc', letterSpacing: '0.08em', textTransform: 'uppercase',
+                          fontFamily: 'var(--font-ui, sans-serif)', fontWeight: 700,
+                        }}>
+                          Coming Soon
+                        </span>
+                      )}
                     </div>
                     <div style={{ fontSize: 11, color: `${m.color}88`, fontStyle: 'italic', marginTop: 2 }}>
                       {m.subtitle}

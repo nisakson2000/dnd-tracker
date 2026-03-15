@@ -567,10 +567,10 @@ function UnifiedRestModal({ characterId, restTab, setRestTab, onClose, reloadCha
     );
   }
 
-  const conAb = abilities.find(a => a.ability === 'CON');
+  const conAb = (abilities || []).find(a => a.ability === 'CON');
   const conMod = conAb ? Math.floor((conAb.score - 10) / 2) : 0;
   const hdMatch = overview.hit_dice_total?.match(/(\d+)?d(\d+)/);
-  const hitDieSize = hdMatch ? parseInt(hdMatch[2]) : 10;
+  const hitDieSize = hdMatch ? parseInt(hdMatch[2] || '10') : 10;
   const hitDiceAvail = Math.max(0, overview.level - (overview.hit_dice_used || 0));
   const shortRestFeats = features.filter(f => (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0) && (f.recharge === 'short_rest' || f.recharge === 'long_rest'));
   const longRestFeats = features.filter(f => (f.uses_total ?? 0) > 0 && (f.uses_remaining ?? 0) < (f.uses_total ?? 0) && f.recharge);
