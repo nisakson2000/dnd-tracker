@@ -1,6 +1,7 @@
 # Version Bump Checklist
 
 Read this file before pushing any release. Every item must be updated or the versions will fall out of sync.
+**CI enforces this** — the build will fail if any of these are out of sync.
 
 ---
 
@@ -13,33 +14,32 @@ Read this file before pushing any release. Every item must be updated or the ver
 | 3 | `frontend/package.json` | `"version"` | `"0.8.0"` |
 | 4 | `src-tauri/tauri.conf.json` | `"version"` | `"0.8.0"` |
 | 5 | `src-tauri/Cargo.toml` | `version = "..."` | `"0.8.0"` |
+| 6 | `version.json` (repo root) | `"version"` — the in-app update checker reads this | `"0.8.0"` |
 
 ## Changelogs to Update
 
 | # | File | What to do |
 |---|------|-----------|
-| 6 | `frontend/src/data/changelog.js` | Add new entry at top of `CHANGELOG` array (this is what shows in-app) |
-| 7 | `MASTERUPDATELIST.md` | Add new version section at top below the header |
-| 8 | `README.md` | Update `**Current Version: V0.X.X**` on line 3 |
+| 7 | `frontend/src/data/changelog.js` | Add new entry at top of `CHANGELOG` array — **this is what "What's New" shows in-app** |
+| 8 | `MASTERUPDATELIST.md` | Add new version section at top below the header |
+| 9 | `README.md` | Update `**Current Version: V0.X.X**` on line 3 |
 
 ## Release (GitHub)
 
 | # | Action | Details |
 |---|--------|---------|
-| 9 | `version.json` (repo root) | Update `"version"` — this is what the in-app update checker reads |
-| 10 | GitHub Release | Tag and title must match the new version |
+| 10 | GitHub Release | CI creates this automatically on push — tag and title match the version |
 
 ## Steps
 
 1. Decide the new version number
-2. Update all 5 version files (#1-5)
-3. Write the changelog entry in `changelog.js` (#6)
-4. Copy/expand the changelog into `MASTERUPDATELIST.md` (#7)
-5. Update `README.md` version line (#8)
-6. Update `version.json` (#9)
-7. Test the app — confirm Updates tab shows the correct version
-8. Commit locally
-9. Only push + create GitHub Release (#10) when explicitly ready
+2. Update all 6 version files (#1-6)
+3. Write the changelog entry in `changelog.js` (#7) — **the app's "What's New" reads this, it will show stale content if you skip it**
+4. Copy/expand the changelog into `MASTERUPDATELIST.md` (#8)
+5. Update `README.md` version line (#9)
+6. Test the app — confirm the Updates tab shows the correct version AND the correct "What's New" content
+7. Commit locally
+8. Only push when explicitly ready — CI builds and creates the GitHub Release (#10) automatically
 
 ## Rules
 

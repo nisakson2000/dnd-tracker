@@ -6,34 +6,103 @@ on:
       - main
 
 jobs:
-  # ── Step 1: Delete old release & tag so we always get a fresh one ──
-  cleanup:
-    permissions:
-      contents: write
+  # ── Step 1: Verify all version files are in sync ──
+  verify-versions:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.version.outputs.version }}
+      version: ${{ steps.check.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Read version
-        id: version
+      - name: Verify all version files match
+        id: check
         run: |
-          VERSION=$(grep "version" src-tauri/tauri.conf.json | head -1 | sed 's/.*": "//;s/".*//')
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Detected version: $VERSION"
+          echo "=== Version Sync Check ==="
+          echo "See VERSION_BUMP_CHECKLIST.md for the full list of files to update."
+          echo ""
+
+          # Read version from each source
+          V_TAURI=$(grep '"version"' src-tauri/tauri.conf.json | head -1 | sed 's/.*": "//;s/".*//')
+          V_ROOT=$(grep '"version"' package.json | head -1 | sed 's/.*": "//;s/".*//')
+          V_FRONT=$(grep '"version"' frontend/package.json | head -1 | sed 's/.*": "//;s/".*//')
+          V_CARGO=$(grep '^version' src-tauri/Cargo.toml | head -1 | sed 's/.*= "//;s/".*//')
+          V_JS=$(grep "APP_VERSION" frontend/src/version.js | sed "s/.*'V//;s/'.*//" )
+          V_JSON=$(python3 -c "import json; print(json.load(open('version.json'))['version'])")
+          V_README=$(grep 'Current Version' README.md | sed 's/.*V//;s/\*.*//')
+
+          echo "  tauri.conf.json:   $V_TAURI"
+          echo "  package.json:      $V_ROOT"
+          echo "  frontend/pkg:      $V_FRONT"
+          echo "  Cargo.toml:        $V_CARGO"
+          echo "  version.js:        $V_JS"
+          echo "  version.json:      $V_JSON"
+          echo "  README.md:         $V_README"
+
+          ERRORS=""
+
+          # All must match tauri.conf.json (source of truth for build)
+          if [ "$V_ROOT" != "$V_TAURI" ]; then
+            ERRORS="$ERRORS\n  MISMATCH: package.json ($V_ROOT) != tauri.conf.json ($V_TAURI)"
+          fi
+          if [ "$V_FRONT" != "$V_TAURI" ]; then
+            ERRORS="$ERRORS\n  MISMATCH: frontend/package.json ($V_FRONT) != tauri.conf.json ($V_TAURI)"
+          fi
+          if [ "$V_CARGO" != "$V_TAURI" ]; then
+            ERRORS="$ERRORS\n  MISMATCH: Cargo.toml ($V_CARGO) != tauri.conf.json ($V_TAURI)"
+          fi
+          if [ "$V_JS" != "$V_TAURI" ]; then
+            ERRORS="$ERRORS\n  MISMATCH: version.js ($V_JS) != tauri.conf.json ($V_TAURI)"
+          fi
+          if [ "$V_JSON" != "$V_TAURI" ]; then
+            ERRORS="$ERRORS\n  MISMATCH: version.json ($V_JSON) != tauri.conf.json ($V_TAURI)"
+          fi
+          if [ "$V_README" != "$V_TAURI" ]; then
+            ERRORS="$ERRORS\n  MISMATCH: README.md ($V_README) != tauri.conf.json ($V_TAURI)"
+          fi
+
+          # Check changelog.js has an entry for this version
+          if ! grep -q "version: 'V${V_TAURI}'" frontend/src/data/changelog.js; then
+            ERRORS="$ERRORS\n  MISSING: changelog.js has no entry for V${V_TAURI} — the in-app 'What's New' will show stale content"
+          fi
+
+          # Check MASTERUPDATELIST.md has an entry for this version
+          if ! grep -q "V${V_TAURI}" MASTERUPDATELIST.md; then
+            ERRORS="$ERRORS\n  MISSING: MASTERUPDATELIST.md has no entry for V${V_TAURI}"
+          fi
+
+          if [ -n "$ERRORS" ]; then
+            echo ""
+            echo "VERSION CHECK FAILED:"
+            echo -e "$ERRORS"
+            echo ""
+            echo "Fix these files and push again. See VERSION_BUMP_CHECKLIST.md for details."
+            exit 1
+          fi
+
+          echo ""
+          echo "All version files match: $V_TAURI"
+          echo "version=$V_TAURI" >> "$GITHUB_OUTPUT"
+
+  # ── Step 2: Delete old release & tag so we always get a fresh one ──
+  cleanup:
+    needs: verify-versions
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Delete existing release & tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          VERSION="${{ needs.verify-versions.outputs.version }}"
           echo "Cleaning up v${VERSION}..."
           gh release delete "v${VERSION}" --yes --cleanup-tag 2>/dev/null || echo "No existing release to delete"
 
-  # ── Step 2: Build for Windows ──
+  # ── Step 3: Build for Windows ──
   build-windows:
-    needs: cleanup
+    needs: [verify-versions, cleanup]
     permissions:
       contents: write
     runs-on: windows-latest
@@ -79,4 +148,3 @@ jobs:
           releaseDraft: false
           prerelease: false
           updaterJsonKeepUniversal: true
-
