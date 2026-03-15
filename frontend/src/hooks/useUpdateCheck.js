@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { APP_VERSION, DM_MODE_VERSION } from '../version';
+import { APP_VERSION } from '../version';
 
 // Same neutral manifest URL as UpdateScreen — no repo name exposed
 const VERSION_MANIFEST_URL =
   'https://raw.githubusercontent.com/nisakson2000/dnd-tracker/main/version.json';
 
 const DISMISSED_KEY = 'codex_dismissed_update_version';
-const DISMISSED_DM_KEY = 'codex_dismissed_dm_update_version';
 
 function parseVersion(str) {
   const m = str.match(/V?(\d+)\.(\d+)\.(\d+)/);
@@ -24,9 +23,7 @@ function isNewer(remote, local) {
 // checkResult: null | 'up_to_date' | 'update_available' | 'offline'
 export function useUpdateCheck() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [dmUpdateAvailable, setDmUpdateAvailable] = useState(false);
   const [latestVersion, setLatestVersion] = useState(null);
-  const [latestDmVersion, setLatestDmVersion] = useState(null);
   const [checking, setChecking] = useState(false);
   const [lastChecked, setLastChecked] = useState(null);
   const [checkResult, setCheckResult] = useState(null);
@@ -64,22 +61,8 @@ export function useUpdateCheck() {
         setUpdateAvailable(hasAppUpdate && !isDismissed);
       }
 
-      // DM version check (independent)
-      const remoteDmVer = data.dm_version || null;
-      let hasDmUpdate = false;
-      if (remoteDmVer) {
-        setLatestDmVersion(remoteDmVer);
-        const remoteDm = parseVersion(remoteDmVer);
-        const localDm = parseVersion(DM_MODE_VERSION);
-        hasDmUpdate = isNewer(remoteDm, localDm);
-        const dismissedDm = localStorage.getItem(DISMISSED_DM_KEY);
-        const isDmDismissed = dismissedDm === remoteDmVer;
-        setDmUpdateAvailable(hasDmUpdate && !isDmDismissed);
-      }
-
-      const anyUpdate = (hasAppUpdate && localStorage.getItem(DISMISSED_KEY) !== remoteVer)
-        || (hasDmUpdate && localStorage.getItem(DISMISSED_DM_KEY) !== remoteDmVer);
-      setCheckResult(anyUpdate ? 'update_available' : 'up_to_date');
+      setCheckResult(hasAppUpdate && localStorage.getItem(DISMISSED_KEY) !== remoteVer
+        ? 'update_available' : 'up_to_date');
 
       if (mountedRef.current) setLastChecked(new Date());
     } catch {
@@ -96,22 +79,8 @@ export function useUpdateCheck() {
       localStorage.setItem(DISMISSED_KEY, ver);
     }
     setUpdateAvailable(false);
-    // Only mark up_to_date if DM update is also not available
-    if (!dmUpdateAvailable) {
-      setCheckResult('up_to_date');
-    }
-  }, [latestVersion, dmUpdateAvailable]);
-
-  const dismissDmUpdate = useCallback((version) => {
-    const ver = version || latestDmVersion;
-    if (ver) {
-      localStorage.setItem(DISMISSED_DM_KEY, ver);
-    }
-    setDmUpdateAvailable(false);
-    if (!updateAvailable) {
-      setCheckResult('up_to_date');
-    }
-  }, [latestDmVersion, updateAvailable]);
+    setCheckResult('up_to_date');
+  }, [latestVersion]);
 
   // Check once on mount — no auto-polling (user triggers manually or from Updates page)
   useEffect(() => {
@@ -121,12 +90,11 @@ export function useUpdateCheck() {
   }, [checkForUpdates]);
 
   return {
-    updateAvailable, dmUpdateAvailable,
-    latestVersion, latestDmVersion,
+    updateAvailable,
+    latestVersion,
     checking, lastChecked,
     checkResult, checkForUpdates,
-    dismissUpdate, dismissDmUpdate,
+    dismissUpdate,
     currentVersion: APP_VERSION,
-    currentDmVersion: DM_MODE_VERSION,
   };
 }

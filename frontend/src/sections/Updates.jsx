@@ -7,7 +7,6 @@ import {
 } from 'lucide-react';
 import { CHANGELOG } from '../data/changelog';
 import { useUpdateCheck } from '../hooks/useUpdateCheck';
-import { DM_MODE_VERSION } from '../version';
 import { invoke } from '@tauri-apps/api/core';
 
 // ── Update phases ─────────────────────────────────────
@@ -21,12 +20,12 @@ const PHASE = {
 
 export default function Updates() {
   const {
-    updateAvailable, dmUpdateAvailable,
-    latestVersion, latestDmVersion,
+    updateAvailable,
+    latestVersion,
     checking, lastChecked,
     checkResult, checkForUpdates,
-    dismissUpdate, dismissDmUpdate,
-    currentVersion, currentDmVersion,
+    dismissUpdate,
+    currentVersion,
   } = useUpdateCheck();
 
   const [expandedVersion, setExpandedVersion] = useState(
@@ -178,8 +177,7 @@ export default function Updates() {
   return (
     <div style={{ maxWidth: '640px' }}>
       <h2 className="font-display text-2xl text-amber-100 mb-1">Updates & Changelog</h2>
-      <p className="text-sm text-amber-200/30 mb-1">App version: {currentVersion}</p>
-      <p className="text-sm text-amber-200/30 mb-6">DM Mode version: {currentDmVersion}</p>
+      <p className="text-sm text-amber-200/30 mb-6">Version: {currentVersion}</p>
 
       {/* ── Active update flow ───────────────────────── */}
       <AnimatePresence mode="wait">
@@ -380,7 +378,7 @@ export default function Updates() {
                 <p className="text-xs text-amber-200/30 mt-0.5">No internet connection. Connect to WiFi or check your network to verify you're running the latest version.</p>
               </div>
             </div>
-          ) : (updateAvailable || dmUpdateAvailable) ? (
+          ) : updateAvailable ? (
             <div className="space-y-3">
               {/* App update */}
               {updateAvailable && (
@@ -442,76 +440,6 @@ export default function Updates() {
                         }}
                         onMouseLeave={e => {
                           e.currentTarget.style.background = 'linear-gradient(135deg, rgba(201,168,76,0.2), rgba(201,168,76,0.12))';
-                          e.currentTarget.style.boxShadow = 'none';
-                        }}
-                      >
-                        <Download size={14} />
-                        Update Now
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {/* DM Mode update */}
-              {dmUpdateAvailable && (
-                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(155,89,182,0.2)' }}>
-                  <div className="flex items-center gap-4 p-5" style={{ background: 'linear-gradient(135deg, rgba(155,89,182,0.08), rgba(155,89,182,0.03))' }}>
-                    <div style={{
-                      width: '48px', height: '48px', borderRadius: '14px',
-                      background: 'linear-gradient(135deg, rgba(155,89,182,0.2), rgba(155,89,182,0.08))',
-                      border: '1px solid rgba(155,89,182,0.3)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0,
-                    }}>
-                      <Download size={22} style={{ color: '#c084fc' }} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-amber-100 font-display font-semibold">DM Mode Update Available</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-amber-200/40 font-mono">{currentDmVersion}</span>
-                        <ArrowRight size={10} style={{ color: 'rgba(155,89,182,0.4)' }} />
-                        <span className="text-xs font-mono font-semibold" style={{ color: '#c084fc' }}>{latestDmVersion}</span>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                      <button
-                        onClick={() => dismissDmUpdate()}
-                        style={{
-                          padding: '10px 16px', borderRadius: '10px',
-                          background: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          color: 'rgba(255,255,255,0.4)',
-                          fontFamily: 'var(--font-display)',
-                          fontSize: '13px',
-                          fontWeight: 500,
-                          cursor: 'pointer',
-                          transition: 'all 0.15s',
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-                      >
-                        Dismiss
-                      </button>
-                      <button
-                        onClick={installUpdate}
-                        style={{
-                          padding: '10px 24px', borderRadius: '10px',
-                          background: 'linear-gradient(135deg, rgba(155,89,182,0.2), rgba(155,89,182,0.12))',
-                          border: '1px solid rgba(155,89,182,0.35)',
-                          color: '#e9b8ff',
-                          fontFamily: 'var(--font-display)',
-                          fontSize: '13px',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          transition: 'all 0.15s',
-                          display: 'flex', alignItems: 'center', gap: '8px',
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(155,89,182,0.3), rgba(155,89,182,0.18))';
-                          e.currentTarget.style.boxShadow = '0 0 20px rgba(155,89,182,0.15)';
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(155,89,182,0.2), rgba(155,89,182,0.12))';
                           e.currentTarget.style.boxShadow = 'none';
                         }}
                       >

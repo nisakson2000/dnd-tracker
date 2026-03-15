@@ -138,7 +138,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
     return () => window.removeEventListener('codex-ai-settings-changed', handler);
   }, []);
 
-  const isDM = appMode === 'dm' && (import.meta.env.DEV || false);
+  const isDM = appMode === 'dm';
   const { campaignStatus } = useSession();
   const isDraft = campaignStatus === 'draft';
   // Filter DM sidebar items based on campaign type and status (draft = building, active = running)
@@ -448,7 +448,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
             <BookOpen size={14} />
             Arcane Encyclopedia
           </Link>
-          {isDM && isDraft && (
+          {isDM && (
             <button
               onClick={() => onSelect('dm-guide')}
               style={{

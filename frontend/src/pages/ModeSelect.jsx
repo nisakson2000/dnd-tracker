@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import { useAppMode } from '../contexts/ModeContext';
 import { useUpdateCheck } from '../hooks/useUpdateCheck';
-import { APP_VERSION, DM_MODE_VERSION } from '../version';
+import { APP_VERSION } from '../version';
 
 const Updates = lazy(() => import('../sections/Updates'));
 
@@ -25,7 +25,7 @@ export default function ModeSelect() {
   const [showUpdates, setShowUpdates] = useState(false);
   const [showDevGate, setShowDevGate] = useState(false);
   const [devPassphrase, setDevPassphrase] = useState('');
-  const { updateAvailable, dmUpdateAvailable } = useUpdateCheck();
+  const { updateAvailable } = useUpdateCheck();
 
   const modes = [
     {
@@ -124,13 +124,8 @@ export default function ModeSelect() {
               whileHover={{ y: -8, boxShadow: `0 20px 60px rgba(0,0,0,0.6), 0 0 40px ${m.color}15` }}
               onClick={() => {
                 if (m.id === 'dm') {
-                  const devUnlocked = (() => { try { return localStorage.getItem('codex-dev-unlocked') === 'true'; } catch { return false; } })();
-                  if (import.meta.env.DEV || devUnlocked) {
-                    setShowBetaWarning(true);
-                  } else {
-                    setShowDevGate(true);
-                    setDevPassphrase('');
-                  }
+                  setShowDevGate(true);
+                  setDevPassphrase('');
                 } else {
                   setMode(m.id);
                 }
@@ -163,7 +158,7 @@ export default function ModeSelect() {
                   <div>
                     <div style={{ fontFamily: 'var(--font-heading, "Cinzel", serif)', fontSize: 18, color: '#efe0c0', letterSpacing: '0.02em', display: 'flex', alignItems: 'center', gap: 10 }}>
                       {m.title}
-                      {m.id === 'dm' && !import.meta.env.DEV && (() => { try { return localStorage.getItem('codex-dev-unlocked') !== 'true'; } catch { return true; } })() && (
+                      {m.id === 'dm' && (
                         <span style={{
                           fontSize: 9, padding: '2px 8px', borderRadius: 6,
                           background: 'rgba(155,89,182,0.15)', border: '1px solid rgba(155,89,182,0.3)',
@@ -251,19 +246,19 @@ export default function ModeSelect() {
             position: 'relative',
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '8px 14px', borderRadius: 9,
-            background: (updateAvailable || dmUpdateAvailable) ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.03)',
-            border: `1px solid ${(updateAvailable || dmUpdateAvailable) ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.08)'}`,
-            color: (updateAvailable || dmUpdateAvailable) ? 'rgba(74,222,128,0.6)' : 'rgba(200,175,130,0.4)',
+            background: updateAvailable ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.03)',
+            border: `1px solid ${updateAvailable ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.08)'}`,
+            color: updateAvailable ? 'rgba(74,222,128,0.6)' : 'rgba(200,175,130,0.4)',
             cursor: 'pointer',
             fontFamily: 'var(--font-heading, "Cinzel", serif)', fontSize: 11,
             letterSpacing: '0.06em', transition: 'all 0.2s',
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = (updateAvailable || dmUpdateAvailable) ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = (updateAvailable || dmUpdateAvailable) ? 'rgba(74,222,128,0.35)' : 'rgba(201,168,76,0.25)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = (updateAvailable || dmUpdateAvailable) ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = (updateAvailable || dmUpdateAvailable) ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.08)'; }}
+          onMouseEnter={e => { e.currentTarget.style.background = updateAvailable ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = updateAvailable ? 'rgba(74,222,128,0.35)' : 'rgba(201,168,76,0.25)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = updateAvailable ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = updateAvailable ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.08)'; }}
         >
           <Bell size={13} />
           Updates
-          {(updateAvailable || dmUpdateAvailable) && (
+          {updateAvailable && (
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px rgba(74,222,128,0.6)', animation: 'pulse 2s ease-in-out infinite' }} />
           )}
         </button>
@@ -318,7 +313,7 @@ export default function ModeSelect() {
                   letterSpacing: '0.15em', textTransform: 'uppercase',
                   color: '#fbbf24',
                 }}>
-                  {DM_MODE_VERSION}
+                  BETA
                 </div>
 
                 <h3 style={{
@@ -422,10 +417,9 @@ export default function ModeSelect() {
                       try {
                         const valid = await invoke('verify_dev_passphrase', { passphrase: devPassphrase });
                         if (valid) {
-                          localStorage.setItem('codex-dev-unlocked', 'true');
                           setShowDevGate(false);
                           setShowBetaWarning(true);
-                          toast.success('Dev access unlocked!');
+                          toast.success('DM Mode unlocked!');
                         } else {
                           toast.error('Invalid passphrase');
                           setDevPassphrase('');
@@ -463,10 +457,9 @@ export default function ModeSelect() {
                       try {
                         const valid = await invoke('verify_dev_passphrase', { passphrase: devPassphrase });
                         if (valid) {
-                          localStorage.setItem('codex-dev-unlocked', 'true');
                           setShowDevGate(false);
                           setShowBetaWarning(true);
-                          toast.success('Dev access unlocked!');
+                          toast.success('DM Mode unlocked!');
                         } else {
                           toast.error('Invalid passphrase');
                           setDevPassphrase('');

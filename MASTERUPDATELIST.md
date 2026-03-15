@@ -4,6 +4,79 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.8.0 — Player Mode Overhaul: Decomposed Architecture, Combat Animations & Polish
+**Released:** March 15, 2026
+
+### Architecture
+- **PlayerSession Decomposition** — monolithic PlayerSession.jsx broken into focused modules (usePlayerSessionEvents, usePlayerCharacterData, PlayerSessionHeader, PlayerSessionSidebar)
+- **WebSocket Heartbeat** — 15-second ping/pong with automatic disconnect detection
+- **Message Acknowledgment** — critical events (HpDelta, TurnAdvance, etc.) require ACK for reliability
+- **Reconnection Replay** — event buffer replays missed events on seamless rejoin
+- **PlayerHpRequest** — DM-authority HP changes and CharDelta for efficient sync
+
+### New Features
+- **Interactive Battle Map** — players can drag their own token, distance measurement tool
+- **Damage/Healing Animations** — floating number animations with critical hit effects (PlayerDamageOverlay)
+- **Audio Feedback System** — Web Audio API sounds for damage, heal, crit, roll, and turn chime
+- **Enhanced Chat** — /roll dice commands, /me emotes, sender colors, timestamps
+- **Session Transcript Export** — export session transcript to markdown with Tauri file dialog
+- **Keyboard Shortcuts** — Space (end turn), R (quick roll), Tab (cycle tabs), Escape (dismiss)
+
+### Changes
+- Removed standalone Dice Roller section from navigation (still available in character sheet)
+
+---
+
+## V0.7.1 — Combat Sync, Bug Fixes, QoL & UI Polish
+**Released:** March 15, 2026
+
+### Major Features
+- **Combat State Bar** — players see initiative order, current turn, and round counter during combat
+- **Monster HP Tiers** — monster health status shown as colored dots on initiative bar for players
+- **Monster Conditions** — conditions (poisoned, prone, etc.) displayed as badges on initiative bar
+- **Turn Notification** — audio chime + golden flash banner when it becomes your turn
+- **Death Save Sync** — structured death save tracking synced between DM and players
+- **HP Visibility Modes** — DM can toggle monster HP display: Tier / Percentage / Exact / Hidden
+- **Condition Tooltips** — hover over conditions to see full 5e SRD mechanical descriptions
+- **Prompt History** — DM can view and resend previous prompts from a collapsible history panel
+
+### Bug Fixes
+- Combat state (initiative, HP tiers, conditions) restored on player reconnect
+- Combat state persists in crash-recovery snapshots
+- Session timer persists across app restarts
+- Fixed missing useMemo import in CharacterView causing crash
+
+### QoL
+- Empty state placeholders for combat lists when no creatures or initiative order exists
+
+---
+
+## V0.7.0 — Accurate Dice Modifiers, Magic Items & Polish
+**Released:** March 14, 2026
+
+### Dice & Roll System
+- **Accurate Dice Modifiers** — all roll types (ability checks, saving throws, skills, attacks) correctly chain ability modifier + proficiency + item bonuses + condition effects per 5e RAW
+- **Advantage/Disadvantage** — proper 5e cancellation rules (advantage + disadvantage = straight roll)
+- **Multiplayer Roll Accuracy** — item bonuses synced in character snapshot for accurate remote rolls
+
+### Magic Items
+- **Magic Weapon Bonus** — equipped +1/+2/+3 weapons auto-add magic bonus to attack AND damage rolls
+- **Magic Armor Bonus** — equipped +1/+2/+3 armor/shields auto-add magic bonus to AC with breakdown tooltip
+- **Extra Damage Display** — weapons with extra damage (e.g., "2d6 fire") shown in attack roll results
+- **Item Save Bonuses** — items like Cloak of Protection add save bonus to all saving throw rolls
+- **Item Stat Bonuses** — items like Gauntlets of Ogre Power apply ability score bonuses to rolls
+- **Magic Item Properties Form** — set magic bonus, extra damage, save bonus, and special properties on items
+
+### QoL & Fixes
+- **HP Undo** — 10-second undo window after damage or healing with one-click restore
+- **Enter Key Submit** — press Enter to submit item forms and attack forms
+- **Quest Search & Filter** — search quests by name, filter by status (active/completed/failed)
+- **Form Validation** — empty item/combatant/NPC names blocked with error feedback
+- **Negative Currency Prevention** — currency fields clamped to 0 minimum
+- **NaN Weight Fix** — null/undefined weight no longer breaks encumbrance calculation
+
+---
+
 ## V0.6.5 — NPC Intelligence, Story Engines & Advanced World Systems
 **Released:** March 14, 2026
 

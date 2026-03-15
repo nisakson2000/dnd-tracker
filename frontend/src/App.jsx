@@ -990,9 +990,9 @@ function AppContent() {
                   <Route path="/wiki/:slug" element={<WikiArticlePage />} />
                   <Route path="/updates" element={<UpdatesPage />} />
                   <Route path="/dm/campaigns" element={<Navigate to="/" replace />} />
-                  {/* DM routes — dev builds only until further testing */}
-                  <Route path="/dm/lobby/:id" element={import.meta.env.DEV ? <DMLobby /> : <Navigate to="/" replace />} />
-                  <Route path="/dm/session/:id" element={import.meta.env.DEV ? <DMSession /> : <Navigate to="/" replace />} />
+                  {/* DM routes — gated by passphrase on ModeSelect */}
+                  <Route path="/dm/lobby/:id" element={<DMLobby />} />
+                  <Route path="/dm/session/:id" element={<DMSession />} />
                   <Route path="/player/join" element={<PlayerJoin />} />
                   <Route path="/player/session" element={<PlayerSession />} />
                 </Routes>
