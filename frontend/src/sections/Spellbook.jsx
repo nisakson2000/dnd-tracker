@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Pencil, ChevronDown, ChevronRight, ChevronUp, Sparkles, RotateCcw, Search, Lock, Coins, Info, CheckSquare, Square, Wand2, Coffee, Moon, BookOpen, Filter, Zap, Crosshair, CircleDot, ShieldAlert, Pin, PinOff, Flame, Clock } from 'lucide-react';
+import { Plus, Trash2, Pencil, ChevronDown, ChevronRight, ChevronUp, Sparkles, RotateCcw, Search, Lock, Coins, Info, CheckSquare, Square, Wand2, Coffee, Moon, BookOpen, Filter, Zap, Crosshair, CircleDot, ShieldAlert, Pin, PinOff, Flame, Clock, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getSpells, addSpell, updateSpell, deleteSpell, getSpellSlots, updateSpellSlots, resetSpellSlots } from '../api/spells';
 import { getOverview } from '../api/overview';
@@ -539,7 +539,12 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
     }
   };
 
-  if (loading) return <div className="text-amber-200/40">Loading spellbook...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center gap-2 py-12 text-amber-200/40">
+      <Loader2 size={18} className="animate-spin" />
+      <span>Loading spellbook...</span>
+    </div>
+  );
 
   const levelNames = ['Cantrips', '1st Level', '2nd Level', '3rd Level', '4th Level', '5th Level', '6th Level', '7th Level', '8th Level', '9th Level'];
 

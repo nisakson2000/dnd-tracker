@@ -396,7 +396,12 @@ export default function Features({ characterId, character }) {
     return classData[charLevel] || [];
   }, [charClass, charLevel]);
 
-  if (loading) return <div className="text-amber-200/40">Loading features...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center gap-2 py-12 text-amber-200/40">
+      <Loader2 size={18} className="animate-spin" />
+      <span>Loading features...</span>
+    </div>
+  );
 
   return (
     <div className="space-y-6 max-w-none">

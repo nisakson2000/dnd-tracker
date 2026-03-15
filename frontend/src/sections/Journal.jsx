@@ -1313,7 +1313,12 @@ export default function Journal({ characterId }) {
     return { npcsFound, questsFound };
   };
 
-  if (loading) return <div className="text-amber-200/40">Loading journal...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center gap-2 py-12 text-amber-200/40">
+      <Loader2 size={18} className="animate-spin" />
+      <span>Loading journal...</span>
+    </div>
+  );
 
   return (
     <div className="space-y-6 max-w-none">

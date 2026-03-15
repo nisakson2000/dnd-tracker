@@ -49,18 +49,23 @@ function MemberCard({ member, isYou, colorIndex = 0 }) {
   return (
     <div
       className={`party-card${isYou ? ' is-you' : ''}`}
+      role="button"
+      aria-expanded={expanded}
+      aria-label={`${character.name || 'Unknown'} - click to ${expanded ? 'collapse' : 'expand'} details`}
+      tabIndex={0}
       style={{ ...(isDead ? { opacity: 0.6 } : {}), cursor: 'pointer', transition: 'border-color 0.15s' }}
       onClick={() => setExpanded(e => !e)}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(ex => !ex); } }}
     >
       <div className="party-card-header">
         <div className="party-card-avatar" style={{ background: `${accent}22`, borderColor: `${accent}55`, color: accent }}>
           {(character.name || '?')[0]}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '13px', color: '#e8d9b5', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div title={character.name || 'Unknown'} style={{ fontFamily: 'Cinzel, Georgia, serif', fontSize: '13px', color: '#e8d9b5', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {character.name || 'Unknown'}
           </div>
-          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontFamily: 'Outfit, sans-serif', maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div title={[character.race, character.primary_class].filter(Boolean).join(' ') + (character.level ? ` · Lv ${character.level}` : '')} style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontFamily: 'Outfit, sans-serif', maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {[character.race, character.primary_class].filter(Boolean).join(' ')}
             {character.level ? ` \u00B7 Lv ${character.level}` : ''}
           </div>

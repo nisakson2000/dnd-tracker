@@ -310,7 +310,12 @@ export default function Lore({ characterId }) {
     return counts;
   }, [notes]);
 
-  if (loading) return <div className="text-amber-200/40">Loading lore...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center gap-2 py-12 text-amber-200/40">
+      <Loader2 size={18} className="animate-spin" />
+      <span>Loading lore...</span>
+    </div>
+  );
 
   const LoreCard = ({ note, isWikiView }) => {
     const CatIcon = getCategoryIcon(note.category);

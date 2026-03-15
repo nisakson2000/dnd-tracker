@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Minus, Trash2, Package, Coins, Search, ArrowRightLeft, FlaskConical, Shield, Swords, Sparkles, AlertTriangle, ChevronUp, ChevronDown, Zap, Pencil, Weight, Tag, Layers } from 'lucide-react';
+import { Plus, Minus, Trash2, Package, Coins, Search, ArrowRightLeft, FlaskConical, Shield, Swords, Sparkles, AlertTriangle, ChevronUp, ChevronDown, Zap, Pencil, Weight, Tag, Layers, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getItems, addItem, updateItem, deleteItem, getCurrency, updateCurrency } from '../api/inventory';
 import { getOverview, updateOverview } from '../api/overview';
@@ -762,7 +762,12 @@ export default function Inventory({ characterId, character }) {
     );
   };
 
-  if (loading) return <div className="text-amber-200/40">Loading inventory...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center gap-2 py-12 text-amber-200/40">
+      <Loader2 size={18} className="animate-spin" />
+      <span>Loading inventory...</span>
+    </div>
+  );
 
   return (
     <div className="space-y-6 max-w-none">
