@@ -113,6 +113,9 @@ function HpBar({ current, max }) {
   );
 }
 
+// ─── XP thresholds (5e) ─────────────────────────────────────────────────────
+const XP_LEVELS = [0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000, 85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000];
+
 // ─── Character card ──────────────────────────────────────────────────────────
 
 function CharacterCard({ char, index, onEnter, onDelete, onSessionPrep, onEndSession }) {
@@ -166,9 +169,21 @@ function CharacterCard({ char, index, onEnter, onDelete, onSessionPrep, onEndSes
             border: `2px solid ${clsColor}55`,
             color: clsColor,
             boxShadow: `0 0 22px ${clsColor}28, inset 0 0 10px ${clsColor}0a`,
+            overflow: 'hidden',
           }}
         >
-          {char.name?.[0] || '?'}
+          {char.portrait_data ? (
+            <img
+              src={char.portrait_data}
+              alt={char.name}
+              style={{
+                width: 58, height: 58, borderRadius: '50%',
+                objectFit: 'cover', display: 'block',
+              }}
+            />
+          ) : (
+            char.name?.[0] || '?'
+          )}
         </motion.div>
 
         {/* Level badge */}
@@ -221,6 +236,13 @@ function CharacterCard({ char, index, onEnter, onDelete, onSessionPrep, onEndSes
           {!char.primary_class && <span style={{ color: 'rgba(200,175,130,0.25)', fontStyle: 'italic' }}>Awaiting destiny…</span>}
         </div>
 
+        {/* Subclass */}
+        {char.primary_subclass && (
+          <div style={{ fontSize: 11, fontStyle: 'italic', color: `${clsColor}88`, marginBottom: 2, letterSpacing: '0.02em' }}>
+            {char.primary_subclass}
+          </div>
+        )}
+
         {/* Flavor text */}
         {flavor && (
           <div style={{ fontSize: 11, fontStyle: 'italic', marginBottom: 8, letterSpacing: '0.02em', color: `${clsColor}55` }}>
@@ -253,10 +275,73 @@ function CharacterCard({ char, index, onEnter, onDelete, onSessionPrep, onEndSes
                 <Shield size={9} style={{ color: 'rgba(200,175,130,0.6)' }} /> AC {char.armor_class}
               </span>
             )}
+            {char.speed > 0 && (
+              <span style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '4px 10px', borderRadius: 99,
+                background: 'rgba(0,0,0,0.35)',
+                border: '1px solid rgba(200,175,130,0.15)',
+                fontSize: 12, color: 'rgba(200,175,130,0.55)',
+              }}>
+                <Zap size={9} style={{ color: 'rgba(200,175,130,0.6)' }} /> {char.speed} ft
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Status indicators */}
+        {(char.inspiration || char.exhaustion_level > 0 || char.temp_hp > 0) && (
+          <div style={{ display: 'flex', gap: 5, marginBottom: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            {char.inspiration && (
+              <span style={{ display: 'flex', alignItems: 'center', color: '#f1c40f' }}>
+                <Sparkles size={10} />
+              </span>
+            )}
+            {char.exhaustion_level > 0 && (
+              <span style={{
+                fontSize: 9, padding: '1px 5px', borderRadius: 99,
+                background: 'rgba(243,156,18,0.15)', border: '1px solid rgba(243,156,18,0.3)',
+                color: '#f39c12', fontFamily: 'var(--font-heading)', letterSpacing: '0.04em',
+              }}>
+                E{char.exhaustion_level}
+              </span>
+            )}
+            {char.temp_hp > 0 && (
+              <span style={{
+                fontSize: 9, padding: '1px 5px', borderRadius: 99,
+                background: 'rgba(52,152,219,0.15)', border: '1px solid rgba(52,152,219,0.3)',
+                color: '#3498db', fontFamily: 'var(--font-heading)', letterSpacing: '0.04em',
+              }}>
+                +{char.temp_hp} temp
+              </span>
+            )}
           </div>
         )}
 
         {char.max_hp > 0 && <HpBar current={char.current_hp} max={char.max_hp} />}
+
+        {/* XP progress bar */}
+        {char.experience_points > 0 && char.level >= 1 && char.level < 20 && (() => {
+          const currentXP = XP_LEVELS[char.level - 1] || 0;
+          const nextXP = XP_LEVELS[char.level] || XP_LEVELS[19];
+          const xpRange = nextXP - currentXP;
+          const xpProgress = xpRange > 0 ? Math.max(0, Math.min(100, ((char.experience_points - currentXP) / xpRange) * 100)) : 0;
+          return (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+                <span style={{ fontSize: 8, color: `${clsColor}55`, fontFamily: 'var(--font-heading)', letterSpacing: '0.06em' }}>XP</span>
+              </div>
+              <div style={{ width: '100%', height: 2, borderRadius: 99, background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
+                <motion.div
+                  style={{ height: '100%', borderRadius: 99, background: `${clsColor}55` }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${xpProgress}%` }}
+                  transition={{ duration: 1.1, delay: 0.6 }}
+                />
+              </div>
+            </div>
+          );
+        })()}
 
         <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto' }}>
           {char.ruleset && (

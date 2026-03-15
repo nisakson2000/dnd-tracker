@@ -773,10 +773,10 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   useEffect(() => {
     if (!overview) return;
     if (overview.death_save_successes >= 3) {
-      toast.success('Stabilized! Your character is unconscious but stable.', { duration: 5000, icon: '💚' });
+      toast.success('Stabilized! Your character is unconscious but stable.', { duration: 5000, style: { background: '#1a2e1a', color: '#86efac', border: '1px solid rgba(52,211,153,0.4)', fontFamily: 'monospace' } });
     }
     if (overview.death_save_failures >= 3) {
-      toast.error('Your character has died.', { duration: 5000, icon: '💀' });
+      toast.error('Your character has fallen...', { duration: 6000, icon: '💀', style: { background: '#2e1a1a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)', fontFamily: 'monospace' } });
     }
   }, [overview?.death_save_successes, overview?.death_save_failures]);
 
@@ -1846,7 +1846,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           </div>
 
           {/* Prominent Death Saves - visible at 0 HP */}
-          {overview.current_hp === 0 && (
+          {overview.current_hp <= 0 && (
             <div className="card border-2 border-red-500/40 bg-red-950/20 shadow-[0_0_24px_rgba(239,68,68,0.12)]">
               <div className="flex items-center gap-2 mb-3">
                 <Skull size={18} className="text-red-400" />
@@ -1899,25 +1899,37 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                       const updated = { ...overview, current_hp: 1, death_save_successes: 0, death_save_failures: 0 };
                       setOverview(updated);
                       triggerOverview(updated);
-                      toast.success(`NAT 20! You regain 1 HP and stabilize!`, { icon: '🎲', duration: 5000, style: { background: '#1a2e1a', color: '#86efac', border: '1px solid rgba(52,211,153,0.4)', fontFamily: 'monospace' } });
+                      toast.success(`Critical! You regain 1 HP!`, { icon: '🎲', duration: 5000, style: { background: '#1a2e1a', color: '#86efac', border: '1px solid rgba(52,211,153,0.4)', fontFamily: 'monospace' } });
                     } else if (d20 === 1) {
                       const newFails = Math.min(3, overview.death_save_failures + 2);
                       const updated = { ...overview, death_save_failures: newFails };
                       setOverview(updated);
                       triggerOverview(updated);
-                      toast(`NAT 1! Two death save failures! (${newFails}/3)`, { icon: '💀', duration: 5000, style: { background: '#2e1a1a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)', fontFamily: 'monospace' } });
+                      if (newFails >= 3) {
+                        toast(`NAT 1! Your character has fallen...`, { icon: '💀', duration: 6000, style: { background: '#2e1a1a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)', fontFamily: 'monospace' } });
+                      } else {
+                        toast(`NAT 1! Two death save failures! (${newFails}/3)`, { icon: '💀', duration: 5000, style: { background: '#2e1a1a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)', fontFamily: 'monospace' } });
+                      }
                     } else if (d20 >= 10) {
                       const newSucc = Math.min(3, overview.death_save_successes + 1);
                       const updated = { ...overview, death_save_successes: newSucc };
                       setOverview(updated);
                       triggerOverview(updated);
-                      toast.success(`Rolled ${d20} — Death save success! (${newSucc}/3)`, { icon: '🎲', duration: 4000, style: { background: '#1a2e1a', color: '#86efac', border: '1px solid rgba(52,211,153,0.3)', fontFamily: 'monospace' } });
+                      if (newSucc >= 3) {
+                        toast.success(`Rolled ${d20} — Stabilized! Your character is unconscious but stable.`, { icon: '🎲', duration: 5000, style: { background: '#1a2e1a', color: '#86efac', border: '1px solid rgba(52,211,153,0.4)', fontFamily: 'monospace' } });
+                      } else {
+                        toast.success(`Rolled ${d20} — Death save success! (${newSucc}/3)`, { icon: '🎲', duration: 4000, style: { background: '#1a2e1a', color: '#86efac', border: '1px solid rgba(52,211,153,0.3)', fontFamily: 'monospace' } });
+                      }
                     } else {
                       const newFails = Math.min(3, overview.death_save_failures + 1);
                       const updated = { ...overview, death_save_failures: newFails };
                       setOverview(updated);
                       triggerOverview(updated);
-                      toast(`Rolled ${d20} — Death save failure! (${newFails}/3)`, { icon: '💀', duration: 4000, style: { background: '#2e1a1a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)', fontFamily: 'monospace' } });
+                      if (newFails >= 3) {
+                        toast(`Rolled ${d20} — Your character has fallen...`, { icon: '💀', duration: 6000, style: { background: '#2e1a1a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)', fontFamily: 'monospace' } });
+                      } else {
+                        toast(`Rolled ${d20} — Death save failure! (${newFails}/3)`, { icon: '💀', duration: 4000, style: { background: '#2e1a1a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)', fontFamily: 'monospace' } });
+                      }
                     }
                   }}
                   className="btn-primary text-sm px-6 py-2 flex items-center gap-2 bg-red-600/80 hover:bg-red-500 border-red-400/30"
