@@ -4,6 +4,12 @@ use tauri::ipc::Channel;
 
 const OLLAMA_URL: &str = "http://127.0.0.1:11434";
 
+/// On Windows, prevent spawned processes from opening a visible console window.
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 fn client(timeout_secs: u64) -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(timeout_secs))
@@ -63,8 +69,12 @@ fn is_ollama_installed() -> bool {
             if local_path.exists() { return true; }
         }
         if std::path::Path::new(r"C:\Program Files\Ollama\ollama.exe").exists() { return true; }
-        // Try PATH
-        std::process::Command::new("ollama").arg("--version").output().is_ok()
+        // Try PATH (hidden window)
+        std::process::Command::new("ollama")
+            .arg("--version")
+            .creation_flags(CREATE_NO_WINDOW)
+            .output()
+            .is_ok()
     }
     #[cfg(not(target_os = "windows"))]
     {
@@ -86,6 +96,7 @@ pub async fn ollama_start() -> Result<String, String> {
             if p.exists() {
                 std::process::Command::new(p)
                     .arg("serve")
+                    .creation_flags(CREATE_NO_WINDOW)
                     .stdin(std::process::Stdio::null())
                     .stdout(std::process::Stdio::null())
                     .stderr(std::process::Stdio::null())
@@ -99,6 +110,7 @@ pub async fn ollama_start() -> Result<String, String> {
         // Try PATH
         std::process::Command::new("ollama")
             .arg("serve")
+            .creation_flags(CREATE_NO_WINDOW)
             .stdin(std::process::Stdio::null())
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
@@ -188,11 +200,12 @@ pub async fn ollama_auto_install(
 
         let _ = on_progress.send(InstallProgress { stage: "Installing Ollama...".into(), percent: 85, done: false });
 
-        // Run the installer silently
+        // Run the installer silently (hidden window)
         let status = std::process::Command::new(&installer_path)
             .arg("/VERYSILENT")
             .arg("/NORESTART")
             .arg("/SUPPRESSMSGBOXES")
+            .creation_flags(CREATE_NO_WINDOW)
             .status()
             .map_err(|e| format!("Failed to run installer: {}", e))?;
 
