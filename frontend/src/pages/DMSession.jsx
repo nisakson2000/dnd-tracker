@@ -377,16 +377,19 @@ export default function DMSession() {
   }, [dispatch]);
 
   // Listen for ALL incoming game events from players
+  const connectedPlayersRef = useRef(connectedPlayers);
+  connectedPlayersRef.current = connectedPlayers;
   useEffect(() => {
     let unlisten;
     listen('session-game-event', (event) => {
       const { from, event: gameEvent } = event.payload || {};
       if (!gameEvent?.type) return;
+      const players = connectedPlayersRef.current;
 
       switch (gameEvent.type) {
         case 'RollBroadcast': {
           const label = gameEvent.label ? ` (${gameEvent.label})` : '';
-          const playerName = connectedPlayers.find(p => p.id === gameEvent.player_uuid)?.name || from || 'Player';
+          const playerName = players.find(p => p.id === gameEvent.player_uuid)?.name || from || 'Player';
           dispatch({
             type: 'LOG_ACTION',
             payload: `${playerName} rolled ${gameEvent.expression} → ${gameEvent.total}${label}`,
@@ -398,12 +401,12 @@ export default function DMSession() {
           break;
         }
         case 'ConcentrationUpdate': {
-          const playerName = connectedPlayers.find(p => p.id === gameEvent.player_uuid)?.name || from || 'Player';
+          const playerName = players.find(p => p.id === gameEvent.player_uuid)?.name || from || 'Player';
           dispatch({ type: 'LOG_ACTION', payload: `${playerName} ${gameEvent.spell ? 'concentrating on ' + gameEvent.spell : 'dropped concentration'}` });
           break;
         }
         case 'ActionRequest': {
-          const playerName = connectedPlayers.find(p => p.id === gameEvent.player_uuid)?.name || from || 'Player';
+          const playerName = players.find(p => p.id === gameEvent.player_uuid)?.name || from || 'Player';
           toast(`${playerName} requests: ${gameEvent.description || gameEvent.action_type}`, {
             icon: '\u2753', duration: 6000,
             style: { background: '#1a1520', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' },
@@ -412,7 +415,7 @@ export default function DMSession() {
           break;
         }
         case 'ChatMessage': {
-          const senderName = connectedPlayers.find(p => p.id === from)?.name || gameEvent.sender || from || 'Player';
+          const senderName = players.find(p => p.id === from)?.name || gameEvent.sender || from || 'Player';
           dispatch({ type: 'ADD_CHAT_MESSAGE', payload: { sender: senderName, message: gameEvent.message, timestamp: gameEvent.timestamp } });
           dispatch({ type: 'LOG_ACTION', payload: `${senderName}: ${gameEvent.message}` });
           break;
@@ -422,9 +425,11 @@ export default function DMSession() {
       }
     }).then(fn => { unlisten = fn; });
     return () => { if (unlisten) unlisten(); };
-  }, [connectedPlayers, dispatch]);
+  }, [dispatch]);
 
   // Listen for join requests — auto-approve with current game state snapshot
+  const gameStateRef = useRef({ currentScene, initiative, round, currentTurn, sessionId, campaignName, campaignId });
+  gameStateRef.current = { currentScene, initiative, round, currentTurn, sessionId, campaignName, campaignId };
   useEffect(() => {
     let unlisten;
     listen('session-join-request', (event) => {
@@ -432,18 +437,18 @@ export default function DMSession() {
       dispatch({ type: 'LOG_ACTION', payload: `${display_name || 'Player'} requested to join` });
       toast(`${display_name || 'Player'} wants to join!`, { icon: '👤', duration: 5000 });
 
-      // Build a FullStateSnapshot so the joining player gets current game state
+      const gs = gameStateRef.current;
       const snapshot = JSON.stringify({
         type: 'FullStateSnapshot',
-        campaign_id: campaignId || '',
+        campaign_id: gs.campaignId || '',
         state: {
-          scene: currentScene || null,
-          initiative: initiative || [],
-          round: round || 0,
-          current_turn: currentTurn || 0,
-          encounter_active: (initiative && initiative.length > 0) || false,
-          session_id: sessionId || '',
-          campaign_name: campaignName || '',
+          scene: gs.currentScene || null,
+          initiative: gs.initiative || [],
+          round: gs.round || 0,
+          current_turn: gs.currentTurn || 0,
+          encounter_active: (gs.initiative && gs.initiative.length > 0) || false,
+          session_id: gs.sessionId || '',
+          campaign_name: gs.campaignName || '',
         },
       });
 
@@ -452,7 +457,7 @@ export default function DMSession() {
       });
     }).then(fn => { unlisten = fn; });
     return () => { if (unlisten) unlisten(); };
-  }, [dispatch, currentScene, initiative, round, currentTurn, sessionId, campaignName]);
+  }, [dispatch]);
 
   // Session timer
   useEffect(() => {
@@ -478,15 +483,17 @@ export default function DMSession() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist timer to localStorage every 30s for crash recovery
+  const elapsedRef = useRef(elapsedSeconds);
+  elapsedRef.current = elapsedSeconds;
   useEffect(() => {
     const key = `codex-session-timer-${sessionId || campaignId}`;
     const saveInterval = setInterval(() => {
-      if (elapsedSeconds > 0) {
-        localStorage.setItem(key, JSON.stringify({ elapsed: elapsedSeconds, savedAt: Date.now() }));
+      if (elapsedRef.current > 0) {
+        localStorage.setItem(key, JSON.stringify({ elapsed: elapsedRef.current, savedAt: Date.now() }));
       }
     }, 30000);
     return () => clearInterval(saveInterval);
-  }, [elapsedSeconds, sessionId, campaignId]);
+  }, [sessionId, campaignId]);
 
   // Load scenes on mount
   useEffect(() => {

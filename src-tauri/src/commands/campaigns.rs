@@ -216,27 +216,42 @@ pub fn delete_campaign(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     with_campaign_conn(&state, |conn| {
-        // Delete in dependency order
-        conn.execute("DELETE FROM monsters WHERE encounter_id IN (SELECT id FROM encounters WHERE campaign_id = ?1)", params![campaign_id])
-            .map_err(|e| format!("Failed to delete monsters: {}", e))?;
-        conn.execute("DELETE FROM encounters WHERE campaign_id = ?1", params![campaign_id])
-            .map_err(|e| format!("Failed to delete encounters: {}", e))?;
-        conn.execute("DELETE FROM action_buttons WHERE scene_id IN (SELECT id FROM scenes WHERE campaign_id = ?1)", params![campaign_id])
-            .map_err(|e| format!("Failed to delete action buttons: {}", e))?;
-        conn.execute("DELETE FROM scenes WHERE campaign_id = ?1", params![campaign_id])
-            .map_err(|e| format!("Failed to delete scenes: {}", e))?;
-        conn.execute("DELETE FROM players WHERE campaign_id = ?1", params![campaign_id])
-            .map_err(|e| format!("Failed to delete players: {}", e))?;
-        conn.execute("DELETE FROM quest_flags WHERE campaign_id = ?1", params![campaign_id])
-            .map_err(|e| format!("Failed to delete quest flags: {}", e))?;
-        conn.execute("DELETE FROM event_log WHERE campaign_id = ?1", params![campaign_id])
-            .map_err(|e| format!("Failed to delete event log: {}", e))?;
-        conn.execute("DELETE FROM handouts WHERE campaign_id = ?1", params![campaign_id])
-            .map_err(|e| format!("Failed to delete handouts: {}", e))?;
-        conn.execute("DELETE FROM campaigns WHERE id = ?1", params![campaign_id])
-            .map_err(|e| format!("Failed to delete campaign: {}", e))?;
+        // Delete in dependency order, wrapped in transaction for atomicity + speed
+        conn.execute_batch("BEGIN TRANSACTION")
+            .map_err(|e| format!("Failed to begin transaction: {}", e))?;
 
-        Ok(())
+        let result = (|| -> Result<(), String> {
+            conn.execute("DELETE FROM monsters WHERE encounter_id IN (SELECT id FROM encounters WHERE campaign_id = ?1)", params![campaign_id])
+                .map_err(|e| format!("Failed to delete monsters: {}", e))?;
+            conn.execute("DELETE FROM encounters WHERE campaign_id = ?1", params![campaign_id])
+                .map_err(|e| format!("Failed to delete encounters: {}", e))?;
+            conn.execute("DELETE FROM action_buttons WHERE scene_id IN (SELECT id FROM scenes WHERE campaign_id = ?1)", params![campaign_id])
+                .map_err(|e| format!("Failed to delete action buttons: {}", e))?;
+            conn.execute("DELETE FROM scenes WHERE campaign_id = ?1", params![campaign_id])
+                .map_err(|e| format!("Failed to delete scenes: {}", e))?;
+            conn.execute("DELETE FROM players WHERE campaign_id = ?1", params![campaign_id])
+                .map_err(|e| format!("Failed to delete players: {}", e))?;
+            conn.execute("DELETE FROM quest_flags WHERE campaign_id = ?1", params![campaign_id])
+                .map_err(|e| format!("Failed to delete quest flags: {}", e))?;
+            conn.execute("DELETE FROM event_log WHERE campaign_id = ?1", params![campaign_id])
+                .map_err(|e| format!("Failed to delete event log: {}", e))?;
+            conn.execute("DELETE FROM handouts WHERE campaign_id = ?1", params![campaign_id])
+                .map_err(|e| format!("Failed to delete handouts: {}", e))?;
+            conn.execute("DELETE FROM campaigns WHERE id = ?1", params![campaign_id])
+                .map_err(|e| format!("Failed to delete campaign: {}", e))?;
+            Ok(())
+        })();
+
+        match result {
+            Ok(()) => {
+                conn.execute_batch("COMMIT").map_err(|e| format!("Failed to commit: {}", e))?;
+                Ok(())
+            }
+            Err(e) => {
+                let _ = conn.execute_batch("ROLLBACK");
+                Err(e)
+            }
+        }
     })?;
 
     // Clear active campaign if it was the deleted one

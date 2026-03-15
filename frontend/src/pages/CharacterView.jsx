@@ -325,15 +325,15 @@ function FavoritesBar({ characterId }) {
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
   };
 
-  /* ── Picker data for current tab ── */
-  const getPickerItems = () => {
+  /* ── Picker data for current tab (memoized) ── */
+  const pickerItems = useMemo(() => {
     const alreadyPinned = new Set(favorites.map(f => `${f.type}:${f.id}`));
     if (pickerTab === 'spell') return (pickerData.spells || []).map(s => ({ id: String(s.id), type: 'spell', name: s.name, level: s.level })).filter(s => !alreadyPinned.has(`spell:${s.id}`));
     if (pickerTab === 'attack') return (pickerData.attacks || []).map(a => ({ id: String(a.id), type: 'attack', name: a.name, bonus: a.attack_bonus || 0 })).filter(a => !alreadyPinned.has(`attack:${a.id}`));
     if (pickerTab === 'item') return (pickerData.items || []).map(i => ({ id: String(i.id), type: 'item', name: i.name, itemId: i.id, quantity: i.quantity ?? 0 })).filter(i => !alreadyPinned.has(`item:${i.id}`));
     if (pickerTab === 'feature') return (pickerData.features || []).map(f => ({ id: String(f.id), type: 'feature', name: f.name, featureId: f.id, uses_remaining: f.uses_remaining ?? 0, max_uses: f.max_uses ?? 0 })).filter(f => !alreadyPinned.has(`feature:${f.id}`));
     return [];
-  };
+  }, [pickerTab, pickerData, favorites]);
 
   const barStyle = {
     display: 'flex',
@@ -474,7 +474,7 @@ function FavoritesBar({ characterId }) {
                     {pickerLoading ? (
                       <div style={{ textAlign: 'center', padding: '20px', color: 'rgba(253,230,138,0.3)', fontSize: '11px' }}>Loading...</div>
                     ) : (() => {
-                      const items = getPickerItems();
+                      const items = pickerItems;
                       if (items.length === 0) return (
                         <div style={{ textAlign: 'center', padding: '20px', color: 'rgba(253,230,138,0.25)', fontSize: '11px', fontStyle: 'italic' }}>
                           No {FAV_TYPE_META[pickerTab].label.toLowerCase()}s to pin

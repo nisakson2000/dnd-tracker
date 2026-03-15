@@ -115,7 +115,8 @@ pub fn open_connection(path: &Path) -> SqlResult<Connection> {
          PRAGMA foreign_keys=ON;
          PRAGMA synchronous=NORMAL;
          PRAGMA cache_size=-8000;
-         PRAGMA temp_store=MEMORY;"
+         PRAGMA temp_store=MEMORY;
+         PRAGMA mmap_size=30000000;"
     )?;
     Ok(conn)
 }
