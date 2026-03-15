@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle, AlertCircle, WifiOff, Clock, ChevronDown, ChevronUp,
-  ExternalLink, Download, RefreshCw, Shield, ArrowRight,
+  Download, RefreshCw, Shield, ArrowRight,
 } from 'lucide-react';
 import { CHANGELOG } from '../data/changelog';
 import { useUpdateCheck } from '../hooks/useUpdateCheck';
@@ -472,17 +472,8 @@ export default function Updates() {
       )}
 
       {/* ── Changelog ───────────────────────────────── */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3">
         <h3 className="text-[10px] font-mono tracking-widest uppercase text-amber-200/25">What's New</h3>
-        <button
-          onClick={() => {
-            try { invoke('plugin:shell|open', { path: 'https://github.com/nisakson2000/dnd-tracker/blob/main/MASTERUPDATELIST.md' }); } catch { /* non-critical */ }
-          }}
-          className="flex items-center gap-1 text-[10px] text-amber-200/30 hover:text-amber-200/60 transition-colors bg-transparent border-none cursor-pointer"
-          style={{ fontFamily: 'inherit' }}
-        >
-          <ExternalLink size={10} /> Full changelog
-        </button>
       </div>
       <div className="space-y-3">
         {displayVersions.map((entry) => {

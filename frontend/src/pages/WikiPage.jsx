@@ -224,7 +224,7 @@ export default function WikiPage() {
       {/* Back button */}
       <div className="w-full flex items-center gap-4 mb-4">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-sm text-amber-200/60 hover:text-amber-200 transition-colors"
         >
           <ArrowLeft size={16} />
