@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo, lazy, Suspense } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Heart, Clock, Shield, Zap, Star, Footprints, X, Moon, Coffee, Sunrise, Dices, Flame, Check, Keyboard, Wand2, Sword, FlaskConical, Sparkles, ChevronUp, ChevronDown, Pin, Plus, Hammer } from 'lucide-react';
 import toast from 'react-hot-toast';

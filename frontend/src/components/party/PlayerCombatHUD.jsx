@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Swords, Wand2, FlaskConical, Sparkles, Shield, Heart, X, ChevronRight, Zap, Target, Clock, Send, Skull, AlertTriangle, Hand, ArrowRight } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useCampaignSync } from '../../contexts/CampaignSyncContext';
+import CombatStateBar from './CombatStateBar';
 import { useParty } from '../../contexts/PartyContext';
 import { rollDie, parseAndRollExpression } from '../../utils/dice';
 import { computeConditionEffects } from '../../data/conditionEffects';
@@ -74,7 +76,7 @@ const SPELL_AUTO_EFFECTS = {
 };
 
 export default function PlayerCombatHUD({ characterId }) {
-  const { sendEvent, sharedCombatLog, sendConcentrationUpdate, isMyTurn, monsterHpTiers } = useCampaignSync();
+  const { sendEvent, sharedCombatLog, sendConcentrationUpdate, isMyTurn, monsterHpTiers, turnFlash, combatActive, initiativeOrder } = useCampaignSync();
   const { myClientId } = useParty();
 
   // Self-load character data
@@ -647,6 +649,35 @@ export default function PlayerCombatHUD({ characterId }) {
 
   return (
     <div style={containerStyle}>
+      {/* Turn Flash Banner */}
+      <AnimatePresence>
+        {turnFlash && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              padding: '10px 16px',
+              background: 'linear-gradient(135deg, rgba(201,168,76,0.2) 0%, rgba(201,168,76,0.08) 100%)',
+              borderBottom: '2px solid rgba(201,168,76,0.4)',
+              textAlign: 'center',
+              fontSize: 16, fontWeight: 800,
+              color: '#c9a84c',
+              fontFamily: 'var(--font-heading)',
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              textShadow: '0 0 12px rgba(201,168,76,0.4)',
+            }}
+          >
+            Your Turn!
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Combat State Bar — initiative order + monster status */}
+      <CombatStateBar />
+
       {/* Exhaustion Warning Banners */}
       {exhaustionLevel >= 3 && (
         <div style={{

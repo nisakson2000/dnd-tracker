@@ -3,6 +3,27 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.7.1',
+    date: '03/15/2026',
+    time: '12:00 AM',
+    title: 'Combat Sync, Bug Fixes, QoL & UI Polish',
+    changes: [
+      'Combat State Bar — players now see initiative order, current turn, round counter during combat',
+      'Monster HP Tiers — monster health status shown as colored dots on initiative bar for players',
+      'Monster Conditions — conditions (poisoned, prone, etc.) now display as badges on initiative bar',
+      'Turn Notification — audio chime + golden flash banner when it becomes your turn',
+      'Death Save Sync — structured death save tracking synced between DM and players',
+      'HP Visibility Modes — DM can toggle monster HP display: Tier / Percentage / Exact / Hidden',
+      'Condition Tooltips — hover over conditions to see full 5e SRD mechanical descriptions',
+      'Prompt History — DM can view and resend previous prompts from a collapsible history panel',
+      'Combat State Recovery — full combat state (initiative, HP tiers, conditions) persists across reconnects and crashes',
+      'Session Timer Persistence — elapsed session time now survives app restarts',
+      'Empty States — clear placeholder messages when no creatures or initiative order exists',
+      'Bug Fix: useMemo import missing in CharacterView causing crash',
+      'Bug Fix: Reconnecting players now receive monster HP tiers, conditions, and latest broadcast',
+    ],
+  },
+  {
     version: 'V0.7.0',
     date: '03/14/2026',
     time: '11:59 PM',

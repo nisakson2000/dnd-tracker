@@ -43,6 +43,9 @@ export function CampaignSyncProvider({ children }) {
   const [pendingGoldChange, setPendingGoldChange] = useState([]);
   const [pendingSlotLoss, setPendingSlotLoss] = useState([]);
   const [monsterHpTiers, setMonsterHpTiers] = useState({});
+  const [monsterConditions, setMonsterConditions] = useState({}); // { monster_id: ['poisoned', 'prone'] }
+  const [playerDeathSaves, setPlayerDeathSaves] = useState({}); // { client_id: { successes: N, failures: N } }
+  const [turnFlash, setTurnFlash] = useState(false);
   const [syncedBattleMap, setSyncedBattleMap] = useState(null);
   const [activeShop, setActiveShop] = useState(null);
   const [pendingPurchases, setPendingPurchases] = useState([]);
@@ -73,6 +76,32 @@ export function CampaignSyncProvider({ children }) {
     const current = initiativeOrder[currentTurn];
     return current?.client_id === myClientId;
   }, [combatActive, initiativeOrder, currentTurn, myClientId]);
+
+  // Track isMyTurn transitions — play chime + flash when it becomes your turn
+  const prevIsMyTurnRef = useRef(false);
+  useEffect(() => {
+    if (isMyTurn && !prevIsMyTurnRef.current) {
+      setTurnFlash(true);
+      const timer = setTimeout(() => setTurnFlash(false), 3000);
+      // Play a short chime via Web Audio API
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.1); // G5
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.3);
+      } catch (_) { /* Web Audio not available */ }
+      return () => clearTimeout(timer);
+    }
+    prevIsMyTurnRef.current = isMyTurn;
+  }, [isMyTurn]);
 
   // Subscribe to party events
   useEffect(() => {
@@ -120,6 +149,8 @@ export function CampaignSyncProvider({ children }) {
       setCurrentTurn(0);
       setRound(1);
       setMonsterHpTiers({});
+      setMonsterConditions({});
+      setPlayerDeathSaves({});
       setSyncedBattleMap(null);
     }));
 
@@ -221,6 +252,22 @@ export function CampaignSyncProvider({ children }) {
 
     unsubs.push(onPartyEvent('death_save_result', (msg) => {
       setSharedCombatLog(prev => [...prev, { type: 'death_save', text: msg.data?.text || `Death save result`, timestamp: msg.timestamp }].slice(-50));
+      // Track structured death save data
+      const cid = msg.client_id || msg.data?.client_id;
+      if (cid) {
+        setPlayerDeathSaves(prev => {
+          const current = prev[cid] || { successes: 0, failures: 0 };
+          const success = msg.data?.success;
+          const isCrit = msg.data?.is_crit;
+          if (success) {
+            const newSuccesses = isCrit ? 3 : current.successes + 1;
+            return { ...prev, [cid]: { ...current, successes: Math.min(3, newSuccesses) } };
+          } else {
+            const newFailures = (msg.data?.is_fumble || msg.data?.roll === 1) ? current.failures + 2 : current.failures + 1;
+            return { ...prev, [cid]: { ...current, failures: Math.min(3, newFailures) } };
+          }
+        });
+      }
     }));
 
     unsubs.push(onPartyEvent('spell_slot_update', (msg) => {
@@ -238,6 +285,19 @@ export function CampaignSyncProvider({ children }) {
     unsubs.push(onPartyEvent('monster_condition', (msg) => {
       // Players can see monster conditions in combat log
       setSharedCombatLog(prev => [...prev, { type: 'condition', text: `${msg.data?.monster_name || 'Monster'} is ${msg.data?.action === 'add' ? 'now' : 'no longer'} ${msg.data?.condition || ''}`, timestamp: msg.timestamp }].slice(-50));
+      // Track monster conditions persistently
+      const mid = msg.data?.monster_id;
+      const cond = msg.data?.condition;
+      if (mid && cond) {
+        setMonsterConditions(prev => {
+          const current = prev[mid] || [];
+          if (msg.data?.action === 'add') {
+            return { ...prev, [mid]: current.includes(cond) ? current : [...current, cond] };
+          } else {
+            return { ...prev, [mid]: current.filter(c => c !== cond) };
+          }
+        });
+      }
     }));
 
     unsubs.push(onPartyEvent('level_up_available', (msg) => {
@@ -334,6 +394,7 @@ export function CampaignSyncProvider({ children }) {
           combatActive, initiativeOrder, currentTurn, round,
           activePrompts: activePrompts.filter(p => true), // Send active prompts
           currentMood, dmSessionActive,
+          monsterHpTiers, monsterConditions, latestBroadcast,
         };
         sendTargetedEvent('full_state_snapshot', snapshot, [msg.client_id]);
       }
@@ -350,6 +411,9 @@ export function CampaignSyncProvider({ children }) {
         if (s.activePrompts) setActivePrompts(s.activePrompts);
         if (s.currentMood !== undefined) setCurrentMood(s.currentMood);
         if (s.dmSessionActive !== undefined) setDmSessionActive(s.dmSessionActive);
+        if (s.monsterHpTiers) setMonsterHpTiers(s.monsterHpTiers);
+        if (s.monsterConditions) setMonsterConditions(s.monsterConditions);
+        if (s.latestBroadcast) setLatestBroadcast(s.latestBroadcast);
         toast.success('Reconnected — state restored');
       }
     }));
@@ -487,6 +551,13 @@ export function CampaignSyncProvider({ children }) {
   const clearSkillCheck = useCallback(() => { setPendingSkillCheck(null); }, []);
   const clearSkillCheckResults = useCallback(() => { setSkillCheckResults([]); }, []);
   const clearPromptHistory = useCallback(() => { setPromptHistory([]); }, []);
+  const clearPlayerDeathSaves = useCallback(() => { setPlayerDeathSaves({}); }, []);
+
+  // Combat snapshot for crash-recovery persistence
+  const getCombatSnapshot = useCallback(() => ({
+    combatActive, initiativeOrder, currentTurn, round,
+    monsterHpTiers, monsterConditions, playerDeathSaves,
+  }), [combatActive, initiativeOrder, currentTurn, round, monsterHpTiers, monsterConditions, playerDeathSaves]);
   const registerPlayer = useCallback((clientId, playerName) => {
     setConnectedPlayerMap(prev => ({ ...prev, [clientId]: playerName }));
   }, []);
@@ -626,7 +697,9 @@ export function CampaignSyncProvider({ children }) {
     pendingItemLoss, clearItemLoss,
     pendingGoldChange, clearGoldChange,
     pendingSlotLoss, clearSlotLoss,
-    monsterHpTiers, clearMonsterHpTiers,
+    monsterHpTiers, clearMonsterHpTiers, monsterConditions,
+    playerDeathSaves, clearPlayerDeathSaves, turnFlash,
+    getCombatSnapshot,
     syncedBattleMap, sendBattleMapSync, sendBattleMapTokenMove,
     sendBattleMapFogUpdate, sendBattleMapDrawingUpdate, sendBattleMapClear,
     activeShop, pendingPurchases, setPendingPurchases, sendShopOpen, sendShopClose, clearPendingPurchases,
@@ -661,7 +734,9 @@ export function CampaignSyncProvider({ children }) {
        pendingItemLoss, clearItemLoss,
        pendingGoldChange, clearGoldChange,
        pendingSlotLoss, clearSlotLoss,
-       monsterHpTiers, clearMonsterHpTiers,
+       monsterHpTiers, clearMonsterHpTiers, monsterConditions,
+       playerDeathSaves, clearPlayerDeathSaves, turnFlash,
+       getCombatSnapshot,
        syncedBattleMap, sendBattleMapSync, sendBattleMapTokenMove,
        sendBattleMapFogUpdate, sendBattleMapDrawingUpdate, sendBattleMapClear,
        activeShop, pendingPurchases, sendShopOpen, sendShopClose, clearPendingPurchases,

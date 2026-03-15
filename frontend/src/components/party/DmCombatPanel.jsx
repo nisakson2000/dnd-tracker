@@ -9,21 +9,21 @@ import { getExhaustionLevel } from '../../utils/exhaustionEffects';
 
 // ── 5e SRD Conditions ──
 const CONDITIONS = [
-  { id: 'blinded', label: 'Blinded', color: '#6b7280' },
-  { id: 'charmed', label: 'Charmed', color: '#f472b6' },
-  { id: 'deafened', label: 'Deafened', color: '#9ca3af' },
-  { id: 'frightened', label: 'Frightened', color: '#a78bfa' },
-  { id: 'grappled', label: 'Grappled', color: '#f97316' },
-  { id: 'incapacitated', label: 'Incapacitated', color: '#dc2626' },
-  { id: 'invisible', label: 'Invisible', color: '#67e8f9' },
-  { id: 'paralyzed', label: 'Paralyzed', color: '#eab308' },
-  { id: 'petrified', label: 'Petrified', color: '#78716c' },
-  { id: 'poisoned', label: 'Poisoned', color: '#22c55e' },
-  { id: 'prone', label: 'Prone', color: '#d97706' },
-  { id: 'restrained', label: 'Restrained', color: '#ea580c' },
-  { id: 'stunned', label: 'Stunned', color: '#facc15' },
-  { id: 'unconscious', label: 'Unconscious', color: '#991b1b' },
-  { id: 'concentrating', label: 'Concentrating', color: '#60a5fa' },
+  { id: 'blinded', label: 'Blinded', color: '#6b7280', description: 'Auto-fail sight checks. Attack rolls have disadvantage. Attacks against have advantage.' },
+  { id: 'charmed', label: 'Charmed', color: '#f472b6', description: "Can't attack the charmer. Charmer has advantage on social checks." },
+  { id: 'deafened', label: 'Deafened', color: '#9ca3af', description: 'Auto-fail hearing checks.' },
+  { id: 'frightened', label: 'Frightened', color: '#a78bfa', description: 'Disadvantage on ability checks and attacks while source is in sight. Cannot willingly move closer.' },
+  { id: 'grappled', label: 'Grappled', color: '#f97316', description: 'Speed becomes 0. Ends if grappler is incapacitated or moved out of reach.' },
+  { id: 'incapacitated', label: 'Incapacitated', color: '#dc2626', description: "Can't take actions or reactions." },
+  { id: 'invisible', label: 'Invisible', color: '#67e8f9', description: 'Heavily obscured for hiding. Attacks have advantage, attacks against have disadvantage.' },
+  { id: 'paralyzed', label: 'Paralyzed', color: '#eab308', description: 'Incapacitated, auto-fail STR/DEX saves. Attacks have advantage, hits within 5ft are crits.' },
+  { id: 'petrified', label: 'Petrified', color: '#78716c', description: 'Transformed to stone. Weight x10. Incapacitated, auto-fail STR/DEX saves. Resistance to all damage.' },
+  { id: 'poisoned', label: 'Poisoned', color: '#22c55e', description: 'Disadvantage on attack rolls and ability checks.' },
+  { id: 'prone', label: 'Prone', color: '#d97706', description: 'Disadvantage on attacks. Melee attacks within 5ft have advantage, ranged have disadvantage. Must use half movement to stand.' },
+  { id: 'restrained', label: 'Restrained', color: '#ea580c', description: 'Speed 0. Attacks have disadvantage. Attacks against have advantage. Disadvantage on DEX saves.' },
+  { id: 'stunned', label: 'Stunned', color: '#facc15', description: 'Incapacitated, auto-fail STR/DEX saves. Attacks against have advantage.' },
+  { id: 'unconscious', label: 'Unconscious', color: '#991b1b', description: 'Incapacitated, drops items, falls prone. Auto-fail STR/DEX saves. Attacks have advantage, hits within 5ft are crits.' },
+  { id: 'concentrating', label: 'Concentrating', color: '#60a5fa', description: 'Maintaining a concentration spell. CON save on damage or lose concentration.' },
 ];
 
 /** Parse stat_block_json safely */
@@ -40,11 +40,13 @@ export default function DmCombatPanel() {
   const {
     sessionActive, activeEncounterId, encounterMonsters,
     damageMonster, endSceneEncounter, startSceneEncounter, currentScene,
+    monsterHpVisibility, setMonsterHpVisibility,
   } = useLiveSession();
   const { combatActive, initiativeOrder, currentTurn, round, advanceTurn,
     sendHpChange, sendDeathSavePrompt, sendInspirationToggle, sendReactionPrompt,
     sendCombatLogEntry, sendMonsterCondition, concentrationState,
     sendPrompt, incomingAttacks, removeIncomingAttack,
+    playerDeathSaves,
   } = useCampaignSync();
   const { members, myClientId, memberPresence, sendEvent } = useParty();
 
@@ -60,7 +62,8 @@ export default function DmCombatPanel() {
 
   const [damageInputs, setDamageInputs] = useState({});
   const [playerDamageInputs, setPlayerDamageInputs] = useState({});
-  const [deathSaves, setDeathSaves] = useState({}); // { clientId: { successes: 0, failures: 0 } }
+  // Death saves now synced from context via playerDeathSaves (alias for local usage)
+  const deathSaves = playerDeathSaves || {};
   const [monsterConditions, setMonsterConditions] = useState({}); // { monsterId: ['poisoned', 'prone'] }
   const [showConditionPicker, setShowConditionPicker] = useState(null); // monsterId or null
   const [turnTimer, setTurnTimer] = useState(0);
@@ -499,6 +502,26 @@ export default function DmCombatPanel() {
         </div>
       </div>
 
+      {/* HP Visibility Toggle */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 9 }}>
+        <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>HP Display:</span>
+        {['tier', 'percentage', 'exact', 'hidden'].map(mode => (
+          <button
+            key={mode}
+            onClick={() => setMonsterHpVisibility(mode)}
+            style={{
+              padding: '2px 6px', borderRadius: 4, fontSize: 8, fontWeight: 600, cursor: 'pointer',
+              background: monsterHpVisibility === mode ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${monsterHpVisibility === mode ? 'rgba(201,168,76,0.25)' : 'rgba(255,255,255,0.06)'}`,
+              color: monsterHpVisibility === mode ? '#c9a84c' : 'rgba(255,255,255,0.25)',
+              textTransform: 'capitalize',
+            }}
+          >
+            {mode === 'percentage' ? '%' : mode}
+          </button>
+        ))}
+      </div>
+
       {/* Encounter difficulty meter */}
       {difficultyInfo && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px', marginBottom: 6 }}>
@@ -604,6 +627,11 @@ export default function DmCombatPanel() {
         <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(201,168,76,0.4)', fontFamily: 'var(--font-heading)', marginBottom: 2 }}>
           Initiative
         </div>
+        {initiativeOrder.length === 0 && (
+          <div style={{ textAlign: 'center', padding: 8, color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>
+            Waiting for initiative...
+          </div>
+        )}
         {initiativeOrder.map((entry, i) => (
           <div
             key={i}
@@ -643,6 +671,11 @@ export default function DmCombatPanel() {
       </div>
 
       {/* Monster cards */}
+      {aliveMonsters.length === 0 && (
+        <div style={{ textAlign: 'center', padding: 12, color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>
+          No creatures in encounter
+        </div>
+      )}
       {aliveMonsters.length > 0 && (
         <>
           <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(239,68,68,0.4)', fontFamily: 'var(--font-heading)' }}>
@@ -715,7 +748,7 @@ export default function DmCombatPanel() {
                               background: `${cond.color}18`, border: `1px solid ${cond.color}30`,
                               color: cond.color, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3,
                             }}
-                            title={`Remove ${cond.label}`}
+                            title={`${cond.label}: ${cond.description || ''} (click to remove)`}
                           >
                             {cond.label} <X size={7} />
                           </span>
@@ -846,6 +879,7 @@ export default function DmCombatPanel() {
                           <button
                             key={cond.id}
                             onClick={() => toggleCondition(monster.id, cond.id)}
+                            title={cond.description}
                             style={{
                               fontSize: 8, padding: '2px 5px', borderRadius: 4,
                               background: active ? `${cond.color}25` : 'rgba(255,255,255,0.03)',

@@ -121,7 +121,7 @@ const smallLabel = {
 // ── Component ──
 
 export default function DmActionPanel() {
-  const { sendPrompt, sendEvent, sendTargetedEvent, promptResults, applyCondition, removeCondition, requestEquipment, sendHpChange } = useCampaignSync();
+  const { sendPrompt, sendEvent, sendTargetedEvent, promptResults, applyCondition, removeCondition, requestEquipment, sendHpChange, promptHistory } = useCampaignSync();
   const { members, myClientId } = useParty();
   const { handleSocialOutcome } = useLiveSession();
 
@@ -132,6 +132,7 @@ export default function DmActionPanel() {
   const [difficulty, setDifficulty] = useState('medium');
   const [targetMode, setTargetMode] = useState('all');
   const [selectedTargets, setSelectedTargets] = useState([]);
+  const [showPromptHistory, setShowPromptHistory] = useState(false);
 
   // Passive Check
   const [passiveDc, setPassiveDc] = useState(13);
@@ -1510,6 +1511,65 @@ export default function DmActionPanel() {
                 </div>
               );
             })
+          )}
+        </div>
+      )}
+
+      {/* Prompt History */}
+      {promptHistory && promptHistory.length > 0 && (
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+          <button
+            onClick={() => setShowPromptHistory(!showPromptHistory)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6, width: '100%',
+              background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0',
+              color: 'rgba(201,168,76,0.5)', fontSize: 10, fontWeight: 600,
+              textTransform: 'uppercase', letterSpacing: '0.06em',
+            }}
+          >
+            <RotateCcw size={10} />
+            Recent Prompts ({promptHistory.length})
+            <span style={{ marginLeft: 'auto', fontSize: 8, color: 'rgba(255,255,255,0.2)' }}>
+              {showPromptHistory ? 'Hide' : 'Show'}
+            </span>
+          </button>
+          {showPromptHistory && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6 }}>
+              {promptHistory.slice(0, 10).map((h, i) => (
+                <div key={h.prompt_id || i} style={{
+                  padding: '6px 8px', borderRadius: 6,
+                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                  fontSize: 10,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                    <span style={{ fontWeight: 600, color: '#e8d9b5', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {h.prompt_type || h.label || h.type || 'Prompt'}
+                    </span>
+                    <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.2)' }}>
+                      {h.sent_at ? new Date(h.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </span>
+                    {h.results && (
+                      <span style={{ fontSize: 8, padding: '1px 4px', borderRadius: 3, background: 'rgba(74,222,128,0.1)', color: '#4ade80' }}>
+                        {h.results.length} response{h.results.length !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => {
+                      const { prompt_id, sent_at, results, ...params } = h;
+                      sendPrompt(params.prompt_type || params.type || 'custom', params);
+                    }}
+                    style={{
+                      padding: '2px 8px', borderRadius: 4, fontSize: 8, fontWeight: 600,
+                      background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)',
+                      color: '#c9a84c', cursor: 'pointer',
+                    }}
+                  >
+                    Resend
+                  </button>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       )}

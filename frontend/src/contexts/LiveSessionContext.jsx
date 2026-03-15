@@ -21,7 +21,7 @@ export function useLiveSession() {
 }
 
 export function LiveSessionProvider({ children }) {
-  const { sendBroadcast, startCombat, advanceTurn, endCombat, sendPrompt, sendEvent, sendXpAward, requestEquipment, sendRestSync } = useCampaignSync();
+  const { sendBroadcast, startCombat, advanceTurn, endCombat, sendPrompt, sendEvent, sendXpAward, requestEquipment, sendRestSync, getCombatSnapshot } = useCampaignSync();
   const { members, myClientId } = useParty();
 
   // Session state
@@ -41,6 +41,9 @@ export function LiveSessionProvider({ children }) {
   // Encounter state
   const [activeEncounterId, setActiveEncounterId] = useState(null);
   const [encounterMonsters, setEncounterMonsters] = useState([]);
+
+  // DM-configurable monster HP visibility: 'tier' | 'percentage' | 'exact' | 'hidden'
+  const [monsterHpVisibility, setMonsterHpVisibility] = useState('tier');
 
   // Quest runner state
   const [activeQuestId, setActiveQuestId] = useState(null);
@@ -74,6 +77,7 @@ export function LiveSessionProvider({ children }) {
   useEffect(() => {
     if (!sessionActive || !sessionId || !activeCampaignId) return;
     const interval = setInterval(() => {
+      const combatState = getCombatSnapshot ? getCombatSnapshot() : {};
       const snapshot = {
         campaignId: activeCampaignId,
         campaignName,
@@ -82,6 +86,9 @@ export function LiveSessionProvider({ children }) {
         activeEncounterId,
         encounterMonsters,
         sessionXp,
+        sessionStartedAt,
+        monsterHpVisibility,
+        combat: combatState,
         timestamp: Date.now(),
       };
       invoke('save_session_snapshot', {
@@ -91,7 +98,7 @@ export function LiveSessionProvider({ children }) {
       }).catch(e => console.warn('Snapshot save failed:', e));
     }, 30000);
     return () => clearInterval(interval);
-  }, [sessionActive, sessionId, activeCampaignId, campaignName, currentScene, activeEncounterId, encounterMonsters, sessionXp]);
+  }, [sessionActive, sessionId, activeCampaignId, campaignName, currentScene, activeEncounterId, encounterMonsters, sessionXp, sessionStartedAt, monsterHpVisibility, getCombatSnapshot]);
 
   const logEvent = useCallback((type, text) => {
     const entry = { type, text, timestamp: new Date().toISOString() };
@@ -502,15 +509,23 @@ export function LiveSessionProvider({ children }) {
       const result = await invoke('update_monster_hp', { monsterId, hpDelta: delta });
       const newHp = result?.hp_current ?? ((monster.hp_current ?? monster.hp_max) + delta);
 
-      // Broadcast HP tier to players
+      // Broadcast HP tier to players (with optional extra detail based on visibility setting)
       const tier = getHpTier(newHp, monster.hp_max);
-      sendEvent('monster_hp_update', {
+      const hpPayload = {
         monster_id: monsterId,
         name: monster.name,
         tier: tier.tier,
         tier_label: tier.label,
         tier_color: tier.color,
-      });
+      };
+      if (monsterHpVisibility === 'percentage') {
+        hpPayload.hp_pct = Math.max(0, Math.round((newHp / monster.hp_max) * 100));
+      } else if (monsterHpVisibility === 'exact') {
+        hpPayload.hp_exact = `${Math.max(0, newHp)}/${monster.hp_max}`;
+      } else if (monsterHpVisibility === 'hidden') {
+        hpPayload.hidden = true;
+      }
+      sendEvent('monster_hp_update', hpPayload);
 
       if (newHp <= 0) {
         await invoke('kill_monster', { monsterId });
@@ -726,7 +741,7 @@ export function LiveSessionProvider({ children }) {
   const value = useMemo(() => ({
     activeCampaignId, campaignName, sessionId, sessionActive, sessionStartedAt, elapsed,
     currentScene, scenes, npcs, quests, handouts,
-    activeEncounterId, encounterMonsters,
+    activeEncounterId, encounterMonsters, monsterHpVisibility, setMonsterHpVisibility,
     actionLog, sessionXp,
     activeQuestId, activeQuestBeats, currentBeat,
     startLiveSession, endLiveSession,
@@ -739,7 +754,8 @@ export function LiveSessionProvider({ children }) {
   }), [
     activeCampaignId, campaignName, sessionId, sessionActive, sessionStartedAt, elapsed,
     currentScene, scenes, npcs, quests, handouts,
-    activeEncounterId, encounterMonsters, actionLog, sessionXp,
+    activeEncounterId, encounterMonsters, monsterHpVisibility, setMonsterHpVisibility,
+    actionLog, sessionXp,
     activeQuestId, activeQuestBeats, currentBeat,
     startLiveSession, endLiveSession,
     setActiveScene, startSceneEncounter, endSceneEncounter,
