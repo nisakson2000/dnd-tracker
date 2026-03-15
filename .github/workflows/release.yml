@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+# Cancel any in-progress run when a new push arrives — prevents race conditions
+concurrency:
+  group: release
+  cancel-in-progress: true
+
 jobs:
   # ── Step 1: Verify all version files are in sync ──
   verify-versions:
