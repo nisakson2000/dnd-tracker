@@ -28,7 +28,7 @@ function getSessionId() {
   if (sessionId) return sessionId;
   sessionId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
   sessionStart = new Date().toISOString();
-  try { sessionStorage.setItem(SESSION_KEY, sessionId); } catch {}
+  try { sessionStorage.setItem(SESSION_KEY, sessionId); } catch (e) { console.warn('[SessionMonitor] sessionStorage write:', e); }
   return sessionId;
 }
 
@@ -95,7 +95,7 @@ async function flushErrors() {
       flushing = false;
       return;
     }
-  } catch {}
+  } catch (e) { console.warn('[SessionMonitor] rate limit check:', e); }
 
   // Group by type
   const errorsByType = {};
@@ -139,9 +139,9 @@ ${errorLines}
 
   try {
     await invoke('submit_bug_report', { title, body });
-    try { localStorage.setItem(LAST_REPORT_KEY, Date.now().toString()); } catch {}
-  } catch {
-    // If submit fails, errors are lost — that's fine for auto-reports
+    try { localStorage.setItem(LAST_REPORT_KEY, Date.now().toString()); } catch (e) { console.warn('[SessionMonitor] localStorage write:', e); }
+  } catch (e) {
+    console.warn('[SessionMonitor] auto-report submit failed:', e);
   }
 
   flushing = false;
@@ -190,7 +190,7 @@ export default function SessionMonitor() {
       const msg = args.map(a => {
         if (a instanceof Error) return a.message;
         if (typeof a === 'string') return a;
-        try { return JSON.stringify(a); } catch { return String(a); }
+        try { return JSON.stringify(a); } catch (e) { console.warn('[SessionMonitor] JSON stringify:', e); return String(a); }
       }).join(' ');
 
       if (!shouldCapture(msg)) return;

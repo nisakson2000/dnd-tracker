@@ -3,6 +3,7 @@ import {
   Crown, RefreshCw, Copy, Shield, Heart, Zap,
   Flame, Skull, Swords, Eye, Star, BookOpen,
 } from 'lucide-react';
+import { pick, randBetween } from '../../utils/dndHelpers';
 
 /* ─── CR scaling tables (DMG p.274) ─── */
 const CR_TABLE = {
@@ -39,8 +40,6 @@ const CR_TABLE = {
 };
 
 /* ─── Helpers ─── */
-function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-function randBetween(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
 function rollStat(base, crMod) { return Math.max(1, Math.min(30, base + crMod)); }
 function mod(score) { const m = Math.floor((score - 10) / 2); return m >= 0 ? `+${m}` : `${m}`; }
 function modNum(score) { return Math.floor((score - 10) / 2); }

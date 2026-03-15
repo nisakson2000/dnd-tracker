@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import {
   DoorOpen, Skull, Gem, AlertTriangle, Copy, RefreshCw, Minus, Plus,
 } from 'lucide-react';
+import { pick, randBetween } from '../../utils/dndHelpers';
 
 /* ─── template data ─────────────────────────────────────────────── */
 
@@ -84,8 +85,7 @@ const ROOM_DESCRIPTIONS = {
 
 /* ─── helpers ───────────────────────────────────────────────────── */
 
-function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-function pick(arr)      { return arr[rand(0, arr.length - 1)]; }
+const rand = randBetween;
 function chance(pct)    { return Math.random() < pct; }
 
 function weightedPick(items) {

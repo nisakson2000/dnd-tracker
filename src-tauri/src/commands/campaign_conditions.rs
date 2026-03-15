@@ -47,7 +47,7 @@ pub fn campaign_apply_condition(
 
     with_campaign_conn(&state, |conn| {
         let now = chrono::Utc::now().timestamp();
-        let mut target_name = String::from("Unknown");
+        let target_name;
 
         // Try updating player first
         let player_row: Option<(String, String)> = conn.query_row(
@@ -143,7 +143,7 @@ pub fn campaign_remove_condition(
 
     with_campaign_conn(&state, |conn| {
         let now = chrono::Utc::now().timestamp();
-        let mut target_name = String::from("Unknown");
+        let target_name;
 
         // Try player first
         let player_row: Option<(String, String)> = conn.query_row(

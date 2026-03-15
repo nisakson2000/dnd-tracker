@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { MessageCircle, Copy, RefreshCw, Pin, PinOff } from 'lucide-react';
+import { pick } from '../../utils/dndHelpers';
 
 /* ─── template data ─────────────────────────────────────────────── */
 
@@ -142,10 +143,6 @@ const QUEST_HOOKS = {
 };
 
 /* ─── helpers ───────────────────────────────────────────────────── */
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
 
 function pickWeighted(items) {
   const total = items.reduce((s, i) => s + i.weight, 0);

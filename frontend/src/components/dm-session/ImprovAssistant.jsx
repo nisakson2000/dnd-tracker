@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { User, MapPin, Zap, Copy, RefreshCw, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { pick } from '../../utils/dndHelpers';
 
 /* ─────────────────────── DATA TABLES ─────────────────────── */
 
@@ -277,10 +278,6 @@ const EVENTS = [
 ];
 
 /* ─────────────────────── HELPERS ─────────────────────── */
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
 
 function pickWeighted(items) {
   const total = items.reduce((s, i) => s + i.weight, 0);

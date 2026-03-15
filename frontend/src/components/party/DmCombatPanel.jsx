@@ -275,9 +275,9 @@ export default function DmCombatPanel() {
 
     // Persist to backend (fire-and-forget; .catch so it won't break if command doesn't exist yet)
     if (has) {
-      invoke('campaign_remove_condition', { encounter_id: activeEncounterId, monster_id: monsterId, condition: conditionId }).catch(() => {});
+      invoke('campaign_remove_condition', { encounter_id: activeEncounterId, monster_id: monsterId, condition: conditionId }).catch(e => console.warn('[DmCombatPanel] remove condition:', e));
     } else {
-      invoke('campaign_apply_condition', { encounter_id: activeEncounterId, monster_id: monsterId, condition: conditionId }).catch(() => {});
+      invoke('campaign_apply_condition', { encounter_id: activeEncounterId, monster_id: monsterId, condition: conditionId }).catch(e => console.warn('[DmCombatPanel] apply condition:', e));
     }
 
     // Sync to players
@@ -305,7 +305,7 @@ export default function DmCombatPanel() {
     }));
 
     // Persist to backend (fire-and-forget; .catch so it won't break if command doesn't exist yet)
-    invoke('campaign_remove_condition', { encounter_id: activeEncounterId, monster_id: monsterId, condition: conditionId }).catch(() => {});
+    invoke('campaign_remove_condition', { encounter_id: activeEncounterId, monster_id: monsterId, condition: conditionId }).catch(e => console.warn('[DmCombatPanel] remove condition:', e));
 
     // Sync to players
     if (sendMonsterCondition) {

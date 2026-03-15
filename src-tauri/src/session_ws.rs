@@ -263,7 +263,8 @@ impl SessionServer {
         }
     }
 
-    /// Get buffered events for replay
+    /// Get buffered events for replay (reserved for reconnection support)
+    #[allow(dead_code)]
     pub async fn get_buffered_events(&self) -> Vec<String> {
         self.event_buffer.lock().await.clone()
     }

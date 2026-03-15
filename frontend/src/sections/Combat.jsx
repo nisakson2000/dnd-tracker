@@ -604,7 +604,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       // Persist to combat log DB (fire-and-forget)
       insertCombatLog('', roundCounter, currentTurn, 'damage', '', target.name, dmgMsg,
         JSON.stringify({ raw: amount, effective: dmgResult.effective, modifier: dmgResult.modifier, damageType: damageTypeArg })
-      ).catch(() => {}); // silent fail for solo play (no campaign)
+      ).catch(e => console.warn('[Combat] combat log (damage) — silent fail for solo play:', e));
 
       // --- Death save trigger: dropped to 0 HP ---
       if (hpResult.droppedToZero) {
@@ -678,7 +678,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       insertCombatLog('', roundCounter, currentTurn, 'healing', '', target.name,
         `${target.name} healed ${healResult.actualHealing} HP`,
         JSON.stringify({ amount, actual: healResult.actualHealing })
-      ).catch(() => {});
+      ).catch(e => console.warn('[Combat] combat log (healing):', e));
 
       // --- Healing from 0 HP clears death saves (but not if dead — need resurrection) ---
       if (healResult.wasAtZero && healResult.newHp > 0) {

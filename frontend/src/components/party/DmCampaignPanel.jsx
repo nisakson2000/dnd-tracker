@@ -107,10 +107,10 @@ export default function DmCampaignPanel() {
     invoke('get_latest_incomplete_session', { campaignId: activeCampaignId })
       .then(json => {
         if (json) {
-          try { setRecoverableSession(JSON.parse(json)); } catch {}
+          try { setRecoverableSession(JSON.parse(json)); } catch (e) { console.warn('[DmCampaignPanel] JSON parse error:', e); }
         }
       })
-      .catch(() => {});
+      .catch(e => console.warn('[DmCampaignPanel] get incomplete session:', e));
   }, [activeCampaignId, sessionActive]);
 
   // Display name is set by the auto-select effect above — no separate tracking needed
@@ -207,7 +207,7 @@ export default function DmCampaignPanel() {
                 {loading ? 'Resuming...' : 'Resume Session'}
               </button>
               <button onClick={() => {
-                invoke('mark_session_complete', { sessionId: recoverableSession.sessionId }).catch(() => {});
+                invoke('mark_session_complete', { sessionId: recoverableSession.sessionId }).catch(e => console.warn('[DmCampaignPanel] mark session complete:', e));
                 setRecoverableSession(null);
               }} style={{ padding: '6px 16px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 12 }}>
                 Discard

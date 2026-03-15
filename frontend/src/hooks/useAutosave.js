@@ -46,7 +46,7 @@ export function useAutosave(saveFn, delay = 800) {
       // Fire-and-forget save of pending data
       const data = pendingRef.current;
       pendingRef.current = null;
-      saveFnRef.current(data).catch(() => {});
+      saveFnRef.current(data).catch(e => console.warn('[useAutosave] flush save:', e));
     }
   }, []);
 
@@ -55,7 +55,7 @@ export function useAutosave(saveFn, delay = 800) {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       if (pendingRef.current !== null) {
-        saveFnRef.current(pendingRef.current).catch(() => {});
+        saveFnRef.current(pendingRef.current).catch(e => console.warn('[useAutosave] unmount save:', e));
       }
     };
   }, []);

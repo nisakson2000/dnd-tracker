@@ -3,15 +3,15 @@ import {
   Wine, Copy, RefreshCw, ChevronDown, ChevronRight,
   User, Utensils, Sparkles, MessageCircle, Dices,
 } from 'lucide-react';
+import { pick, randBetween } from '../../utils/dndHelpers';
 
 /* ── helpers ─────────────────────────────────────────── */
-const pick  = a => a[Math.floor(Math.random() * a.length)];
+const roll = randBetween;
 const pickN = (a, n) => {
   const s = [...a];
   for (let i = s.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [s[i], s[j]] = [s[j], s[i]]; }
   return s.slice(0, Math.min(n, s.length));
 };
-const roll = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 /* ── style tokens ────────────────────────────────────── */
 const AMBER = '#c9a84c';

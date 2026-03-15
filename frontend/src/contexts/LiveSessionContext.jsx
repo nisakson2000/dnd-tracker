@@ -213,7 +213,7 @@ export function LiveSessionProvider({ children }) {
 
       // Mark snapshot as complete so it won't trigger recovery on next launch
       if (sessionId) {
-        invoke('mark_session_complete', { sessionId }).catch(() => {});
+        invoke('mark_session_complete', { sessionId }).catch(e => console.warn('[LiveSession] mark session complete:', e));
       }
 
       setSessionActive(false);
@@ -289,7 +289,7 @@ export function LiveSessionProvider({ children }) {
           try {
             const stats = JSON.parse(m.stat_block_json);
             dexMod = stats.dex_mod || Math.floor(((stats.dex || stats.dexterity || 10) - 10) / 2);
-          } catch {}
+          } catch (e) { console.warn('[LiveSession] JSON parse error:', e); }
         }
         const d20 = rollDie(20);
         return {
@@ -397,7 +397,7 @@ export function LiveSessionProvider({ children }) {
       let rewardItems = [];
       try {
         rewardItems = JSON.parse(rewards?.items_json || quest.reward_items_json || '[]');
-      } catch { rewardItems = []; }
+      } catch (e) { console.warn('[LiveSession] JSON parse error:', e); rewardItems = []; }
 
       if (rewardGold > 0 || rewardItems.length > 0) {
         sendEvent('loot_drop', {
@@ -473,7 +473,7 @@ export function LiveSessionProvider({ children }) {
           try {
             const stats = JSON.parse(m.stat_block_json);
             dexMod = stats.dex_mod || Math.floor(((stats.dex || stats.dexterity || 10) - 10) / 2);
-          } catch {}
+          } catch (e) { console.warn('[LiveSession] JSON parse error:', e); }
         }
         const d20 = rollDie(20);
         return {
@@ -485,7 +485,7 @@ export function LiveSessionProvider({ children }) {
       });
       const initiative = [...playerEntries, ...playersNoChar, ...monsterEntries].sort((a, b) => b.initiative - a.initiative);
 
-      await invoke('start_encounter', { encounterId, initiativeJson: JSON.stringify(initiative) }).catch(() => {});
+      await invoke('start_encounter', { encounterId, initiativeJson: JSON.stringify(initiative) }).catch(e => console.warn('[LiveSession] start encounter:', e));
       startCombat(initiative);
       logEvent('combat_start', `Random encounter started with ${monsters?.length || 0} monsters`);
     } catch (e) {

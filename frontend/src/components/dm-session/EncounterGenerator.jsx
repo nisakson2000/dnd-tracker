@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { pick } from '../../utils/dndHelpers';
 import {
   Swords, RefreshCw, Copy, ChevronDown, Shield, Skull,
   TreePine, Mountain, Sun, Droplets, Eye, Building2,
@@ -412,7 +413,6 @@ const BIOME_TACTICS = {
 };
 
 /* ─── Helpers ─── */
-function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function shuffle(arr) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function crLabel(cr) { return cr < 1 ? (cr === 0.125 ? '1/8' : cr === 0.25 ? '1/4' : cr === 0.5 ? '1/2' : '0') : String(cr); }
 

@@ -10,12 +10,13 @@ import { SessionProvider } from './contexts/SessionContext';
 import { useDevUpdateCheck } from './hooks/useDevUpdateCheck';
 import { APP_VERSION } from './version';
 import ModeSelect from './pages/ModeSelect';
-import Dashboard from './pages/Dashboard';
-import CharacterView from './pages/CharacterView';
-import WikiPage from './pages/WikiPage';
-import WikiArticlePage from './pages/WikiArticlePage';
-// UpdateScreen removed — Tauri native updater handles updates via Dashboard banner
-import CharacterSetup from './pages/CharacterSetup';
+
+// Heavy pages — lazy loaded for smaller initial bundle
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const CharacterView = lazy(() => import('./pages/CharacterView'));
+const WikiPage = lazy(() => import('./pages/WikiPage'));
+const WikiArticlePage = lazy(() => import('./pages/WikiArticlePage'));
+const CharacterSetup = lazy(() => import('./pages/CharacterSetup'));
 import BootupVideo from './components/BootupVideo';
 import SessionMonitor from './components/SessionMonitor';
 

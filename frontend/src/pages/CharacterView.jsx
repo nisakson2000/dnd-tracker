@@ -598,7 +598,7 @@ function UnifiedRestModal({ characterId, restTab, setRestTab, onClose, reloadCha
         lines.push('HP: ' + overview.current_hp + ' \u2192 ' + Math.min(overview.max_hp, overview.current_hp + totalHealed) + ' / ' + overview.max_hp);
       }
       if (shortRestFeats.length > 0) {
-        await Promise.all(shortRestFeats.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total }).catch(() => {})));
+        await Promise.all(shortRestFeats.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total }).catch(e => console.warn('[CharacterView] short rest feature reset:', e))));
         for (const f of shortRestFeats) {
           lines.push('Recharged: ' + f.name + ' (' + f.uses_remaining + '/' + f.uses_total + ' \u2192 ' + f.uses_total + '/' + f.uses_total + ')');
         }
@@ -642,7 +642,7 @@ function UnifiedRestModal({ characterId, restTab, setRestTab, onClose, reloadCha
       }
       // Features recharged — itemized
       if (longRestFeats.length > 0) {
-        await Promise.all(longRestFeats.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total }).catch(() => {})));
+        await Promise.all(longRestFeats.map(f => updateFeature(characterId, f.id, { ...f, uses_remaining: f.uses_total }).catch(e => console.warn('[CharacterView] long rest feature reset:', e))));
         for (const f of longRestFeats) {
           lines.push('Recharged: ' + f.name + ' (' + f.uses_remaining + '/' + f.uses_total + ' \u2192 ' + f.uses_total + '/' + f.uses_total + ')');
         }
@@ -897,7 +897,7 @@ function CampaignEventProcessor({ characterId, character, onCharacterUpdate, onC
               characterId,
               name: change.condition,
               active: true
-            }).catch(() => {});
+            }).catch(e => console.warn('[CharacterView] add condition:', e));
             activeList.push(change.condition);
             const appliedSummary = CONDITION_EFFECTS[change.condition]?.summary;
             toast(`Condition applied: ${change.condition}${appliedSummary ? `\n${appliedSummary}` : ''}`, {
@@ -911,7 +911,7 @@ function CampaignEventProcessor({ characterId, character, onCharacterUpdate, onC
               await invoke('update_condition', {
                 conditionId: cond.id,
                 active: false
-              }).catch(() => {});
+              }).catch(e => console.warn('[CharacterView] remove condition:', e));
               activeList = activeList.filter(n => n !== change.condition);
               toast(`Condition removed: ${change.condition}`, {
                 icon: '\u2705', duration: 2500,
@@ -944,7 +944,7 @@ function CampaignEventProcessor({ characterId, character, onCharacterUpdate, onC
           await invoke('update_overview', {
             characterId,
             updates: { current_hp: newHp }
-          }).catch(() => {});
+          }).catch(e => console.warn('[CharacterView] update HP:', e));
 
           onCharacterUpdate(prev => ({ ...prev, current_hp: newHp }));
 
@@ -1024,7 +1024,7 @@ function CampaignEventProcessor({ characterId, character, onCharacterUpdate, onC
         await invoke('update_overview', {
           characterId,
           updates: { inspiration: granted ? 1 : 0 }
-        }).catch(() => {});
+        }).catch(e => console.warn('[CharacterView] update inspiration:', e));
         onCharacterUpdate(prev => ({ ...prev, inspiration: granted ? 1 : 0 }));
 
         if (granted) {
@@ -1051,7 +1051,7 @@ function CampaignEventProcessor({ characterId, character, onCharacterUpdate, onC
           const items = await getItems(characterId).catch(() => []);
           const item = (items || []).find(i => i.name === loss.item_name);
           if (item) {
-            await invoke('delete_item', { itemId: item.id }).catch(() => {});
+            await invoke('delete_item', { itemId: item.id }).catch(e => console.warn('[CharacterView] delete item:', e));
             toast(`Lost item: ${loss.item_name}${loss.reason ? ` (${loss.reason})` : ''}`, {
               icon: '\uD83D\uDEAB', duration: 3000,
               style: { background: '#1a1520', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' }
@@ -1075,7 +1075,7 @@ function CampaignEventProcessor({ characterId, character, onCharacterUpdate, onC
           const delta = change.delta || 0;
           const currency = await invoke('get_currency', { characterId }).catch(() => ({ gp: 0 }));
           const newGp = Math.max(0, (currency?.gp || 0) + delta);
-          await invoke('update_currency', { characterId, currency: { ...currency, gp: newGp } }).catch(() => {});
+          await invoke('update_currency', { characterId, currency: { ...currency, gp: newGp } }).catch(e => console.warn('[CharacterView] update currency:', e));
 
           if (delta < 0) {
             toast(`Lost ${Math.abs(delta)} GP${change.reason ? ` — ${change.reason}` : ''}`, {
@@ -1107,7 +1107,7 @@ function CampaignEventProcessor({ characterId, character, onCharacterUpdate, onC
           await invoke('use_spell_slot', {
             characterId,
             slotLevel: loss.level
-          }).catch(() => {});
+          }).catch(e => console.warn('[CharacterView] use spell slot:', e));
           toast(`Lost a level ${loss.level} spell slot`, {
             icon: '\uD83D\uDD2E', duration: 3000,
             style: { background: '#1a1520', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' }
@@ -1153,8 +1153,8 @@ export default function CharacterView() {
   // Broadcast which section we're editing to other devs (dev presence)
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    invoke('dev_set_active_section', { section: activeSection }).catch(() => {});
-    return () => { invoke('dev_set_active_section', { section: null }).catch(() => {}); };
+    invoke('dev_set_active_section', { section: activeSection }).catch(e => console.warn('[CharacterView] dev presence:', e));
+    return () => { invoke('dev_set_active_section', { section: null }).catch(e => console.warn('[CharacterView] dev presence cleanup:', e)); };
   }, [activeSection]);
   const { errors, clearErrors } = useErrorLog();
 
@@ -1237,7 +1237,7 @@ export default function CharacterView() {
         divider,
         '',
       ];
-      invoke('write_bug_report', { report: lines.join('\n') }).catch(() => {});
+      invoke('write_bug_report', { report: lines.join('\n') }).catch(e => console.warn('[CharacterView] write bug report:', e));
     }
     toast(`Bug report from ${msg.reporter || 'a player'}`, { icon: '\uD83D\uDC1B', duration: 4000 });
   }, []);
@@ -1278,7 +1278,7 @@ export default function CharacterView() {
       .then(c => {
         if (c) setCampaignStats({ session_count: c.session_count || 0, total_hours: c.total_hours || 0 });
       })
-      .catch(() => {});
+      .catch(e => console.warn('[CharacterView] select campaign:', e));
   }, [appMode, characterId]);
 
   // Reload character data when import/export triggers a refresh (avoids full page reload)
@@ -1810,7 +1810,7 @@ export default function CharacterView() {
             onClose={() => setShowRestModal(false)}
             reloadCharacter={() => {
               loadCharacter();
-              getSpellSlots(characterId).then(s => setSpellSlots(s || [])).catch(() => {});
+              getSpellSlots(characterId).then(s => setSpellSlots(s || [])).catch(e => console.warn('[CharacterView] reload spell slots:', e));
             }}
           />
         )}
