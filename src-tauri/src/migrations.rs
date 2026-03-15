@@ -741,5 +741,25 @@ pub const CAMPAIGN_MIGRATIONS: &[Migration] = &[
         ",
     },
 
+    // ── Migration 9: Performance indexes for core tables ──
+    Migration {
+        name: "performance_indexes",
+        sql: "
+            CREATE INDEX IF NOT EXISTS idx_monsters_encounter ON monsters(encounter_id);
+            CREATE INDEX IF NOT EXISTS idx_players_campaign ON players(campaign_id);
+            CREATE INDEX IF NOT EXISTS idx_event_log_type ON event_log(campaign_id, event_type);
+            CREATE INDEX IF NOT EXISTS idx_handouts_campaign ON handouts(campaign_id);
+            CREATE INDEX IF NOT EXISTS idx_campaign_npcs_campaign ON campaign_npcs(campaign_id);
+            CREATE INDEX IF NOT EXISTS idx_quest_beats_quest ON quest_beats(quest_id);
+            CREATE INDEX IF NOT EXISTS idx_campaign_quests_campaign ON campaign_quests(campaign_id);
+            CREATE INDEX IF NOT EXISTS idx_scenes_campaign ON scenes(campaign_id);
+            CREATE INDEX IF NOT EXISTS idx_encounters_scene ON encounters(scene_id);
+            CREATE INDEX IF NOT EXISTS idx_action_buttons_scene ON action_buttons(scene_id);
+            CREATE INDEX IF NOT EXISTS idx_arc_entries_arc ON arc_entries(arc_id);
+            CREATE INDEX IF NOT EXISTS idx_character_arcs_campaign ON character_arcs(campaign_id);
+            CREATE INDEX IF NOT EXISTS idx_world_state_campaign ON world_state(campaign_id);
+        ",
+    },
+
     // ── Future migrations go here ──
 ];

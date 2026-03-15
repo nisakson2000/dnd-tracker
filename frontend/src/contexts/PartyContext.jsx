@@ -163,14 +163,14 @@ export function PartyProvider({ children }) {
         const listeners = eventListenersRef.current.get(msg.event);
         if (listeners) {
           for (const handler of listeners.values()) {
-            try { handler(msg); } catch { /* ignore listener errors */ }
+            try { handler(msg); } catch (err) { console.warn('[Party] Event listener error:', err); }
           }
         }
         // Also dispatch to wildcard '*' listeners
         const wildcardListeners = eventListenersRef.current.get('*');
         if (wildcardListeners) {
           for (const handler of wildcardListeners.values()) {
-            try { handler(msg); } catch { /* ignore */ }
+            try { handler(msg); } catch (err) { console.warn('[Party] Wildcard listener error:', err); }
           }
         }
       } else if (msg.type === 'bug_report' && onBugReportRef.current) {
@@ -189,7 +189,7 @@ export function PartyProvider({ children }) {
         // Remote connection dropped
         handleConnectionLost();
       }
-    } catch { /* ignore parse errors */ }
+    } catch (err) { console.warn('[Party] Failed to process message:', err); }
   }, [touchPresence]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleConnectionLost = useCallback(() => {

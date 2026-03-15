@@ -16,7 +16,7 @@ import WorldStateManager from '../components/dm-session/WorldStateManager';
 import CharacterArcManager from '../components/dm-session/CharacterArcManager';
 import StoryPanel from '../components/dm-session/StoryPanel';
 import QuestRunner from '../components/dm-session/QuestRunner';
-import { useCampaignSync } from '../contexts/CampaignSyncContext';
+import { useCampaignSyncSafe } from '../contexts/CampaignSyncContext';
 import { History, AlertCircle, BookMarked, Megaphone } from 'lucide-react';
 
 function formatTimer(seconds) {
@@ -37,11 +37,12 @@ export default function DMSession() {
     broadcastEvent,
   } = useSession();
 
+  const syncCtx = useCampaignSyncSafe();
   const {
-    promptResults, promptHistory, clearPromptHistory,
-    sendPrompt, connectedPlayerMap, resolvePlayerName,
-    sendEvent: syncSendEvent,
-  } = useCampaignSync();
+    promptResults = {}, promptHistory = [], clearPromptHistory = () => {},
+    sendPrompt = () => {}, connectedPlayerMap = {}, resolvePlayerName = (id) => id || 'Player',
+    sendEvent: syncSendEvent = () => {},
+  } = syncCtx || {};
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [ending, setEnding] = useState(false);
@@ -1301,9 +1302,16 @@ export default function DMSession() {
             quests={quests}
             npcs={questNpcs}
             scenes={scenes}
-            onAdvanceBeat={async () => {
-              // TODO: advance beat via backend
-              toast.success('Beat advanced');
+            onAdvanceBeat={async (questId) => {
+              try {
+                const result = await invoke('advance_quest_beat', { questId });
+                if (result?.completed) {
+                  toast.success(`Quest complete: ${result.quest_title || 'Quest'}`);
+                } else {
+                  toast.success(`Beat advanced: ${result?.next_beat_title || 'Next beat'}`);
+                }
+                await broadcastEvent({ type: 'QuestUpdated', campaign_id: campaignId, quest_id: questId });
+              } catch (e) { toast.error(`Failed to advance beat: ${e}`); }
             }}
             onBroadcast={async (text) => {
               try {

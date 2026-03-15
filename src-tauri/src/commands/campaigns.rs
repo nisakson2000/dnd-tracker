@@ -70,6 +70,13 @@ pub fn create_campaign(
     status: Option<String>,
     state: State<'_, AppState>,
 ) -> Result<serde_json::Value, String> {
+    let name = name.trim().to_string();
+    if name.is_empty() {
+        return Err("Campaign name cannot be empty.".to_string());
+    }
+    if name.len() > 200 {
+        return Err("Campaign name is too long (max 200 characters).".to_string());
+    }
     let id = campaign_id.unwrap_or_else(|| Uuid::new_v4().to_string());
     let now = chrono::Utc::now().timestamp();
     let ctype = campaign_type.unwrap_or_else(|| "homebrew".to_string());

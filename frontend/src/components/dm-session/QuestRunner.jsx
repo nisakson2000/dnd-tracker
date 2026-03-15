@@ -163,7 +163,7 @@ export default function QuestRunner({
   };
 
   const handleAdvance = () => {
-    if (onAdvanceBeat) onAdvanceBeat();
+    if (onAdvanceBeat && selectedQuestId) onAdvanceBeat(selectedQuestId);
   };
 
   const handleBroadcast = () => {

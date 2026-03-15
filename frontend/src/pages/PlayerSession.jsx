@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useSession } from '../contexts/SessionContext';
-import { useCampaignSync } from '../contexts/CampaignSyncContext';
+import { useCampaignSyncSafe } from '../contexts/CampaignSyncContext';
 import { CONDITION_EFFECTS } from '../data/conditionEffects';
 import { getOverview, updateOverview } from '../api/overview';
 import { getItems, getCurrency } from '../api/inventory';
@@ -45,7 +45,7 @@ export default function PlayerSession() {
     sendToDm, broadcastEvent, playerUuid,
   } = useSession();
 
-  const syncCtx = useCampaignSync();
+  const syncCtx = useCampaignSyncSafe();
   const { isMyTurn, combatActive, initiativeOrder, currentTurn: syncCurrentTurn, round: syncRound, currentMood } = syncCtx || {};
 
   const [diceResult, setDiceResult] = useState(null);
@@ -113,10 +113,10 @@ export default function PlayerSession() {
   // Load inventory, spell slots, conditions
   useEffect(() => {
     if (!playerUuid) return;
-    getItems(playerUuid).then(setInventory).catch(() => {});
-    getCurrency(playerUuid).then(c => { if (c) setCurrency(c); }).catch(() => {});
-    getSpellSlots(playerUuid).then(s => { if (s) setSpellSlots(s); }).catch(() => {});
-    getConditions(playerUuid).then(c => { if (c) setConditions(c.filter(x => x.active)); }).catch(() => {});
+    getItems(playerUuid).then(setInventory).catch(e => console.warn('[PlayerSession] Failed to load inventory:', e));
+    getCurrency(playerUuid).then(c => { if (c) setCurrency(c); }).catch(e => console.warn('[PlayerSession] Failed to load currency:', e));
+    getSpellSlots(playerUuid).then(s => { if (s) setSpellSlots(s); }).catch(e => console.warn('[PlayerSession] Failed to load spell slots:', e));
+    getConditions(playerUuid).then(c => { if (c) setConditions(c.filter(x => x.active)); }).catch(e => console.warn('[PlayerSession] Failed to load conditions:', e));
   }, [playerUuid]);
 
   // HP update handler
@@ -233,8 +233,17 @@ export default function PlayerSession() {
     if (!skillCheckPrompt || skillCheckRolling) return;
     setSkillCheckRolling(true);
     const roll = Math.floor(Math.random() * 20) + 1;
-    // TODO: In future, pull actual modifier from character sheet
-    const modifier = 0;
+    // Compute ability modifier from character sheet
+    const SKILL_ABILITY_MAP = {
+      Athletics: 'Strength',
+      Acrobatics: 'Dexterity', 'Sleight of Hand': 'Dexterity', Stealth: 'Dexterity',
+      Arcana: 'Intelligence', History: 'Intelligence', Investigation: 'Intelligence', Nature: 'Intelligence', Religion: 'Intelligence',
+      'Animal Handling': 'Wisdom', Insight: 'Wisdom', Medicine: 'Wisdom', Perception: 'Wisdom', Survival: 'Wisdom',
+      Deception: 'Charisma', Intimidation: 'Charisma', Performance: 'Charisma', Persuasion: 'Charisma',
+    };
+    const abilityName = skillCheckPrompt.ability || SKILL_ABILITY_MAP[skillCheckPrompt.skill] || '';
+    const abilityEntry = charAbilities.find(a => a.ability?.toLowerCase() === abilityName.toLowerCase());
+    const modifier = abilityEntry ? Math.floor(((abilityEntry.score || 10) - 10) / 2) : 0;
     const total = roll + modifier;
     const success = skillCheckPrompt.dc ? total >= skillCheckPrompt.dc : null;
 
