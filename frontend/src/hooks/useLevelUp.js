@@ -4,18 +4,13 @@ export function useLevelUp() {
   const [showOverlay, setShowOverlay] = useState(false);
   const [levelUpInfo, setLevelUpInfo] = useState({ name: '', level: 1, className: '' });
   const audioRef = useRef(null);
-  const fallbackTimerRef = useRef(null);
 
-  // Cleanup audio and timers on unmount
+  // Cleanup audio on unmount
   useEffect(() => {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current.onended = null;
         audioRef.current = null;
-      }
-      if (fallbackTimerRef.current) {
-        clearTimeout(fallbackTimerRef.current);
       }
     };
   }, []);
@@ -24,24 +19,17 @@ export function useLevelUp() {
     setLevelUpInfo({ name, level: newLevel, className });
     setShowOverlay(true);
 
+    // Play audio as a nice-to-have — overlay stays until user clicks to dismiss
     try {
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current.onended = null;
         audioRef.current.currentTime = 0;
       }
       const audio = new Audio('/audio/levelup.flac');
       audioRef.current = audio;
-      audio.play().catch(() => {
-        // Audio play failed — use fallback timer to dismiss overlay
-        fallbackTimerRef.current = setTimeout(() => setShowOverlay(false), 5000);
-      });
-      audio.onended = () => setShowOverlay(false);
-      audio.onerror = () => {
-        fallbackTimerRef.current = setTimeout(() => setShowOverlay(false), 5000);
-      };
+      audio.play().catch(() => { /* audio unsupported — overlay still shows */ });
     } catch {
-      fallbackTimerRef.current = setTimeout(() => setShowOverlay(false), 5000);
+      // audio failed — overlay still shows
     }
   }, []);
 
@@ -49,11 +37,7 @@ export function useLevelUp() {
     setShowOverlay(false);
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current.onended = null;
       audioRef.current.currentTime = 0;
-    }
-    if (fallbackTimerRef.current) {
-      clearTimeout(fallbackTimerRef.current);
     }
   }, []);
 

@@ -4606,7 +4606,7 @@ dependencies = [
 
 [[package]]
 name = "the-codex"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "chrono",
  "dirs 5.0.1",
@@ -4616,6 +4616,7 @@ dependencies = [
  "rusqlite",
  "serde",
  "serde_json",
+ "sha2",
  "tauri",
  "tauri-build",
  "tauri-plugin-process",
