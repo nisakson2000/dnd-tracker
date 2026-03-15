@@ -35,7 +35,11 @@ cat > version.json << VJEOF
 {"version":"${VERSION}","notes":"V${VERSION}","download":"https://github.com/${REPO}/releases/tag/v${VERSION}"}
 VJEOF
 
-# 5. Stage, commit, push (push triggers CI which builds & uploads installers)
+# 5. Delete old release & tag (so CI creates a fresh one)
+echo "→ Cleaning up old v${VERSION} release..."
+gh release delete "v${VERSION}" --yes --cleanup-tag 2>/dev/null || echo "  (no old release to delete)"
+
+# 6. Stage, commit, push (push triggers CI which builds & uploads installers)
 echo "→ Committing and pushing..."
 git add -A
 git commit -m "Release V${VERSION} — OTA hotpatch + dist.zip" --allow-empty 2>/dev/null || true
@@ -45,5 +49,5 @@ echo ""
 echo "═══ V${VERSION} pushed successfully! ═══"
 echo "  • dist.zip ready (OTA update)"
 echo "  • version.json updated (app will detect new version)"
-echo "  • CI will build Windows installers (.msi, .exe) and create the GitHub release"
+echo "  • CI will build Windows (.msi, .exe) + Linux (.deb, .AppImage) installers"
 echo "  • Watch CI: https://github.com/${REPO}/actions"

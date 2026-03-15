@@ -6,11 +6,37 @@ on:
       - main
 
 jobs:
-  publish:
+  # ── Step 1: Delete old release & tag so we always get a fresh one ──
+  cleanup:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(grep "version" src-tauri/tauri.conf.json | head -1 | sed 's/.*": "//;s/".*//')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Detected version: $VERSION"
+
+      - name: Delete existing release & tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "Cleaning up v${VERSION}..."
+          gh release delete "v${VERSION}" --yes --cleanup-tag 2>/dev/null || echo "No existing release to delete"
+
+  # ── Step 2: Build for Windows ──
+  build-windows:
+    needs: cleanup
     permissions:
       contents: write
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -29,9 +55,63 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             src-tauri/target
-          key: rust-${{ runner.os }}-${{ hashFiles('src-tauri/Cargo.lock') }}
+          key: rust-windows-${{ hashFiles('src-tauri/Cargo.lock') }}
           restore-keys: |
-            rust-${{ runner.os }}-
+            rust-windows-
+
+      - name: Install root dependencies
+        run: npm install
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm install
+
+      - name: Build and release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
+          CODEX_REPORTS_TOKEN: ${{ secrets.CODEX_REPORTS_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: 'The Codex v__VERSION__'
+          releaseBody: 'Auto-update release'
+          releaseDraft: false
+          prerelease: false
+          updaterJsonKeepUniversal: true
+
+  # ── Step 3: Build for Linux ──
+  build-linux:
+    needs: cleanup
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libgtk-3-dev
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: rust-linux-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            rust-linux-
 
       - name: Install root dependencies
         run: npm install
