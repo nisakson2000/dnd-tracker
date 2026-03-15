@@ -138,7 +138,29 @@ export default function QuestGenerator() {
             </div>
             <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
               <button
-                onClick={() => toast('Add to Campaign coming soon!')}
+                onClick={async () => {
+                  try {
+                    // Extract title from the first line of the markdown result
+                    const firstLine = result.split('\n').find(l => l.trim());
+                    const title = firstLine ? firstLine.replace(/^#+\s*/, '').replace(/\*\*/g, '').trim().slice(0, 100) : 'AI Generated Quest';
+                    await invoke('create_campaign_quest', {
+                      title,
+                      giver: '',
+                      description: result,
+                      status: 'hidden',
+                      visibility: 'dm_only',
+                      objectivesJson: '[]',
+                      rewardXp: 0,
+                      rewardGold: 0,
+                      rewardItemsJson: '[]',
+                      parentQuestId: null,
+                      linkedArcId: null,
+                    });
+                    toast.success('Quest added to campaign!');
+                  } catch (err) {
+                    toast.error(`Failed to save quest: ${String(err).slice(0, 80)}`);
+                  }
+                }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '4px',
                   padding: '6px 12px', borderRadius: '6px',

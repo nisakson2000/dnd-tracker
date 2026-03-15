@@ -211,7 +211,7 @@ export default function AiModules({ mode = 'dm' }) {
       } else {
         toast.error(`Generation failed: ${msg.slice(0, 100)}`);
       }
-      setResult('');
+      setResult('_error_');
     } finally {
       setGenerating(false);
     }
@@ -627,16 +627,56 @@ export default function AiModules({ mode = 'dm' }) {
           </span>
         </div>
 
+        {/* Error state with retry */}
+        {result === '_error_' && (
+          <div style={{
+            marginTop: '12px', padding: '12px', borderRadius: '8px',
+            background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)',
+            display: 'flex', alignItems: 'center', gap: '10px',
+          }}>
+            <AlertTriangle size={14} style={{ color: '#f87171', flexShrink: 0 }} />
+            <span style={{ fontSize: '12px', color: '#fca5a5', flex: 1 }}>Generation failed. Check that Ollama is running.</span>
+            <button
+              onClick={handleGenerate}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '4px',
+                padding: '5px 12px', borderRadius: '6px',
+                background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)',
+                color: '#a78bfa', fontSize: '11px', fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'var(--font-ui)',
+              }}
+            >
+              <RefreshCw size={11} /> Retry
+            </button>
+          </div>
+        )}
+
         {/* Result display */}
-        {result && (
+        {result && result !== '_error_' && (
           <div style={{ marginTop: '12px' }}>
             <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap',
               marginBottom: '6px',
             }}>
-              <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-mute)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-mute)', letterSpacing: '0.05em', textTransform: 'uppercase', marginRight: 'auto' }}>
                 Result
               </span>
+              <button
+                onClick={handleGenerate}
+                disabled={generating}
+                title="Regenerate with same input"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '4px',
+                  padding: '3px 10px', borderRadius: '5px',
+                  background: 'rgba(139,92,246,0.08)',
+                  border: '1px solid rgba(139,92,246,0.2)',
+                  color: '#a78bfa',
+                  fontSize: '10px', fontWeight: 500,
+                  cursor: generating ? 'wait' : 'pointer', fontFamily: 'var(--font-ui)',
+                }}
+              >
+                <RefreshCw size={10} /> Regenerate
+              </button>
               <button
                 onClick={handleCopy}
                 style={{
@@ -682,6 +722,9 @@ export default function AiModules({ mode = 'dm' }) {
               }}
             >
               {renderMarkdown(result)}
+            </div>
+            <div style={{ marginTop: '6px', fontSize: '10px', color: 'var(--text-mute)', textAlign: 'right' }}>
+              {result.split(/\s+/).filter(Boolean).length} words
             </div>
           </div>
         )}
