@@ -116,6 +116,21 @@ function HpBar({ current, max }) {
 // ─── XP thresholds (5e) ─────────────────────────────────────────────────────
 const XP_LEVELS = [0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000, 85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000];
 
+// ─── Time ago helper ─────────────────────────────────────────────────────────
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+}
+
 // ─── Character card ──────────────────────────────────────────────────────────
 
 function CharacterCard({ char, index, onEnter, onDelete, onSessionPrep, onEndSession }) {
@@ -352,6 +367,16 @@ function CharacterCard({ char, index, onEnter, onDelete, onSessionPrep, onEndSes
             }}>
               {RULESET_OPTIONS.find(o => o.id === char.ruleset)?.name || char.ruleset}
             </div>
+          )}
+          {char.updated_at && (
+            <span style={{
+              display: 'flex', alignItems: 'center', gap: 3,
+              fontSize: 9, color: 'rgba(200,175,130,0.3)',
+              fontFamily: 'var(--font-heading)', letterSpacing: '0.04em',
+              marginLeft: 6,
+            }}>
+              <Clock size={8} /> {timeAgo(char.updated_at)}
+            </span>
           )}
           <motion.div
             animate={{ opacity: hovered ? 1 : 0 }}
@@ -2366,6 +2391,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const [charSearch, setCharSearch] = useState('');
+  const [sortMode, setSortMode] = useState('recent');
   const [showDDBImport, setShowDDBImport] = useState(false);
   const [sessionPrepChar, setSessionPrepChar] = useState(null);
   const [postSessionChar, setPostSessionChar] = useState(null);
@@ -2605,6 +2631,12 @@ export default function Dashboard() {
       return (c.name || '').toLowerCase().includes(q)
         || (c.race || '').toLowerCase().includes(q)
         || (c.primary_class || '').toLowerCase().includes(q);
+    })
+    .sort((a, b) => {
+      if (sortMode === 'recent') return (b.updated_at || '').localeCompare(a.updated_at || '');
+      if (sortMode === 'level') return (b.level || 0) - (a.level || 0);
+      if (sortMode === 'az') return (a.name || '').localeCompare(b.name || '');
+      return 0;
     });
 
   const avgLevel = characters.length > 0
@@ -2886,6 +2918,30 @@ export default function Dashboard() {
             onImportCampaign={handleImportCampaign}
           />
         ) : (
+          <>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12, alignItems: 'center' }}>
+            <span style={{ fontSize: 10, color: 'rgba(201,168,76,0.3)', fontFamily: 'var(--font-heading)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Sort:</span>
+            {[
+              { key: 'recent', label: 'Recent' },
+              { key: 'level', label: 'Level' },
+              { key: 'az', label: 'A-Z' },
+            ].map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => setSortMode(opt.key)}
+                style={{
+                  fontSize: 10, fontFamily: 'var(--font-heading)', letterSpacing: '0.06em',
+                  padding: '3px 10px', borderRadius: 99, cursor: 'pointer',
+                  border: sortMode === opt.key ? '1px solid rgba(201,168,76,0.5)' : '1px solid rgba(201,168,76,0.15)',
+                  background: sortMode === opt.key ? 'rgba(201,168,76,0.12)' : 'rgba(0,0,0,0.2)',
+                  color: sortMode === opt.key ? 'rgba(201,168,76,0.8)' : 'rgba(201,168,76,0.35)',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 20 }}>
             {filteredCharacters.map((c, i) => isDM ? (
               <CampaignCard
@@ -2957,6 +3013,7 @@ export default function Dashboard() {
               </>
             )}
           </div>
+          </>
         )}
       </div>
 

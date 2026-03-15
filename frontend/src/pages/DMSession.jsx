@@ -16,8 +16,9 @@ import WorldStateManager from '../components/dm-session/WorldStateManager';
 import CharacterArcManager from '../components/dm-session/CharacterArcManager';
 import StoryPanel from '../components/dm-session/StoryPanel';
 import QuestRunner from '../components/dm-session/QuestRunner';
+import QuickReferencePanel from '../components/dm-session/QuickReferencePanel';
 import { useCampaignSyncSafe } from '../contexts/CampaignSyncContext';
-import { History, AlertCircle, BookMarked, Megaphone } from 'lucide-react';
+import { History, AlertCircle, BookMarked, Megaphone, BookOpen } from 'lucide-react';
 
 function formatTimer(seconds) {
   const h = Math.floor(seconds / 3600);
@@ -87,6 +88,7 @@ export default function DMSession() {
   const [showChatHistory, setShowChatHistory] = useState(false);
   // Quest panel
   const [showQuestRunner, setShowQuestRunner] = useState(false);
+  const [showQuickRef, setShowQuickRef] = useState(false);
   const [quests, setQuests] = useState([]);
   const [questNpcs, setQuestNpcs] = useState([]);
   // Debounce refs
@@ -1340,6 +1342,11 @@ export default function DMSession() {
             }}
           />
 
+          {/* Quick Reference Panel */}
+          {showQuickRef && (
+            <QuickReferencePanel onClose={() => setShowQuickRef(false)} />
+          )}
+
           {/* Prompt History */}
           {showPromptHistory && (
             <div style={panelStyle}>
@@ -1694,6 +1701,9 @@ export default function DMSession() {
         </button>
         <button onClick={() => setShowChatHistory(!showChatHistory)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showChatHistory ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showChatHistory ? 'rgba(167,139,250,0.3)' : 'rgba(255,255,255,0.08)'}`, color: showChatHistory ? '#a78bfa' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
           <MessageCircle size={10} /> Chat{chatMessages.length > 0 ? ` (${chatMessages.length})` : ''}
+        </button>
+        <button onClick={() => setShowQuickRef(!showQuickRef)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showQuickRef ? 'rgba(201,168,76,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showQuickRef ? 'rgba(201,168,76,0.3)' : 'rgba(255,255,255,0.08)'}`, color: showQuickRef ? '#c9a84c' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <BookOpen size={10} /> Quick Ref
         </button>
         <button onClick={handleExportSession} disabled={exporting || !sessionId} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-mute)', fontSize: '10px', cursor: exporting ? 'wait' : 'pointer', fontFamily: 'var(--font-mono)', opacity: exporting ? 0.5 : 1 }}>
           <Download size={10} /> {exporting ? 'Exporting...' : 'Export'}
