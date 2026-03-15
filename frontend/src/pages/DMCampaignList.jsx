@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, ChevronRight, BookOpen, Clock, Shield, X, Scroll, ArrowLeft, ArrowUpDown, Filter } from 'lucide-react';
-import { useAppMode } from '../contexts/ModeContext';
+
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -22,7 +22,7 @@ function formatDate(ts) {
 
 export default function DMCampaignList() {
   const navigate = useNavigate();
-  const { clearMode } = useAppMode();  // eslint-disable-line no-unused-vars
+
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);

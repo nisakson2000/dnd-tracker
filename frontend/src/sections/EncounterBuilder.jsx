@@ -140,7 +140,7 @@ const labelStyle = {
 // ═════════════════════════════════════════════════════════════════════════════
 // Encounter Builder Component
 // ═════════════════════════════════════════════════════════════════════════════
-export default function EncounterBuilder({ characterId }) { // eslint-disable-line no-unused-vars
+export default function EncounterBuilder({ _characterId }) { // eslint-disable-line no-unused-vars
   // ── Party Setup ──
   const [partySize, setPartySize] = useState(4);
   const [avgLevel, setAvgLevel] = useState(3);

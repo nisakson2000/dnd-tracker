@@ -940,7 +940,7 @@ function AppContent() {
   useEffect(() => {
     invoke('flush_pending_reports').then(result => {
       if (result?.flushed > 0) {
-        console.log(`[Reports] Flushed ${result.flushed} queued report(s) to GitHub`);
+        if (import.meta.env.DEV) console.log(`[Reports] Flushed ${result.flushed} queued report(s) to GitHub`);
       }
     }).catch(() => {}); // Silent — no internet is fine
   }, []);

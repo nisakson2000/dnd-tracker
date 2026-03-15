@@ -108,7 +108,7 @@ export function LiveSessionProvider({ children }) {
   // Load all campaign data
   const loadCampaignData = useCallback(async () => {
     try {
-      console.log('[LiveSession] loadCampaignData: fetching scenes, npcs, quests, handouts...');
+      if (import.meta.env.DEV) console.log('[LiveSession] loadCampaignData: fetching scenes, npcs, quests, handouts...');
       // Try campaign DB first (campaigns.db)
       const [sceneList, campaignNpcs, campaignQuests, handoutList] = await Promise.all([
         invoke('list_scenes').catch(() => []),
@@ -125,19 +125,19 @@ export function LiveSessionProvider({ children }) {
       if (npcList.length === 0 && activeCampaignIdRef.current) {
         const charNpcs = await invoke('get_npcs', { characterId: activeCampaignIdRef.current }).catch(() => []);
         if (charNpcs && charNpcs.length > 0) {
-          console.log('[LiveSession] Using character-based NPCs:', charNpcs.length);
+          if (import.meta.env.DEV) console.log('[LiveSession] Using character-based NPCs:', charNpcs.length);
           npcList = charNpcs;
         }
       }
       if (questList.length === 0 && activeCampaignIdRef.current) {
         const charQuests = await invoke('get_quests', { characterId: activeCampaignIdRef.current }).catch(() => []);
         if (charQuests && charQuests.length > 0) {
-          console.log('[LiveSession] Using character-based quests:', charQuests.length);
+          if (import.meta.env.DEV) console.log('[LiveSession] Using character-based quests:', charQuests.length);
           questList = charQuests;
         }
       }
 
-      console.log('[LiveSession] loadCampaignData results:', {
+      if (import.meta.env.DEV) console.log('[LiveSession] loadCampaignData results:', {
         scenes: (sceneList || []).length,
         npcs: npcList.length,
         quests: questList.length,
@@ -161,18 +161,18 @@ export function LiveSessionProvider({ children }) {
 
   const startLiveSession = useCallback(async (campaignId, name) => {
     try {
-      console.log('[LiveSession] Step 1: Selecting campaign:', campaignId);
+      if (import.meta.env.DEV) console.log('[LiveSession] Step 1: Selecting campaign:', campaignId);
       // Try select_campaign first (campaigns.db), fall back to set_active_campaign_id
       // (character-based campaigns from Dashboard DM mode don't exist in campaigns.db)
       try {
         await invoke('select_campaign', { campaignId });
       } catch {
-        console.log('[LiveSession] Campaign not in campaigns.db, using character-based mode');
+        if (import.meta.env.DEV) console.log('[LiveSession] Campaign not in campaigns.db, using character-based mode');
         await invoke('set_active_campaign_id', { campaignId });
       }
-      console.log('[LiveSession] Step 2: Starting session...');
+      if (import.meta.env.DEV) console.log('[LiveSession] Step 2: Starting session...');
       const result = await invoke('start_session');
-      console.log('[LiveSession] Step 3: Session started, id:', result.session_id);
+      if (import.meta.env.DEV) console.log('[LiveSession] Step 3: Session started, id:', result.session_id);
       setActiveCampaignId(campaignId);
       setCampaignName(name || 'Campaign');
       setSessionId(result.session_id);
@@ -182,15 +182,15 @@ export function LiveSessionProvider({ children }) {
       setSessionXp(0);
 
       // Load all campaign data — pulls quests, NPCs, scenes, handouts from the selected campaign
-      console.log('[LiveSession] Step 4: Loading campaign data...');
+      if (import.meta.env.DEV) console.log('[LiveSession] Step 4: Loading campaign data...');
       await loadCampaignData();
-      console.log('[LiveSession] Step 5: Campaign data loaded. Broadcasting...');
+      if (import.meta.env.DEV) console.log('[LiveSession] Step 5: Campaign data loaded. Broadcasting...');
 
       // Notify players that a live session is active (locks XP/currency editing)
       sendEvent('session_start', { campaign_id: campaignId, campaign_name: name });
       sendBroadcast('announcement', 'Session Started', `The adventure begins! Welcome to ${name || 'the campaign'}.`);
       logEvent('session_start', `Live session started for ${name}`);
-      console.log('[LiveSession] Session fully started!');
+      if (import.meta.env.DEV) console.log('[LiveSession] Session fully started!');
     } catch (e) {
       console.error('[LiveSession] Failed to start live session:', e);
       toast.error(`Failed to start session: ${e?.message || e}`);
