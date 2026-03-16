@@ -4,6 +4,15 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.8.1 — Auto-Update Fix
+**Released:** March 16, 2026
+
+- **Tauri Native Updater** — "Update Now" button now uses Tauri's built-in updater to download, install, and relaunch automatically
+- **Removed Fake Progress** — old flow just opened a browser page with a simulated progress bar; replaced with real download/install tracking
+- **Unified Update Banners** — merged duplicate gold and green update banners into a single flow
+
+---
+
 ## V0.8.0 — Player Mode Overhaul: Decomposed Architecture, Combat Animations & Polish
 **Released:** March 15, 2026
 

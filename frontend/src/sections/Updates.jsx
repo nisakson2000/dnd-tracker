@@ -36,7 +36,6 @@ export default function Updates() {
   const [progress, setProgress] = useState(0);
   const [updateError, setUpdateError] = useState('');
   const [tauriUpdate, setTauriUpdate] = useState(null);
-  const [tauriInstalling, setTauriInstalling] = useState(false);
   const tickerRef = useRef(null);
 
   // Normalize version strings so V0.8.0 matches 0.8.0, v0.8.0, etc.
@@ -56,16 +55,39 @@ export default function Updates() {
     } catch { /* expected in dev */ }
   }, [checkForUpdates, currentNorm]);
 
+  // Use Tauri native updater to download, install, and relaunch
   const handleTauriUpdate = useCallback(async () => {
     if (!tauriUpdate?.update) return;
-    setTauriInstalling(true);
+    setPhase(PHASE.DOWNLOADING);
+    setProgress(0);
+    setUpdateError('');
+
     try {
+      // Animate progress during download+install
+      tickerRef.current = setInterval(() => {
+        setProgress(p => {
+          if (p >= 90) { clearInterval(tickerRef.current); tickerRef.current = null; return 90; }
+          return p + Math.random() * 3 + 0.5;
+        });
+      }, 200);
+
       await tauriUpdate.update.downloadAndInstall();
-      const { relaunch } = await import('@tauri-apps/plugin-process');
-      await relaunch();
+
+      if (tickerRef.current) { clearInterval(tickerRef.current); tickerRef.current = null; }
+      setProgress(100);
+      setPhase(PHASE.COMPLETE);
+
+      // Relaunch after a brief pause so the user sees "complete"
+      setTimeout(async () => {
+        try {
+          const { relaunch } = await import('@tauri-apps/plugin-process');
+          await relaunch();
+        } catch { /* user can restart manually */ }
+      }, 1500);
     } catch (e) {
-      setTauriInstalling(false);
+      if (tickerRef.current) { clearInterval(tickerRef.current); tickerRef.current = null; }
       setUpdateError(`Update failed: ${e?.message || e}`);
+      setPhase(PHASE.ERROR);
     }
   }, [tauriUpdate]);
 
@@ -93,67 +115,66 @@ export default function Updates() {
   const displayVersions = recentVersions.length > 0 ? recentVersions : CHANGELOG.slice(0, 1);
 
   // ── Install update flow ─────────────────────────────
+  // Prefer Tauri native updater; fall back to opening the download page
   const installUpdate = useCallback(async () => {
-    setPhase(PHASE.DOWNLOADING);
-    setProgress(0);
-    setUpdateError('');
+    // If we already have a Tauri update object, use native updater
+    if (tauriUpdate?.update) {
+      handleTauriUpdate();
+      return;
+    }
+
+    // Try to get a Tauri update object on-the-fly
+    try {
+      const { check } = await import('@tauri-apps/plugin-updater');
+      const update = await check();
+      if (update?.available) {
+        setTauriUpdate({ available: true, version: update.version, body: update.body, update });
+        // Kick off the native update after setting state
+        setPhase(PHASE.DOWNLOADING);
+        setProgress(0);
+        setUpdateError('');
+
+        tickerRef.current = setInterval(() => {
+          setProgress(p => {
+            if (p >= 90) { clearInterval(tickerRef.current); tickerRef.current = null; return 90; }
+            return p + Math.random() * 3 + 0.5;
+          });
+        }, 200);
+
+        await update.downloadAndInstall();
+
+        if (tickerRef.current) { clearInterval(tickerRef.current); tickerRef.current = null; }
+        setProgress(100);
+        setPhase(PHASE.COMPLETE);
+
+        setTimeout(async () => {
+          try {
+            const { relaunch } = await import('@tauri-apps/plugin-process');
+            await relaunch();
+          } catch { /* user can restart manually */ }
+        }, 1500);
+        return;
+      }
+    } catch { /* not in Tauri or check failed — fall through to manual */ }
+
+    // Fallback: open download page in browser
+    if (!downloadUrl) {
+      setUpdateError('No download URL available — try checking for updates again.');
+      setPhase(PHASE.ERROR);
+      return;
+    }
 
     try {
-      // Phase 1: Downloading
-      tickerRef.current = setInterval(() => {
-        setProgress(p => {
-          if (p >= 65) {
-            clearInterval(tickerRef.current);
-            tickerRef.current = null;
-            return 65;
-          }
-          return p + Math.random() * 4 + 1;
-        });
-      }, 120);
-
-      if (!downloadUrl) throw new Error('No download URL available — try checking for updates again.');
-
-      if (tickerRef.current) { clearInterval(tickerRef.current); tickerRef.current = null; }
-      setProgress(70);
-
-      // Phase 2: Patching (simulated — we open the installer)
-      setPhase(PHASE.PATCHING);
-      setProgress(70);
-
-      tickerRef.current = setInterval(() => {
-        setProgress(p => {
-          if (p >= 95) {
-            clearInterval(tickerRef.current);
-            tickerRef.current = null;
-            return 95;
-          }
-          return p + Math.random() * 3 + 0.5;
-        });
-      }, 150);
-
-      // Open the installer
-      try {
-        await invoke('plugin:shell|open', { path: downloadUrl });
-      } catch {
-        window.open(downloadUrl, '_blank');
-      }
-
-      // Wait for visual completion
-      await new Promise(r => setTimeout(r, 2000));
-      if (tickerRef.current) { clearInterval(tickerRef.current); tickerRef.current = null; }
-      setProgress(100);
-      setPhase(PHASE.COMPLETE);
-
-      // Mark this version as handled so the prompt doesn't loop
-      if (latestVersion) {
-        dismissUpdate(latestVersion);
-      }
-    } catch (err) {
-      if (tickerRef.current) { clearInterval(tickerRef.current); tickerRef.current = null; }
-      setUpdateError(err.message || 'Download failed');
-      setPhase(PHASE.ERROR);
+      await invoke('plugin:shell|open', { path: downloadUrl });
+    } catch {
+      window.open(downloadUrl, '_blank');
     }
-  }, [latestVersion, downloadUrl, dismissUpdate]);
+
+    // Mark this version as handled
+    if (latestVersion) {
+      dismissUpdate(latestVersion);
+    }
+  }, [tauriUpdate, handleTauriUpdate, latestVersion, downloadUrl, dismissUpdate]);
 
   const resetUpdate = () => {
     setPhase(PHASE.IDLE);
@@ -323,8 +344,8 @@ export default function Updates() {
         )}
       </AnimatePresence>
 
-      {/* ── Tauri native update banner ────────────────── */}
-      {tauriUpdate?.available && (
+      {/* ── Tauri-only update banner (no version.json update yet) ── */}
+      {tauriUpdate?.available && !updateAvailable && (
         <div className="mb-6">
           <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(39,174,96,0.3)' }}>
             <div className="flex items-center gap-4 p-5" style={{ background: 'linear-gradient(135deg, rgba(39,174,96,0.12), rgba(39,174,96,0.04))' }}>
@@ -343,20 +364,19 @@ export default function Updates() {
               </div>
               <button
                 onClick={handleTauriUpdate}
-                disabled={tauriInstalling}
                 style={{
                   padding: '10px 20px', borderRadius: '10px',
-                  background: tauriInstalling ? 'rgba(39,174,96,0.15)' : 'rgba(39,174,96,0.2)',
+                  background: 'rgba(39,174,96,0.2)',
                   border: '1px solid rgba(39,174,96,0.4)',
                   color: '#86efac',
                   fontFamily: 'var(--font-display)',
                   fontSize: '13px',
                   fontWeight: 600,
-                  cursor: tauriInstalling ? 'wait' : 'pointer',
+                  cursor: 'pointer',
                   transition: 'all 0.15s',
                 }}
               >
-                {tauriInstalling ? 'Installing...' : 'UPDATE NOW'}
+                UPDATE NOW
               </button>
             </div>
           </div>

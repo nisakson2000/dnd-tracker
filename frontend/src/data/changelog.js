@@ -3,6 +3,17 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.8.1',
+    date: '03/16/2026',
+    time: '',
+    title: 'Auto-Update Fix',
+    changes: [
+      'In-app "Update Now" button now uses Tauri native updater — downloads, installs, and relaunches automatically',
+      'Removed fake progress bar that only opened a browser page',
+      'Unified duplicate update banners into a single flow',
+    ],
+  },
+  {
     version: 'V0.8.0',
     date: '03/15/2026',
     time: '4:00 PM',
