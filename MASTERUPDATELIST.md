@@ -4,6 +4,13 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.8.2 — Auto-Update Test Patch
+**Released:** March 16, 2026
+
+- Test patch to verify auto-update pipeline
+
+---
+
 ## V0.8.1 — Auto-Update Fix
 **Released:** March 16, 2026
 

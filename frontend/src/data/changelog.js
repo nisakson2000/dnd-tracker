@@ -3,6 +3,15 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.8.2',
+    date: '03/16/2026',
+    time: '',
+    title: 'Auto-Update Test Patch',
+    changes: [
+      'Test patch to verify auto-update pipeline',
+    ],
+  },
+  {
     version: 'V0.8.1',
     date: '03/16/2026',
     time: '',
