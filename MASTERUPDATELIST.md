@@ -4,6 +4,49 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.8.3 — Encounter Runner Overhaul, Player QoL & Campaign Wizard
+**Released:** March 16, 2026
+
+### Encounter Runner
+- **Custom Damage Input** — type exact damage amounts per monster instead of fixed +5/-5 buttons
+- **HP Bars** — visual health bars on each monster card with percentage-based coloring
+- **Inline Stat Blocks** — expand any monster card to view full stat block (abilities, AC, speed, attacks)
+- **Condition System** — apply/remove D&D 5e conditions on monsters with badge display
+- **SRD Monster Search** — search and add monsters to active encounters on the fly
+- **Kill/Remove Buttons** — quickly remove defeated monsters from the encounter
+
+### Player Sidebar QoL
+- **Clickable HP Bar** — click to open damage/heal popup with preset buttons (-1/-5/-10/+1/+5/+10)
+- **Combat Stats Row** — AC (blue), Speed (green), Proficiency Bonus (gold), Initiative (purple) always visible
+- **Death Save Tracker** — appears at 0 HP with 3 success (green) and 3 failure (red) dots
+- **Temp HP Overlay** — blue segment on HP bar showing temporary hit points
+- **Quick Dice Roller** — d4/d6/d8/d10/d12/d20 buttons with toast notifications, nat 20/1 callouts
+
+### Spellbook
+- **Spell Slot Color Coding** — purple (healthy), amber (≤34% remaining), red (empty) for both dots and text
+
+### Campaign Creation Wizard
+- **3-Step Guided Flow** — Campaign Details → Template Selection → Review & Generate
+- **Quick Create Toggle** — single-step form for fast campaign creation (preserves old UX)
+- **Template Selection** — One-Shot, Short Campaign, Full Campaign, or Blank with content previews
+- **Preview & Re-roll** — review generated content before creating, re-roll individual items
+
+### New Content
+- **6 New Premade Campaigns** (12 total) — Plague of Shadows, Carnival of Lost Souls, Heist of the Golden Vault, Isle of the Storm King, Tomb of the Serpent Queen, The Frozen Throne
+
+### Changes
+- DM Guide trimmed to running sessions only (campaign building content moved to Campaign Builder)
+- All campaigns now route to Campaign Builder instead of DM Lobby
+- Removed Quick Actions (Quick Roll d20, Long Rest All, Random Table) from player Dashboard
+
+### Bug Fixes
+- Fixed stale state in encounter condition handler (used old closure instead of fresh data)
+- Fixed spell slot text color mismatch (green text with purple dots → matching purple)
+- Added missing transitions on sidebar combat stat badges
+- Fixed death save skull icon sizing (was 10px, now 12px to match other sidebar icons)
+
+---
+
 ## V0.8.2 — Auto-Update Test Patch
 **Released:** March 16, 2026
 

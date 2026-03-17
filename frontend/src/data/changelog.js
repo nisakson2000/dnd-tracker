@@ -3,6 +3,23 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.8.3',
+    date: '03/16/2026',
+    time: '',
+    title: 'Encounter Runner Overhaul, Player QoL & Campaign Wizard',
+    changes: [
+      'Encounter runner — custom damage input, HP bars, inline stat blocks, condition badges, SRD monster search',
+      'Player sidebar — clickable HP bar with damage/heal popup, combat stats (AC, Speed, Prof, Init), death saves at 0 HP, temp HP overlay, quick dice roller',
+      'Spell slot color coding — purple (healthy), amber (low), red (empty) with matching text',
+      'Campaign creation wizard — 3-step guided flow with Quick Create toggle, template selection (One-Shot, Short, Full, Blank), preview & re-roll',
+      '6 new premade campaign modules (12 total) — Plague of Shadows, Carnival of Lost Souls, Heist of the Golden Vault, Isle of the Storm King, Tomb of the Serpent Queen, The Frozen Throne',
+      'DM Guide trimmed — removed campaign building sections (now in Campaign Builder only), kept running sessions content',
+      'All campaigns now route to Campaign Builder instead of DM Lobby',
+      'Removed Quick Actions (Quick Roll, Long Rest All, Random Table) from player Dashboard',
+      'Bug fixes — stale state in condition handler, spell slot color mismatch, missing transitions on sidebar stats, death save icon sizing',
+    ],
+  },
+  {
     version: 'V0.8.2',
     date: '03/16/2026',
     time: '',
