@@ -321,6 +321,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   const [dmgModifiers, setDmgModifiers] = useState({}); // 'resist' | 'vuln' | null per attack id
   const [weaponMagicBonus, setWeaponMagicBonus] = useState(0); // highest equipped weapon magic_bonus
   const [weaponExtraDamage, setWeaponExtraDamage] = useState(''); // e.g. "2d6 fire"
+  const [ammoItems, setAmmoItems] = useState([]); // Item 7: ammunition items for linking
   const rollTimeoutRefs = useRef({});
   const [attackAdvOverrides, setAttackAdvOverrides] = useState({}); // per-attack: 'advantage' | 'disadvantage' | null
   const [attackBonusInputs, setAttackBonusInputs] = useState({}); // per-attack situational bonus
@@ -735,6 +736,9 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       // Load equipped weapon magic bonuses
       try {
         const items = await getItems(characterId);
+        // Item 7: Load ammunition items
+        const ammo = (items || []).filter(i => i.item_type === 'ammunition' || (i.name && /^(arrows?|bolts?|bullets?|darts?|needles?|sling)/i.test(i.name)));
+        setAmmoItems(ammo);
         const equippedWeapons = items.filter(i => i.equipped && i.item_type === 'weapon');
         let bestMagic = 0;
         let extraDmg = '';
@@ -906,13 +910,28 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       }, 1200);
     }
 
+    // Item 7: Auto-decrement ammunition
+    if (atk.ammo_item_id) {
+      const ammo = ammoItems.find(i => i.id === atk.ammo_item_id);
+      if (ammo && ammo.quantity > 0) {
+        import('../api/inventory').then(({ updateItem }) => {
+          updateItem(characterId, ammo.id, { quantity: ammo.quantity - 1 }).catch(() => {});
+        });
+        setAmmoItems(prev => prev.map(i => i.id === ammo.id ? { ...i, quantity: i.quantity - 1 } : i));
+        if (ammo.quantity <= 1) {
+          toast(`Last ${ammo.name} used!`, { icon: '\u26A0\uFE0F', duration: 3000, style: { background: '#1a1520', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' } });
+        }
+      }
+    }
+
     // Combat log
+    const ammoLabel = atk.ammo_item_id ? (() => { const a = ammoItems.find(i => i.id === atk.ammo_item_id); return a ? ` [${a.name}: ${Math.max(0, (a.quantity || 0) - 1)} left]` : ''; })() : '';
     const extraStr = dmgResult?.extraDamage ? ` + ${dmgResult.extraDamage}` : '';
     const dmgStr = dmgResult ? ` for ${dmgResult.total} damage${extraStr}${dmgResult.crit ? ' (CRIT!)' : ''}` : '';
     const critStr = isNat20 ? ' [NAT 20]' : isNat1 ? ' [NAT 1]' : '';
     const modeStr = modeLabel ? ` [${modeLabel}: ${d20a}, ${d20b}]` : '';
     const sitStr = sitBonus ? ` + ${sitBonus} bonus` : '';
-    logEvent('attack', `${atk.name || 'Attack'}: rolled ${d20} + ${bonus}${magicBonus ? ` + ${magicBonus} magic` : ''}${flankBonus ? ` + ${flankBonus} flanking` : ''}${sitStr} = ${total}${modeStr}${critStr}${dmgStr}`);
+    logEvent('attack', `${atk.name || 'Attack'}: rolled ${d20} + ${bonus}${magicBonus ? ` + ${magicBonus} magic` : ''}${flankBonus ? ` + ${flankBonus} flanking` : ''}${sitStr} = ${total}${modeStr}${critStr}${dmgStr}${ammoLabel}`);
 
     // Clear previous timeout for this attack if any
     if (rollTimeoutRefs.current[atk.id]) {
@@ -1115,6 +1134,120 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         </div>
       )}
 
+      {/* PC Death Save Quick-Roll */}
+      {character && character.current_hp <= 0 && character.max_hp > 0 && (() => {
+        const pcDeathKey = `pc_${characterId}`;
+        const pcDs = deathSaves[pcDeathKey] || null;
+        // Auto-initialize death saves when PC drops to 0
+        if (!pcDs) {
+          // Use a timeout to avoid setState during render
+          setTimeout(() => {
+            setDeathSaves(prev => {
+              if (prev[pcDeathKey]) return prev;
+              return { ...prev, [pcDeathKey]: { successes: 0, failures: 0, stable: false, dead: false } };
+            });
+          }, 0);
+          return null;
+        }
+        if (pcDs.dead) {
+          return (
+            <div className="card bg-[#1a0505] border-red-500/30">
+              <div className="text-center py-2">
+                <span className="text-red-400 font-display text-sm">{'\u{1F480}'} {character.name || 'Your character'} has died</span>
+              </div>
+            </div>
+          );
+        }
+        const handlePcDeathSaveRoll = () => {
+          if (pcDs.stable || pcDs.dead) return;
+          const roll = rollDie(20);
+          const result = resolveDeathSave(roll);
+          const newSuccesses = Math.min(3, pcDs.successes + result.successes);
+          const newFailures = Math.min(3, pcDs.failures + result.failures);
+
+          logEvent('death', `${character.name || 'PC'} death save: rolled ${roll} — ${result.description}`);
+
+          if (result.type === 'nat20') {
+            // Clear death saves — character regains 1 HP
+            setDeathSaves(prev => { const next = { ...prev }; delete next[pcDeathKey]; return next; });
+            toast(`Natural 20! ${character.name || 'You'} regain 1 HP!`, {
+              icon: '\u2728', duration: 4000,
+              style: { background: '#0a1a0a', color: '#86efac', border: '1px solid rgba(34,197,94,0.5)' },
+            });
+            return;
+          }
+
+          const isDead = newFailures >= 3;
+          const isStable = newSuccesses >= 3;
+          setDeathSaves(prev => ({
+            ...prev,
+            [pcDeathKey]: { successes: newSuccesses, failures: newFailures, stable: isStable, dead: isDead },
+          }));
+
+          if (isDead) {
+            logEvent('death', `${character.name || 'PC'} has died.`);
+            toast(`${character.name || 'You'} has died.`, { icon: '\u{1F480}', duration: 4000,
+              style: { background: '#1a0505', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.5)' },
+            });
+          } else if (isStable) {
+            logEvent('death', `${character.name || 'PC'} has stabilized!`);
+            toast(`${character.name || 'You'} stabilized!`, { icon: '\u{1F49A}', duration: 3000,
+              style: { background: '#0a1a0a', color: '#86efac', border: '1px solid rgba(34,197,94,0.4)' },
+            });
+          } else {
+            const rollLabel = roll === 1 ? 'Natural 1!' : `Rolled ${roll}`;
+            toast(`Death Save: ${rollLabel} — ${result.description}`, {
+              icon: result.failures > 0 ? '\u274C' : '\u2705', duration: 3000,
+              style: result.failures > 0
+                ? { background: '#1a0a0a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' }
+                : { background: '#0a1a0a', color: '#86efac', border: '1px solid rgba(34,197,94,0.3)' },
+            });
+          }
+        };
+
+        return (
+          <div className="card bg-gradient-to-r from-[#1a0808] to-[#14121c] border-red-500/20">
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-display text-red-300 flex items-center gap-2 text-sm">
+                <Skull size={14} /> Death Saves — {character.name || 'Your Character'}
+              </span>
+              {pcDs.stable ? (
+                <span className="text-[10px] text-emerald-400 bg-emerald-900/30 px-2 py-0.5 rounded border border-emerald-500/30">Stabilized</span>
+              ) : (
+                <button
+                  onClick={handlePcDeathSaveRoll}
+                  className="px-3 py-1.5 rounded-lg bg-red-900/40 text-red-300 border border-red-500/30 hover:bg-red-900/60 transition-all flex items-center gap-1.5 text-xs font-medium"
+                >
+                  <Dice5 size={13} /> Roll Death Save
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-emerald-400/70 uppercase tracking-wider mr-1">Successes</span>
+                {[0, 1, 2].map(i => (
+                  <div key={`pcs-${i}`} className={`w-5 h-5 rounded-full border-2 transition-all ${
+                    i < pcDs.successes
+                      ? 'bg-emerald-500 border-emerald-400'
+                      : 'bg-transparent border-emerald-500/30'
+                  }`} />
+                ))}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-red-400/70 uppercase tracking-wider mr-1">Failures</span>
+                {[0, 1, 2].map(i => (
+                  <div key={`pcf-${i}`} className={`w-5 h-5 rounded-full border-2 transition-all ${
+                    i < pcDs.failures
+                      ? 'bg-red-500 border-red-400'
+                      : 'bg-transparent border-red-500/30'
+                  }`} />
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Combat Suggestions Panel */}
       <CombatSuggestions
         character={character}
@@ -1178,6 +1311,24 @@ export default function Combat({ characterId, character, onConditionsChange }) {
             onChange={e => setNewCombatantInit(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && addCombatant()}
           />
+          <button
+            onClick={() => {
+              const dexScore = character?.dexterity || 10;
+              const dexMod = Math.floor((dexScore - 10) / 2);
+              const roll = rollDie(20);
+              const total = roll + dexMod;
+              const modStr = dexMod >= 0 ? `+${dexMod}` : `${dexMod}`;
+              setNewCombatantInit(String(total));
+              toast(`Initiative: ${roll} ${modStr} = ${total}`, {
+                icon: '\u{1F3B2}', duration: 3000,
+                style: { background: '#0a0a1a', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.4)' },
+              });
+            }}
+            className="px-2 py-1.5 rounded-lg bg-gold/10 border border-gold/30 hover:bg-gold/20 hover:border-gold/50 transition-all flex items-center gap-1 text-xs text-gold font-medium whitespace-nowrap"
+            title={`Roll Initiative (d20 + DEX modifier${character?.dexterity ? `: ${Math.floor((character.dexterity - 10) / 2) >= 0 ? '+' : ''}${Math.floor((character.dexterity - 10) / 2)}` : ''})`}
+          >
+            <Dice5 size={12} /> Roll Init
+          </button>
           <input
             type="number"
             className="input w-20"
@@ -1589,6 +1740,15 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                         <span className="text-gold text-sm">{atk.attack_bonus ?? '+0'}{weaponMagicBonus > 0 && <span className="text-purple-400/70 text-xs ml-0.5">(+{weaponMagicBonus})</span>}{flankingEnabled && <span className="text-gold/60 text-xs ml-0.5">(+2)</span>}</span>
                         <span className="text-amber-200/60 text-sm">{atk.damage_dice ?? '\u2014'} {atk.damage_type && <span className="text-amber-200/40">{atk.damage_type}</span>}</span>
                         {atk.attack_range && <span className="text-amber-200/30 text-xs">{atk.attack_range}</span>}
+                        {/* Item 7: Ammo count */}
+                        {atk.ammo_item_id && (() => {
+                          const ammo = ammoItems.find(i => i.id === atk.ammo_item_id);
+                          return ammo ? (
+                            <span className={`text-xs px-1.5 py-0.5 rounded border ${ammo.quantity <= 3 ? 'text-red-300 bg-red-900/20 border-red-500/20' : 'text-amber-200/40 bg-amber-200/5 border-amber-200/10'}`}>
+                              {ammo.name}: {ammo.quantity}
+                            </span>
+                          ) : null;
+                        })()}
                       </div>
                       {/* Advantage/Disadvantage toggles + Situational bonus */}
                       <div className="flex items-center gap-2 mt-1.5">
@@ -1774,7 +1934,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         characterId={characterId}
       />
 
-      {showAdd && <AttackForm onSubmit={handleAddAttack} onCancel={() => setShowAdd(false)} />}
+      {showAdd && <AttackForm onSubmit={handleAddAttack} onCancel={() => setShowAdd(false)} ammoItems={ammoItems} />}
 
       <ConfirmDialog
         show={!!confirmDelete}
@@ -2081,9 +2241,9 @@ function TurnActionTracker({ actionEcon, setActionEcon, setReactionUsed, resetAc
   );
 }
 
-function AttackForm({ onSubmit, onCancel }) {
+function AttackForm({ onSubmit, onCancel, ammoItems = [] }) {
   const [form, setForm] = useState({
-    name: '', attack_bonus: '+0', damage_dice: '1d6', damage_type: '', attack_range: '', notes: '',
+    name: '', attack_bonus: '+0', damage_dice: '1d6', damage_type: '', attack_range: '', notes: '', ammo_item_id: null,
   });
   const [nameError, setNameError] = useState(false);
   const update = (f, v) => {
@@ -2124,6 +2284,22 @@ function AttackForm({ onSubmit, onCancel }) {
             <input className="input w-full" placeholder="Damage type" value={form.damage_type} onChange={e => update('damage_type', e.target.value)} />
             <input className="input w-full" placeholder="Range" value={form.attack_range} onChange={e => update('attack_range', e.target.value)} />
           </div>
+          {/* Item 7: Ammo linking */}
+          {ammoItems.length > 0 && (
+            <div>
+              <select
+                className="input w-full"
+                value={form.ammo_item_id || ''}
+                onChange={e => update('ammo_item_id', e.target.value ? parseInt(e.target.value) : null)}
+              >
+                <option value="">No ammunition linked</option>
+                {ammoItems.map(item => (
+                  <option key={item.id} value={item.id}>{item.name} (x{item.quantity})</option>
+                ))}
+              </select>
+              <p className="text-amber-200/30 text-xs mt-1">Auto-deducts ammo on attack roll</p>
+            </div>
+          )}
           <textarea className="input w-full h-16 resize-none" placeholder="Notes" value={form.notes} onChange={e => update('notes', e.target.value)} />
         </div>
         <div className="flex gap-3 justify-end mt-4">

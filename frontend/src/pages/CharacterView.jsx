@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, lazy, Suspense } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Heart, Clock, Shield, Zap, Star, Footprints, X, Moon, Coffee, Sunrise, Dices, Flame, Check, Keyboard, Wand2, Sword, FlaskConical, Sparkles, ChevronUp, ChevronDown, Pin, Plus, Hammer } from 'lucide-react';
+import { Heart, Clock, Shield, Zap, Star, Footprints, X, Moon, Coffee, Sunrise, Dices, Flame, Check, Keyboard, Wand2, Sword, FlaskConical, Sparkles, ChevronUp, ChevronDown, Pin, Plus, Hammer, ChevronRight, Eye, Minus } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getOverview } from '../api/overview';
+import { getOverview, updateOverview } from '../api/overview';
 import { getConditions, getAttacks } from '../api/combat';
 import { getBackstory } from '../api/backstory';
 import { getSpells, getSpellSlots, resetSpellSlots } from '../api/spells';
@@ -13,6 +13,9 @@ import { RulesetProvider } from '../contexts/RulesetContext';
 import { PartyProvider } from '../contexts/PartyContext';
 import { CampaignSyncProvider, useCampaignSync } from '../contexts/CampaignSyncContext';
 import { addQuest, addNpc } from '../utils/playerJournal';
+import { listCharacters } from '../api/characters';
+import ClassResourceBar from '../components/ClassResourceBar';
+import { useHpAdjust } from '../hooks/useHpAdjust';
 import { LiveSessionProvider } from '../contexts/LiveSessionContext';
 import { useSession } from '../contexts/SessionContext';
 import PlayerNotification from '../components/party/PlayerNotification';
@@ -158,7 +161,7 @@ const SECTION_LABELS = {
   'homebrew': 'Homebrew Builder',
   'party-loot': 'Party Loot',
   'archives': 'Archives',
-  'dm-guide': 'Create a Campaign Tutorial',
+  'dm-guide': 'DM Mode Guide',
   'random-tables': 'Random Tables',
   'session-prep': 'Session Prep',
 };
@@ -1155,9 +1158,57 @@ export default function CharacterView() {
   const [combatMode, setCombatMode] = useState(false);
   const [showPlayerWelcome, setShowPlayerWelcome] = useState(false);
   const [campaignStats, setCampaignStats] = useState({ session_count: 0, total_hours: 0 });
+  // Item 1: HP Widget popover
+  const [showHpWidget, setShowHpWidget] = useState(false);
+  const [hpWidgetInput, setHpWidgetInput] = useState('');
+  const hpWidgetRef = useRef(null);
+  // Item 4: Character Switcher
+  const [showCharSwitcher, setShowCharSwitcher] = useState(false);
+  const [charList, setCharList] = useState([]);
+  const charSwitcherRef = useRef(null);
+  // Item 17: Concentration indicator
+  const [concentrationSpell, setConcentrationSpell] = useState(() => {
+    try { return localStorage.getItem(`codex_concentration_${characterId}`) || ''; } catch { return ''; }
+  });
   const { showOverlay, levelUpInfo, triggerLevelUp, dismiss } = useLevelUp();
   useCrashRecovery();
   useAutoBackup(characterId, character?.name);
+
+  // HP Widget: shared HP adjustment hook
+  const hpAdjust = useHpAdjust({
+    overview: character || {},
+    setOverview: (updated) => setCharacter(typeof updated === 'function' ? updated(character) : updated),
+    triggerOverview: (updated) => {
+      invoke('update_overview', { characterId, payload: { current_hp: updated.current_hp, temp_hp: updated.temp_hp, death_save_successes: updated.death_save_successes, death_save_failures: updated.death_save_failures } }).catch(e => console.warn('[CharacterView] HP widget save:', e));
+    },
+  });
+
+  // HP Widget: close on outside click
+  useEffect(() => {
+    if (!showHpWidget) return;
+    const handler = (e) => { if (hpWidgetRef.current && !hpWidgetRef.current.contains(e.target)) setShowHpWidget(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showHpWidget]);
+
+  // Character Switcher: close on outside click
+  useEffect(() => {
+    if (!showCharSwitcher) return;
+    const handler = (e) => { if (charSwitcherRef.current && !charSwitcherRef.current.contains(e.target)) setShowCharSwitcher(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showCharSwitcher]);
+
+  // Concentration: sync from localStorage (other sections may update it)
+  useEffect(() => {
+    const handler = () => {
+      try { setConcentrationSpell(localStorage.getItem(`codex_concentration_${characterId}`) || ''); } catch { /* ignore */ }
+    };
+    window.addEventListener('storage', handler);
+    window.addEventListener('codex-concentration-changed', handler);
+    return () => { window.removeEventListener('storage', handler); window.removeEventListener('codex-concentration-changed', handler); };
+  }, [characterId]);
+
   // Broadcast which section we're editing to other devs (dev presence)
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -1309,6 +1360,44 @@ export default function CharacterView() {
       .then(slots => setSpellSlots(slots || []))
       .catch(() => setSpellSlots([]));
   }, [characterId]);
+
+  // Item 6: Clickable spell slot pips — spend/recover
+  const handleSlotClick = useCallback(async (slotLevel, remaining, maxSlots) => {
+    if (remaining <= 0) return;
+    try {
+      await invoke('use_spell_slot', { characterId, slotLevel });
+      setSpellSlots(prev => prev.map(s => s.slot_level === slotLevel ? { ...s, used_slots: s.used_slots + 1 } : s));
+      toast(`Spent a level ${slotLevel} spell slot (${remaining - 1}/${maxSlots})`, {
+        icon: '\uD83D\uDD2E', duration: 2000,
+        style: { background: '#1a1520', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)', fontSize: '12px' },
+      });
+    } catch (e) { console.warn('[CharacterView] use spell slot:', e); }
+  }, [characterId]);
+
+  const handleSlotRightClick = useCallback(async (e, slotLevel, usedSlots, maxSlots) => {
+    e.preventDefault();
+    if (usedSlots <= 0) return;
+    try {
+      await invoke('recover_spell_slot', { characterId, slotLevel }).catch(() => {
+        // Fallback: update directly
+        return invoke('update_spell_slots', { characterId, payload: { slot_level: slotLevel, used_slots: usedSlots - 1, max_slots: maxSlots } });
+      });
+      setSpellSlots(prev => prev.map(s => s.slot_level === slotLevel ? { ...s, used_slots: Math.max(0, s.used_slots - 1) } : s));
+      toast(`Recovered a level ${slotLevel} spell slot`, {
+        icon: '\u2728', duration: 2000,
+        style: { background: '#1a1520', color: '#86efac', border: '1px solid rgba(74,222,128,0.3)', fontSize: '12px' },
+      });
+    } catch (e2) { console.warn('[CharacterView] recover spell slot:', e2); }
+  }, [characterId]);
+
+  // Item 4: Character Switcher opener
+  const openCharSwitcher = useCallback(async () => {
+    setShowCharSwitcher(prev => !prev);
+    try {
+      const chars = await listCharacters();
+      setCharList(chars || []);
+    } catch { setCharList([]); }
+  }, []);
 
   const loadCharacter = async () => {
     try {
@@ -1514,7 +1603,15 @@ export default function CharacterView() {
           onSelect={setActiveSection}
           onBack={() => navigate('/')}
           activeConditionCount={activeConditionCount}
+          activeConditions={activeConditions}
           portrait={portrait}
+          onHpChange={appMode !== 'dm' && character ? async (delta) => {
+            const newHp = Math.max(0, Math.min(character.max_hp, (character.current_hp ?? 0) + delta));
+            try {
+              await updateOverview(characterId, { current_hp: newHp });
+              setCharacter(prev => prev ? { ...prev, current_hp: newHp } : prev);
+            } catch (e) { console.error('HP update failed:', e); }
+          } : undefined}
         />
 
         {/* Right side: topbar + content */}
@@ -1560,29 +1657,162 @@ export default function CharacterView() {
                     {character?.name?.[0] || '?'}
                   </div>
                 )}
-                {/* Name + class */}
-                <div style={{ marginRight: '18px' }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 'calc(14px * var(--font-scale, 1))', fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+                {/* Name + class + Character Switcher (Item 4) */}
+                <div style={{ marginRight: '18px', position: 'relative' }} ref={charSwitcherRef}>
+                  <div
+                    style={{ fontFamily: 'var(--font-display)', fontSize: 'calc(14px * var(--font-scale, 1))', fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', lineHeight: 1.2, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    onClick={openCharSwitcher}
+                    title="Switch character"
+                  >
                     {character?.name || 'Unknown'}
+                    <ChevronDown size={11} style={{ opacity: 0.4, transition: 'transform 0.15s', transform: showCharSwitcher ? 'rotate(180deg)' : '' }} />
                   </div>
                   <div style={{ fontSize: 'calc(11px * var(--font-scale, 1))', color: 'var(--text-dim)', fontFamily: 'var(--font-ui)', whiteSpace: 'nowrap', marginTop: '1px' }}>
                     {[character?.race, character?.primary_class].filter(Boolean).join(' · ')}
                     {character?.level ? ` · Lv ${character.level}` : ''}
                   </div>
+                  {/* Character Switcher Dropdown */}
+                  {showCharSwitcher && (
+                    <div style={{
+                      position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 200,
+                      width: '240px', maxHeight: '320px',
+                      background: 'rgba(12,10,20,0.97)', backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(201,168,76,0.25)', borderRadius: '10px',
+                      boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
+                      display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                    }}>
+                      <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(201,168,76,0.1)', fontSize: '10px', color: 'rgba(253,230,138,0.4)', fontFamily: 'var(--font-ui)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Switch Character
+                      </div>
+                      <div style={{ overflowY: 'auto', flex: 1, padding: '4px' }}>
+                        {charList.map(c => (
+                          <button
+                            key={c.id}
+                            onClick={() => { setShowCharSwitcher(false); navigate(`/character/${c.id}`); }}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
+                              padding: '7px 10px', borderRadius: '7px', cursor: 'pointer',
+                              background: c.id === characterId ? 'rgba(201,168,76,0.12)' : 'transparent',
+                              border: c.id === characterId ? '1px solid rgba(201,168,76,0.25)' : '1px solid transparent',
+                              color: c.id === characterId ? '#fde68a' : 'var(--text-dim)',
+                              fontSize: '12px', fontFamily: 'var(--font-ui)', textAlign: 'left',
+                              transition: 'background 0.1s',
+                            }}
+                            onMouseEnter={e => { if (c.id !== characterId) e.currentTarget.style.background = 'rgba(201,168,76,0.06)'; }}
+                            onMouseLeave={e => { if (c.id !== characterId) e.currentTarget.style.background = 'transparent'; }}
+                          >
+                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name || 'Unnamed'}</span>
+                            {c.id === characterId && <Check size={12} style={{ color: '#fde68a', flexShrink: 0 }} />}
+                          </button>
+                        ))}
+                        <div style={{ borderTop: '1px solid rgba(201,168,76,0.1)', margin: '4px 0' }} />
+                        <button
+                          onClick={() => { setShowCharSwitcher(false); navigate('/'); }}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
+                            padding: '7px 10px', borderRadius: '7px', cursor: 'pointer',
+                            background: 'transparent', border: '1px solid transparent',
+                            color: 'rgba(253,230,138,0.5)', fontSize: '12px', fontFamily: 'var(--font-ui)', textAlign: 'left',
+                            transition: 'background 0.1s',
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(201,168,76,0.06)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                          Back to Dashboard
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Divider */}
                 <div style={{ width: '1px', height: '22px', background: 'var(--border)', margin: '0 14px', flexShrink: 0 }} />
             {/* Stat chips */}
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
+              {/* Item 1: Clickable HP Widget */}
               {character?.max_hp > 0 && (() => {
                 const pct = (character.current_hp / character.max_hp) * 100;
                 const hpColor = pct <= 0 ? 'text-red-400 bg-red-950/40 border-red-500/30' : pct < 25 ? 'text-red-300 bg-red-950/30 border-red-500/20 animate-pulse' : pct <= 50 ? 'text-yellow-300 bg-yellow-950/20 border-yellow-500/20' : '';
                 return (
-                  <span className={`stat-chip stat-chip-hp ${hpColor}`}>
-                    <Heart size={10} /> {character.current_hp}/{character.max_hp}
-                    {character.temp_hp > 0 && <span className="text-blue-300 ml-0.5">+{character.temp_hp}</span>}
-                  </span>
+                  <div style={{ position: 'relative' }} ref={hpWidgetRef}>
+                    <span
+                      className={`stat-chip stat-chip-hp ${hpColor}`}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => setShowHpWidget(prev => !prev)}
+                      title="Click to adjust HP"
+                    >
+                      <Heart size={10} /> {character.current_hp}/{character.max_hp}
+                      {character.temp_hp > 0 && <span className="text-blue-300 ml-0.5">+{character.temp_hp}</span>}
+                    </span>
+                    {showHpWidget && (
+                      <div style={{
+                        position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)',
+                        zIndex: 200, width: '220px',
+                        background: 'rgba(12,10,20,0.97)', backdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(239,68,68,0.25)', borderRadius: '10px',
+                        boxShadow: '0 12px 40px rgba(0,0,0,0.6)', padding: '12px',
+                      }}>
+                        {/* HP Bar */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <span style={{ fontSize: '11px', fontFamily: 'var(--font-ui)', color: 'var(--text-dim)' }}>HP</span>
+                          <span style={{ fontSize: '14px', fontWeight: 600, fontFamily: 'var(--font-display)', color: pct > 50 ? '#4ade80' : pct > 25 ? '#fbbf24' : '#ef4444' }}>
+                            {character.current_hp} / {character.max_hp}
+                          </span>
+                        </div>
+                        <div style={{ height: '4px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', marginBottom: '10px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${Math.min(100, pct)}%`, background: pct > 50 ? '#4ade80' : pct > 25 ? '#fbbf24' : '#ef4444', borderRadius: '2px', transition: 'width 0.3s' }} />
+                        </div>
+                        {character.temp_hp > 0 && (
+                          <div style={{ fontSize: '10px', color: '#93c5fd', marginBottom: '8px', fontFamily: 'var(--font-ui)' }}>
+                            Temp HP: {character.temp_hp}
+                          </div>
+                        )}
+                        {/* Input */}
+                        <input
+                          type="number"
+                          value={hpWidgetInput}
+                          onChange={e => setHpWidgetInput(e.target.value)}
+                          placeholder="Amount"
+                          autoFocus
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' && hpWidgetInput) {
+                              hpAdjust.applyDamage(hpWidgetInput);
+                              setHpWidgetInput('');
+                              setShowHpWidget(false);
+                            }
+                            if (e.key === 'Escape') setShowHpWidget(false);
+                          }}
+                          style={{
+                            width: '100%', padding: '6px 10px', borderRadius: '6px', fontSize: '13px',
+                            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                            color: 'var(--text)', fontFamily: 'var(--font-mono, monospace)',
+                            outline: 'none', marginBottom: '8px', textAlign: 'center',
+                          }}
+                        />
+                        {/* Action buttons */}
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button
+                            onClick={() => { if (hpWidgetInput) { hpAdjust.applyDamage(hpWidgetInput); setHpWidgetInput(''); setShowHpWidget(false); } }}
+                            style={{ flex: 1, padding: '5px', borderRadius: '6px', fontSize: '10px', fontFamily: 'var(--font-ui)', cursor: 'pointer', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', transition: 'all 0.15s' }}
+                          >
+                            <Minus size={10} style={{ display: 'inline', marginRight: '2px', verticalAlign: 'middle' }} /> Damage
+                          </button>
+                          <button
+                            onClick={() => { if (hpWidgetInput) { hpAdjust.applyHeal(hpWidgetInput); setHpWidgetInput(''); setShowHpWidget(false); } }}
+                            style={{ flex: 1, padding: '5px', borderRadius: '6px', fontSize: '10px', fontFamily: 'var(--font-ui)', cursor: 'pointer', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.25)', color: '#86efac', transition: 'all 0.15s' }}
+                          >
+                            <Plus size={10} style={{ display: 'inline', marginRight: '2px', verticalAlign: 'middle' }} /> Heal
+                          </button>
+                          <button
+                            onClick={() => { if (hpWidgetInput) { hpAdjust.applyTempHp(hpWidgetInput); setHpWidgetInput(''); setShowHpWidget(false); } }}
+                            style={{ flex: 1, padding: '5px', borderRadius: '6px', fontSize: '10px', fontFamily: 'var(--font-ui)', cursor: 'pointer', background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.25)', color: '#93c5fd', transition: 'all 0.15s' }}
+                          >
+                            <Shield size={9} style={{ display: 'inline', marginRight: '2px', verticalAlign: 'middle' }} /> Temp
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 );
               })()}
               {character?.armor_class > 0 && (
@@ -1605,7 +1835,27 @@ export default function CharacterView() {
                   <Zap size={9} /> {activeConditionCount} condition{activeConditionCount !== 1 ? 's' : ''}
                 </span>
               )}
-              {/* Spell slot pips */}
+              {/* Item 17: Concentration Indicator */}
+              {concentrationSpell && (
+                <span
+                  title="Click to break concentration"
+                  onClick={() => {
+                    try { localStorage.removeItem(`codex_concentration_${characterId}`); } catch { /* ignore */ }
+                    setConcentrationSpell('');
+                    window.dispatchEvent(new Event('codex-concentration-changed'));
+                    toast('Concentration broken', { icon: '\uD83D\uDD2E', duration: 2000, style: { background: '#1a1520', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' } });
+                  }}
+                  style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.3)', color: '#c4b5fd', fontSize: '10px', padding: '2px 7px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '3px', cursor: 'pointer', transition: 'all 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.2)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.12)'; }}
+                >
+                  <Eye size={9} /> {concentrationSpell.length > 15 ? concentrationSpell.slice(0, 14) + '\u2026' : concentrationSpell}
+                  <X size={8} style={{ opacity: 0.5, marginLeft: '1px' }} />
+                </span>
+              )}
+              {/* Item 2: Class Resource Counters */}
+              <ClassResourceBar characterId={characterId} onUpdate={() => {}} />
+              {/* Spell slot pips (Item 6: now clickable) */}
               {spellSlots.filter(s => s.max_slots > 0).length > 0 && (
                 <>
                   <div style={{ width: '1px', height: '16px', background: 'var(--border)', margin: '0 4px', flexShrink: 0 }} />
@@ -1615,7 +1865,9 @@ export default function CharacterView() {
                     return (
                       <span
                         key={slot.slot_level}
-                        title={`Level ${slot.slot_level}: ${remaining}/${slot.max_slots} remaining`}
+                        title={`Level ${slot.slot_level}: ${remaining}/${slot.max_slots} remaining\nClick to spend \u00B7 Right-click to recover`}
+                        onClick={() => handleSlotClick(slot.slot_level, remaining, slot.max_slots)}
+                        onContextMenu={(e) => handleSlotRightClick(e, slot.slot_level, slot.used_slots, slot.max_slots)}
                         style={{
                           background: allUsed ? 'rgba(139,92,246,0.05)' : 'rgba(139,92,246,0.1)',
                           border: `1px solid ${allUsed ? 'rgba(139,92,246,0.12)' : 'rgba(139,92,246,0.25)'}`,
@@ -1629,7 +1881,11 @@ export default function CharacterView() {
                           lineHeight: 1,
                           whiteSpace: 'nowrap',
                           fontFamily: 'var(--font-ui)',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
                         }}
+                        onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.2)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.filter = ''; }}
                       >
                         <span style={{ fontWeight: 600, fontSize: '8px', opacity: 0.7 }}>
                           {slot.slot_level}{['st','nd','rd'][slot.slot_level - 1] || 'th'}
@@ -1844,6 +2100,7 @@ export default function CharacterView() {
           level={levelUpInfo.level}
           className={levelUpInfo.className}
           rulesetId={rulesetId}
+          characterId={characterId}
           onDismiss={dismiss}
         />
       </div>

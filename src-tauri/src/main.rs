@@ -173,6 +173,7 @@ fn main() {
             // Characters
             commands::characters::list_characters,
             commands::characters::create_character,
+            commands::characters::clone_character,
             commands::characters::delete_character,
             // Overview
             commands::overview::get_overview,
@@ -208,6 +209,7 @@ fn main() {
             commands::combat::add_attack,
             commands::combat::update_attack,
             commands::combat::delete_attack,
+            commands::combat::use_attack,
             commands::combat::get_conditions,
             commands::combat::update_conditions,
             commands::combat::get_combat_notes,

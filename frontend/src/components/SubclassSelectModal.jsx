@@ -3,6 +3,13 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 
+// TODO: Auto-add subclass features when selected.
+// classFeatures.js currently only has base class features (subclass entries are generic prompts
+// like "Choose your subclass archetype"). Once subclass feature data is added to classFeatures.js
+// (e.g. CLASS_FEATURES.Barbarian.subclasses['Path of the Berserker']), import { addFeature }
+// from '../api/features' and auto-insert all relevant subclass features for the character's
+// current level when onSelect fires. The character ID would need to be passed as a prop.
+
 export default function SubclassSelectModal({ show, className, subclasses, onSelect, onClose }) {
   const [selected, setSelected] = useState('');
 

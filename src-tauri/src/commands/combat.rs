@@ -12,6 +12,7 @@ pub struct AttackData {
     pub damage_type: String,
     pub attack_range: String,
     pub notes: String,
+    pub ammo_item_id: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -37,9 +38,9 @@ pub fn get_attacks(
 ) -> Result<Vec<AttackData>, String> {
     state.with_char_conn(&character_id, |conn| {
         let mut stmt = conn
-            .prepare("SELECT id, name, attack_bonus, damage_dice, damage_type, attack_range, notes FROM attacks")
+            .prepare("SELECT id, name, attack_bonus, damage_dice, damage_type, attack_range, notes, ammo_item_id FROM attacks")
             .map_err(|e| e.to_string())?;
-        // Column order: 0=id, 1=name, 2=attack_bonus, 3=damage_dice, 4=damage_type, 5=attack_range, 6=notes
+        // Column order: 0=id, 1=name, 2=attack_bonus, 3=damage_dice, 4=damage_type, 5=attack_range, 6=notes, 7=ammo_item_id
         let attacks = stmt
             .query_map([], |row| {
                 Ok(AttackData {
@@ -50,6 +51,7 @@ pub fn get_attacks(
                     damage_type: row.get(4).unwrap_or_default(),
                     attack_range: row.get(5).unwrap_or_default(),
                     notes: row.get(6).unwrap_or_default(),
+                    ammo_item_id: row.get(7).ok(),
                 })
             })
             .map_err(|e| e.to_string())?
@@ -67,11 +69,12 @@ pub fn add_attack(
 ) -> Result<AttackData, String> {
     state.with_char_conn(&character_id, |conn| {
         conn.execute(
-            "INSERT INTO attacks (name, attack_bonus, damage_dice, damage_type, attack_range, notes)
-             VALUES (?1,?2,?3,?4,?5,?6)",
+            "INSERT INTO attacks (name, attack_bonus, damage_dice, damage_type, attack_range, notes, ammo_item_id)
+             VALUES (?1,?2,?3,?4,?5,?6,?7)",
             rusqlite::params![
                 payload.name, payload.attack_bonus, payload.damage_dice,
                 payload.damage_type, payload.attack_range, payload.notes,
+                payload.ammo_item_id,
             ],
         )
         .map_err(|e| e.to_string())?;
@@ -90,10 +93,11 @@ pub fn update_attack(
     state.with_char_conn(&character_id, |conn| {
         let updated = conn
             .execute(
-                "UPDATE attacks SET name=?1, attack_bonus=?2, damage_dice=?3, damage_type=?4, attack_range=?5, notes=?6 WHERE id=?7",
+                "UPDATE attacks SET name=?1, attack_bonus=?2, damage_dice=?3, damage_type=?4, attack_range=?5, notes=?6, ammo_item_id=?7 WHERE id=?8",
                 rusqlite::params![
                     payload.name, payload.attack_bonus, payload.damage_dice,
-                    payload.damage_type, payload.attack_range, payload.notes, attack_id,
+                    payload.damage_type, payload.attack_range, payload.notes,
+                    payload.ammo_item_id, attack_id,
                 ],
             )
             .map_err(|e| e.to_string())?;
@@ -118,6 +122,44 @@ pub fn delete_attack(
             return Err("Attack not found".to_string());
         }
         Ok(serde_json::json!({"status": "deleted"}))
+    })
+}
+
+#[tauri::command]
+pub fn use_attack(
+    state: State<'_, AppState>,
+    character_id: String,
+    attack_id: i64,
+) -> Result<serde_json::Value, String> {
+    state.with_char_conn(&character_id, |conn| {
+        // Look up the attack's ammo_item_id
+        let ammo_id: Option<i64> = conn
+            .query_row(
+                "SELECT ammo_item_id FROM attacks WHERE id=?1",
+                [attack_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| format!("Attack not found: {}", e))?;
+
+        if let Some(item_id) = ammo_id {
+            // Decrement the linked item's quantity by 1 (floor at 0)
+            let updated = conn
+                .execute(
+                    "UPDATE items SET quantity = MAX(quantity - 1, 0) WHERE id=?1",
+                    [item_id],
+                )
+                .map_err(|e| format!("Failed to decrement ammo: {}", e))?;
+            if updated == 0 {
+                return Err(format!("Linked ammo item (id={}) not found", item_id));
+            }
+            // Fetch remaining quantity
+            let remaining: i64 = conn
+                .query_row("SELECT quantity FROM items WHERE id=?1", [item_id], |row| row.get(0))
+                .unwrap_or(0);
+            Ok(serde_json::json!({"status": "used", "ammo_remaining": remaining}))
+        } else {
+            Ok(serde_json::json!({"status": "used", "ammo_remaining": null}))
+        }
     })
 }
 

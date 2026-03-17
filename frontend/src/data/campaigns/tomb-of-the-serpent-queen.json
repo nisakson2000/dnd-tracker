@@ -1,0 +1,221 @@
+{
+  "name": "Tomb of the Serpent Queen",
+  "summary": "Explorers have unsealed an ancient yuan-ti temple-tomb deep in the jungle, and the half-resurrected Serpent Queen stirs within. Cultists converge, traps await, and a demigod demands tribute.",
+  "description": "In the sweltering heart of the Veshara Jungle, a team of Amberhall University archaeologists has uncovered the entrance to the Tomb of Zeth'sari, the Serpent Queen — a yuan-ti demigod who was entombed alive by her own high priests three thousand years ago when her hunger for divine ascension threatened to consume the entire civilization. The unsealing of the tomb has sent psychic shockwaves rippling through the region, calling yuan-ti cultists from hidden enclaves across the continent. They believe the Serpent Queen's resurrection will herald a new age of serpent dominion. The tomb itself is a five-level death trap designed not to keep intruders out, but to keep Zeth'sari in. Each level tests a different aspect of worthiness: the Venom Halls test resilience against poison, the Chamber of Shed Skins tests identity and disguise, the Gallery of Coils tests agility through crushing mechanical traps, the Sanctum of Scales tests devotion through yuan-ti religious trials, and the Burial Vault holds the sarcophagus of Zeth'sari herself — half-conscious, half-resurrected, and furious. The party must race the cultists through the tomb, survive its ancient defenses, and decide whether to destroy the Serpent Queen permanently, bargain with her, or risk unleashing her on the world. The jungle itself is hostile, with territorial dinosaurs, quicksand, disease, and oppressive heat adding layers of danger before the party even reaches the tomb entrance.",
+  "level": "5-8",
+  "ruleset": "5e 2014",
+  "author": "The Codex",
+  "tags": ["dungeon crawl", "undead", "jungle"],
+  "npcs": [
+    {
+      "name": "Professor Ellara Voss",
+      "role": "Quest Giver",
+      "race": "Human",
+      "npc_class": "Sage",
+      "location": "Veshara Jungle — Base Camp",
+      "description": "A sun-weathered woman in her fifties with close-cropped gray hair, wire-rimmed spectacles perpetually fogged in the humidity, and ink-stained fingers that never stop sketching. Professor Voss is Amberhall University's foremost expert on pre-Cataclysm serpent civilizations, and she has spent twenty years searching for Zeth'sari's tomb. She is brilliant, obsessive, and deeply conflicted — her academic curiosity screams to explore the tomb, but the psychic shockwave that followed the unsealing gave her visions of scaled armies and burning cities that shook her to her core. She carries a leather-bound journal stuffed with loose pages, pressed jungle flowers, and rubbing of stone carvings.",
+      "notes": "Can translate yuan-ti glyphs and identify trap mechanisms from her research. Will insist on accompanying the party into the first level but is not a combatant. Her journal contains critical information about the tomb's layout based on fragmentary texts. She suspects the tomb was designed as a prison, not a monument. Reward: 500 gold from university funds, plus first pick of any non-dangerous artifacts.",
+      "status": "alive"
+    },
+    {
+      "name": "Ssirath the Uncoiled",
+      "role": "Antagonist",
+      "race": "Yuan-ti Pureblood",
+      "npc_class": "Warlock",
+      "location": "Veshara Jungle — Converging on the Tomb",
+      "description": "A tall, androgynous figure with olive skin, vertical-slit pupils, and a forked tongue that flickers when they speak. Ssirath appears almost entirely human save for a pattern of fine scales along their jawline and the backs of their hands. They are the high priest of the Coil Reborn, a yuan-ti cult that has waited generations for the Serpent Queen's return. Ssirath is calm, eloquent, and utterly convinced that Zeth'sari's resurrection is both inevitable and righteous. They view mammals as a temporary aberration in the natural order. Despite their fanaticism, Ssirath is pragmatic — they will negotiate, delay, and even cooperate with the party if it serves their ultimate goal of reaching the Burial Vault first.",
+      "notes": "Commands a force of twelve yuan-ti cultists and two yuan-ti malisons. Can cast darkness, suggestion, hold person, and counterspell. Will offer the party a 'fair bargain' — help clear the tomb's traps and split the treasure, with only the sarcophagus reserved for the cult. Naturally, Ssirath will betray this deal at the first opportunity. Immune to poison. Carries a staff carved from a giant serpent's spine.",
+      "status": "alive"
+    },
+    {
+      "name": "Korr Ironjaw",
+      "role": "Ally",
+      "race": "Half-Orc",
+      "npc_class": "Fighter",
+      "location": "Veshara Jungle — Base Camp",
+      "description": "A massive half-orc mercenary with a prosthetic iron lower jaw — the result of a disastrous encounter with a jungle hydra five years ago. The prosthetic clicks and whirs when he talks, giving his speech a distinctive metallic undertone. Korr was hired by the university as a security escort for the archaeological expedition, and he takes the job seriously despite his gruff exterior. He is fiercely protective of Professor Voss, whom he respects as one of the few people who treats him like a person rather than a weapon. He sleeps with one eye open, literally — an old mercenary habit he cannot break.",
+      "notes": "Excellent combatant (AC 18, +7 to hit, multiattack). Will fight alongside the party in the jungle but refuses to enter the tomb past the first level — he has a deep superstitious fear of 'places built to hold angry gods.' If the party earns his trust, he reveals that he has seen yuan-ti scouts circling the camp at night and fears an attack is imminent. Carries a greatsword named 'Last Argument.'",
+      "status": "alive"
+    },
+    {
+      "name": "Zeth'sari, the Serpent Queen",
+      "role": "Antagonist",
+      "race": "Yuan-ti Abomination",
+      "npc_class": "Demigod",
+      "location": "Tomb of Zeth'sari — The Burial Vault (Level 5)",
+      "description": "A colossal yuan-ti abomination entombed in a sarcophagus of enchanted obsidian, held in stasis by waning divine seals. In her prime, Zeth'sari was twelve feet of rippling muscle and scaled majesty — the lower body of a massive constrictor serpent fused with a humanoid upper body adorned in gold and jade. Three thousand years of imprisonment have not diminished her fury. She is only half-resurrected: her body is corporeal from the waist up but phases in and out of reality below, her voice echoes from multiple directions simultaneously, and her eyes burn with an amber light that causes fear in those who meet her gaze. She speaks in an ancient dialect of Common, imperious and contemptuous of all 'warm-blooded things.'",
+      "notes": "Boss encounter. Phase 1: psychic attacks and fear aura while still partially bound (AC 16, HP 120). Phase 2: if the seals are broken, she fully manifests with constrict and bite attacks (AC 18, HP 180). Can be permanently destroyed by re-activating all five divine seals on each tomb level simultaneously. Can be bargained with — she will accept freedom in exchange for a century of dormancy, but she is a liar. Vulnerable to radiant damage.",
+      "status": "alive"
+    },
+    {
+      "name": "Tik-Tik",
+      "role": "Guide",
+      "race": "Grung",
+      "npc_class": "Ranger",
+      "location": "Veshara Jungle — Canopy Village",
+      "description": "A bright orange grung (poisonous frog-person) with vivid blue spots along their back and large, expressive eyes that blink independently. Tik-Tik is a scout from a grung village in the jungle canopy who has watched the 'smooth-skins' dig up the forbidden place with growing alarm. The grung have legends about the Serpent Queen — they call her 'She Who Swallows the Sun' — and they have avoided the tomb's vicinity for centuries. Tik-Tik is brave enough (or foolish enough) to approach the party and offer to guide them through the jungle in exchange for a promise to seal the tomb permanently. They speak Common in short, clipped sentences and punctuate important points by inflating their throat pouch.",
+      "notes": "Expert jungle navigator — eliminates random encounters while guiding. Their skin secretion is mildly poisonous (DC 12 Con save or poisoned for 1 minute on skin contact). Knows a secret river route that bypasses the cultist patrols. Will refuse to enter the tomb but will wait at the entrance with healing herbs (equivalent to 3 potions of healing). If the party promises to seal the tomb and breaks that promise, Tik-Tik's entire village becomes hostile.",
+      "status": "alive"
+    },
+    {
+      "name": "Brother Ashwin",
+      "role": "Support",
+      "race": "Human",
+      "npc_class": "Cleric",
+      "location": "Veshara Jungle — Base Camp",
+      "description": "A soft-spoken Kelemvorite priest in sweat-stained gray robes who was attached to the expedition to handle any undead complications — a standard university precaution that has proven terrifyingly prescient. Brother Ashwin is a gentle man with dark skin, kind eyes, and hands calloused from years of gravedigging (a sacred duty in his faith). He is quietly terrified of the tomb but views confronting undead as his divine calling. He prays each morning at dawn with quiet intensity and carries a well-worn holy symbol of Kelemvor carved from bone.",
+      "notes": "Can cast turn undead, lesser restoration, spiritual weapon, and prayer of healing. His turn undead is especially effective against Zeth'sari's undead guardians. Will enter the tomb if asked, though his hands shake the entire time. Carries 4 vials of holy water and a scroll of protection from poison. His knowledge of burial rites may help the party understand the divine seals that imprison Zeth'sari.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "Unseal the Tomb, Seal the Fate",
+      "giver": "Professor Ellara Voss",
+      "description": "Professor Voss's archaeological team has unsealed the entrance to the Tomb of Zeth'sari, but the psychic shockwave that followed has drawn yuan-ti cultists to the region like moths to flame. The professor needs the party to enter the tomb, document its contents, neutralize the threat of the Serpent Queen's resurrection, and secure any artifacts of historical value. What began as an academic expedition has become a race against fanatical cultists who want to awaken a demigod.",
+      "status": "active",
+      "notes": "Reward: 500 gold from university funds, first pick of non-dangerous artifacts, and a letter of recommendation to the Amberhall University Adventurer's Guild (opens future quest lines). The party must decide whether to destroy Zeth'sari, re-seal the tomb, or attempt something else entirely.",
+      "objectives": [
+        { "text": "Speak with Professor Voss at base camp and review her research on the tomb", "completed": false },
+        { "text": "Navigate the Veshara Jungle to reach the tomb entrance (with or without Tik-Tik's help)", "completed": false },
+        { "text": "Clear Level 1: The Venom Halls — survive poison traps and venomous guardians", "completed": false },
+        { "text": "Clear Level 2: The Chamber of Shed Skins — navigate illusions and identity puzzles", "completed": false },
+        { "text": "Clear Level 3: The Gallery of Coils — survive mechanical crushing traps", "completed": false },
+        { "text": "Clear Level 4: The Sanctum of Scales — pass or subvert yuan-ti religious trials", "completed": false },
+        { "text": "Confront Zeth'sari in Level 5: The Burial Vault", "completed": false },
+        { "text": "Return to base camp and report to Professor Voss", "completed": false }
+      ]
+    },
+    {
+      "title": "The Cult Converges",
+      "giver": "Korr Ironjaw",
+      "description": "Korr has spotted yuan-ti scouts circling the base camp at night, and he fears a full assault is coming. Ssirath the Uncoiled leads a cult force that wants the tomb's contents for themselves. The party can deal with the cult threat through combat, subterfuge, or an uneasy temporary alliance — but Ssirath will inevitably betray any deal made. Eliminating the cult presence outside the tomb will secure the base camp and prevent the cultists from following the party inside.",
+      "status": "active",
+      "notes": "Can be resolved through multiple approaches: ambush the scouts, negotiate with Ssirath (temporary), set traps around the camp, or enter the tomb quickly and collapse the entrance behind them (risky). If the cult is not dealt with, they enter the tomb one level behind the party and create additional encounters.",
+      "objectives": [
+        { "text": "Investigate the yuan-ti scout sightings around base camp", "completed": false },
+        { "text": "Determine the size and composition of Ssirath's cult force", "completed": false },
+        { "text": "Choose an approach: fight, negotiate, or outmaneuver the cultists", "completed": false },
+        { "text": "Secure the base camp and tomb entrance against cult incursion", "completed": false }
+      ]
+    },
+    {
+      "title": "The Five Divine Seals",
+      "giver": "Brother Ashwin",
+      "description": "Brother Ashwin has studied the glyphs around the tomb entrance and believes the Serpent Queen is held by five divine seals, one on each level of the tomb. The seals were placed by the yuan-ti priests who originally entombed Zeth'sari, channeling the power of a now-forgotten serpent god who opposed her ascension. Over three millennia, the seals have weakened. If the party can find and reactivate all five seals simultaneously, they can permanently imprison Zeth'sari without fighting her directly — but each seal requires a sacrifice of vitality (HP), memory, or a personal treasure to recharge.",
+      "status": "active",
+      "notes": "Optional path to resolve the campaign without the boss fight. Each seal costs something: Seal 1 costs 10 HP (cannot be healed until long rest), Seal 2 costs a cherished personal memory, Seal 3 costs a magic item or 200 gold worth of treasure, Seal 4 costs a character's ability to speak for 24 hours, Seal 5 costs a permanent -1 to a stat of the character's choice. The party can split the costs. This path earns Brother Ashwin's undying loyalty and a blessing of Kelemvor (advantage on death saves for one month).",
+      "objectives": [
+        { "text": "Learn about the five divine seals from Brother Ashwin's research", "completed": false },
+        { "text": "Locate the seal on Level 1: The Venom Halls", "completed": false },
+        { "text": "Locate the seal on Level 2: The Chamber of Shed Skins", "completed": false },
+        { "text": "Locate the seal on Level 3: The Gallery of Coils", "completed": false },
+        { "text": "Locate the seal on Level 4: The Sanctum of Scales", "completed": false },
+        { "text": "Reactivate all five seals to permanently imprison Zeth'sari", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "The Veshara Jungle",
+      "category": "Location",
+      "body": "A vast, primordial rainforest that stretches for hundreds of miles across the southern continent, untamed and largely unexplored by the civilized nations of the north. The Veshara is a place of staggering biodiversity — towering kapok trees with buttress roots the size of houses, bioluminescent fungi that light the forest floor at night, and creatures ranging from tiny poison dart frogs to territorial allosauruses that hunt in mated pairs. The jungle is oppressively hot and humid, with temperatures rarely dropping below 90 degrees even at night. Disease, parasites, quicksand, and flash floods are constant threats. Indigenous peoples, including grung tribes and tabaxi clans, navigate the jungle with ease, but outsiders rarely last more than a week without a guide.",
+      "related_to": "Tik-Tik"
+    },
+    {
+      "title": "The Tomb of Zeth'sari",
+      "category": "Location",
+      "body": "A five-level subterranean temple-tomb carved into the bedrock beneath a jungle-choked pyramid. The tomb was built three thousand years ago by Zeth'sari's own high priests after they turned against her, sealing her alive in an obsidian sarcophagus at the tomb's deepest point. The architecture is classic yuan-ti: serpentine corridors that coil and double back, walls carved with scenes of serpent gods devouring the sun, and engineering traps that use counterweights, pressure plates, and hydraulic poison delivery systems that still function after three millennia. Each level is themed around an aspect of yuan-ti philosophy — venom (purification), skin-shedding (transformation), coils (strength), scales (devotion), and the burial vault (transcendence).",
+      "related_to": "Zeth'sari, the Serpent Queen"
+    },
+    {
+      "title": "Zeth'sari and the War of Scales",
+      "category": "History",
+      "body": "Three thousand years ago, the yuan-ti empire of Ssethara spanned the entire Veshara Jungle and beyond. Zeth'sari was its queen and high priestess, a yuan-ti abomination of unmatched power who claimed direct descent from the serpent god Merrshaulk. She ruled wisely for two centuries before her obsession with divine ascension consumed her. She began demanding living sacrifices by the hundreds, performing rituals that warped reality around her temples, and transforming loyal subjects into monstrous experiments. Her own high priests, fearing she would destroy the empire in her quest for godhood, banded together in what became known as the War of Scales — a civil war that lasted three years and ended with Zeth'sari's imprisonment. The priests entombed her alive, believing death would only free her spirit to seek a new vessel.",
+      "related_to": "Zeth'sari, the Serpent Queen"
+    },
+    {
+      "title": "The Coil Reborn",
+      "category": "Faction",
+      "body": "A yuan-ti cult that has survived in hidden enclaves for three thousand years, passing down the prophecy that Zeth'sari would one day rise again to lead the serpent races to dominion over the warm-blooded world. The Coil Reborn operates in cells of six to twelve members, most of them yuan-ti purebloods who can pass as human and infiltrate surface societies. Their high priest, Ssirath the Uncoiled, received a psychic vision when the tomb was unsealed and immediately mobilized every cell within travel distance. The cult is well-funded through centuries of stolen wealth and black-market dealings. Members identify each other through a ritual scar on the left wrist shaped like a coiled serpent.",
+      "related_to": "Ssirath the Uncoiled"
+    },
+    {
+      "title": "Amberhall University",
+      "category": "Faction",
+      "body": "The premier institution of learning in the northern kingdoms, known for its schools of arcane theory, natural philosophy, and archaeology. The university funds expeditions to historical sites across the world, motivated equally by the pursuit of knowledge and the acquisition of artifacts for its famous museum. Professor Voss's expedition to find the Tomb of Zeth'sari was considered a long shot by the university board, funded only because Voss threatened to resign if denied. The university has a standing contract with the Ironjaw Mercenary Company for expedition security, which is how Korr ended up guarding a dig site in a jungle he despises.",
+      "related_to": "Professor Ellara Voss"
+    },
+    {
+      "title": "The Grung of the High Canopy",
+      "category": "Culture",
+      "body": "The grung are amphibious frog-folk who live in treetop villages throughout the Veshara Jungle. They are organized by caste, with color denoting rank: green (warriors), blue (workers), purple (administrators), red (scholars), orange (elite warriors like Tik-Tik), and gold (leaders). The grung have an oral history stretching back millennia, and their legends include vivid accounts of the Serpent Queen's reign — they were among the enslaved races forced to build her temples. The grung call the tomb 'The Place Where the Sun Went to Die' and have maintained a sacred prohibition against approaching it for three thousand years. Tik-Tik's willingness to guide outsiders there is considered borderline heretical by the village elders, tolerated only because the alternative — letting the Serpent Queen awaken — is worse.",
+      "related_to": "Tik-Tik"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: Tomb of the Serpent Queen",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe adventurers have been hired by Amberhall University to reinforce a remote archaeological expedition in the Veshara Jungle. After two weeks of river travel and three days of overland hiking through some of the most inhospitable terrain on the continent, they arrive at Professor Voss's base camp: a cluster of canvas tents surrounded by a hastily erected wooden palisade, already being reclaimed by jungle vines.\n\nThe camp is tense. Half the original dig crew has quit and headed home. The remaining workers speak in hushed voices about nightmares — always the same nightmare, a great serpent swallowing the sun. Professor Voss meets the party at the camp entrance, her spectacles fogged, her journal clutched to her chest like a shield.\n\n'Thank the gods you're here,' she says, pushing her glasses up her nose. 'We found it. We found Zeth'sari's tomb. And I think... I think we may have made a terrible mistake opening it.'\n\nBehind her, barely visible through the jungle canopy, the moss-covered peak of an ancient pyramid rises above the treeline. Birds refuse to fly over it.\n\nKorr Ironjaw, the half-orc security chief, stands by the palisade gate with his greatsword drawn. He nods at the party and gestures toward the jungle. 'We've got company out there. Snakes in human skin. Saw three of them last night, watching from the tree line. They didn't attack. They're waiting for something.'\n\n**Starting Hook:** Professor Voss needs the party to enter the tomb and assess the threat level. Korr warns about cultist scouts. The party must decide whether to deal with the external threat first or push into the tomb immediately.\n\n**Key NPCs to introduce:** Professor Ellara Voss, Korr Ironjaw, Brother Ashwin",
+    "tags": "introduction,session-zero,veshara-jungle,tomb,yuan-ti",
+    "npcs_mentioned": "Professor Ellara Voss,Korr Ironjaw,Brother Ashwin,Ssirath the Uncoiled"
+  },
+  "items": [
+    {
+      "name": "Fang of the Serpent Queen",
+      "item_type": "weapon",
+      "weight": 1.0,
+      "value_gp": 800.0,
+      "quantity": 1,
+      "description": "An actual fang pulled from Zeth'sari's jaw during her imprisonment, carved with binding runes and fitted with a leather-wrapped hilt to serve as a curved dagger. The fang is unnaturally sharp and weeps a thin film of venom that never dries. On a hit, the target must succeed on a DC 14 Constitution saving throw or take an additional 1d6 poison damage. The dagger hums with malevolent intelligence and occasionally whispers in Abyssal to its wielder, urging violence. Functions as a +1 dagger.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Seal-Keeper's Amulet",
+      "item_type": "misc",
+      "weight": 0.5,
+      "value_gp": 500.0,
+      "quantity": 1,
+      "description": "A heavy jade amulet in the shape of a coiled serpent eating its own tail, worn by the high priests who originally sealed Zeth'sari's tomb. The jade is cool to the touch regardless of the jungle heat, and it pulses with a faint golden light when undead or yuan-ti are within 60 feet. The wearer gains advantage on saving throws against being poisoned and against the frightened condition caused by serpentine creatures. Found on a skeletal priest in the Sanctum of Scales.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "neck",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Elixir of Serpent's Resilience",
+      "item_type": "consumable",
+      "weight": 0.5,
+      "value_gp": 100.0,
+      "quantity": 3,
+      "description": "A thick, olive-green potion brewed by Brother Ashwin from jungle herbs and blessed water. It tastes like licorice and burns going down. For one hour after consumption, the drinker gains resistance to poison damage and advantage on saving throws against the poisoned condition. Brother Ashwin prepared three of these in anticipation of the tomb's defenses, using a recipe adapted from ancient Kelemvorite texts on combating serpent cults.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Voss's Field Journal",
+      "item_type": "misc",
+      "weight": 2.0,
+      "value_gp": 0.0,
+      "quantity": 1,
+      "description": "Professor Voss's battered leather journal, stuffed with loose pages, charcoal rubbings of stone carvings, pressed jungle flowers, and twenty years of obsessive research on yuan-ti burial practices. A character who spends an hour studying the journal gains advantage on Intelligence (History) and Intelligence (Investigation) checks related to yuan-ti culture, architecture, and trap design for the next 24 hours. The margins are filled with Voss's cramped handwriting, including personal notes like 'If I'm right about this, it changes everything. If I'm wrong, I've wasted my life. Both options terrify me.'",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "common"
+    }
+  ]
+}

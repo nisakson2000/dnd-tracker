@@ -1,0 +1,218 @@
+{
+  "name": "Carnival of Lost Souls",
+  "summary": "A mysterious traveling carnival lures visitors into a Feywild trap, where an archfey steals their memories. The party must outwit enchanted attractions and free the stolen souls before dawn breaks.",
+  "description": "The Grand Carnival of Wonders has rolled into the quiet town of Willowmere, bringing colored lanterns, impossible music, and the scent of honeyed pastries that drift for miles. Townsfolk flock to the spectacle, but those who stay past midnight return... different. They forget their children's names, stare blankly at loved ones, and mutter about a beautiful woman with moth wings. The carnival is the domain of Lady Ephemera, an archfey who feeds on mortal memories to sustain her fading glamour. Her carnival exists in a pocket of the Feywild that overlaps with the Material Plane only between dusk and dawn. Each attraction is a cleverly disguised memory trap: the Hall of Mirrors shows your happiest memory before stealing it, the Fortune Teller's tent trades your past for false futures, and the Grand Tent's final performance literally brings down the house on anyone who applauds. The party must navigate six enchanted attractions, win three twisted carnival games to earn tokens of passage, confront Lady Ephemera's lieutenants, and ultimately face the archfey herself in the Carousel of Forgotten Things — a spinning ride made of crystallized memories from a thousand stolen lives. If the party cannot break the carnival's enchantment before dawn, the carnival vanishes and all stolen memories are lost forever. Includes fey bargaining encounters, puzzle-based attractions, and moral dilemmas where freeing one soul may cost another.",
+  "level": "1-3",
+  "ruleset": "5e 2014",
+  "author": "The Codex",
+  "tags": ["starter", "fey", "mystery"],
+  "npcs": [
+    {
+      "name": "Lady Ephemera",
+      "role": "Antagonist",
+      "race": "Fey",
+      "npc_class": "Archfey Warlock",
+      "location": "The Carousel of Forgotten Things",
+      "description": "A hauntingly beautiful archfey with iridescent moth wings that shimmer between violet and silver. Her eyes are pools of liquid starlight, and when she smiles, you briefly forget why you were afraid. She wears a gown stitched from translucent memory-silk that plays scenes from stolen lives across its surface. Her voice sounds like a lullaby you heard as a child but can never quite remember. Lady Ephemera is not cruel by nature — she is desperate. Her glamour is fading, and without mortal memories to sustain her, she will dissolve into the mists of the Feywild. She genuinely believes she gives mortals a fair trade: a night of wonder for a few insignificant memories.",
+      "notes": "Can be bargained with if the party offers a truly remarkable memory willingly. Vulnerable to cold iron. Her true name is Aurelia Mothwhisper — knowing it gives power in negotiations. Will not fight to the death; if reduced to half HP, she offers a desperate bargain.",
+      "status": "alive"
+    },
+    {
+      "name": "Milo Thistlewick",
+      "role": "Quest Giver",
+      "race": "Halfling",
+      "npc_class": "Commoner",
+      "location": "Willowmere — The Hearthstone Tavern",
+      "description": "A round-faced halfling innkeeper with flour-dusted hands and worry lines that have deepened dramatically in the past week. His wife Lenna visited the carnival three nights ago and returned unable to recognize him or their two daughters. He keeps showing her their wedding ring, but she just stares at it blankly. Milo oscillates between desperate hope and quiet fury, and he will give everything he owns to anyone who can bring his wife's memories back. He speaks quickly when nervous, which is all the time now.",
+      "notes": "Offers 80 gold (his entire savings), free room and board, and a family heirloom ring as payment. Knows that several other townsfolk are similarly affected. Can identify at least four victims by name. His tavern serves as a good base of operations.",
+      "status": "alive"
+    },
+    {
+      "name": "Jinx",
+      "role": "Informant",
+      "race": "Goblin",
+      "npc_class": "Bard",
+      "location": "Carnival Grounds — Ticket Booth",
+      "description": "A wiry goblin with oversized spectacles, a patched top hat, and a perpetual manic grin. Jinx serves as the carnival's ticket taker and barker, shouting elaborate enticements to passersby in a voice far too large for his body. He was a mortal goblin bard who wandered into Lady Ephemera's domain decades ago and traded his freedom for eternal entertainment. He secretly resents his servitude but is bound by a fey contract that prevents him from directly warning visitors. However, he has learned to speak in riddles and double meanings that hint at the truth.",
+      "notes": "Will give cryptic warnings if the party is kind to him. His riddles contain real clues — 'The mirrors show what you love most, and love is always the first thing she takes.' His fey contract has a loophole: he can help the party if they formally invite him to 'join their act.' Carries a set of trick dice that always roll what the user needs.",
+      "status": "alive"
+    },
+    {
+      "name": "The Magnificent Valdris",
+      "role": "Antagonist",
+      "race": "Elf",
+      "npc_class": "Illusionist",
+      "location": "Carnival Grounds — The Grand Tent",
+      "description": "A tall, impossibly thin elf with silver hair slicked back and eyes that change color with his mood — amber when amused, crimson when angered. He serves as the carnival's ringmaster and Lady Ephemera's right hand. His stage shows are genuinely breathtaking displays of illusion magic, but each performance is laced with enchantment that softens the audience's mental defenses. Valdris was once a promising wizard at a prestigious academy before his obsession with illusion magic led him to seek out fey mentors. He traded his empathy for perfect illusions and now genuinely cannot understand why mortals cling to their memories so tightly.",
+      "notes": "Commands the carnival's illusion defenses. If the party disrupts his show, he becomes a dangerous combatant using mirror image, phantasmal force, and hypnotic pattern. Can be reasoned with if someone shows him a memory of genuine human connection — it triggers a flicker of the empathy he lost. Carries a wand of illusions.",
+      "status": "alive"
+    },
+    {
+      "name": "Bramble",
+      "role": "Ally",
+      "race": "Fey",
+      "npc_class": "Druid",
+      "location": "Carnival Grounds — The Hedge Maze",
+      "description": "A small satyr child with mossy green fur, stubby horns wrapped in wildflowers, and large, perpetually worried eyes. Bramble was born in the Feywild and assigned to tend the carnival's hedge maze, which she has grown to love as her personal garden. Unlike the other carnival workers, Bramble has a strong moral compass and feels terrible about the trapped mortals. She leaves small gifts — acorns, pressed flowers, smooth stones — at the maze exits to comfort lost visitors. She speaks in a high, breathy voice and frequently apologizes for things that are not her fault.",
+      "notes": "Will secretly guide the party through the hedge maze if they promise to free the trapped souls without destroying the maze (she considers it her home). Knows a hidden path to the Carousel. Can cast goodberry, entangle, and speak with plants. Terrified of Lady Ephemera but more terrified of doing nothing.",
+      "status": "alive"
+    },
+    {
+      "name": "Lenna Thistlewick",
+      "role": "Victim",
+      "race": "Halfling",
+      "npc_class": "Commoner",
+      "location": "Willowmere — The Hearthstone Tavern",
+      "description": "A halfling woman in her mid-thirties with auburn braids and paint-stained fingers — she was the town's sign painter before the carnival stole her memories. Now she sits in the tavern's corner booth, tracing patterns on the table with her finger and humming a melody no one recognizes. Occasionally she looks at Milo with an expression that is almost recognition, almost love, before it fades like morning frost. Her stolen memories are stored in a crystallized orb on the Carousel, glowing with warm amber light.",
+      "notes": "If the party recovers her memory orb and returns it to her, she remembers everything at once and the emotional shock is overwhelming. She becomes a fierce advocate for rescuing the other victims. Her sign-painting skills mean she can read and reproduce magical symbols, which may help with fey contract loopholes.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "Memories Stolen, Lives Unraveled",
+      "giver": "Milo Thistlewick",
+      "description": "Milo's wife Lenna and several other Willowmere residents have lost their memories after visiting the Grand Carnival of Wonders. The carnival only appears between dusk and dawn, and Milo is desperate for someone to investigate before more townsfolk are affected. He suspects dark magic but has no proof — just the hollow look in his wife's eyes where love used to be.",
+      "status": "active",
+      "notes": "Reward: 80 gold, free lodging at The Hearthstone Tavern, and the Thistlewick family heirloom ring (a simple gold band that grants advantage on saves against being charmed, once per long rest).",
+      "objectives": [
+        { "text": "Speak with Milo Thistlewick at The Hearthstone Tavern about the missing memories", "completed": false },
+        { "text": "Visit the affected townsfolk and document the pattern of memory loss", "completed": false },
+        { "text": "Enter the carnival after dusk and investigate the attractions", "completed": false },
+        { "text": "Discover the truth about Lady Ephemera and the Feywild pocket", "completed": false },
+        { "text": "Find and recover the stolen memory orbs from the Carousel of Forgotten Things", "completed": false },
+        { "text": "Return the memories to the affected townsfolk before dawn", "completed": false }
+      ]
+    },
+    {
+      "title": "The Carnival Games",
+      "giver": "Jinx",
+      "description": "To reach Lady Ephemera's inner sanctum, the party must earn three Tokens of Passage by winning the carnival's twisted games. Each game is a fey challenge that tests a different virtue: the Ring Toss of Regret tests resolve against illusions of past failures, the Strength Bell of Burdens measures willpower against magically amplified guilt, and the Shooting Gallery of Shadows requires the marksman to hit their own shadow without flinching. Jinx hints at the games through riddles, never speaking plainly due to his binding contract.",
+      "status": "active",
+      "notes": "Each game can be won through cleverness rather than raw ability. The Ring Toss responds to characters who acknowledge their failures rather than deny them. The Strength Bell rewards those who accept their burdens. The Shooting Gallery tests self-acceptance. Tokens are small silver moths that flutter and glow.",
+      "objectives": [
+        { "text": "Decode Jinx's riddles to understand how each game truly works", "completed": false },
+        { "text": "Win the Ring Toss of Regret by confronting a past failure", "completed": false },
+        { "text": "Win the Strength Bell of Burdens by accepting an emotional weight", "completed": false },
+        { "text": "Win the Shooting Gallery of Shadows by facing your own darkness", "completed": false },
+        { "text": "Collect three Tokens of Passage to unlock the path to the Carousel", "completed": false }
+      ]
+    },
+    {
+      "title": "A Satyr's Plea",
+      "giver": "Bramble",
+      "description": "The young satyr Bramble has watched countless mortals wander into the hedge maze and lose themselves, both literally and figuratively. She wants to help but is terrified of Lady Ephemera's wrath. If the party can find the original fey contract that binds the carnival workers — hidden somewhere in Valdris's Grand Tent — Bramble believes she can use her druidic magic to grow a loophole in its binding clauses, literally causing the parchment to sprout new words that free the workers from servitude.",
+      "status": "active",
+      "notes": "Optional quest that weakens Lady Ephemera by freeing her workers. The contract is hidden in a locked chest behind Valdris's stage. Freeing the workers causes several attractions to malfunction, making the final confrontation easier. Bramble's magic only works if she is not acting under duress — she must choose freely.",
+      "objectives": [
+        { "text": "Find Bramble in the hedge maze and earn her trust", "completed": false },
+        { "text": "Infiltrate the Grand Tent and locate Valdris's hidden chest", "completed": false },
+        { "text": "Retrieve the original fey contract without alerting Valdris", "completed": false },
+        { "text": "Bring the contract to Bramble and protect her while she works her magic", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "Willowmere",
+      "category": "Location",
+      "body": "A sleepy lakeside town of roughly 300 residents nestled between rolling green hills and the shimmering waters of Mirror Lake. Willowmere is known for its annual Lantern Festival, where townsfolk float paper lanterns on the lake to honor the departed. The town has a single tavern (The Hearthstone), a general goods store, a small chapel to Eldath, and a surprisingly well-stocked herbalist shop run by a retired adventurer. The arrival of the carnival was initially celebrated as a rare treat for a town that sees little excitement — that enthusiasm has since curdled into dread.",
+      "related_to": "Milo Thistlewick"
+    },
+    {
+      "title": "The Grand Carnival of Wonders",
+      "category": "Location",
+      "body": "A sprawling carnival that materializes in a field outside Willowmere each evening at dusk and vanishes at dawn, leaving only trampled grass and the faint scent of sugar and ozone. The carnival exists in a pocket dimension where the Feywild overlaps with the Material Plane. Its attractions include the Hall of Mirrors, the Fortune Teller's Tent, the Grand Tent (main stage), the Hedge Maze, the Carousel of Forgotten Things, a Shooting Gallery, a Ring Toss, and a Strength Test. Enchanted lanterns float without strings, the music plays without visible musicians, and the cotton candy tastes like your favorite childhood treat — different for everyone.",
+      "related_to": "Lady Ephemera"
+    },
+    {
+      "title": "The Carousel of Forgotten Things",
+      "category": "Location",
+      "body": "The centerpiece of the carnival and Lady Ephemera's seat of power. The carousel is an enormous, ornate ride whose wooden animals are carved from crystallized memories — each one a lifelike sculpture of a moment stolen from a mortal visitor. A laughing child frozen mid-spin, a couple's first kiss preserved in amber light, a soldier's memory of home rendered in gleaming crystal. The carousel spins slowly and perpetually, and each rotation feeds Lady Ephemera's glamour. The stolen memory orbs are mounted where the brass poles meet the ceiling, arranged in concentric rings. Removing an orb without disrupting the carousel requires careful timing or powerful magic.",
+      "related_to": "Lady Ephemera"
+    },
+    {
+      "title": "Lady Ephemera and the Fading",
+      "category": "History",
+      "body": "Lady Ephemera was once a radiant archfey who presided over the Court of Twilight Memories in the Feywild, a domain of nostalgia and bittersweet recollection. When the mortal world's belief in the fey began to wane centuries ago, her court diminished and her power faded. The Fading, as fey call it, slowly erases archfey who lose their connection to mortal belief. Desperate to survive, Ephemera created the carnival as a way to harvest mortal memories directly — each memory sustains her for weeks, and particularly emotional ones can sustain her for months. She has operated the carnival for nearly two hundred years, moving from town to town, always departing before suspicion grows too strong. Willowmere is simply her latest stop.",
+      "related_to": "Lady Ephemera"
+    },
+    {
+      "title": "Fey Contracts and Binding Words",
+      "category": "Culture",
+      "body": "In the Feywild, spoken agreements carry the weight of natural law. A promise made to a fey is magically binding, and breaking one carries severe consequences — from transformation into an animal to the erasure of one's name from existence. Written fey contracts are even more powerful, as they are anchored to the physical world and cannot be undone simply by forgetting. Lady Ephemera's carnival workers are all bound by a master contract written in Sylvan on living parchment made from treant bark. The contract has loopholes, as all fey contracts must by ancient tradition, but finding them requires someone who can read between the lines — literally, as the loopholes are written in invisible ink between the visible clauses.",
+      "related_to": "Jinx"
+    },
+    {
+      "title": "Mirror Lake and the Thin Places",
+      "category": "Location",
+      "body": "Mirror Lake, from which Willowmere takes its name, has always been a 'thin place' where the boundary between the Material Plane and the Feywild is unusually weak. Local legends speak of fishermen who cast their lines into the lake and pulled up silver fish that sang, or children who waded too far and returned speaking Sylvan. The lake is why Lady Ephemera chose Willowmere — the thin boundary makes it easier to anchor her carnival's pocket dimension. If the party investigates the lake at night, they can see the carnival reflected in its surface even when standing too far away to see it directly, and the reflection shows the carnival's true fey form rather than its mortal disguise.",
+      "related_to": "Willowmere"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: Carnival of Lost Souls",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe adventurers arrive in Willowmere on a warm evening in late summer. The town is nestled beside Mirror Lake, where the water catches the last rays of sunset and holds them like liquid gold. It should be idyllic — and it would be, if not for the hollow-eyed townsfolk who shuffle through the streets with blank expressions.\n\nAt The Hearthstone Tavern, the innkeeper Milo Thistlewick waves the party over with trembling hands. His wife Lenna sits in a corner booth, staring at nothing. Milo explains that the Grand Carnival of Wonders arrived a week ago, and since then, visitors who stay past midnight come back... wrong. They lose their memories — not all of them, but the ones that matter most. Names of loved ones, childhood homes, the feeling of being happy.\n\nThrough the tavern window, colored lights bloom on the hillside as the carnival materializes with the setting sun. Impossible music drifts through the streets, and the scent of honeyed pastries makes your stomach growl despite yourself. A small goblin in a top hat stands at the town gate, shouting invitations through a brass megaphone.\n\n**Starting Hook:** Milo begs the party to investigate the carnival before more townsfolk are affected. He offers everything he has. The carnival opens at dusk and vanishes at dawn — the party has one night to uncover the truth.\n\n**Key NPCs to introduce:** Milo Thistlewick, Jinx, Lenna Thistlewick",
+    "tags": "introduction,session-zero,willowmere,carnival,feywild",
+    "npcs_mentioned": "Milo Thistlewick,Lenna Thistlewick,Jinx,Lady Ephemera"
+  },
+  "items": [
+    {
+      "name": "Mothwing Cloak",
+      "item_type": "armor",
+      "weight": 1.0,
+      "value_gp": 400.0,
+      "quantity": 1,
+      "description": "A shimmering cloak woven from the discarded wing-scales of Lady Ephemera herself. The fabric shifts between deep violet and pale silver depending on the light, and when the wearer moves quickly, it leaves a brief afterimage of iridescent moth wings. The cloak grants advantage on Dexterity (Stealth) checks made in dim light or darkness, as the wearer seems to blur into the shadows like a moth dissolving into twilight.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "armor",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Jinx's Trick Dice",
+      "item_type": "misc",
+      "weight": 0.1,
+      "value_gp": 150.0,
+      "quantity": 1,
+      "description": "A pair of bone dice carved with fey runes instead of pips. Given to the party by Jinx the goblin barker as thanks for freeing him from his contract. Once per long rest, the holder can roll these dice before making an ability check and choose to replace their d20 roll with the sum of the two dice (2-12). The dice hum faintly and feel warm to the touch, and they always land dramatically — spinning on one corner for several seconds before falling.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Memory Orb (Lenna's)",
+      "item_type": "misc",
+      "weight": 0.5,
+      "value_gp": 0.0,
+      "quantity": 1,
+      "description": "A fist-sized sphere of crystallized memory that glows with warm amber light. When held close, you can faintly hear a halfling woman's laughter and smell fresh-baked bread. Scenes play across its surface like a snow globe: a wedding on a lakeshore, a child's first steps, paint-stained hands lettering a shop sign. This orb contains Lenna Thistlewick's stolen memories. Returning it to her will restore everything she has lost. It feels heavier than it should, as though love has weight.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "common"
+    },
+    {
+      "name": "Thistlewick Family Ring",
+      "item_type": "misc",
+      "weight": 0.1,
+      "value_gp": 50.0,
+      "quantity": 1,
+      "description": "A simple gold band engraved on the inside with the words 'Where you go, I follow' in Halfling script. This ring has been in the Thistlewick family for four generations, passed from parent to child on their wedding day. Its long exposure to genuine love has imbued it with a faint protective enchantment. Once per long rest, the wearer can reroll a failed saving throw against being charmed, taking the higher result.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "ring",
+      "stat_modifiers": "{}",
+      "rarity": "common"
+    }
+  ]
+}

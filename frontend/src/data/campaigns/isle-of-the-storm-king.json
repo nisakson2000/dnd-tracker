@@ -1,0 +1,217 @@
+{
+  "name": "Isle of the Storm King",
+  "summary": "A storm giant's island has resurfaced after centuries beneath the waves, sparking a multi-faction race to claim its ancient treasures and the power they hold.",
+  "description": "Six days ago, the sea boiled. Fishermen along the Dagger Coast reported massive swells, unnatural lightning storms, and a deep rumbling that rattled windows twenty miles inland. When the storms cleared, an island stood where no island had been — a jagged mass of black volcanic rock and ruined cyclopean architecture rising from the waves like a fist. Scholars identified it almost immediately from ancient texts: Thundrakar, the fortress-island of the storm giant king Voldreth, who sank his own domain beneath the ocean a thousand years ago rather than let it fall to an invading army of fire giants. The legends say Voldreth's treasury held artifacts of staggering power — weapons forged from crystallized lightning, armor carved from hurricane-core, and the Stormcrown itself, a diadem said to grant dominion over wind and wave. Now Thundrakar has risen, and every power on the coast wants what's inside. The Dagger Coast Trading Consortium has dispatched an armed merchant expedition. A warband of fire giant descendants has mobilized, claiming ancestral right to the island. A cabal of storm sorcerers called the Tempest Accord seeks the Stormcrown for their own purposes. And somewhere on the island, if the legends are true, Voldreth himself still waits — not dead, but sleeping, bound in a self-imposed stasis that has lasted a millennium. The party has been hired by a coastal town's desperate mayor to reach the island before the other factions, secure anything that might protect the coast from the coming power struggle, and — if possible — figure out why the island surfaced now, after a thousand years of silence.",
+  "level": "5-8",
+  "ruleset": "5e 2014",
+  "author": "The Codex",
+  "tags": ["exploration", "giants", "coastal"],
+  "npcs": [
+    {
+      "name": "Mayor Selene Ashworth",
+      "role": "Quest Giver",
+      "race": "Human",
+      "npc_class": "Noble",
+      "location": "Stormbreak — Town Hall",
+      "description": "The mayor of Stormbreak, a weathered coastal town that bore the brunt of Thundrakar's resurfacing. Half the fishing fleet was destroyed in the initial swells, and the town's seawall cracked in three places. Selene is a pragmatic woman in her early fifties with sun-darkened skin, grey-streaked auburn hair, and the calloused hands of someone who still helps haul nets when the catch is thin. She was elected mayor because she is honest, stubborn, and puts her town first — qualities that serve her well now as she watches powerful factions converge on the waters off her coast. She cannot compete with their resources, but she can hire adventurers to act as her eyes, ears, and if necessary, her sword arm on the island.",
+      "notes": "Selene can provide the party with a sturdy fishing sloop (The Saltheart) and enough supplies for two weeks. She is offering 500 gold pieces plus whatever non-dangerous loot the party recovers from the island. Her primary concern is the safety of Stormbreak — she fears that whoever claims the Stormcrown might use its power in ways that devastate the coast. She has also heard rumors that the Tempest Accord has been performing rituals that may have triggered the island's resurfacing.",
+      "status": "alive"
+    },
+    {
+      "name": "Captain Halvard Ironkeel",
+      "role": "Ally",
+      "race": "Dwarf",
+      "npc_class": "Fighter",
+      "location": "At sea — aboard The Saltheart",
+      "description": "A retired naval officer and Stormbreak's most experienced deep-water sailor. He is short even for a dwarf, bow-legged from decades on rolling decks, with a magnificent braided beard streaked with white and a voice like a foghorn. He volunteers to captain The Saltheart for the expedition, not for pay but because he has spent forty years on this stretch of coast and considers whatever emerges from its waters to be his business. He is brave to the point of recklessness on the water, cautious to the point of paranoia on land, and has an encyclopedic knowledge of the Dagger Coast's currents, reefs, and weather patterns. He tells stories constantly — most of them true, all of them long.",
+      "notes": "Halvard is an expert sailor and navigator who can get the party to Thundrakar safely despite the treacherous currents surrounding the newly risen island. He will not go ashore — he insists on staying with the ship, which is genuinely important since other factions may try to strand the party by destroying their vessel. He knows the waters well enough to identify the Consortium's ships by their rigging and can spot a fire giant longship at extreme range.",
+      "status": "alive"
+    },
+    {
+      "name": "Zara Tempest",
+      "role": "Neutral NPC",
+      "race": "Air Genasi",
+      "npc_class": "Sorcerer",
+      "location": "Thundrakar — The Outer Ruins",
+      "description": "A storm sorcerer and junior member of the Tempest Accord who has begun to question her organization's motives. She is young — barely twenty — with pale blue skin, white hair that moves constantly as if in an unfelt breeze, and eyes the color of a thunderhead. She was told the Accord sought the Stormcrown to study it and protect the coast from its power. She has since overheard her superiors discussing plans to use the crown to control trade routes through weather manipulation. She is conflicted, idealistic, and frightened — she is powerful enough that the Accord will not let her leave alive if they discover her doubts. She may approach the party on the island as a potential ally, or the party may encounter her separated from her group after an encounter with the island's guardians.",
+      "notes": "Zara can provide valuable information about the Tempest Accord's plans, numbers (twelve sorcerers plus hired mercenaries), and their camp location on the island's eastern shore. She knows that the Accord performed a ritual three months ago that they believe triggered the island's resurfacing. She is a capable combatant (CR 3 storm sorcerer) and will fight alongside the party if she trusts them, but she is terrified of her mentor, Archon Vaelith, and may hesitate at critical moments.",
+      "status": "alive"
+    },
+    {
+      "name": "Archon Vaelith",
+      "role": "Antagonist",
+      "race": "Human",
+      "npc_class": "Sorcerer",
+      "location": "Thundrakar — Eastern Shore Camp / The Storm Spire",
+      "description": "The leader of the Tempest Accord expedition, a gaunt and imperious storm sorcerer in his seventies who has spent his entire life pursuing the legend of the Stormcrown. His skin is lined with faint, lightning-shaped scars — the result of channeling storm magic for decades — and his eyes crackle with barely contained electrical energy. He speaks with absolute certainty about everything and views anyone who opposes him as either an obstacle or an idiot. He is brilliant, fanatical, and willing to sacrifice anyone — including his own people — to claim the Stormcrown. He believes he is the only person disciplined enough to wield it responsibly, a belief that blinds him to his own megalomania.",
+      "notes": "Vaelith is a CR 7 storm sorcerer with access to Call Lightning, Lightning Bolt, and Storm Sphere. He has a contingency teleportation spell that triggers if he drops below 20 hit points, making him difficult to kill permanently. He is the one who devised the ritual that raised Thundrakar, though he does not fully understand what he unleashed. He will attempt to negotiate with the party before resorting to violence, but his definition of 'negotiation' is essentially 'agree with me or die.'",
+      "status": "alive"
+    },
+    {
+      "name": "Skarn Emberfist",
+      "role": "Antagonist",
+      "race": "Fire Giant",
+      "npc_class": "Barbarian",
+      "location": "Thundrakar — Western Beach / The Forge Halls",
+      "description": "The war chief of a fire giant clan that claims descent from the army that besieged Thundrakar a thousand years ago. He stands eighteen feet tall with coal-black skin shot through with veins of molten orange, a mane of flame-red hair braided with iron rings, and armor forged from volcanic glass. He is not mindlessly aggressive — he is a cunning tactician who has spent years preparing for this moment, studying every scrap of lore about Thundrakar's layout. He views the island as his clan's rightful conquest, stolen from their ancestors by Voldreth's cowardly decision to sink it rather than fight. He respects strength and despises deception, which makes him both dangerous and potentially negotiable — if the party can prove their worth in combat or offer him something he values more than the Stormcrown.",
+      "notes": "Skarn commands a warband of eight fire giants and twenty hobgoblin mercenaries. They arrived on three longships and have established a beachhead on the western shore. Skarn's primary goal is not the Stormcrown but the Forge Halls — legendary workshops where Voldreth's giant-smiths created weapons of incredible power. He might be willing to let the party pass through his territory or even ally temporarily against the Tempest Accord if they agree to leave the Forge Halls to his people. He fights as a CR 9 fire giant with barbarian rage abilities.",
+      "status": "alive"
+    },
+    {
+      "name": "The Echo of Voldreth",
+      "role": "Key NPC",
+      "race": "Storm Giant (Projection)",
+      "npc_class": "King",
+      "location": "Thundrakar — The Throne of Storms (deepest chamber)",
+      "description": "Not Voldreth himself, but a magical echo — a projection of the storm giant king's consciousness left behind when he entered stasis a thousand years ago. The Echo appears as a translucent, thirty-foot-tall giant with a crown of perpetual lightning and a voice that resonates like distant thunder. It is calm, weary, and sorrowful. It can answer questions about the island, the Stormcrown, and the events that led to Thundrakar's sinking, but its knowledge is frozen at the moment of the stasis — it knows nothing of the current world. The Echo's purpose is to test anyone who reaches the Throne of Storms and determine whether they are worthy of waking the real Voldreth or claiming the Stormcrown. Its tests are not physical but philosophical — it asks questions about power, responsibility, and sacrifice.",
+      "notes": "The Echo cannot be fought — it is intangible and immune to all damage. It will judge the party based on their answers to three questions: 'What would you do with power you did not earn?', 'Who would you sacrifice to save a thousand?', and 'Is it better to rule or to serve?' There are no objectively correct answers — the Echo judges sincerity and wisdom, not alignment. If it deems the party worthy, it reveals the location of the real Voldreth and the Stormcrown. If not, it teleports them to the island's surface and seals the Throne chamber.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "Voyage to Thundrakar",
+      "giver": "Mayor Selene Ashworth",
+      "description": "The island of Thundrakar lies roughly sixty miles off the Dagger Coast, surrounded by treacherous currents, sudden squalls, and debris fields of shattered rock thrown up by the island's violent resurfacing. Captain Halvard Ironkeel can navigate the worst of it, but the journey is still perilous. The party must help crew The Saltheart through dangerous waters, deal with sea creatures agitated by the island's emergence, and make landfall on Thundrakar's rocky shore without being spotted by the other factions already establishing beachheads. Once ashore, the party must scout the island, identify the major factions present, and find an approach to the interior ruins that avoids the worst of the competition.",
+      "status": "active",
+      "notes": "The voyage takes roughly 18 hours in good conditions, but conditions are not good — expect encounters with agitated sea life (hunter sharks, a wounded sea serpent), debris navigation requiring group skill checks, and the possibility of being intercepted by a Consortium patrol vessel. Upon arrival, the party can see three other camps from the water: the Consortium on the south beach, the fire giants on the west beach, and the Tempest Accord on the eastern shore. The north shore is rocky and dangerous but unoccupied — the best landing point for a party that wants to avoid immediate conflict.",
+      "objectives": [
+        { "text": "Prepare The Saltheart for the voyage and gather supplies in Stormbreak", "completed": false },
+        { "text": "Navigate the treacherous waters surrounding Thundrakar", "completed": false },
+        { "text": "Make landfall on Thundrakar without alerting other factions", "completed": false },
+        { "text": "Scout the island and identify the positions and strength of competing expeditions", "completed": false }
+      ]
+    },
+    {
+      "title": "The Gauntlet of Factions",
+      "giver": "Circumstances",
+      "description": "Thundrakar is not a large island — perhaps three miles across — but its interior is a maze of ruined cyclopean architecture, collapsed tunnels, and storm-blasted terrain that channels all paths toward the island's central peak, where the Storm Spire rises like a broken finger against the sky. The problem is that every faction on the island is converging on the same destination, and the narrow paths through the ruins create inevitable confrontations. The party must navigate this gauntlet — dealing with each faction through diplomacy, stealth, misdirection, or force — while also contending with the island's own defenses: animated stone guardians, lightning-charged traps, and weather that shifts from calm to hurricane in minutes as if the island itself is testing intruders.",
+      "status": "active",
+      "notes": "This quest is the sandbox core of the campaign. The party can approach the three factions in any order and deal with them however they choose. Allying with Skarn against the Tempest Accord, using Zara as a double agent, negotiating passage with the Consortium — all are viable approaches. The island's guardians (stone golems carved in the shape of giants, lightning elementals, animated storm-cloud serpents) attack all intruders equally, which can create opportunities for the party to let factions weaken each other before engaging.",
+      "objectives": [
+        { "text": "Find a navigable route through the outer ruins toward the Storm Spire", "completed": false },
+        { "text": "Deal with the Dagger Coast Trading Consortium expedition", "completed": false },
+        { "text": "Deal with Skarn Emberfist and the fire giant warband", "completed": false },
+        { "text": "Deal with Archon Vaelith and the Tempest Accord", "completed": false },
+        { "text": "Reach the Storm Spire at the island's center", "completed": false }
+      ]
+    },
+    {
+      "title": "The Throne of Storms",
+      "giver": "The Echo of Voldreth",
+      "description": "Beneath the Storm Spire lies the heart of Thundrakar — a vast underground chamber where storm giant king Voldreth sealed himself in magical stasis a thousand years ago. The path down is guarded by the most powerful of the island's defenses, and the chamber itself is saturated with raw elemental energy that crackles along the walls and floor. At the center sits the Throne of Storms, a massive seat of black iron and crystal with the Stormcrown resting on its arm. Before it stands the Echo of Voldreth, the king's final guardian and judge. The party must pass the Echo's philosophical tests to prove their worthiness. But they are not the only ones descending to the Throne — whichever faction the party did not fully deal with above will arrive for a final confrontation in the chamber itself, fighting amid the lightning and the giant king's ancient power.",
+      "status": "active",
+      "notes": "The final encounter is a multi-phase challenge: first the Echo's three philosophical questions, then a combat encounter against the surviving faction that has followed the party down, and finally a decision — wake Voldreth, claim the Stormcrown, destroy the crown, or leave it sealed. Each choice has significant consequences for the Dagger Coast. Waking Voldreth introduces a storm giant king to a world that has moved on without him. Claiming the crown gives enormous power to whoever wears it. Destroying it eliminates the threat but also the possibility of its protective use. Leaving it risks another faction eventually claiming it.",
+      "objectives": [
+        { "text": "Descend through the Storm Spire's inner chambers to reach the Throne of Storms", "completed": false },
+        { "text": "Answer the Echo of Voldreth's three questions", "completed": false },
+        { "text": "Defeat or repel the rival faction that follows the party to the Throne", "completed": false },
+        { "text": "Decide the fate of the Stormcrown and King Voldreth", "completed": false },
+        { "text": "Return to Stormbreak and report to Mayor Ashworth", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "Thundrakar",
+      "category": "Location",
+      "body": "The fortress-island of the storm giant king Voldreth, Thundrakar was once the seat of a storm giant kingdom that dominated the Dagger Coast a millennium ago. The island is roughly three miles across and dominated by a central volcanic peak called the Storm Spire, around which the giants built a massive complex of halls, forges, temples, and fortifications carved from the island's black basalt. The architecture is cyclopean in scale — doorways forty feet high, corridors wide enough for three giants to walk abreast, stairs where each step is five feet tall for a Medium creature. After a thousand years underwater, the ruins are encrusted with coral and barnacles, draped in dead kelp, and filled with trapped seawater that drains slowly through cracks in the rock. Despite the decay, the giant-forged stonework has held remarkably well, and the deeper chambers — sealed by Voldreth's magic before the sinking — are almost perfectly preserved.",
+      "related_to": "The Echo of Voldreth, Storm Spire"
+    },
+    {
+      "title": "King Voldreth and the Sinking",
+      "category": "History",
+      "body": "Voldreth was the last king of the Dagger Coast storm giants, a ruler renowned for both his wisdom and his temper. When an army of fire giants, led by a warlord named Surtur's Fist, besieged Thundrakar with overwhelming numbers, Voldreth faced an impossible choice: fight and see his people slaughtered, or surrender and see his kingdom's treasures used to fuel fire giant conquest across the region. He chose a third option. Using the Stormcrown — an artifact of immense elemental power — he channeled a hurricane of unprecedented force directly into the ocean floor beneath his own island, collapsing the volcanic chamber below and sinking Thundrakar beneath the waves in minutes. The fire giant fleet was destroyed in the resulting maelstrom. Voldreth's people escaped on ships he had secretly prepared, scattering across the world. Voldreth himself remained, entering a magical stasis on his throne with the Stormcrown beside him, waiting for a time when his island might be needed again.",
+      "related_to": "Skarn Emberfist, The Stormcrown"
+    },
+    {
+      "title": "The Stormcrown",
+      "category": "Artifact",
+      "body": "A diadem forged from a metal that does not exist naturally — a silvery-blue alloy the giants called 'thundersteel,' created by quenching raw iron in the heart of a living thunderstorm. The Stormcrown is sized for a storm giant but magically resizes to fit any wearer. It grants the wearer control over wind and weather within a radius of several miles: the ability to summon or dismiss storms, direct lightning strikes with precision, calm or agitate seas, and — at full power — reshape coastlines through sustained hurricane force. The crown's power is not unlimited; it draws on the wearer's vitality, and sustained use causes exhaustion, lightning-scar tissue, and eventually a merging of the wearer's consciousness with the elemental forces they channel. Voldreth bore these costs for decades before the sinking. A mortal wearer would burn through much faster.",
+      "related_to": "King Voldreth, Archon Vaelith"
+    },
+    {
+      "title": "The Dagger Coast Trading Consortium",
+      "category": "Faction",
+      "body": "A powerful merchant organization that controls most of the trade along the Dagger Coast, a five-hundred-mile stretch of rocky shoreline dotted with port towns and fishing villages. The Consortium is pragmatic and profit-driven — they have no interest in ancient prophecies or elemental power, but they are very interested in the legendary wealth of a storm giant king's treasury. Their expedition to Thundrakar consists of three armed merchant vessels carrying sixty soldiers, a team of professional treasure hunters, and a half-dozen scholars hired to identify and appraise anything valuable. They are well-equipped but not prepared for the scale of resistance the island's guardians present. Their commander, a human woman named Director Caelynn Brask, is a shrewd negotiator who would prefer to buy the party off rather than fight them — but she has the resources to do either.",
+      "related_to": "Stormbreak, Mayor Selene Ashworth"
+    },
+    {
+      "title": "The Tempest Accord",
+      "category": "Faction",
+      "body": "A secretive cabal of storm sorcerers who believe that control of weather is the ultimate form of power and that the Stormcrown is the key to achieving it. Founded three decades ago by Archon Vaelith, the Accord has spent years studying the legends of Thundrakar and developing the ritual that ultimately triggered the island's resurfacing. They are fanatical in their devotion to Vaelith's vision — a world where weather patterns are controlled by a council of sorcerers for the 'greater good,' with the Accord naturally serving as that council. Their expedition to the island consists of twelve sorcerers of varying power and a company of hired mercenaries. They are the most magically capable faction on the island but also the most internally fragile — not all members share Vaelith's extremism, and dissent is growing, particularly from younger members like Zara Tempest who joined the Accord seeking knowledge, not domination.",
+      "related_to": "Archon Vaelith, Zara Tempest"
+    },
+    {
+      "title": "Stormbreak",
+      "category": "Location",
+      "body": "A hardy coastal town of roughly eight hundred residents perched on the Dagger Coast's northern reach, Stormbreak is the closest settlement to where Thundrakar resurfaced. Named for the massive granite breakwater that protects its harbor from the fierce storms common to this stretch of coast, the town has survived centuries of rough weather, pirate raids, and lean fishing seasons through sheer stubbornness. Its people are fisherfolk, boat-builders, and kelp farmers who view the sea with equal measures of respect and resentment. The town's most prominent feature, aside from the breakwater, is a lighthouse called Old Fury that has guided ships past the coastal rocks for over two hundred years. Since Thundrakar's appearance, Stormbreak has become an unwilling staging ground — Consortium ships fill the harbor, Tempest Accord agents lurk in taverns gathering information, and fire giant scouts have been spotted on the headlands north of town. Mayor Ashworth is doing her best to keep the peace, but tensions are rising daily.",
+      "related_to": "Mayor Selene Ashworth, Captain Halvard Ironkeel"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: Isle of the Storm King",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nYou hear about the island before you see it. Every tavern on the Dagger Coast is buzzing with the same story: six days ago, the sea went mad. A column of water a mile wide erupted from the ocean sixty miles offshore, the sky split with lightning that lasted for hours, and when dawn broke, an island sat in the open water where charts showed nothing but deep sea.\n\nThundrakar. The name surfaces from old sailors' tales and dusty library shelves. The fortress of the storm giant king Voldreth, sunk beneath the waves a thousand years ago. A place of legend, suddenly and violently real.\n\nBy the time you reach Stormbreak — a weathered fishing town that is the closest port to the island — the chaos is already in full swing. The harbor is choked with ships that don't belong here: sleek Consortium traders with armed decks, a cluster of unfamiliar vessels flying no flag, and on the horizon, shapes too large to be any human-built craft — fire giant longships, their hulls glowing faintly with forge-heat even at this distance.\n\nMayor Selene Ashworth meets you on the docks, salt spray in her grey-streaked hair and worry carved deep into her sun-weathered face. She wastes no time on pleasantries.\n\n'Half my fleet is kindling,' she says, gesturing at the damaged boats pulled up on the beach. 'Three factions are using my harbor as a staging ground without so much as asking. And something out there on that island is generating storms that are getting worse every day. I need people on that island who are working for this town, not for a profit margin or an ideology. I need you.'\n\nShe points toward the horizon, where a dark shape rises from the waves, ringed by unnatural clouds that pulse with internal lightning.\n\n'That's Thundrakar. Whatever's on it, everyone wants it. I just want my coast to survive the next month.'",
+    "tags": "exploration, naval, giants, factions, introduction",
+    "npcs_mentioned": "Mayor Selene Ashworth, Captain Halvard Ironkeel"
+  },
+  "items": [
+    {
+      "name": "Stormcrown",
+      "item_type": "wondrous item",
+      "weight": 5.0,
+      "value_gp": 50000.0,
+      "quantity": 1,
+      "description": "A diadem of thundersteel — a silvery-blue metal that hums with barely contained electrical energy. Sized for a storm giant but magically resizing to fit any wearer, the Stormcrown is warm to the touch and trails faint arcs of static electricity in dry conditions. When worn, it grants the wearer control over weather within a 5-mile radius: they can cast Control Weather at will without material components, cast Call Lightning as a 5th-level spell three times per day, and gain immunity to lightning and thunder damage. However, each hour the crown is worn, the wearer must succeed on a DC 15 Constitution saving throw or gain one level of exhaustion as the crown draws on their life force. A creature that dies while wearing the Stormcrown is transformed into a lightning elemental permanently.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "head",
+      "stat_modifiers": "{}",
+      "rarity": "legendary"
+    },
+    {
+      "name": "Tidecaller's Conch",
+      "item_type": "wondrous item",
+      "weight": 1.0,
+      "value_gp": 1200.0,
+      "quantity": 1,
+      "description": "A large spiral conch shell found in the ruins of Thundrakar's harbor, its interior surface inscribed with tiny Primordial runes. When blown as an action, the conch produces a deep, resonant tone that can be heard clearly up to one mile away, even underwater. The tone has two effects: it calms rough seas within a 500-foot radius for 10 minutes (reducing waves to gentle swells and suppressing storm-driven currents), and it summons 1d4 friendly water elementals that serve the blower for 1 hour or until destroyed. The conch can be used once per day, recharging at dawn when salt water is poured through it.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "none",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Giant-Forged Anchor Maul",
+      "item_type": "weapon",
+      "weight": 18.0,
+      "value_gp": 2500.0,
+      "quantity": 1,
+      "description": "A massive warhammer fashioned from a ship's anchor, its shaft wrapped in salt-stained leather and its head still trailing links of giant-forged chain. Originally a tool used by Voldreth's harbor giants, this weapon has been scaled down through residual magic to be wielded (with effort) by a Medium creature. It functions as a +1 maul with an additional property: on a critical hit, the target must succeed on a DC 14 Strength saving throw or be knocked prone and pushed 10 feet away as the impact carries the weight of a crashing wave. The chain trailing from the maul's head can be used to grapple a creature within 10 feet as a bonus action (Athletics check, DC equal to the target's Athletics or Acrobatics).",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{\"attack\": 1, \"damage\": 1}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Stormscale Cloak",
+      "item_type": "armor",
+      "weight": 4.0,
+      "value_gp": 800.0,
+      "quantity": 1,
+      "description": "A cloak fashioned from the shed scales of a blue dragon, found in Voldreth's trophy hall. The scales are each the size of a playing card, deep sapphire blue with a metallic sheen, and they overlap in a pattern that ripples like rain on water when the wearer moves. The cloak grants resistance to lightning damage and advantage on saving throws against effects that would push, pull, or knock the wearer prone (representing the wearer's supernatural stability against storm winds). Additionally, during a thunderstorm — natural or magical — the cloak grants a +1 bonus to AC as the scales charge with ambient electricity and create a faint repulsive field.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "back",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    }
+  ]
+}

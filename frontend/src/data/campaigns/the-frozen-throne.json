@@ -1,0 +1,222 @@
+{
+  "name": "The Frozen Throne",
+  "summary": "A dwarven kingdom in the frozen north has gone silent, its king frozen on his throne by a cunning white dragon wyrmling. The party must brave blizzards and political intrigue to liberate the hold.",
+  "description": "The mountain kingdom of Kazdul-Vorn, a dwarven stronghold carved into the peaks of the Ironspine Mountains, has not sent a trade caravan or diplomatic envoy in six weeks. Their last message, delivered by a half-dead raven, bore only five words: 'The ice that thinks. Send help.' The Merchant Council of the lowland city of Thorngate has hired adventurers to investigate, fearing economic collapse if Kazdul-Vorn's iron and gemstone exports cease permanently. The journey north is treacherous — the Frostmarch Pass is choked with blizzards and prowled by winter wolves, the mountain trails are prone to avalanches, and the temperature drops to lethal levels after dark. Upon reaching Kazdul-Vorn, the party discovers a kingdom locked in unnatural winter. The great forge-fires have gone cold, the halls are rimed with frost that grows like a living thing, and King Borin Stoneshield sits frozen solid on his throne, encased in ice so clear he appears merely to be sleeping. The kingdom is divided: Thane Urgra Blackhammer has declared herself regent and wants to negotiate with whatever caused this, while Commander Halvir Frostaxe advocates military action. Neither knows that the true architect of the crisis is Cryovexis, an unusually intelligent white dragon wyrmling who has claimed the kingdom's deepest mine shaft — the legendary Underheart — as her lair. Cryovexis is small but brilliant, using the mine's natural connections to underground ice rivers to project freezing cold throughout the kingdom. She wants the dwarves' gemstone hoard, their forge-craft expertise to build her a proper hoard vault, and most of all, she wants to be taken seriously as a dragon despite her youth. The party must navigate dwarven politics, survive the frozen halls, and confront a dragon who is more cunning than she is powerful.",
+  "level": "3-5",
+  "ruleset": "5e 2014",
+  "author": "The Codex",
+  "tags": ["exploration", "dragon", "political"],
+  "npcs": [
+    {
+      "name": "Thane Urgra Blackhammer",
+      "role": "Quest Giver",
+      "race": "Dwarf",
+      "npc_class": "Noble",
+      "location": "Kazdul-Vorn — The Regent's Hall",
+      "description": "A broad-shouldered dwarf woman in her second century with iron-gray hair woven into elaborate braids, each braid representing a decade of service to the crown. Her face is deeply lined and her eyes are sharp as cut gemstones. Urgra was Kazdul-Vorn's Master of Coin before the crisis, managing the kingdom's vast mineral wealth with an accountant's precision and a merchant's cunning. She assumed the title of Thane-Regent when King Borin was frozen, and she carries the weight of leadership like a physical burden. She believes the freezing curse can be negotiated away — everything has a price, even dragon-born calamity. She keeps her voice steady and her hands clasped behind her back, but those close to her notice she has not slept in days.",
+      "notes": "Favors diplomacy and negotiation over combat. Has been secretly gathering the kingdom's gemstone reserves to offer as tribute to whatever force holds the king hostage. Will hire the party as official envoys with authority to negotiate on behalf of the crown. Offers 300 gold plus 'the gratitude of Kazdul-Vorn, which is worth more than gold.' Clashes constantly with Commander Halvir. Knows the location of several secret passages in the hold that bypass the worst of the frozen areas.",
+      "status": "alive"
+    },
+    {
+      "name": "Commander Halvir Frostaxe",
+      "role": "Ally",
+      "race": "Dwarf",
+      "npc_class": "Fighter",
+      "location": "Kazdul-Vorn — The Garrison",
+      "description": "A scarred, battle-hardened dwarf with a magnificent red beard streaked with white, braided around iron rings taken from enemies he has defeated. His left eye is a milky blind spot from a frost giant's backhand twenty years ago, and he compensates by turning his head constantly, giving him a hawkish, alert appearance. Halvir commands Kazdul-Vorn's garrison of fifty warriors, though morale is crumbling as the cold deepens and soldiers begin to desert. He is blunt, loyal, and deeply frustrated by Thane Urgra's diplomatic approach — in his experience, you do not negotiate with things that freeze your king. He drinks heavily but never loses his edge, and his soldiers would follow him into a dragon's gullet if he asked.",
+      "notes": "Will provide the party with cold weather gear, weapons, and up to four soldiers as escorts (use Guard stat block with cold resistance). Wants the party to locate the source of the cold and destroy it, period. Has sent three scouting parties into the deep mines; two returned frostbitten and delirious, one never returned at all. His missing scouts are alive but imprisoned in ice near Cryovexis's lair. Secretly blames himself for not acting faster when the first signs appeared.",
+      "status": "alive"
+    },
+    {
+      "name": "Cryovexis",
+      "role": "Antagonist",
+      "race": "White Dragon",
+      "npc_class": "Dragon Wyrmling",
+      "location": "Kazdul-Vorn — The Underheart Mine",
+      "description": "A white dragon wyrmling roughly the size of a large horse, with scales like hammered silver and eyes of piercing glacial blue. Cryovexis is exceptionally small for a dragon, which is the source of both her deepest insecurity and her greatest strength — she has learned to compensate for her lack of size with intelligence, cunning, and patience, traits unusual in white dragons. She speaks Common with a slight reptilian lisp and a vocabulary that would impress a university professor, having spent her first two years of life secretly listening to dwarven scholars through mine shaft ventilation tunnels. She hoards not just treasure but knowledge, and her 'lair' in the Underheart is lined with stolen books, maps, and technical diagrams alongside the expected piles of gemstones. She views the dwarves not as enemies but as future subjects — she genuinely believes she would be a better ruler than King Borin.",
+      "notes": "Can be defeated in combat (AC 16, HP 52, cold breath weapon 5d8 in 15-ft cone, DC 12 Con save for half). Can also be negotiated with — she wants recognition, a proper hoard, and to not be dismissed as 'just a wyrmling.' A clever party might broker a deal where she relocates to an uninhabited mountain in exchange for a portion of the gemstone hoard. If the party mocks her size or calls her 'little,' she becomes enraged and attacks. She has frozen King Borin as a hostage, not out of malice but as leverage — she knows how to unfreeze him and will do so as part of a genuine deal. She is lonely and has never met another dragon.",
+      "status": "alive"
+    },
+    {
+      "name": "Runa Deepdelve",
+      "role": "Informant",
+      "race": "Dwarf",
+      "npc_class": "Artificer",
+      "location": "Kazdul-Vorn — The Silent Forge",
+      "description": "A young dwarf woman barely past her first century, with soot-streaked auburn hair, goggles perpetually pushed up on her forehead, and burn scars on her forearms from years of forge work. Runa was the kingdom's most promising artificer before the great forges went cold. She has been secretly working in a small personal workshop, burning furniture for fuel, trying to build a device that can counteract the magical cold radiating from the deep mines. Her prototype — a brass sphere covered in runes that she calls the Thermal Core — works in a ten-foot radius but needs a power source she cannot provide alone. She speaks rapidly about technical matters, forgets to eat, and has a habit of addressing her tools by name.",
+      "notes": "Her Thermal Core can protect the party from Cryovexis's cold aura if powered by a spell slot of 2nd level or higher (lasts 1 hour per spell level). She can also modify weapons to deal fire damage (1d4 bonus fire damage, lasts 24 hours) if given an hour and raw materials. Knows the mine layout intimately and can draw a map from memory. Has heard Cryovexis speaking through the ventilation shafts and was the first person to realize the threat was a dragon, not a curse — but Thane Urgra dismissed her as 'too young to understand politics.'",
+      "status": "alive"
+    },
+    {
+      "name": "King Borin Stoneshield",
+      "role": "Victim",
+      "race": "Dwarf",
+      "npc_class": "Noble",
+      "location": "Kazdul-Vorn — The Throne Room",
+      "description": "The rightful king of Kazdul-Vorn, a stout and dignified dwarf in his fourth century with a braided white beard adorned with gemstone clasps and a crown of hammered mithral. He sits on the Ironspine Throne — a massive seat carved from the mountain's living rock — encased in ice so perfectly clear that he appears to be merely sitting in contemplation. His expression is one of mild surprise, as though he was frozen mid-sentence. Close inspection reveals his eyes still track movement, very slowly — he is conscious inside the ice, experiencing every frozen moment. A faint warmth radiates from his crown, suggesting it is resisting the enchantment.",
+      "notes": "Cannot be freed by mundane means — the ice regenerates faster than it can be chipped away. Greater restoration, dispel magic (DC 15), or Cryovexis's willing reversal can free him. When freed, he is disoriented but lucid, and his first question is about his people's safety. He is a fair and just ruler who will listen to the party's account before making decisions about Cryovexis. His mithral crown, the Crown of the Ironspine, is a minor artifact that grants resistance to cold damage and immunity to magical paralysis — its resistance is why Cryovexis could not kill him outright.",
+      "status": "alive"
+    },
+    {
+      "name": "Garret Holloway",
+      "role": "Quest Giver",
+      "race": "Human",
+      "npc_class": "Merchant",
+      "location": "Thorngate — The Merchant Council Hall",
+      "description": "A portly human merchant in his forties with a waxed mustache, expensive fur-lined coat, and the perpetually worried expression of a man watching his investments melt. Garret is the head of Thorngate's Merchant Council and the primary financier of the expedition to Kazdul-Vorn. His fortune depends on the dwarven kingdom's iron and gemstone exports, and six weeks of silence has put him on the edge of financial ruin. He is generous with coin but expects results, and he frames everything in terms of profit and loss — even the rescue of a frozen king. Despite his mercantile coldness, he genuinely respects the dwarves and considers King Borin a friend.",
+      "notes": "Provides the initial quest hook and 200 gold in advance for supplies and travel expenses. Promises an additional 500 gold upon confirmation that trade routes have been restored. Can outfit the party with cold weather gear, climbing equipment, and provisions for a two-week journey. Has a contact in the mountain — a dwarven merchant named Brinna who was supposed to meet a caravan three weeks ago and never appeared. Finding Brinna (she is hiding in the upper halls, rationing food) provides additional information about the situation inside.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "The Silent Kingdom",
+      "giver": "Garret Holloway",
+      "description": "The dwarven kingdom of Kazdul-Vorn has gone silent — no trade caravans, no envoys, no communication except a single desperate raven carrying the message 'The ice that thinks. Send help.' Garret Holloway and the Thorngate Merchant Council need someone to travel to the kingdom, determine what has happened, and restore contact. The journey through the Frostmarch Pass is dangerous even in good weather, and reports suggest the weather has been anything but good.",
+      "status": "active",
+      "notes": "Reward: 200 gold advance, 500 gold upon completion, cold weather gear and supplies. The journey to Kazdul-Vorn takes 4-5 days through the Frostmarch Pass and involves survival challenges (DC 13 Con saves against exhaustion each day without cold weather gear, random encounters with winter wolves and ice mephits).",
+      "objectives": [
+        { "text": "Meet with Garret Holloway in Thorngate and accept the contract", "completed": false },
+        { "text": "Purchase supplies and prepare for the journey north", "completed": false },
+        { "text": "Travel through the Frostmarch Pass to Kazdul-Vorn (4-5 days)", "completed": false },
+        { "text": "Gain entry to the sealed kingdom and assess the situation", "completed": false },
+        { "text": "Meet with Thane Urgra and Commander Halvir to understand the political divide", "completed": false },
+        { "text": "Investigate the source of the magical cold in the deep mines", "completed": false },
+        { "text": "Confront Cryovexis and resolve the crisis (combat, negotiation, or both)", "completed": false },
+        { "text": "Free King Borin from his icy prison", "completed": false },
+        { "text": "Return to Thorngate and report to Garret Holloway", "completed": false }
+      ]
+    },
+    {
+      "title": "The Forge Must Burn",
+      "giver": "Runa Deepdelve",
+      "description": "The kingdom's great forges have gone cold, and with them, Kazdul-Vorn's ability to produce weapons, tools, and warmth. Runa Deepdelve has built a prototype Thermal Core that could reignite the forges and push back the magical cold, but she needs three things: a fire-aligned power source (a fire elemental gem, a red dragon scale, or a sustained spell of 3rd level or higher), pure forge-coal from the emergency reserves in the lower halls (currently frozen over), and someone to protect her while she installs the device in the main forge chamber. Reigniting the forges would restore heat to the upper kingdom, boost morale, and weaken Cryovexis's hold on the environment.",
+      "status": "active",
+      "notes": "Completing this quest before confronting Cryovexis weakens the dragon's cold aura and gives the party advantage on saves against her breath weapon during the final encounter. The emergency coal reserves are guarded by ice mephits that have nested in the cold. Runa's workshop contains a fire elemental gem she has been saving — she will offer it if the party cannot provide an alternative power source, but it is her most prized possession.",
+      "objectives": [
+        { "text": "Find Runa in her workshop and learn about the Thermal Core", "completed": false },
+        { "text": "Secure a fire-aligned power source for the device", "completed": false },
+        { "text": "Retrieve pure forge-coal from the frozen emergency reserves in the lower halls", "completed": false },
+        { "text": "Escort Runa to the main forge chamber and protect her during installation", "completed": false },
+        { "text": "Reignite the Great Forge of Kazdul-Vorn", "completed": false }
+      ]
+    },
+    {
+      "title": "The Missing Scouts",
+      "giver": "Commander Halvir Frostaxe",
+      "description": "Commander Halvir sent three scouting parties into the deep mines to locate the source of the cold. Two returned frostbitten and incoherent, babbling about 'a voice in the ice' and 'eyes like winter.' The third party — six soldiers led by Sergeant Brenna Ironfist, Halvir's most trusted officer — never returned at all. Halvir refuses to believe they are dead and wants the party to find them. The missing scouts are alive, imprisoned in pillars of ice near Cryovexis's lair, kept as trophies and potential bargaining chips by the dragon.",
+      "status": "active",
+      "notes": "The frozen scouts can be freed with fire magic or by negotiating their release from Cryovexis. Sergeant Brenna Ironfist has valuable intelligence about the dragon's lair layout and weaknesses — she observed Cryovexis for hours while partially conscious in the ice. Freeing the scouts earns Commander Halvir's loyalty and the garrison's full support. If the scouts are abandoned, Halvir loses faith in the party and becomes an obstacle rather than an ally.",
+      "objectives": [
+        { "text": "Speak with Commander Halvir about the missing scouting party", "completed": false },
+        { "text": "Interview the survivors from the other two scouting parties for information", "completed": false },
+        { "text": "Descend into the deep mines and locate the missing scouts", "completed": false },
+        { "text": "Free Sergeant Brenna Ironfist and her soldiers from their icy prison", "completed": false },
+        { "text": "Return the scouts safely to Commander Halvir at the garrison", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "Kazdul-Vorn, the Ironspine Kingdom",
+      "category": "Location",
+      "body": "A dwarven kingdom carved into the heart of Mount Kazdul, the tallest peak in the Ironspine Mountain range. The kingdom is over eight hundred years old and spans dozens of levels, from the grand entrance gates at the mountain's base to the deepest mine shafts that reach down to the roots of the earth. Kazdul-Vorn is renowned for its master forges, which burn with fires fed by natural gas vents deep in the mountain, and its gemstone mines, which produce sapphires, rubies, and the rare starstone — a luminous mineral found nowhere else. The kingdom houses approximately two thousand dwarves across its many halls, along with a small population of gnome tinkers, human traders, and a single very old elf who claims to have been present at the kingdom's founding and refuses to leave.",
+      "related_to": "King Borin Stoneshield"
+    },
+    {
+      "title": "The Underheart Mine",
+      "category": "Location",
+      "body": "The deepest and oldest mine shaft in Kazdul-Vorn, descending nearly a mile below the mountain's base into a vast natural cavern system. The Underheart was the original source of Kazdul-Vorn's wealth — its walls glitter with exposed gemstone veins and rare mineral deposits. Mining ceased in the Underheart fifty years ago when tunnelers broke through into an underground river system filled with supernaturally cold water. The breach was sealed, but the cold never fully receded. When Cryovexis arrived six weeks ago, she recognized the underground ice rivers as a perfect conduit for her cold breath and established her lair at the convergence point where three rivers meet. The Underheart is now a frozen cathedral of ice stalactites and crystallized mineral formations, beautiful and deadly.",
+      "related_to": "Cryovexis"
+    },
+    {
+      "title": "The Frostmarch Pass",
+      "category": "Location",
+      "body": "The only reliable overland route to Kazdul-Vorn, a narrow mountain pass that winds through the Ironspine range at elevations exceeding ten thousand feet. In summer, the pass is manageable if treacherous — loose scree, narrow ledges, and unpredictable weather make it a three-day journey for experienced travelers. In winter, it becomes a death trap of ice-covered switchbacks, blinding blizzards, and avalanche-prone slopes. The pass is currently experiencing unseasonal winter conditions caused by Cryovexis's influence radiating outward from Kazdul-Vorn. Winter wolves, displaced from their usual hunting grounds by the intensified cold, have moved into the pass in unusual numbers, and ice mephits dance in the blizzard winds like malicious snowflakes.",
+      "related_to": "Kazdul-Vorn, the Ironspine Kingdom"
+    },
+    {
+      "title": "Thorngate and the Iron Trade",
+      "category": "Faction",
+      "body": "Thorngate is a prosperous lowland city of fifteen thousand people that serves as the primary trading partner for Kazdul-Vorn. Dwarven iron, steel, gemstones, and masterwork weapons flow south through the Frostmarch Pass, while grain, lumber, textiles, and luxury goods flow north. The relationship has been mutually beneficial for centuries, and the Thorngate Merchant Council maintains a permanent embassy in Kazdul-Vorn (currently frozen). Six weeks without trade has caused iron prices in Thorngate to triple, blacksmiths are running low on raw materials, and the city's economy teeters on the edge of recession. Garret Holloway, head of the Merchant Council, has staked his personal fortune on resolving the crisis quickly.",
+      "related_to": "Garret Holloway"
+    },
+    {
+      "title": "White Dragons and the Intelligence Paradox",
+      "category": "Culture",
+      "body": "White dragons are widely considered the least intelligent of the chromatic dragons — a generalization that is usually accurate but occasionally produces dangerous exceptions. Cryovexis is one such exception. Born in a glacier far to the north, she was the runt of her clutch and was driven away by her mother before her first winter. Forced to survive on cunning rather than strength, she developed problem-solving abilities far beyond the norm for her kind. She learned Common by eavesdropping on travelers, taught herself to read by stealing books from a mountain hermit, and planned her takeover of Kazdul-Vorn with a patience that would impress a blue dragon. Other dragons would consider her an aberration; she considers herself the future of her species.",
+      "related_to": "Cryovexis"
+    },
+    {
+      "title": "The Crown of the Ironspine",
+      "category": "History",
+      "body": "The mithral crown worn by the kings and queens of Kazdul-Vorn since its founding, forged from the first mithral vein discovered in the mountain. The crown is a simple circlet of interwoven mithral strands set with seven starstones that glow with a soft, steady light. It is considered a minor artifact, enchanted by the kingdom's founders with protective magic that grants resistance to cold damage and immunity to magical paralysis — protections deemed essential for a ruler whose domain extends into the frigid depths of the earth. The crown is why Cryovexis could not kill King Borin outright; its magic resisted her freezing breath and forced her to settle for imprisonment instead. The crown's light has not dimmed despite six weeks of encasement in ice, a visible reminder to the dwarves that their king still lives.",
+      "related_to": "King Borin Stoneshield"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: The Frozen Throne",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe adventurers are summoned to the Merchant Council Hall in Thorngate, a grand building of stone and dark timber where the city's wealthiest traders conduct business over brandy and balance sheets. Garret Holloway, a portly man in an expensive fur coat, stands before a large map of the Ironspine Mountains pinned to an oak board. Red pins mark the trade route to Kazdul-Vorn. A single black pin marks the kingdom itself.\n\n'Six weeks,' Holloway says, tugging at his waxed mustache. 'Six weeks since anyone has heard from the dwarves. Their last raven carried this.' He holds up a scrap of parchment. The writing is shaky, the ink smeared by cold and haste: *The ice that thinks. Send help.*\n\n'I've sent three couriers into the Frostmarch Pass. None returned. The pass is buried in unseasonable blizzards, wolves are prowling in packs twice the normal size, and the temperature is dropping by the day. Something is very wrong up there, and I need people with more steel in their spines than my couriers to find out what.'\n\nHe places a heavy coin purse on the table. 'Two hundred gold now. Five hundred more when the trade route reopens. Cold weather gear, climbing equipment, and provisions are on me. I need you to reach Kazdul-Vorn, find out what happened, and fix it. Questions?'\n\nThrough the council hall's frosted windows, the Ironspine Mountains loom on the northern horizon, their peaks lost in a wall of gray cloud that seems darker and heavier than it should be for this time of year.\n\n**Starting Hook:** Accept Holloway's contract and prepare for the journey north. The party has one day in Thorngate to purchase additional supplies before departing for the Frostmarch Pass.\n\n**Key NPCs to introduce:** Garret Holloway (in Thorngate), Thane Urgra Blackhammer and Commander Halvir Frostaxe (upon arrival at Kazdul-Vorn)",
+    "tags": "introduction,session-zero,thorngate,kazdul-vorn,dragon",
+    "npcs_mentioned": "Garret Holloway,Thane Urgra Blackhammer,Commander Halvir Frostaxe,King Borin Stoneshield"
+  },
+  "items": [
+    {
+      "name": "Frostbane Warhammer",
+      "item_type": "weapon",
+      "weight": 4.0,
+      "value_gp": 600.0,
+      "quantity": 1,
+      "description": "A dwarven warhammer forged in the great forges of Kazdul-Vorn from star-iron and inlaid with copper runes that glow with inner heat. The hammer's head is perpetually warm to the touch, and when it strikes, it releases a burst of radiant warmth that is particularly effective against creatures of elemental cold. On a hit against a creature with cold resistance or immunity, the hammer deals an additional 1d6 fire damage. The handle is wrapped in firedrake leather that never slips, even when wet or icy. Functions as a +1 warhammer.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Runa's Thermal Core",
+      "item_type": "misc",
+      "weight": 5.0,
+      "value_gp": 350.0,
+      "quantity": 1,
+      "description": "A brass sphere the size of a grapefruit, covered in intricate dwarven runes and fitted with three adjustable copper vanes. When activated by expending a spell slot of 2nd level or higher, the core radiates comfortable warmth in a 10-foot radius for one hour per spell level used, granting everyone in the area resistance to cold damage and immunity to the effects of extreme cold weather. The sphere hums softly when active and glows a deep orange. Runa Deepdelve's finest creation, built from salvaged forge components and sheer stubborn ingenuity.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Starstone Pendant",
+      "item_type": "misc",
+      "weight": 0.2,
+      "value_gp": 400.0,
+      "quantity": 1,
+      "description": "A pendant carved from a single starstone — the rare luminous mineral found only in the Kazdul-Vorn mines. The stone emits a soft, steady silvery-blue light equivalent to a candle, and it pulses brighter when the wearer is in danger (grants +1 to initiative rolls). Starstone is prized by dwarven artisans for its beauty, but this particular stone was cut by King Borin himself as a gift for his daughter, who died in a mining accident decades ago. It was found in the throne room, fallen from the frozen king's clenched fist.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "neck",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Dwarven Forge-Whiskey",
+      "item_type": "consumable",
+      "weight": 1.0,
+      "value_gp": 30.0,
+      "quantity": 2,
+      "description": "A sealed stone flask of Kazdul-Vorn's legendary forge-whiskey, distilled over natural gas vents and aged in charred iron casks for fifty years. The liquid is amber with flecks of actual gold leaf and burns like swallowing a hot coal — in the best possible way. Drinking a flask grants resistance to cold damage for 1 hour and restores 2d4+2 hit points, but the drinker must succeed on a DC 10 Constitution saving throw or become mildly intoxicated (disadvantage on Dexterity checks for 10 minutes). Commander Halvir swears it is the only thing keeping his garrison functional.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "common"
+    }
+  ]
+}

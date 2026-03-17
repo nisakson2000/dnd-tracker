@@ -184,6 +184,54 @@ pub fn create_character(
 }
 
 #[tauri::command]
+pub fn clone_character(
+    state: State<'_, AppState>,
+    character_id: String,
+) -> Result<String, String> {
+    let new_id = Uuid::new_v4().to_string()[..8].to_string();
+
+    let src_path = state.char_db_path(&character_id);
+    if !src_path.exists() {
+        return Err(format!("Character database not found: {}", character_id));
+    }
+
+    // Ensure any cached connection is flushed to disk before copying
+    // (WAL mode may have uncommitted pages in the -wal file)
+    state.with_char_conn(&character_id, |conn| {
+        conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);")
+            .map_err(|e| format!("Failed to checkpoint source DB: {}", e))?;
+        Ok(())
+    })?;
+
+    let dest_path = state.char_db_path(&new_id);
+    std::fs::copy(&src_path, &dest_path)
+        .map_err(|e| format!("Failed to copy character database: {}", e))?;
+
+    // Open the cloned DB and rename the character
+    let conn = db::open_connection(&dest_path)
+        .map_err(|e| format!("Failed to open cloned database: {}", e))?;
+
+    // Read current name and append " (Copy)"
+    let current_name: String = conn
+        .query_row(
+            "SELECT name FROM character_overview LIMIT 1",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap_or_else(|_| "New Character".to_string());
+
+    let new_name = format!("{} (Copy)", current_name);
+    let now = chrono::Utc::now().to_rfc3339();
+    conn.execute(
+        "UPDATE character_overview SET name=?1, updated_at=?2 WHERE id=1",
+        rusqlite::params![new_name, now],
+    )
+    .map_err(|e| format!("Failed to rename cloned character: {}", e))?;
+
+    Ok(new_id)
+}
+
+#[tauri::command]
 pub fn delete_character(
     state: State<'_, AppState>,
     character_id: String,

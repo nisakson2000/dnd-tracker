@@ -1,0 +1,215 @@
+{
+  "name": "Plague of Shadows",
+  "summary": "A plague of living shadows devours a remote mountain monastery, replacing monks with hollow duplicates. The party must descend into sealed catacombs to close a tear into the Shadowfell before the darkness spreads beyond the peaks.",
+  "description": "High in the Greypeak Mountains, the Monastery of the Dawning Light has stood for over four centuries as a bastion of knowledge and quiet contemplation. Its monks, devotees of a forgotten sun deity, maintained vast archives and practiced rituals said to hold back the darkness between worlds. Three weeks ago, all communication from the monastery ceased. Traders who supply the monks with food and parchment report strange phenomena on the mountain trail: pools of darkness that move against the wind, whispered voices in empty ravines, and an unnatural chill that clings to the bones long after descending. The Abbot's final message, scrawled in trembling hand and delivered by a half-dead courier, contained only three words: 'The seal broke.' Now the party has been hired by the regional governor to investigate. What they will find is far worse than silence. The monks still walk the halls, but their eyes are hollow, their shadows move independently, and something ancient stirs in the catacombs beneath the monastery — a tear in the fabric of reality connecting the Material Plane to the Shadowfell, growing wider with each soul it consumes.",
+  "level": "3-5",
+  "ruleset": "5e 2014",
+  "author": "The Codex",
+  "tags": ["mystery", "undead", "horror"],
+  "npcs": [
+    {
+      "name": "Brother Aldric",
+      "role": "Quest Giver",
+      "race": "Human",
+      "npc_class": "Cleric",
+      "location": "Greypeak Trail Waystation",
+      "description": "A gaunt, hollow-eyed monk in his late fifties who escaped the monastery during the first night of the shadow plague. His left hand is blackened and withered — touched by a shadow duplicate before he fled. He speaks in a halting, guilt-ridden whisper, constantly glancing at dark corners. Despite his terror, he is resolute in his belief that the monastery can be saved if the seal in the catacombs is restored. He carries a worn journal detailing the monastery's daily rituals, which contain clues to navigating the catacombs safely.",
+      "notes": "Knows the layout of the monastery and the location of the catacomb entrance. His blackened hand is slowly spreading — he has perhaps five days before he becomes a shadow duplicate himself. This can serve as a ticking clock for the party.",
+      "status": "alive"
+    },
+    {
+      "name": "Abbot Sere",
+      "role": "Key NPC",
+      "race": "Human",
+      "npc_class": "Cleric",
+      "location": "Monastery of the Dawning Light — Inner Sanctum",
+      "description": "Once a serene and commanding leader, Abbot Sere has been partially consumed by shadow. She exists in a twilight state — half herself, half shadow duplicate — flickering between lucidity and cold malice. In her lucid moments, she begs for death or rescue; in her shadow moments, she speaks with the voice of the Shadowfell entity and attempts to lure the party deeper into traps. Her white hair now streams with threads of living darkness, and her shadow on the wall moves seconds before she does.",
+      "notes": "She holds the Dawnkey, the only artifact capable of resealing the Shadowfell tear. The party must find a way to separate her from the shadow influence long enough to retrieve it. Radiant damage temporarily restores her lucidity for 1d4 rounds.",
+      "status": "alive"
+    },
+    {
+      "name": "The Umbral Shepherd",
+      "role": "Antagonist",
+      "race": "Undead (Shadow Entity)",
+      "npc_class": "Shadow Sorcerer",
+      "location": "Catacombs — The Breach Chamber",
+      "description": "An ancient entity from the Shadowfell that has been clawing at the seal for centuries. It appears as a towering humanoid silhouette with no features except two points of cold violet light where eyes should be. It does not speak aloud — instead, its words manifest as intrusive thoughts in the minds of those nearby, always calm, always reasonable, always urging surrender. It feeds on identity, consuming a creature's sense of self to birth shadow duplicates. It is patient, intelligent, and utterly alien in its motivations.",
+      "notes": "The Umbral Shepherd cannot leave the catacombs while the seal is even partially intact. It commands the shadow duplicates throughout the monastery telepathically. It is vulnerable to radiant damage and can be banished if the Dawnkey is used at the seal. In combat, it fights as a CR 5 shadow sorcerer with legendary actions.",
+      "status": "alive"
+    },
+    {
+      "name": "Sister Vael",
+      "role": "Ally",
+      "race": "Half-Elf",
+      "npc_class": "Monk",
+      "location": "Monastery of the Dawning Light — Bell Tower",
+      "description": "A young half-elf monk who has barricaded herself in the bell tower with two other survivors. Resourceful and fierce, she has discovered that the sound of the monastery's bronze bells temporarily disrupts shadow duplicates, causing them to lose cohesion for a few seconds. She has been ringing the bells at irregular intervals to keep the shadows at bay, but she is exhausted, starving, and running out of rope to pull the bell clappers. Her arms are covered in burns from the blessed bell ropes — the only thing that keeps the shadows from climbing the tower.",
+      "notes": "Can provide tactical information about shadow duplicate behavior and patrol patterns. If rescued, she can ring the bells during the final encounter to give the party advantage against shadow creatures for one round per bell toll. She knows a hidden passage from the bell tower to the kitchens.",
+      "status": "alive"
+    },
+    {
+      "name": "Governor Thessa Maryn",
+      "role": "Quest Giver",
+      "race": "Human",
+      "npc_class": "Noble",
+      "location": "Greypeak Foothill — Town of Dawnhaven",
+      "description": "The practical, no-nonsense governor of the mountain region surrounding the monastery. A former soldier in her mid-forties with close-cropped silver hair and a pronounced limp from an old campaign wound. She does not believe in curses or supernatural explanations — she suspects bandits or a rival political faction. She is offering a substantial reward for the investigation but will be genuinely shaken when she learns the truth. Despite her skepticism, she is fair and will honor any deal made with the party.",
+      "notes": "Provides the initial quest hook and can supply basic equipment, rations, and two riding horses for the mountain trail. She has also sent a previous scouting party of three soldiers who never returned — the party may encounter their shadow duplicates in the monastery.",
+      "status": "alive"
+    },
+    {
+      "name": "Korrin Duskwalker",
+      "role": "Neutral NPC",
+      "race": "Drow",
+      "npc_class": "Ranger",
+      "location": "Greypeak Trail — Mountain Pass",
+      "description": "A surface drow exile and wilderness guide who knows the Greypeak trails better than anyone alive. He has noticed the unnatural darkness spreading from the monastery and has been tracking its expansion with chalk marks on boulders. He is wary and transactional — he will share what he knows for coin or a favor, but he will not enter the monastery under any circumstances. He speaks plainly, avoids eye contact, and has a habit of carving small wooden animals while he talks. His raven companion, Nyx, scouts ahead and has seen things that deeply unsettle both of them.",
+      "notes": "Can guide the party safely along the mountain trail, avoiding shadow-tainted areas. He knows that the darkness has been growing roughly one hundred feet per day down the mountainside and estimates it will reach Dawnhaven in about twelve days. He can also identify the tracks of the governor's lost scouting party, leading directly into the monastery gates.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "Into the Dawning Dark",
+      "giver": "Governor Thessa Maryn",
+      "description": "Governor Maryn has lost contact with the Monastery of the Dawning Light and a scouting party she sent to investigate has not returned. She needs an experienced group to travel up the Greypeak Trail, determine what has happened at the monastery, and report back. The pay is 200 gold pieces for a full report, with a bonus for rescuing any survivors. She suspects mundane causes, but Brother Aldric's ravings about living shadows and stolen souls tell a different story entirely.",
+      "status": "active",
+      "notes": "The trail to the monastery takes two days on foot, one by horse. Random encounters with shadow-tainted wildlife (shadow wolves, darkmantle-infested caves) should increase in frequency as the party climbs higher.",
+      "objectives": [
+        { "text": "Speak with Brother Aldric at the Greypeak Trail Waystation to learn about the monastery's fall", "completed": false },
+        { "text": "Travel the Greypeak Trail to the Monastery of the Dawning Light", "completed": false },
+        { "text": "Determine the fate of the governor's scouting party", "completed": false },
+        { "text": "Report findings to Governor Maryn", "completed": false }
+      ]
+    },
+    {
+      "title": "The Hollow Monks",
+      "giver": "Brother Aldric",
+      "description": "Brother Aldric believes many of his fellow monks still live — trapped inside the shadow duplicates that have replaced them. He has seen them flicker, just for a moment, the real person visible beneath the shadow like a face under dark water. He begs the party to find a way to free them rather than simply destroying the duplicates. Sister Vael, barricaded in the bell tower, may know more about the nature of the duplicates and how to reverse the process. But time is running out — Brother Aldric's own blackened hand proves that the shadow's grip only tightens.",
+      "status": "active",
+      "notes": "There are roughly twenty shadow duplicates in the monastery. Destroying a duplicate kills the original monk permanently. However, exposing a duplicate to concentrated radiant energy (such as the Dawnkey or a sustained Daylight spell) can separate shadow from monk. The party must choose how many they can realistically save versus the time pressure of the spreading darkness.",
+      "objectives": [
+        { "text": "Reach the bell tower and make contact with Sister Vael", "completed": false },
+        { "text": "Learn how shadow duplicates are created and whether the process can be reversed", "completed": false },
+        { "text": "Recover the Dawnkey from Abbot Sere", "completed": false },
+        { "text": "Free as many trapped monks as possible before sealing the breach", "completed": false }
+      ]
+    },
+    {
+      "title": "Seal the Breach",
+      "giver": "Abbot Sere (during a moment of lucidity)",
+      "description": "Beneath the monastery lies a network of catacombs where the order's founders are entombed. At the deepest point, in a chamber called the Breach Room, a ward carved into the living rock has held back a tear into the Shadowfell for over four hundred years. Something — or someone — damaged the ward, and now the tear is widening. The Umbral Shepherd, a Shadowfell entity of terrible patience, pours its influence through the gap. The Dawnkey, a relic shaped like a golden sundial, must be placed in the ward's central socket to reseal the breach. But the Shepherd will not let the party close its door to the Material Plane without a fight.",
+      "status": "active",
+      "notes": "The catacombs are a three-level dungeon with environmental hazards (darkness that suppresses darkvision, cold damage in shadow-heavy rooms, whispering that forces Wisdom saves or suffer the frightened condition). The final encounter with the Umbral Shepherd is meant to be a challenging fight for a level 4-5 party, with the Shepherd using lair actions tied to the Shadowfell tear.",
+      "objectives": [
+        { "text": "Navigate the catacombs beneath the monastery to reach the Breach Room", "completed": false },
+        { "text": "Survive the environmental hazards of the shadow-tainted tunnels", "completed": false },
+        { "text": "Confront and defeat or banish the Umbral Shepherd", "completed": false },
+        { "text": "Use the Dawnkey to reseal the Shadowfell breach", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "Monastery of the Dawning Light",
+      "category": "Location",
+      "body": "Perched on a granite shelf two-thirds up Greypeak's northern face, the Monastery of the Dawning Light is a sprawling complex of pale stone buildings, meditation gardens, and an archive said to contain over ten thousand scrolls. Built four centuries ago by the Order of the First Ray — devotees of a forgotten sun deity whose name has been lost even to the monks — the monastery was deliberately constructed atop a natural weak point between planes, a thin spot where the Shadowfell presses close to the Material Plane. The founders carved a powerful ward into the bedrock of the mountain itself and built the monastery as both a place of learning and a permanent garrison against the dark. The ward requires maintenance through daily dawn rituals performed by the abbot, and the monastery's bells — cast from bronze alloyed with blessed silver — serve as both timekeepers and a ward-reinforcement mechanism.",
+      "related_to": "Abbot Sere, Brother Aldric, Sister Vael"
+    },
+    {
+      "title": "The Shadowfell Tear",
+      "category": "Planar Phenomenon",
+      "body": "The boundary between the Material Plane and the Shadowfell is not uniform. In certain locations — places of great sorrow, ancient death, or geological instability — the membrane thins to near transparency. The Greypeak tear is one such weak point, a roughly circular area in the deepest catacomb where reality shimmers like heat haze and the air tastes of ash and cold iron. Through the tear, one can glimpse the Shadowfell: an endless grey expanse of dead trees, colorless earth, and a sky that has never known stars. When the ward was intact, the tear was stable and harmless — scholars even studied it as an academic curiosity. Now that the ward has cracked, shadow-stuff bleeds through like ink in water, corrupting everything it touches and providing a conduit for the Umbral Shepherd's consciousness.",
+      "related_to": "The Umbral Shepherd, Breach Room"
+    },
+    {
+      "title": "Shadow Duplicates",
+      "category": "Creature",
+      "body": "When a living creature is consumed by the shadow plague, its identity — memories, personality, mannerisms — is stripped away and used to construct a duplicate made of solidified shadow-stuff. The duplicate is physically indistinguishable from the original in dim light but appears flat and slightly translucent in bright light. It mimics the original's behavior patterns but lacks genuine emotion — its laughter is hollow, its concern performative, its anger cold and mechanical. The original creature is not killed but rather suspended in a state of conscious paralysis within the duplicate, aware but unable to act or speak. Duplicates are vulnerable to radiant damage and sustained bright light. When a duplicate is destroyed by mundane means, the original creature dies. When a duplicate is destroyed by radiant energy, there is a chance the original can be freed, though the process is traumatic.",
+      "related_to": "The Hollow Monks quest, Brother Aldric"
+    },
+    {
+      "title": "The Order of the First Ray",
+      "category": "Faction",
+      "body": "A monastic order founded by a solar named Aureth who chose to take mortal form to combat the spread of Shadowfell influence in the Material Plane. The order's monks are not warriors but scholars, archivists, and ritualists who maintain the dawn wards through discipline, prayer, and meticulous record-keeping. At its height, the order maintained seven monasteries across the world, each guarding a Shadowfell weak point. Over the centuries, the other six monasteries fell to war, neglect, or natural disaster, leaving the Dawning Light as the last. The order's numbers have dwindled to fewer than thirty monks, and their understanding of the ward magic has degraded to rote ritual — they perform the daily ceremonies but no longer understand the principles behind them, which is partly why they failed to notice the ward's deterioration until it was too late.",
+      "related_to": "Monastery of the Dawning Light, Abbot Sere"
+    },
+    {
+      "title": "The Greypeak Trail",
+      "category": "Location",
+      "body": "A narrow, switchbacking mountain path that ascends from the foothill town of Dawnhaven to the monastery above. The trail takes two days to climb on foot, passing through alpine forests, rocky scree fields, and a narrow pass called the Needle's Eye where the path narrows to single file along a cliff edge. Under normal circumstances, the trail is well-maintained and reasonably safe. Since the shadow plague began, the upper portions of the trail have become increasingly dangerous: patches of unnatural darkness cling to overhangs and cave mouths, shadow-tainted animals (wolves with too-long silhouettes, ravens with hollow eyes) stalk travelers, and the temperature drops precipitously the closer one gets to the monastery. Korrin Duskwalker has mapped the safe portions of the trail and marked dangerous areas with chalk runes on boulders.",
+      "related_to": "Korrin Duskwalker, Dawnhaven"
+    },
+    {
+      "title": "Dawnhaven",
+      "category": "Location",
+      "body": "A modest mountain town of roughly five hundred souls nestled at the base of the Greypeak Trail. Dawnhaven exists primarily to support the monastery — its economy revolves around supplying the monks with food, parchment, ink, and other necessities, and in return the monks provide healing services, education, and spiritual guidance. The town is governed by Governor Thessa Maryn, a practical administrator who took the post after retiring from military service. Since the monastery went silent, Dawnhaven has grown uneasy. The traders who usually make weekly supply runs have stopped going up the mountain. Strange shadows have been seen at the tree line above town. And three of the governor's soldiers, sent to investigate, have not returned. Fear is building, and some families have begun packing their belongings.",
+      "related_to": "Governor Thessa Maryn, Greypeak Trail"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: Plague of Shadows",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe mountain air bites cold as your party arrives in Dawnhaven, a quiet town pressed against the base of the Greyspeak range. You were summoned here by a posting on the adventurer's board — or perhaps by a direct letter from the governor — promising good coin for straightforward work: investigate a monastery that has gone silent.\n\nBut nothing about Dawnhaven feels straightforward. The townsfolk speak in hushed voices and avoid the north-facing windows of their homes. Children are kept indoors after sunset. The innkeeper at the Hearthstone Lodge tells you that a monk stumbled down the mountain trail five days ago, half-mad and muttering about shadows that move on their own, about brothers and sisters who smile with the wrong faces.\n\nGovernor Thessa Maryn receives you in her office at the town hall — a sparse, practical room that suits its occupant. She lays out the situation with military brevity: the Monastery of the Dawning Light has been out of contact for three weeks. A scouting party of three soldiers was dispatched ten days ago and has not returned. A monk named Brother Aldric arrived at the waystation on the trail, raving about a plague of shadows. The governor needs answers, and she needs them before whatever is happening up there comes down here.\n\nThe Greypeak Trail awaits. Above you, somewhere in the mist and granite, the monastery sits in silence — or what passes for it.",
+    "tags": "horror, mystery, monastery, shadows, introduction",
+    "npcs_mentioned": "Governor Thessa Maryn, Brother Aldric"
+  },
+  "items": [
+    {
+      "name": "The Dawnkey",
+      "item_type": "wondrous item",
+      "weight": 2.0,
+      "value_gp": 5000.0,
+      "quantity": 1,
+      "description": "A golden sundial roughly six inches in diameter, warm to the touch even in freezing conditions. Its gnomon is shaped like a single ray of light, and the dial face is inscribed with prayers in Celestial that glow faintly in darkness. When held aloft, it sheds bright light in a 30-foot radius and dim light for an additional 30 feet. As an action, the wielder can expend one charge to cast Daylight centered on the Dawnkey (3 charges, regains 1d3 charges at dawn). The Dawnkey is the only object capable of resealing the Shadowfell breach beneath the monastery — when placed in the ward's central socket, it completes the circuit and restores the seal.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "offhand",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Shadowtouched Lantern",
+      "item_type": "wondrous item",
+      "weight": 1.0,
+      "value_gp": 350.0,
+      "quantity": 1,
+      "description": "A monastery lantern that has been partially corrupted by shadow-stuff. Its glass panes are clouded with swirling darkness, and the flame inside burns cold and grey. When lit, this lantern reveals invisible creatures and objects within 15 feet that are connected to the Shadowfell — shadow duplicates, hidden shadow creatures, and lingering shadow residue all become visible as dark outlines rimmed with faint violet light. However, carrying the lit lantern imposes disadvantage on saving throws against being frightened, as the wielder sees the true extent of the shadow corruption around them.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "offhand",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Bell-Bronze Shield",
+      "item_type": "armor",
+      "weight": 6.0,
+      "value_gp": 800.0,
+      "quantity": 1,
+      "description": "A round shield forged from the same blessed bronze alloy used to cast the monastery's ward-bells. Its surface is etched with concentric circles radiating from a central boss shaped like a rising sun. When struck by a melee attack, the shield produces a clear, resonant tone that disrupts shadow creatures within 10 feet, imposing disadvantage on their next attack roll. Once per long rest, the wielder can strike the shield as an action to produce a powerful toll that forces all shadow creatures within 30 feet to make a DC 14 Constitution saving throw or be stunned until the end of the wielder's next turn.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "offhand",
+      "stat_modifiers": "{\"ac\": 2}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Brother Aldric's Journal",
+      "item_type": "adventuring gear",
+      "weight": 0.5,
+      "value_gp": 0.0,
+      "quantity": 1,
+      "description": "A worn leather journal filled with Brother Aldric's meticulous handwriting. The first half contains years of mundane monastery records: supply inventories, weather observations, and transcriptions of dawn rituals. The final pages, written in increasingly shaky script, document the shadow plague's progression day by day. Studying the journal for one hour grants advantage on Investigation checks made within the monastery and reveals the location of a hidden passage from the kitchens to the catacombs that bypasses the main catacomb entrance, which is heavily guarded by shadow duplicates.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "none",
+      "stat_modifiers": "{}",
+      "rarity": "common"
+    }
+  ]
+}

@@ -6,7 +6,7 @@ import {
   Library, ChevronRight, ChevronLeft, Scroll, Check, X,
   Search, Users, Upload, ClipboardList, Flag, FileJson,
   Sparkles, Coins, BookOpen, AlertTriangle, Moon,
-  Clock, CheckCircle, XCircle, Zap, Save, Download, Dices,
+  Clock, CheckCircle, XCircle, Zap, Save, Download, Dices, Copy,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
@@ -41,27 +41,6 @@ const CLASSES = [
   { id: 'Sorcerer',  color: '#e74c3c', bg: 'rgba(231,76,60,0.12)',   sym: '✦',  flavor: 'Born of magic' },
   { id: 'Warlock',   color: '#9b59b6', bg: 'rgba(155,89,182,0.12)',  sym: '👁', flavor: 'Patron\'s vessel' },
   { id: 'Wizard',    color: '#3498db', bg: 'rgba(52,152,219,0.12)',  sym: '📖', flavor: 'Arcane scholar' },
-];
-
-// ─── NPC & Encounter quick-gen data ─────────────────────────────────────────
-
-const NPC_NAMES = ['Grim', 'Aldric', 'Seraphina', 'Thorne', 'Isolde', 'Bramwell', 'Lyra', 'Corwin', 'Elara', 'Magnus'];
-const NPC_TRAITS = ['grumpy', 'jovial', 'suspicious', 'generous', 'mysterious', 'nervous', 'boisterous', 'quiet', 'cunning', 'noble'];
-const NPC_ROLES = ['innkeeper', 'blacksmith', 'merchant', 'guard', 'scholar', 'thief', 'priest', 'farmer', 'noble', 'wanderer'];
-
-const ENCOUNTER_HOOKS = [
-  'A band of goblins ambush from the treeline',
-  'An injured traveler stumbles out of the fog',
-  'A merchant cart has been overturned, its guards missing',
-  'Strange lights flicker in the abandoned watchtower',
-  'A bridge troll demands a riddle contest for passage',
-  'Wolves circle the campsite as night falls',
-  'A mysterious stranger offers a map to buried treasure',
-  'The road ahead is blocked by a fresh landslide',
-  'Bandits disguised as pilgrims approach the party',
-  'A dragon\'s shadow passes overhead, circling twice',
-  'An old well emanates faint cries for help',
-  'A courier rushes past, dropping a sealed letter',
 ];
 
 const RUNE_CHARS = ['ᚠ','ᚢ','ᚦ','ᚨ','ᚱ','ᚲ','ᚷ','ᚹ','ᚺ','ᚾ','ᛁ','ᛃ','ᛇ','ᛈ','ᛉ','ᛊ','ᛏ','ᛒ','ᛖ','ᛗ','ᛚ','ᛜ','ᛞ','ᛟ'];
@@ -154,7 +133,7 @@ function timeAgo(dateStr) {
 
 // ─── Character card ──────────────────────────────────────────────────────────
 
-function CharacterCard({ char, index, onEnter, onDelete, onSessionPrep, onEndSession }) {
+function CharacterCard({ char, index, onEnter, onDelete, onDuplicate, onSessionPrep, onEndSession }) {
   const [hovered, setHovered] = useState(false);
   const cls = CLASSES.find(c => c.id === char.primary_class);
   const clsColor = cls?.color || '#c9a84c';
@@ -255,6 +234,23 @@ function CharacterCard({ char, index, onEnter, onDelete, onSessionPrep, onEndSes
           onClick={e => { e.stopPropagation(); onDelete(char); }}
         >
           <Trash2 size={12} />
+        </motion.button>
+
+        {/* Duplicate */}
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: hovered ? 1 : 0 }}
+          style={{
+            position: 'absolute', top: 8, left: 42, border: 'none', cursor: 'pointer',
+            width: 28, height: 28, borderRadius: 8, fontSize: 12,
+            background: 'rgba(0,0,0,0.45)', color: 'rgba(200,175,130,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          whileHover={{ color: '#c9a84c', background: 'rgba(201,168,76,0.2)' }}
+          onClick={e => { e.stopPropagation(); onDuplicate(char); }}
+          title="Duplicate character"
+        >
+          <Copy size={12} />
         </motion.button>
 
       </div>
@@ -640,7 +636,7 @@ function CampaignCard({ char, index, onEnter, onDelete, onExport }) {
       whileHover={{ y: -6, boxShadow: `0 14px 50px rgba(0,0,0,0.7), 0 0 0 1px ${color}40` }}
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
-      onClick={() => onEnter(char.id)}
+      onClick={() => onEnter(char.id, char.status)}
       style={{
         borderRadius: 14, overflow: 'hidden', cursor: 'pointer',
         background: 'rgba(11,9,20,0.9)',
@@ -2589,6 +2585,16 @@ export default function Dashboard() {
     }
   };
 
+  const handleDuplicate = async (char) => {
+    try {
+      await invoke('clone_character', { characterId: char.id });
+      toast.success('Character duplicated!');
+      load();
+    } catch (err) {
+      toast.error(`Failed to duplicate: ${err.message || err}`);
+    }
+  };
+
   const handleImport = async (data) => {
     try {
       const name = data.overview?.name || 'Imported Character';
@@ -2966,78 +2972,6 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* ─── Quick Actions Section ─────────────────────────────────── */}
-          {!isDM && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.42 }}
-              style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 18, marginTop: 4 }}
-            >
-              <motion.button
-                whileHover={{ scale: 1.06, background: 'rgba(201,168,76,0.15)' }}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => {
-                  const roll = Math.floor(Math.random() * 20) + 1;
-                  toast(roll === 20 ? `d20: NAT 20!` : roll === 1 ? `d20: Critical fail... 1` : `d20: ${roll}`, {
-                    icon: roll === 20 ? '🎉' : roll === 1 ? '💀' : '🎲',
-                    style: { background: '#1a1425', color: '#f0e4c8', border: '1px solid rgba(201,168,76,0.3)', fontFamily: 'var(--font-heading)' },
-                  });
-                }}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '6px 16px', borderRadius: 99, cursor: 'pointer',
-                  background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.18)',
-                  fontFamily: 'var(--font-heading)', fontSize: 11, color: 'rgba(200,175,130,0.6)', letterSpacing: '0.04em',
-                  transition: 'all 0.15s',
-                }}
-              >
-                <Dices size={12} style={{ color: 'rgba(201,168,76,0.55)' }} />
-                Quick Roll d20
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.06, background: 'rgba(201,168,76,0.15)' }}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => {
-                  if (characters.length > 0) {
-                    toast('Open a character to rest', {
-                      icon: '🌙',
-                      style: { background: '#1a1425', color: '#f0e4c8', border: '1px solid rgba(201,168,76,0.3)', fontFamily: 'var(--font-heading)' },
-                    });
-                  }
-                }}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '6px 16px', borderRadius: 99, cursor: 'pointer',
-                  background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.18)',
-                  fontFamily: 'var(--font-heading)', fontSize: 11, color: 'rgba(200,175,130,0.6)', letterSpacing: '0.04em',
-                  transition: 'all 0.15s',
-                }}
-              >
-                <Moon size={12} style={{ color: 'rgba(201,168,76,0.55)' }} />
-                Long Rest All
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.06, background: 'rgba(201,168,76,0.15)' }}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => {
-                  if (characters.length > 0) {
-                    const recent = [...characters].sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''))[0];
-                    navigate(`/character/${recent.id}?section=random-tables`);
-                  }
-                }}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '6px 16px', borderRadius: 99, cursor: 'pointer',
-                  background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.18)',
-                  fontFamily: 'var(--font-heading)', fontSize: 11, color: 'rgba(200,175,130,0.6)', letterSpacing: '0.04em',
-                  transition: 'all 0.15s',
-                }}
-              >
-                <BookOpen size={12} style={{ color: 'rgba(201,168,76,0.55)' }} />
-                Random Table
-              </motion.button>
-            </motion.div>
-          )}
 
           {isDM && (
             <>
@@ -3074,58 +3008,6 @@ export default function Dashboard() {
                   {characters.filter(c => c.status === 'draft').length} Draft
                 </div>
               </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.42 }}
-                style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}
-              >
-                <motion.button
-                  whileHover={{ scale: 1.06, background: 'rgba(155,89,182,0.15)' }}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => {
-                    const name = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
-                    const trait = NPC_TRAITS[Math.floor(Math.random() * NPC_TRAITS.length)];
-                    const role = NPC_ROLES[Math.floor(Math.random() * NPC_ROLES.length)];
-                    toast(`${name} — a ${trait} ${role}`, {
-                      icon: '🎭',
-                      duration: 5000,
-                      style: { background: '#1a1425', color: '#f0e4c8', border: '1px solid rgba(155,89,182,0.3)', fontFamily: 'var(--font-heading)' },
-                    });
-                  }}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    padding: '6px 16px', borderRadius: 99, cursor: 'pointer',
-                    background: 'rgba(155,89,182,0.06)', border: '1px solid rgba(155,89,182,0.18)',
-                    fontFamily: 'var(--font-heading)', fontSize: 11, color: 'rgba(192,132,252,0.6)', letterSpacing: '0.04em',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  <Users size={12} style={{ color: 'rgba(155,89,182,0.55)' }} />
-                  Quick NPC
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.06, background: 'rgba(155,89,182,0.15)' }}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => {
-                    const hook = ENCOUNTER_HOOKS[Math.floor(Math.random() * ENCOUNTER_HOOKS.length)];
-                    toast(hook, {
-                      icon: '⚔️',
-                      duration: 5000,
-                      style: { background: '#1a1425', color: '#f0e4c8', border: '1px solid rgba(155,89,182,0.3)', fontFamily: 'var(--font-heading)' },
-                    });
-                  }}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    padding: '6px 16px', borderRadius: 99, cursor: 'pointer',
-                    background: 'rgba(155,89,182,0.06)', border: '1px solid rgba(155,89,182,0.18)',
-                    fontFamily: 'var(--font-heading)', fontSize: 11, color: 'rgba(192,132,252,0.6)', letterSpacing: '0.04em',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  <Dices size={12} style={{ color: 'rgba(155,89,182,0.55)' }} />
-                  Quick Encounter
-                </motion.button>
-              </motion.div>
             </>
           )}
 
@@ -3133,7 +3015,9 @@ export default function Dashboard() {
             {filteredCharacters.map((c, i) => isDM ? (
               <CampaignCard
                 key={c.id} char={c} index={i}
-                onEnter={id => navigate(`/dm/lobby/${id}`)}
+                onEnter={(id) => {
+                  navigate(`/character/${id}`, { state: { section: 'campaign-hub' } });
+                }}
                 onDelete={setDeleteTarget}
                 onExport={handleExportCampaign}
               />
@@ -3142,6 +3026,7 @@ export default function Dashboard() {
                 key={c.id} char={c} index={i}
                 onEnter={id => navigate(`/character/${id}`)}
                 onDelete={setDeleteTarget}
+                onDuplicate={handleDuplicate}
               />
             ))}
             {!charSearch.trim() && (

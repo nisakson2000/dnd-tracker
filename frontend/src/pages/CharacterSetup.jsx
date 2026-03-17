@@ -1545,6 +1545,45 @@ export default function CharacterSetup() {
         });
       }
 
+      // 7. Auto-add racial traits as features
+      if (raceData?.traits?.length) {
+        for (const trait of raceData.traits) {
+          await invoke('add_feature', {
+            characterId,
+            payload: {
+              name: trait.name,
+              source: [raceData.name, raceData.subrace].filter(Boolean).join(' '),
+              source_level: 1,
+              feature_type: 'racial',
+              description: trait.description || '',
+              uses_total: 0,
+              uses_remaining: 0,
+              recharge: 'none',
+            },
+          }).catch(() => {});
+        }
+      }
+
+      // 8. Auto-add background feature and proficiencies (2024 edition)
+      // TODO: For 5e-2014, add structured background data to rules5e.js with the following shape:
+      //   { name: string, feature: { name, description }, skillProficiencies: string[], toolProficiencies?: string[], languages?: string[] }
+      // Then auto-populate features and proficiencies here for 2014 backgrounds as well.
+      if (is2024 && backgroundData?.feat) {
+        await invoke('add_feature', {
+          characterId,
+          payload: {
+            name: backgroundData.feat,
+            source: backgroundData.name || 'Background',
+            source_level: 1,
+            feature_type: 'background',
+            description: `Origin feat from the ${backgroundData.name} background.`,
+            uses_total: 0,
+            uses_remaining: 0,
+            recharge: 'none',
+          },
+        }).catch(() => {});
+      }
+
       toast.success(`${overview.name} is ready for adventure!`);
       navigate(`/character/${characterId}`);
     } catch (err) {

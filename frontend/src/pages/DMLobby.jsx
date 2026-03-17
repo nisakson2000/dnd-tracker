@@ -14,6 +14,7 @@ import { useSession } from '../contexts/SessionContext';
 import { useAppMode } from '../contexts/ModeContext';
 import { rulesetMatch, rulesetLabel } from '../utils/rulesetUtils';
 import ConfirmDialog from '../components/ConfirmDialog';
+import CampaignOverview from '../components/dm-campaign/CampaignOverview';
 import SessionRecap from '../components/dm-session/SessionRecap';
 import HandoutsManager from '../components/dm-session/HandoutsManager';
 import QuestGenerator from '../components/dm-session/QuestGenerator';
@@ -541,6 +542,14 @@ export default function DMLobby() {
             <Play size={18} /> {starting ? 'Starting...' : 'Start Session'}
           </button>
         </motion.div>
+
+        {/* Campaign Overview Dashboard */}
+        <CampaignOverview
+          campaign={campaign}
+          scenes={scenes}
+          connectedPlayers={connectedPlayers}
+          onRefresh={loadScenes}
+        />
 
         {/* Two-column layout */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>

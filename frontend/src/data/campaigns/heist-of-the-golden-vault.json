@@ -1,0 +1,217 @@
+{
+  "name": "Heist of the Golden Vault",
+  "summary": "A daring heist on a legendary gambling hall in a corrupt port city, where the party must infiltrate a heavily guarded underground vault to recover a stolen artifact for a desperate resistance cell.",
+  "description": "The port city of Thalassora is a place where coin speaks louder than conscience. Ruled by the Merchant Triad — three obscenely wealthy trading dynasties who seized power from the old aristocracy a generation ago — the city is a glittering monument to greed dressed up as prosperity. At the heart of Thalassora's entertainment district stands the Golden Vault, a five-story gambling hall and pleasure palace that is the crown jewel of the Triad's empire. Its marble floors are inlaid with gold leaf, its chandeliers burn with ever-bright magical flames, and its clientele includes the wealthiest and most powerful figures on the coast. But the Golden Vault has a secret. Beneath its opulent floors, behind enchanted locks and arcane wards, lies an actual vault — a massive underground strongroom where the Triad stores its most valuable and most incriminating possessions. Among them is the Tidemother's Compact, an ancient treaty-artifact that grants legitimate rulership of Thalassora to whoever holds it. The Triad stole it from the city's original governing council during their coup and has kept it locked away ever since. Now a resistance movement called the Lantern Bearers has contacted the party with a proposition: break into the Golden Vault, steal the Compact, and return it to the people of Thalassora. The pay is modest, but the chance to topple tyrants is priceless.",
+  "level": "3-5",
+  "ruleset": "5e 2014",
+  "author": "The Codex",
+  "tags": ["heist", "intrigue", "urban"],
+  "npcs": [
+    {
+      "name": "Lysara Venn",
+      "role": "Quest Giver",
+      "race": "Half-Elf",
+      "npc_class": "Rogue",
+      "location": "Thalassora — The Drowned Rat Tavern (Lantern Bearer safehouse)",
+      "description": "The de facto leader of the Lantern Bearers, a former Triad bookkeeper who discovered the full extent of their corruption and defected. She is sharp, cautious, and carries herself with the coiled energy of someone who has been hunted for two years. Her dark hair is kept short for practicality, and she has a thin scar running from her left ear to her jaw — a parting gift from Triad enforcers. She plans meticulously, speaks precisely, and has little patience for bravado. Beneath her controlled exterior, she is driven by genuine outrage at what the Triad has done to Thalassora and a deep personal guilt for the years she spent helping them do it.",
+      "notes": "Lysara provides the party with the initial briefing, floor plans of the Golden Vault's upper levels (obtained during her time as a bookkeeper), and a contact inside the Vault who can get the party through the front door. She does not know the layout of the underground vault itself — that information must be obtained through other means.",
+      "status": "alive"
+    },
+    {
+      "name": "Degan Thorne",
+      "role": "Antagonist",
+      "race": "Human",
+      "npc_class": "Fighter",
+      "location": "The Golden Vault — Security Office (3rd Floor)",
+      "description": "Head of security for the Golden Vault and a former pit fighter who clawed his way up through the Triad's ranks through a combination of brutal competence and unsettling loyalty. He is a mountain of a man — six and a half feet tall, shaved head, with hands like shovels and a surprisingly soft, measured voice that makes his threats all the more chilling. He runs the Vault's security with military precision: rotating guard patrols, magical scrying checkpoints, enchanted locks on every door below the main floor, and a team of trained displacer beasts in the sub-basement. He is not cruel for cruelty's sake but is utterly without mercy when it comes to protecting his employers' interests.",
+      "notes": "Degan patrols the third floor personally from midnight to dawn. He carries a master key that opens every mundane lock in the building. He is fiercely loyal to the Triad but has a personal code — he will not harm children or bystanders, which the party could potentially exploit. In combat, he fights as a CR 4 Champion Fighter with a magical greatsword.",
+      "status": "alive"
+    },
+    {
+      "name": "Mirabel Solis",
+      "role": "Ally (Inside Contact)",
+      "race": "Gnome",
+      "npc_class": "Bard",
+      "location": "The Golden Vault — Main Gaming Floor",
+      "description": "A performer and card dealer at the Golden Vault who secretly works for the Lantern Bearers. She is a whirlwind of charm and energy, a natural entertainer who uses her position to eavesdrop on Triad conversations and pass information to the resistance. She has copper-red curls, an infectious laugh, and an almost supernatural ability to make people feel comfortable enough to say things they shouldn't. She has been undercover at the Vault for eight months, and the strain is beginning to show — she drinks more than she used to, and her laughter sometimes has a brittle edge. She genuinely likes some of her coworkers at the Vault and struggles with the knowledge that the heist may cost them their livelihoods.",
+      "notes": "Mirabel can smuggle the party into the Vault disguised as high-roller guests, new hires, or entertainment acts. She knows the guard rotation on the main floor and the location of the service elevator that connects to the sub-basement. She will not participate in violence and will break cover to flee if fighting starts on the main floor.",
+      "status": "alive"
+    },
+    {
+      "name": "Cassius Aldren",
+      "role": "Antagonist",
+      "race": "Human",
+      "npc_class": "Wizard",
+      "location": "The Golden Vault — The Underground Vault",
+      "description": "The Triad's personal arcanist and the designer of the vault's magical defenses. A thin, impeccably dressed man in his sixties with silver-rimmed spectacles and an air of academic detachment that borders on sociopathy. He views the vault's security systems as his masterwork — a puzzle box of interlocking wards, glyphs, and enchantments that he considers unbreakable. He visits the vault twice weekly to maintain the wards and conduct private research, and he takes any breach of his systems as a profound personal insult. He is vain about his intellect, dismissive of non-arcane threats, and dangerously competent when cornered.",
+      "notes": "Cassius has designed three layers of magical defense in the vault: an anti-magic field in the entry corridor (which also disables the party's magic), a corridor of glyph traps keyed to detect unauthorized heartbeats, and a final ward on the vault door that requires a specific arcane passphrase spoken in Draconic. The passphrase changes weekly; the current one can be found in Cassius's personal journal, kept in his office on the fourth floor.",
+      "status": "alive"
+    },
+    {
+      "name": "Rook",
+      "role": "Neutral NPC",
+      "race": "Tiefling",
+      "npc_class": "Rogue",
+      "location": "Thalassora — The Underbelly (sewer network)",
+      "description": "A freelance thief and information broker who operates out of Thalassora's sewer network, which she has mapped extensively over the past decade. She is lanky, sardonic, and perpetually amused by everyone else's problems. Her skin is a deep charcoal, her horns are filed to blunt nubs (to fit through tight spaces, she says), and she wears a patchwork coat of pockets, each containing some useful tool or trinket. She has no loyalty to the Lantern Bearers or the Triad — she sells information to whoever pays. However, she has a grudging respect for audacity, and a heist against the Golden Vault is audacious enough to earn a discount.",
+      "notes": "Rook can sell the party a sewer map showing a maintenance tunnel that connects to the Golden Vault's sub-basement (price: 50 gp or a favor to be named later). She also knows that the displacer beasts in the sub-basement are fed at exactly 2 AM, leaving a 15-minute window when their handlers are in the kennel area rather than patrolling. Her 'favor' will come due in a future adventure.",
+      "status": "alive"
+    },
+    {
+      "name": "Triad Master Orlan Vex",
+      "role": "Antagonist",
+      "race": "Human",
+      "npc_class": "Noble",
+      "location": "The Golden Vault — Private Suite (5th Floor)",
+      "description": "The most powerful of the three Triad leaders and the one who personally ordered the theft of the Tidemother's Compact twenty years ago. He is a handsome man in his late fifties who has cultivated an image of benevolent philanthropy — he funds orphanages, sponsors festivals, and is beloved by the common people who have no idea he orchestrated the coup that impoverished them. He spends most evenings in his private suite at the Vault, entertaining guests and conducting business over expensive wine. He is charming, intelligent, utterly ruthless, and genuinely believes he is a better ruler than any council could be. He is not present in the underground vault but will become the party's primary enemy if the heist succeeds.",
+      "notes": "Orlan is not a direct combat threat but commands vast resources. If the heist is discovered, he will mobilize the city guard, offer a bounty on the party, and personally oversee the hunt. He has a contingency plan: if the Compact is stolen, he intends to claim it was destroyed years ago and that whoever holds it now possesses a forgery. The party will need to find a way to publicly authenticate the Compact to counter this narrative.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "Case the Joint",
+      "giver": "Lysara Venn",
+      "description": "Before the heist can proceed, the party needs to gather intelligence on the Golden Vault's defenses, routines, and layout — especially the underground vault, which Lysara has no information about. This means getting inside the Vault as guests, workers, or through less conventional means, and observing everything without raising suspicion. Mirabel Solis, the Lantern Bearers' inside contact, can help with initial access, but the party will need to explore beyond the public areas on their own. Key information needed: guard patrol schedules, the location and nature of magical defenses, how to access the underground vault, and an escape route.",
+      "status": "active",
+      "notes": "This quest is designed for social interaction, stealth, and investigation. The party can approach it in many ways: posing as high-roller gamblers, applying for jobs at the Vault, sneaking in through the sewers to map the sub-basement, or even befriending off-duty guards at local taverns. Each approach yields different pieces of the puzzle.",
+      "objectives": [
+        { "text": "Make contact with Mirabel Solis inside the Golden Vault", "completed": false },
+        { "text": "Observe and record the guard patrol schedule on at least two floors", "completed": false },
+        { "text": "Locate the entrance to the underground vault", "completed": false },
+        { "text": "Identify the magical defenses protecting the vault and find a way to bypass them", "completed": false },
+        { "text": "Plan a viable escape route from the vault to a safe location", "completed": false }
+      ]
+    },
+    {
+      "title": "The Golden Heist",
+      "giver": "Lysara Venn",
+      "description": "The moment of truth. Using the intelligence gathered during the casing phase, the party must infiltrate the Golden Vault, navigate its defenses, reach the underground vault, steal the Tidemother's Compact, and escape without being caught — or at least without being identified. The heist window is narrow: the party has one night to execute the plan, and every complication burns precious time. Degan Thorne's security team patrols in overlapping shifts, Cassius Aldren's magical wards require specific countermeasures, and the displacer beasts in the sub-basement are hungry, perceptive, and very fast.",
+      "status": "active",
+      "notes": "The heist should be run as a tense, multi-stage skill challenge with combat as a last resort. Stealth, deception, and creative problem-solving should be rewarded. If the alarm is raised, the difficulty escalates dramatically — reinforcements arrive in 3 rounds, and Degan Thorne personally responds within 5 rounds. The party can still succeed after an alarm but must move fast and abandon subtlety.",
+      "objectives": [
+        { "text": "Enter the Golden Vault without raising suspicion", "completed": false },
+        { "text": "Reach the sub-basement level without triggering an alarm", "completed": false },
+        { "text": "Bypass or disable Cassius Aldren's magical vault defenses", "completed": false },
+        { "text": "Retrieve the Tidemother's Compact from the vault", "completed": false },
+        { "text": "Escape the Golden Vault and reach the Lantern Bearer safehouse", "completed": false }
+      ]
+    },
+    {
+      "title": "Return to the People",
+      "giver": "Lysara Venn",
+      "description": "Stealing the Compact is only half the battle. The Tidemother's Compact must be presented publicly to Thalassora's citizenry to delegitimize the Triad's rule, and Triad Master Orlan Vex is already spinning his counter-narrative — claiming the Compact was destroyed long ago and that any artifact produced now is a forgery crafted by malcontents. The Lantern Bearers need the party to help authenticate the Compact, protect it from Triad agents trying to reclaim or destroy it, and ensure it reaches the public forum where the city's future will be decided. The Triad will throw everything they have at stopping this — hired assassins, corrupt city guards, and possibly even Cassius Aldren himself.",
+      "status": "active",
+      "notes": "This quest transitions from heist to political thriller. The party must navigate social encounters, chase sequences through city streets, and potentially a final confrontation with Triad forces at the public forum. The Compact can be authenticated by a specific NPC — the elderly harbormaster, who witnessed the original coup and can testify to the Compact's legitimacy.",
+      "objectives": [
+        { "text": "Find a way to publicly authenticate the Tidemother's Compact", "completed": false },
+        { "text": "Protect the Compact from Triad agents attempting to reclaim or destroy it", "completed": false },
+        { "text": "Escort the Compact to the public forum in Thalassora's harbor square", "completed": false },
+        { "text": "Ensure the Compact is presented to the people and the Triad's illegitimacy is exposed", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "Thalassora",
+      "category": "Location",
+      "body": "A sprawling port city built into the curve of a natural harbor on the Sapphire Coast. Thalassora has been a center of maritime trade for over five centuries, its docks handling everything from mundane grain shipments to exotic magical components from distant lands. The city is divided into distinct districts: the Harbor Ward (docks, warehouses, and working-class housing), the Coin Quarter (banks, trading houses, and the Golden Vault), the Old City (the original aristocratic quarter, now faded and neglected), and the Underbelly (a network of sewers, smuggling tunnels, and hidden spaces beneath the streets that serves as a shadow-city for those who operate outside the law). Since the Triad's rise to power, wealth has concentrated dramatically in the Coin Quarter while the other districts have declined. The Harbor Ward, once prosperous, is now marked by poverty and resentment — fertile ground for the Lantern Bearers' resistance movement.",
+      "related_to": "The Golden Vault, Lantern Bearers"
+    },
+    {
+      "title": "The Golden Vault",
+      "category": "Location",
+      "body": "The most famous establishment in Thalassora, the Golden Vault is a five-story gambling hall, restaurant, theater, and social club that caters to the city's elite. Its exterior is white marble with gold-leaf trim, and its main entrance is flanked by two stone griffins enchanted to roar at anyone attempting to enter with concealed weapons. The main gaming floor occupies the entire first and second floors, offering everything from card games to magical roulette to exotic beast fights in a sunken pit. The third floor houses security operations and staff quarters. The fourth floor contains private offices and meeting rooms used by the Triad for business. The fifth floor is Orlan Vex's personal suite. Beneath the building, accessed by a hidden service elevator, is the sub-basement: a heavily guarded underground complex containing the Triad's personal vault, a kennel for displacer beasts, and a maintenance tunnel connecting to the city's sewer system.",
+      "related_to": "Degan Thorne, Cassius Aldren, Orlan Vex"
+    },
+    {
+      "title": "The Merchant Triad",
+      "category": "Faction",
+      "body": "The ruling power of Thalassora, consisting of three merchant dynasties — the Vex family (shipping and import/export), the Aldren family (banking and arcane services), and the Sable family (real estate and construction) — who jointly overthrew the city's elected governing council twenty years ago in a bloodless coup. They accomplished this by stealing the Tidemother's Compact, the city's founding charter and the legal basis for its government, and then using their combined economic leverage to install themselves as the new authority. On the surface, the Triad has maintained order and even expanded Thalassora's trade, but their rule benefits only the wealthy. Taxes are crushing for commoners, labor laws have been gutted, and political dissent is met with quiet disappearances. Orlan Vex is the most powerful of the three Triad leaders, though the others are not mere puppets — the alliance is one of mutual self-interest, and internal tensions exist that a clever party could exploit.",
+      "related_to": "Orlan Vex, Cassius Aldren"
+    },
+    {
+      "title": "The Tidemother's Compact",
+      "category": "Artifact",
+      "body": "An ancient treaty-artifact dating back to Thalassora's founding, the Tidemother's Compact is both a legal document and a magical object. It takes the form of a bronze scroll case containing a sheet of preserved kelp inscribed with the city's founding charter in Aquan and Common. According to legend, the Compact was brokered between the city's original human settlers and a powerful sea spirit called the Tidemother, who granted the settlers use of the harbor in exchange for fair governance and respect for the sea. The Compact is magically bound to the concept of legitimate authority — whoever holds it and can prove their claim before the citizens of Thalassora is recognized as the city's rightful ruler. The Triad stole the Compact not because they needed it to rule, but because they needed to prevent anyone else from using it to challenge their authority.",
+      "related_to": "The Merchant Triad, Lysara Venn"
+    },
+    {
+      "title": "The Lantern Bearers",
+      "category": "Faction",
+      "body": "A resistance movement operating in secret throughout Thalassora, dedicated to overthrowing the Merchant Triad and restoring democratic governance to the city. The organization takes its name from the old tradition of hanging lanterns in harbor windows to guide ships safely home — a symbol of the city's communal spirit that the Triad's rule has eroded. The Lantern Bearers number roughly forty active members, drawn from all walks of life: dockworkers, shopkeepers, former council members, and even a few disillusioned Triad employees like Lysara Venn. They operate out of several safehouses, the primary one being a hidden room beneath the Drowned Rat tavern in the Harbor Ward. Their resources are limited, which is why they need outside help — the party — for the vault heist. They are idealistic but not naive; they understand that toppling the Triad will create chaos and have a provisional governing plan ready.",
+      "related_to": "Lysara Venn, Mirabel Solis"
+    },
+    {
+      "title": "The Underbelly",
+      "category": "Location",
+      "body": "Beneath Thalassora's streets lies a vast network of sewers, maintenance tunnels, smuggling routes, and forgotten basements collectively known as the Underbelly. Originally constructed as a storm drain system for the harbor, it has been expanded over centuries by smugglers, thieves, and others who prefer to conduct their business away from daylight. The Underbelly is not lawless — it has its own informal economy and social rules, enforced by figures like Rook, who have mapped its passages and control access to its most useful routes. The network connects to several important locations above ground, including a maintenance tunnel that emerges in the Golden Vault's sub-basement. Navigating the Underbelly without a guide is dangerous: flooded passages, unstable ceilings, and territorial creatures (giant rats, otyughs, and the occasional escaped sewer crocodile) make wrong turns potentially fatal.",
+      "related_to": "Rook, The Golden Vault"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: Heist of the Golden Vault",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe salt air hits you before the city does. Thalassora rises from the coastline like a jewel set in grey stone — white buildings climbing the hillside above a crescent harbor crowded with ships from a dozen nations. From the deck of your vessel, it looks prosperous, vibrant, alive.\n\nUp close, the cracks show. The dockworkers are thin and tired. The harbor-side taverns are half-empty despite it being midweek. Guards in the livery of the Merchant Triad patrol in pairs, hands resting on sword pommels, eyes scanning the crowd with the bored vigilance of an occupying force.\n\nYou were contacted through channels that varied by party member — a whispered word at a tavern, a coded letter slipped under a door, a favor called in by an old friend. The message was the same: come to Thalassora. Find the Drowned Rat. Ask for Lysara.\n\nThe Drowned Rat turns out to be a cramped, salt-stained tavern wedged between a chandlery and a boarded-up fishmonger in the Harbor Ward. The barkeep — a one-armed dwarf named Griss — gives you a long look when you mention Lysara's name, then jerks his head toward a door behind the bar.\n\nDown a narrow staircase, in a room lit by a single lantern, a half-elf woman with short dark hair and a scar along her jaw is waiting. She has maps spread on the table, a cold cup of tea at her elbow, and the expression of someone who is about to ask you to do something very dangerous.\n\n'Thank you for coming,' she says. 'Let me tell you about the Golden Vault.'",
+    "tags": "heist, urban, intrigue, port city, introduction",
+    "npcs_mentioned": "Lysara Venn"
+  },
+  "items": [
+    {
+      "name": "Tidemother's Compact",
+      "item_type": "wondrous item",
+      "weight": 3.0,
+      "value_gp": 0.0,
+      "quantity": 1,
+      "description": "An ancient bronze scroll case, green with patina and inscribed with wave-pattern knotwork. Inside is a sheet of magically preserved giant kelp bearing the founding charter of Thalassora, written in flowing Aquan script with a Common translation beneath. The Compact radiates a faint aura of enchantment and conjuration. When held by someone who speaks the words 'I claim the right of governance' in Aquan, the Compact glows with soft blue-green light and emits the distant sound of ocean waves — this authentication effect is visible and audible to all within 60 feet, making it impossible to fake. The Compact has no combat applications; its power is entirely political and symbolic.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "none",
+      "stat_modifiers": "{}",
+      "rarity": "legendary"
+    },
+    {
+      "name": "Mirabel's Lucky Deck",
+      "item_type": "wondrous item",
+      "weight": 0.5,
+      "value_gp": 150.0,
+      "quantity": 1,
+      "description": "A deck of playing cards used by Mirabel Solis during her time as a dealer at the Golden Vault, subtly enchanted over months of handling. The cards are made of stiff parchment with gold-leaf backing and feel unnaturally smooth between the fingers. Once per long rest, the holder can draw a card as a bonus action to gain one of the following effects (determined by the suit drawn): Hearts — gain 1d8 temporary hit points; Diamonds — gain advantage on the next Persuasion or Deception check within 1 hour; Spades — gain advantage on the next Stealth or Sleight of Hand check within 1 hour; Clubs — gain advantage on the next attack roll within 1 minute.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "none",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Sewer Runner's Boots",
+      "item_type": "wondrous item",
+      "weight": 2.0,
+      "value_gp": 400.0,
+      "quantity": 1,
+      "description": "Knee-high boots of dark, treated leather with thick rubber soles, originally crafted for Thalassora's sewer maintenance crews and later enchanted by an enterprising Underbelly cobbler. The boots grant the wearer advantage on checks to move silently on wet or stone surfaces, immunity to the difficult terrain caused by shallow water or sewage, and the ability to walk on slippery surfaces without falling. They are also magically self-cleaning — no matter what the wearer steps in, the boots return to their original state within one minute. Practical, ugly, and invaluable for anyone planning to traverse the Underbelly.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "feet",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Vault Cracker's Toolkit",
+      "item_type": "tool",
+      "weight": 3.0,
+      "value_gp": 500.0,
+      "quantity": 1,
+      "description": "A custom thieves' tools set assembled by Rook over years of professional burglary, stored in a compact leather roll. In addition to standard lockpicks and tension wrenches, it includes a set of mithral probes thin enough to navigate magical lock mechanisms, a vial of sovereign glue solvent for bypassing adhesive traps, a tiny mirror on an extendable arm for checking around corners and inside keyholes, and a tuning fork that vibrates in the presence of active magical wards within 5 feet. When used as thieves' tools, this kit grants a +2 bonus to checks made to pick locks or disarm traps. The tuning fork's ward-detection ability functions as a limited Detect Magic, sensing only abjuration magic within a 5-foot radius.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "none",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    }
+  ]
+}

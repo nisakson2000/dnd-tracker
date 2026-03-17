@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Minus, Trash2, Package, Coins, Search, ArrowRightLeft, FlaskConical, Shield, Swords, Sparkles, AlertTriangle, ChevronUp, ChevronDown, Zap, Pencil, Weight, Tag, Layers, Loader2 } from 'lucide-react';
+import { Plus, Minus, Trash2, Package, Coins, Search, ArrowRightLeft, FlaskConical, Shield, Swords, Sparkles, AlertTriangle, ChevronUp, ChevronDown, Zap, Pencil, Weight, Tag, Layers, Loader2, ShoppingCart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getItems, addItem, updateItem, deleteItem, getCurrency, updateCurrency } from '../api/inventory';
 import { getOverview, updateOverview } from '../api/overview';
@@ -171,6 +171,8 @@ export default function Inventory({ characterId, character }) {
   const [comparisonItem, setComparisonItem] = useState(null);
   const [groupBy, setGroupBy] = useState('none');
   const [collapsedGroups, setCollapsedGroups] = useState({});
+  const [sellMode, setSellMode] = useState(false);
+  const [selectedItems, setSelectedItems] = useState(new Set());
 
   const load = async () => {
     try {
@@ -594,6 +596,61 @@ export default function Inventory({ characterId, character }) {
     } catch (err) { toast.error(err.message); }
   };
 
+  // --- Sell Mode helpers ---
+  const toggleItemSelected = (itemId) => {
+    setSelectedItems(prev => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId);
+      else next.add(itemId);
+      return next;
+    });
+  };
+
+  const sellModeTotal = useMemo(() => {
+    if (!sellMode || selectedItems.size === 0) return { count: 0, fullValue: 0, sellValue: 0 };
+    let fullValue = 0;
+    let count = 0;
+    for (const item of items) {
+      if (selectedItems.has(item.id)) {
+        fullValue += (item.value_gp || 0) * (item.quantity || 1);
+        count++;
+      }
+    }
+    return { count, fullValue, sellValue: Math.floor(fullValue * 50) / 100 }; // half value, rounded down to 2 decimals
+  }, [sellMode, selectedItems, items]);
+
+  const handleSellSelected = async () => {
+    if (selectedItems.size === 0) return;
+    const sellValue = sellModeTotal.sellValue;
+    try {
+      // Delete all selected items
+      await Promise.all(
+        [...selectedItems].map(id => deleteItem(characterId, id))
+      );
+      // Add gold to currency
+      const gpToAdd = Math.floor(sellValue);
+      const spToAdd = Math.round((sellValue - gpToAdd) * 10);
+      const updated = {
+        ...currency,
+        gp: currency.gp + gpToAdd,
+        sp: currency.sp + spToAdd,
+      };
+      setCurrency(updated);
+      await updateCurrency(characterId, updated);
+      toast.success(`Sold ${sellModeTotal.count} item${sellModeTotal.count !== 1 ? 's' : ''} for ${sellValue} GP`);
+      setSellMode(false);
+      setSelectedItems(new Set());
+      load();
+    } catch (err) {
+      toast.error('Failed to sell items: ' + err.message);
+    }
+  };
+
+  const exitSellMode = () => {
+    setSellMode(false);
+    setSelectedItems(new Set());
+  };
+
   // --- Shared item row renderer ---
   const renderItem = (item) => {
     const typeColor = { weapon: 'border-l-red-500/70', armor: 'border-l-blue-400/70', wondrous: 'border-l-purple-400/70', consumable: 'border-l-emerald-400/70', misc: 'border-l-amber-200/20' };
@@ -612,6 +669,16 @@ export default function Inventory({ characterId, character }) {
         onMouseEnter={() => equippedCounterpart && setComparisonItem(item)}
         onMouseLeave={() => setComparisonItem(null)}
       >
+        {sellMode && (
+          <label className="flex items-center cursor-pointer shrink-0 mt-1" onClick={e => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={selectedItems.has(item.id)}
+              onChange={() => toggleItemSelected(item.id)}
+              className="w-4 h-4 rounded border-amber-200/30 bg-[#0d0d12] text-gold accent-amber-500 cursor-pointer"
+            />
+          </label>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-amber-100 font-medium">{item.name}</span>
@@ -813,6 +880,15 @@ export default function Inventory({ characterId, character }) {
           </div>
         </h2>
         <div className="flex gap-2">
+          {items.length > 0 && (
+            <button
+              onClick={() => sellMode ? exitSellMode() : setSellMode(true)}
+              className={`text-xs flex items-center gap-1 ${sellMode ? 'btn-primary bg-amber-600 hover:bg-amber-700 border-amber-500' : 'btn-secondary'}`}
+              title={sellMode ? 'Exit sell mode' : 'Enter sell mode to batch-sell items'}
+            >
+              <ShoppingCart size={12} /> {sellMode ? 'Exit Sell Mode' : 'Sell Mode'}
+            </button>
+          )}
           {equippedCount > 0 && (
             <button onClick={handleUnequipAll} className="btn-secondary text-xs flex items-center gap-1" title="Unequip all items (camp/rest)">
               Unequip All
@@ -1240,6 +1316,47 @@ export default function Inventory({ characterId, character }) {
           </div>
         )}
       </div>
+
+      {/* Sell Mode Summary Bar */}
+      {sellMode && (
+        <div className="sticky bottom-0 z-10 bg-[#14121c]/95 backdrop-blur border border-amber-500/30 rounded-lg p-3 flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <ShoppingCart size={16} className="text-amber-400" />
+              <span className="text-sm text-amber-100 font-medium">Sell Mode</span>
+            </div>
+            <span className="text-sm text-amber-200/60">
+              {sellModeTotal.count} item{sellModeTotal.count !== 1 ? 's' : ''} selected
+              {sellModeTotal.count > 0 && (
+                <span className="ml-2">
+                  · Total value: <span className="text-gold font-medium">{sellModeTotal.fullValue.toFixed(2)} GP</span>
+                  · Sell price: <span className="text-emerald-400 font-medium">{sellModeTotal.sellValue.toFixed(2)} GP</span>
+                  <span className="text-amber-200/30 ml-1">(half value)</span>
+                </span>
+              )}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exitSellMode}
+              className="btn-secondary text-xs px-3 py-1.5"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSellSelected}
+              disabled={sellModeTotal.count === 0}
+              className={`text-xs px-3 py-1.5 rounded font-medium flex items-center gap-1 ${
+                sellModeTotal.count > 0
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-500'
+                  : 'bg-gray-700 text-gray-400 border border-gray-600 cursor-not-allowed'
+              }`}
+            >
+              <Coins size={12} /> Sell Selected
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Add Modal */}
       {showAdd && <ItemForm onSubmit={handleAdd} onCancel={() => setShowAdd(false)} character={character} />}

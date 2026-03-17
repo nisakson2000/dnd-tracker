@@ -49,6 +49,10 @@ const DAMAGE_TYPE_COLORS = {
 // Casting time filter options
 const CASTING_TIMES = ['Action', 'Bonus Action', 'Reaction', '1 Minute', '10 Minutes', '1 Hour'];
 
+// Caster type distinction
+const KNOWN_CASTER_CLASSES = ['Bard', 'Sorcerer', 'Warlock', 'Ranger'];
+const PREPARED_CASTER_CLASSES = ['Cleric', 'Druid', 'Paladin', 'Wizard'];
+
 export default function Spellbook({ characterId, onSpellSlotsChange }) {
   const { PROFICIENCY_BONUS, CLASSES, SPELL_SLOTS } = useRuleset();
   const [spells, setSpells] = useState([]);
@@ -70,6 +74,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [damageTypeFilter, setDamageTypeFilter] = useState('all'); // 'all' | damage type name
   const [castingTimeFilter, setCastingTimeFilter] = useState('all'); // 'all' | casting time string
+  const [sortBy, setSortBy] = useState('level'); // 'level' | 'name' | 'school' | 'casting_time'
   const [pinnedSpells, setPinnedSpells] = useState(() => {
     try {
       const stored = localStorage.getItem(`codex_pinned_spells_${characterId}`);
@@ -77,12 +82,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
     } catch { return []; }
   });
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const [concentratingOn, setConcentratingOn] = useState(() => {
-    try {
-      const stored = localStorage.getItem(`codex_concentration_${characterId}`);
-      return stored ? JSON.parse(stored) : null;
-    } catch { return null; }
-  });
+  const [concentratingOn, setConcentratingOn] = useState(null);
   const [expandedSpell, setExpandedSpell] = useState(null);
   const [quickCastOpen, setQuickCastOpen] = useState(() => {
     try { return sessionStorage.getItem(`codex_quickcast_${characterId}`) !== 'closed'; } catch { return true; }
@@ -116,16 +116,25 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
     try { localStorage.setItem(`codex_pinned_spells_${characterId}`, JSON.stringify(pinnedSpells)); } catch (err) { if (import.meta.env.DEV) console.warn('Pinned spells persist:', err); }
   }, [pinnedSpells, characterId]);
 
-  // Persist concentration state to localStorage
+  // Persist concentration state to localStorage and notify topbar
+  const concentrationInitialized = useRef(false);
   useEffect(() => {
+    // Skip the initial null state to avoid clearing localStorage before restoration
+    if (!concentrationInitialized.current) {
+      if (concentratingOn != null) concentrationInitialized.current = true;
+      else return;
+    }
     try {
       if (concentratingOn != null) {
-        localStorage.setItem(`codex_concentration_${characterId}`, JSON.stringify(concentratingOn));
+        const spell = spells.find(s => s.id === concentratingOn);
+        const spellName = spell?.name || 'Unknown Spell';
+        localStorage.setItem(`codex_concentration_${characterId}`, spellName);
       } else {
         localStorage.removeItem(`codex_concentration_${characterId}`);
       }
     } catch {}
-  }, [concentratingOn, characterId]);
+    window.dispatchEvent(new Event('codex-concentration-changed'));
+  }, [concentratingOn, characterId, spells]);
 
   const togglePinSpell = (spellId) => {
     setPinnedSpells(prev =>
@@ -165,6 +174,30 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
 
   useEffect(() => { load(); }, [characterId]);
 
+  // Restore concentration state from localStorage after spells load
+  const spellsLoaded = spells.length > 0;
+  useEffect(() => {
+    if (!spellsLoaded) return;
+    try {
+      const stored = localStorage.getItem(`codex_concentration_${characterId}`);
+      if (!stored) return;
+      // Try to match by spell name (new format: plain string)
+      const match = spells.find(s => s.name === stored);
+      if (match) {
+        setConcentratingOn(match.id);
+      } else {
+        // Legacy format: might be JSON-encoded spell ID
+        try {
+          const parsed = JSON.parse(stored);
+          const legacyMatch = spells.find(s => s.id === parsed);
+          if (legacyMatch) {
+            setConcentratingOn(legacyMatch.id);
+          }
+        } catch { /* not JSON, spell no longer exists */ }
+      }
+    } catch { /* ignore */ }
+  }, [spellsLoaded, characterId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Notify parent (CharacterView top bar) when spell slots change
   useEffect(() => {
     if (onSpellSlotsChange) onSpellSlotsChange(slots);
@@ -203,7 +236,18 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
       if (!ct.includes(filterVal)) return false;
     }
     return true;
-  }), [spells, searchQuery, levelFilter, preparedFilter, schoolFilter, componentFilter, concentrationFilter, ritualFilter, damageTypeFilter, castingTimeFilter]);
+  }).sort((a, b) => {
+    // Pinned spells always first
+    const aPinned = pinnedSpells.includes(a.id) ? 0 : 1;
+    const bPinned = pinnedSpells.includes(b.id) ? 0 : 1;
+    if (aPinned !== bPinned) return aPinned - bPinned;
+
+    if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
+    if (sortBy === 'school') return (a.school || '').localeCompare(b.school || '') || a.level - b.level;
+    if (sortBy === 'casting_time') return (a.casting_time || '').localeCompare(b.casting_time || '') || a.level - b.level;
+    // Default: level
+    return a.level - b.level || (a.name || '').localeCompare(b.name || '');
+  }), [spells, searchQuery, levelFilter, preparedFilter, schoolFilter, componentFilter, concentrationFilter, ritualFilter, damageTypeFilter, castingTimeFilter, sortBy, pinnedSpells]);
 
   // Pinned spells (filtered but shown separately at top)
   const pinnedSpellsList = useMemo(() => {
@@ -320,9 +364,16 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
     }
   };
 
-  const castSpell = async (spell, atLevel = null) => {
+  const castSpell = async (spell, atLevel = null, skipConcentrationCheck = false) => {
     const castLevel = atLevel || spell.level;
     if (castLevel === 0) return; // Cantrips don't use slots
+
+    // Concentration check: confirm before dropping existing concentration
+    if (!skipConcentrationCheck && spell.concentration && concentratingOn && concentratingOn !== spell.id) {
+      const oldSpell = spells.find(s => s.id === concentratingOn);
+      setConcentrationConfirm({ spell, level: castLevel, oldSpell });
+      return;
+    }
 
     // Find the slot for this level
     const slot = slots.find(s => s.slot_level === castLevel);
@@ -345,9 +396,6 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
       setSpellsCastToday(prev => [...prev, { name: spell.name, level: higherSlot.slot_level, ts: Date.now() }]);
       // Set concentration if applicable
       if (spell.concentration) {
-        if (concentratingOn && concentratingOn !== spell.id) {
-          toast('Dropped previous concentration', { icon: '\uD83D\uDCA8', duration: 2000 });
-        }
         setConcentratingOn(spell.id);
       }
       return;
@@ -370,9 +418,6 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
 
     // Auto-set concentration
     if (spell.concentration) {
-      if (concentratingOn && concentratingOn !== spell.id) {
-        toast('Dropped previous concentration', { icon: '\uD83D\uDCA8', duration: 2000 });
-      }
       setConcentratingOn(spell.id);
     }
   };
@@ -400,7 +445,6 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
       'Druid': 'WIS',
       'Wizard': 'INT',
       'Paladin': 'CHA',
-      'Ranger': 'WIS',
     };
 
     const ability = PREPARED_CASTERS[cls];
@@ -419,6 +463,22 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
 
     return { current: currentPrepared, max, ability };
   }, [charData, spells]);
+
+  // Caster type: known vs prepared
+  const isKnownCaster = useMemo(() => {
+    if (!charData) return false;
+    return KNOWN_CASTER_CLASSES.includes(charData.overview.primary_class);
+  }, [charData]);
+
+  const isPreparedCaster = useMemo(() => {
+    if (!charData) return false;
+    return PREPARED_CASTER_CLASSES.includes(charData.overview.primary_class);
+  }, [charData]);
+
+  const atPreparedCap = useMemo(() => {
+    if (!isPreparedCaster || !preparedLimit) return false;
+    return preparedLimit.current >= preparedLimit.max;
+  }, [isPreparedCaster, preparedLimit]);
 
   // Daily spell tracking summary
   const dailySummary = useMemo(() => {
@@ -524,7 +584,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
   const confirmConcentrationSwap = () => {
     if (!concentrationConfirm) return;
     const { spell, level } = concentrationConfirm;
-    castSpell(spell, level === spell.level ? null : level);
+    castSpell(spell, level === spell.level ? null : level, true);
     setConcentrationConfirm(null);
     setQuickCastPending(null);
   };
@@ -670,6 +730,18 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
             >
               <CircleDot size={10} /> Concentration
             </button>
+            <span className="text-amber-200/15 mx-0.5">|</span>
+            <span className="text-xs text-amber-200/40">Sort:</span>
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              className="text-xs px-2 py-1 rounded-full border border-amber-200/10 bg-transparent text-amber-200/60 focus:border-gold/30 focus:text-gold outline-none transition-all cursor-pointer"
+            >
+              <option value="level">Level</option>
+              <option value="name">Name (A-Z)</option>
+              <option value="school">School</option>
+              <option value="casting_time">Casting Time</option>
+            </select>
             <button
               onClick={() => setShowAdvancedFilters(prev => !prev)}
               className={`text-xs px-2.5 py-1 rounded-full border transition-all flex items-center gap-1 ml-auto ${
@@ -1121,6 +1193,10 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
                 <div className="text-xs">\u2014</div>
               </div>
             );
+            const remaining = maxSlots - usedSlots;
+            const slotPct = maxSlots > 0 ? remaining / maxSlots : 0;
+            const slotColor = remaining === 0 ? 'text-red-400' : slotPct <= 0.34 ? 'text-amber-400' : 'text-purple-400';
+            const dotAvail = remaining === 0 ? 'bg-red-500/60 border-red-400/50' : slotPct <= 0.34 ? 'bg-amber-500 border-amber-300 shadow-[0_0_6px_rgba(245,158,11,0.4)]' : 'bg-purple-500 border-purple-300 shadow-[0_0_6px_rgba(168,85,247,0.4)]';
             return (
               <div key={level} className="text-center pb-1">
                 <div className="text-xs text-amber-200/50 mb-2">{levelNames[level]}</div>
@@ -1130,14 +1206,14 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
                       key={i}
                       onClick={() => handleSlotToggle(level, i)}
                       className={`w-5 h-5 rounded-full border-2 transition-all ${
-                        i < usedSlots ? 'bg-purple-600/40 border-purple-400/40' : 'bg-purple-500 border-purple-300 shadow-[0_0_6px_rgba(168,85,247,0.4)]'
+                        i < usedSlots ? 'bg-purple-600/40 border-purple-400/40' : dotAvail
                       }`}
-                      title={`${maxSlots - usedSlots}/${maxSlots} ${levelNames[level]} slots remaining`}
+                      title={`${remaining}/${maxSlots} ${levelNames[level]} slots remaining`}
                       aria-label={`${levelNames[level]} spell slot ${i + 1} of ${maxSlots}, ${i < usedSlots ? 'used' : 'available'}`}
                     />
                   ))}
                 </div>
-                <div className="text-xs text-amber-200/30 mt-1">{maxSlots - usedSlots}/{maxSlots}</div>
+                <div className={`text-xs mt-1 font-semibold ${slotColor}`}>{remaining}/{maxSlots}</div>
               </div>
             );
           })}
@@ -1165,7 +1241,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
           </div>
           <div className="space-y-2">
             {pinnedSpellsList.map(spell => (
-              <SpellRow key={`pinned-${spell.id}`} spell={spell} level={spell.level} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} setEditingSpell={setEditingSpell} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} isPinned={true} onTogglePin={togglePinSpell} />
+              <SpellRow key={`pinned-${spell.id}`} spell={spell} level={spell.level} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} setEditingSpell={setEditingSpell} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} isPinned={true} onTogglePin={togglePinSpell} isKnownCaster={isKnownCaster} isPreparedCaster={isPreparedCaster} atPreparedCap={atPreparedCap} />
             ))}
           </div>
         </div>
@@ -1181,7 +1257,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
           </div>
           <div className="space-y-2">
             {spellsByLevel[0].map(spell => (
-              <SpellRow key={spell.id} spell={spell} level={0} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} setEditingSpell={setEditingSpell} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} isPinned={pinnedSpells.includes(spell.id)} onTogglePin={togglePinSpell} />
+              <SpellRow key={spell.id} spell={spell} level={0} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} setEditingSpell={setEditingSpell} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} isPinned={pinnedSpells.includes(spell.id)} onTogglePin={togglePinSpell} isKnownCaster={isKnownCaster} isPreparedCaster={isPreparedCaster} atPreparedCap={atPreparedCap} />
             ))}
           </div>
           {/* Cantrip Scaling Display */}
@@ -1227,7 +1303,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
             {isExpanded && (
               <div className="mt-3 space-y-2">
                 {levelSpells.map(spell => (
-                  <SpellRow key={spell.id} spell={spell} level={level} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} setEditingSpell={setEditingSpell} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} isPinned={pinnedSpells.includes(spell.id)} onTogglePin={togglePinSpell} />
+                  <SpellRow key={spell.id} spell={spell} level={level} spells={spells} slots={slots} concentratingOn={concentratingOn} setConcentratingOn={setConcentratingOn} handleUpdateSpell={handleUpdateSpell} setConfirmDelete={setConfirmDelete} setEditingSpell={setEditingSpell} expandedSpell={expandedSpell} setExpandedSpell={setExpandedSpell} castSpell={castSpell} isPinned={pinnedSpells.includes(spell.id)} onTogglePin={togglePinSpell} isKnownCaster={isKnownCaster} isPreparedCaster={isPreparedCaster} atPreparedCap={atPreparedCap} />
                 ))}
               </div>
             )}
@@ -1263,7 +1339,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
   );
 }
 
-function SpellRow({ spell, level, spells, slots, concentratingOn, setConcentratingOn, handleUpdateSpell, setConfirmDelete, setEditingSpell, expandedSpell, setExpandedSpell, castSpell, isPinned = false, onTogglePin }) {
+function SpellRow({ spell, level, spells, slots, concentratingOn, setConcentratingOn, handleUpdateSpell, setConfirmDelete, setEditingSpell, expandedSpell, setExpandedSpell, castSpell, isPinned = false, onTogglePin, isKnownCaster = false, isPreparedCaster = false, atPreparedCap = false }) {
   const [showUpcast, setShowUpcast] = useState(false);
 
   // Material component cost detection
@@ -1352,10 +1428,35 @@ function SpellRow({ spell, level, spells, slots, concentratingOn, setConcentrati
               <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-800/40 text-emerald-300 flex items-center gap-1" title="Always prepared (domain/oath spell) \u2014 cannot be unprepared">
                 <Lock size={10} /> Prepared
               </span>
+            ) : isKnownCaster ? (
+              <span
+                className="text-xs px-1.5 py-0.5 rounded bg-emerald-800/40 text-emerald-300"
+                title="Known casters always have their spells available"
+              >
+                Known
+              </span>
             ) : (
               <button
-                onClick={() => handleUpdateSpell(spell.id, { ...spell, prepared: !spell.prepared })}
-                className={`text-xs px-1.5 py-0.5 rounded ${spell.prepared ? 'bg-emerald-800/40 text-emerald-300' : 'bg-gray-800/40 text-gray-400'}`}
+                onClick={() => {
+                  if (!spell.prepared || !atPreparedCap) {
+                    handleUpdateSpell(spell.id, { ...spell, prepared: !spell.prepared });
+                  }
+                }}
+                disabled={!spell.prepared && atPreparedCap}
+                className={`text-xs px-1.5 py-0.5 rounded transition-all ${
+                  spell.prepared
+                    ? 'bg-emerald-800/40 text-emerald-300'
+                    : atPreparedCap
+                    ? 'bg-gray-800/40 text-gray-500 cursor-not-allowed opacity-60'
+                    : 'bg-gray-800/40 text-gray-400'
+                }`}
+                title={
+                  !spell.prepared && atPreparedCap
+                    ? 'Prepared spell limit reached \u2014 unprepare another spell first'
+                    : spell.prepared
+                    ? 'Click to unprepare'
+                    : 'Click to prepare'
+                }
               >
                 {spell.prepared ? 'Prepared' : 'Unprepared'}
               </button>
@@ -1426,6 +1527,11 @@ function SpellRow({ spell, level, spells, slots, concentratingOn, setConcentrati
             </span>
           )}
         </div>
+      )}
+      {spell.description && expandedSpell !== spell.id && (
+        <p className="text-[11px] italic text-amber-200/25 mt-1 leading-snug">
+          {spell.description.length > 80 ? spell.description.slice(0, 80).trim() + '\u2026' : spell.description}
+        </p>
       )}
       {spell.description && (
         <button

@@ -69,7 +69,7 @@ export default function Features({ characterId, character }) {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [editingFeature, setEditingFeature] = useState(null);
-  const [filter, setFilter] = useState('all');
+  const [sourceFilter, setSourceFilter] = useState('all');
   const [activationFilter, setActivationFilter] = useState('all');
   const [rechargeFilter, setRechargeFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -304,7 +304,8 @@ export default function Features({ characterId, character }) {
   const reactionCt = features.filter(f => classifyFeature(f) === 'reaction').length;
 
   const filtered = useMemo(() => {
-    let result = filter === 'all' ? features : features.filter(f => f.feature_type === filter);
+    // Source filter (by feature type: class, racial, feat, subclass, background)
+    let result = sourceFilter === 'all' ? features : features.filter(f => f.feature_type === sourceFilter);
 
     // Active/passive/reaction filter
     if (activationFilter !== 'all') {
@@ -330,7 +331,7 @@ export default function Features({ characterId, character }) {
       );
     }
     return result;
-  }, [features, filter, activationFilter, rechargeFilter, search]);
+  }, [features, sourceFilter, activationFilter, rechargeFilter, search]);
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
     // Pinned always come first
@@ -340,7 +341,7 @@ export default function Features({ characterId, character }) {
 
     if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
     if (sortBy === 'type') {
-      const order = { class: 0, racial: 1, feat: 2 };
+      const order = { class: 0, subclass: 1, racial: 2, feat: 3, background: 4 };
       return (order[a.feature_type] ?? 9) - (order[b.feature_type] ?? 9);
     }
     if (sortBy === 'uses') return (a.uses_remaining ?? 0) - (b.uses_remaining ?? 0);
@@ -474,6 +475,16 @@ export default function Features({ characterId, character }) {
           <span className="text-purple-300 bg-purple-500/10 border border-purple-400/20 px-2.5 py-1 rounded">
             {features.filter(f => f.feature_type === 'feat').length} Feats
           </span>
+          {features.some(f => f.feature_type === 'subclass') && (
+            <span className="text-indigo-300 bg-indigo-500/10 border border-indigo-400/20 px-2.5 py-1 rounded">
+              {features.filter(f => f.feature_type === 'subclass').length} Subclass
+            </span>
+          )}
+          {features.some(f => f.feature_type === 'background') && (
+            <span className="text-rose-300 bg-rose-500/10 border border-rose-400/20 px-2.5 py-1 rounded">
+              {features.filter(f => f.feature_type === 'background').length} Background
+            </span>
+          )}
           <div className="h-4 w-px bg-amber-200/10" />
           {activeCt > 0 && (
             <span className="text-orange-300 bg-orange-500/10 border border-orange-400/20 px-2.5 py-1 rounded flex items-center gap-1">
@@ -515,15 +526,19 @@ export default function Features({ characterId, character }) {
               className="input text-xs pl-7 pr-3 py-1 w-56"
             />
           </div>
-          {/* Source filter */}
-          <div className="flex gap-2">
-            {['all', 'class', 'racial', 'feat'].map(f => (
-              <button key={f} onClick={() => setFilter(f)}
-                className={`text-xs px-3 py-1 rounded capitalize ${filter === f ? 'bg-gold/20 text-gold border border-gold/30' : 'text-amber-200/40 border border-amber-200/10'}`}>
-                {f}
-              </button>
-            ))}
-          </div>
+          {/* Source filter dropdown */}
+          <select
+            value={sourceFilter}
+            onChange={e => setSourceFilter(e.target.value)}
+            className="input text-xs px-2.5 py-1 rounded"
+          >
+            <option value="all">All Sources</option>
+            <option value="class">Class</option>
+            <option value="racial">Race</option>
+            <option value="feat">Feat</option>
+            <option value="subclass">Subclass</option>
+            <option value="background">Background</option>
+          </select>
           {/* Active/Passive/Reaction filter */}
           <div className="flex gap-1">
             {['all', 'active', 'passive', 'reaction'].map(af => (
@@ -676,6 +691,24 @@ export default function Features({ characterId, character }) {
                   {collapsedGroups[group.key] ? <ChevronDown size={11} /> : <ChevronUp size={11} />}
                   {group.label}
                   <span className="text-amber-200/30 font-normal">({group.features.length})</span>
+                  {/* Charges at-a-glance when group is collapsed */}
+                  {collapsedGroups[group.key] && (() => {
+                    const chargeFeatures = group.features.filter(gf => (gf.uses_total ?? 0) > 0);
+                    if (chargeFeatures.length === 0) return null;
+                    const totalRemaining = chargeFeatures.reduce((sum, gf) => sum + (gf.uses_remaining ?? 0), 0);
+                    const totalMax = chargeFeatures.reduce((sum, gf) => sum + (gf.uses_total ?? 0), 0);
+                    return (
+                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                        totalRemaining === 0
+                          ? 'bg-red-500/15 text-red-400 border border-red-400/20'
+                          : totalRemaining < totalMax
+                            ? 'bg-amber-500/15 text-amber-400 border border-amber-400/20'
+                            : 'bg-gold/10 text-gold/70 border border-gold/20'
+                      }`}>
+                        {totalRemaining}/{totalMax} charges
+                      </span>
+                    );
+                  })()}
                 </div>
                 <div className="flex-1 h-px bg-amber-200/8" />
               </button>
@@ -1038,6 +1071,8 @@ function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharg
               f.feature_type === 'class' ? 'bg-blue-500/15 text-blue-300 border-blue-400/20' :
               f.feature_type === 'racial' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-400/20' :
               f.feature_type === 'feat' ? 'bg-purple-500/15 text-purple-300 border-purple-400/20' :
+              f.feature_type === 'subclass' ? 'bg-indigo-500/15 text-indigo-300 border-indigo-400/20' :
+              f.feature_type === 'background' ? 'bg-rose-500/15 text-rose-300 border-rose-400/20' :
               'bg-amber-200/5 text-amber-200/40 border-amber-200/10'
             }`}>{f.feature_type}</span>
           </div>
@@ -1275,6 +1310,8 @@ function FeatureForm({ onSubmit, onCancel, initialData }) {
               <option value="class">Class</option>
               <option value="racial">Racial</option>
               <option value="feat">Feat</option>
+              <option value="subclass">Subclass</option>
+              <option value="background">Background</option>
             </select>
           </div>
           <div className="grid grid-cols-2 gap-3">

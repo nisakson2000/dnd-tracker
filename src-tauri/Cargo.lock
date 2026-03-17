@@ -4606,7 +4606,7 @@ dependencies = [
 
 [[package]]
 name = "the-codex"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "chrono",
  "dirs 5.0.1",

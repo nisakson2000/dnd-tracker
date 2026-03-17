@@ -20,10 +20,19 @@ import dragonCoast from '../data/campaigns/dragon-coast.json';
 import feywildCrossing from '../data/campaigns/feywild-crossing.json';
 import shadowAcademy from '../data/campaigns/shadow-academy.json';
 import siegeOfIronhold from '../data/campaigns/siege-of-ironhold.json';
+import plagueOfShadows from '../data/campaigns/plague-of-shadows.json';
+import carnivalOfLostSouls from '../data/campaigns/carnival-of-lost-souls.json';
+import heistOfTheGoldenVault from '../data/campaigns/heist-of-the-golden-vault.json';
+import isleOfTheStormKing from '../data/campaigns/isle-of-the-storm-king.json';
+import tombOfTheSerpentQueen from '../data/campaigns/tomb-of-the-serpent-queen.json';
+import theFrozenThrone from '../data/campaigns/the-frozen-throne.json';
 
 const BUNDLED_CAMPAIGNS = [
   goblinMine, cursedVillage, dragonCoast,
   feywildCrossing, shadowAcademy, siegeOfIronhold,
+  plagueOfShadows, carnivalOfLostSouls,
+  heistOfTheGoldenVault, isleOfTheStormKing,
+  tombOfTheSerpentQueen, theFrozenThrone,
 ];
 
 const LEVEL_COLORS = {
@@ -43,24 +52,21 @@ const TAG_ICONS = {
   investigation: Search,
   goblins: Users,
   naval: Globe,
+  horror: AlertTriangle,
+  heist: Shield,
+  fey: Sparkles,
+  jungle: Globe,
+  giants: Shield,
+  exploration: Map,
+  political: Users,
+  urban: Users,
 };
 
 // ── GitHub adventure browser helpers ──
 
-const HOMEBREW_API_URL = 'https://api.github.com/repos/TheGiddyLimit/homebrew/contents/adventure';
-
 async function fetchAdventureList() {
-  const resp = await fetch(HOMEBREW_API_URL);
-  if (!resp.ok) throw new Error(`GitHub API error: ${resp.status}`);
-  const files = await resp.json();
-  return files
-    .filter(f => f.name.endsWith('.json'))
-    .map(f => ({
-      name: f.name.replace(/\.json$/, '').replace(/[_-]/g, ' '),
-      fileName: f.name,
-      downloadUrl: f.download_url,
-      size: f.size,
-    }));
+  const { fetchCommunityList } = await import('../data/campaignFetcher');
+  return fetchCommunityList();
 }
 
 // fetchAndParseAdventure imported from ../data/campaignFetcher
@@ -917,10 +923,13 @@ export default function PremadeCampaigns({ characterId }) {
     return true;
   });
 
-  const filteredCommunity = communityList.filter(c =>
-    !searchQuery.trim() ||
-    c.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCommunity = communityList.filter(c => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return c.name.toLowerCase().includes(q) ||
+      (c.author || '').toLowerCase().includes(q) ||
+      (c.description || '').toLowerCase().includes(q);
+  });
 
   return (
     <div style={{ maxWidth: '900px' }}>
@@ -1197,12 +1206,30 @@ export default function PremadeCampaigns({ characterId }) {
                         }}>
                           {preview?.name || adv.name}
                         </div>
+                        {adv.description && (
+                          <div style={{
+                            fontSize: '11px',
+                            color: 'var(--text-dim)',
+                            fontFamily: 'var(--font-ui)',
+                            marginBottom: '2px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            {adv.description}
+                          </div>
+                        )}
                         <div style={{
                           fontSize: '10px',
                           color: 'var(--text-mute)',
-                          fontFamily: 'var(--font-mono)',
+                          fontFamily: 'var(--font-ui)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
                         }}>
-                          {adv.fileName} {adv.size ? `(${Math.round(adv.size / 1024)}KB)` : ''}
+                          {adv.author && <span>{adv.author}</span>}
+                          {adv.size ? <span>{Math.round(adv.size / 1024)}KB</span> : null}
+                          {adv.estTime && <span>{adv.estTime}</span>}
                         </div>
                       </div>
 

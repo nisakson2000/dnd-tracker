@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import {
   Square, Clock, Users, Swords, MapPin, ChevronRight,
   SkipForward, ScrollText, Dice5, Shield, Star, Eye, Zap, ChevronDown, ChevronUp, X, Check, Moon, Sun,
-  Play, StopCircle, Skull, Heart, Send, MessageCircle, Download, Sparkles, Loader2,
+  Play, StopCircle, Skull, Heart, Send, MessageCircle, Download, Sparkles, Loader2, Plus, Minus, Search,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
@@ -70,6 +70,16 @@ export default function DMSession() {
   const [encounterMonsters, setEncounterMonsters] = useState([]);
   const [encounterActive, setEncounterActive] = useState(false);
   const [activeEncounterId, setActiveEncounterId] = useState(null);
+
+  // Encounter UI state
+  const [damageInputs, setDamageInputs] = useState({});
+  const [expandedMonster, setExpandedMonster] = useState(null);
+  const [conditionTarget, setConditionTarget] = useState(null);
+  const [monsterSearch, setMonsterSearch] = useState('');
+  const [monsterSearchResults, setMonsterSearchResults] = useState([]);
+  const [monsterSearching, setMonsterSearching] = useState(false);
+
+  const DND_CONDITIONS = ['Blinded','Charmed','Deafened','Frightened','Grappled','Incapacitated','Invisible','Paralyzed','Petrified','Poisoned','Prone','Restrained','Stunned','Unconscious'];
 
   // Chat state
   const [chatInput, setChatInput] = useState('');
@@ -200,6 +210,73 @@ export default function DMSession() {
     } catch (e) {
       toast.error('Failed to kill monster');
       console.error(e);
+    }
+  };
+
+  // Monster search + add
+  const handleMonsterSearch = async () => {
+    if (!monsterSearch.trim()) { setMonsterSearchResults([]); return; }
+    setMonsterSearching(true);
+    try {
+      const results = await invoke('search_srd_monsters', { query: monsterSearch.trim() });
+      setMonsterSearchResults(results || []);
+    } catch (e) {
+      toast.error('Monster search failed');
+    } finally {
+      setMonsterSearching(false);
+    }
+  };
+
+  const handleAddMonster = async (srdMonster) => {
+    if (!activeEncounterId) { toast.error('No active encounter'); return; }
+    try {
+      await invoke('add_monster_to_encounter', {
+        encounterId: activeEncounterId,
+        name: srdMonster.name,
+        hpMax: srdMonster.hp,
+        ac: srdMonster.ac,
+        statBlockJson: JSON.stringify(srdMonster),
+      });
+      toast.success(`Added ${srdMonster.name}`);
+      const monsters = await invoke('get_encounter_monsters', { encounterId: activeEncounterId });
+      setEncounterMonsters(monsters || []);
+      dispatch({ type: 'LOG_ACTION', payload: `Added ${srdMonster.name} to encounter` });
+    } catch (e) {
+      toast.error('Failed to add monster');
+    }
+  };
+
+  const handleRemoveMonster = async (monsterId) => {
+    try {
+      await invoke('remove_monster', { monsterId });
+      setEncounterMonsters(prev => prev.filter(m => m.id !== monsterId));
+      dispatch({ type: 'LOG_ACTION', payload: 'Monster removed from encounter' });
+    } catch (e) {
+      toast.error('Failed to remove monster');
+    }
+  };
+
+  // Condition handlers
+  const handleApplyCondition = async (monsterId, condition) => {
+    try {
+      await invoke('campaign_apply_condition', { targetId: monsterId, condition, duration: null });
+      const monsters = await invoke('get_encounter_monsters', { encounterId: activeEncounterId });
+      setEncounterMonsters(monsters || []);
+      const monster = (monsters || []).find(m => m.id === monsterId);
+      dispatch({ type: 'LOG_ACTION', payload: `${monster?.name || 'Monster'}: ${condition} applied` });
+      setConditionTarget(null);
+    } catch (e) {
+      toast.error('Failed to apply condition');
+    }
+  };
+
+  const handleRemoveCondition = async (monsterId, conditionName) => {
+    try {
+      await invoke('campaign_remove_condition', { targetId: monsterId, conditionName });
+      const monsters = await invoke('get_encounter_monsters', { encounterId: activeEncounterId });
+      setEncounterMonsters(monsters || []);
+    } catch (e) {
+      toast.error('Failed to remove condition');
     }
   };
 
@@ -842,41 +919,51 @@ export default function DMSession() {
               </div>
             ) : (
               <div style={{ display: 'grid', gap: '4px' }}>
-                {initiative.map((entry, idx) => (
-                  <div
-                    key={entry.id || idx}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '10px',
-                      padding: '8px 10px', borderRadius: '8px',
-                      background: idx === currentTurn ? 'rgba(155,89,182,0.15)' : 'rgba(255,255,255,0.02)',
-                      border: idx === currentTurn ? '1px solid rgba(155,89,182,0.3)' : '1px solid transparent',
-                    }}
-                  >
-                    <span style={{
-                      fontSize: '14px', fontWeight: 700, color: '#c084fc',
-                      fontFamily: 'var(--font-mono)', minWidth: '24px', textAlign: 'center',
-                    }}>
-                      {entry.initiative ?? '—'}
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        fontSize: '12px', fontWeight: 500,
-                        color: idx === currentTurn ? 'var(--text)' : 'var(--text-dim)',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {entry.name}
-                      </div>
-                    </div>
-                    {entry.hp !== undefined && (
+                {initiative.map((entry, idx) => {
+                  const isActive = idx === currentTurn;
+                  return (
+                    <div
+                      key={entry.id || idx}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '10px',
+                        padding: '8px 10px', borderRadius: '8px',
+                        background: isActive ? 'rgba(155,89,182,0.18)' : 'rgba(255,255,255,0.02)',
+                        border: isActive ? '1px solid rgba(155,89,182,0.35)' : '1px solid transparent',
+                        borderLeft: isActive ? '3px solid #c084fc' : '3px solid transparent',
+                        boxShadow: isActive ? '0 0 10px rgba(155,89,182,0.2)' : 'none',
+                        transition: 'all 0.2s',
+                        opacity: isActive ? 1 : 0.7,
+                      }}
+                    >
+                      {isActive && (
+                        <ChevronRight size={11} style={{ color: '#c084fc', flexShrink: 0, marginLeft: -4 }} />
+                      )}
                       <span style={{
-                        fontSize: '11px', color: entry.hp > 0 ? '#4ade80' : '#ef4444',
-                        fontFamily: 'var(--font-mono)',
+                        fontSize: isActive ? '15px' : '14px', fontWeight: 700, color: '#c084fc',
+                        fontFamily: 'var(--font-mono)', minWidth: '24px', textAlign: 'center',
                       }}>
-                        {entry.hp}/{entry.maxHp}
+                        {entry.initiative ?? '—'}
                       </span>
-                    )}
-                  </div>
-                ))}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          fontSize: isActive ? '13px' : '12px', fontWeight: isActive ? 700 : 500,
+                          color: isActive ? 'white' : 'var(--text-dim)',
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                          {entry.name}
+                        </div>
+                      </div>
+                      {entry.hp !== undefined && (
+                        <span style={{
+                          fontSize: '11px', color: entry.hp > 0 ? '#4ade80' : '#ef4444',
+                          fontFamily: 'var(--font-mono)', fontWeight: 600,
+                        }}>
+                          {entry.hp}/{entry.maxHp}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
             {initiative.length > 0 && (
@@ -1048,77 +1135,286 @@ export default function DMSession() {
                   </p>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gap: '6px' }}>
-                  {encounterMonsters.length === 0 ? (
+                <div style={{ display: 'grid', gap: '8px' }}>
+                  {/* Monster Search */}
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                      <Search size={11} style={{ position: 'absolute', left: 7, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-mute)', pointerEvents: 'none' }} />
+                      <input
+                        value={monsterSearch}
+                        onChange={e => setMonsterSearch(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleMonsterSearch()}
+                        placeholder="Add monster..."
+                        style={{
+                          width: '100%', padding: '5px 8px 5px 22px', borderRadius: 6,
+                          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                          color: 'var(--text)', fontSize: 11, fontFamily: 'var(--font-ui)', outline: 'none', boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                    <button
+                      onClick={handleMonsterSearch}
+                      disabled={monsterSearching}
+                      style={{
+                        padding: '5px 8px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                        background: 'rgba(155,89,182,0.15)', color: '#c084fc', fontSize: 10, fontWeight: 600,
+                        fontFamily: 'var(--font-ui)',
+                      }}
+                    >{monsterSearching ? '...' : 'Search'}</button>
+                  </div>
+
+                  {/* Search Results Dropdown */}
+                  {monsterSearchResults.length > 0 && (
                     <div style={{
-                      textAlign: 'center', padding: '12px',
-                      color: 'var(--text-mute)', fontSize: '11px',
+                      maxHeight: 120, overflowY: 'auto', background: 'rgba(0,0,0,0.4)',
+                      borderRadius: 6, border: '1px solid rgba(255,255,255,0.06)',
                     }}>
-                      No monsters in encounter
+                      {monsterSearchResults.map((sr, idx) => (
+                        <div
+                          key={`${sr.name}-${idx}`}
+                          onClick={() => { handleAddMonster(sr); setMonsterSearchResults([]); setMonsterSearch(''); }}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px',
+                            cursor: 'pointer', fontSize: 11, color: 'var(--text)',
+                            borderBottom: idx < monsterSearchResults.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                            transition: 'background 0.1s',
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(155,89,182,0.1)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <span style={{ flex: 1 }}>{sr.name}</span>
+                          <span style={{ fontSize: 9, color: 'var(--text-mute)', fontFamily: 'var(--font-mono)' }}>CR {sr.cr}</span>
+                          <span style={{ fontSize: 9, color: '#60a5fa', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Shield size={8} /> {sr.ac}
+                          </span>
+                          <span style={{ fontSize: 9, color: '#4ade80', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Heart size={8} /> {sr.hp}
+                          </span>
+                          <Plus size={10} style={{ color: '#c084fc', opacity: 0.5 }} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Monster Cards */}
+                  {encounterMonsters.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '12px', color: 'var(--text-mute)', fontSize: '11px' }}>
+                      Search and add monsters above
                     </div>
                   ) : (
-                    encounterMonsters.map(m => (
-                      <div key={m.id} style={{
-                        display: 'flex', alignItems: 'center', gap: '8px',
-                        padding: '6px 10px', borderRadius: '8px',
-                        background: m.alive ? 'rgba(255,255,255,0.03)' : 'rgba(239,68,68,0.05)',
-                        border: `1px solid ${m.alive ? 'rgba(255,255,255,0.06)' : 'rgba(239,68,68,0.15)'}`,
-                        opacity: m.alive ? 1 : 0.5,
-                      }}>
-                        <span style={{
-                          fontSize: '12px', fontWeight: 500,
-                          color: m.alive ? 'var(--text)' : '#ef4444',
-                          flex: 1, minWidth: 0, overflow: 'hidden',
-                          textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                          textDecoration: m.alive ? 'none' : 'line-through',
+                    encounterMonsters.map(m => {
+                      const hpPercent = m.hp_max > 0 ? (m.hp_current / m.hp_max) * 100 : 0;
+                      const hpColor = !m.alive ? '#666' : hpPercent > 50 ? '#4ade80' : hpPercent > 25 ? '#fbbf24' : '#ef4444';
+                      const dmgVal = parseInt(damageInputs[m.id]) || 0;
+                      let statBlock = null;
+                      try { statBlock = m.stat_block_json ? (typeof m.stat_block_json === 'string' ? JSON.parse(m.stat_block_json) : m.stat_block_json) : null; } catch (e) {}
+                      let conditions = [];
+                      try { conditions = m.conditions_json ? (typeof m.conditions_json === 'string' ? JSON.parse(m.conditions_json) : m.conditions_json) : []; } catch (e) {}
+
+                      return (
+                        <div key={m.id} style={{
+                          borderRadius: 8, overflow: 'hidden',
+                          background: m.alive ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)',
+                          border: `1px solid ${m.alive ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)'}`,
+                          opacity: m.alive ? 1 : 0.5,
                         }}>
-                          {m.name}
-                        </span>
-                        <span style={{
-                          fontSize: '11px', fontWeight: 600,
-                          fontFamily: 'var(--font-mono)',
-                          color: m.hp_current > m.hp_max * 0.25 ? '#4ade80' : '#ef4444',
-                        }}>
-                          {m.hp_current}/{m.hp_max}
-                        </span>
-                        {m.alive && (
-                          <>
-                            <button
-                              onClick={() => handleMonsterHp(m.id, -5)}
-                              title="Deal 5 damage"
-                              style={{
-                                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)',
-                                borderRadius: '4px', padding: '2px 6px', cursor: 'pointer',
-                                color: '#fca5a5', fontSize: '10px', fontWeight: 700,
-                                fontFamily: 'var(--font-mono)',
-                              }}
-                            >-5</button>
-                            <button
-                              onClick={() => handleMonsterHp(m.id, 5)}
-                              title="Heal 5"
-                              style={{
-                                background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)',
-                                borderRadius: '4px', padding: '2px 6px', cursor: 'pointer',
-                                color: '#4ade80', fontSize: '10px', fontWeight: 700,
-                                fontFamily: 'var(--font-mono)',
-                              }}
-                            >+5</button>
-                            <button
-                              onClick={() => handleKillMonster(m.id)}
-                              title="Kill monster"
-                              style={{
-                                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)',
-                                borderRadius: '4px', padding: '2px 4px', cursor: 'pointer',
-                                color: '#fca5a5', display: 'flex', alignItems: 'center',
-                              }}
-                            >
-                              <Skull size={11} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    ))
+                          {/* Header: Name + AC + HP */}
+                          <div
+                            onClick={() => setExpandedMonster(expandedMonster === m.id ? null : m.id)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 8,
+                              padding: '7px 10px', cursor: 'pointer',
+                            }}
+                          >
+                            <span style={{
+                              fontSize: 12, fontWeight: 600, flex: 1, minWidth: 0,
+                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                              color: m.alive ? 'var(--text)' : 'var(--text-mute)',
+                              textDecoration: m.alive ? 'none' : 'line-through',
+                            }}>
+                              {m.name}
+                            </span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 10, color: '#60a5fa', fontFamily: 'var(--font-mono)' }}>
+                              <Shield size={9} /> {m.ac}
+                            </span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: hpColor, fontFamily: 'var(--font-mono)', minWidth: 44, textAlign: 'right' }}>
+                              {m.hp_current}/{m.hp_max}
+                            </span>
+                            <ChevronDown size={10} style={{
+                              color: 'var(--text-mute)', flexShrink: 0,
+                              transform: expandedMonster === m.id ? 'rotate(180deg)' : 'rotate(0deg)',
+                              transition: 'transform 0.2s',
+                            }} />
+                          </div>
+
+                          {/* HP Bar */}
+                          <div style={{ height: 3, margin: '0 10px', background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+                            <div style={{
+                              height: '100%', borderRadius: 2, background: hpColor,
+                              width: `${Math.max(0, Math.min(100, hpPercent))}%`,
+                              transition: 'width 0.3s',
+                            }} />
+                          </div>
+
+                          {/* Condition Badges */}
+                          {conditions.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, padding: '4px 10px' }}>
+                              {conditions.map((c, ci) => (
+                                <span key={ci} style={{
+                                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                                  padding: '1px 6px', borderRadius: 4, fontSize: 9, fontWeight: 600,
+                                  background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.2)',
+                                  color: '#fbbf24', fontFamily: 'var(--font-mono)',
+                                }}>
+                                  {typeof c === 'string' ? c : c.name || c.condition}
+                                  <X
+                                    size={8} style={{ cursor: 'pointer', opacity: 0.7 }}
+                                    onClick={(e) => { e.stopPropagation(); handleRemoveCondition(m.id, typeof c === 'string' ? c : c.name || c.condition); }}
+                                  />
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Controls: Heal/Damage/Kill/Conditions */}
+                          {m.alive && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px' }}>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleMonsterHp(m.id, dmgVal > 0 ? dmgVal : 1); setDamageInputs(prev => ({ ...prev, [m.id]: '' })); }}
+                                style={{
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  padding: '3px 6px', borderRadius: 4, border: 'none', cursor: 'pointer',
+                                  background: 'rgba(74,222,128,0.15)', color: '#4ade80', fontSize: 10, fontWeight: 600,
+                                }}
+                                title="Heal"
+                              ><Plus size={10} /></button>
+                              <input
+                                type="number"
+                                value={damageInputs[m.id] || ''}
+                                onChange={e => setDamageInputs(prev => ({ ...prev, [m.id]: e.target.value }))}
+                                onClick={e => e.stopPropagation()}
+                                placeholder="HP"
+                                style={{
+                                  width: 40, padding: '3px 4px', borderRadius: 4, textAlign: 'center',
+                                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                                  color: 'var(--text)', fontSize: 11, fontFamily: 'var(--font-mono)', outline: 'none',
+                                }}
+                              />
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleMonsterHp(m.id, -(dmgVal > 0 ? dmgVal : 1)); setDamageInputs(prev => ({ ...prev, [m.id]: '' })); }}
+                                style={{
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  padding: '3px 6px', borderRadius: 4, border: 'none', cursor: 'pointer',
+                                  background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontSize: 10, fontWeight: 600,
+                                }}
+                                title="Damage"
+                              ><Minus size={10} /></button>
+                              <div style={{ flex: 1 }} />
+                              {/* Condition toggle */}
+                              <div style={{ position: 'relative' }}>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setConditionTarget(conditionTarget === m.id ? null : m.id); }}
+                                  style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    padding: '3px 6px', borderRadius: 4, border: 'none', cursor: 'pointer',
+                                    background: conditionTarget === m.id ? 'rgba(251,191,36,0.2)' : 'rgba(251,191,36,0.08)',
+                                    color: '#fbbf24', fontSize: 9, fontWeight: 600,
+                                  }}
+                                  title="Add condition"
+                                >
+                                  <Zap size={10} />
+                                </button>
+                                {conditionTarget === m.id && (
+                                  <div style={{
+                                    position: 'absolute', bottom: '100%', right: 0, marginBottom: 4,
+                                    background: 'rgba(20,15,30,0.98)', border: '1px solid rgba(255,255,255,0.1)',
+                                    borderRadius: 8, padding: 6, zIndex: 50,
+                                    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, width: 200,
+                                    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                                  }}>
+                                    {DND_CONDITIONS.map(cond => (
+                                      <button
+                                        key={cond}
+                                        onClick={(e) => { e.stopPropagation(); handleApplyCondition(m.id, cond); }}
+                                        style={{
+                                          padding: '3px 6px', borderRadius: 4, border: 'none', cursor: 'pointer',
+                                          background: conditions.some(c => (typeof c === 'string' ? c : c.name || c.condition) === cond) ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.04)',
+                                          color: conditions.some(c => (typeof c === 'string' ? c : c.name || c.condition) === cond) ? '#fbbf24' : 'var(--text-dim)',
+                                          fontSize: 9, fontWeight: 500, textAlign: 'left',
+                                          fontFamily: 'var(--font-ui)',
+                                        }}
+                                      >{cond}</button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleKillMonster(m.id); }}
+                                style={{
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  padding: '3px 6px', borderRadius: 4, border: 'none', cursor: 'pointer',
+                                  background: 'rgba(239,68,68,0.1)', color: '#fca5a5',
+                                }}
+                                title="Kill"
+                              ><Skull size={10} /></button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleRemoveMonster(m.id); }}
+                                style={{
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  padding: '3px 6px', borderRadius: 4, border: 'none', cursor: 'pointer',
+                                  background: 'rgba(255,255,255,0.05)', color: 'var(--text-mute)',
+                                }}
+                                title="Remove"
+                              ><X size={10} /></button>
+                            </div>
+                          )}
+
+                          {/* Expanded Stat Block */}
+                          {expandedMonster === m.id && statBlock && (
+                            <div style={{
+                              padding: '8px 10px', borderTop: '1px solid rgba(255,255,255,0.04)',
+                              fontSize: 10, color: 'var(--text-dim)', fontFamily: 'var(--font-mono)',
+                              display: 'grid', gap: 4,
+                            }}>
+                              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                {statBlock.size && <span>Size: {statBlock.size}</span>}
+                                {statBlock.type && <span>Type: {statBlock.type}</span>}
+                                {statBlock.cr && <span>CR: {statBlock.cr}</span>}
+                                {statBlock.speed && <span>Speed: {statBlock.speed}</span>}
+                              </div>
+                              <div style={{ display: 'flex', gap: 10 }}>
+                                {['str', 'dex', 'con', 'int', 'wis', 'cha'].map(stat => (
+                                  statBlock[stat] !== undefined && (
+                                    <span key={stat}>
+                                      <span style={{ color: 'var(--text-mute)', textTransform: 'uppercase' }}>{stat}</span>{' '}
+                                      <span style={{ color: 'var(--text)', fontWeight: 600 }}>{statBlock[stat]}</span>
+                                    </span>
+                                  )
+                                ))}
+                              </div>
+                              {statBlock.attacks && statBlock.attacks.length > 0 && (
+                                <div>
+                                  <span style={{ color: '#ef4444', fontWeight: 600 }}>Attacks: </span>
+                                  {statBlock.attacks.map((a, i) => (
+                                    <span key={i}>
+                                      {a.name} (+{a.bonus}, {a.damage}){i < statBlock.attacks.length - 1 ? ', ' : ''}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              {statBlock.traits && statBlock.traits.length > 0 && (
+                                <div>
+                                  <span style={{ color: '#c084fc', fontWeight: 600 }}>Traits: </span>
+                                  {statBlock.traits.join(', ')}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
                   )}
+
                   {/* Pending action requests from players */}
                   {pendingActions.length > 0 && (
                     <div style={{

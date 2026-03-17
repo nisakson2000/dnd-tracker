@@ -1,12 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ScrollText, BookOpen, Shield, Sparkles, Swords,
   BookMarked, Users, Map, Globe, ArrowLeft, User, Download,
   Library, Settings2, Heart, Bug, Crown, LayoutDashboard,
-  Star, Search, X, Zap, Wifi, MapPin, Lightbulb, Grid3X3,
-  Calendar, Hammer, Package, HelpCircle, Dices, PawPrint, ClipboardList,
+  Star, Search, X, Zap, Wifi, MapPin, Lightbulb, Grid3X3, Eye,
+  Calendar, Hammer, Package, HelpCircle, Dices, PawPrint, ClipboardList, Skull,
+  ChevronDown, ChevronRight,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAppMode } from '../contexts/ModeContext';
 import { useSession } from '../contexts/SessionContext';
 import { getSectionShortcutLabel } from '../utils/keyboardShortcuts';
@@ -126,10 +128,13 @@ function loadPinned() {
   return [];
 }
 
-export default function Sidebar({ character, activeSection, onSelect, onBack, activeConditionCount = 0, portrait = '' }) {
+export default function Sidebar({ character, activeSection, onSelect, onBack, activeConditionCount = 0, activeConditions = [], portrait = '', onHpChange }) {
   const { mode: appMode } = useAppMode();
   const { campaignType } = useSession();
   const [, forceUpdate] = useState(0);
+  const [showHpPopup, setShowHpPopup] = useState(false);
+  const [hpInput, setHpInput] = useState('');
+  const hpInputRef = useRef(null);
 
   // Re-render when AI settings change so the Arcane Advisor item appears/disappears
   useEffect(() => {
@@ -165,7 +170,9 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
 
   const hp = character?.current_hp ?? 0;
   const maxHp = character?.max_hp ?? 0;
+  const tempHp = character?.temp_hp ?? 0;
   const hpPct = maxHp > 0 ? Math.min(100, Math.max(0, (hp / maxHp) * 100)) : 0;
+  const tempHpPct = maxHp > 0 ? Math.min(100 - hpPct, Math.max(0, (tempHp / maxHp) * 100)) : 0;
   const fillColor = hpColor(hp, maxHp);
 
   // ── Pinned sections ──
@@ -182,6 +189,37 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
       return [...prev, id];
     });
   }, []);
+
+  // ── Collapsible sidebar groups ──
+  const COLLAPSED_GROUPS_KEY = 'codex_sidebar_collapsed_groups';
+  const [collapsedGroups, setCollapsedGroups] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(COLLAPSED_GROUPS_KEY) || '{}');
+    } catch { return {}; }
+  });
+
+  const toggleGroupCollapse = useCallback((groupLabel) => {
+    setCollapsedGroups(prev => {
+      const next = { ...prev, [groupLabel]: !prev[groupLabel] };
+      localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  // Determine which group the active section belongs to
+  const activeGroup = sectionGroups.find(g => g.items.some(item => item.id === activeSection))?.label || null;
+
+  // Check if a group should be collapsed: auto-collapse Campaign and Tools when not active,
+  // but Character group stays expanded by default
+  const isGroupCollapsed = (groupLabel) => {
+    // If user has explicitly toggled this group, respect that
+    if (collapsedGroups[groupLabel] !== undefined) return collapsedGroups[groupLabel];
+    // Character group is always expanded by default
+    if (groupLabel === 'Character') return false;
+    // Auto-collapse Campaign and Tools groups when not actively used
+    if ((groupLabel === 'Campaign' || groupLabel === 'Tools') && activeGroup !== groupLabel) return true;
+    return false;
+  };
 
   // Build a flat lookup of all items for pinned rendering
   const allItems = sectionGroups.flatMap(g => g.items);
@@ -253,22 +291,171 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
               </div>
             )}
 
-            {/* HP pill */}
+            {/* HP pill — clickable for quick damage/heal */}
             {maxHp > 0 && (
-              <div className="sidebar-hp-pill">
-                <Heart size={11} style={{ color: fillColor, flexShrink: 0 }} />
-                <div className="sidebar-hp-bar">
-                  <div className="sidebar-hp-fill" style={{ width: `${hpPct}%`, background: fillColor }} />
+              <div style={{ position: 'relative' }}>
+                <div
+                  className="sidebar-hp-pill"
+                  style={{ cursor: onHpChange ? 'pointer' : 'default' }}
+                  onClick={() => {
+                    if (!onHpChange) return;
+                    setShowHpPopup(!showHpPopup);
+                    setHpInput('');
+                    setTimeout(() => hpInputRef.current?.focus(), 50);
+                  }}
+                  title={onHpChange ? 'Click to damage/heal' : undefined}
+                >
+                  <Heart size={11} style={{ color: fillColor, flexShrink: 0 }} />
+                  <div className="sidebar-hp-bar">
+                    <div className="sidebar-hp-fill" style={{ width: `${hpPct}%`, background: fillColor }} />
+                    {tempHp > 0 && (
+                      <div style={{
+                        position: 'absolute', top: 0, bottom: 0, borderRadius: 2,
+                        left: `${hpPct}%`, width: `${tempHpPct}%`,
+                        background: '#60a5fa', opacity: 0.6, transition: 'width 0.3s',
+                      }} />
+                    )}
+                  </div>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: fillColor, fontFamily: 'Outfit, sans-serif', whiteSpace: 'nowrap' }}>
+                    {hp}/{maxHp}{tempHp > 0 ? <span style={{ color: '#60a5fa', fontSize: '9px' }}> +{tempHp}</span> : ''}
+                  </span>
                 </div>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: fillColor, fontFamily: 'Outfit, sans-serif', whiteSpace: 'nowrap' }}>
-                  {hp}/{maxHp}
-                </span>
+
+                {/* Quick HP popup */}
+                {showHpPopup && onHpChange && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0,
+                    marginTop: 4, padding: '8px', borderRadius: 8,
+                    background: 'rgba(20,15,30,0.98)', border: '1px solid rgba(255,255,255,0.1)',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.5)', zIndex: 100,
+                  }}>
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                      <button
+                        onClick={() => {
+                          const val = parseInt(hpInput) || 0;
+                          if (val > 0) { onHpChange(-val); setHpInput(''); setShowHpPopup(false); }
+                        }}
+                        style={{
+                          padding: '4px 8px', borderRadius: 4, border: 'none', cursor: 'pointer',
+                          background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontSize: 11, fontWeight: 700,
+                          fontFamily: 'var(--font-mono)',
+                        }}
+                      >−</button>
+                      <input
+                        ref={hpInputRef}
+                        type="number"
+                        value={hpInput}
+                        onChange={e => setHpInput(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            const val = parseInt(hpInput) || 0;
+                            if (val > 0) { onHpChange(-val); setHpInput(''); setShowHpPopup(false); }
+                          } else if (e.key === 'Escape') { setShowHpPopup(false); }
+                        }}
+                        placeholder="HP"
+                        style={{
+                          flex: 1, padding: '4px 6px', borderRadius: 4, textAlign: 'center',
+                          background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                          color: 'var(--text)', fontSize: 12, fontFamily: 'var(--font-mono)',
+                          outline: 'none', width: '100%', minWidth: 0,
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          const val = parseInt(hpInput) || 0;
+                          if (val > 0) { onHpChange(val); setHpInput(''); setShowHpPopup(false); }
+                        }}
+                        style={{
+                          padding: '4px 8px', borderRadius: 4, border: 'none', cursor: 'pointer',
+                          background: 'rgba(74,222,128,0.15)', color: '#4ade80', fontSize: 11, fontWeight: 700,
+                          fontFamily: 'var(--font-mono)',
+                        }}
+                      >+</button>
+                    </div>
+                    <div style={{ display: 'flex', gap: 3, marginTop: 4, justifyContent: 'center' }}>
+                      {[1, 5, 10].map(n => (
+                        <button
+                          key={n}
+                          onClick={() => { onHpChange(-n); setShowHpPopup(false); }}
+                          style={{
+                            padding: '2px 8px', borderRadius: 4, border: 'none', cursor: 'pointer',
+                            background: 'rgba(239,68,68,0.08)', color: '#fca5a5', fontSize: 10,
+                            fontFamily: 'var(--font-mono)', fontWeight: 600,
+                          }}
+                        >-{n}</button>
+                      ))}
+                      {[1, 5, 10].map(n => (
+                        <button
+                          key={n}
+                          onClick={() => { onHpChange(n); setShowHpPopup(false); }}
+                          style={{
+                            padding: '2px 8px', borderRadius: 4, border: 'none', cursor: 'pointer',
+                            background: 'rgba(74,222,128,0.08)', color: '#86efac', fontSize: 10,
+                            fontFamily: 'var(--font-mono)', fontWeight: 600,
+                          }}
+                        >+{n}</button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Combat stats row — AC, Speed, Prof Bonus */}
+            {character && (
+              <div style={{ display: 'flex', gap: '6px', marginTop: '10px', flexWrap: 'wrap' }}>
+                {character.armor_class > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 7px', borderRadius: '6px', background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.15)', transition: 'all 0.15s' }} title="Armor Class">
+                    <Shield size={9} style={{ color: '#60a5fa' }} />
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#60a5fa', fontFamily: 'var(--font-mono)' }}>{character.armor_class}</span>
+                  </div>
+                )}
+                {character.speed > 0 && (
+                  <div style={{ padding: '2px 7px', borderRadius: '6px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.15)', transition: 'all 0.15s' }} title="Speed">
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#4ade80', fontFamily: 'var(--font-mono)' }}>{character.speed}ft</span>
+                  </div>
+                )}
+                {(() => {
+                  const lvl = character.level || 1;
+                  const prof = lvl >= 17 ? 6 : lvl >= 13 ? 5 : lvl >= 9 ? 4 : lvl >= 5 ? 3 : 2;
+                  return (
+                    <div style={{ padding: '2px 7px', borderRadius: '6px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.15)', transition: 'all 0.15s' }} title="Proficiency Bonus">
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#c9a84c', fontFamily: 'var(--font-mono)' }}>+{prof}</span>
+                    </div>
+                  );
+                })()}
+                {character.initiative_bonus !== undefined && character.initiative_bonus !== 0 && (
+                  <div style={{ padding: '2px 7px', borderRadius: '6px', background: 'rgba(192,132,252,0.08)', border: '1px solid rgba(192,132,252,0.15)', transition: 'all 0.15s' }} title="Initiative Bonus">
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#c084fc', fontFamily: 'var(--font-mono)' }}>{character.initiative_bonus >= 0 ? '+' : ''}{character.initiative_bonus} Init</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Death saves — shown when at 0 HP */}
+            {character && hp === 0 && maxHp > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', padding: '4px 8px', borderRadius: '6px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                <Skull size={12} style={{ color: '#ef4444', flexShrink: 0 }} />
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '2px' }} title="Successes">
+                    {[0, 1, 2].map(i => (
+                      <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: i < (character.death_save_successes || 0) ? '#4ade80' : 'rgba(255,255,255,0.1)', border: '1px solid rgba(74,222,128,0.3)' }} />
+                    ))}
+                  </div>
+                  <span style={{ fontSize: '8px', color: 'var(--text-mute)' }}>|</span>
+                  <div style={{ display: 'flex', gap: '2px' }} title="Failures">
+                    {[0, 1, 2].map(i => (
+                      <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: i < (character.death_save_failures || 0) ? '#ef4444' : 'rgba(255,255,255,0.1)', border: '1px solid rgba(239,68,68,0.3)' }} />
+                    ))}
+                  </div>
+                </div>
+                <span style={{ fontSize: '9px', color: '#fca5a5', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>Death Saves</span>
               </div>
             )}
 
             {/* Status badges */}
             {character && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
                 {character.inspiration && (
                   <span style={{ fontSize: '9px', background: 'rgba(201,168,76,0.15)', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '1px 6px', fontFamily: 'Outfit, sans-serif', fontWeight: 600 }}>Inspired</span>
                 )}
@@ -276,8 +463,41 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
                   <span style={{ fontSize: '9px', background: 'rgba(249,115,22,0.15)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.3)', borderRadius: '4px', padding: '1px 6px', fontFamily: 'Outfit, sans-serif', fontWeight: 600 }}>Exhaust {character.exhaustion_level}</span>
                 )}
                 {activeConditionCount > 0 && (
-                  <span style={{ fontSize: '9px', background: 'rgba(239,68,68,0.12)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '4px', padding: '1px 6px', fontFamily: 'Outfit, sans-serif', fontWeight: 600 }}>{activeConditionCount} Cond</span>
+                  <span
+                    style={{ fontSize: '9px', background: 'rgba(239,68,68,0.12)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '4px', padding: '1px 6px', fontFamily: 'Outfit, sans-serif', fontWeight: 600, cursor: 'default' }}
+                    title={activeConditions.length > 0 ? activeConditions.join(', ') : `${activeConditionCount} active conditions`}
+                  >{activeConditionCount} Cond</span>
                 )}
+              </div>
+            )}
+
+            {/* Quick dice roller */}
+            {!isDM && character && (
+              <div style={{ display: 'flex', gap: '3px', marginTop: '8px', flexWrap: 'wrap' }}>
+                {[4, 6, 8, 10, 12, 20].map(die => (
+                  <button
+                    key={die}
+                    onClick={() => {
+                      const roll = Math.floor(Math.random() * die) + 1;
+                      const isCrit = die === 20 && roll === 20;
+                      const isFail = die === 20 && roll === 1;
+                      toast(isCrit ? `d${die}: NAT 20!` : isFail ? `d${die}: Critical fail... 1` : `d${die}: ${roll}`, {
+                        icon: isCrit ? '\u{1F389}' : isFail ? '\u{1F480}' : '\u{1F3B2}',
+                        duration: 3000,
+                        style: { background: '#1a1425', color: '#f0e4c8', border: '1px solid rgba(201,168,76,0.3)', fontFamily: 'var(--font-heading)' },
+                      });
+                    }}
+                    style={{
+                      padding: '3px 0', borderRadius: 4, border: 'none', cursor: 'pointer',
+                      background: 'rgba(201,168,76,0.06)', color: 'rgba(200,175,130,0.5)',
+                      fontSize: 9, fontWeight: 700, fontFamily: 'var(--font-mono)',
+                      flex: 1, textAlign: 'center', transition: 'all 0.15s', minWidth: 28,
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.15)'; e.currentTarget.style.color = '#c9a84c'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.06)'; e.currentTarget.style.color = 'rgba(200,175,130,0.5)'; }}
+                    title={`Roll d${die}`}
+                  >d{die}</button>
+                ))}
               </div>
             )}
           </>
@@ -371,12 +591,21 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
           </div>
         )}
 
-        {filteredGroups.map(group => (
+        {filteredGroups.map(group => {
+          const collapsed = !searchQuery && isGroupCollapsed(group.label);
+          const ChevronIcon = collapsed ? ChevronRight : ChevronDown;
+          return (
           <div key={group.label} style={{ marginBottom: '4px' }}>
-            <div style={{ padding: '8px 14px 3px', fontFamily: 'var(--font-mono)', fontSize: '8px', fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--text-mute)' }}>
+            <div
+              onClick={() => !searchQuery && toggleGroupCollapse(group.label)}
+              style={{ padding: '8px 14px 3px', fontFamily: 'var(--font-mono)', fontSize: '8px', fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--text-mute)', cursor: searchQuery ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px', userSelect: 'none', transition: 'color 0.15s' }}
+              onMouseEnter={e => { if (!searchQuery) e.currentTarget.style.color = 'var(--text-dim)'; }}
+              onMouseLeave={e => { if (!searchQuery) e.currentTarget.style.color = 'var(--text-mute)'; }}
+            >
+              {!searchQuery && <ChevronIcon size={10} style={{ flexShrink: 0 }} />}
               {group.label}
             </div>
-            {group.items.filter(item => !item.conditional || item.conditional()).map(({ id, label, icon: Icon }) => { // eslint-disable-line no-unused-vars
+            {!collapsed && group.items.filter(item => !item.conditional || item.conditional()).map(({ id, label, icon: Icon }) => { // eslint-disable-line no-unused-vars
               const active = activeSection === id;
               const isPinned = pinnedIds.includes(id);
               const shortcutHint = getSectionShortcutLabel(id);
@@ -435,7 +664,8 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
               );
             })}
           </div>
-        ))}
+          );
+        })}
 
         {/* Wiki + Archives links */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '8px', paddingTop: '8px' }}>
@@ -463,7 +693,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
               onMouseLeave={e => { if (activeSection !== 'dm-guide') e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
             >
               <HelpCircle size={14} />
-              Create a Campaign
+              DM Guide
             </button>
           )}
         </div>

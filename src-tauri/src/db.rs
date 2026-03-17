@@ -265,7 +265,8 @@ pub fn init_character_tables(conn: &Connection) -> SqlResult<()> {
             damage_dice TEXT DEFAULT '1d6',
             damage_type TEXT DEFAULT '',
             attack_range TEXT DEFAULT '',
-            notes TEXT DEFAULT ''
+            notes TEXT DEFAULT '',
+            ammo_item_id INTEGER
         );
 
         CREATE TABLE IF NOT EXISTS conditions (
@@ -428,6 +429,9 @@ pub fn migrate_character_db(conn: &Connection) -> SqlResult<()> {
 
     // ── Damage modifiers (resistances, immunities, vulnerabilities) ──
     add_column_if_missing(conn, "character_overview", "damage_modifiers", "TEXT", "'{}'");
+
+    // ── attacks columns ──
+    add_column_if_missing(conn, "attacks", "ammo_item_id", "INTEGER", "NULL");
 
     // ── Update schema version ──
     conn.execute(

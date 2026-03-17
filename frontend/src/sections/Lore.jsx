@@ -43,20 +43,82 @@ const QUICK_LORE_TITLES = {
   Item: ['The Blade of the First King', 'The Amulet of Warding', 'The Staff of Seasons', 'The Cloak of Many Faces'],
 };
 
+// Rich body content generators per category for quick generate
+const LORE_BODY_GENERATORS = {
+  Location: () => {
+    const owners = ['Marta Copperkettle', 'Old Brann', 'Duchess Elara', 'The Ironworkers\' Guild', 'nobody — it\'s been abandoned', 'a reclusive mage', 'the town council'];
+    const features = ['a centuries-old oak growing through the floor', 'walls covered in faded murals depicting a great battle', 'an underground spring with supposed healing properties', 'a bell tower that rings on its own during storms', 'hidden passageways behind the bookshelves', 'scorch marks on the walls from a long-ago fire'];
+    const atmospheres = ['Warm and inviting, smells of pipe smoke and roasting meat', 'Cold and drafty, with an uneasy silence', 'Bustling and noisy, every table full of travelers', 'Dimly lit and secretive, conversations held in whispers', 'Ancient and crumbling, but maintained with obvious care'];
+    const dangers = ['bandits patrol the roads nearby', 'the lower levels are flooded and home to something large', 'the local wildlife has become unusually aggressive', 'a curse lingers over anyone who stays past midnight', 'a rival faction has agents watching the area'];
+    const p = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    return `**Controlled by:** ${p(owners)}\n**Notable features:** ${p(features)}\n**Atmosphere:** ${p(atmospheres)}\n**Dangers:** ${p(dangers)}\n**Local rumors:** The locals speak of ${p(['strange lights seen at night', 'a treasure hidden beneath the foundation', 'disappearances that happen every full moon', 'an ancient pact with a fey lord', 'a sealed door that no key can open'])}.`;
+  },
+  History: () => {
+    const eras = ['the Age of Kings', 'the Sundering', 'the First Age', 'the War of Crowns', 'the Age of Silence'];
+    const figures = ['a legendary hero', 'a tyrannical archmage', 'twin siblings who founded rival kingdoms', 'a dragon who brokered peace', 'a nameless prophet'];
+    const events = ['a great war that reshaped the continent', 'a magical cataclysm that sank an island', 'the forging of a weapon that killed a god', 'a plague that wiped out an entire civilization', 'the sealing of a portal to the Abyss'];
+    const evidence = ['ancient stone tablets found in a forgotten library', 'folk songs passed down through generations', 'a map that shows lands that no longer exist', 'contradictory accounts from two surviving texts'];
+    const p = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    return `**Era:** ${p(eras)}\n**Key figures:** ${p(figures)}\n**What happened:** ${p(events)}\n**Evidence:** ${p(evidence)}\n**Current relevance:** ${p(['echoes of these events are being felt again', 'a descendant of the key figure has recently surfaced', 'the sealed threat may be weakening', 'scholars disagree on what really happened — the truth matters now'])}.`;
+  },
+  Organization: () => {
+    const leaders = ['a charismatic half-elf diplomat', 'an aging dwarf general', 'a council of three masked figures', 'a young prodigy who seized control', 'a figurehead — the real leader is unknown'];
+    const goals = ['expand trade routes across the continent', 'acquire ancient magical knowledge', 'overthrow the current ruling class', 'protect the realm from extraplanar threats', 'monopolize a critical resource'];
+    const reputations = ['feared and respected in equal measure', 'beloved by the common folk', 'seen as corrupt by outsiders', 'mysterious — few know they even exist', 'once noble, now fallen from grace'];
+    const p = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    return `**Leader:** ${p(leaders)}\n**Goals:** ${p(goals)}\n**Size:** ${p(['a handful of trusted operatives', 'several hundred members across the region', 'thousands, with cells in every major city', 'unknown — they recruit in secret'])}\n**Headquarters:** ${p(['a fortified keep on the border', 'hidden beneath a popular tavern', 'a floating citadel', 'constantly moving — no fixed location'])}\n**Reputation:** ${p(reputations)}`;
+  },
+  Faction: () => {
+    const leaders = ['a ruthless spymaster', 'a reformed criminal', 'an elected council of veterans', 'a tiefling warlock with a silver tongue'];
+    const goals = ['seize control of the city\'s underworld', 'expose corruption in the nobility', 'defend a sacred site from desecration', 'broker peace between warring nations'];
+    const p = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    return `**Leader:** ${p(leaders)}\n**Goals:** ${p(goals)}\n**Allies:** ${p(['the merchant class', 'a neighboring kingdom', 'a rogue dragon', 'disillusioned soldiers'])}\n**Enemies:** ${p(['the crown', 'a rival faction', 'the church', 'an invading army'])}\n**Recruitment:** ${p(['by invitation only', 'anyone willing to take the oath', 'through a series of dangerous trials', 'bloodline members only'])}`;
+  },
+  Religion: () => {
+    const domains = ['light and healing', 'death and rebirth', 'nature and the wild', 'knowledge and secrets', 'war and valor'];
+    const p = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    return `**Domain:** ${p(domains)}\n**Worshippers:** ${p(['common folk seeking protection', 'scholars and mages', 'soldiers and warriors', 'outcasts and the desperate', 'royalty and nobility'])}\n**Holy site:** ${p(['a mountaintop temple', 'a grove of ancient trees', 'a cathedral in the capital', 'the site of a great miracle', 'a hidden underground shrine'])}\n**Tenets:** ${p(['protect the weak', 'seek knowledge at any cost', 'balance must be maintained', 'only the strong deserve to lead', 'all debts must be paid'])}\n**Current conflict:** ${p(['a schism has split the faithful', 'the deity has gone silent', 'a rival religion is gaining followers', 'a heretical cult threatens the order'])}`;
+  },
+  Creature: () => {
+    const habitats = ['the deep forest', 'mountain caves', 'swamp ruins', 'the underdark', 'coastal cliffs'];
+    const behaviors = ['territorial but not aggressive unless provoked', 'actively hunts intelligent prey', 'guards a sacred site', 'has been displaced from its home', 'is being controlled by a more powerful entity'];
+    const p = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    return `**Habitat:** ${p(habitats)}\n**Behavior:** ${p(behaviors)}\n**Threat level:** ${p(['minor nuisance', 'dangerous to travelers', 'regional threat', 'existential danger to nearby settlements'])}\n**Distinguishing features:** ${p(['unusual coloring', 'scarred from a previous battle', 'larger than normal for its kind', 'displays surprising intelligence', 'leaves a trail of frost/fire/decay'])}\n**Local knowledge:** ${p(['the creature has been sighted for generations', 'it appeared only recently after an earthquake', 'hunters have tried and failed to kill it', 'a local druid claims it can be reasoned with'])}`;
+  },
+  Magic: () => {
+    const p = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    return `**Type:** ${p(['arcane phenomenon', 'divine manifestation', 'planar bleed-through', 'ancient ward', 'wild magic surge'])}\n**Effect:** ${p(['spells behave unpredictably in the area', 'the boundary between planes is thin', 'magic is amplified to dangerous levels', 'divination magic is blocked entirely', 'the dead do not stay dead'])}\n**Cause:** ${p(['unknown — scholars are still investigating', 'a failed ritual centuries ago', 'the death of a powerful being', 'a ley line intersection', 'deliberate sabotage by an enemy mage'])}\n**Danger:** ${p(['minimal if you know the rules', 'moderate — avoid casting within the zone', 'severe — reality itself is unstable', 'catastrophic — the effect is spreading'])}`;
+  },
+  Item: () => {
+    const rarities = ['Uncommon', 'Rare', 'Very Rare', 'Legendary'];
+    const types = ['Weapon', 'Armor', 'Wondrous Item', 'Staff', 'Ring', 'Amulet'];
+    const p = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    return `**Rarity:** ${p(rarities)}\n**Type:** ${p(types)}\n**Properties:** ${p(['+1 to attack and damage, glows near undead', 'grants resistance to fire, warm to the touch', 'allows the bearer to cast one spell per day', 'grants advantage on Stealth checks in dim light', 'deals extra radiant damage on critical hits'])}\n**History:** ${p(['forged by a master smith for a legendary hero', 'stolen from a dragon\'s hoard three centuries ago', 'created during the Age of Kings as a symbol of authority', 'the last work of a dying artificer', 'its origins are unknown — it simply appeared one day'])}\n**Attunement:** ${p(['Required', 'Not required', 'Required (by a spellcaster)', 'Required (by a good-aligned creature)'])}`;
+  },
+};
+
 function generateRandomLoreNote() {
   const template = LORE_TEMPLATES[Math.floor(Math.random() * LORE_TEMPLATES.length)];
   const category = template.category;
   const titles = QUICK_LORE_TITLES[category] || QUICK_LORE_TITLES.Location;
   const title = titles[Math.floor(Math.random() * titles.length)];
   const discoveryType = ['Confirmed', 'Rumor', 'Speculation'][Math.floor(Math.random() * 3)];
+
+  // Use the rich body generator if available, otherwise fall back to template
+  const bodyGen = LORE_BODY_GENERATORS[category];
+  const body = bodyGen ? bodyGen() : template.body;
+
+  const sourceNpcs = ['A traveling bard', 'Old Theron the sage', 'A dying soldier', 'Ancient texts in the library', 'A cryptic vision', 'Local tavern gossip', 'A prisoner\'s confession', 'The town crier'];
+  const sourceNpc = sourceNpcs[Math.floor(Math.random() * sourceNpcs.length)];
+
   return {
     title,
     category,
-    body: template.body,
+    body,
     related_to_text: '',
     discovery_type: discoveryType,
-    source_npc: '',
-    source_date: '',
+    source_npc: sourceNpc,
+    source_date: new Date().toISOString().split('T')[0],
     session_number: '',
     linked_entries: [],
   };

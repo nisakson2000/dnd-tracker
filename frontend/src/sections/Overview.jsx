@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { TrendingUp, TrendingDown, Heart, Shield, ShieldOff, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles, Skull, Search, Brain, Swords, AlertTriangle, ChevronDown, ChevronUp, ChevronRight, StickyNote, Flame, Waves, Wind, Target, Wand2, Calculator, Package, Dices, X, Plus, Trash2, Compass, Loader2, RotateCcw } from 'lucide-react';
+import { TrendingUp, TrendingDown, Heart, Shield, ShieldOff, Eye, Footprints, Moon, Coffee, Check, Star, Sparkles, Skull, Search, Brain, Swords, AlertTriangle, ChevronDown, ChevronUp, ChevronRight, StickyNote, Flame, Waves, Wind, Target, Wand2, Calculator, Package, Dices, X, Plus, Trash2, Compass, Loader2, RotateCcw, Pencil } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { getTotalLevel, getHitDiceBreakdown } from '../utils/multiclass';
 import toast from 'react-hot-toast';
@@ -25,6 +25,28 @@ const DAMAGE_TYPES = [
   'Acid', 'Bludgeoning', 'Cold', 'Fire', 'Force', 'Lightning', 'Necrotic',
   'Piercing', 'Poison', 'Psychic', 'Radiant', 'Slashing', 'Thunder',
   'Nonmagical Bludgeoning', 'Nonmagical Piercing', 'Nonmagical Slashing',
+];
+
+const ARMOR_AC_TABLE = {
+  'Padded Armor': { base: 11, type: 'light' },
+  'Leather Armor': { base: 11, type: 'light' },
+  'Studded Leather': { base: 12, type: 'light' },
+  'Hide Armor': { base: 12, type: 'medium', maxDex: 2 },
+  'Chain Shirt': { base: 13, type: 'medium', maxDex: 2 },
+  'Scale Mail': { base: 14, type: 'medium', maxDex: 2 },
+  'Breastplate': { base: 14, type: 'medium', maxDex: 2 },
+  'Half Plate': { base: 15, type: 'medium', maxDex: 2 },
+  'Ring Mail': { base: 14, type: 'heavy' },
+  'Chain Mail': { base: 16, type: 'heavy' },
+  'Splint Armor': { base: 17, type: 'heavy' },
+  'Plate Armor': { base: 18, type: 'heavy' },
+  'Shield': { bonus: 2 },
+};
+
+const OVERVIEW_TABS = [
+  { id: 'stats', label: 'Stats', icon: Brain },
+  { id: 'combat', label: 'Combat', icon: Swords },
+  { id: 'character', label: 'Character', icon: Compass },
 ];
 const ABILITY_NAMES = { STR: 'Strength', DEX: 'Dexterity', CON: 'Constitution', INT: 'Intelligence', WIS: 'Wisdom', CHA: 'Charisma' };
 
@@ -83,6 +105,19 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const [itemMagicBonuses, setItemMagicBonuses] = useState([]); // [{name, magic_bonus, item_type}]
   const [showSubclassModal, setShowSubclassModal] = useState(false);
   const [showLevelConfirm, setShowLevelConfirm] = useState(null);
+  const [overviewTab, setOverviewTab] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`codex-overview-tab-${characterId}`);
+      if (stored && ['stats', 'combat', 'character', 'multiclass'].includes(stored)) return stored;
+    } catch {}
+    return 'stats';
+  });
+  const [acCalcResult, setAcCalcResult] = useState(null); // { total, breakdown[] }
+
+  const switchOverviewTab = useCallback((tab) => {
+    setOverviewTab(tab);
+    try { localStorage.setItem(`codex-overview-tab-${characterId}`, tab); } catch {}
+  }, [characterId]);
   const [diceHintDismissed, setDiceHintDismissed] = useState(() => !!localStorage.getItem('codex-dice-hint-dismissed'));
   const prevLevelRef = useRef(null);
   const subclassTimeoutRef = useRef(null);
@@ -250,6 +285,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
       if (val) localStorage.setItem(`codex_concentration_${characterId}`, val);
       else localStorage.removeItem(`codex_concentration_${characterId}`);
     } catch (err) { if (import.meta.env.DEV) console.warn('Failed to save concentration to localStorage:', err); }
+    window.dispatchEvent(new Event('codex-concentration-changed'));
   };
 
   // ── Personal Goals (Character Arcs) ──
@@ -1020,6 +1056,80 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
 
   const sortedSkillEntries = useMemo(() => Object.entries(SKILLS).sort(([a], [b]) => a.localeCompare(b)), [SKILLS]);
 
+  // ── Auto-Calculate AC from equipped items ──
+  const autoCalculateAC = useCallback(async () => {
+    try {
+      const allItems = await getItems(characterId);
+      const equipped = allItems.filter(i => i.equipped);
+      const dex = calcMod(abilityMap.DEX || 10);
+      let baseAC = 10 + dex; // unarmored default
+      let shieldBonus = 0;
+      let armorFound = false;
+      const breakdown = [{ label: 'Unarmored base', value: 10 }];
+
+      for (const item of equipped) {
+        const armorInfo = ARMOR_AC_TABLE[item.name];
+        if (armorInfo) {
+          if (armorInfo.bonus) {
+            // Shield
+            shieldBonus = armorInfo.bonus + (item.magic_bonus || 0);
+          } else {
+            armorFound = true;
+            const mb = item.magic_bonus || 0;
+            if (armorInfo.type === 'light') {
+              baseAC = armorInfo.base + dex + mb;
+              breakdown.length = 0;
+              breakdown.push({ label: `${item.name}`, value: armorInfo.base });
+              breakdown.push({ label: 'DEX modifier', value: dex });
+              if (mb > 0) breakdown.push({ label: 'Magic bonus', value: mb });
+            } else if (armorInfo.type === 'medium') {
+              const cappedDex = Math.min(dex, armorInfo.maxDex || 2);
+              baseAC = armorInfo.base + cappedDex + mb;
+              breakdown.length = 0;
+              breakdown.push({ label: `${item.name}`, value: armorInfo.base });
+              breakdown.push({ label: `DEX modifier (max ${armorInfo.maxDex || 2})`, value: cappedDex });
+              if (mb > 0) breakdown.push({ label: 'Magic bonus', value: mb });
+            } else if (armorInfo.type === 'heavy') {
+              baseAC = armorInfo.base + mb;
+              breakdown.length = 0;
+              breakdown.push({ label: `${item.name}`, value: armorInfo.base });
+              if (mb > 0) breakdown.push({ label: 'Magic bonus', value: mb });
+            }
+          }
+        }
+      }
+
+      if (!armorFound) {
+        breakdown.push({ label: 'DEX modifier', value: dex });
+      }
+      if (shieldBonus > 0) {
+        breakdown.push({ label: 'Shield', value: shieldBonus });
+      }
+
+      const total = baseAC + shieldBonus;
+      setAcCalcResult({ total, breakdown, hasArmor: armorFound, hasShield: shieldBonus > 0 });
+      toast.success(`Calculated AC: ${total}`, { duration: 3000 });
+    } catch (err) {
+      toast.error(`Failed to calculate AC: ${err.message}`);
+    }
+  }, [characterId, abilityMap]);
+
+  // ── Recalculate all skill bonuses ──
+  const recalculateAllSkills = useCallback(() => {
+    let changed = 0;
+    const updatedSkills = skills.map(sk => {
+      const ability = Object.entries(SKILLS).find(([name]) => name === sk.name)?.[1] || 'STR';
+      const score = abilityMap[ability] || 10;
+      const skillItemBonus = itemStatBonuses[ability] || 0;
+      const expectedBonus = calcMod(score + skillItemBonus) + (sk.expertise ? profBonus * 2 : sk.proficient ? profBonus : 0);
+      if (sk.bonus !== undefined && sk.bonus !== expectedBonus) changed++;
+      return { ...sk, bonus: expectedBonus };
+    });
+    setSkills(updatedSkills);
+    triggerSkills(updatedSkills);
+    toast.success(`Skill bonuses recalculated (${changed} updated)`, { duration: 3000 });
+  }, [skills, abilityMap, itemStatBonuses, profBonus, SKILLS]);
+
 
   if (loading || !overview) {
     return <div className="text-amber-200/40">Loading character sheet...</div>;
@@ -1452,7 +1562,28 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         })()}
       </div>
 
-      {/* Two-column layout for wide screens */}
+      {/* Overview Tab Bar */}
+      <div className="flex flex-wrap gap-1.5">
+        {[...OVERVIEW_TABS, ...(multiclassData.length > 0 ? [{ id: 'multiclass', label: 'Multiclass', icon: Sparkles }] : [])].map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => switchOverviewTab(tab.id)}
+              className={`text-xs px-3 py-1.5 rounded border transition-all cursor-pointer flex items-center gap-1.5 font-display tracking-wide ${
+                overviewTab === tab.id
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                  : 'border-white/5 text-amber-200/40 hover:text-amber-200/60 hover:border-white/10'
+              }`}
+            >
+              <Icon size={12} /> {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ═══ STATS TAB ═══ */}
+      {overviewTab === 'stats' && (
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Left column: Ability Scores, Saving Throws, Skills */}
         <div className="space-y-6">
@@ -1486,7 +1617,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                     <div className="relative">
                       <input
                         type="number" min={1} max={30}
-                        className="text-3xl font-bold text-gold text-center w-16 mx-auto hover:text-amber-300 transition-all"
+                        className="text-3xl font-bold text-gold text-center w-16 mx-auto hover:text-amber-300 transition-all rounded-md hover:ring-1 hover:ring-gold/25 focus:ring-1 focus:ring-gold/40"
                         aria-label={`${ABILITY_NAMES[ab]} score`}
                         style={{ border: 'none', background: 'transparent', outline: 'none', boxShadow: 'none' }}
                         value={localAbilities[ab] ?? score}
@@ -1498,6 +1629,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                           updateAbility(ab, val);
                         }}
                       />
+                      <Pencil size={10} className="absolute top-0 -left-1 text-gold/0 group-hover/ab:text-gold/40 transition-all duration-200" />
                       <Dices size={12} className="absolute top-0 -right-1 text-gold/0 group-hover/ab:text-gold/70 transition-all duration-200 group-hover/ab:animate-pulse" />
                     </div>
                     {/* Modifier below */}
@@ -1642,6 +1774,13 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 <span className="inline-block w-3 h-3 rounded-full border-2 border-amber-200/25 bg-amber-200/[0.04]" />
                 None
               </span>
+              <button
+                onClick={recalculateAllSkills}
+                className="ml-auto inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded bg-gold/8 border border-gold/20 text-gold/60 hover:bg-gold/15 hover:text-gold transition-all"
+                title="Recalculate all skill bonuses from current ability scores and proficiencies"
+              >
+                <Calculator size={10} /> Recalculate All
+              </button>
             </div>
             <div className="space-y-0 max-h-[380px] overflow-y-auto pr-1 skill-list">
               {sortedSkillEntries.map(([skillName, ability]) => {
@@ -1719,8 +1858,12 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
           </div>
         </div>
 
-        {/* Right column: HP, Core Stats, Hit Dice, Death Saves, Conditions */}
-        <div className="space-y-6">
+      </div>
+      )}
+
+      {/* ═══ COMBAT TAB ═══ */}
+      {overviewTab === 'combat' && (
+      <div className="space-y-6">
           {/* Proficiency + Core Stats */}
           <div className={`grid grid-cols-2 ${spellAttackBonus ? 'md:grid-cols-7' : spellSaveDC ? 'md:grid-cols-6' : 'md:grid-cols-5'} gap-4`}>
             <div className="card text-center border-gold/25 shadow-[0_0_12px_rgba(201,168,76,0.06)]" title={`Proficiency bonus: +${profBonus} (levels ${profBonus === 2 ? '1-4' : profBonus === 3 ? '5-8' : profBonus === 4 ? '9-12' : profBonus === 5 ? '13-16' : '17-20'})`}>
@@ -1731,25 +1874,59 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             <div className="card text-center group relative" title={`AC Breakdown: Base 10 + DEX mod (${modStr(dexMod)}) = ${10 + dexMod}. Current AC: ${overview.armor_class}${overview.armor_class !== 10 + dexMod ? ' (armor/shield/magic may apply)' : ''}`}>
               <div className="text-xs text-amber-200/50 mb-1 flex items-center justify-center gap-1"><Shield size={12} /> AC<HelpTooltip text={HELP.ac} /></div>
               <input type="number" min={0} max={30} className="input text-center text-2xl font-display w-20 mx-auto" value={overview.armor_class} onChange={e => updateField('armor_class', parseInt(e.target.value) || 0)} />
+              {/* Auto-calculate AC button */}
+              <button
+                onClick={(e) => { e.stopPropagation(); autoCalculateAC(); }}
+                className="text-[9px] text-amber-200/40 hover:text-gold transition-colors mt-1 flex items-center gap-0.5 mx-auto"
+                title="Auto-calculate AC from equipped armor, shield, and DEX"
+              >
+                <Calculator size={9} /> Auto
+              </button>
               {/* AC Breakdown Tooltip on hover */}
               <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 p-3 rounded-lg bg-[#0c0a14] border border-gold/20 shadow-xl z-30 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200">
                 <div className="text-[10px] font-display text-gold/70 tracking-wider uppercase mb-1.5">AC Breakdown</div>
                 <div className="space-y-1 text-[11px] text-amber-200/60">
-                  <div className="flex justify-between"><span>Unarmored base</span><span className="text-amber-100">10</span></div>
-                  <div className="flex justify-between"><span>DEX modifier</span><span className="text-amber-100">{modStr(dexMod)}</span></div>
-                  {(() => {
-                    const armorMagicTotal = itemMagicBonuses.filter(i => i.item_type === 'armor').reduce((s, i) => s + i.magic_bonus, 0);
-                    return armorMagicTotal > 0 && (
-                      <div className="flex justify-between"><span className="text-purple-400/70">Magic armor/shield</span><span className="text-purple-400/70">+{armorMagicTotal}</span></div>
-                    );
-                  })()}
-                  <div className="border-t border-amber-200/10 my-1" />
-                  <div className="flex justify-between"><span>Unarmored total</span><span className="text-gold font-bold">{10 + dexMod}</span></div>
-                  {overview.armor_class !== 10 + dexMod && (
+                  {acCalcResult ? (
                     <>
+                      {acCalcResult.breakdown.map((item, i) => (
+                        <div key={i} className="flex justify-between"><span>{item.label}</span><span className="text-amber-100">{item.value >= 0 ? '+' : ''}{item.value}</span></div>
+                      ))}
                       <div className="border-t border-amber-200/10 my-1" />
-                      <div className="flex justify-between"><span>Your AC</span><span className="text-gold font-bold">{overview.armor_class}</span></div>
-                      <div className="text-[9px] text-amber-200/35 mt-1">Difference of {modStr(overview.armor_class - (10 + dexMod))} from armor, shield, or magic</div>
+                      <div className="flex justify-between"><span>Calculated AC</span><span className="text-gold font-bold">{acCalcResult.total}</span></div>
+                      {acCalcResult.total !== overview.armor_class && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateField('armor_class', acCalcResult.total);
+                            toast.success(`AC updated to ${acCalcResult.total}`);
+                          }}
+                          className="w-full mt-1.5 text-[10px] px-2 py-1 rounded bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-all"
+                        >
+                          Apply AC {acCalcResult.total}
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between"><span>Unarmored base</span><span className="text-amber-100">10</span></div>
+                      <div className="flex justify-between"><span>DEX modifier</span><span className="text-amber-100">{modStr(dexMod)}</span></div>
+                      {(() => {
+                        const armorMagicTotal = itemMagicBonuses.filter(i => i.item_type === 'armor').reduce((s, i) => s + i.magic_bonus, 0);
+                        return armorMagicTotal > 0 && (
+                          <div className="flex justify-between"><span className="text-purple-400/70">Magic armor/shield</span><span className="text-purple-400/70">+{armorMagicTotal}</span></div>
+                        );
+                      })()}
+                      <div className="border-t border-amber-200/10 my-1" />
+                      <div className="flex justify-between"><span>Unarmored total</span><span className="text-gold font-bold">{10 + dexMod}</span></div>
+                      {overview.armor_class !== 10 + dexMod && (
+                        <>
+                          <div className="border-t border-amber-200/10 my-1" />
+                          <div className="flex justify-between"><span>Your AC</span><span className="text-gold font-bold">{overview.armor_class}</span></div>
+                          <div className="text-[9px] text-amber-200/35 mt-1">Difference of {modStr(overview.armor_class - (10 + dexMod))} from armor, shield, or magic</div>
+                        </>
+                      )}
+                      <div className="border-t border-amber-200/10 my-1" />
+                      <div className="text-[9px] text-amber-200/30 text-center">Click "Auto" to calculate from equipped items</div>
                     </>
                   )}
                 </div>
@@ -2461,6 +2638,83 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
             </SectionToggle>
           </div>
 
+          {/* Damage Modifiers (Resistances, Immunities, Vulnerabilities) */}
+      <div className="card">
+        <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="damage-mods" title="Damage Modifiers" summary={damageModSummary}>
+        <p className="text-xs text-amber-200/30 mb-3">Track resistances, immunities, and vulnerabilities from your race, class, or magic items.</p>
+
+        {/* Category display */}
+        {[
+          { key: 'resistances', label: 'Resistances', desc: 'Half damage', icon: <Shield size={14} />, color: 'blue', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.25)', text: 'rgb(147,197,253)', chipBg: 'rgba(59,130,246,0.15)', chipBorder: 'rgba(59,130,246,0.3)' },
+          { key: 'immunities', label: 'Immunities', desc: 'No damage', icon: <ShieldOff size={14} />, color: 'gold', bg: 'rgba(234,179,8,0.08)', border: 'rgba(234,179,8,0.25)', text: 'rgb(253,224,71)', chipBg: 'rgba(234,179,8,0.15)', chipBorder: 'rgba(234,179,8,0.3)' },
+          { key: 'vulnerabilities', label: 'Vulnerabilities', desc: 'Double damage', icon: <AlertTriangle size={14} />, color: 'red', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)', text: 'rgb(252,165,165)', chipBg: 'rgba(239,68,68,0.15)', chipBorder: 'rgba(239,68,68,0.3)' },
+        ].map(cat => (
+          <div key={cat.key} style={{ background: cat.bg, border: `1px solid ${cat.border}`, borderRadius: '8px', padding: '10px 12px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: parsedDamageModifiers[cat.key].length > 0 ? '8px' : '0' }}>
+              <span style={{ color: cat.text, display: 'flex', alignItems: 'center' }}>{cat.icon}</span>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: '13px', color: cat.text, fontWeight: 600 }}>{cat.label}</span>
+              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginLeft: '4px' }}>{cat.desc}</span>
+            </div>
+            {parsedDamageModifiers[cat.key].length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {parsedDamageModifiers[cat.key].map(type => (
+                  <span key={type} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '4px',
+                    background: cat.chipBg, border: `1px solid ${cat.chipBorder}`, borderRadius: '6px',
+                    padding: '3px 8px', fontSize: '11px', color: cat.text, fontFamily: 'var(--font-ui)',
+                  }}>
+                    {type}
+                    <button
+                      onClick={() => removeDamageModifier(cat.key, type)}
+                      style={{ background: 'none', border: 'none', color: cat.text, cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center', opacity: 0.6 }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                      onMouseLeave={e => e.currentTarget.style.opacity = '0.6'}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Add damage modifier control */}
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '8px' }}>
+          <select
+            value={dmAddCategory}
+            onChange={e => setDmAddCategory(e.target.value)}
+            className="input"
+            style={{ width: '140px', fontSize: '11px', padding: '5px 8px' }}
+          >
+            <option value="resistances">Resistance</option>
+            <option value="immunities">Immunity</option>
+            <option value="vulnerabilities">Vulnerability</option>
+          </select>
+          <select
+            value={dmAddType}
+            onChange={e => {
+              if (e.target.value) {
+                addDamageModifier(dmAddCategory, e.target.value);
+              }
+            }}
+            className="input"
+            style={{ flex: 1, fontSize: '11px', padding: '5px 8px' }}
+          >
+            <option value="">Select damage type...</option>
+            {DAMAGE_TYPES.filter(t => !parsedDamageModifiers[dmAddCategory]?.includes(t)).map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+        </SectionToggle>
+      </div>
+      </div>
+      )}
+
+      {/* ═══ CHARACTER TAB ═══ */}
+      {overviewTab === 'character' && (
+      <div className="space-y-6">
           {/* Quick Notes / Scratchpad */}
           <div className="card">
             <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="notes" title="Quick Notes" icon={StickyNote} summary={overview.notes ? `${overview.notes.slice(0, 40)}${overview.notes.length > 40 ? '...' : ''}` : 'Empty'}>
@@ -2472,8 +2726,6 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
               />
             </SectionToggle>
           </div>
-        </div>
-      </div>
 
       {/* Race Traits & Class Features */}
       {(() => {
@@ -2702,77 +2954,97 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         </SectionToggle>
       </div>
 
-      {/* Damage Modifiers (Resistances, Immunities, Vulnerabilities) */}
-      <div className="card">
-        <SectionToggle collapsedSections={collapsedSections} toggleCollapse={toggleCollapse} id="damage-mods" title="Damage Modifiers" summary={damageModSummary}>
-        <p className="text-xs text-amber-200/30 mb-3">Track resistances, immunities, and vulnerabilities from your race, class, or magic items.</p>
-
-        {/* Category display */}
-        {[
-          { key: 'resistances', label: 'Resistances', desc: 'Half damage', icon: <Shield size={14} />, color: 'blue', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.25)', text: 'rgb(147,197,253)', chipBg: 'rgba(59,130,246,0.15)', chipBorder: 'rgba(59,130,246,0.3)' },
-          { key: 'immunities', label: 'Immunities', desc: 'No damage', icon: <ShieldOff size={14} />, color: 'gold', bg: 'rgba(234,179,8,0.08)', border: 'rgba(234,179,8,0.25)', text: 'rgb(253,224,71)', chipBg: 'rgba(234,179,8,0.15)', chipBorder: 'rgba(234,179,8,0.3)' },
-          { key: 'vulnerabilities', label: 'Vulnerabilities', desc: 'Double damage', icon: <AlertTriangle size={14} />, color: 'red', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)', text: 'rgb(252,165,165)', chipBg: 'rgba(239,68,68,0.15)', chipBorder: 'rgba(239,68,68,0.3)' },
-        ].map(cat => (
-          <div key={cat.key} style={{ background: cat.bg, border: `1px solid ${cat.border}`, borderRadius: '8px', padding: '10px 12px', marginBottom: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: parsedDamageModifiers[cat.key].length > 0 ? '8px' : '0' }}>
-              <span style={{ color: cat.text, display: 'flex', alignItems: 'center' }}>{cat.icon}</span>
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: '13px', color: cat.text, fontWeight: 600 }}>{cat.label}</span>
-              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginLeft: '4px' }}>{cat.desc}</span>
-            </div>
-            {parsedDamageModifiers[cat.key].length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {parsedDamageModifiers[cat.key].map(type => (
-                  <span key={type} style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '4px',
-                    background: cat.chipBg, border: `1px solid ${cat.chipBorder}`, borderRadius: '6px',
-                    padding: '3px 8px', fontSize: '11px', color: cat.text, fontFamily: 'var(--font-ui)',
-                  }}>
-                    {type}
-                    <button
-                      onClick={() => removeDamageModifier(cat.key, type)}
-                      style={{ background: 'none', border: 'none', color: cat.text, cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center', opacity: 0.6 }}
-                      onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                      onMouseLeave={e => e.currentTarget.style.opacity = '0.6'}
-                    >
-                      <X size={12} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-
-        {/* Add damage modifier control */}
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '8px' }}>
-          <select
-            value={dmAddCategory}
-            onChange={e => setDmAddCategory(e.target.value)}
-            className="input"
-            style={{ width: '140px', fontSize: '11px', padding: '5px 8px' }}
-          >
-            <option value="resistances">Resistance</option>
-            <option value="immunities">Immunity</option>
-            <option value="vulnerabilities">Vulnerability</option>
-          </select>
-          <select
-            value={dmAddType}
-            onChange={e => {
-              if (e.target.value) {
-                addDamageModifier(dmAddCategory, e.target.value);
-              }
-            }}
-            className="input"
-            style={{ flex: 1, fontSize: '11px', padding: '5px 8px' }}
-          >
-            <option value="">Select damage type...</option>
-            {DAMAGE_TYPES.filter(t => !parsedDamageModifiers[dmAddCategory]?.includes(t)).map(t => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
-        </SectionToggle>
       </div>
+      )}
+
+      {/* ═══ MULTICLASS TAB ═══ */}
+      {overviewTab === 'multiclass' && multiclassData.length > 0 && (
+        <div className="card">
+          <p className="text-xs text-amber-200/40 mb-3">Manage your multiclass levels and hit dice breakdown. Primary class details are in the identity card above.</p>
+          {(() => {
+            let mc = [];
+            try { mc = JSON.parse(overview.multiclass_data || '[]'); } catch { mc = []; }
+            if (!Array.isArray(mc)) mc = [];
+            const tl = getTotalLevel(overview.level, mc);
+            const hitDice = getHitDiceBreakdown(overview.primary_class, overview.level, mc);
+            const updateMulticlass = (newMc) => {
+              const updated = { ...overview, multiclass_data: JSON.stringify(newMc) };
+              setOverview(updated);
+              triggerOverview(updated);
+            };
+            const addMulticlass = () => updateMulticlass([...mc, { class: '', subclass: '', level: 1 }]);
+            const removeMulticlass = (index) => updateMulticlass(mc.filter((_, i) => i !== index));
+            const updateMulticlassEntry = (index, field, value) => {
+              const newMc = mc.map((entry, i) => {
+                if (i !== index) return entry;
+                const updated = { ...entry, [field]: value };
+                if (field === 'level') updated.level = Math.max(1, Math.min(20, parseInt(value) || 1));
+                return updated;
+              });
+              updateMulticlass(newMc);
+            };
+            return (<>
+              <div className="text-xs text-amber-200/50 mb-3">Total Level: {tl} ({overview.primary_class || 'Primary'} {overview.level}{mc.map((cls) => ` + ${cls.class || '?'} ${cls.level || '?'}`).join('')})</div>
+              {mc.length > 0 && (
+                <div className="space-y-2 mb-3">
+                  {mc.map((cls, i) => (
+                    <div key={i} className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-end bg-purple-900/10 border border-purple-500/15 rounded p-2">
+                      <div>
+                        <label className="label text-[10px]">Class</label>
+                        <select className="input w-full text-sm" value={cls.class || ''} onChange={e => updateMulticlassEntry(i, 'class', e.target.value)}>
+                          <option value="">Select...</option>
+                          {CLASSES.map(c => (
+                            <option key={c.name} value={c.name} disabled={c.name === overview.primary_class}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="label text-[10px]">Subclass</label>
+                        {(() => {
+                          const clsData = CLASSES.find(c => c.name === cls.class);
+                          const subs = clsData?.subclasses || [];
+                          if (subs.length > 0) {
+                            return (
+                              <select className="input w-full text-sm" value={cls.subclass || ''} onChange={e => updateMulticlassEntry(i, 'subclass', e.target.value)}>
+                                <option value="">Select...</option>
+                                {subs.map(s => <option key={s} value={s}>{s}</option>)}
+                              </select>
+                            );
+                          }
+                          return <input className="input w-full text-sm" value={cls.subclass || ''} onChange={e => updateMulticlassEntry(i, 'subclass', e.target.value)} placeholder="Subclass" />;
+                        })()}
+                      </div>
+                      <div>
+                        <label className="label text-[10px]">Lv</label>
+                        <input type="number" className="input w-16 text-sm text-center" min={1} max={20}
+                          value={cls.level || 1} onChange={e => updateMulticlassEntry(i, 'level', e.target.value)} />
+                      </div>
+                      <button onClick={() => removeMulticlass(i)} className="btn-ghost p-1.5 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded self-end mb-0.5" title="Remove class">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button onClick={addMulticlass} className="btn-ghost text-xs flex items-center gap-1 text-purple-300 hover:text-purple-200">
+                <Plus size={12} /> Add Class
+              </button>
+              {mc.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gold/5">
+                  <div className="text-[10px] text-amber-200/40 uppercase tracking-wider mb-1">Hit Dice Breakdown</div>
+                  <div className="flex flex-wrap gap-2">
+                    {hitDice.map((hd, i) => (
+                      <span key={i} className="text-xs bg-purple-900/20 text-purple-200/80 px-2 py-1 rounded border border-purple-500/15">
+                        {hd.count}{hd.die} ({hd.class || '?'})
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>);
+          })()}
+        </div>
+      )}
 
       {/* Level-Up Summary */}
       {showLevelUpSummary && (

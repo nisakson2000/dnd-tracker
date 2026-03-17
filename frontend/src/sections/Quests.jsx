@@ -29,14 +29,18 @@ const PRIORITY_STYLES = {
 };
 
 const QUEST_TEMPLATES = [
-  { label: 'Bounty Hunt', quest_type: 'Bounty', description: 'A dangerous creature has been spotted in the area. Track it down and eliminate the threat.', objectives: [{ text: 'Locate the creature', completed: false }, { text: 'Defeat or capture the target', completed: false }, { text: 'Return with proof of completion', completed: false }], difficulty: 'medium' },
-  { label: 'Rescue Mission', quest_type: 'Side Quest', description: 'Someone has gone missing and needs to be found before it\'s too late.', objectives: [{ text: 'Investigate the disappearance', completed: false }, { text: 'Track down the missing person', completed: false }, { text: 'Ensure their safe return', completed: false }], difficulty: 'medium' },
-  { label: 'Fetch Quest', quest_type: 'Side Quest', description: 'A rare item must be retrieved from a dangerous location.', objectives: [{ text: 'Travel to the location', completed: false }, { text: 'Retrieve the item', completed: false }, { text: 'Return the item to the quest giver', completed: false }], difficulty: 'easy' },
-  { label: 'Escort Mission', quest_type: 'Side Quest', description: 'A traveler needs safe passage through dangerous territory.', objectives: [{ text: 'Meet the traveler', completed: false }, { text: 'Protect them during the journey', completed: false }, { text: 'Deliver them safely to the destination', completed: false }], difficulty: 'medium' },
-  { label: 'Dungeon Delve', quest_type: 'Main Story', description: 'An ancient dungeon holds secrets and treasure, but also deadly traps and guardians.', objectives: [{ text: 'Find the dungeon entrance', completed: false }, { text: 'Navigate the traps and puzzles', completed: false }, { text: 'Defeat the dungeon boss', completed: false }, { text: 'Claim the treasure', completed: false }], difficulty: 'hard' },
-  { label: 'Investigation', quest_type: 'Side Quest', description: 'Strange events demand answers. Gather clues and uncover the truth.', objectives: [{ text: 'Gather initial clues', completed: false }, { text: 'Interview witnesses or suspects', completed: false }, { text: 'Piece together the evidence', completed: false }, { text: 'Confront the responsible party', completed: false }], difficulty: 'medium' },
-  { label: 'Defense / Siege', quest_type: 'Main Story', description: 'An attack is imminent. Prepare defenses and hold the line.', objectives: [{ text: 'Fortify defenses', completed: false }, { text: 'Rally allies and defenders', completed: false }, { text: 'Repel the attackers', completed: false }], difficulty: 'hard' },
-  { label: 'Political Intrigue', quest_type: 'Main Story', description: 'Navigate the treacherous waters of politics and power.', objectives: [{ text: 'Gather intelligence on the factions', completed: false }, { text: 'Gain an ally among the powerful', completed: false }, { text: 'Expose or outmaneuver the opposition', completed: false }], difficulty: 'medium' },
+  { label: 'Bounty Hunt', quest_type: 'Bounty', description: 'A dangerous creature has been spotted in the area. Track it down and eliminate the threat before more innocents are harmed.', objectives: [{ text: 'Locate the creature', completed: false }, { text: 'Defeat or capture the target', completed: false }, { text: 'Return with proof of completion', completed: false }], difficulty: 'medium' },
+  { label: 'Rescue Mission', quest_type: 'Side Quest', description: 'Someone has gone missing under suspicious circumstances and needs to be found before it\'s too late.', objectives: [{ text: 'Investigate the disappearance', completed: false }, { text: 'Track down the missing person', completed: false }, { text: 'Ensure their safe return', completed: false }], difficulty: 'medium' },
+  { label: 'Fetch Quest', quest_type: 'Side Quest', description: 'A rare and valuable item must be retrieved from a dangerous location before rivals claim it first.', objectives: [{ text: 'Travel to the location', completed: false }, { text: 'Retrieve the item', completed: false }, { text: 'Return the item to the quest giver', completed: false }], difficulty: 'easy' },
+  { label: 'Escort Mission', quest_type: 'Side Quest', description: 'A traveler carrying something of great importance needs safe passage through dangerous territory.', objectives: [{ text: 'Meet the traveler', completed: false }, { text: 'Protect them during the journey', completed: false }, { text: 'Deliver them safely to the destination', completed: false }], difficulty: 'medium' },
+  { label: 'Dungeon Delve', quest_type: 'Main Story', description: 'An ancient dungeon has been unsealed, revealing secrets and treasure — but also deadly traps and awakened guardians.', objectives: [{ text: 'Find the dungeon entrance', completed: false }, { text: 'Navigate the traps and puzzles', completed: false }, { text: 'Defeat the dungeon boss', completed: false }, { text: 'Claim the treasure', completed: false }], difficulty: 'hard' },
+  { label: 'Investigation', quest_type: 'Side Quest', description: 'Strange events are plaguing the area — bodies found in locked rooms, goods vanishing overnight, or whispers of dark rituals.', objectives: [{ text: 'Gather initial clues', completed: false }, { text: 'Interview witnesses or suspects', completed: false }, { text: 'Piece together the evidence', completed: false }, { text: 'Confront the responsible party', completed: false }], difficulty: 'medium' },
+  { label: 'Defense / Siege', quest_type: 'Main Story', description: 'An overwhelming force approaches. The settlement must be fortified and its people rallied before the enemy arrives.', objectives: [{ text: 'Fortify defenses', completed: false }, { text: 'Rally allies and defenders', completed: false }, { text: 'Repel the attackers', completed: false }], difficulty: 'hard' },
+  { label: 'Political Intrigue', quest_type: 'Main Story', description: 'Rival factions maneuver for power behind closed doors. Alliances must be forged and betrayals uncovered.', objectives: [{ text: 'Gather intelligence on the factions', completed: false }, { text: 'Gain an ally among the powerful', completed: false }, { text: 'Expose or outmaneuver the opposition', completed: false }], difficulty: 'medium' },
+  { label: 'Heist', quest_type: 'Side Quest', description: 'A heavily guarded vault holds something that rightfully belongs to someone else — or so the client claims.', objectives: [{ text: 'Scout the target and map entry points', completed: false }, { text: 'Disable wards or security', completed: false }, { text: 'Execute the heist during the distraction', completed: false }, { text: 'Escape with the prize', completed: false }], difficulty: 'hard' },
+  { label: 'Curse Breaking', quest_type: 'Main Story', description: 'A terrible affliction grips the land or a person of importance. The source must be found and destroyed before it spreads.', objectives: [{ text: 'Research the nature of the curse', completed: false }, { text: 'Locate the cursed object or site', completed: false }, { text: 'Gather components for the ritual', completed: false }, { text: 'Break the curse and deal with its source', completed: false }], difficulty: 'hard' },
+  { label: 'Exploration', quest_type: 'Side Quest', description: 'Uncharted territory beckons. Map the unknown, survive its dangers, and return with proof of what lies beyond.', objectives: [{ text: 'Prepare supplies and gather intel', completed: false }, { text: 'Navigate treacherous terrain', completed: false }, { text: 'Document discoveries', completed: false }, { text: 'Return alive with proof', completed: false }], difficulty: 'medium' },
+  { label: 'Sabotage', quest_type: 'Side Quest', description: 'An enemy operation must be dismantled from within. Infiltrate, gather intelligence, and bring it down.', objectives: [{ text: 'Infiltrate the enemy operation', completed: false }, { text: 'Identify critical weaknesses', completed: false }, { text: 'Execute the sabotage', completed: false }, { text: 'Escape undetected', completed: false }], difficulty: 'hard' },
 ];
 
 const SUGGESTED_OBJECTIVES = ['Defeat the enemy', 'Find the hidden item', 'Speak to the contact', 'Solve the puzzle', 'Escort to safety', 'Survive the ambush', 'Gather evidence', 'Return to quest giver'];
@@ -46,25 +50,101 @@ const QUICK_QUEST_TITLES = [
   'Wolves at the Gate', 'The Silent Village', 'Bounty: The Iron Fang', 'Secrets of the Old Tower',
   'The Stolen Heirloom', 'Rumbles Beneath', 'A Call for Aid', 'The Poisoned Well',
   'Whispers in the Dark', 'The Broken Seal', 'Trouble at the Border', 'The Lost Expedition',
+  'Blood Moon Rising', 'The Traitor Among Us', 'The Sunken Cathedral', 'Ashes of the Phoenix',
+  'The Last Heir', 'Beneath the Gallows', 'The Collector\'s Demand', 'A Crown of Thorns',
+  'The Whispering Idol', 'Plague of Shadows', 'The Forgemaster\'s Secret', 'Echoes of the Fallen',
+  'The Crimson Pact', 'Ghosts of Thornfield', 'The Silver Key', 'Wrath of the Mountain',
 ];
 
+const QUEST_GIVERS = [
+  'Aldric Thornbury', 'Brenna Ashford', 'Captain Voss', 'Dame Elara Nightwind',
+  'Elder Mordecai', 'Fiona Copperkettle', 'Guildmaster Rourke', 'Helena Stormwind',
+  'Inspector Crane', 'Jareth the Wanderer', 'Kira Dawnforge', 'Lord Ashmore',
+  'Magistrate Wren', 'Nessa Brightwater', 'Old Theron', 'Prior Cedric',
+  'Quartermaster Vex', 'Rhiannon Blackthorn', 'Silas the Fence', 'Taverna the Seer',
+];
+
+const QUEST_LOCATIONS = [
+  'Ravenhollow', 'The Whispering Mines', 'Thornwall Keep', 'Ashenmoor Swamp',
+  'The Crimson Market', 'Silverpine Forest', 'Duskreach Tower', 'The Sunken Temple',
+  'Ironpeak Citadel', 'Hollowbrook Village', 'The Obsidian Caverns', 'Moonrise Abbey',
+  'Wraithmarsh', 'The Gilded Quarter', 'Grimstone Pass', 'Frostfell Ruins',
+];
+
+const QUEST_COMPLICATIONS = [
+  'A rival adventuring party is after the same goal.',
+  'The quest giver isn\'t telling the whole truth.',
+  'An innocent person will be harmed if the party succeeds.',
+  'The target location is under quarantine or lockdown.',
+  'A powerful faction has a stake in the outcome.',
+  'Weather or natural disaster complicates the journey.',
+  'The party\'s reputation precedes them — for better or worse.',
+  'A betrayal from within threatens to unravel the plan.',
+  'Resources are scarce and must be carefully rationed.',
+  'The enemy knows the party is coming.',
+];
+
+const QUEST_TWISTS = [
+  'The "villain" is actually trying to prevent a greater evil.',
+  'The quest giver is the real antagonist.',
+  'Success comes at a terrible moral cost.',
+  'The goal has already been achieved by someone else.',
+  'An ally turns out to be working for the other side.',
+  'The reward is cursed or comes with strings attached.',
+  'The situation is the opposite of what was described.',
+  'A third party swoops in to claim the prize.',
+  'The problem was caused by the quest giver themselves.',
+  'Completing the quest triggers an even larger threat.',
+];
+
+const QUEST_ITEM_REWARDS = [
+  'Potion of Healing (2)', 'Scroll of Protection', 'Ring of Warmth', '+1 Weapon of choice',
+  'Cloak of Elvenkind', 'Bag of Holding', 'Boots of Striding', 'Wand of Magic Detection',
+  'Amulet of Proof Against Detection', 'Immovable Rod', 'Decanter of Endless Water',
+  'Pearl of Power', 'Sending Stones (pair)', 'Goggles of Night', 'Hat of Disguise',
+];
+
+function pickOne(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randBetween(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
 function generateRandomQuest() {
-  const template = QUEST_TEMPLATES[Math.floor(Math.random() * QUEST_TEMPLATES.length)];
-  const title = QUICK_QUEST_TITLES[Math.floor(Math.random() * QUICK_QUEST_TITLES.length)];
-  const priority = PRIORITIES[Math.floor(Math.random() * PRIORITIES.length)];
+  const template = pickOne(QUEST_TEMPLATES);
+  const title = pickOne(QUICK_QUEST_TITLES);
+  const priority = pickOne(PRIORITIES);
+  const questGiver = pickOne(QUEST_GIVERS);
+  const location = pickOne(QUEST_LOCATIONS);
+  const complication = pickOne(QUEST_COMPLICATIONS);
+  const twist = pickOne(QUEST_TWISTS);
+  const difficulty = template.difficulty;
+
+  // Scale rewards to difficulty
+  const xpRanges = { easy: [100, 300], medium: [300, 600], hard: [600, 1200], deadly: [1200, 2500], trivial: [25, 100] };
+  const goldRanges = { easy: [25, 75], medium: [75, 200], hard: [200, 500], deadly: [500, 1500], trivial: [10, 25] };
+  const [xpMin, xpMax] = xpRanges[difficulty] || [100, 300];
+  const [goldMin, goldMax] = goldRanges[difficulty] || [50, 150];
+  const xpReward = String(Math.round(randBetween(xpMin, xpMax) / 25) * 25);
+  const goldReward = String(Math.round(randBetween(goldMin, goldMax) / 5) * 5);
+  const itemReward = Math.random() > 0.5 ? pickOne(QUEST_ITEM_REWARDS) : '';
+
+  // Build rich description using location and quest giver
+  const desc = template.description.replace(/the area/, location).replace(/A traveler|Someone/, questGiver);
+
+  // Build DM notes with plot hook, complication, and twist
+  const notesText = `**Plot Hook:** ${questGiver} approaches the party at ${location} with an urgent request.\n\n**Complication:** ${complication}\n\n**Twist:** ${twist}\n\n**Setting Notes:** The events take place in and around ${location}. The locals are ${pickOne(['wary of outsiders', 'desperate for help', 'hiding something', 'divided on the issue', 'unaware of the danger', 'eager to see the problem resolved'])}.`;
+
   return {
     title,
-    quest_giver: '',
-    description: template.description,
+    quest_giver: questGiver,
+    description: desc,
     status: 'active',
-    difficulty: template.difficulty,
-    notes_text: '',
+    difficulty,
+    notes_text: notesText,
     objectives: template.objectives.map(o => ({ ...o })),
     priority,
-    xp_reward: '',
-    gold_reward: '',
-    item_rewards: '',
-    location: '',
+    xp_reward: xpReward,
+    gold_reward: goldReward,
+    item_rewards: itemReward,
+    location,
     quest_type: template.quest_type,
     timeline: [{ stage: 'received', date: new Date().toISOString().split('T')[0] }],
     session_notes: [],
@@ -1065,9 +1145,10 @@ function QuestForm({ quest, initialData, onSubmit, onCancel }) {
               {QUEST_TYPES.map(t => {
                 const style = QUEST_TYPE_STYLES[t];
                 const TypeIcon = style.icon;
+                const isSelected = form.quest_type === t;
                 return (
                   <button key={t} type="button" onClick={() => update('quest_type', t)}
-                    className={`text-xs px-2.5 py-1 rounded border flex items-center gap-1 ${form.quest_type === t ? `${style.bg} ${style.text} ${style.border}` : 'bg-amber-200/5 text-amber-200/40 border-amber-200/10'}`}>
+                    className={`text-xs px-2.5 py-1 rounded border flex items-center gap-1 ${isSelected ? 'bg-gold/20 text-gold border-gold/30 ring-1 ring-gold/20' : 'bg-amber-200/5 text-amber-200/40 border-amber-200/10'}`}>
                     <TypeIcon size={11} /> {t}
                   </button>
                 );
