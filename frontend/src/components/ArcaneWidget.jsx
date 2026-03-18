@@ -4,8 +4,11 @@ import { invoke } from '@tauri-apps/api/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Send, Trash2, X, Loader2, Zap, Check, Minimize2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { streamChat, searchWikiContext } from '../api/assistant';
+import { streamChat, searchWikiContext, needsWikiSearch, getAvailableModels, getSelectedModel, setSelectedModel } from '../api/assistant';
 import { buildSectionPrompt, buildMessages } from '../data/assistantContext';
+
+const responseCache = new Map();
+const RESPONSE_CACHE_MAX = 30;
 
 const SETTINGS_KEY = 'codex-assistant-settings';
 
@@ -91,11 +94,26 @@ export default function ArcaneWidget({ characterId, section, sectionData }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
-  const [charData, setCharData] = useState(null);
+  const [thinking, setThinking] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [applyingAction, setApplyingAction] = useState(false);
+  const [availableModels, setAvailableModels] = useState([]);
+  const [selectedModel, setSelectedModelState] = useState(() => getSelectedModel());
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Fetch available models on mount
+  useEffect(() => {
+    getAvailableModels().then(models => {
+      if (models.length) setAvailableModels(models);
+    });
+  }, []);
+
+  const handleModelChange = (e) => {
+    const model = e.target.value;
+    setSelectedModel(model);
+    setSelectedModelState(model);
+  };
 
   // Listen for setting changes from Settings tab
   useEffect(() => {
@@ -103,14 +121,6 @@ export default function ArcaneWidget({ characterId, section, sectionData }) {
     window.addEventListener('codex-ai-settings-changed', handler);
     return () => window.removeEventListener('codex-ai-settings-changed', handler);
   }, []);
-
-  // Load character context
-  useEffect(() => {
-    if (!characterId || !settings.enabled) return;
-    invoke('export_character', { characterId })
-      .then(setCharData)
-      .catch(() => {});
-  }, [characterId, settings.enabled]);
 
   // Clear messages when section changes
   useEffect(() => {
@@ -138,15 +148,25 @@ export default function ArcaneWidget({ characterId, section, sectionData }) {
     setInput('');
     setPendingAction(null);
 
+    // Check response cache
+    const cacheKey = `${section}:${msg}`;
+    const cached = responseCache.get(cacheKey);
+    if (cached) {
+      setMessages(prev => [...prev, { role: 'user', content: msg }, { role: 'assistant', content: cached }]);
+      return;
+    }
+
     const newMessages = [...messages, { role: 'user', content: msg }];
     setMessages(newMessages);
+    setThinking(true);
     setStreaming(true);
 
     try {
-      const wikiContext = await searchWikiContext(msg);
-      const systemPrompt = buildSectionPrompt(charData, section, sectionData, wikiContext);
+      const wikiContext = needsWikiSearch(msg) ? await searchWikiContext(msg) : '';
+      const systemPrompt = buildSectionPrompt(null, section, sectionData, wikiContext);
       const apiMessages = buildMessages(systemPrompt, messages, msg);
       let fullResponse = '';
+      setThinking(false);
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
       for await (const chunk of streamChat(apiMessages)) {
@@ -159,22 +179,25 @@ export default function ArcaneWidget({ characterId, section, sectionData }) {
         });
       }
 
-      // Final clean
+      // Final clean + cache
       const finalText = cleanResponse(fullResponse);
       setMessages(prev => {
         const updated = [...prev];
         updated[updated.length - 1] = { role: 'assistant', content: finalText };
         return updated;
       });
+      responseCache.set(cacheKey, finalText);
+      if (responseCache.size > RESPONSE_CACHE_MAX) responseCache.delete(responseCache.keys().next().value);
     } catch (err) {
       const errorMsg = err.message?.includes('Failed to fetch')
         ? 'Ollama appears offline.'
         : `Error: ${err.message}`;
       setMessages(prev => [...prev, { role: 'assistant', content: errorMsg, isError: true }]);
     } finally {
+      setThinking(false);
       setStreaming(false);
     }
-  }, [input, messages, streaming, charData, section, sectionData]);
+  }, [input, messages, streaming, section, sectionData]);
 
   const handleApplyAction = async () => {
     if (!pendingAction || applyingAction) return;
@@ -226,7 +249,6 @@ export default function ArcaneWidget({ characterId, section, sectionData }) {
           toast.error(`Unknown action: ${action}`);
       }
       setPendingAction(null);
-      invoke('export_character', { characterId }).then(setCharData).catch(() => {});
     } catch (err) {
       toast.error(`Failed: ${err.message}`);
     } finally {
@@ -275,6 +297,18 @@ export default function ArcaneWidget({ characterId, section, sectionData }) {
                 <span className="aw-header-title">Arcane Advisor</span>
               </div>
               <div className="aw-header-actions">
+                {availableModels.length > 1 && (
+                  <select
+                    value={selectedModel}
+                    onChange={handleModelChange}
+                    className="aw-model-select"
+                    title="AI Model"
+                  >
+                    {availableModels.map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                )}
                 <button
                   onClick={() => { setMessages([]); setPendingAction(null); }}
                   className="aw-header-btn" title="Clear"
@@ -312,7 +346,7 @@ export default function ArcaneWidget({ characterId, section, sectionData }) {
                 </div>
               ))}
 
-              {streaming && messages[messages.length - 1]?.content === '' && (
+              {(thinking || (streaming && messages[messages.length - 1]?.content === '')) && (
                 <div className="aw-msg aw-msg-ai">
                   <div className="aw-bubble aw-bubble-ai aw-typing">
                     <span /><span /><span />
@@ -409,6 +443,17 @@ export default function ArcaneWidget({ characterId, section, sectionData }) {
           transition: all 0.15s;
         }
         .aw-header-btn:hover { background: rgba(255,255,255,0.05); color: var(--text-sub); }
+
+        .aw-model-select {
+          padding: 2px 6px; border-radius: 5px; font-size: 10px;
+          background: rgba(0,0,0,0.3); border: 1px solid rgba(139,92,246,0.15);
+          color: var(--text-mute); font-family: var(--font-ui);
+          outline: none; cursor: pointer; max-width: 100px;
+          transition: border-color 0.15s;
+        }
+        .aw-model-select:hover { border-color: rgba(139,92,246,0.3); color: var(--text-sub); }
+        .aw-model-select:focus { border-color: rgba(139,92,246,0.35); }
+        .aw-model-select option { background: #1a1a2e; color: var(--text); }
 
         .aw-messages {
           flex: 1; overflow-y: auto; padding: 10px 12px;

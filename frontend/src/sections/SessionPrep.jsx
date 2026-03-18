@@ -6,6 +6,8 @@ import {
 import { invoke } from '@tauri-apps/api/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { useGuidance } from '../contexts/GuidanceContext';
+import ContextualTip from '../components/dm-campaign/ContextualTip';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const STATUS_COLORS = {
@@ -172,14 +174,22 @@ function QuestTrackerPanel({ characterId }) {
   const toggleStatus = useCallback(async (quest) => {
     const nextStatus = quest.status === 'active' ? 'completed' : quest.status === 'completed' ? 'failed' : 'active';
     try {
-      await invoke('update_quest', { questId: quest.id, status: nextStatus });
+      const payload = {
+        title: quest.title || '',
+        giver: quest.giver || '',
+        description: quest.description || '',
+        status: nextStatus,
+        notes: quest.notes || '',
+        objectives: quest.objectives || [],
+      };
+      await invoke('update_quest', { characterId, questId: quest.id, payload });
       loadQuests();
       toast.success(`Quest marked as ${nextStatus}`);
     } catch (e) {
       console.warn('Failed to update quest status:', e);
       toast.error('Failed to update quest');
     }
-  }, [loadQuests]);
+  }, [characterId, loadQuests]);
 
   const activeQuests = quests.filter(q => q.status === 'active');
   const completedQuests = quests.filter(q => q.status === 'completed');
@@ -536,6 +546,8 @@ function SessionNotesPanel({ characterId }) {
 
 // ─── Main SessionPrep Component ─────────────────────────────────────────────
 export default function SessionPrep({ characterId, onNavigate }) {
+  const guidance = useGuidance();
+
   const handleStartSession = useCallback(() => {
     if (onNavigate) {
       // Navigate to DM Session via the section navigation
@@ -561,6 +573,24 @@ export default function SessionPrep({ characterId, onNavigate }) {
           Prepare your encounters, review NPCs, and track quests before the session begins.
         </p>
       </motion.div>
+
+      {/* Guidance Tips */}
+      {guidance?.guidanceMode === 'guided' && (() => {
+        const tips = guidance.getActiveTips?.('session-prep') || [];
+        return tips.length > 0 ? (
+          <motion.div variants={itemVariants} style={{ marginBottom: 8 }}>
+            {tips.slice(0, 2).map(tip => (
+              <ContextualTip
+                key={tip.id}
+                tipId={tip.id}
+                text={tip.text}
+                onDismiss={guidance.dismissTip}
+                onHideAll={() => guidance.setGuidanceMode('free')}
+              />
+            ))}
+          </motion.div>
+        ) : null;
+      })()}
 
       {/* Session Overview — full width */}
       <SessionOverviewPanel characterId={characterId} onStartSession={handleStartSession} />

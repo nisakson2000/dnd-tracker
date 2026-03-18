@@ -11,6 +11,7 @@ const initialState = {
   campaignStatus: 'active', // 'draft' | 'active' | 'archived'
   sessionId: null,
   sessionActive: false,
+  paused: false, // Phase 4: Session pause/resume
   connectedPlayers: [],
   pendingPlayers: [],
   connectionStatus: 'disconnected', // 'disconnected' | 'connecting' | 'connected'
@@ -51,9 +52,28 @@ function sessionReducer(state, action) {
         ...state,
         sessionId: null,
         sessionActive: false,
+        paused: false,
         initiative: [],
         round: 0,
         currentTurn: 0,
+      };
+    case 'PAUSE_SESSION':
+      return {
+        ...state,
+        paused: true,
+        actionLog: [
+          { text: 'Session paused', timestamp: Date.now() },
+          ...state.actionLog,
+        ].slice(0, 200),
+      };
+    case 'RESUME_SESSION':
+      return {
+        ...state,
+        paused: false,
+        actionLog: [
+          { text: 'Session resumed', timestamp: Date.now() },
+          ...state.actionLog,
+        ].slice(0, 200),
       };
     case 'SET_SCENE':
       return { ...state, currentScene: action.payload };
@@ -182,11 +202,32 @@ function sessionReducer(state, action) {
             ].slice(0, 200),
           };
 
+        case 'SessionPaused':
+          return {
+            ...state,
+            paused: true,
+            actionLog: [
+              { text: `${label} Session paused`, timestamp: Date.now() },
+              ...state.actionLog,
+            ].slice(0, 200),
+          };
+
+        case 'SessionResumed':
+          return {
+            ...state,
+            paused: false,
+            actionLog: [
+              { text: `${label} Session resumed`, timestamp: Date.now() },
+              ...state.actionLog,
+            ].slice(0, 200),
+          };
+
         case 'SessionEnd':
           return {
             ...state,
             sessionId: null,
             sessionActive: false,
+            paused: false,
             initiative: [],
             round: 0,
             currentTurn: 0,
@@ -514,11 +555,31 @@ export function SessionProvider({ children }) {
     }
   }, []);
 
+  /* ── Pause / Resume helpers ── */
+
+  const pauseSession = useCallback(async () => {
+    dispatch({ type: 'PAUSE_SESSION' });
+    try {
+      await invoke('ws_broadcast_event', { eventJson: JSON.stringify({ type: 'SessionPaused' }) });
+    } catch (err) {
+      console.error('[SessionContext] Failed to broadcast SessionPaused:', err);
+    }
+  }, [dispatch]);
+
+  const resumeSession = useCallback(async () => {
+    dispatch({ type: 'RESUME_SESSION' });
+    try {
+      await invoke('ws_broadcast_event', { eventJson: JSON.stringify({ type: 'SessionResumed' }) });
+    } catch (err) {
+      console.error('[SessionContext] Failed to broadcast SessionResumed:', err);
+    }
+  }, [dispatch]);
+
   /* ── Context value ── */
 
   const value = useMemo(
-    () => ({ ...state, dispatch, broadcastEvent, sendToDm }),
-    [state, dispatch, broadcastEvent, sendToDm]
+    () => ({ ...state, dispatch, broadcastEvent, sendToDm, pauseSession, resumeSession }),
+    [state, dispatch, broadcastEvent, sendToDm, pauseSession, resumeSession]
   );
 
   return (

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { Scroll, Coins, Map, Megaphone, X, MapPin, Users } from 'lucide-react';
 import ModalPortal from '../ModalPortal';
 import { useCampaignSync } from '../../contexts/CampaignSyncContext';
@@ -13,7 +13,7 @@ const TYPE_STYLES = {
   quest_reveal: { icon: Map, bg: 'linear-gradient(135deg, #0a1530, #0d1025)', border: '#60a5fa', accent: '#60a5fa', label: 'New Quest' },
 };
 
-export default function PlayerNotification() {
+export default memo(function PlayerNotification() {
   const { latestBroadcast, dismissBroadcast } = useCampaignSync();
   const timerRef = useRef(null);
 
@@ -65,4 +65,4 @@ export default function PlayerNotification() {
       </div>
     </ModalPortal>
   );
-}
+})

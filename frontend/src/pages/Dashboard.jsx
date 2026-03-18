@@ -6,7 +6,7 @@ import {
   Library, ChevronRight, ChevronLeft, Scroll, Check, X,
   Search, Users, Upload, ClipboardList, Flag, FileJson,
   Sparkles, Coins, BookOpen, AlertTriangle, Moon,
-  Clock, CheckCircle, XCircle, Zap, Save, Download, Dices, Copy,
+  Clock, CheckCircle, XCircle, Zap, Save, Download, Dices, Copy, Gamepad2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
@@ -23,6 +23,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import DDBImportModal from '../components/DDBImportModal';
 import { APP_VERSION } from '../version';
 import { useAppMode } from '../contexts/ModeContext';
+import { useTutorial } from '../contexts/TutorialContext';
 import { useUpdateCheck } from '../hooks/useUpdateCheck';
 import { useOllamaAutoSetup } from '../hooks/useOllamaAutoSetup';
 
@@ -1773,7 +1774,7 @@ function Divider() {
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
-function EmptyState({ onOpen, onImport, onDDBImport, isDM, onCreateHomebrew, onImportCampaign }) {
+function EmptyState({ onOpen, onImport, onDDBImport, isDM, onCreateHomebrew, onImportCampaign, onStartTutorial }) {
   const fileInputRef = useRef(null);
 
   const handleFileSelect = async (e) => {
@@ -1828,6 +1829,15 @@ function EmptyState({ onOpen, onImport, onDDBImport, isDM, onCreateHomebrew, onI
           >
             <Upload size={16} /> Import Campaign
           </motion.button>
+          {onStartTutorial && (
+            <motion.button
+              onClick={onStartTutorial}
+              whileHover={{ y: -2, boxShadow: '0 8px 28px rgba(201,168,76,0.25)' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: '1px solid rgba(201,168,76,0.3)', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: 'rgba(201,168,76,0.1)', color: 'rgba(201,168,76,0.85)' }}
+            >
+              <Gamepad2 size={16} /> Interactive Tutorial
+            </motion.button>
+          )}
         </div>
       ) : (
         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -2400,6 +2410,7 @@ export default function Dashboard() {
   const { mode: appMode, clearMode } = useAppMode();
 
   const isDM = appMode === 'dm';
+  const tutorial = useTutorial();
   const [characters, setCharacters] = useState([]);
   const [loading, setLoading]       = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -2628,6 +2639,17 @@ export default function Dashboard() {
     }
   };
 
+  const handleStartTutorial = async () => {
+    try {
+      if (tutorial) tutorial.startTutorial();
+      const { loadTutorialCampaign } = await import('../utils/loadTutorialCampaign');
+      const charId = await loadTutorialCampaign();
+      navigate(`/dm/lobby/${charId}`);
+    } catch (err) {
+      toast.error(`Failed to load tutorial: ${err.message || err}`);
+    }
+  };
+
   const handleImportCampaign = async () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -2655,6 +2677,12 @@ export default function Dashboard() {
   // ── Derived stats for quick stats bar ──
   const filteredCharacters = characters
     .filter(c => {
+      // In DM mode, show only campaigns; in player mode, hide campaigns
+      if (isDM) {
+        if (!c.campaign_type && !c.status) return false;
+      } else {
+        if (c.campaign_type) return false;
+      }
       if (!charSearch.trim()) return true;
       const q = charSearch.trim().toLowerCase();
       return (c.name || '').toLowerCase().includes(q)
@@ -2945,6 +2973,7 @@ export default function Dashboard() {
             isDM={isDM}
             onCreateHomebrew={() => setShowCreateHomebrew(true)}
             onImportCampaign={handleImportCampaign}
+            onStartTutorial={isDM ? handleStartTutorial : undefined}
           />
         ) : (
           <>
@@ -3076,6 +3105,28 @@ export default function Dashboard() {
                       </div>
                       <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
                         Load a .json campaign file
+                      </div>
+                    </motion.div>
+                    {/* Interactive Tutorial card */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 24 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: (filteredCharacters.length + 3) * 0.08, type: 'spring', damping: 22, stiffness: 200 }}
+                      whileHover={{ y: -4, borderColor: 'rgba(201,168,76,0.4)' }}
+                      onClick={handleStartTutorial}
+                      style={{
+                        borderRadius: 14, cursor: 'pointer', minHeight: 160,
+                        background: 'rgba(11,9,20,0.6)', border: '1px dashed rgba(201,168,76,0.2)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        gap: 10, transition: 'all 0.2s',
+                      }}
+                    >
+                      <Gamepad2 size={28} style={{ color: 'rgba(201,168,76,0.35)' }} />
+                      <div style={{ fontFamily: 'var(--font-heading)', fontSize: 13, color: 'rgba(201,168,76,0.5)', letterSpacing: '0.04em' }}>
+                        Interactive Tutorial
+                      </div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
+                        Learn to DM with a guided walkthrough
                       </div>
                     </motion.div>
                   </>

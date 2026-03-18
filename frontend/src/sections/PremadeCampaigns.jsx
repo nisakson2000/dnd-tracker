@@ -26,6 +26,14 @@ import heistOfTheGoldenVault from '../data/campaigns/heist-of-the-golden-vault.j
 import isleOfTheStormKing from '../data/campaigns/isle-of-the-storm-king.json';
 import tombOfTheSerpentQueen from '../data/campaigns/tomb-of-the-serpent-queen.json';
 import theFrozenThrone from '../data/campaigns/the-frozen-throne.json';
+import bloodWarProphecy from '../data/campaigns/blood-war-prophecy.json';
+import whispersOfTheDeep from '../data/campaigns/whispers-of-the-deep.json';
+import theWildHunt from '../data/campaigns/the-wild-hunt.json';
+import shatteredCrown from '../data/campaigns/shattered-crown.json';
+import clockworkConspiracy from '../data/campaigns/clockwork-conspiracy.json';
+import lastLightOfEldara from '../data/campaigns/last-light-of-eldara.json';
+import tutorialFirstAdventure from '../data/campaigns/tutorial-first-adventure.json';
+import { useTutorial } from '../contexts/TutorialContext';
 
 const BUNDLED_CAMPAIGNS = [
   goblinMine, cursedVillage, dragonCoast,
@@ -33,12 +41,19 @@ const BUNDLED_CAMPAIGNS = [
   plagueOfShadows, carnivalOfLostSouls,
   heistOfTheGoldenVault, isleOfTheStormKing,
   tombOfTheSerpentQueen, theFrozenThrone,
+  bloodWarProphecy, whispersOfTheDeep, theWildHunt,
+  shatteredCrown, clockworkConspiracy, lastLightOfEldara,
 ];
 
 const LEVEL_COLORS = {
   '1-3': { bg: 'rgba(74,222,128,0.12)', text: '#4ade80', border: 'rgba(74,222,128,0.25)' },
+  '1-5': { bg: 'rgba(74,222,128,0.12)', text: '#4ade80', border: 'rgba(74,222,128,0.25)' },
   '3-5': { bg: 'rgba(251,191,36,0.12)', text: '#fbbf24', border: 'rgba(251,191,36,0.25)' },
   '5-8': { bg: 'rgba(249,115,22,0.12)', text: '#fb923c', border: 'rgba(249,115,22,0.25)' },
+  '5-10': { bg: 'rgba(249,115,22,0.12)', text: '#fb923c', border: 'rgba(249,115,22,0.25)' },
+  '8-12': { bg: 'rgba(239,68,68,0.12)', text: '#ef4444', border: 'rgba(239,68,68,0.25)' },
+  '10-15': { bg: 'rgba(168,85,247,0.12)', text: '#a855f7', border: 'rgba(168,85,247,0.25)' },
+  '15-20': { bg: 'rgba(236,72,153,0.12)', text: '#ec4899', border: 'rgba(236,72,153,0.25)' },
 };
 
 const TAG_ICONS = {
@@ -60,6 +75,11 @@ const TAG_ICONS = {
   exploration: Map,
   political: Users,
   urban: Users,
+  planar: Globe,
+  survival: AlertTriangle,
+  war: Shield,
+  steampunk: Shield,
+  artificer: Shield,
 };
 
 // ── GitHub adventure browser helpers ──
@@ -443,6 +463,22 @@ function CampaignCard({ campaign, onLoad, loading, isBundled }) {
                   letterSpacing: '0.05em',
                 }}>
                   BUNDLED
+                </span>
+              )}
+              {campaign.tags?.includes('tutorial') && (
+                <span style={{
+                  fontSize: '9px',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 700,
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  background: 'linear-gradient(135deg, rgba(201,168,76,0.2), rgba(201,168,76,0.1))',
+                  color: '#c9a84c',
+                  border: '1px solid rgba(201,168,76,0.4)',
+                  letterSpacing: '0.06em',
+                  boxShadow: '0 0 8px rgba(201,168,76,0.15)',
+                }}>
+                  TUTORIAL
                 </span>
               )}
             </div>
@@ -910,7 +946,15 @@ export default function PremadeCampaigns({ characterId }) {
     }
   };
 
-  const filteredBundled = BUNDLED_CAMPAIGNS.filter(c => {
+  const tutorial = useTutorial();
+  const isTutorialFlow = tutorial?.tutorialActive;
+
+  // Include tutorial campaign at the top when tutorial is active or in guided mode
+  const allBundled = isTutorialFlow
+    ? [tutorialFirstAdventure, ...BUNDLED_CAMPAIGNS]
+    : [...BUNDLED_CAMPAIGNS, tutorialFirstAdventure];
+
+  const filteredBundled = allBundled.filter(c => {
     // Ruleset filter
     if (rulesetFilter !== 'all' && c.ruleset !== rulesetFilter) return false;
     // Search filter

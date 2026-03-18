@@ -1,12 +1,20 @@
+import { memo, useMemo } from 'react';
 import {
   Wifi, WifiOff, Shield, Heart, LogOut,
-  Minus, Plus, Zap, Brain,
+  Minus, Plus, Zap, Brain, AlertTriangle, Activity,
 } from 'lucide-react';
 import {
   Package, Sparkles,
 } from 'lucide-react';
 
-export default function PlayerSessionHeader({
+const lowHpPulse = `
+@keyframes lowHpPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+`;
+
+export default memo(function PlayerSessionHeader({
   connected,
   campaignName,
   handleDisconnect,
@@ -28,9 +36,50 @@ export default function PlayerSessionHeader({
   showSpellSlots,
   setShowSpellSlots,
   handleUseSpellSlot,
+  latencyMs,
 }) {
+  // Low HP warning (< 25%)
+  const hpWarning = useMemo(() => {
+    if (!charOverview?.max_hp || charOverview.max_hp <= 0) return null;
+    const pct = charOverview.current_hp / charOverview.max_hp;
+    if (charOverview.current_hp <= 0) return 'dead';
+    if (pct <= 0.25) return 'critical';
+    if (pct <= 0.5) return 'low';
+    return null;
+  }, [charOverview?.current_hp, charOverview?.max_hp]);
+
+  // Spell slot depletion check
+  const slotWarning = useMemo(() => {
+    if (!spellSlots || spellSlots.length === 0) return null;
+    const withMax = spellSlots.filter(s => s.max_slots > 0);
+    if (withMax.length === 0) return null;
+    const totalRemaining = withMax.reduce((sum, s) => sum + (s.max_slots - (s.used_slots || 0)), 0);
+    const totalMax = withMax.reduce((sum, s) => sum + s.max_slots, 0);
+    if (totalRemaining === 0) return 'depleted';
+    if (totalRemaining <= Math.ceil(totalMax * 0.25)) return 'low';
+    return null;
+  }, [spellSlots]);
+
   return (
     <>
+      <style>{lowHpPulse}</style>
+
+      {/* ── Low HP Warning Banner ── */}
+      {hpWarning === 'critical' && (
+        <div style={{
+          padding: '4px 20px',
+          background: 'rgba(239,68,68,0.1)',
+          borderBottom: '1px solid rgba(239,68,68,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          animation: 'lowHpPulse 2s ease-in-out infinite',
+        }}>
+          <AlertTriangle size={12} style={{ color: '#ef4444' }} />
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#fca5a5', fontFamily: 'var(--font-heading)', letterSpacing: '0.05em' }}>
+            CRITICAL HP — {charOverview.current_hp}/{charOverview.max_hp}
+          </span>
+        </div>
+      )}
+
       {/* ── Connection Banner ── */}
       <div style={{
         padding: '6px 20px',
@@ -48,6 +97,19 @@ export default function PlayerSessionHeader({
             ? `Connected to ${campaignName || 'Session'}`
             : 'Not connected — join a session to play live'
           }
+          {connected && latencyMs != null && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 3,
+              fontSize: 10, fontWeight: 600, fontFamily: 'var(--font-mono, monospace)',
+              padding: '1px 6px', borderRadius: 4, marginLeft: 6,
+              background: latencyMs < 100 ? 'rgba(74,222,128,0.1)' : latencyMs < 300 ? 'rgba(251,191,36,0.1)' : 'rgba(239,68,68,0.1)',
+              color: latencyMs < 100 ? '#4ade80' : latencyMs < 300 ? '#fbbf24' : '#ef4444',
+              border: `1px solid ${latencyMs < 100 ? 'rgba(74,222,128,0.2)' : latencyMs < 300 ? 'rgba(251,191,36,0.2)' : 'rgba(239,68,68,0.2)'}`,
+            }}>
+              <Activity size={8} />
+              {latencyMs}ms
+            </span>
+          )}
         </div>
         <button
           onClick={handleDisconnect}
@@ -183,10 +245,20 @@ export default function PlayerSessionHeader({
               <Package size={11} />
             </button>
             {spellSlots.some(s => s.max_slots > 0) && (
-              <button onClick={() => setShowSpellSlots(!showSpellSlots)} title="Spell Slots"
-                style={{ background: showSpellSlots ? 'rgba(155,89,182,0.15)' : 'none', border: `1px solid ${showSpellSlots ? 'rgba(155,89,182,0.3)' : 'transparent'}`, borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', color: showSpellSlots ? '#c084fc' : 'var(--text-mute)', fontSize: '10px', fontFamily: 'var(--font-mono)', transition: 'all 0.15s' }}>
-                <Sparkles size={11} />
-              </button>
+              <div style={{ position: 'relative', display: 'inline-flex' }}>
+                <button onClick={() => setShowSpellSlots(!showSpellSlots)} title="Spell Slots"
+                  style={{ background: showSpellSlots ? 'rgba(155,89,182,0.15)' : 'none', border: `1px solid ${showSpellSlots ? 'rgba(155,89,182,0.3)' : 'transparent'}`, borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', color: showSpellSlots ? '#c084fc' : 'var(--text-mute)', fontSize: '10px', fontFamily: 'var(--font-mono)', transition: 'all 0.15s' }}>
+                  <Sparkles size={11} />
+                </button>
+                {slotWarning && (
+                  <div style={{
+                    position: 'absolute', top: -3, right: -3,
+                    width: 8, height: 8, borderRadius: '50%',
+                    background: slotWarning === 'depleted' ? '#ef4444' : '#fbbf24',
+                    border: '1px solid rgba(0,0,0,0.3)',
+                  }} title={slotWarning === 'depleted' ? 'All spell slots used!' : 'Low on spell slots'} />
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -288,4 +360,4 @@ export default function PlayerSessionHeader({
       )}
     </>
   );
-}
+})

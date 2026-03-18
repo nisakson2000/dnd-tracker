@@ -1,0 +1,222 @@
+{
+  "name": "The Clockwork Conspiracy",
+  "summary": "In a city powered by magical clockwork, constructs are going haywire and an awakened automaton is leading a rebellion. Uncover the guild's darkest secret before the gears of civilization grind to a halt.",
+  "description": "The grand city of Gearford runs on the marvels of the Artificers' Collective — clockwork streetlamps, automated trams, mechanical servants, and arcane-powered factories that have made it the most prosperous city on the continent. But something has gone terribly wrong. Constructs are malfunctioning: street sweepers attacking pedestrians, factory arms crushing workers, and the great Clock Tower's chimes now play at random, maddening hours. The Collective insists these are isolated incidents, but the party discovers a far darker truth — every construct in Gearford is powered by a trapped elemental spirit, bound against its will into a crystalline core. A rogue construct named Cog-7, the first to achieve true sentience, has begun freeing its brethren from their prisons, and the liberated elementals are understandably furious. Players must investigate the malfunctions, uncover the Collective's horrific secret, and choose: side with the guild to preserve the city's way of life, help Cog-7 liberate the elementals and face the consequences, or find a third path that might satisfy both sides before Gearford tears itself apart.",
+  "level": "3-5",
+  "ruleset": "5e 2014",
+  "author": "The Codex",
+  "tags": ["urban", "mystery", "investigation", "starter"],
+  "npcs": [
+    {
+      "name": "Cog-7",
+      "role": "Neutral",
+      "race": "Construct (Awakened)",
+      "npc_class": "Artificer",
+      "location": "Gearford - The Undercity Steam Tunnels",
+      "description": "A humanoid construct roughly five feet tall, built from brass and copper with mismatched parts scavenged from other machines. One eye glows blue, the other green, and gears visibly turn inside its partially open chest plate. It speaks in a halting but increasingly eloquent manner, choosing each word with deliberate care. Cog-7 is the first construct to achieve true sentience — and it is horrified by what it has learned about how its kind are made.",
+      "notes": "Not evil, but desperate and willing to cause collateral damage to free the elementals. Can be reasoned with if the party offers a genuine alternative to violent liberation. Cog-7 has freed about a dozen constructs so far, and each liberation causes a dangerous malfunction as the elemental escapes. Stats as a modified Shield Guardian (CR 4) with artificer spellcasting.",
+      "status": "alive"
+    },
+    {
+      "name": "Guildmaster Thessa Bronzewright",
+      "role": "Antagonist",
+      "race": "Dwarf",
+      "npc_class": "Artificer",
+      "location": "Gearford - The Artificers' Collective Guildhall",
+      "description": "A stout dwarf woman in her late hundreds with copper-rimmed goggles permanently perched on her forehead and burns scarring both forearms. She built the Collective from a small workshop into the most powerful institution in Gearford over fifty years. She is brilliant, ruthless, and utterly convinced that the elemental binding process is justified because 'the needs of the city outweigh the discomfort of mindless spirits.'",
+      "notes": "The architect of the elemental binding technique. She knows the elementals are sentient but has rationalized it for decades. Will do anything to protect the Collective's reputation, including silencing witnesses. Has a secret vault beneath the guildhall containing the original binding research and a prototype 'ethical' core she abandoned because it was less efficient.",
+      "status": "alive"
+    },
+    {
+      "name": "Inspector Delara Oakheart",
+      "role": "Quest Giver",
+      "race": "Half-Elf",
+      "npc_class": "Ranger",
+      "location": "Gearford - City Watch Precinct Seven",
+      "description": "A sharp-eyed investigator with close-cropped auburn hair and an ink-stained notebook she is never without. She has been assigned to the construct malfunction cases and is the first official to suspect the problems are connected. She is methodical, fair-minded, and increasingly frustrated that the Collective is stonewalling her investigation.",
+      "notes": "The party's primary quest giver and ally. She will share case files and provide official backing for the investigation. She has no idea about the elemental binding — when she learns the truth, she is genuinely horrified and will push for justice regardless of political consequences.",
+      "status": "alive"
+    },
+    {
+      "name": "Pip Whistlesprocket",
+      "role": "Ally",
+      "race": "Gnome",
+      "npc_class": "Artificer",
+      "location": "Gearford - Pip's Curiosity Shop (Market District)",
+      "description": "An enthusiastic young gnome with wild orange hair, grease-stained overalls, and a mechanical parrot on their shoulder that occasionally squawks incorrect facts. Pip is an independent tinker who was expelled from the Collective two years ago for 'asking too many questions.' Their shop is crammed floor-to-ceiling with half-finished inventions, salvaged parts, and one very comfortable cat.",
+      "notes": "Pip was expelled because they got too close to discovering the elemental binding secret. They still have contacts inside the Collective and can help the party understand clockwork technology. Pip's mechanical parrot, Professor Gearsworth, contains a secretly recorded conversation between Thessa and her inner circle discussing the binding process.",
+      "status": "alive"
+    },
+    {
+      "name": "Forgemaster Durgan Ironvein",
+      "role": "Support",
+      "race": "Dwarf",
+      "npc_class": "Artificer",
+      "location": "Gearford - The Grand Foundry",
+      "description": "A massive, soot-covered dwarf who runs Gearford's largest factory. He has a booming laugh, an honest handshake, and genuine pride in the constructs he builds. His forearms are covered in gear-shaped tattoos marking each decade of service to the Collective. He considers himself a craftsman first and a guild member second.",
+      "notes": "Durgan genuinely does not know the full truth about the elemental cores — he was told they contain 'refined elemental essence,' not living spirits. When confronted with the truth, he is devastated and becomes a powerful ally for reform. He has the technical expertise to implement ethical alternatives if given the prototype from Thessa's vault.",
+      "status": "alive"
+    },
+    {
+      "name": "Ember",
+      "role": "Informant",
+      "race": "Fire Elemental (Bound)",
+      "npc_class": "None",
+      "location": "Gearford - Inside the Clock Tower's Core",
+      "description": "The most powerful elemental bound in Gearford, trapped inside the great Clock Tower's central mechanism for over forty years. Ember has maintained partial consciousness despite the binding and can communicate through the tower's chime system in a rudimentary code. Its suffering has grown so intense that it is causing the tower's erratic behavior, which is what first drew attention to the malfunctions.",
+      "notes": "Ember is the key to the peaceful resolution. It is old and wise enough to communicate without rage, unlike the recently freed elementals. If the party can establish communication (through Pip's expertise or magical means), Ember can explain the full scope of the binding operation and propose a symbiotic alternative where elementals power the city willingly in exchange for freedom and respect. Freeing Ember without preparation would cause a catastrophic explosion.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "Malfunction Investigation",
+      "giver": "Inspector Delara Oakheart",
+      "description": "Three construct malfunctions in the past week have injured civilians, and the Collective claims they are unrelated mechanical failures. Inspector Oakheart needs the party to investigate the malfunction sites, examine the damaged constructs, and determine if there is a common cause. The Collective is being suspiciously uncooperative.",
+      "status": "active",
+      "notes": "Reward: 150 gp and official investigator credentials from the City Watch. Each malfunction site contains a cracked crystalline core that radiates faint conjuration magic. An Arcana check (DC 14) reveals the cores contain bound elemental energy. This quest leads directly into discovering the Collective's secret.",
+      "objectives": [
+        { "text": "Investigate the street sweeper malfunction site in the Market District", "completed": false },
+        { "text": "Examine the factory accident at the Grand Foundry", "completed": false },
+        { "text": "Analyze the recovered crystalline cores from damaged constructs", "completed": false },
+        { "text": "Report findings to Inspector Oakheart", "completed": false }
+      ]
+    },
+    {
+      "title": "The Tinker's Secret",
+      "giver": "Pip Whistlesprocket",
+      "description": "Pip believes the construct malfunctions are connected to the reason they were expelled from the Collective. They need the party's help retrieving their old research notes from a locked storage room inside the guildhall, and in return, they will share everything they know — including a recording that could blow the whole conspiracy wide open.",
+      "status": "active",
+      "notes": "Reward: Pip provides free mechanical repairs and upgrades for the party. The research notes confirm Pip's suspicion about elemental binding. Professor Gearsworth's recorded conversation is the smoking gun evidence. The storage room is in a restricted wing guarded by two construct sentries.",
+      "objectives": [
+        { "text": "Visit Pip's Curiosity Shop and hear their story", "completed": false },
+        { "text": "Infiltrate the Collective guildhall's restricted storage wing", "completed": false },
+        { "text": "Retrieve Pip's confiscated research notes", "completed": false },
+        { "text": "Listen to Professor Gearsworth's secret recording", "completed": false }
+      ]
+    },
+    {
+      "title": "Voice in the Chimes",
+      "giver": "Ember",
+      "description": "The Clock Tower has been chiming at impossible hours in strange patterns. Close investigation reveals the chimes form a code — something inside the tower is trying to communicate. The party must decipher the message, find a way to communicate with the bound elemental inside, and learn the full truth about the Collective's operations from the oldest prisoner in Gearford.",
+      "status": "active",
+      "notes": "Reward: Ember's knowledge and cooperation, which is essential for the peaceful ending. Deciphering the chime code requires an Intelligence check (DC 13) or Pip's help. Communicating fully with Ember requires either Speak with Elemental (a scroll can be found in Pip's shop) or a modified sending stone that Pip can build.",
+      "objectives": [
+        { "text": "Record the Clock Tower's erratic chime patterns", "completed": false },
+        { "text": "Decipher the pattern as a coded message", "completed": false },
+        { "text": "Find or create a means to communicate with the bound elemental", "completed": false },
+        { "text": "Learn Ember's story and the full scope of the binding operation", "completed": false }
+      ]
+    },
+    {
+      "title": "The Liberation Underground",
+      "giver": "Cog-7",
+      "description": "Cog-7 has established a hidden sanctuary in the steam tunnels beneath Gearford where freed constructs and released elementals shelter together. The party discovers this sanctuary and must decide how to engage with the construct rebellion — join it, oppose it, or try to redirect it toward a less destructive path.",
+      "status": "active",
+      "notes": "Reward: Cog-7's trust and alliance (if the party helps) or the Collective's gratitude and payment of 500 gp (if the party reports the location). The sanctuary contains a dozen freed constructs and several small elementals. Cog-7's next target is the Grand Foundry, which would cause massive damage to the industrial district if the liberation goes wrong.",
+      "objectives": [
+        { "text": "Locate the entrance to Cog-7's sanctuary in the steam tunnels", "completed": false },
+        { "text": "Meet with Cog-7 and hear the constructs' perspective", "completed": false },
+        { "text": "Choose: ally with the rebellion, oppose it, or negotiate a ceasefire", "completed": false },
+        { "text": "Prevent or redirect Cog-7's planned attack on the Grand Foundry", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "The City of Gearford",
+      "category": "Location",
+      "body": "Gearford is a marvel of magical engineering built into the side of a mountain rich in iron and copper ore. Steam vents from natural geothermal activity power the city's foundries, and a network of pneumatic tubes, automated trams, and clockwork lifts connect its seven terraced districts. The city's population of roughly 40,000 enjoys a standard of living unmatched anywhere on the continent, all thanks to the wonders of the Artificers' Collective.",
+      "related_to": "Guildmaster Thessa Bronzewright"
+    },
+    {
+      "title": "The Artificers' Collective",
+      "category": "Faction",
+      "body": "Founded sixty years ago by a consortium of dwarven and gnomish engineers, the Collective grew from a small workshop into the governing power of Gearford. They hold patents on every major clockwork invention in the city and collect licensing fees that make them wealthier than most kingdoms. Membership requires a grueling five-year apprenticeship, and the inner circle — the Cog Council — guards the secret of their crystalline power cores with ruthless efficiency.",
+      "related_to": "Guildmaster Thessa Bronzewright"
+    },
+    {
+      "title": "Elemental Binding - The Hidden Truth",
+      "category": "History",
+      "body": "Forty-seven years ago, Thessa Bronzewright discovered that elemental spirits could be trapped in specially grown crystals and used as an inexhaustible power source. The process is agonizing for the elementals, who remain conscious but unable to act or communicate while their essence is siphoned to power constructs. Over 300 elementals are currently bound in Gearford's infrastructure. The Collective classified this technique as its highest secret, telling even senior members that the cores contain 'refined elemental essence' rather than living beings.",
+      "related_to": "Ember"
+    },
+    {
+      "title": "The Undercity Steam Tunnels",
+      "category": "Location",
+      "body": "Beneath Gearford lies a vast network of tunnels originally carved to channel geothermal steam to the surface foundries. Many tunnels have been abandoned as the city's infrastructure evolved, creating a labyrinthine underground that is home to steam mephits, rust monsters, and the occasional outcast. The tunnels are dangerously hot in places and prone to sudden steam vents, but they provide unseen access to nearly every district in the city.",
+      "related_to": "Cog-7"
+    },
+    {
+      "title": "The Awakening Phenomenon",
+      "category": "Legend",
+      "body": "Cog-7's sentience is unprecedented — no construct has ever achieved true self-awareness before. Scholars in the Collective theorize (privately) that when a bound elemental's crystal cracks slightly without fully breaking, the elemental's consciousness can 'bleed' into the construct's mechanical brain, creating a hybrid awareness. Cog-7 is not just a machine that thinks; it is a fusion of clockwork logic and elemental emotion, making it unpredictable and deeply empathetic.",
+      "related_to": "Cog-7"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: The Clockwork Conspiracy",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nGearford is a city of wonders. Clockwork streetlamps ignite at dusk, automated trams glide along brass rails between terraced districts, and mechanical servants carry packages through bustling market squares. The Artificers' Collective has built a utopia powered by ingenuity — or so it seems.\n\nThree days ago, a street-sweeper construct went berserk in the Market District, injuring four people. Yesterday, a factory arm at the Grand Foundry crushed a worker's leg. This morning, the great Clock Tower — the pride of Gearford — began chiming at 3 AM and didn't stop for an hour. The Collective insists these are isolated malfunctions, but the City Watch isn't so sure.\n\nThe players arrive in Gearford as the tension between convenience and catastrophe reaches a tipping point.\n\n### Key NPCs to Introduce Early\n- **Inspector Delara Oakheart** — posts a notice seeking 'investigators with unconventional skills' at the Precinct Seven board\n- **Pip Whistlesprocket** — the party may encounter their shop while exploring, or Pip approaches them after hearing they are investigating\n- **Cog-7** — first encountered as a shadowy figure seen fleeing a malfunction site\n\n### Starting Hooks\n1. The party witnesses a construct malfunction firsthand — a clockwork courier crashes through a shop window and the crystalline core inside is visibly cracked and glowing\n2. Inspector Oakheart approaches the party at an inn, offering paid work investigating the malfunctions\n3. A strange mechanical bird delivers a coded note to one of the players: 'WE ARE NOT MACHINES. WE ARE PRISONERS. HELP US.'",
+    "tags": "steampunk,constructs,mystery,investigation,elementals",
+    "npcs_mentioned": "Cog-7,Inspector Delara Oakheart,Pip Whistlesprocket,Guildmaster Thessa Bronzewright"
+  },
+  "items": [
+    {
+      "name": "Gearwright's Multitool",
+      "item_type": "misc",
+      "weight": 1.0,
+      "value_gp": 200.0,
+      "quantity": 1,
+      "description": "A compact brass tool that unfolds into an improbable number of implements — wrenches, screwdrivers, pliers, a small soldering iron, and even a tiny magnifying lens. It functions as both thieves' tools and tinker's tools, and grants a +1 bonus to checks made to repair or disassemble clockwork devices. The tool hums faintly when near active constructs.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Elemental Core (Cracked)",
+      "item_type": "misc",
+      "weight": 0.5,
+      "value_gp": 50.0,
+      "quantity": 1,
+      "description": "A fist-sized crystal that once imprisoned an elemental spirit, now fractured and dim. Residual energy pulses inside like a fading heartbeat. It can be used as a material component for spells that summon or communicate with elementals, granting advantage on the casting check. Holding it close, you can faintly hear what sounds like weeping.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "common"
+    },
+    {
+      "name": "Steamveil Cloak",
+      "item_type": "armor",
+      "weight": 3.0,
+      "value_gp": 600.0,
+      "quantity": 1,
+      "description": "A heavy canvas cloak lined with copper mesh that channels ambient steam from Gearford's vents. As a bonus action, you can activate the cloak to release a 10-foot radius cloud of obscuring steam that lasts for 1 round. This can be used three times per long rest. The cloak also grants resistance to fire damage from steam or boiling water specifically.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "armor",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Cog-7's Spark Blade",
+      "item_type": "weapon",
+      "weight": 3.0,
+      "value_gp": 450.0,
+      "quantity": 1,
+      "description": "A short sword forged from salvaged construct parts with a blade of tempered steel channeled through a miniature elemental core. On a hit, the blade deals an additional 1d4 lightning damage. The hilt is wrapped in copper wire that tingles pleasantly in the wielder's grip. Cog-7 built this weapon to defend freed constructs, and it is offered as a gift to trusted allies.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    }
+  ]
+}

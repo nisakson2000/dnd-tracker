@@ -1,14 +1,50 @@
+import { memo, useState, useCallback } from 'react';
 import {
   ScrollText, Eye, FileText, Heart,
   Send, MessageCircle, Hand, Moon,
   BookOpen, Compass, User, Shield,
-  Edit3,
+  Edit3, ChevronDown, ChevronUp, Activity, Zap, Footprints,
+  Clock, Trash2,
 } from 'lucide-react';
 import CampaignOverview from '../CampaignOverview';
 
-export default function PlayerSessionSidebar({
+function AbilityScoreGrid({ abilities }) {
+  const ABILITY_ORDER = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+  const abilityMap = {};
+  (abilities || []).forEach(a => {
+    const key = (a.ability || '').toUpperCase().slice(0, 3);
+    abilityMap[key] = a.score || 10;
+  });
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
+      {ABILITY_ORDER.map(ab => {
+        const score = abilityMap[ab] || 10;
+        const mod = Math.floor((score - 10) / 2);
+        const modStr = mod >= 0 ? `+${mod}` : `${mod}`;
+        return (
+          <div key={ab} style={{
+            textAlign: 'center', padding: '4px 2px',
+            borderRadius: '6px', background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(255,255,255,0.05)',
+          }}>
+            <div style={{ fontSize: '8px', fontWeight: 700, color: 'var(--text-mute)', letterSpacing: '0.06em', fontFamily: 'var(--font-mono)' }}>{ab}</div>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', lineHeight: 1.2 }}>{score}</div>
+            <div style={{ fontSize: '10px', color: mod >= 0 ? '#4ade80' : '#f87171', fontWeight: 600 }}>{modStr}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export default memo(function PlayerSessionSidebar({
   panelStyle,
   panelHeaderStyle,
+  // Character data
+  characterData,
+  characterAbilities,
+  characterConditions,
   // Handouts
   handouts,
   expandedHandout,
@@ -50,6 +86,8 @@ export default function PlayerSessionSidebar({
   sessionNote,
   setSessionNote,
   handleSaveNote,
+  savedNotes,
+  onDeleteNote,
   // Chat
   chatMessages,
   chatInput,
@@ -59,8 +97,144 @@ export default function PlayerSessionSidebar({
   setActionInput,
   handleRequestAction,
 }) {
+  const [showCharView, setShowCharView] = useState(false);
+  const [showSavedNotes, setShowSavedNotes] = useState(false);
+
+  // Auto-save note on blur if there's content
+  const handleNoteBlur = useCallback(() => {
+    if (sessionNote?.trim()) {
+      handleSaveNote();
+    }
+  }, [sessionNote, handleSaveNote]);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto', maxHeight: '100%' }}>
+      {/* Character Quick-View */}
+      {characterData && (
+        <div style={panelStyle}>
+          <button
+            onClick={() => setShowCharView(!showCharView)}
+            style={{
+              ...panelHeaderStyle,
+              width: '100%', background: 'none', border: 'none',
+              cursor: 'pointer', fontFamily: 'var(--font-mono, monospace)',
+              justifyContent: 'space-between',
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <User size={12} /> Character
+            </span>
+            <span style={{ fontSize: '10px', color: 'var(--text-mute)' }}>
+              {showCharView ? '\u25B2' : '\u25BC'}
+            </span>
+          </button>
+          {showCharView && (
+            <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* Name, Race, Class, Level */}
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-display, "Cinzel", serif)' }}>
+                  {characterData.name || 'Unknown'}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
+                  {[characterData.race, characterData.class, characterData.level ? `Lv ${characterData.level}` : null].filter(Boolean).join(' \u2022 ')}
+                </div>
+              </div>
+
+              {/* HP Bar */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Heart size={10} style={{ color: '#ef4444' }} /> HP
+                  </span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-mono)' }}>
+                    {characterData.current_hp ?? '?'}/{characterData.max_hp ?? '?'}
+                    {(characterData.temp_hp || 0) > 0 && (
+                      <span style={{ color: '#60a5fa', marginLeft: '4px' }}>+{characterData.temp_hp}</span>
+                    )}
+                  </span>
+                </div>
+                <div style={{
+                  height: '6px', borderRadius: '3px',
+                  background: 'rgba(255,255,255,0.06)',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    height: '100%', borderRadius: '3px',
+                    width: `${Math.min(100, Math.max(0, ((characterData.current_hp || 0) / (characterData.max_hp || 1)) * 100))}%`,
+                    background: ((characterData.current_hp || 0) / (characterData.max_hp || 1)) > 0.5
+                      ? '#4ade80'
+                      : ((characterData.current_hp || 0) / (characterData.max_hp || 1)) > 0.25
+                        ? '#fbbf24'
+                        : '#ef4444',
+                    transition: 'width 0.3s, background 0.3s',
+                  }} />
+                </div>
+              </div>
+
+              {/* AC, Speed, Initiative, Proficiency */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+                {[
+                  { label: 'AC', value: characterData.armor_class ?? characterData.ac ?? '—', icon: Shield, color: '#60a5fa' },
+                  { label: 'Speed', value: characterData.speed ? `${characterData.speed} ft` : '—', icon: Footprints, color: '#a78bfa' },
+                  { label: 'Initiative', value: (() => {
+                    const dexEntry = (characterAbilities || []).find(a => (a.ability || '').toUpperCase().startsWith('DEX'));
+                    const mod = dexEntry ? Math.floor(((dexEntry.score || 10) - 10) / 2) : 0;
+                    return mod >= 0 ? `+${mod}` : `${mod}`;
+                  })(), icon: Zap, color: '#fbbf24' },
+                  { label: 'Prof.', value: characterData.proficiency_bonus ? `+${characterData.proficiency_bonus}` : '—', icon: Activity, color: '#4ade80' },
+                ].map(stat => (
+                  <div key={stat.label} style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '5px 8px', borderRadius: '6px',
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                  }}>
+                    <stat.icon size={11} style={{ color: stat.color, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: '8px', color: 'var(--text-mute)', fontWeight: 600, letterSpacing: '0.04em' }}>{stat.label}</div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-mono)' }}>{stat.value}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Ability Scores */}
+              {characterAbilities && characterAbilities.length > 0 && (
+                <div>
+                  <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>
+                    Ability Scores
+                  </div>
+                  <AbilityScoreGrid abilities={characterAbilities} />
+                </div>
+              )}
+
+              {/* Active Conditions */}
+              {characterConditions && characterConditions.length > 0 && (
+                <div>
+                  <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>
+                    Conditions
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {characterConditions.map((c, i) => (
+                      <span key={c.id || i} style={{
+                        fontSize: '10px', fontWeight: 600,
+                        padding: '2px 8px', borderRadius: '4px',
+                        background: 'rgba(239,68,68,0.1)',
+                        border: '1px solid rgba(239,68,68,0.2)',
+                        color: '#f87171',
+                        textTransform: 'capitalize',
+                      }}>
+                        {c.name || c.condition || 'Unknown'}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Handouts (M-13) */}
       <div style={{ ...panelStyle, flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={panelHeaderStyle}>
@@ -438,7 +612,8 @@ export default function PlayerSessionSidebar({
             <textarea
               value={sessionNote}
               onChange={e => setSessionNote(e.target.value)}
-              placeholder="Jot a session note..."
+              onBlur={handleNoteBlur}
+              placeholder="Jot a session note... (auto-saves on blur)"
               rows={2}
               style={{
                 flex: 1, padding: '4px 8px', borderRadius: '6px',
@@ -462,6 +637,67 @@ export default function PlayerSessionSidebar({
             </button>
           </div>
         </div>
+
+        {/* Saved Notes */}
+        {savedNotes && savedNotes.length > 0 && (
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+            <button
+              onClick={() => setShowSavedNotes(!showSavedNotes)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '6px 12px', background: 'none', border: 'none',
+                cursor: 'pointer', color: 'var(--text-mute)', fontSize: '10px', fontWeight: 600,
+                fontFamily: 'var(--font-ui)',
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <BookOpen size={10} /> Saved Notes ({savedNotes.length})
+              </span>
+              {showSavedNotes ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
+            </button>
+            {showSavedNotes && (
+              <div style={{ padding: '4px 12px 8px', maxHeight: '160px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {savedNotes.slice(0, 20).map(note => (
+                  <div key={note.id} style={{
+                    padding: '6px 8px', borderRadius: '6px',
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+                      <span style={{ fontSize: '9px', color: 'var(--text-mute)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Clock size={8} />
+                        {note.created_at ? new Date(note.created_at).toLocaleString([], {
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                        }) : note.title || 'Note'}
+                      </span>
+                      {onDeleteNote && (
+                        <button
+                          onClick={() => onDeleteNote(note.id)}
+                          title="Delete note"
+                          style={{
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: 'var(--text-mute)', padding: '2px', display: 'flex',
+                            opacity: 0.4, transition: 'opacity 0.15s',
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = '#f87171'; }}
+                          onMouseLeave={e => { e.currentTarget.style.opacity = '0.4'; e.currentTarget.style.color = 'var(--text-mute)'; }}
+                        >
+                          <Trash2 size={9} />
+                        </button>
+                      )}
+                    </div>
+                    <div style={{
+                      fontSize: '11px', color: 'var(--text-dim)', lineHeight: 1.4,
+                      whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                    }}>
+                      {note.body?.slice(0, 200)}{(note.body?.length || 0) > 200 ? '...' : ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Chat + Action Request */}
@@ -555,4 +791,4 @@ export default function PlayerSessionSidebar({
       </div>
     </div>
   );
-}
+})

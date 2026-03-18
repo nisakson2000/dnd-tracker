@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Dice5, Check, X, Send, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ModalPortal from '../ModalPortal';
@@ -16,7 +16,7 @@ const SKILL_TO_ABILITY = {
   'Sleight of Hand': 'DEX', Stealth: 'DEX', Survival: 'WIS',
 };
 
-export default function PlayerPromptPopup() {
+export default memo(function PlayerPromptPopup() {
   const { activePrompts, respondToPrompt } = useCampaignSync();
   const { members, myClientId } = useParty();
   const [freeText, setFreeText] = useState('');
@@ -390,4 +390,4 @@ export default function PlayerPromptPopup() {
       </div>
     </ModalPortal>
   );
-}
+})

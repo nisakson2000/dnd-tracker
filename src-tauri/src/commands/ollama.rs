@@ -322,7 +322,7 @@ pub async fn ollama_chat(
     temperature: Option<f64>,
 ) -> Result<(), String> {
     let url = format!("{}/api/chat", OLLAMA_URL);
-    let num_predict = max_tokens.unwrap_or(128);
+    let num_predict = max_tokens.unwrap_or(300);
     let temp = temperature.unwrap_or(0.3);
     let resp = client(300)?
         .post(&url)

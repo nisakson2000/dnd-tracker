@@ -456,6 +456,7 @@ fn main() {
             commands::combat_log::insert_combat_log,
             commands::combat_log::get_combat_log,
             commands::combat_log::clear_combat_log,
+            commands::combat_log::archive_combat_session,
             // Factions
             commands::factions::create_faction,
             commands::factions::list_factions,

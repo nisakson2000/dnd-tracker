@@ -1,0 +1,292 @@
+{
+  "name": "The Shattered Crown",
+  "summary": "The king is dead, three noble houses vie for the empty throne, and a barbarian horde gathers at the border. Choose your allegiance — or seize power for yourself.",
+  "description": "King Aldric Valoryn was found dead in his chambers with no visible wounds and a look of pure terror frozen on his face. Within hours, the three most powerful noble houses of the Kingdom of Valdris declared their claim to the Shattered Crown. House Ashford controls the military, House Veranthi holds the treasury, and House Morrigan commands the arcane academies. As the realm fractures along factional lines, the players are drawn into a web of assassination plots, secret alliances, and political maneuvering as hired agents caught between warring powers. Complicating matters further, a bastard heir to the true bloodline has emerged from hiding, a foreign emissary offers treacherous aid, and scouts report a massive barbarian coalition massing beyond the northern passes. The campaign features multiple branching storylines with at least four distinct endings depending on which faction the players support — or betray. Espionage, courtly intrigue, battlefield tactics, and moral compromise are the weapons of this war.",
+  "level": "5-8",
+  "ruleset": "5e 2014",
+  "author": "The Codex",
+  "tags": ["political", "intrigue", "urban", "exploration"],
+  "npcs": [
+    {
+      "name": "Duke Harlan Ashford",
+      "role": "Quest Giver",
+      "race": "Human",
+      "npc_class": "Fighter",
+      "location": "Valdris - Ashford Garrison",
+      "description": "A broad-shouldered man in his late forties with a scarred jaw and iron-grey hair cropped short. He commands the kingdom's largest standing army and believes that only martial strength can hold Valdris together. He speaks bluntly, despises courtly games, and respects only those who prove themselves in battle.",
+      "notes": "Genuinely believes he is the best candidate for king, but his temper and distrust of magic make him dangerous. Will offer the party military contracts and access to the war council. His weakness is his estranged daughter, who secretly supports House Morrigan.",
+      "status": "alive"
+    },
+    {
+      "name": "Marquessa Isolde Veranthi",
+      "role": "Quest Giver",
+      "race": "Half-Elf",
+      "npc_class": "Rogue",
+      "location": "Valdris - The Gilded Spire (Veranthi Estate)",
+      "description": "An elegantly dressed woman in her early forties with sharp green eyes and an ever-present half-smile that never quite reaches them. She controls the kingdom's banks, trade routes, and merchant guilds. Every word she speaks is a calculated investment, and she treats alliances like business transactions.",
+      "notes": "The most politically savvy of the three claimants. She has bribed half the city watch and has blackmail material on key nobles. Will pay handsomely for information and dirty work. Secretly poisoned the king using a rare alchemical agent — the true mastermind of the succession crisis.",
+      "status": "alive"
+    },
+    {
+      "name": "Archon Vyrena Morrigan",
+      "role": "Quest Giver",
+      "race": "Human",
+      "npc_class": "Wizard",
+      "location": "Valdris - The Obsidian Tower",
+      "description": "A tall, imperious woman in her sixties who radiates arcane authority. She wears midnight-blue robes embroidered with silver constellations and carries a staff topped with a slowly orbiting crystal. As head of the Arcane Consortium, she controls the kingdom's magical defenses and ward network.",
+      "notes": "Knows the king was killed by magic but cannot determine the exact method. Genuinely fears that without arcane leadership, the kingdom's magical infrastructure will collapse. Has been scrying on the other houses and knows more than she reveals. Her endgame is a magocracy, not a traditional monarchy.",
+      "status": "alive"
+    },
+    {
+      "name": "Whisper",
+      "role": "Informant",
+      "race": "Changeling",
+      "npc_class": "Rogue",
+      "location": "Valdris - The Rusted Nail Tavern (basement)",
+      "description": "No one knows Whisper's true face. They appear as a different person at every meeting — sometimes a scarred dockworker, sometimes a veiled noblewoman, sometimes an elderly priest. They run the largest spy network in Valdris and sell information to all three houses simultaneously.",
+      "notes": "True neutral in the conflict. Sells information based on the highest bidder but has a personal code: they never sell information that would harm children. Knows about Caelum's existence and heritage but has been protecting that secret for personal reasons — Whisper is Caelum's godparent.",
+      "status": "alive"
+    },
+    {
+      "name": "Caelum Valoryn",
+      "role": "Neutral",
+      "race": "Human",
+      "npc_class": "Paladin",
+      "location": "Valdris - Dockside District (in hiding)",
+      "description": "A quiet, intense young man of twenty-two with the late king's distinctive amber eyes and dark curling hair. He was raised in secret by a retired knight and only recently learned of his true parentage. He carries a locket containing a lock of the queen's hair and a letter in the king's hand acknowledging him.",
+      "notes": "The legitimate (but secret) heir to the throne. He has paladin training but is unpolished and naive about politics. All three houses would either want to control him or eliminate him. His existence could unite the kingdom or paint an even larger target on everyone involved. The players' treatment of Caelum determines several ending paths.",
+      "status": "alive"
+    },
+    {
+      "name": "Ambassador Kazimir Drakov",
+      "role": "Antagonist",
+      "race": "Human",
+      "npc_class": "Warlock",
+      "location": "Valdris - The Foreign Quarter Embassy",
+      "description": "A gaunt, pale-skinned diplomat from the Dravosi Imperium to the east, dressed in severe black with silver buttons. He speaks softly with an accent that makes every sentence sound like a threat. He has offered Valdris military aid against the barbarian horde — for a price that amounts to vassalage.",
+      "notes": "Secretly a warlock serving a fiendish patron who feeds on political chaos. Kazimir is actively sabotaging peace negotiations between the houses and has agents provocateurs in all three factions. His patron wants Valdris to fall so the Imperium can annex it. If exposed, he is a dangerous combatant (CR 7).",
+      "status": "alive"
+    },
+    {
+      "name": "Warchief Brenna Stormborn",
+      "role": "Antagonist",
+      "race": "Goliath",
+      "npc_class": "Barbarian",
+      "location": "The Northern Passes - Stormborn Encampment",
+      "description": "A massive goliath woman covered in ritual scars and blue warpaint, standing nearly eight feet tall. She has united six barbarian tribes under her banner through combat, charisma, and a prophecy that names her the 'Breaker of Stone Walls.' She rides a dire elk into battle and wields a greataxe made from a dragon's jawbone.",
+      "notes": "Not a mindless brute — Brenna is a shrewd tactician who is exploiting Valdris's civil war. She can potentially be negotiated with if the party offers her people legitimate territory and recognition. Her horde numbers around 3,000 warriors and will attack within two weeks of campaign start.",
+      "status": "alive"
+    },
+    {
+      "name": "Sir Aldous Greymantle",
+      "role": "Ally",
+      "race": "Human",
+      "npc_class": "Fighter",
+      "location": "Valdris - The Honorguard Barracks",
+      "description": "The former captain of the king's personal guard, now a broken man drowning in guilt and cheap wine. He is in his late fifties with a silver beard, bloodshot eyes, and hands that still move to a sword that was taken from him. He was on duty the night the king died and blames himself entirely.",
+      "notes": "Witnessed something crucial the night of the murder — he saw a cloaked figure leaving the king's wing but was magically compelled to forget. A Remove Curse or similar effect can restore his memory, revealing a key clue pointing to the Veranthi household. Once restored, he becomes a powerful ally (veteran stat block) desperate for redemption.",
+      "status": "alive"
+    },
+    {
+      "name": "Seraphina Ashford",
+      "role": "Informant",
+      "race": "Human",
+      "npc_class": "Sorcerer",
+      "location": "Valdris - The Obsidian Tower (student quarters)",
+      "description": "Duke Ashford's estranged daughter, a young woman of nineteen with her father's strong jaw but her mother's kind eyes. She rejected the military life her father planned for her and enrolled in the Arcane Consortium, becoming Archon Morrigan's most promising student. She is torn between family loyalty and her own beliefs.",
+      "notes": "A potential bridge between House Ashford and House Morrigan if the players can broker reconciliation between father and daughter. She has discovered something troubling in the Consortium's archives — evidence that Morrigan knew the king would die before it happened. She will share this with players she trusts.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "The King's Last Night",
+      "giver": "Sir Aldous Greymantle",
+      "description": "Investigate the circumstances of King Aldric's death. The official story is natural causes, but Aldous insists something was wrong. The party must examine the death chamber, interview witnesses, and find a way to break the enchantment clouding Aldous's memory of that night.",
+      "status": "active",
+      "notes": "Reward: 500 gp from Aldous's savings, plus crucial information. Breaking the enchantment on Aldous reveals a Veranthi agent was present. The death chamber contains traces of a rare poison called Widow's Whisper, purchasable only through Veranthi trade contacts.",
+      "objectives": [
+        { "text": "Gain access to the sealed royal death chamber", "completed": false },
+        { "text": "Interview the palace staff who were on duty", "completed": false },
+        { "text": "Find a way to break the enchantment on Sir Aldous's memory", "completed": false },
+        { "text": "Identify the poison or spell used to kill the king", "completed": false }
+      ]
+    },
+    {
+      "title": "The Bastard Prince",
+      "giver": "Whisper",
+      "description": "Whisper reveals that a bastard heir to the Valoryn bloodline exists and is hiding somewhere in the Dockside District. The party must find Caelum before the other factions do and decide what to do with him — protect him, deliver him to a faction, or help him claim the throne himself.",
+      "status": "active",
+      "notes": "Reward: Whisper provides three free intelligence reports (each worth 200 gp). Finding Caelum requires navigating the dangerous Dockside underworld. Each faction will offer substantial rewards for Caelum's location once they learn of his existence.",
+      "objectives": [
+        { "text": "Meet with Whisper at the Rusted Nail", "completed": false },
+        { "text": "Search the Dockside District for signs of the hidden heir", "completed": false },
+        { "text": "Protect Caelum from the assassin sent by an unknown faction", "completed": false },
+        { "text": "Decide Caelum's fate: hide, deliver, or champion him", "completed": false }
+      ]
+    },
+    {
+      "title": "The Emissary's Bargain",
+      "giver": "Marquessa Isolde Veranthi",
+      "description": "Ambassador Kazimir has offered military aid against the barbarian horde, but his terms are suspiciously generous. Isolde wants the party to infiltrate the Foreign Quarter Embassy and discover Kazimir's true agenda. The embassy is heavily warded and guarded by Dravosi soldiers.",
+      "status": "active",
+      "notes": "Reward: 800 gp and a favor from House Veranthi. The embassy contains evidence of Kazimir's fiendish pact and his agents in all three houses. Ironically, Isolde is sending the party to investigate someone else's conspiracy while hiding her own. If players find Kazimir's dossier on Isolde, they learn she poisoned the king.",
+      "objectives": [
+        { "text": "Scout the Foreign Quarter Embassy and identify security measures", "completed": false },
+        { "text": "Infiltrate the embassy through stealth, disguise, or social engineering", "completed": false },
+        { "text": "Find and copy Kazimir's secret correspondence", "completed": false },
+        { "text": "Escape without triggering a diplomatic incident", "completed": false }
+      ]
+    },
+    {
+      "title": "Storm on the Horizon",
+      "giver": "Duke Harlan Ashford",
+      "description": "Barbarian scouts have been spotted in the northern farmlands, and the border forts report signal fires from the passes. Duke Ashford needs the party to ride north, assess the horde's strength, and if possible, make contact with Warchief Brenna to gauge whether negotiation is possible before the full invasion begins.",
+      "status": "active",
+      "notes": "Reward: 600 gp and officer commissions in the Ashford military. The horde is larger than expected (3,000+). Brenna will parley if approached with respect and an offer of land. If players broker a deal with Brenna, the barbarian threat can become an allied force — dramatically shifting the power balance.",
+      "objectives": [
+        { "text": "Ride to the northern border and assess the barbarian horde's numbers", "completed": false },
+        { "text": "Survive or evade barbarian raiding parties in the farmlands", "completed": false },
+        { "text": "Reach Warchief Brenna's camp and request a parley", "completed": false },
+        { "text": "Report findings back to Duke Ashford", "completed": false }
+      ]
+    },
+    {
+      "title": "The Coronation Crisis",
+      "giver": "Caelum Valoryn",
+      "description": "With all factions converging for the emergency Coronation Summit, the party must navigate a final gauntlet of betrayal and political maneuvering. Kazimir plans to trigger a magical catastrophe during the summit to plunge the city into chaos, and the party must stop him while supporting their chosen claimant — or Caelum — for the throne.",
+      "status": "active",
+      "notes": "Reward: Varies by ending. This is the campaign finale. Four possible outcomes: Ashford military rule, Veranthi mercantile oligarchy, Morrigan magocracy, or Caelum's restored monarchy. A fifth 'dark' ending occurs if Kazimir succeeds. The summit takes place in the Grand Valoryn Cathedral and involves both social encounters and a climactic combat against Kazimir and his fiendish patron's avatar.",
+      "objectives": [
+        { "text": "Secure evidence to support your chosen claimant (or expose all three)", "completed": false },
+        { "text": "Attend the Coronation Summit and navigate the political debates", "completed": false },
+        { "text": "Uncover and prevent Kazimir's sabotage plot", "completed": false },
+        { "text": "Defeat Kazimir and his fiendish allies in the cathedral", "completed": false },
+        { "text": "Crown the new ruler of Valdris", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "The Kingdom of Valdris",
+      "category": "Location",
+      "body": "Valdris is a prosperous human-majority kingdom nestled between fertile river valleys and rugged northern mountains. Its capital, also called Valdris, is a sprawling city of white stone walls, red-tiled roofs, and seven great bridges spanning the River Auros. The kingdom has enjoyed two centuries of relative peace under the Valoryn dynasty, but old rivalries between the noble houses were only ever held in check by a strong monarch.",
+      "related_to": "Caelum Valoryn"
+    },
+    {
+      "title": "House Ashford - The Iron Shield",
+      "category": "Faction",
+      "body": "House Ashford has served as the kingdom's military backbone for generations. They control the standing army, the border fortresses, and the kingdom's weapons forges. Their motto is 'Duty Before Glory,' and their sigil is a silver shield on a crimson field. Duke Harlan is the seventh Ashford to hold the title of Lord Marshal, and the family's soldiers are fiercely loyal to the house above all else.",
+      "related_to": "Duke Harlan Ashford"
+    },
+    {
+      "title": "House Veranthi - The Golden Web",
+      "category": "Faction",
+      "body": "House Veranthi rose to prominence through trade, banking, and strategic marriages rather than military conquest. They control the merchant guilds, the kingdom's treasury, and most of the trade routes connecting Valdris to neighboring realms. Their sigil is a golden spider on a green field, and their motto is 'Every Thread Connected.' They are widely distrusted but universally needed — half the nobility owes them money.",
+      "related_to": "Marquessa Isolde Veranthi"
+    },
+    {
+      "title": "House Morrigan - The Starborn",
+      "category": "Faction",
+      "body": "House Morrigan founded the Arcane Consortium three generations ago and has since become synonymous with magical power in Valdris. They maintain the city's magical wards, train battle-mages for the army, and advise the crown on arcane matters. Their sigil is a silver crescent moon on a field of midnight blue. The house believes that arcane talent, not bloodline or wealth, should determine who rules.",
+      "related_to": "Archon Vyrena Morrigan"
+    },
+    {
+      "title": "The Valoryn Bloodline",
+      "category": "History",
+      "body": "The Valoryn dynasty has ruled Valdris for over two hundred years, beginning with Queen Elara the Unifier who forged the kingdom from warring city-states. The Valoryns are said to carry 'the Sovereign's Light' — a faint divine blessing that manifests as amber-colored eyes and an innate resistance to enchantment magic. King Aldric was the last known bearer of this bloodline, though rumors of illegitimate children have surfaced throughout the dynasty's history.",
+      "related_to": "Caelum Valoryn"
+    },
+    {
+      "title": "The Dravosi Imperium",
+      "category": "Faction",
+      "body": "A vast, authoritarian empire to the east of Valdris, the Dravosi Imperium has long coveted the fertile river valleys of the Valoryn kingdom. Ruled by an Empress-Consort who serves as the mortal vessel for a powerful archdevil, the Imperium expands through a combination of military force, political subversion, and infernal pacts. Ambassador Kazimir is one of dozens of agents working to destabilize Valdris from within.",
+      "related_to": "Ambassador Kazimir Drakov"
+    },
+    {
+      "title": "The Stormborn Prophecy",
+      "category": "Legend",
+      "body": "Among the northern barbarian tribes, a prophecy speaks of the 'Breaker of Stone Walls' — a goliath warrior who will unite the scattered tribes and lead them to a homeland behind the mountains. Warchief Brenna Stormborn's birth during a thunderstorm, her unprecedented unification of six rival tribes, and her victories in ritual combat have convinced most tribal shamans that she is the prophesied leader. Whether the prophecy demands conquest or coexistence is a matter of heated debate among the shamans.",
+      "related_to": "Warchief Brenna Stormborn"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: The Shattered Crown",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe Kingdom of Valdris is in crisis. Three days ago, King Aldric Valoryn was found dead in his bedchamber — no wounds, no signs of struggle, just a frozen expression of absolute terror. The court physicians declared natural causes, but no one believes it.\n\nWithin hours, the three great noble houses declared their claims to the throne. Duke Harlan Ashford sealed the military quarter and placed his soldiers on high alert. Marquessa Isolde Veranthi locked down the treasury and began calling in debts. Archon Vyrena Morrigan activated the city's arcane wards and declared the Obsidian Tower neutral ground.\n\nThe players arrive in the capital city of Valdris during this powder-keg moment. They may be hired agents, mercenaries seeking opportunity, or travelers caught in the wrong place at the wrong time.\n\n### Key NPCs to Introduce Early\n- **Sir Aldous Greymantle** — found drinking in a tavern, guilt-ridden and desperate for someone to believe his story\n- **Whisper** — makes contact through a cryptic note slipped into a player's pocket\n- **Ambassador Kazimir Drakov** — seen at a public address offering the Imperium's 'generous assistance'\n\n### Starting Hooks\n1. Sir Aldous approaches the party in a tavern, begging them to investigate the king's death\n2. Each noble house has posted bounties for 'capable adventurers' on the city notice boards\n3. A street riot breaks out between Ashford soldiers and Veranthi merchants — the party is caught in the middle",
+    "tags": "political,intrigue,succession,war,factions",
+    "npcs_mentioned": "Duke Harlan Ashford,Marquessa Isolde Veranthi,Archon Vyrena Morrigan,Sir Aldous Greymantle,Whisper,Ambassador Kazimir Drakov"
+  },
+  "items": [
+    {
+      "name": "The Shattered Crown",
+      "item_type": "misc",
+      "weight": 3.0,
+      "value_gp": 5000.0,
+      "quantity": 1,
+      "description": "The legendary crown of the Valoryn dynasty, broken into three pieces when King Aldric died — as if the metal itself rejected the notion of an unworthy successor. Each piece is held by one of the three noble houses. When reassembled and placed on the head of a true Valoryn heir, it glows with warm amber light and grants the wearer advantage on Charisma checks against citizens of Valdris.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "very rare"
+    },
+    {
+      "name": "Whisper's Listening Coin",
+      "item_type": "misc",
+      "weight": 0.1,
+      "value_gp": 350.0,
+      "quantity": 1,
+      "description": "A tarnished copper coin with a face on both sides — each face has a finger pressed to its lips. When placed in a room, the paired coin (held by the owner) transmits all conversation within 30 feet for up to 8 hours. The coin is undetectable by mundane searches but can be found with Detect Magic.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Veranthi Ledger of Debts",
+      "item_type": "misc",
+      "weight": 2.0,
+      "value_gp": 1000.0,
+      "quantity": 1,
+      "description": "A thick leather-bound book filled with meticulous records of every debt owed to House Veranthi. Presenting a relevant entry to a debtor grants advantage on Intimidation checks against them. The ledger contains entries for over forty noble families, twelve military officers, and three members of the Arcane Consortium.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Stormborn Waraxe",
+      "item_type": "weapon",
+      "weight": 7.0,
+      "value_gp": 1500.0,
+      "quantity": 1,
+      "description": "A massive greataxe crafted from the jawbone of a young white dragon, bound with mammoth leather and etched with tribal lightning runes. When you score a critical hit with this weapon, the target must make a DC 14 Constitution saving throw or be stunned until the end of your next turn. The axe crackles faintly with static electricity in cold weather.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Signet of House Morrigan",
+      "item_type": "misc",
+      "weight": 0.1,
+      "value_gp": 800.0,
+      "quantity": 1,
+      "description": "A silver ring bearing the crescent moon sigil of House Morrigan. While wearing this ring, you can cast Detect Magic once per long rest without expending a spell slot. Additionally, you gain advantage on Arcana checks made within the city of Valdris, as the ring resonates with the city's ward network.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    }
+  ]
+}

@@ -1,12 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { getOverview, updateOverview } from '../api/overview';
 import { getItems, getCurrency } from '../api/inventory';
 import { getSpellSlots, updateSpellSlots } from '../api/spells';
 import { getConditions } from '../api/combat';
-import { addJournalEntry } from '../api/journal';
+import { addJournalEntry, getJournalEntries, deleteJournalEntry } from '../api/journal';
 
 export default function usePlayerCharacterData(playerUuid, { addFeedEvent, connected, sendToDm }) {
+  // Debounce timer for HP sync to DM
+  const hpSyncTimerRef = useRef(null);
   const [charOverview, setCharOverview] = useState(null);
   const [charAbilities, setCharAbilities] = useState([]);
   const [inventory, setInventory] = useState([]);
@@ -16,6 +18,7 @@ export default function usePlayerCharacterData(playerUuid, { addFeedEvent, conne
   const [hpEditMode, setHpEditMode] = useState(false);
   const [hpDelta, setHpDelta] = useState('');
   const [sessionNote, setSessionNote] = useState('');
+  const [savedNotes, setSavedNotes] = useState([]);
 
   // Load character overview when playerUuid (characterId) is available
   const refreshCharacter = useCallback(() => {
@@ -38,10 +41,18 @@ export default function usePlayerCharacterData(playerUuid, { addFeedEvent, conne
     getCurrency(playerUuid).then(c => { if (c) setCurrency(c); }).catch(e => console.warn('[PlayerSession] Failed to load currency:', e));
     getSpellSlots(playerUuid).then(s => { if (s) setSpellSlots(s); }).catch(e => console.warn('[PlayerSession] Failed to load spell slots:', e));
     getConditions(playerUuid).then(c => { if (c) setConditions(c.filter(x => x.active)); }).catch(e => console.warn('[PlayerSession] Failed to load conditions:', e));
+    // Load saved journal notes
+    getJournalEntries(playerUuid).then(entries => {
+      const sessionNotes = (entries || []).filter(e =>
+        (typeof e.tags === 'string' && e.tags.includes('session-note')) ||
+        (Array.isArray(e.tags) && e.tags.includes('session-note'))
+      );
+      setSavedNotes(sessionNotes);
+    }).catch(e => console.warn('[PlayerSession] Failed to load saved notes:', e));
   }, [playerUuid]);
 
-  // HP update handler
-  const handleHpChange = async (delta) => {
+  // HP update handler — debounces DM sync to avoid flooding WS on rapid +/- clicks
+  const handleHpChange = useCallback(async (delta) => {
     if (!playerUuid || !charOverview) return;
     const newHp = Math.max(0, Math.min(charOverview.max_hp || 999, (charOverview.current_hp || 0) + delta));
     try {
@@ -51,14 +62,17 @@ export default function usePlayerCharacterData(playerUuid, { addFeedEvent, conne
       setHpEditMode(false);
       const label = delta > 0 ? `Healed ${delta}` : `Took ${Math.abs(delta)} damage`;
       addFeedEvent('combat', `${label} (HP: ${newHp}/${charOverview.max_hp})`);
-      // Broadcast to DM
+      // Debounced broadcast to DM (300ms) — prevents flooding on rapid +/- clicks
       if (connected) {
-        sendToDm({ type: 'CharUpdate', player_uuid: playerUuid, hp: newHp, max_hp: charOverview.max_hp }).catch(() => {});
+        if (hpSyncTimerRef.current) clearTimeout(hpSyncTimerRef.current);
+        hpSyncTimerRef.current = setTimeout(() => {
+          sendToDm({ type: 'CharUpdate', player_uuid: playerUuid, hp: newHp, max_hp: charOverview.max_hp }).catch(() => {});
+        }, 300);
       }
     } catch {
       toast.error('Failed to update HP');
     }
-  };
+  }, [playerUuid, charOverview, addFeedEvent, connected, sendToDm]);
 
   // Temp HP handler
   const handleSetTempHp = async (val) => {
@@ -88,16 +102,27 @@ export default function usePlayerCharacterData(playerUuid, { addFeedEvent, conne
   const handleSaveNote = async () => {
     if (!playerUuid || !sessionNote.trim()) return;
     try {
-      await addJournalEntry(playerUuid, {
+      const entry = await addJournalEntry(playerUuid, {
         title: `Session Note — ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
         body: sessionNote.trim(),
-        tags: ['session-note'],
-        session_number: null, real_date: new Date().toISOString().split('T')[0],
-        ingame_date: null, npcs_mentioned: [], pinned: false,
+        tags: 'session-note',
+        session_number: 0, real_date: new Date().toISOString().split('T')[0],
+        ingame_date: '', npcs_mentioned: '', pinned: 0,
       });
       toast.success('Note saved to journal');
+      if (entry) setSavedNotes(prev => [entry, ...prev]);
       setSessionNote('');
     } catch { toast.error('Failed to save note'); }
+  };
+
+  // Delete a saved note
+  const handleDeleteNote = async (entryId) => {
+    if (!playerUuid || !entryId) return;
+    try {
+      await deleteJournalEntry(playerUuid, entryId);
+      setSavedNotes(prev => prev.filter(n => n.id !== entryId));
+      toast.success('Note deleted');
+    } catch { toast.error('Failed to delete note'); }
   };
 
   return {
@@ -118,5 +143,7 @@ export default function usePlayerCharacterData(playerUuid, { addFeedEvent, conne
     handleSetTempHp,
     handleUseSpellSlot,
     handleSaveNote,
+    savedNotes,
+    handleDeleteNote,
   };
 }

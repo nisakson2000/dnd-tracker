@@ -1,7 +1,7 @@
 {
   "name": "frontend-temp",
   "private": true,
-  "version": "0.8.3",
+  "version": "0.8.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -24,6 +24,7 @@
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.13.1",
+    "react-window": "^2.2.7",
     "tailwindcss": "^4.2.1"
   },
   "devDependencies": {

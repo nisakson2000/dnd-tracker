@@ -4,8 +4,11 @@ import { ChevronDown, ChevronUp, MapPin, Users, Scroll, BookOpen, CheckCircle, X
 import { invoke } from '@tauri-apps/api/core';
 import toast from 'react-hot-toast';
 import { generateNPC, generateQuest, generateLocation } from '../../utils/quickGenerators';
+import ReadinessChecklist from './ReadinessChecklist';
+import { useGuidance } from '../../contexts/GuidanceContext';
 
-export default function CampaignOverview({ campaign, scenes, connectedPlayers, onRefresh }) {
+export default function CampaignOverview({ campaign, scenes, connectedPlayers, onRefresh, onNavigate }) {
+  const guidance = useGuidance();
   const [npcCount, setNpcCount] = useState(0);
   const [questCount, setQuestCount] = useState(0);
   const [collapsed, setCollapsed] = useState(false);
@@ -167,44 +170,18 @@ export default function CampaignOverview({ campaign, scenes, connectedPlayers, o
                 <StatCard icon={<BookOpen size={14} />} label="Sessions" value={sessionCount} />
               </div>
 
-              {/* Readiness Checklist */}
+              {/* Enhanced Readiness Checklist */}
               <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-dim)', marginBottom: '8px' }}>
-                  Readiness Checklist
-                </div>
-                {checks.map((check, i) => (
-                  <div key={i} style={{
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    padding: '6px 0', fontSize: '12px',
-                  }}>
-                    {check.passed
-                      ? <CheckCircle size={14} style={{ color: '#4ade80', flexShrink: 0 }} />
-                      : <XCircle size={14} style={{ color: check.skippable ? 'rgba(255,255,255,0.15)' : 'rgba(239,68,68,0.5)', flexShrink: 0 }} />
-                    }
-                    <span style={{
-                      color: check.passed ? 'var(--text-dim)' : 'var(--text-mute)',
-                      flex: 1,
-                    }}>
-                      {check.label}
-                      {check.skippable && !check.passed && <span style={{ opacity: 0.5 }}> (optional)</span>}
-                    </span>
-                    {!check.passed && check.action && (
-                      <button
-                        onClick={() => handleGenerate(check.action)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: '4px',
-                          padding: '3px 8px', borderRadius: '6px',
-                          background: 'rgba(155,89,182,0.1)',
-                          border: '1px solid rgba(155,89,182,0.25)',
-                          color: '#c084fc', fontSize: '10px', fontWeight: 600,
-                          cursor: 'pointer', fontFamily: 'var(--font-ui)',
-                        }}
-                      >
-                        <Wand2 size={10} /> Generate
-                      </button>
-                    )}
-                  </div>
-                ))}
+                <ReadinessChecklist
+                  campaign={campaign}
+                  scenes={scenes}
+                  connectedPlayers={connectedPlayers}
+                  npcCount={npcCount}
+                  questCount={questCount}
+                  encounterCount={0}
+                  guidanceMode={guidance?.guidanceMode || 'free'}
+                  onNavigate={onNavigate || (() => {})}
+                />
               </div>
 
               {/* Quick-Fill Buttons */}

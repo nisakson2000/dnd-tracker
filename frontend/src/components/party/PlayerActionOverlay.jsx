@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { memo, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Swords, Dice5, Check, X, Send, Coins, Users, Shield, Heart, ChevronRight, AlertTriangle, Skull, Zap, Clock, Book } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
@@ -9,6 +9,7 @@ import { parseAndRollExpression } from '../../utils/dice';
 import { computeConditionEffects } from '../../data/conditionEffects';
 import { getOverview } from '../../api/overview';
 import PlayerCombatHUD from './PlayerCombatHUD';
+import ErrorBoundary from '../ErrorBoundary';
 import { loadJournal } from '../../utils/playerJournal';
 
 // Keyframes injected once
@@ -41,7 +42,7 @@ const actionBtn = (color, bg) => ({
   cursor: 'pointer', transition: 'all 0.2s', animation: 'pao-pulseGold 2s ease-in-out infinite',
 });
 
-export default function PlayerActionOverlay({ activeConditions = [], characterId }) {
+export default memo(function PlayerActionOverlay({ activeConditions = [], characterId }) {
   const { activePrompts, respondToPrompt, combatActive, initiativeOrder, currentTurn, round, isMyTurn, sendEvent, pendingDeathSavePrompt, clearDeathSavePrompt, pendingReaction, clearReaction } = useCampaignSync();
   const { onPartyEvent, myClientId, members } = useParty();
 
@@ -743,7 +744,9 @@ export default function PlayerActionOverlay({ activeConditions = [], characterId
         <CombatHUD initiativeOrder={initiativeOrder} currentTurn={currentTurn} round={round} isMyTurn={isMyTurn} />
         {/* PlayerCombatHUD — full combat action panel when it's my turn */}
         {combatActive && isMyTurn && (
-          <PlayerCombatHUD characterId={characterId} />
+          <ErrorBoundary label="Combat HUD">
+            <PlayerCombatHUD characterId={characterId} />
+          </ErrorBoundary>
         )}
         <JournalButton characterId={characterId} showJournal={showJournal} setShowJournal={setShowJournal} />
         <JournalPanel characterId={characterId} showJournal={showJournal} setShowJournal={setShowJournal} journalTab={journalTab} setJournalTab={setJournalTab} />
@@ -793,7 +796,7 @@ export default function PlayerActionOverlay({ activeConditions = [], characterId
       <JournalPanel characterId={characterId} showJournal={showJournal} setShowJournal={setShowJournal} journalTab={journalTab} setJournalTab={setJournalTab} />
     </ModalPortal>
   );
-}
+})
 
 // ─── JOURNAL COMPONENTS ──────────────────────────────────────────────────
 function JournalButton({ characterId, showJournal, setShowJournal }) {

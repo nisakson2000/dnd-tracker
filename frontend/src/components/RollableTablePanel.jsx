@@ -62,7 +62,7 @@ export default function RollableTablePanel() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
         <Dices size={18} style={{ color: 'rgba(201,168,76,0.7)' }} />
         <span style={{ fontFamily: 'var(--font-heading)', fontSize: 16, color: 'rgba(240,228,200,0.9)', letterSpacing: '0.02em' }}>
-          Random Tables
+          Random Encounters
         </span>
         <span style={{ fontSize: 10, color: 'rgba(200,175,130,0.3)', fontFamily: 'var(--font-ui)', marginLeft: 4 }}>
           No AI required

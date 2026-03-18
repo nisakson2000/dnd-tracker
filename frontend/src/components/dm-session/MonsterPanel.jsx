@@ -16,6 +16,7 @@ export default function MonsterPanel({ encounterId, onMonsterChange, onBroadcast
   const [monsters, setMonsters] = useState([]);
   const [damageInputs, setDamageInputs] = useState({}); // { monsterId: string }
   const [expandedMonster, setExpandedMonster] = useState(null);
+  const [legendaryUsed, setLegendaryUsed] = useState({}); // { monsterId: number }
 
   // Load encounter monsters
   const loadMonsters = useCallback(async () => {
@@ -368,48 +369,227 @@ export default function MonsterPanel({ encounterId, onMonsterChange, onBroadcast
                     </div>
                   )}
 
-                  {/* Expanded stat block */}
-                  {expandedMonster === m.id && statBlock && (
-                    <div style={{
-                      padding: '8px 10px', borderTop: '1px solid rgba(255,255,255,0.04)',
-                      fontSize: '10px', color: 'var(--text-dim)',
-                      fontFamily: 'var(--font-mono)',
-                      display: 'grid', gap: '4px',
-                    }}>
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        {statBlock.size && <span>Size: {statBlock.size}</span>}
-                        {statBlock.type && <span>Type: {statBlock.type}</span>}
-                        {statBlock.cr && <span>CR: {statBlock.cr}</span>}
-                        {statBlock.speed && <span>Speed: {statBlock.speed}</span>}
-                      </div>
-                      <div style={{ display: 'flex', gap: '12px' }}>
-                        {['str', 'dex', 'con', 'int', 'wis', 'cha'].map(stat => (
-                          statBlock[stat] !== undefined && (
-                            <span key={stat}>
-                              <span style={{ color: 'var(--text-mute)', textTransform: 'uppercase' }}>{stat}</span>{' '}
-                              <span style={{ color: 'var(--text)' }}>{statBlock[stat]}</span>
-                            </span>
-                          )
-                        ))}
-                      </div>
-                      {statBlock.attacks && statBlock.attacks.length > 0 && (
-                        <div>
-                          <span style={{ color: 'var(--text-mute)' }}>Attacks: </span>
-                          {statBlock.attacks.map((a, i) => (
-                            <span key={i}>
-                              {a.name} (+{a.bonus}, {a.damage}){i < statBlock.attacks.length - 1 ? ', ' : ''}
-                            </span>
+                  {/* Expanded stat block — full 5e-style */}
+                  {expandedMonster === m.id && statBlock && (() => {
+                    const divider = { borderTop: '1px solid rgba(201,168,76,0.25)', margin: '6px 0' };
+                    const sectionHeader = { color: '#c9a84c', fontSize: '11px', fontWeight: 700, marginBottom: '3px' };
+                    const labelStyle = { color: 'var(--text-mute)' };
+                    const bodyStyle = { color: 'var(--text-dim)' };
+                    const saves = statBlock.saving_throws || statBlock.saves;
+                    const lrMax = statBlock.legendary_resistance;
+                    const lrUsed = legendaryUsed[m.id] || 0;
+
+                    return (
+                      <div style={{
+                        padding: '8px 10px', borderTop: '1px solid rgba(255,255,255,0.04)',
+                        fontSize: '10px', color: 'var(--text-dim)',
+                        fontFamily: 'var(--font-mono)',
+                        display: 'grid', gap: '2px',
+                      }}>
+                        {/* Basic info */}
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          {statBlock.size && <span><span style={labelStyle}>Size:</span> {statBlock.size}</span>}
+                          {statBlock.type && <span><span style={labelStyle}>Type:</span> {statBlock.type}</span>}
+                          {statBlock.cr && <span><span style={labelStyle}>CR:</span> {statBlock.cr}</span>}
+                          {statBlock.speed && <span><span style={labelStyle}>Speed:</span> {statBlock.speed}</span>}
+                        </div>
+
+                        <div style={divider} />
+
+                        {/* Ability scores */}
+                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                          {['str', 'dex', 'con', 'int', 'wis', 'cha'].map(stat => (
+                            statBlock[stat] !== undefined && (
+                              <span key={stat} style={{ textAlign: 'center' }}>
+                                <span style={{ ...labelStyle, textTransform: 'uppercase', display: 'block', fontSize: '9px' }}>{stat}</span>
+                                <span style={{ color: 'var(--text)', fontWeight: 600 }}>
+                                  {statBlock[stat]} <span style={{ color: 'var(--text-mute)', fontSize: '9px' }}>({Math.floor((statBlock[stat] - 10) / 2) >= 0 ? '+' : ''}{Math.floor((statBlock[stat] - 10) / 2)})</span>
+                                </span>
+                              </span>
+                            )
                           ))}
                         </div>
-                      )}
-                      {statBlock.traits && statBlock.traits.length > 0 && (
-                        <div>
-                          <span style={{ color: 'var(--text-mute)' }}>Traits: </span>
-                          {statBlock.traits.join(', ')}
-                        </div>
-                      )}
-                    </div>
-                  )}
+
+                        <div style={divider} />
+
+                        {/* Saving throws */}
+                        {saves && (
+                          <div><span style={labelStyle}>Saving Throws </span>
+                            {typeof saves === 'string' ? saves : typeof saves === 'object' && !Array.isArray(saves)
+                              ? Object.entries(saves).map(([k, v]) => `${k.charAt(0).toUpperCase() + k.slice(1)} +${v}`).join(', ')
+                              : Array.isArray(saves) ? saves.join(', ') : ''}
+                          </div>
+                        )}
+
+                        {/* Skills */}
+                        {statBlock.skills && (
+                          <div><span style={labelStyle}>Skills </span>
+                            {typeof statBlock.skills === 'string' ? statBlock.skills : typeof statBlock.skills === 'object' && !Array.isArray(statBlock.skills)
+                              ? Object.entries(statBlock.skills).map(([k, v]) => `${k} +${v}`).join(', ')
+                              : Array.isArray(statBlock.skills) ? statBlock.skills.join(', ') : ''}
+                          </div>
+                        )}
+
+                        {/* Damage vulnerabilities */}
+                        {statBlock.damage_vulnerabilities && (
+                          <div><span style={labelStyle}>Damage Vulnerabilities </span>
+                            {Array.isArray(statBlock.damage_vulnerabilities) ? statBlock.damage_vulnerabilities.join(', ') : statBlock.damage_vulnerabilities}
+                          </div>
+                        )}
+
+                        {/* Damage resistances */}
+                        {statBlock.damage_resistances && (
+                          <div><span style={labelStyle}>Damage Resistances </span>
+                            {Array.isArray(statBlock.damage_resistances) ? statBlock.damage_resistances.join(', ') : statBlock.damage_resistances}
+                          </div>
+                        )}
+
+                        {/* Damage immunities */}
+                        {statBlock.damage_immunities && (
+                          <div><span style={labelStyle}>Damage Immunities </span>
+                            {Array.isArray(statBlock.damage_immunities) ? statBlock.damage_immunities.join(', ') : statBlock.damage_immunities}
+                          </div>
+                        )}
+
+                        {/* Condition immunities */}
+                        {statBlock.condition_immunities && (
+                          <div><span style={labelStyle}>Condition Immunities </span>
+                            {Array.isArray(statBlock.condition_immunities) ? statBlock.condition_immunities.join(', ') : statBlock.condition_immunities}
+                          </div>
+                        )}
+
+                        {/* Senses */}
+                        {statBlock.senses && (
+                          <div><span style={labelStyle}>Senses </span>
+                            {Array.isArray(statBlock.senses) ? statBlock.senses.join(', ') : statBlock.senses}
+                          </div>
+                        )}
+
+                        {/* Languages */}
+                        {statBlock.languages && (
+                          <div><span style={labelStyle}>Languages </span>
+                            {Array.isArray(statBlock.languages) ? statBlock.languages.join(', ') : statBlock.languages}
+                          </div>
+                        )}
+
+                        {/* Special Abilities / Traits */}
+                        {statBlock.traits && statBlock.traits.length > 0 && (
+                          <>
+                            <div style={divider} />
+                            <div style={sectionHeader}>Traits</div>
+                            {statBlock.traits.map((t, i) => (
+                              <div key={i} style={{ marginBottom: '3px' }}>
+                                {typeof t === 'object' && t.name ? (
+                                  <>
+                                    <span style={{ color: 'var(--text)', fontWeight: 600, fontStyle: 'italic' }}>{t.name}. </span>
+                                    <span style={bodyStyle}>{t.desc || t.description || ''}</span>
+                                  </>
+                                ) : (
+                                  <span style={bodyStyle}>{typeof t === 'string' ? t : JSON.stringify(t)}</span>
+                                )}
+                              </div>
+                            ))}
+                          </>
+                        )}
+
+                        {statBlock.special_abilities && statBlock.special_abilities.length > 0 && (
+                          <>
+                            <div style={divider} />
+                            <div style={sectionHeader}>Special Abilities</div>
+                            {statBlock.special_abilities.map((a, i) => (
+                              <div key={i} style={{ marginBottom: '3px' }}>
+                                <span style={{ color: 'var(--text)', fontWeight: 600, fontStyle: 'italic' }}>{a.name}. </span>
+                                <span style={bodyStyle}>{a.desc || a.description || ''}</span>
+                              </div>
+                            ))}
+                          </>
+                        )}
+
+                        {/* Actions */}
+                        {((statBlock.attacks && statBlock.attacks.length > 0) || (statBlock.actions && statBlock.actions.length > 0)) && (
+                          <>
+                            <div style={divider} />
+                            <div style={sectionHeader}>Actions</div>
+                            {(statBlock.actions || []).map((a, i) => (
+                              <div key={`action-${i}`} style={{ marginBottom: '3px' }}>
+                                <span style={{ color: 'var(--text)', fontWeight: 600, fontStyle: 'italic' }}>{a.name}. </span>
+                                <span style={bodyStyle}>{a.desc || a.description || ''}</span>
+                              </div>
+                            ))}
+                            {(statBlock.attacks || []).filter(a => !(statBlock.actions || []).some(ac => ac.name === a.name)).map((a, i) => (
+                              <div key={`atk-${i}`} style={{ marginBottom: '3px' }}>
+                                <span style={{ color: 'var(--text)', fontWeight: 600, fontStyle: 'italic' }}>{a.name}. </span>
+                                <span style={bodyStyle}>
+                                  {a.desc || a.description || `+${a.bonus} to hit, ${a.damage} damage`}
+                                </span>
+                              </div>
+                            ))}
+                          </>
+                        )}
+
+                        {/* Reactions */}
+                        {statBlock.reactions && statBlock.reactions.length > 0 && (
+                          <>
+                            <div style={divider} />
+                            <div style={sectionHeader}>Reactions</div>
+                            {statBlock.reactions.map((r, i) => (
+                              <div key={i} style={{ marginBottom: '3px' }}>
+                                <span style={{ color: 'var(--text)', fontWeight: 600, fontStyle: 'italic' }}>{r.name}. </span>
+                                <span style={bodyStyle}>{r.desc || r.description || ''}</span>
+                              </div>
+                            ))}
+                          </>
+                        )}
+
+                        {/* Legendary Resistance */}
+                        {lrMax && (
+                          <>
+                            <div style={divider} />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={sectionHeader}>Legendary Resistance ({lrMax}/Day)</span>
+                              <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+                                {Array.from({ length: lrMax }, (_, i) => (
+                                  <button
+                                    key={i}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setLegendaryUsed(prev => ({
+                                        ...prev,
+                                        [m.id]: i < lrUsed ? i : i + 1,
+                                      }));
+                                    }}
+                                    style={{
+                                      width: '14px', height: '14px', borderRadius: '50%',
+                                      border: '1px solid #c9a84c',
+                                      background: i < lrUsed ? '#c9a84c' : 'transparent',
+                                      cursor: 'pointer', padding: 0,
+                                      transition: 'background 0.15s',
+                                    }}
+                                    title={i < lrUsed ? 'Click to restore' : 'Click to use'}
+                                  />
+                                ))}
+                                <span style={{ ...labelStyle, fontSize: '9px', marginLeft: '4px' }}>{lrUsed}/{lrMax} used</span>
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Legendary Actions */}
+                        {statBlock.legendary_actions && statBlock.legendary_actions.length > 0 && (
+                          <>
+                            <div style={divider} />
+                            <div style={sectionHeader}>Legendary Actions</div>
+                            {statBlock.legendary_actions.map((la, i) => (
+                              <div key={i} style={{ marginBottom: '3px' }}>
+                                <span style={{ color: 'var(--text)', fontWeight: 600, fontStyle: 'italic' }}>{la.name}. </span>
+                                <span style={bodyStyle}>{la.desc || la.description || ''}</span>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}

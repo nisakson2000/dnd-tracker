@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { memo, useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { List, useListRef } from 'react-window';
 import {
   Swords, Heart, Star, Package, Scroll,
-  MessageCircle, Globe, Settings, ChevronDown, ChevronUp
+  MessageCircle, Globe, Settings, ChevronDown, ChevronUp,
+  Search, Filter, X
 } from 'lucide-react';
 
 /* ─── Category config ─── */
@@ -16,6 +17,7 @@ const CATEGORIES = {
   world:       { color: '#e67e22', icon: Globe,         label: 'World' },
   system:      { color: '#6b7280', icon: Settings,      label: 'System' },
 };
+const CATEGORY_KEYS = Object.keys(CATEGORIES);
 
 /* ─── Relative time helper ─── */
 function relativeTime(timestamp) {
@@ -28,110 +30,103 @@ function relativeTime(timestamp) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-/* ─── Virtualized window constants ─── */
-const ITEM_HEIGHT = 52;       // estimated px per collapsed card
-const BUFFER_COUNT = 8;       // extra items above/below viewport
+/* ─── Row heights ─── */
+const COLLAPSED_HEIGHT = 52;
+const EXPANDED_EXTRA = 60;
 
-/* ─── Single event card ─── */
-function EventCard({ event, index }) {
-  const [expanded, setExpanded] = useState(false);
+/* ─── Single event card (row component for react-window v2) ─── */
+const EventRow = memo(function EventRow({ data, rowIndex, style }) {
+  const { events, expandedIds, onToggle } = data;
+  const event = events[rowIndex];
+  if (!event) return null;
+
+  const expanded = expandedIds.has(event.id);
   const cat = CATEGORIES[event.category] || CATEGORIES.system;
   const Icon = event.icon
     ? (CATEGORIES[event.icon]?.icon || cat.icon)
     : cat.icon;
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, x: -24 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -12 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 10,
-        padding: '8px 12px',
-        borderLeft: `3px solid ${cat.color}`,
-        background: 'rgba(255,255,255,0.03)',
-        borderRadius: '0 6px 6px 0',
-        marginBottom: 4,
-        cursor: event.details ? 'pointer' : 'default',
-        transition: 'background 0.15s',
-      }}
-      onClick={() => event.details && setExpanded(e => !e)}
-      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
-    >
-      {/* Icon */}
-      <div style={{
-        width: 26, height: 26, minWidth: 26,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        borderRadius: 6,
-        background: `${cat.color}18`,
-        marginTop: 1,
-      }}>
-        <Icon size={14} style={{ color: cat.color }} />
-      </div>
-
-      {/* Content */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{
-            fontSize: 13,
-            color: '#e2dcc8',
-            lineHeight: 1.4,
-            flex: 1,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: expanded ? 'normal' : 'nowrap',
-          }}>
-            {event.message}
-          </span>
-          <span style={{
-            fontSize: 10,
-            color: 'rgba(255,255,255,0.3)',
-            whiteSpace: 'nowrap',
-            fontFamily: 'var(--font-ui)',
-          }}>
-            {relativeTime(event.timestamp)}
-          </span>
-          {event.details && (
-            expanded
-              ? <ChevronUp size={12} style={{ color: 'rgba(255,255,255,0.3)' }} />
-              : <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.3)' }} />
-          )}
+    <div style={{ ...style, paddingRight: 8 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 10,
+          padding: '8px 12px',
+          borderLeft: `3px solid ${cat.color}`,
+          background: 'rgba(255,255,255,0.03)',
+          borderRadius: '0 6px 6px 0',
+          marginBottom: 4,
+          cursor: event.details ? 'pointer' : 'default',
+          transition: 'background 0.15s',
+          height: expanded ? COLLAPSED_HEIGHT + EXPANDED_EXTRA - 4 : COLLAPSED_HEIGHT - 4,
+          overflow: 'hidden',
+        }}
+        onClick={() => event.details && onToggle(event.id)}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+      >
+        {/* Icon */}
+        <div style={{
+          width: 26, height: 26, minWidth: 26,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          borderRadius: 6,
+          background: `${cat.color}18`,
+          marginTop: 1,
+        }}>
+          <Icon size={14} style={{ color: cat.color }} />
         </div>
 
-        {/* Expandable details */}
-        <AnimatePresence>
+        {/* Content */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{
+              fontSize: 13,
+              color: '#e2dcc8',
+              lineHeight: 1.4,
+              flex: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: expanded ? 'normal' : 'nowrap',
+            }}>
+              {event.message}
+            </span>
+            <span style={{
+              fontSize: 10,
+              color: 'rgba(255,255,255,0.3)',
+              whiteSpace: 'nowrap',
+              fontFamily: 'var(--font-ui)',
+            }}>
+              {relativeTime(event.timestamp)}
+            </span>
+            {event.details && (
+              expanded
+                ? <ChevronUp size={12} style={{ color: 'rgba(255,255,255,0.3)' }} />
+                : <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.3)' }} />
+            )}
+          </div>
+
+          {/* Expandable details */}
           {expanded && event.details && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              style={{ overflow: 'hidden' }}
-            >
-              <div style={{
-                marginTop: 6,
-                padding: '6px 8px',
-                fontSize: 12,
-                lineHeight: 1.5,
-                color: 'rgba(255,255,255,0.55)',
-                background: 'rgba(0,0,0,0.25)',
-                borderRadius: 4,
-                fontFamily: 'var(--font-ui)',
-              }}>
-                {event.details}
-              </div>
-            </motion.div>
+            <div style={{
+              marginTop: 6,
+              padding: '6px 8px',
+              fontSize: 12,
+              lineHeight: 1.5,
+              color: 'rgba(255,255,255,0.55)',
+              background: 'rgba(0,0,0,0.25)',
+              borderRadius: 4,
+              fontFamily: 'var(--font-ui)',
+            }}>
+              {event.details}
+            </div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
-}
+});
 
 /* ─── Pulsing dot for empty state ─── */
 const pulseKeyframes = `
@@ -141,63 +136,140 @@ const pulseKeyframes = `
 }
 `;
 
+/* ─── Filter button ─── */
+const FilterButton = memo(function FilterButton({ catKey, active, onClick }) {
+  const cat = CATEGORIES[catKey];
+  return (
+    <button
+      onClick={() => onClick(catKey)}
+      style={{
+        padding: '2px 8px',
+        borderRadius: 4,
+        fontSize: 10,
+        fontWeight: 600,
+        fontFamily: 'var(--font-ui)',
+        border: `1px solid ${active ? cat.color + '40' : 'rgba(255,255,255,0.06)'}`,
+        background: active ? cat.color + '18' : 'transparent',
+        color: active ? cat.color : 'rgba(255,255,255,0.3)',
+        cursor: 'pointer',
+        transition: 'all 0.15s',
+        whiteSpace: 'nowrap',
+        textTransform: 'capitalize',
+      }}
+    >
+      {cat.label}
+    </button>
+  );
+});
+
 /* ─── Main feed component ─── */
-export default function PlayerEventFeed({ events = [], maxEvents = 200 }) {
-  const scrollRef = useRef(null);
+export default memo(function PlayerEventFeed({ events = [], maxEvents = 200 }) {
+  const [listRef, listCallbackRef] = useListRef();
+  const scrollContainerRef = useRef(null);
   const [autoScroll, setAutoScroll] = useState(true);
-  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 30 });
+  const [expandedIds, setExpandedIds] = useState(new Set());
   const userScrollingRef = useRef(false);
   const lastScrollTopRef = useRef(0);
 
-  // Trim events to maxEvents (keep newest)
-  const trimmedEvents = useMemo(
-    () => (events.length > maxEvents ? events.slice(-maxEvents) : events),
-    [events, maxEvents]
-  );
+  // Filtering state
+  const [activeFilters, setActiveFilters] = useState(new Set()); // empty = show all
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Compute visible window on scroll
-  const handleScroll = useCallback(() => {
-    const el = scrollRef.current;
+  // Toggle a category filter
+  const toggleFilter = useCallback((catKey) => {
+    setActiveFilters(prev => {
+      const next = new Set(prev);
+      if (next.has(catKey)) next.delete(catKey);
+      else next.add(catKey);
+      return next;
+    });
+  }, []);
+
+  const clearFilters = useCallback(() => {
+    setActiveFilters(new Set());
+    setSearchQuery('');
+  }, []);
+
+  // Trim events to maxEvents (keep newest), then apply filters
+  const filteredEvents = useMemo(() => {
+    let list = events.length > maxEvents ? events.slice(-maxEvents) : events;
+
+    if (activeFilters.size > 0) {
+      list = list.filter(e => activeFilters.has(e.category));
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(e =>
+        e.message?.toLowerCase().includes(q) ||
+        e.details?.toLowerCase().includes(q)
+      );
+    }
+
+    return list;
+  }, [events, maxEvents, activeFilters, searchQuery]);
+
+  const isFiltered = activeFilters.size > 0 || searchQuery.trim() !== '';
+
+  // Toggle expand
+  const handleToggle = useCallback((id) => {
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  // Row height getter (supports variable heights for expanded items)
+  const getRowHeight = useCallback((index) => {
+    const event = filteredEvents[index];
+    return expandedIds.has(event?.id) ? COLLAPSED_HEIGHT + EXPANDED_EXTRA : COLLAPSED_HEIGHT;
+  }, [filteredEvents, expandedIds]);
+
+  // Row props passed to each EventRow
+  const rowProps = useMemo(() => ({
+    events: filteredEvents,
+    expandedIds,
+    onToggle: handleToggle,
+  }), [filteredEvents, expandedIds, handleToggle]);
+
+  // Auto-scroll to bottom on new events (only when not filtered)
+  useEffect(() => {
+    if (autoScroll && !isFiltered && listRef.current && filteredEvents.length > 0) {
+      listRef.current.scrollToRow(filteredEvents.length - 1);
+    }
+  }, [filteredEvents.length, autoScroll, isFiltered, listRef]);
+
+  // Detect user scrolling up to pause auto-scroll
+  useEffect(() => {
+    const el = scrollContainerRef.current;
     if (!el) return;
+    const scrollEl = el.querySelector('[style*="overflow"]') || el.firstChild;
+    if (!scrollEl) return;
 
-    const scrollTop = el.scrollTop;
-    const viewportHeight = el.clientHeight;
-    const totalHeight = el.scrollHeight;
+    const handleScroll = () => {
+      const scrollTop = scrollEl.scrollTop;
+      const totalHeight = scrollEl.scrollHeight;
+      const viewportHeight = scrollEl.clientHeight;
 
-    // Detect user scrolling up -> pause auto-scroll
-    if (scrollTop < lastScrollTopRef.current - 5) {
-      userScrollingRef.current = true;
-      setAutoScroll(false);
-    }
-    lastScrollTopRef.current = scrollTop;
+      if (scrollTop < lastScrollTopRef.current - 5) {
+        userScrollingRef.current = true;
+        setAutoScroll(false);
+      }
+      lastScrollTopRef.current = scrollTop;
 
-    // Re-enable auto-scroll if user scrolled near bottom
-    const nearBottom = totalHeight - scrollTop - viewportHeight < 40;
-    if (nearBottom && userScrollingRef.current) {
-      userScrollingRef.current = false;
-      setAutoScroll(true);
-    }
+      const nearBottom = totalHeight - scrollTop - viewportHeight < 40;
+      if (nearBottom && userScrollingRef.current) {
+        userScrollingRef.current = false;
+        setAutoScroll(true);
+      }
+    };
 
-    // Virtualization range
-    const start = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER_COUNT);
-    const end = Math.min(
-      trimmedEvents.length,
-      Math.ceil((scrollTop + viewportHeight) / ITEM_HEIGHT) + BUFFER_COUNT
-    );
-    setVisibleRange({ start, end });
-  }, [trimmedEvents.length]);
-
-  // Auto-scroll to bottom on new events
-  useEffect(() => {
-    if (autoScroll && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [trimmedEvents.length, autoScroll]);
-
-  // Initial visible range
-  useEffect(() => {
-    setVisibleRange({ start: Math.max(0, trimmedEvents.length - 30), end: trimmedEvents.length });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    scrollEl.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollEl.removeEventListener('scroll', handleScroll);
+  }, [filteredEvents.length]);
 
   // Update relative timestamps every 30s
   const [, setTick] = useState(0);
@@ -206,12 +278,8 @@ export default function PlayerEventFeed({ events = [], maxEvents = 200 }) {
     return () => clearInterval(id);
   }, []);
 
-  const visibleEvents = trimmedEvents.slice(visibleRange.start, visibleRange.end);
-  const topPad = visibleRange.start * ITEM_HEIGHT;
-  const bottomPad = Math.max(0, (trimmedEvents.length - visibleRange.end) * ITEM_HEIGHT);
-
   /* ─── Empty state ─── */
-  if (trimmedEvents.length === 0) {
+  if (events.length === 0) {
     return (
       <div style={{
         background: 'rgba(11,9,20,0.85)',
@@ -253,73 +321,191 @@ export default function PlayerEventFeed({ events = [], maxEvents = 200 }) {
       overflow: 'hidden',
       position: 'relative',
     }}>
-      {/* Header */}
+      {/* Header with filter controls */}
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '10px 14px 8px',
+        padding: '8px 14px 6px',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
-        <span style={{
-          fontSize: 11,
-          textTransform: 'uppercase',
-          letterSpacing: '0.1em',
-          color: '#c9a84c',
-          fontFamily: 'var(--font-heading)',
-          fontWeight: 600,
+        {/* Title row */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: showFilters ? 6 : 0,
         }}>
-          Event Feed
-        </span>
-        <span style={{
-          fontSize: 10,
-          color: 'rgba(255,255,255,0.25)',
-          fontFamily: 'var(--font-ui)',
-        }}>
-          {trimmedEvents.length} event{trimmedEvents.length !== 1 ? 's' : ''}
-        </span>
+          <span style={{
+            fontSize: 11,
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            color: '#c9a84c',
+            fontFamily: 'var(--font-heading)',
+            fontWeight: 600,
+          }}>
+            Event Feed
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {isFiltered && (
+              <span style={{
+                fontSize: 10,
+                color: '#c9a84c',
+                fontFamily: 'var(--font-ui)',
+              }}>
+                {filteredEvents.length}/{events.length > maxEvents ? maxEvents : events.length}
+              </span>
+            )}
+            {!isFiltered && (
+              <span style={{
+                fontSize: 10,
+                color: 'rgba(255,255,255,0.25)',
+                fontFamily: 'var(--font-ui)',
+              }}>
+                {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}
+              </span>
+            )}
+            <button
+              onClick={() => setShowFilters(f => !f)}
+              style={{
+                background: showFilters || isFiltered ? 'rgba(201,168,76,0.12)' : 'transparent',
+                border: `1px solid ${showFilters || isFiltered ? 'rgba(201,168,76,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                borderRadius: 4,
+                padding: '2px 6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 3,
+                color: showFilters || isFiltered ? '#c9a84c' : 'rgba(255,255,255,0.3)',
+                transition: 'all 0.15s',
+              }}
+              title="Toggle filters"
+            >
+              <Filter size={10} />
+              {isFiltered && (
+                <span style={{ fontSize: 9, fontWeight: 700 }}>
+                  {activeFilters.size > 0 ? activeFilters.size : ''}{searchQuery ? 'Q' : ''}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Filter bar (collapsible) */}
+        {showFilters && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {/* Search */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'rgba(255,255,255,0.03)',
+              borderRadius: 4,
+              padding: '3px 8px',
+            }}>
+              <Search size={11} style={{ color: 'rgba(255,255,255,0.25)', flexShrink: 0 }} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search events..."
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  color: '#e2dcc8',
+                  fontSize: 11,
+                  fontFamily: 'var(--font-ui)',
+                  padding: '2px 0',
+                }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}
+                >
+                  <X size={10} style={{ color: 'rgba(255,255,255,0.3)' }} />
+                </button>
+              )}
+            </div>
+
+            {/* Category filter buttons */}
+            <div style={{
+              display: 'flex', flexWrap: 'wrap', gap: 4,
+              alignItems: 'center',
+            }}>
+              {CATEGORY_KEYS.map(key => (
+                <FilterButton
+                  key={key}
+                  catKey={key}
+                  active={activeFilters.has(key)}
+                  onClick={toggleFilter}
+                />
+              ))}
+              {isFiltered && (
+                <button
+                  onClick={clearFilters}
+                  style={{
+                    padding: '2px 6px',
+                    borderRadius: 4,
+                    fontSize: 10,
+                    border: '1px solid rgba(239,68,68,0.2)',
+                    background: 'rgba(239,68,68,0.08)',
+                    color: '#fca5a5',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-ui)',
+                  }}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Scrollable area */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        style={{
+      {/* Scrollable area with react-window v2 */}
+      {filteredEvents.length === 0 ? (
+        <div style={{
           flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          padding: '6px 8px',
-          scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(201,168,76,0.25) transparent',
-        }}
-      >
-        {/* Top spacer for virtualization */}
-        {topPad > 0 && <div style={{ height: topPad }} />}
-
-        <AnimatePresence initial={false}>
-          {visibleEvents.map((event, i) => (
-            <EventCard
-              key={event.id || `${visibleRange.start + i}`}
-              event={event}
-              index={visibleRange.start + i}
-            />
-          ))}
-        </AnimatePresence>
-
-        {/* Bottom spacer for virtualization */}
-        {bottomPad > 0 && <div style={{ height: bottomPad }} />}
-      </div>
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'rgba(255,255,255,0.25)',
+          fontSize: 12,
+          fontFamily: 'var(--font-ui)',
+          fontStyle: 'italic',
+        }}>
+          No events match filters
+        </div>
+      ) : (
+        <div
+          ref={scrollContainerRef}
+          style={{
+            flex: 1,
+            minHeight: 0,
+            padding: '6px 0 6px 8px',
+          }}
+        >
+          <List
+            listRef={listCallbackRef}
+            rowCount={filteredEvents.length}
+            rowHeight={getRowHeight}
+            rowComponent={EventRow}
+            rowProps={rowProps}
+            overscanCount={5}
+            style={{
+              height: '100%',
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(201,168,76,0.25) transparent',
+            }}
+          />
+        </div>
+      )}
 
       {/* "Scroll to latest" button when auto-scroll is paused */}
-      {!autoScroll && (
-        <motion.button
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 8 }}
+      {!autoScroll && !isFiltered && (
+        <button
           onClick={() => {
             setAutoScroll(true);
-            if (scrollRef.current) {
-              scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+            if (listRef.current) {
+              listRef.current.scrollToRow(filteredEvents.length - 1);
             }
           }}
           style={{
@@ -344,8 +530,8 @@ export default function PlayerEventFeed({ events = [], maxEvents = 200 }) {
         >
           <ChevronDown size={12} />
           New events
-        </motion.button>
+        </button>
       )}
     </div>
   );
-}
+})

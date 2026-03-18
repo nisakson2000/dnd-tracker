@@ -6,6 +6,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { Search, Wand2, Sword, Users, ScrollText, BookOpen, Sparkles, Clock, ArrowRight, HelpCircle } from 'lucide-react';
 import { ModeProvider, useAppMode } from './contexts/ModeContext';
 import { SessionProvider } from './contexts/SessionContext';
+import { GuidanceProvider } from './contexts/GuidanceContext';
+import { TutorialProvider } from './contexts/TutorialContext';
 import { useDevUpdateCheck } from './hooks/useDevUpdateCheck';
 import { APP_VERSION } from './version';
 import ModeSelect from './pages/ModeSelect';
@@ -18,6 +20,7 @@ const WikiArticlePage = lazy(() => import('./pages/WikiArticlePage'));
 const CharacterSetup = lazy(() => import('./pages/CharacterSetup'));
 // BootupVideo removed — app launches directly to mode select
 import SessionMonitor from './components/SessionMonitor';
+import JumpscareOverlay from './components/JumpscareOverlay';
 
 // Lazy-loaded standalone pages
 const UpdatesPage = lazy(() => import('./pages/UpdatesPage'));
@@ -993,6 +996,8 @@ function AppContent() {
         visibleToasts={4}
       />
 
+      <JumpscareOverlay />
+
       {/* Dev sync gate — force pull if behind remote (dev builds only) */}
       {import.meta.env.DEV && !syncDone && <DevSyncGate onReady={handleSyncReady} />}
 
@@ -1004,6 +1009,8 @@ function AppContent() {
         <BrowserRouter>
           <NavigationBridge />
           <SessionProvider>
+          <GuidanceProvider>
+          <TutorialProvider>
             <CommandPalette />
             <ErrorBoundary>
               <Suspense fallback={null}>
@@ -1023,6 +1030,8 @@ function AppContent() {
                 </Routes>
               </Suspense>
             </ErrorBoundary>
+          </TutorialProvider>
+          </GuidanceProvider>
           </SessionProvider>
         </BrowserRouter>
       )}

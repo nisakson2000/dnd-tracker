@@ -5,6 +5,7 @@ const VERSION_MANIFEST_URL =
   'https://raw.githubusercontent.com/nisakson2000/dnd-tracker/main/version.json';
 
 const DISMISSED_KEY = 'codex_dismissed_update_version';
+const PREV_VERSION_KEY = 'codex_previous_version';
 
 /** Strip leading V/v and normalize to bare "x.y.z" */
 function normalizeVersion(str) {
@@ -38,11 +39,30 @@ export function useUpdateCheck() {
   const [checking, setChecking] = useState(false);
   const [lastChecked, setLastChecked] = useState(null);
   const [checkResult, setCheckResult] = useState(null);
+  const [downloadProgress, setDownloadProgress] = useState(null); // null | { percent, status }
+  const [previousVersion, setPreviousVersion] = useState(null);
   const mountedRef = useRef(true);
+
+  // Track previous version for rollback info
+  useEffect(() => {
+    const stored = localStorage.getItem(PREV_VERSION_KEY);
+    if (stored) {
+      setPreviousVersion(stored);
+    }
+    // Record current version as previous for next update cycle
+    const currentNorm = normalizeVersion(APP_VERSION);
+    const prevNorm = stored ? normalizeVersion(stored) : null;
+    if (prevNorm !== currentNorm && stored) {
+      // Version changed since last run — keep old as previous
+    } else if (!stored) {
+      localStorage.setItem(PREV_VERSION_KEY, currentNorm);
+    }
+  }, []);
 
   const checkForUpdates = useCallback(async () => {
     setChecking(true);
     setCheckResult(null);
+    setDownloadProgress({ percent: 0, status: 'checking' });
     try {
       // Cache-bust to defeat GitHub CDN caching (~5 min TTL)
       const url = `${VERSION_MANIFEST_URL}?_=${Date.now()}`;
@@ -54,6 +74,8 @@ export function useUpdateCheck() {
       const data = await res.json();
 
       if (!mountedRef.current) return;
+
+      setDownloadProgress({ percent: 100, status: 'done' });
 
       const remoteVer = normalizeVersion(data.version);
       let hasAppUpdate = false;
@@ -75,8 +97,19 @@ export function useUpdateCheck() {
         ? 'update_available' : 'up_to_date');
 
       if (mountedRef.current) setLastChecked(new Date());
+
+      // Clear progress after a short delay
+      setTimeout(() => {
+        if (mountedRef.current) setDownloadProgress(null);
+      }, 1500);
     } catch {
-      if (mountedRef.current) setCheckResult('offline');
+      if (mountedRef.current) {
+        setCheckResult('offline');
+        setDownloadProgress({ percent: 0, status: 'error' });
+        setTimeout(() => {
+          if (mountedRef.current) setDownloadProgress(null);
+        }, 2000);
+      }
     } finally {
       if (mountedRef.current) setChecking(false);
     }
@@ -91,6 +124,12 @@ export function useUpdateCheck() {
     setUpdateAvailable(false);
     setCheckResult('up_to_date');
   }, [latestVersion]);
+
+  // Called after an update is installed to record the previous version
+  const recordVersionUpgrade = useCallback(() => {
+    const currentNorm = normalizeVersion(APP_VERSION);
+    localStorage.setItem(PREV_VERSION_KEY, currentNorm);
+  }, []);
 
   // Check once on mount
   useEffect(() => {
@@ -108,5 +147,9 @@ export function useUpdateCheck() {
     checkResult, checkForUpdates,
     dismissUpdate,
     currentVersion: APP_VERSION,
+    // Phase 6 additions
+    downloadProgress,
+    previousVersion,
+    recordVersionUpgrade,
   };
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { memo, useState, useEffect, useCallback, useMemo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Store, ShoppingBag, Coins, Package, X, Clock, Check, Ban, ArrowRightLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -15,7 +15,7 @@ const RARITY_COLORS = {
 
 const SELL_MULTIPLIER = 0.5;
 
-export default function PlayerShopOverlay({ characterId, characterName }) {
+export default memo(function PlayerShopOverlay({ characterId, characterName }) {
   const { activeShop, pendingPurchases, setPendingPurchases, sendEvent } = useCampaignSync();
   const { myClientId } = useParty();
 
@@ -290,4 +290,4 @@ export default function PlayerShopOverlay({ characterId, characterName }) {
       </div>
     </div>
   );
-}
+})

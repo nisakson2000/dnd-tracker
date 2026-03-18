@@ -28,6 +28,7 @@ export function PartyProvider({ children }) {
   const [memberPresence, setMemberPresence] = useState({}); // { clientId: { lastSeen, status } }
   const [chatMessages, setChatMessages] = useState([]); // max 100 IC/OOC chat messages
   const [hostInfo, setHostInfo] = useState(null); // { dmName, campaignName } from host's snapshot
+  const [latencyMs, setLatencyMs] = useState(null); // connection quality indicator
 
   const pingIntervalRef = useRef(null);
   const reconnectTimerRef = useRef(null);
@@ -119,10 +120,13 @@ export function PartyProvider({ children }) {
           if (raw) setChatMessages(JSON.parse(raw));
           else setChatMessages([]);
         } catch { setChatMessages([]); }
-        // Start ping interval
+        // Start ping interval with latency measurement
         pingIntervalRef.current = setInterval(() => {
           const rc = connRef.current.roomCode;
-          invoke('party_ipc_send', { message: JSON.stringify({ type: 'ping', room: rc }) }).catch(() => {});
+          const t0 = Date.now();
+          invoke('party_ipc_send', { message: JSON.stringify({ type: 'ping', room: rc }) })
+            .then(() => setLatencyMs(Date.now() - t0))
+            .catch(() => {});
         }, 25000);
       } else if (msg.type === 'player_joined') {
         setMembers(prev => prev.find(m2 => m2.client_id === msg.member.client_id) ? prev : [...prev, msg.member]);
@@ -500,12 +504,12 @@ export function PartyProvider({ children }) {
 
   const value = useMemo(() => ({
     wsStatus, mode, roomCode, hostIp, joinIp, joinInput, members, myClientId,
-    wasConnected, reconnecting, memberPresence, chatMessages, hostInfo,
+    wasConnected, reconnecting, memberPresence, chatMessages, hostInfo, latencyMs,
     setMode, setRoomCode, setHostIp, setJoinIp, setJoinInput,
     connect, disconnect, sendUpdate, sendEvent, sendTargetedEvent, onPartyEvent, sendBugReport, sendChatMessage, handleHost, handleLeave,
     manualReconnect, onBugReportRef,
   }), [wsStatus, mode, roomCode, hostIp, joinIp, joinInput, members, myClientId,
-       wasConnected, reconnecting, memberPresence, chatMessages, hostInfo,
+       wasConnected, reconnecting, memberPresence, chatMessages, hostInfo, latencyMs,
        connect, disconnect, sendUpdate, sendEvent, sendTargetedEvent, onPartyEvent, sendBugReport, sendChatMessage, handleHost, handleLeave,
        manualReconnect]);
 

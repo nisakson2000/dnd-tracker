@@ -1,0 +1,272 @@
+{
+  "name": "Blood War Prophecy",
+  "summary": "A celestial prophecy foretells a catastrophic shift in the Blood War. Players must descend into the Nine Hells to retrieve a stolen artifact before a pit fiend shatters the balance between demons and devils forever.",
+  "description": "The port city of Tethenmere has always been a crossroads for strange travelers, but lately something darker has taken root. Devil cultists operate brazenly in the dockyards, smuggling soul coins and whispering about a coming 'Reckoning.' When a dying celestial crashes into the harbor bearing a fragment of an ancient prophecy, the truth becomes clear: the Tablet of Azael, a relic capable of binding entire legions of demons, has been stolen from a celestial vault and carried through a portal into Avernus. The pit fiend Kazravorax intends to use the Tablet to shatter the stalemate of the Blood War, unleashing a unified infernal army upon the multiverse. The players must infiltrate the cultist network in Tethenmere, fight their way through a hellmouth portal hidden beneath the city's cathedral, and navigate the blasted wastelands of Avernus to reach Kazravorax's iron fortress before the ritual is complete. Along the way, they will face impossible bargains, corrupted allies, and the ever-present temptation to claim infernal power for themselves. The campaign features a mix of urban investigation, planar survival, and a climactic dungeon crawl through a fortress forged from screaming iron.",
+  "level": "5-8",
+  "ruleset": "5e 2014",
+  "author": "The Codex",
+  "tags": ["planar", "horror", "urban", "dungeon crawl"],
+  "npcs": [
+    {
+      "name": "Seraphel",
+      "role": "Quest Giver",
+      "race": "Deva (Celestial)",
+      "npc_class": "Cleric",
+      "location": "Tethenmere - Harbor District",
+      "description": "A deva who crash-landed in Tethenmere harbor, her golden wings shattered and her radiance flickering. She carries one half of the Prophecy of Azael inscribed on a shard of celestial glass. She is dying and cannot be healed by mortal magic — only completing her mission will restore her divine spark.",
+      "notes": "Seraphel cannot enter Avernus herself; her celestial nature would alert every fiend on the plane. She serves as the primary quest giver and can provide a one-time blessing (advantage on saves vs. fiendish magic for 24 hours). If the players delay too long, she fades and the prophecy shard goes dark.",
+      "status": "alive"
+    },
+    {
+      "name": "Harbormaster Jorik Ashvane",
+      "role": "Informant",
+      "race": "Human",
+      "npc_class": "Rogue",
+      "location": "Tethenmere - Port Authority",
+      "description": "A weathered, sharp-eyed man in his forties who runs the port with ruthless efficiency. He has noticed the cultist activity but has been paid handsomely to look the other way. His ledgers contain shipping records that reveal the cult's smuggling network and the location of the hellmouth portal.",
+      "notes": "Jorik is not evil but deeply compromised. He accepted soul coins as payment without understanding what they were. He can be persuaded (DC 14 Persuasion), intimidated (DC 12 Intimidation), or his ledgers can be stolen. If turned, he provides detailed maps of the cathedral undercroft.",
+      "status": "alive"
+    },
+    {
+      "name": "Mother Vasska",
+      "role": "Antagonist",
+      "race": "Tiefling",
+      "npc_class": "Warlock",
+      "location": "Tethenmere - The Shattered Chalice (secret cult headquarters)",
+      "description": "The leader of the Cult of the Burning Covenant, a gaunt tiefling woman with filed horns and eyes that glow like embers. She speaks in a honeyed whisper and genuinely believes that Kazravorax's victory will bring 'order' to the multiverse. She is a formidable warlock who has bartered away most of her soul for power.",
+      "notes": "Mother Vasska serves as the mid-campaign boss. She guards the hellmouth portal beneath the cathedral and will attempt to parley before fighting. She carries the Infernal Codex, a ritual book needed to safely traverse the portal. If defeated but spared, she may provide information about Kazravorax's fortress in exchange for her life, though she will betray the party if given the chance.",
+      "status": "alive"
+    },
+    {
+      "name": "Kazravorax",
+      "role": "Antagonist",
+      "race": "Pit Fiend",
+      "npc_class": "Fighter",
+      "location": "Avernus - The Screaming Bastion",
+      "description": "An ancient pit fiend who has served in the Blood War for ten thousand years and grown weary of the eternal stalemate. He is cunning, patient, and terrifyingly intelligent. Unlike most fiends, he does not underestimate mortals — he collects them. His fortress is decorated with the preserved bodies of adventurers who tried to stop him.",
+      "notes": "Kazravorax is a CR 20 pit fiend and should not be fought head-on at this level. The encounter is designed around stealing the Tablet during the ritual, disrupting the binding circle, or using the Seraph's Lament sword to sever his connection to the Tablet. He can be bargained with, but his deals always have a devastating hidden cost.",
+      "status": "alive"
+    },
+    {
+      "name": "Blix",
+      "role": "Ally",
+      "race": "Imp",
+      "npc_class": "Rogue",
+      "location": "Avernus - Wandering",
+      "description": "A surprisingly cheerful imp who deserted from Kazravorax's army after being used as a living cannonball one too many times. He is small, scarred, missing one wing, and speaks in rapid-fire sentences. Despite his fiendish nature, he is genuinely helpful — mostly because he wants revenge on Kazravorax.",
+      "notes": "Blix knows the layout of the Screaming Bastion and can guide the party through its traps. He is loyal as long as the party treats him well, but he is still an imp and will pocket anything shiny that isn't nailed down. He refuses to fight Kazravorax directly but will cause distractions. Could become a long-term familiar or companion.",
+      "status": "alive"
+    },
+    {
+      "name": "Commander Zeriel",
+      "role": "Neutral",
+      "race": "Fallen Angel",
+      "npc_class": "Paladin",
+      "location": "Avernus - The Bone Trenches",
+      "description": "A once-celestial warrior who fell during a failed assault on Avernus centuries ago. She now leads a ragged band of mortal survivors and deserters in the wastelands, neither serving Heaven nor Hell. Her armor is cracked and tarnished, but her skill with a blade remains divine.",
+      "notes": "Zeriel can be recruited as a powerful temporary ally for the final assault if the party helps her people (see quest: Rally the Fallen). She provides tactical information about Avernus and the Blood War. She secretly hopes that recovering the Tablet might earn her redemption, and will ask the party to speak on her behalf to Seraphel.",
+      "status": "alive"
+    },
+    {
+      "name": "Father Aldenmire",
+      "role": "Support",
+      "race": "Human",
+      "npc_class": "Cleric",
+      "location": "Tethenmere - Cathedral of the Morning Star",
+      "description": "The elderly head priest of Tethenmere's cathedral, a kind but frail man who has no idea that a hellmouth portal exists beneath his church. He has noticed strange sounds at night and cold spots in the lower halls but has attributed them to old plumbing. He is horrified when he learns the truth.",
+      "notes": "Father Aldenmire can provide healing, holy water, and a Scroll of Protection from Evil and Good. He knows the cathedral layout intimately and can show the party the sealed crypt entrance that leads to the undercroft. He insists on blessing the party before they descend.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "The Fallen Star",
+      "giver": "Seraphel",
+      "description": "Investigate the celestial who crashed into Tethenmere harbor. Protect her from cultist assassins, decipher the prophecy fragment she carries, and learn the truth about the stolen Tablet of Azael. This quest sets the entire campaign in motion.",
+      "status": "active",
+      "notes": "Reward: Seraphel's Blessing (advantage on saves vs. fiendish magic for 24 hours, one-time use per character). The prophecy fragment also reveals that the Tablet can only be destroyed in celestial fire — foreshadowing the endgame.",
+      "objectives": [
+        { "text": "Reach the crashed celestial in the harbor before the cultists do", "completed": false },
+        { "text": "Defend Seraphel from the Burning Covenant assassins", "completed": false },
+        { "text": "Decipher the Prophecy of Azael from the celestial glass shard", "completed": false },
+        { "text": "Learn the location of the hellmouth portal", "completed": false }
+      ]
+    },
+    {
+      "title": "Chains of Coin",
+      "giver": "Harbormaster Jorik Ashvane",
+      "description": "Investigate the cult's smuggling operation in the docklands. Trace the flow of soul coins through the port to uncover the Burning Covenant's network and find evidence that leads to their hidden headquarters beneath the cathedral.",
+      "status": "active",
+      "notes": "Reward: 200 gp, detailed maps of the cathedral undercroft, and Jorik's shipping contacts (useful for future nautical adventures). Completing this quest peacefully improves the party's reputation in Tethenmere.",
+      "objectives": [
+        { "text": "Obtain or steal Jorik's shipping ledgers", "completed": false },
+        { "text": "Investigate three suspicious warehouses in the docklands", "completed": false },
+        { "text": "Confront or infiltrate the Burning Covenant cell at the Shattered Chalice tavern", "completed": false },
+        { "text": "Locate the entrance to the hellmouth portal beneath the cathedral", "completed": false }
+      ]
+    },
+    {
+      "title": "Descent Through the Hellmouth",
+      "giver": "Seraphel",
+      "description": "Confront Mother Vasska and her cultists in the cathedral undercroft, then descend through the hellmouth portal into Avernus. Survive the crossing and establish a foothold in the wastelands of the first layer of the Nine Hells.",
+      "status": "active",
+      "notes": "Reward: The Infernal Codex (taken from Vasska), which provides advantage on Arcana checks related to infernal magic and contains a map of the region around the Screaming Bastion. The portal crossing requires a DC 13 Constitution save or gain one level of exhaustion.",
+      "objectives": [
+        { "text": "Defeat or bypass Mother Vasska and the Burning Covenant guards", "completed": false },
+        { "text": "Use the Infernal Codex to safely activate the hellmouth portal", "completed": false },
+        { "text": "Survive the crossing into Avernus", "completed": false },
+        { "text": "Find shelter in the wastelands and locate allies", "completed": false }
+      ]
+    },
+    {
+      "title": "Rally the Fallen",
+      "giver": "Commander Zeriel",
+      "description": "Commander Zeriel and her band of survivors are pinned down by a devil patrol near the Bone Trenches. Help them fight off the attackers, secure supplies from a wrecked war machine, and convince Zeriel to join the assault on the Screaming Bastion.",
+      "status": "active",
+      "notes": "Reward: Zeriel and three veteran soldiers join as allies for the final assault. Zeriel also gives the party a Feather of Celestial Passage, which allows one free plane shift back to the Material Plane after the mission. Failing this quest means the final assault is significantly harder.",
+      "objectives": [
+        { "text": "Locate Commander Zeriel's camp in the Bone Trenches", "completed": false },
+        { "text": "Defeat the devil patrol besieging the camp", "completed": false },
+        { "text": "Salvage supplies from the wrecked infernal war machine", "completed": false },
+        { "text": "Convince Zeriel to join the assault on the Screaming Bastion", "completed": false }
+      ]
+    },
+    {
+      "title": "The Screaming Bastion",
+      "giver": "Seraphel",
+      "description": "Infiltrate Kazravorax's fortress, navigate its deadly traps and infernal guardians, and reach the ritual chamber where the Tablet of Azael is being prepared. Disrupt the binding ritual, recover the Tablet, and escape Avernus before the fortress collapses.",
+      "status": "active",
+      "notes": "Reward: The Tablet of Azael (to be returned to Seraphel or kept — with consequences), 1500 XP per character, and a major story choice. If Zeriel was recruited, she can hold off reinforcements during the escape. The fortress has three entry points: front gate (hardest), sewer grate (stealth), and collapsed wall (Blix's suggestion).",
+      "objectives": [
+        { "text": "Choose an entry point and infiltrate the Screaming Bastion", "completed": false },
+        { "text": "Navigate the trapped corridors using Blix's guidance", "completed": false },
+        { "text": "Reach the ritual chamber and disrupt the binding ceremony", "completed": false },
+        { "text": "Recover the Tablet of Azael", "completed": false },
+        { "text": "Escape Avernus using the Feather of Celestial Passage or another method", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "The Blood War",
+      "category": "History",
+      "body": "The Blood War is an eternal conflict between the lawful devils of the Nine Hells and the chaotic demons of the Abyss. It has raged since before mortals walked the planes, consuming billions of fiendish lives in an unending stalemate. Scholars believe the stalemate is by design — if either side won decisively, the victor would turn its full attention to the mortal planes. The Tablet of Azael threatens to break that balance forever.",
+      "related_to": "Kazravorax"
+    },
+    {
+      "title": "The Tablet of Azael",
+      "category": "Legend",
+      "body": "Forged by the solar Azael during the first age of creation, the Tablet was designed as a failsafe — a weapon capable of binding entire demonic legions to a single will. It was locked in a celestial vault orbiting the Astral Plane, guarded by devas for millennia. How Kazravorax learned of its location and managed to steal it remains a mystery, though Seraphel suspects a traitor among the celestial ranks.",
+      "related_to": "Seraphel"
+    },
+    {
+      "title": "Tethenmere, the Gateway Port",
+      "category": "Location",
+      "body": "Tethenmere is a bustling port city built where the River Teth meets the Sapphire Coast. It has always attracted an unusual number of planar travelers due to thin spots in the veil between planes beneath the city. The cathedral was built atop one such thin spot centuries ago to 'sanctify' it, but the Burning Covenant has been quietly eroding those wards for years, eventually tearing open a stable portal to Avernus.",
+      "related_to": "Father Aldenmire"
+    },
+    {
+      "title": "The Cult of the Burning Covenant",
+      "category": "Faction",
+      "body": "A devil-worshipping cult that has operated in Tethenmere's underworld for decades, the Burning Covenant believes that infernal order is the only path to lasting peace. They see the Blood War's stalemate as wasteful and Kazravorax's plan as a necessary step toward a 'unified lower planes.' Their members include dockworkers, merchants, and at least one city council member. Mother Vasska transformed them from a fringe cult into a disciplined paramilitary force.",
+      "related_to": "Mother Vasska"
+    },
+    {
+      "title": "The Screaming Bastion",
+      "category": "Location",
+      "body": "Kazravorax's fortress in Avernus is forged from iron that was smelted using the screams of condemned souls — the metal literally wails when struck. The bastion sits atop a cliff overlooking the River Styx, surrounded by fields of petrified soldiers from ancient Blood War battles. Inside, the corridors shift and rearrange according to Kazravorax's will, making navigation without a guide nearly impossible.",
+      "related_to": "Kazravorax"
+    },
+    {
+      "title": "The Prophecy of Azael",
+      "category": "Religion",
+      "body": "An ancient celestial prophecy written in Supernal script on shards of crystallized divine light. It foretells that 'when the Tablet is held by burning hands, the war without end shall find its conclusion, and the gates of perdition will swing wide.' Celestial scholars have debated its meaning for eons. Seraphel believes it is a warning, not a destiny — the prophecy describes what will happen if mortals fail to intervene.",
+      "related_to": "Seraphel"
+    },
+    {
+      "title": "The Bone Trenches of Avernus",
+      "category": "Location",
+      "body": "Vast trenches carved into the blasted landscape of Avernus, filled with the skeletal remains of millions of fiends who died in Blood War battles. The trenches serve as no-man's-land between devil and demon territories. Small bands of mortal survivors, deserters, and lost souls eke out an existence here, scavenging from wrecked war machines and avoiding patrols from both sides.",
+      "related_to": "Commander Zeriel"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: Blood War Prophecy",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe salt wind carries the smell of brine and tar as your ship pulls into the harbor of Tethenmere, a port city perched where the River Teth spills into the Sapphire Coast. You've come for your own reasons — work, wanderlust, or simply the next leg of a longer journey. But the city feels wrong. Dock workers mutter about strange cargo in sealed iron crates. Street preachers rant about 'the burning to come.' And the cathedral bells, which should ring at dawn and dusk, have been silent for three days.\n\nThen, as night falls, a streak of golden light tears across the sky and plunges into the harbor with a sound like shattering glass. The water boils. Fishermen scramble for shore. And in the steam and chaos, you see her — a winged figure, broken and bleeding light instead of blood, crawling onto the dock with a shard of crystal clutched in her hand.\n\nShe looks at you with eyes like dying stars and whispers: *'The Tablet has been taken. The War will end. And everything — everything — will burn.'*\n\n### Key NPCs to Introduce\n- **Seraphel** — the dying deva, primary quest giver\n- **Harbormaster Jorik Ashvane** — first point of contact for dockside investigation\n- **Father Aldenmire** — the cathedral priest, can provide context on the city's history\n\n### Starting Hooks\n- The celestial crash in the harbor is impossible to ignore\n- Cultist assassins will attack Seraphel within minutes, forcing the party to choose sides\n- Strange iron crates on the docks radiate faint infernal energy (DC 12 Arcana to detect)",
+    "tags": "planar,horror,urban,dungeon crawl,blood war,avernus",
+    "npcs_mentioned": "Seraphel,Harbormaster Jorik Ashvane,Father Aldenmire"
+  },
+  "items": [
+    {
+      "name": "Seraph's Lament",
+      "item_type": "weapon",
+      "weight": 3.0,
+      "value_gp": 2500.0,
+      "quantity": 1,
+      "description": "A longsword forged from crystallized celestial light, its blade permanently warm to the touch. When drawn, it emits a faint hum like a mournful hymn. It deals an additional 1d6 radiant damage against fiends, and its light cannot be extinguished by magical darkness. The blade was broken from Seraphel's own weapon during her fall and reforged by Father Aldenmire's prayers.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Soul Coin",
+      "item_type": "misc",
+      "weight": 0.1,
+      "value_gp": 50.0,
+      "quantity": 3,
+      "description": "A coin minted from infernal iron, containing a trapped mortal soul visible as a screaming face on one side. Soul coins are the currency of the Nine Hells and can be used to fuel infernal war machines, bribe devils, or power certain dark rituals. Holding one for too long causes nightmares (DC 10 Wisdom save after a long rest or gain no benefit from the rest).",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Infernal Codex",
+      "item_type": "misc",
+      "weight": 5.0,
+      "value_gp": 1000.0,
+      "quantity": 1,
+      "description": "A heavy tome bound in red leather that is uncomfortably warm, as if it were alive. Its pages are written in Infernal script that rearranges itself to reveal different passages depending on the reader's intent. The Codex provides advantage on Arcana checks related to infernal magic, contains instructions for operating hellmouth portals, and includes a partial map of Avernus near the Screaming Bastion.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Vial of Styx Water",
+      "item_type": "consumable",
+      "weight": 0.5,
+      "value_gp": 200.0,
+      "quantity": 2,
+      "description": "A small crystal vial containing water from the River Styx, sealed with wax and divine sigils. When thrown at a creature (ranged attack, 20 ft range), the target must succeed on a DC 14 Wisdom save or lose all memories of the last hour. Can also be used to erase magical writing or break enchantments tied to memory. Handle with extreme care — a broken seal can affect everyone within 5 feet.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Feather of Celestial Passage",
+      "item_type": "consumable",
+      "weight": 0.0,
+      "value_gp": 5000.0,
+      "quantity": 1,
+      "description": "A single golden feather from Seraphel's broken wing, thrumming with residual divine energy. When snapped, it casts Plane Shift (no save, willing creatures only) targeting the Material Plane, transporting up to eight creatures to the location where the feather was first received. It is the party's only guaranteed way home from Avernus. Single use.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "very rare"
+    }
+  ]
+}

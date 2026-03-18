@@ -6,6 +6,10 @@ import { useEffect, useCallback } from 'react';
  * - R: Open quick roll (focus chat with /roll)
  * - Tab: Cycle combat HUD tabs
  * - Escape: Dismiss overlays
+ * - I: Toggle inventory
+ * - C: Toggle character sheet
+ * - H: Toggle shortcut help
+ * - 1-9: Target selection in combat (when in combat)
  */
 export default function usePlayerKeyboardShortcuts({
   isMyTurn,
@@ -16,6 +20,11 @@ export default function usePlayerKeyboardShortcuts({
   onQuickRoll,
   onCycleTab,
   onDismiss,
+  onToggleInventory,
+  onToggleCharSheet,
+  onShowShortcutHelp,
+  onTargetSelect,
+  inCombat,
 }) {
   const handleKeyDown = useCallback((e) => {
     // Don't trigger shortcuts when typing in inputs
@@ -27,6 +36,21 @@ export default function usePlayerKeyboardShortcuts({
         if (onDismiss) onDismiss();
       }
       return;
+    }
+
+    const mod = e.ctrlKey || e.metaKey;
+
+    // Ctrl/Cmd shortcuts
+    if (mod) {
+      switch (e.key) {
+        case '/':
+        case '?':
+          e.preventDefault();
+          if (onShowShortcutHelp) onShowShortcutHelp();
+          return;
+        default:
+          break;
+      }
     }
 
     switch (e.key) {
@@ -41,15 +65,33 @@ export default function usePlayerKeyboardShortcuts({
       case 'r':
       case 'R':
         // R: open quick roll
-        if (!e.ctrlKey && !e.metaKey) {
+        if (!mod) {
           e.preventDefault();
           if (onQuickRoll) onQuickRoll();
         }
         break;
 
+      case 'i':
+      case 'I':
+        // I: toggle inventory panel
+        if (!mod) {
+          e.preventDefault();
+          if (onToggleInventory) onToggleInventory();
+        }
+        break;
+
+      case 'c':
+      case 'C':
+        // C: toggle character sheet
+        if (!mod) {
+          e.preventDefault();
+          if (onToggleCharSheet) onToggleCharSheet();
+        }
+        break;
+
       case 'Tab':
         // Tab: cycle combat HUD tabs
-        if (!e.ctrlKey && !e.metaKey) {
+        if (!mod) {
           e.preventDefault();
           if (onCycleTab) onCycleTab();
         }
@@ -61,9 +103,17 @@ export default function usePlayerKeyboardShortcuts({
         break;
 
       default:
+        // 1-9: target selection in combat
+        if (inCombat && !mod) {
+          const num = parseInt(e.key, 10);
+          if (num >= 1 && num <= 9) {
+            e.preventDefault();
+            if (onTargetSelect) onTargetSelect(num);
+          }
+        }
         break;
     }
-  }, [isMyTurn, connected, onEndTurn, onQuickRoll, onCycleTab, onDismiss]);
+  }, [isMyTurn, connected, inCombat, onEndTurn, onQuickRoll, onCycleTab, onDismiss, onToggleInventory, onToggleCharSheet, onShowShortcutHelp, onTargetSelect]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);

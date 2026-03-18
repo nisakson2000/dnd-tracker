@@ -1,8 +1,9 @@
+import { memo } from 'react';
 import { Swords } from 'lucide-react';
 import ModalPortal from '../ModalPortal';
 import { useCampaignSync } from '../../contexts/CampaignSyncContext';
 
-export default function SharedCombatBar() {
+export default memo(function SharedCombatBar() {
   const { combatActive, initiativeOrder, currentTurn, round, isMyTurn } = useCampaignSync();
 
   if (!combatActive || !initiativeOrder.length) return null;
@@ -81,4 +82,4 @@ export default function SharedCombatBar() {
       </div>
     </ModalPortal>
   );
-}
+})

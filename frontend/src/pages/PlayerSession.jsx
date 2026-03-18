@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -13,8 +13,14 @@ import { SKILL_ABILITY_MAP } from '../utils/dndHelpers';
 import PlayerEventFeed from '../components/party/PlayerEventFeed';
 import PlayerSessionHeader from '../components/party/PlayerSessionHeader';
 import PlayerSessionSidebar from '../components/party/PlayerSessionSidebar';
+import ErrorBoundary from '../components/ErrorBoundary';
 import usePlayerCharacterData from '../hooks/usePlayerCharacterData';
 import usePlayerSessionEvents from '../hooks/usePlayerSessionEvents';
+
+// ── Memoized animation variants (prevent recreation every render) ──
+const YOUR_TURN_ANIM = { initial: { opacity: 0, y: -10 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -10 } };
+const DICE_RESULT_ANIM = { initial: { scale: 0.8, opacity: 0 }, animate: { scale: 1, opacity: 1 } };
+const SKILL_CHECK_OVERLAY_ANIM = { initial: { opacity: 0, scale: 0.9 }, animate: { opacity: 1, scale: 1 } };
 
 let feedIdCounter = 0;
 function makeFeedEvent(category, message, details = null) {
@@ -30,7 +36,7 @@ function makeFeedEvent(category, message, details = null) {
 export default function PlayerSession() {
   const navigate = useNavigate();
   const {
-    campaignId, campaignName, sessionActive,
+    campaignId, campaignName, sessionActive, paused,
     initiative, round, currentTurn, currentScene,
     connectedPlayers, chatMessages, dispatch,
     sendToDm, broadcastEvent, playerUuid,
@@ -40,6 +46,7 @@ export default function PlayerSession() {
   const { isMyTurn, combatActive, initiativeOrder, currentTurn: syncCurrentTurn, round: syncRound, currentMood } = syncCtx || {};
 
   const [diceResult, setDiceResult] = useState(null);
+  const [rollHistory, setRollHistory] = useState([]); // last 10 rolls
   const [broadcasting, setBroadcasting] = useState(true);
   const [connected, setConnected] = useState(false);
   const [eventFeed, setEventFeed] = useState([]);
@@ -71,6 +78,7 @@ export default function PlayerSession() {
   const [showYourTurn, setShowYourTurn] = useState(false);
 
   const [showCampaignWorld, setShowCampaignWorld] = useState(false);
+  const [latencyMs, setLatencyMs] = useState(null);
   const [showAbilities, setShowAbilities] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [showSpellSlots, setShowSpellSlots] = useState(false);
@@ -101,6 +109,8 @@ export default function PlayerSession() {
     handleSetTempHp,
     handleUseSpellSlot,
     handleSaveNote,
+    savedNotes,
+    handleDeleteNote,
   } = usePlayerCharacterData(playerUuid, { addFeedEvent, connected, sendToDm });
 
   const loadHandouts = useCallback(async () => {
@@ -128,6 +138,20 @@ export default function PlayerSession() {
     setDiscoveredNpcs,
     setActiveQuests,
   });
+
+  // Latency measurement: ping every 30s while connected
+  useEffect(() => {
+    if (!connected) { setLatencyMs(null); return; }
+    const ping = () => {
+      const t0 = Date.now();
+      sendToDm({ type: 'Ping', timestamp: t0 })
+        .then(() => setLatencyMs(Date.now() - t0))
+        .catch(() => {});
+    };
+    ping(); // initial measurement
+    const id = setInterval(ping, 30000);
+    return () => clearInterval(id);
+  }, [connected, sendToDm]);
 
   // v0.7.0: "Your Turn!" banner when isMyTurn becomes true
   useEffect(() => {
@@ -257,9 +281,11 @@ export default function PlayerSession() {
     setSuggestionSending(false);
   };
 
-  const handleRollDice = (sides) => {
+  const handleRollDice = useCallback((sides) => {
     const result = Math.floor(Math.random() * sides) + 1;
-    setDiceResult({ sides, result, timestamp: Date.now() });
+    const roll = { sides, result, timestamp: Date.now() };
+    setDiceResult(roll);
+    setRollHistory(prev => [...prev.slice(-9), roll]);
     if (broadcasting && connected) {
       invoke('ws_send_to_dm', {
         eventJson: JSON.stringify({
@@ -271,7 +297,7 @@ export default function PlayerSession() {
         }),
       }).catch(e => console.warn('Failed to broadcast roll:', e));
     }
-  };
+  }, [broadcasting, connected, playerUuid]);
 
   const handleDisconnect = async () => {
     try {
@@ -283,14 +309,36 @@ export default function PlayerSession() {
     navigate('/');
   };
 
-  const panelStyle = {
+  // ── Keyboard shortcuts ──
+  useEffect(() => {
+    const handler = (e) => {
+      // Escape: dismiss overlays
+      if (e.key === 'Escape') {
+        if (skillCheckPrompt) { setSkillCheckPrompt(null); return; }
+        if (diceResult) { setDiceResult(null); return; }
+      }
+      // Don't fire shortcuts if typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      // Ctrl+R or just R: quick d20 roll
+      if (e.key === 'r' || e.key === 'R') {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+        }
+        handleRollDice(20);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [skillCheckPrompt, diceResult]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const panelStyle = useMemo(() => ({
     background: 'rgba(255,255,255,0.02)',
     border: '1px solid rgba(255,255,255,0.06)',
     borderRadius: '12px',
     overflow: 'hidden',
-  };
+  }), []);
 
-  const panelHeaderStyle = {
+  const panelHeaderStyle = useMemo(() => ({
     padding: '10px 16px',
     borderBottom: '1px solid rgba(255,255,255,0.06)',
     fontSize: '11px', fontWeight: 700,
@@ -298,7 +346,7 @@ export default function PlayerSession() {
     color: 'var(--text-mute)',
     fontFamily: 'var(--font-mono, monospace)',
     display: 'flex', alignItems: 'center', gap: '8px',
-  };
+  }), []);
 
   return (
     <div style={{
@@ -331,6 +379,7 @@ export default function PlayerSession() {
         showSpellSlots={showSpellSlots}
         setShowSpellSlots={setShowSpellSlots}
         handleUseSpellSlot={handleUseSpellSlot}
+        latencyMs={latencyMs}
       />
 
       {/* ── Initiative Bar (read-only) ── */}
@@ -388,9 +437,7 @@ export default function PlayerSession() {
       {/* Your Turn Banner */}
       {showYourTurn && isMyTurn && (
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
+          {...YOUR_TURN_ANIM}
           onClick={() => setShowYourTurn(false)}
           style={{
             padding: '12px 20px', textAlign: 'center', cursor: 'pointer',
@@ -416,7 +463,9 @@ export default function PlayerSession() {
       }}>
         {/* Left: Event Feed + Dice */}
         <div style={{ display: 'grid', gridTemplateRows: '1fr auto', gap: '12px', overflow: 'hidden' }}>
-          <PlayerEventFeed events={eventFeed} maxEvents={200} />
+          <ErrorBoundary label="Event Feed">
+            <PlayerEventFeed events={eventFeed} maxEvents={200} />
+          </ErrorBoundary>
 
           {/* Dice Roller */}
           <div style={panelStyle}>
@@ -476,8 +525,7 @@ export default function PlayerSession() {
               {diceResult && (
                 <motion.div
                   key={diceResult.timestamp}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
+                  {...DICE_RESULT_ANIM}
                   style={{
                     textAlign: 'center', padding: '12px',
                     borderRadius: '10px',
@@ -515,14 +563,41 @@ export default function PlayerSession() {
                   </div>
                 </motion.div>
               )}
+              {/* Roll History */}
+              {rollHistory.length > 1 && (
+                <div style={{
+                  display: 'flex', gap: '4px', flexWrap: 'wrap',
+                  borderTop: '1px solid rgba(255,255,255,0.06)',
+                  paddingTop: '8px', marginTop: '4px',
+                }}>
+                  <span style={{ fontSize: '9px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)', alignSelf: 'center', marginRight: '4px' }}>
+                    History:
+                  </span>
+                  {rollHistory.slice(0, -1).reverse().slice(0, 8).map((r, i) => (
+                    <span key={i} style={{
+                      fontSize: '10px', fontFamily: 'var(--font-mono)',
+                      padding: '1px 5px', borderRadius: '3px',
+                      background: r.result === r.sides ? 'rgba(74,222,128,0.1)' : r.result === 1 && r.sides === 20 ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.03)',
+                      color: r.result === r.sides ? '#4ade80' : r.result === 1 && r.sides === 20 ? '#ef4444' : 'var(--text-mute)',
+                      border: `1px solid ${r.result === r.sides ? 'rgba(74,222,128,0.15)' : r.result === 1 && r.sides === 20 ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.06)'}`,
+                    }}>
+                      {r.result}<span style={{ opacity: 0.5 }}>d{r.sides}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Right: Sidebar */}
+        <ErrorBoundary label="Sidebar">
         <PlayerSessionSidebar
           panelStyle={panelStyle}
           panelHeaderStyle={panelHeaderStyle}
+          characterData={charOverview}
+          characterAbilities={charAbilities}
+          characterConditions={conditions}
           handouts={handouts}
           expandedHandout={expandedHandout}
           setExpandedHandout={setExpandedHandout}
@@ -557,6 +632,8 @@ export default function PlayerSession() {
           sessionNote={sessionNote}
           setSessionNote={setSessionNote}
           handleSaveNote={handleSaveNote}
+          savedNotes={savedNotes}
+          onDeleteNote={handleDeleteNote}
           chatMessages={chatMessages}
           chatInput={chatInput}
           setChatInput={setChatInput}
@@ -565,13 +642,13 @@ export default function PlayerSession() {
           setActionInput={setActionInput}
           handleRequestAction={handleRequestAction}
         />
+        </ErrorBoundary>
       </div>
 
       {/* Skill Check Prompt Overlay */}
       {skillCheckPrompt && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          {...SKILL_CHECK_OVERLAY_ANIM}
           style={{
             position: 'fixed', inset: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -637,6 +714,64 @@ export default function PlayerSession() {
             </button>
           </div>
         </motion.div>
+      )}
+
+      {/* Session Paused Overlay */}
+      {paused && (
+        <div style={{
+          position: 'fixed', inset: 0,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.75)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 2000,
+        }}>
+          <div style={{
+            textAlign: 'center',
+            padding: '48px 64px',
+            borderRadius: '20px',
+            background: 'rgba(4,4,11,0.9)',
+            border: '1px solid rgba(201,168,76,0.25)',
+            boxShadow: '0 30px 80px rgba(0,0,0,0.6)',
+          }}>
+            <div style={{
+              fontSize: '32px', fontWeight: 800,
+              color: '#c9a84c',
+              fontFamily: 'var(--font-display, "Cinzel", serif)',
+              marginBottom: '12px',
+              textShadow: '0 0 30px rgba(201,168,76,0.3)',
+            }}>
+              Session Paused
+            </div>
+            <div style={{
+              fontSize: '14px', color: 'var(--text-dim)',
+              marginBottom: '24px',
+              fontFamily: 'var(--font-ui)',
+            }}>
+              The DM has paused the session. Hang tight...
+            </div>
+            <div style={{
+              display: 'flex', justifyContent: 'center', gap: '8px',
+            }}>
+              {[0, 1, 2].map(i => (
+                <div
+                  key={i}
+                  style={{
+                    width: '8px', height: '8px', borderRadius: '50%',
+                    background: '#c9a84c',
+                    animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite`,
+                  }}
+                />
+              ))}
+            </div>
+            <style>{`
+              @keyframes pulse {
+                0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+                40% { opacity: 1; transform: scale(1.2); }
+              }
+            `}</style>
+          </div>
+        </div>
       )}
     </div>
   );

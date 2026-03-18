@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import {
   Map, Navigation, Loader2, Footprints, Mountain, TreePine,
-  Clock, Utensils, Swords, AlertTriangle, Compass, Route
+  Clock, Utensils, Swords, AlertTriangle, Compass, Route,
+  Cloud, CloudRain, CloudSnow, CloudLightning, Wind
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getWeatherEffects } from './WeatherPanel';
 
 const TERRAINS = [
   { value: 'Road', label: 'Road', icon: Route, desc: 'Paved or well-maintained path' },
@@ -39,6 +41,16 @@ const PACES = [
   },
 ];
 
+const WEATHER_PRESETS = [
+  { label: 'Clear', precipitation: 'None', wind: 'Calm' },
+  { label: 'Rain', precipitation: 'Rain', wind: 'Moderate' },
+  { label: 'Heavy Rain', precipitation: 'Heavy Rain', wind: 'Strong' },
+  { label: 'Thunderstorm', precipitation: 'Thunderstorm', wind: 'Strong' },
+  { label: 'Snow', precipitation: 'Snow', wind: 'Moderate' },
+  { label: 'Blizzard', precipitation: 'Blizzard', wind: 'Gale' },
+  { label: 'Fog', precipitation: 'Fog', wind: 'Calm' },
+];
+
 export default function TravelCalculator() {
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
@@ -47,6 +59,30 @@ export default function TravelCalculator() {
   const [partySize, setPartySize] = useState(4);
   const [calculating, setCalculating] = useState(false);
   const [results, setResults] = useState(null);
+  const [weatherPreset, setWeatherPreset] = useState('Clear');
+  const [currentWeather, setCurrentWeather] = useState({ precipitation: 'None', wind: 'Calm' });
+  const [showWeather, setShowWeather] = useState(false);
+
+  // Load current weather from backend
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await invoke('get_weather', { region: 'default' });
+        if (data) {
+          setCurrentWeather({
+            precipitation: data.precipitation || 'None',
+            wind: data.wind || 'Calm',
+            specialEffects: data.special_effects || data.specialEffects || 'None',
+            temperature: data.temperature,
+          });
+        }
+      } catch { /* weather not available */ }
+    })();
+  }, []);
+
+  const selectedWeather = WEATHER_PRESETS.find(w => w.label === weatherPreset) || WEATHER_PRESETS[0];
+  const weatherEffects = getWeatherEffects(weatherPreset === 'Current' ? currentWeather : selectedWeather);
+  const weatherTravelMod = weatherEffects.travelMultiplier;
 
   const selectedPace = PACES.find(p => p.value === pace);
   const selectedTerrain = TERRAINS.find(t => t.value === terrain);
@@ -232,6 +268,70 @@ export default function TravelCalculator() {
         </div>
       </div>
 
+      {/* Weather Impact */}
+      <div
+        className="rounded-xl p-3 border"
+        style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.06)' }}
+      >
+        <button
+          onClick={() => setShowWeather(!showWeather)}
+          className="w-full flex items-center justify-between text-[10px] cursor-pointer"
+          style={{ color: 'var(--text-mute)', background: 'none', border: 'none', padding: 0 }}
+        >
+          <span className="flex items-center gap-1.5">
+            <Cloud size={11} style={{ color: '#c084fc' }} /> Weather Conditions
+          </span>
+          <span style={{ color: weatherTravelMod > 1 ? '#fb923c' : '#4ade80' }}>
+            {weatherTravelMod > 1 ? `${weatherTravelMod === 2 ? '2x' : '1.5x'} travel time` : 'No impact'}
+          </span>
+        </button>
+
+        {showWeather && (
+          <div className="mt-2 space-y-1.5">
+            <div className="flex flex-wrap gap-1">
+              <button
+                onClick={() => setWeatherPreset('Current')}
+                className="text-[10px] px-2 py-1 rounded-lg border transition-all cursor-pointer"
+                style={{
+                  background: weatherPreset === 'Current' ? 'rgba(192,132,252,0.12)' : 'rgba(255,255,255,0.02)',
+                  borderColor: weatherPreset === 'Current' ? 'rgba(192,132,252,0.35)' : 'rgba(255,255,255,0.06)',
+                  color: weatherPreset === 'Current' ? '#c084fc' : 'var(--text-dim)',
+                }}
+              >
+                Current ({currentWeather.precipitation || 'Clear'})
+              </button>
+              {WEATHER_PRESETS.map(w => (
+                <button
+                  key={w.label}
+                  onClick={() => setWeatherPreset(w.label)}
+                  className="text-[10px] px-2 py-1 rounded-lg border transition-all cursor-pointer"
+                  style={{
+                    background: weatherPreset === w.label ? 'rgba(192,132,252,0.12)' : 'rgba(255,255,255,0.02)',
+                    borderColor: weatherPreset === w.label ? 'rgba(192,132,252,0.35)' : 'rgba(255,255,255,0.06)',
+                    color: weatherPreset === w.label ? '#c084fc' : 'var(--text-dim)',
+                  }}
+                >
+                  {w.label}
+                </button>
+              ))}
+            </div>
+            {weatherEffects.mechanical.length > 0 && (
+              <div className="space-y-1 mt-1">
+                {weatherEffects.mechanical.map((e, i) => (
+                  <div key={i} className="text-[10px] flex items-start gap-1.5 rounded p-1.5"
+                    style={{ background: 'rgba(192,132,252,0.05)', border: '1px solid rgba(192,132,252,0.1)' }}>
+                    <AlertTriangle size={9} className="text-purple-400 mt-0.5 shrink-0" />
+                    <span style={{ color: 'var(--text-dim)' }}>
+                      <span className="text-purple-300 font-medium">{e.source}:</span> {e.text}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Calculate Button */}
       <button
         onClick={handleCalculate}
@@ -321,6 +421,36 @@ export default function TravelCalculator() {
               </div>
             </div>
           </div>
+
+          {/* Weather Impact on Travel */}
+          {weatherTravelMod > 1 && (
+            <div className="p-3 border-t" style={{ borderColor: 'rgba(251,146,60,0.15)', background: 'rgba(251,146,60,0.04)' }}>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Cloud size={11} style={{ color: '#fb923c' }} />
+                <span className="text-[10px] font-medium" style={{ color: '#fb923c' }}>Weather Impact</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span style={{ color: 'var(--text-dim)' }}>
+                  {weatherEffects.summary}
+                </span>
+                <span className="font-medium" style={{ color: '#fb923c' }}>
+                  {weatherTravelMod === 2 ? 'Double' : '+50%'} travel time
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs mt-1">
+                <span style={{ color: 'var(--text-mute)' }}>Adjusted travel time:</span>
+                <span className="font-bold" style={{ color: '#fb923c' }}>
+                  {Math.ceil(results.travel_days * weatherTravelMod)} days
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs mt-0.5">
+                <span style={{ color: 'var(--text-mute)' }}>Adjusted rations:</span>
+                <span className="font-medium" style={{ color: '#fb923c' }}>
+                  {Math.ceil(results.travel_days * weatherTravelMod) * partySize}
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Additional Info */}
           <div className="p-3 space-y-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>

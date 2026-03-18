@@ -1,7 +1,7 @@
 // Auto-populate character stats from class/race/level selection
 // Uses existing CLASSES and RACES data from the ruleset
 
-import { calcMod, calcProfBonus } from './dndHelpers';
+import { calcMod, calcProfBonus, getSpellSlotsForClass } from './dndHelpers';
 
 /**
  * Calculate auto HP: max hit die at level 1, then (avg + CON mod) per subsequent level.
@@ -139,6 +139,30 @@ export function autoPopulateStats({
     }
   }
 
+  // --- Spell Slots from Class/Level ---
+  let spellSlots = null;
+  if (classData?.spellcasting) {
+    const casterType = classData.name === 'Warlock' ? 'pact' : classData.spellcasting.type;
+    const computed = getSpellSlotsForClass(casterType, level);
+    if (computed.length > 0) {
+      spellSlots = computed.map(s => ({ slot_level: s.slot_level, max_slots: s.max_slots, used_slots: 0 }));
+      changes.push(`Spell slots: ${spellSlots.map(s => `L${s.slot_level}×${s.max_slots}`).join(', ')}`);
+    }
+  }
+
+  // --- Starting Equipment ---
+  let startingEquipment = null;
+  if (classData?.startingEquipment && classData.startingEquipment.length > 0) {
+    startingEquipment = classData.startingEquipment.map(item => ({ ...item }));
+    changes.push(`Starting equipment: ${startingEquipment.length} items`);
+  }
+
+  // --- Starting Gold ---
+  let startingGold = null;
+  if (classData?.startingGold) {
+    startingGold = classData.startingGold;
+  }
+
   // --- Proficiency Bonus (display only, computed from level) ---
   const profBonus = calcProfBonus(level);
 
@@ -156,7 +180,84 @@ export function autoPopulateStats({
     overview: newOverview,
     abilities: newAbilities,
     saves: newSaves,
+    spellSlots,
+    startingEquipment,
+    startingGold,
     summary,
     changes,
+  };
+}
+
+/**
+ * Compute long rest effects for a character.
+ * Returns the state changes to apply.
+ */
+export function computeLongRestEffects({ overview, spellSlots, classData, level }) {
+  const effects = { changes: [] };
+
+  // Restore HP to max
+  if (overview?.max_hp && overview.current_hp < overview.max_hp) {
+    effects.newHp = overview.max_hp;
+    effects.changes.push(`HP restored to ${overview.max_hp}`);
+  }
+
+  // Restore hit dice: regain half total (minimum 1)
+  if (overview?.hit_dice_total) {
+    const match = overview.hit_dice_total.match(/(\d+)d(\d+)/);
+    if (match) {
+      const totalDice = parseInt(match[1]);
+      const used = overview.hit_dice_used || 0;
+      const regain = Math.max(1, Math.floor(totalDice / 2));
+      const newUsed = Math.max(0, used - regain);
+      if (newUsed !== used) {
+        effects.newHitDiceUsed = newUsed;
+        effects.changes.push(`Regained ${used - newUsed} hit dice`);
+      }
+    }
+  }
+
+  // Restore all spell slots
+  if (spellSlots && spellSlots.length > 0) {
+    const anyUsed = spellSlots.some(s => s.used_slots > 0);
+    if (anyUsed) {
+      effects.newSpellSlots = spellSlots.map(s => ({ ...s, used_slots: 0 }));
+      effects.changes.push('All spell slots restored');
+    }
+  }
+
+  // Clear temp HP
+  if (overview?.temp_hp > 0) {
+    effects.newTempHp = 0;
+    effects.changes.push('Temp HP cleared');
+  }
+
+  // Reset death saves
+  if (overview?.death_save_successes > 0 || overview?.death_save_failures > 0) {
+    effects.newDeathSaves = { successes: 0, failures: 0 };
+    effects.changes.push('Death saves reset');
+  }
+
+  // Reset exhaustion by 1 level (5e: long rest reduces exhaustion by 1)
+  if (overview?.exhaustion_level > 0) {
+    effects.newExhaustion = overview.exhaustion_level - 1;
+    effects.changes.push(`Exhaustion reduced to ${effects.newExhaustion}`);
+  }
+
+  return effects;
+}
+
+/**
+ * Compute short rest hit die healing.
+ * @param {number} hitDieSize - e.g., 8 for d8
+ * @param {number} conMod - Constitution modifier
+ * @param {number} diceToSpend - how many hit dice to spend
+ * @returns {{ avgHealing: number, minHealing: number, maxHealing: number }}
+ */
+export function computeShortRestHealing(hitDieSize, conMod, diceToSpend) {
+  const avgPerDie = Math.floor(hitDieSize / 2) + 1 + conMod;
+  return {
+    avgHealing: Math.max(0, avgPerDie * diceToSpend),
+    minHealing: Math.max(0, (1 + conMod) * diceToSpend),
+    maxHealing: Math.max(0, (hitDieSize + conMod) * diceToSpend),
   };
 }

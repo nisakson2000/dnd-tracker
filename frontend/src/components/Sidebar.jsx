@@ -6,12 +6,15 @@ import {
   Library, Settings2, Heart, Bug, Crown, LayoutDashboard,
   Star, Search, X, Zap, Wifi, MapPin, Lightbulb, Grid3X3, Eye,
   Calendar, Hammer, Package, HelpCircle, Dices, PawPrint, ClipboardList, Skull,
-  ChevronDown, ChevronRight,
+  ChevronDown, ChevronRight, Play,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAppMode } from '../contexts/ModeContext';
 import { useSession } from '../contexts/SessionContext';
+import { useGuidance } from '../contexts/GuidanceContext';
+import { useTutorial } from '../contexts/TutorialContext';
 import { getSectionShortcutLabel } from '../utils/keyboardShortcuts';
+import NextStepsWidget from './dm-campaign/NextStepsWidget';
 
 function isAssistantEnabled() {
   try {
@@ -44,7 +47,7 @@ const PLAYER_SECTION_GROUPS = [
     label: 'Tools',
     items: [
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
-      { id: 'random-tables', label: 'Random Tables',   icon: Dices },
+      { id: 'random-tables', label: 'Random Encounters',   icon: Dices },
       { id: 'ai-modules', label: 'AI Modules',        icon: Sparkles },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
@@ -94,7 +97,7 @@ const DM_SECTION_GROUPS = [
     label: 'Tools',
     items: [
       { id: 'rules',      label: 'Rules Reference',    icon: Library },
-      { id: 'random-tables', label: 'Random Tables',   icon: Dices },
+      { id: 'random-tables', label: 'Random Encounters',   icon: Dices },
       { id: 'ai-modules', label: 'AI Modules',        icon: Sparkles },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
@@ -144,7 +147,16 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
   }, []);
 
   const isDM = appMode === 'dm';
+  const guidance = useGuidance();
+  const tutorial = useTutorial();
   const { campaignStatus } = useSession();
+
+  // Tutorial: determine which sidebar section the current step targets
+  const tutorialTargetSection = (() => {
+    if (!tutorial?.tutorialActive || !tutorial?.currentStep?.targetSelector) return null;
+    const match = tutorial.currentStep.targetSelector.match(/data-tutorial="sidebar-(.+?)"/);
+    return match ? match[1] : null;
+  })();
   const isDraft = campaignStatus === 'draft';
   // Filter DM sidebar items based on campaign type and status (draft = building, active = running)
   const rawGroups = isDM ? DM_SECTION_GROUPS : PLAYER_SECTION_GROUPS;
@@ -536,6 +548,11 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
 
       {/* Navigation groups */}
       <nav style={{ flex: 1, padding: '8px 0', overflowY: 'auto' }}>
+        {/* DM Guidance: Next Steps Widget */}
+        {isDM && guidance?.guidanceMode === 'guided' && guidance?.nextActions?.length > 0 && (
+          <NextStepsWidget actions={guidance.nextActions} onNavigate={onSelect} />
+        )}
+
         {/* Pinned sections */}
         {!searchQuery && pinnedItems.length > 0 && (
           <div style={{ marginBottom: '4px' }}>
@@ -616,6 +633,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
                   style={{ position: 'relative', display: 'flex', alignItems: 'center' }}
                 >
                   <button
+                    data-tutorial={`sidebar-${id}`}
                     onClick={() => onSelect(id)}
                     aria-current={active ? 'page' : undefined}
                     style={{
@@ -679,22 +697,48 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
             Arcane Encyclopedia
           </Link>
           {isDM && (
-            <button
-              onClick={() => onSelect('dm-guide')}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 16px', fontSize: '13px',
-                color: activeSection === 'dm-guide' ? 'white' : 'rgba(255,255,255,0.4)',
-                background: activeSection === 'dm-guide' ? 'var(--accent-xl)' : 'none',
-                borderLeft: activeSection === 'dm-guide' ? '2px solid var(--accent)' : '2px solid transparent',
-                border: 'none', cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
-                transition: 'color 0.15s', width: '100%', textAlign: 'left',
-              }}
-              onMouseEnter={e => { if (activeSection !== 'dm-guide') e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
-              onMouseLeave={e => { if (activeSection !== 'dm-guide') e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
-            >
-              <HelpCircle size={14} />
-              DM Guide
-            </button>
+            <>
+              <button
+                onClick={() => onSelect('dm-guide')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 16px', fontSize: '13px',
+                  color: activeSection === 'dm-guide' ? 'white' : 'rgba(255,255,255,0.4)',
+                  background: activeSection === 'dm-guide' ? 'var(--accent-xl)' : 'none',
+                  borderLeft: activeSection === 'dm-guide' ? '2px solid var(--accent)' : '2px solid transparent',
+                  border: 'none', cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
+                  transition: 'color 0.15s', width: '100%', textAlign: 'left',
+                }}
+                onMouseEnter={e => { if (activeSection !== 'dm-guide') e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+                onMouseLeave={e => { if (activeSection !== 'dm-guide') e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+              >
+                <HelpCircle size={14} />
+                DM Guide
+              </button>
+              {tutorial && !tutorial.tutorialActive && (
+                <button
+                  onClick={() => {
+                    tutorial.startTutorial();
+                    import('../utils/loadTutorialCampaign').then(({ loadTutorialCampaign }) => {
+                      loadTutorialCampaign().then(charId => {
+                        window.dispatchEvent(new CustomEvent('codex-navigate', { detail: `/dm/lobby/${charId}` }));
+                      });
+                    });
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 16px', fontSize: '12px',
+                    color: 'rgba(74,222,128,0.6)',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontFamily: 'Outfit, sans-serif', transition: 'color 0.15s',
+                    width: '100%', textAlign: 'left',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#4ade80'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(74,222,128,0.6)'}
+                >
+                  <Play size={12} />
+                  {tutorial.isTutorialCompleted() ? 'Restart Tutorial' : 'Interactive Tutorial'}
+                </button>
+              )}
+            </>
           )}
         </div>
       </nav>

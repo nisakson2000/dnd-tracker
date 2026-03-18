@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from 'react';
+import { memo, useEffect, useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 const ANIMATION_DURATION = 1.5; // seconds
 
-export default function PlayerDamageOverlay({ events = [] }) {
+export default memo(function PlayerDamageOverlay({ events = [] }) {
   const [visibleEvents, setVisibleEvents] = useState([]);
 
   // Add new events to visible list
@@ -144,4 +144,4 @@ export default function PlayerDamageOverlay({ events = [] }) {
       </AnimatePresence>
     </div>
   );
-}
+})

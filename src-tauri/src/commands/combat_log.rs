@@ -139,6 +139,47 @@ pub fn get_combat_log(
     })
 }
 
+/// Archive a combat session with summary data.
+#[tauri::command]
+pub fn archive_combat_session(
+    session_id: String,
+    round_count: i64,
+    combatants_json: String,
+    combat_stats_json: String,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    let campaign_id = require_active_campaign(&state)?;
+    let id = Uuid::new_v4().to_string();
+    let now = chrono::Utc::now().timestamp();
+
+    // Build the archive details JSON combining combatants and stats
+    let details = format!(
+        r#"{{"combatants":{},"total_rounds":{},"stats":{}}}"#,
+        combatants_json, round_count, combat_stats_json
+    );
+
+    with_campaign_conn(&state, |conn| {
+        conn.execute(
+            "INSERT INTO combat_log (id, campaign_id, session_id, round, turn_order, entry_type, actor_name, target_name, description, details_json, ts)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            params![
+                id,
+                campaign_id,
+                session_id,
+                round_count,
+                0,
+                "archive",
+                "SYSTEM",
+                "",
+                format!("Combat ended after {} rounds", round_count),
+                details,
+                now
+            ],
+        ).map_err(|e| format!("Failed to archive combat session: {}", e))?;
+        Ok(id)
+    })
+}
+
 /// Clear combat log for a session.
 #[tauri::command]
 pub fn clear_combat_log(

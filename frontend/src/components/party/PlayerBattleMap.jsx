@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useMemo, useState } from 'react';
+import { memo, useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import { useCampaignSync } from '../../contexts/CampaignSyncContext';
 
 /* ── Hex geometry helpers (mirrored from BattleMap) ── */
@@ -29,7 +29,7 @@ const CONDITION_COLORS = {
   prone: '#ef4444', blessed: '#e2e8f0',
 };
 
-export default function PlayerBattleMap({ playerName }) {
+export default memo(function PlayerBattleMap({ playerName }) {
   const { syncedBattleMap, sendEvent } = useCampaignSync();
   const canvasRef = useRef(null);
 
@@ -485,4 +485,4 @@ export default function PlayerBattleMap({ playerName }) {
       `}</style>
     </div>
   );
-}
+})

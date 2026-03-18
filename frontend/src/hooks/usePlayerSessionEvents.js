@@ -3,6 +3,10 @@ import { listen } from '@tauri-apps/api/event';
 import { CONDITION_EFFECTS } from '../data/conditionEffects';
 import toast from 'react-hot-toast';
 
+// Safe field access helpers
+function safeStr(val, fallback = '') { return typeof val === 'string' ? val : fallback; }
+function safeNum(val, fallback = 0) { return typeof val === 'number' && Number.isFinite(val) ? val : fallback; }
+
 export default function usePlayerSessionEvents({
   loadHandouts,
   dispatch,
@@ -27,9 +31,12 @@ export default function usePlayerSessionEvents({
         unlisten = await listen('session-game-event', (event) => {
           if (cancelled) return;
           const gameEvent = event.payload?.event || event.payload;
-          if (!gameEvent?.type) return;
+          if (!gameEvent?.type || typeof gameEvent.type !== 'string') {
+            if (gameEvent?.type !== undefined) console.warn('[PlayerEvents] Invalid event type:', gameEvent?.type);
+            return;
+          }
 
-          switch (gameEvent.type) {
+          try { switch (gameEvent.type) {
             case 'HandoutRevealed':
               loadHandouts();
               toast('New handout from the DM!', { icon: '\uD83D\uDCDC', duration: 4000 });
@@ -50,8 +57,10 @@ export default function usePlayerSessionEvents({
               break;
             case 'EncounterStart': {
               dispatch({ type: 'SET_ENCOUNTER', payload: gameEvent });
-              const initList = gameEvent.initiative
-                || (gameEvent.initiative_json ? JSON.parse(gameEvent.initiative_json) : null);
+              let initList = gameEvent.initiative || null;
+              if (!initList && gameEvent.initiative_json) {
+                try { initList = JSON.parse(gameEvent.initiative_json); } catch { initList = null; }
+              }
               if (initList) dispatch({ type: 'SET_INITIATIVE', payload: initList });
               toast('Combat started!', { icon: '\u2694\uFE0F', duration: 3000 });
               addFeedEvent('combat', 'Combat has begun! Roll initiative!', initList ? `${initList.length} combatants` : null);
@@ -63,7 +72,8 @@ export default function usePlayerSessionEvents({
               addFeedEvent('combat', 'Combat has ended');
               break;
             case 'HpDelta': {
-              const hpMsg = `HP ${gameEvent.delta > 0 ? '+' : ''}${gameEvent.delta}${gameEvent.reason ? `: ${gameEvent.reason}` : ''}`;
+              const delta = safeNum(gameEvent.delta, 0);
+              const hpMsg = `HP ${delta > 0 ? '+' : ''}${delta}${gameEvent.reason ? `: ${gameEvent.reason}` : ''}`;
               toast(hpMsg, { icon: gameEvent.delta > 0 ? '\uD83D\uDC9A' : '\uD83D\uDC94', duration: 3000 });
               addFeedEvent('combat', hpMsg);
               refreshCharacter();
@@ -98,8 +108,9 @@ export default function usePlayerSessionEvents({
               if (gameEvent.player_ids && Array.isArray(gameEvent.player_ids) && playerUuid && !gameEvent.player_ids.includes(playerUuid)) {
                 break;
               }
-              toast(`Gained ${gameEvent.amount || 0} XP! ${gameEvent.reason || ''}`, { icon: '\u2B50', duration: 5000 });
-              addFeedEvent('loot', `Gained ${gameEvent.amount || 0} XP${gameEvent.reason ? ` — ${gameEvent.reason}` : ''}`);
+              const xpAmount = safeNum(gameEvent.amount, 0);
+              toast(`Gained ${xpAmount} XP! ${gameEvent.reason || ''}`, { icon: '\u2B50', duration: 5000 });
+              addFeedEvent('loot', `Gained ${xpAmount} XP${gameEvent.reason ? ` — ${gameEvent.reason}` : ''}`);
               break;
             case 'InspirationAwarded':
               if (gameEvent.player_id && playerUuid && gameEvent.player_id !== playerUuid) {
@@ -125,11 +136,11 @@ export default function usePlayerSessionEvents({
               }
               break;
             case 'LevelUp':
-              toast(`Level up! ${gameEvent.player_name || 'Player'} is now level ${gameEvent.new_level}!`, {
+              toast(`Level up! ${safeStr(gameEvent.player_name, 'Player')} is now level ${safeNum(gameEvent.new_level, '?')}!`, {
                 icon: '\u2B50', duration: 6000,
                 style: { background: '#1a1520', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.4)', fontWeight: 600 },
               });
-              addFeedEvent('loot', `Level up! ${gameEvent.player_name || 'Player'} reached level ${gameEvent.new_level}!`);
+              addFeedEvent('loot', `Level up! ${safeStr(gameEvent.player_name, 'Player')} reached level ${safeNum(gameEvent.new_level, '?')}!`);
               refreshCharacter();
               break;
             case 'ActionApproved':
@@ -157,6 +168,16 @@ export default function usePlayerSessionEvents({
                 icon: '\uD83C\uDFAF', duration: 3000,
               });
               addFeedEvent('combat', gameEvent.spell ? `Concentrating on ${gameEvent.spell}` : 'Concentration dropped');
+              break;
+            case 'SessionPaused':
+              dispatch({ type: 'PAUSE_SESSION' });
+              toast('Session paused by the DM', { icon: '\u23F8\uFE0F', duration: 4000 });
+              addFeedEvent('system', 'The DM has paused the session');
+              break;
+            case 'SessionResumed':
+              dispatch({ type: 'RESUME_SESSION' });
+              toast('Session resumed!', { icon: '\u25B6\uFE0F', duration: 3000 });
+              addFeedEvent('system', 'The DM has resumed the session');
               break;
             case 'SessionEnd':
               toast('The DM has ended the session', { icon: '\uD83C\uDFC1', duration: 6000 });
@@ -219,7 +240,7 @@ export default function usePlayerSessionEvents({
               break;
             }
             case 'NPCDiscovered': {
-              const npcName = gameEvent.npc_name || gameEvent.name || 'Unknown NPC';
+              const npcName = safeStr(gameEvent.npc_name || gameEvent.name, 'Unknown NPC');
               toast(`New NPC discovered: ${npcName}`, { icon: '\uD83D\uDC64', duration: 4000 });
               addFeedEvent('npc', `Discovered NPC: ${npcName}${gameEvent.role ? ` (${gameEvent.role})` : ''}`);
               setDiscoveredNpcs(prev => {
@@ -229,7 +250,7 @@ export default function usePlayerSessionEvents({
               break;
             }
             case 'QuestRevealed': {
-              const questTitle = gameEvent.title || 'Unknown Quest';
+              const questTitle = safeStr(gameEvent.title, 'Unknown Quest');
               toast(`New quest: ${questTitle}`, { icon: '\uD83D\uDCDC', duration: 5000, style: { background: '#1a1520', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.3)' } });
               addFeedEvent('quest', `New quest available: ${questTitle}`);
               setActiveQuests(prev => {
@@ -255,6 +276,9 @@ export default function usePlayerSessionEvents({
               break;
             default:
               break;
+          } } catch (handlerErr) {
+            console.error(`[PlayerEvents] Error handling ${gameEvent.type}:`, handlerErr);
+            addFeedEvent('system', 'An event failed to process');
           }
         });
         if (cancelled && unlisten) unlisten();

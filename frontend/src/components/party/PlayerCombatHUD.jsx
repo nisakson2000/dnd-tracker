@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Swords, Wand2, FlaskConical, Sparkles, Shield, Heart, X, ChevronRight, Zap, Target, Clock, Send, Skull, AlertTriangle, Hand, ArrowRight } from 'lucide-react';
+import { memo, useState, useEffect, useCallback, useMemo } from 'react';
+import { Swords, Wand2, FlaskConical, Sparkles, Shield, Heart, X, ChevronRight, Zap, Target, Clock, Send, Skull, AlertTriangle, Hand, ArrowRight, User, ChevronDown, ChevronUp } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useCampaignSync } from '../../contexts/CampaignSyncContext';
 import CombatStateBar from './CombatStateBar';
@@ -7,7 +7,7 @@ import { useParty } from '../../contexts/PartyContext';
 import { rollDie, parseAndRollExpression } from '../../utils/dice';
 import { computeConditionEffects } from '../../data/conditionEffects';
 import { getExhaustionLevel, getExhaustionEffects } from '../../utils/exhaustionEffects';
-import { getOverview } from '../../api/overview';
+import { getOverview, updateOverview } from '../../api/overview';
 import { getAttacks, getConditions } from '../../api/combat';
 import { getSpells, getSpellSlots, updateSpellSlots } from '../../api/spells';
 import { getItems, updateItem, deleteItem } from '../../api/inventory';
@@ -75,7 +75,7 @@ const SPELL_AUTO_EFFECTS = {
   'spiritual weapon': { type: 'summon_damage', dice: level => `${Math.floor(level / 2)}d8`, addMod: true, damageType: 'force' },
 };
 
-export default function PlayerCombatHUD({ characterId }) {
+export default memo(function PlayerCombatHUD({ characterId }) {
   const { sendEvent, sharedCombatLog, sendConcentrationUpdate, isMyTurn, monsterHpTiers, turnFlash, combatActive, initiativeOrder } = useCampaignSync();
   const { myClientId } = useParty();
 
@@ -87,7 +87,11 @@ export default function PlayerCombatHUD({ characterId }) {
   const [items, setItems] = useState([]);
   const [features, setFeatures] = useState([]);
   const [activeConditions, setActiveConditions] = useState([]);
+  const [abilityScores, setAbilityScores] = useState([]);
+  const [savingThrows, setSavingThrows] = useState([]);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [lastSpellResult, setLastSpellResult] = useState(null); // { spellName, effect, level }
 
   useEffect(() => {
     if (!characterId) return;
@@ -105,6 +109,8 @@ export default function PlayerCombatHUD({ characterId }) {
         ]);
         if (cancelled) return;
         setCharacter(ov?.overview || null);
+        if (ov?.ability_scores) setAbilityScores(ov.ability_scores);
+        if (ov?.saving_throws) setSavingThrows(ov.saving_throws);
         setAttacks(atk || []);
         setSpells(sp || []);
         setSpellSlots(sl || []);
@@ -201,6 +207,7 @@ export default function PlayerCombatHUD({ characterId }) {
       // Don't reset reaction — it resets on round start
       setAttackRoll(null);
       setDamageRoll(null);
+      setLastSpellResult(null);
     }
   }, [isMyTurn]);
 
@@ -469,12 +476,37 @@ export default function PlayerCombatHUD({ characterId }) {
 
     setActionUsed(true);
 
+    // Apply healing spells locally
+    let healApplied = 0;
+    if (autoEffect?.type === 'heal') {
+      const healDice = typeof autoEffect.dice === 'function' ? autoEffect.dice(level || 1) : autoEffect.dice;
+      const healResult = parseAndRollExpression(healDice);
+      if (healResult && character) {
+        healApplied = healResult.total;
+        const maxHp = character.max_hp || 999;
+        const currentHp = character.current_hp || 0;
+        const newHp = Math.min(maxHp, currentHp + healApplied);
+        setCharacter(prev => ({ ...prev, current_hp: newHp }));
+        updateOverview(characterId, { current_hp: newHp }).catch(() => {});
+      }
+    }
+
+    // Store last spell result for inline display
+    setLastSpellResult({
+      spellName: spell.name,
+      level,
+      effect: autoEffectInfo || damageInfo || attackInfo || null,
+      type: autoEffect?.type || (spell.damage_dice ? 'damage' : 'utility'),
+      healApplied,
+    });
+
     sendEvent('player_cast_spell', {
       player_name: playerName,
       spell_name: spell.name,
       slot_level: level,
       concentration: spell.concentration || false,
       auto_effect: autoEffect ? { type: autoEffect.type, effect: autoEffect.effect || null } : null,
+      heal_applied: healApplied || undefined,
       text: `${playerName} casts ${spell.name}${level > 0 ? ` (Lv${level})` : ''}${attackInfo}${damageInfo}${autoEffectInfo}`,
     });
 
@@ -500,16 +532,31 @@ export default function PlayerCombatHUD({ characterId }) {
       item.name?.toLowerCase().includes(k.toLowerCase())
     );
 
+    let healAmount = 0;
     if (potionKey) {
       // Auto-roll healing
       const healResult = parseAndRollExpression(POTION_HEALING[potionKey]);
       if (healResult) {
-        toast(`${item.name}: Healed ${healResult.total} HP!`, {
+        healAmount = healResult.total;
+        // Apply healing locally
+        if (character) {
+          const maxHp = character.max_hp || 999;
+          const currentHp = character.current_hp || 0;
+          const newHp = Math.min(maxHp, currentHp + healAmount);
+          setCharacter(prev => ({ ...prev, current_hp: newHp }));
+          // Persist HP update
+          updateOverview(characterId, { current_hp: newHp }).catch(() => {});
+        }
+        toast(`${item.name}: Healed ${healAmount} HP! (${POTION_HEALING[potionKey]})`, {
           icon: '\u{1F9EA}', duration: 3000,
           style: { background: '#1a1520', color: '#86efac', border: '1px solid rgba(74,222,128,0.3)', fontFamily: 'monospace' },
         });
-        // HP application is handled by the parent
       }
+    } else {
+      toast(`Used ${item.name}`, {
+        icon: '\u{1F9EA}', duration: 2000,
+        style: { background: '#1a1520', color: '#86efac', border: '1px solid rgba(74,222,128,0.3)', fontFamily: 'monospace' },
+      });
     }
 
     if (onItemUsed) onItemUsed(item);
@@ -518,7 +565,10 @@ export default function PlayerCombatHUD({ characterId }) {
     sendEvent('item_used', {
       player_name: playerName,
       item_name: item.name,
-      text: `${playerName} uses ${item.name}`,
+      healing: healAmount || undefined,
+      text: healAmount
+        ? `${playerName} uses ${item.name} — Healed ${healAmount} HP`
+        : `${playerName} uses ${item.name}`,
     });
   };
 
@@ -1004,6 +1054,7 @@ export default function PlayerCombatHUD({ characterId }) {
                     <Wand2 size={11} style={{ color: '#c4b5fd', flexShrink: 0 }} />
                     <span style={{ fontSize: 11, color: '#e8d9b5', flex: 1 }}>{spell.name}</span>
                     {spell.concentration && <span style={{ fontSize: 7, color: '#60a5fa', fontWeight: 600 }}>CONC</span>}
+                    <span style={{ fontSize: 9, color: 'rgba(196,181,253,0.4)', fontWeight: 600, flexShrink: 0 }}>CAST</span>
                   </button>
                 ))}
               </>
@@ -1036,11 +1087,35 @@ export default function PlayerCombatHUD({ characterId }) {
                       <span style={{ fontSize: 11, color: '#e8d9b5', flex: 1 }}>{spell.name}</span>
                       {spell.concentration && <span style={{ fontSize: 7, color: '#60a5fa', fontWeight: 600 }}>CONC</span>}
                       <span style={{ fontSize: 8, color: 'rgba(196,181,253,0.4)' }}>{spell.school || ''}</span>
+                      <span style={{ fontSize: 9, color: slotInfo.remaining > 0 ? 'rgba(196,181,253,0.4)' : 'rgba(255,255,255,0.15)', fontWeight: 600, flexShrink: 0 }}>CAST</span>
                     </button>
                   ))}
                 </div>
               );
             })}
+
+            {/* Last spell result display */}
+            {lastSpellResult && (
+              <div style={{
+                padding: '8px 10px', borderRadius: 7, marginTop: 6,
+                background: lastSpellResult.type === 'heal' ? 'rgba(74,222,128,0.08)' : 'rgba(139,92,246,0.08)',
+                border: `1px solid ${lastSpellResult.type === 'heal' ? 'rgba(74,222,128,0.2)' : 'rgba(139,92,246,0.2)'}`,
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: lastSpellResult.type === 'heal' ? '#86efac' : '#c4b5fd', marginBottom: 2 }}>
+                  {lastSpellResult.spellName}{lastSpellResult.level > 0 ? ` (Lv${lastSpellResult.level})` : ''}
+                </div>
+                {lastSpellResult.effect && (
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-mono, monospace)' }}>
+                    {lastSpellResult.effect}
+                  </div>
+                )}
+                {lastSpellResult.healApplied > 0 && (
+                  <div style={{ fontSize: 9, color: '#86efac', fontFamily: 'var(--font-mono, monospace)', marginTop: 2 }}>
+                    Applied {lastSpellResult.healApplied} HP healing
+                  </div>
+                )}
+              </div>
+            )}
 
             {spells.length === 0 && (
               <div style={{ textAlign: 'center', padding: 20, color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>
@@ -1074,15 +1149,19 @@ export default function PlayerCombatHUD({ characterId }) {
                 <FlaskConical size={12} style={{ color: '#86efac', flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 11, color: '#e8d9b5' }}>{item.name}</div>
-                  {item.description && (
-                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>
-                      {item.description.slice(0, 60)}{item.description.length > 60 ? '\u2026' : ''}
-                    </div>
-                  )}
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>
+                    {(() => {
+                      const potionKey = Object.keys(POTION_HEALING).find(k => item.name?.toLowerCase().includes(k.toLowerCase()));
+                      if (potionKey) return `Heals ${POTION_HEALING[potionKey]} HP`;
+                      if (item.description) return item.description.slice(0, 60) + (item.description.length > 60 ? '\u2026' : '');
+                      return null;
+                    })()}
+                  </div>
                 </div>
-                <span style={{ fontSize: 10, color: 'rgba(74,222,128,0.6)', fontWeight: 600 }}>
+                <span style={{ fontSize: 10, color: 'rgba(74,222,128,0.6)', fontWeight: 600, marginRight: 4 }}>
                   x{item.quantity ?? 1}
                 </span>
+                <span style={{ fontSize: 9, color: 'rgba(74,222,128,0.4)', fontWeight: 600, flexShrink: 0 }}>USE</span>
               </button>
             ))}
           </div>
@@ -1189,6 +1268,123 @@ export default function PlayerCombatHUD({ characterId }) {
         )}
       </div>
 
+      {/* Character Quick-View Stats Drawer */}
+      {character && (
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <button
+            onClick={() => setShowStats(!showStats)}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '6px 14px', background: showStats ? 'rgba(96,165,250,0.06)' : 'none',
+              border: 'none', cursor: 'pointer',
+              color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 600,
+              textTransform: 'uppercase', letterSpacing: '0.08em',
+              fontFamily: 'var(--font-heading)',
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <User size={10} /> Character Stats
+            </span>
+            {showStats ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
+          </button>
+          {showStats && (
+            <div style={{ padding: '8px 14px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {/* AC, Speed, HP row */}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <div style={{
+                  padding: '4px 10px', borderRadius: 6,
+                  background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.15)',
+                  fontSize: 10, color: '#60a5fa', fontWeight: 600,
+                }}>
+                  <Shield size={9} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
+                  AC {character.armor_class ?? 10}
+                </div>
+                <div style={{
+                  padding: '4px 10px', borderRadius: 6,
+                  background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.15)',
+                  fontSize: 10, color: '#4ade80', fontWeight: 600,
+                }}>
+                  Speed {character.speed ?? 30}ft
+                </div>
+                <div style={{
+                  padding: '4px 10px', borderRadius: 6,
+                  background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)',
+                  fontSize: 10, color: '#fca5a5', fontWeight: 600,
+                }}>
+                  <Heart size={9} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
+                  {character.current_hp ?? 0}/{character.max_hp ?? 0}
+                  {(character.temp_hp ?? 0) > 0 && <span style={{ color: '#60a5fa' }}> +{character.temp_hp}</span>}
+                </div>
+              </div>
+
+              {/* Ability Scores — compact grid */}
+              {abilityScores.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 8, fontWeight: 600, textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.08em', marginBottom: 4 }}>Ability Scores</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4 }}>
+                    {['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(ab => {
+                      const entry = abilityScores.find(a => a.ability?.toUpperCase()?.startsWith(ab.slice(0, 3)));
+                      const score = entry?.score ?? 10;
+                      const mod = Math.floor((score - 10) / 2);
+                      return (
+                        <div key={ab} style={{
+                          textAlign: 'center', padding: '4px 2px', borderRadius: 5,
+                          background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                        }}>
+                          <div style={{ fontSize: 7, fontWeight: 700, color: 'rgba(201,168,76,0.5)', letterSpacing: '0.05em' }}>{ab}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#e8d9b5' }}>{mod >= 0 ? `+${mod}` : mod}</div>
+                          <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.25)' }}>{score}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Saving Throw Proficiencies */}
+              {savingThrows.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 8, fontWeight: 600, textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.08em', marginBottom: 4 }}>Saving Throws</div>
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                    {savingThrows.map(st => {
+                      const abbr = st.ability?.slice(0, 3)?.toUpperCase() || '???';
+                      return (
+                        <span key={st.ability} style={{
+                          padding: '2px 6px', borderRadius: 4, fontSize: 9, fontWeight: 600,
+                          background: st.proficient ? 'rgba(201,168,76,0.1)' : 'rgba(255,255,255,0.02)',
+                          border: `1px solid ${st.proficient ? 'rgba(201,168,76,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                          color: st.proficient ? '#c9a84c' : 'rgba(255,255,255,0.2)',
+                        }}>
+                          {abbr}{st.proficient ? ' \u2713' : ''}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Active Conditions */}
+              {activeConditions.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 8, fontWeight: 600, textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.08em', marginBottom: 4 }}>Active Conditions</div>
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                    {activeConditions.map(c => (
+                      <span key={c} style={{
+                        padding: '2px 6px', borderRadius: 4, fontSize: 9, fontWeight: 600,
+                        background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)',
+                        color: '#fca5a5',
+                      }}>
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Enemies HP Tiers */}
       {Object.keys(monsterHpTiers).length > 0 && (
         <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -1238,4 +1434,4 @@ export default function PlayerCombatHUD({ characterId }) {
       </div>
     </div>
   );
-}
+})

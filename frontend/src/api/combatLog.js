@@ -17,3 +17,11 @@ export const getCombatLog = (sessionId, limit) =>
 
 export const clearCombatLog = (sessionId) =>
   invoke('clear_combat_log', { sessionId: sessionId || null })
+
+export const archiveCombatSession = (sessionId, roundCount, combatants, stats) =>
+  invoke('archive_combat_session', {
+    sessionId: sessionId || '',
+    roundCount: roundCount || 0,
+    combatantsJson: typeof combatants === 'string' ? combatants : JSON.stringify(combatants || []),
+    combatStatsJson: typeof stats === 'string' ? stats : JSON.stringify(stats || {}),
+  })

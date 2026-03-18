@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Wifi, WifiOff, ArrowLeft, User, Loader2 } from 'lucide-react';
+import { Wifi, WifiOff, ArrowLeft, User, Loader2, Clock, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
@@ -15,14 +15,74 @@ export default function PlayerJoin() {
   const [selectedCharId, setSelectedCharId] = useState(null);
   const [connecting, setConnecting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('disconnected'); // disconnected | connecting | pending | connected | error
+  const [savedSession, setSavedSession] = useState(null);
   const connectedRef = useRef(false);
   const { dispatch } = useSession();
+
+  // Helper: format time-ago string
+  const formatTimeAgo = (timestamp) => {
+    const diff = Date.now() - timestamp;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+
+  // Load saved session from localStorage on mount
+  useEffect(() => {
+    const lastIp = localStorage.getItem('codex-last-dm-ip');
+    const lastRoom = localStorage.getItem('codex-last-room-code');
+    const lastCharId = localStorage.getItem('codex-last-char-id');
+    const lastCharName = localStorage.getItem('codex-last-char-name');
+    const lastCampaign = localStorage.getItem('codex-last-campaign');
+    const lastTime = localStorage.getItem('codex-last-session-time');
+    if (lastIp && lastCharId && lastTime) {
+      setSavedSession({
+        dmIp: lastIp,
+        roomCode: lastRoom || '',
+        charId: lastCharId,
+        charName: lastCharName || 'Unknown',
+        campaign: lastCampaign || '',
+        time: parseInt(lastTime, 10),
+      });
+      // Pre-fill fields from saved values
+      setDmIp(lastIp);
+      if (lastRoom) setRoomCode(lastRoom);
+    }
+  }, []);
+
+  // Save session data to localStorage
+  const saveSessionData = (charData, campaignName) => {
+    localStorage.setItem('codex-last-dm-ip', dmIp.trim());
+    localStorage.setItem('codex-last-room-code', roomCode);
+    localStorage.setItem('codex-last-char-id', selectedCharId);
+    localStorage.setItem('codex-last-char-name', charData?.name || 'Unknown');
+    localStorage.setItem('codex-last-campaign', campaignName || '');
+    localStorage.setItem('codex-last-session-time', String(Date.now()));
+  };
+
+  // Clear saved session
+  const clearSavedSession = () => {
+    ['codex-last-dm-ip', 'codex-last-room-code', 'codex-last-char-id',
+     'codex-last-char-name', 'codex-last-campaign', 'codex-last-session-time'
+    ].forEach(k => localStorage.removeItem(k));
+    setSavedSession(null);
+  };
 
   useEffect(() => {
     invoke('list_characters')
       .then(list => {
         setCharacters(list);
-        if (list.length === 1) setSelectedCharId(list[0].id);
+        // Auto-select: saved character > single character
+        const savedId = localStorage.getItem('codex-last-char-id');
+        if (savedId && list.some(c => c.id === savedId)) {
+          setSelectedCharId(savedId);
+        } else if (list.length === 1) {
+          setSelectedCharId(list[0].id);
+        }
       })
       .catch(e => {
         console.error('Failed to load characters:', e);
@@ -78,6 +138,9 @@ export default function PlayerJoin() {
       const payload = event.payload;
       if (payload?.event_type === 'JoinApproved' || payload?.type === 'JoinApproved') {
         setConnectionStatus('connected');
+        // Save session for quick reconnect next time
+        const charData = characters.find(c => c.id === selectedCharId);
+        saveSessionData(charData, payload?.campaign_name || '');
         toast.success('Approved! Joining session...');
         setTimeout(() => navigate('/player/session'), 600);
       } else if (payload?.event_type === 'JoinDenied' || payload?.type === 'JoinDenied') {
@@ -185,6 +248,70 @@ export default function PlayerJoin() {
             {connectionStatus === 'error' && 'Connection failed'}
           </span>
         </div>
+
+        {/* Quick Reconnect Card */}
+        {savedSession && connectionStatus === 'disconnected' && (
+          <div style={{
+            padding: '12px 14px', borderRadius: '10px',
+            background: 'rgba(201,168,76,0.06)',
+            border: '1px solid rgba(201,168,76,0.2)',
+            marginBottom: '20px',
+            position: 'relative',
+          }}>
+            <button
+              onClick={clearSavedSession}
+              title="Dismiss"
+              style={{
+                position: 'absolute', top: 8, right: 8,
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--text-mute)', padding: '2px',
+                transition: 'color 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--text-mute)'}
+            >
+              <X size={12} />
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+              <Clock size={12} style={{ color: '#c9a84c' }} />
+              <span style={{ fontSize: 11, fontWeight: 600, color: '#c9a84c', fontFamily: 'var(--font-display)' }}>
+                Previous Session
+              </span>
+              <span style={{ fontSize: 10, color: 'var(--text-mute)', marginLeft: 'auto' }}>
+                {formatTimeAgo(savedSession.time)}
+              </span>
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 8 }}>
+              <strong style={{ color: 'var(--text)' }}>{savedSession.charName}</strong>
+              {savedSession.campaign && <span> — {savedSession.campaign}</span>}
+              <div style={{ fontSize: 11, color: 'var(--text-mute)', marginTop: 2 }}>
+                {savedSession.dmIp}{savedSession.roomCode ? ` / ${savedSession.roomCode}` : ''}
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setDmIp(savedSession.dmIp);
+                setRoomCode(savedSession.roomCode);
+                if (savedSession.charId && characters.some(c => c.id === savedSession.charId)) {
+                  setSelectedCharId(savedSession.charId);
+                }
+                // Auto-connect after a brief tick to let state settle
+                setTimeout(() => handleConnect(), 50);
+              }}
+              style={{
+                width: '100%', padding: '7px 12px', borderRadius: '8px',
+                background: 'linear-gradient(135deg, rgba(201,168,76,0.15), rgba(184,148,47,0.1))',
+                border: '1px solid rgba(201,168,76,0.3)',
+                color: '#c9a84c', fontSize: '12px', fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'var(--font-ui)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                transition: 'all 0.15s',
+              }}
+            >
+              <Wifi size={12} /> Quick Reconnect
+            </button>
+          </div>
+        )}
 
         {/* DM IP */}
         <label style={{ display: 'block', marginBottom: '16px' }}>

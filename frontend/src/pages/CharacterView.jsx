@@ -20,7 +20,7 @@ import { LiveSessionProvider } from '../contexts/LiveSessionContext';
 import { useSession } from '../contexts/SessionContext';
 import PlayerNotification from '../components/party/PlayerNotification';
 import PlayerWelcome, { shouldShowPlayerWelcome } from '../components/PlayerWelcome';
-import PlayerActionOverlay from '../components/party/PlayerActionOverlay';
+const PlayerActionOverlay = lazy(() => import('../components/party/PlayerActionOverlay'));
 import SharedCombatBar from '../components/party/SharedCombatBar';
 import DmToolbar from '../components/party/DmToolbar';
 import Sidebar from '../components/Sidebar';
@@ -162,7 +162,7 @@ const SECTION_LABELS = {
   'party-loot': 'Party Loot',
   'archives': 'Archives',
   'dm-guide': 'DM Mode Guide',
-  'random-tables': 'Random Tables',
+  'random-tables': 'Random Encounters',
   'session-prep': 'Session Prep',
 };
 
@@ -1579,7 +1579,11 @@ export default function CharacterView() {
     );
   }
 
-  const ActiveComponent = SECTIONS[activeSection];
+  const ActiveComponent = SECTIONS[activeSection] || SECTIONS[appMode === 'dm' ? 'campaign-hub' : 'overview'];
+  // If activeSection was invalid (e.g. removed section from old localStorage), reset it
+  if (!SECTIONS[activeSection] && activeSection !== (appMode === 'dm' ? 'campaign-hub' : 'overview')) {
+    setActiveSection(appMode === 'dm' ? 'campaign-hub' : 'overview');
+  }
   const rulesetId = character?.ruleset || '5e-2014';
 
   return (
@@ -2106,7 +2110,9 @@ export default function CharacterView() {
       </div>
       {showPlayerWelcome && <PlayerWelcome onClose={() => setShowPlayerWelcome(false)} />}
       <PlayerNotification />
-      <PlayerActionOverlay activeConditions={activeConditions} characterId={characterId} />
+      <Suspense fallback={null}>
+        <PlayerActionOverlay activeConditions={activeConditions} characterId={characterId} />
+      </Suspense>
       <SharedCombatBar />
       <DmToolbar />
       </LiveSessionProvider>

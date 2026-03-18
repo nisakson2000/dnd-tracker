@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { X, Crown, MapPin, Swords, Megaphone, ScrollText, Sparkles, ChevronRight, ChevronLeft, Play, Gift, Users, Scroll } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { X, Crown, MapPin, Swords, Megaphone, ScrollText, Sparkles, ChevronRight, ChevronLeft, Play, Gift, Users, Scroll, Wifi, BookOpen, Globe, Target, HandHelping, Rocket, Gamepad2 } from 'lucide-react';
+import { useTutorial } from '../../contexts/TutorialContext';
 
-const STORAGE_KEY = 'codex-dm-tutorial-dismissed-v2';
+const STORAGE_KEY = 'codex-dm-tutorial-dismissed-v3';
 
 const STEPS = [
   {
@@ -9,107 +11,140 @@ const STEPS = [
     icon: Crown,
     color: '#c9a84c',
     content: [
-      'The DM Toolbar gives you full control over your live session — campaigns, combat, communications, quests, items, and event logging — all from a floating panel.',
-      'This guide will walk you through each tool. You can always reopen this by clicking the ? button on the toolbar.',
+      'Welcome to The Codex! This guide will walk you through running your first live session — from connecting players to managing combat, quests, and story.',
+      'The DM Toolbar gives you full control over everything during a session. You can reopen this tutorial anytime by clicking the ? button on the toolbar.',
+      'Read through each step, or click the dots at the top to jump to a specific topic.',
     ],
   },
   {
-    title: 'Getting Started',
-    icon: Play,
+    title: 'Connecting Players',
+    icon: Wifi,
     color: '#4ade80',
     content: [
-      '1. Select DM Mode from the main menu and choose or create a campaign.',
-      '2. Premade campaigns come pre-loaded with NPCs, quests, lore, and auto-generated scenes. Homebrew campaigns start blank — you build everything.',
-      '3. Go to the Party section, host a party, and share the room code with players.',
-      '4. Your selected campaign auto-loads — just click "Start Live Session" to begin. No need to pick it again.',
-      '5. Players connect with the room code and their characters sync automatically.',
+      '1. From the Dashboard, enter DM Mode and select or create a campaign.',
+      '2. Go to Settings → Party Connect, and click "Host Party" to start your server. A room code will be generated.',
+      '3. Share your IP address and room code with your players. They enter this on the "Join Session" screen.',
+      '4. Players will appear in your party list once they connect. You can approve or deny join requests.',
+      '5. Once everyone is connected, click "Start Live Session" from the Campaign Lobby. Player HP, AC, conditions, and spell slots sync automatically — no manual setup needed.',
+      'Tip: Players on the same Wi-Fi network use your local IP (e.g. 192.168.x.x). Remote players need your public IP with port 7878 forwarded.',
     ],
   },
   {
-    title: 'Campaign Panel',
+    title: 'Running Quests & Plot',
+    icon: Target,
+    color: '#a78bfa',
+    content: [
+      'Quests are the backbone of your campaign. Go to Quests & Plot in the sidebar to create and manage them.',
+      'Each quest has a title, giver NPC, description, objectives, difficulty, and rewards (XP, gold, items). Players can check off objectives as they complete them.',
+      'During a live session, the Quest Runner (in the DM Toolbar) shows all active quests. Select one to see its current beat — the story step you\'re on.',
+      'Use quest action buttons to: reveal linked NPCs to players, set the scene, start an encounter, or broadcast the quest description.',
+      'Mark objectives complete as your party progresses. When all objectives are done, mark the quest as Completed to auto-award XP.',
+      'Tip: Use the timeline sidebar to see all quest beats at a glance. Create sub-objectives for complex tasks and secret objectives that only reveal when you choose.',
+    ],
+  },
+  {
+    title: 'NPCs & Lore',
+    icon: Users,
+    color: '#f59e0b',
+    content: [
+      'NPCs: Go to the NPCs section to create characters your players will interact with. Set their name, race, class, location, role (ally/antagonist/neutral), and personality notes.',
+      'During sessions, reveal NPCs to players using the Quest Runner or Campaign Panel. Players see the NPC\'s public info; you see your private DM notes.',
+      'Social encounters: Use the DM Actions → Social tab to run NPC conversations. Set a Persuasion/Deception/Intimidation DC and the NPC\'s disposition auto-updates based on player rolls.',
+      'Lore & Locations: Go to Lore & Locations in the sidebar to build your world. Create entries for places, factions, history, religions, and legends.',
+      'Each lore entry has a category, body text (supports markdown), and can be linked to NPCs. Use these as reference during sessions to stay consistent.',
+      'Tip: Premade campaigns come with NPCs and lore pre-loaded. For homebrew, use AI Modules to quickly generate taverns, dungeons, NPCs, and rumors.',
+    ],
+  },
+  {
+    title: 'Scenes & Locations',
     icon: MapPin,
     color: '#22c55e',
     content: [
-      'Once the session is live, you\'ll see a compact header with timer, player count, and combat status.',
-      'Navigate scenes from the collapsible scene list. Each scene shows DM notes, description, and location.',
-      'Quick Actions appear based on the current scene — reveal NPCs, activate quests, start encounters, or hand out documents with one click.',
-      'Set the Scene Mood (Combat, Exploration, Social, Mystery, Danger, etc.) to change the atmosphere for players.',
-      'Use the Travel Calculator to plan overland journeys with random encounter rolls per day.',
-      'Short Rest and Long Rest buttons sync to all players automatically.',
+      'Scenes are the building blocks of your live session. Each scene represents a location, event, or story beat.',
+      'Premade campaigns auto-generate scenes from their location data. For homebrew, create scenes in the Campaign Lobby before starting your session.',
+      'Each scene has: a name, player-visible description, DM-only notes, mood setting, and linked NPCs/quests/encounters.',
+      'During a live session, navigate between scenes from the Campaign Panel. When you change scenes, the mood and description update for all connected players.',
+      'Scene Moods (Combat, Exploration, Social, Mystery, Danger) change the atmosphere on player screens. Use them to set the tone before big reveals.',
+      'Tip: Use Quick Actions that appear below each scene to instantly reveal NPCs, activate quests, or start encounters tied to that location.',
     ],
   },
   {
-    title: 'DM Actions',
-    icon: Gift,
-    color: '#f59e0b',
-    content: [
-      'The Actions panel has tabs: Quick, Skill Check, Conditions, Loot, Social, and Results.',
-      'Quick: Send common prompts to players or trigger passive perception checks.',
-      'Skill Check: Request ability checks, saving throws, or skill checks with custom DCs. Results show pass/fail automatically.',
-      'Conditions: Apply or remove conditions on connected players.',
-      'Loot: Give items to players — search the SRD database with class/race filtering, or create custom weapons, armor, spells, potions, and consumables with full stat blocks.',
-      'Social: Run NPC social encounters — set a DC and the NPC\'s disposition auto-updates based on how players roll.',
-    ],
-  },
-  {
-    title: 'Quest Runner',
-    icon: Scroll,
-    color: '#a78bfa',
-    content: [
-      'The Quest Runner shows all non-completed quests loaded from your campaign.',
-      'Select a quest to see its current beat — the story step you\'re on — with description, DM notes, and linked NPCs.',
-      'Action buttons let you: Load an encounter, Reveal NPCs, Set the scene, Advance to the next beat, or Broadcast the description to players.',
-      'The timeline sidebar shows all beats with their status (completed, active, pending).',
-      'Quests created in the Campaign Lobby or imported from premade campaigns appear here automatically.',
-    ],
-  },
-  {
-    title: 'Combat Manager',
+    title: 'Combat & Encounters',
     icon: Swords,
     color: '#ef4444',
     content: [
-      'Start encounters from the Campaign panel or Combat panel. Initiative is auto-rolled for all players and monsters.',
-      'Track monster HP with damage/heal buttons. Monsters are auto-killed at 0 HP and XP is logged.',
-      'The Player HP strip shows your party\'s health at a glance below the monsters.',
-      'Use the combat mini-bar (always visible during combat) to advance turns or end the encounter quickly.',
-      'Add conditions like Poisoned, Stunned, or Frightened to monsters for tracking.',
+      'Start encounters from the Campaign Panel, Quest Runner, or Encounter Runner in the sidebar.',
+      'Initiative is auto-rolled for all players (using their DEX modifiers) and monsters. You can manually adjust initiative order.',
+      'Track monster HP with the damage/heal buttons. Monsters auto-die at 0 HP, and XP is logged for the party.',
+      'The Player HP strip shows your entire party\'s health at a glance — click any player to adjust their HP directly.',
+      'Use the combat mini-bar (always visible during combat) to advance turns, end the encounter, or add/remove combatants mid-fight.',
+      'Apply conditions (Poisoned, Stunned, Prone, etc.) to monsters or players. Condition effects are tracked automatically with duration countdowns.',
+      'Tip: Use the Encounter Builder in the sidebar (during campaign prep) to pre-build balanced encounters with CR calculations.',
     ],
   },
   {
-    title: 'Communications',
-    icon: Megaphone,
+    title: 'DM Actions & Loot',
+    icon: Gift,
     color: '#f97316',
     content: [
-      'The Comms panel has two tabs: Broadcast and Prompt.',
-      'Broadcast sends narrative text, loot announcements, quest updates, or general announcements to all players. Broadcasts auto-dismiss after 10 seconds.',
-      'Prompt requests actions from players — skill checks, choices, confirmations, or free-text questions.',
-      'Use Quick Checks for common D&D skill checks (Perception, Stealth, Investigation, etc.) with proper DCs by difficulty tier.',
-      'Target specific players or send to everyone. HP and AC sync automatically — no toggle needed.',
+      'The DM Actions panel (in the toolbar) has tabs: Quick, Skill Check, Conditions, Loot, Social, and Results.',
+      'Skill Check: Request ability checks, saving throws, or skill checks with custom DCs. Results show pass/fail automatically with the player\'s modifiers applied.',
+      'Loot: Give items to specific players — search the built-in SRD item database, or create custom weapons, armor, potions, and consumables with full stat blocks.',
+      'Conditions: Apply or remove D&D conditions on connected players with one click.',
+      'Social: Run NPC social encounters with disposition tracking based on roll outcomes.',
+      'Tip: After combat, use the Loot tab to distribute treasure. Items appear directly in the player\'s inventory.',
     ],
   },
   {
-    title: 'Action Log',
-    icon: ScrollText,
+    title: 'Communications & Broadcasts',
+    icon: Megaphone,
     color: '#60a5fa',
     content: [
-      'Every session event is automatically logged — scene changes, combat starts/ends, monster kills, NPC reveals, quest activations, and more.',
-      'The log is timestamped and color-coded by event type.',
-      'Use it to recap what happened or review the session timeline.',
+      'Broadcast: Send narrative text, scene descriptions, loot announcements, or quest updates to all players. These appear as dramatic pop-ups on player screens.',
+      'Prompt: Request specific actions from players — skill checks, choices, or free-text responses. Target specific players or send to everyone.',
+      'Quick Checks: One-click buttons for common skill checks (Perception, Stealth, Investigation, etc.) with proper DCs by difficulty tier.',
+      'All player HP, AC, and conditions sync automatically — you never need to ask "what\'s your HP?" again.',
+      'Tip: Use broadcasts to set the scene before players arrive at a new location. Read the boxed text aloud while players see it on screen.',
     ],
   },
   {
-    title: 'Creating a Homebrew Campaign',
-    icon: Scroll,
+    title: 'Session Journal & Log',
+    icon: ScrollText,
+    color: '#818cf8',
+    content: [
+      'Every session event is automatically logged — scene changes, combat rounds, monster kills, NPC reveals, quest updates, loot drops, and more.',
+      'The Action Log (in the toolbar) shows a timestamped, color-coded feed of everything that happened. Use it to recap or settle disputes.',
+      'Session Notes (in the sidebar) let you write freeform notes during or after each session. Record important player decisions, improvised plot twists, or reminders for next time.',
+      'The Campaign Journal preserves the narrative arc across sessions — what happened, who was involved, and what changed.',
+      'Tip: After each session, spend 5 minutes writing a quick journal entry. Your future self will thank you when players ask "wait, what happened last time?"',
+    ],
+  },
+  {
+    title: 'Building a Homebrew Campaign',
+    icon: BookOpen,
     color: '#22c55e',
     content: [
-      '1. On the Dashboard, click "Create Campaign" to start from scratch.',
-      '2. Give your campaign a name and pick a ruleset (2024 PHB or 2014 PHB).',
-      '3. Once created, click into your campaign to access the Campaign Hub.',
-      '4. Build your world: add NPCs, write quests with objectives, create lore entries for locations and history.',
-      '5. Use the DM Toolkit generators (Dungeon, Encounter, Boss, Rumors, etc.) to quickly create content.',
-      '6. Set up scenes in the Campaign Lobby — each scene is a location or story beat for your session.',
-      '7. Use AI Modules to generate scene descriptions, NPC dialogue, and story hooks — then save them directly to your campaign.',
-      '8. Your campaign appears under "Local Campaigns" when selecting a campaign, so you can always find it.',
+      '1. Dashboard → Create Campaign → name it, pick a ruleset, choose "Homebrew."',
+      '2. Open the Campaign Hub and start building: add NPCs, write quests with objectives, create lore for your world.',
+      '3. Use the Encounter Builder to design balanced combat encounters with CR calculations.',
+      '4. Use AI Modules (sidebar) to generate content: dungeons, NPCs, rumors, scene descriptions, and dialogue.',
+      '5. Set up scenes in the Campaign Lobby — each scene links to quests, NPCs, and encounters for quick access during play.',
+      '6. Use the Homebrew Builder for custom magic items, monsters, and rules.',
+      '7. When ready, host your party, start the live session, and your entire campaign is at your fingertips.',
+      'Tip: Start small — one quest, three NPCs, two locations. You can always add more between sessions.',
+    ],
+  },
+  {
+    title: 'Premade Campaigns',
+    icon: Globe,
+    color: '#c9a84c',
+    content: [
+      'Don\'t want to build from scratch? The Codex includes 18 ready-to-play campaign templates covering levels 1-8.',
+      'Go to Premade Campaigns in the sidebar to browse them. Each includes NPCs, quests with objectives, lore entries, items, and a journal introduction.',
+      'Click "Load Campaign" to import everything into your character/campaign. NPCs, quests, lore, and items are auto-populated.',
+      'Premade campaigns auto-generate scenes from their location data — just start the session and go.',
+      'You can also browse Community Adventures from the 5etools homebrew library for hundreds of additional adventures.',
+      'Tip: Premade campaigns are a starting point, not a cage. Edit NPCs, add quests, change lore — make it your own.',
     ],
   },
   {
@@ -117,13 +152,13 @@ const STEPS = [
     icon: Sparkles,
     color: '#c084fc',
     content: [
-      'Click the status bars (green session bar or red combat bar) to quickly open the relevant panel.',
-      'The toolbar stays visible across all app sections while you\'re hosting.',
-      'NPC dispositions auto-update when players pass or fail social skill checks.',
-      'Premade campaigns auto-generate scenes from locations in the campaign data. Homebrew campaigns let you build scenes manually in the Campaign Lobby.',
-      'Use the Arcane Advisor (AI Assistant) for rules questions, encounter ideas, or lore generation.',
-      'Use AI Modules in the sidebar to generate content and auto-save it to your campaign.',
-      'Export your campaign as a .json file to share it with other DMs, or archive it when you\'re done.',
+      'Click the status bars (green session bar or red combat bar) to quickly jump to the relevant toolbar panel.',
+      'The DM Toolbar stays visible across all app sections while you\'re hosting — switch between NPCs, quests, and combat freely.',
+      'Use Short Rest / Long Rest buttons in the Campaign Panel — they sync to all players and auto-restore HP, hit dice, and spell slots.',
+      'The Random Encounters section (sidebar → Tools) has offline rollable tables for loot, encounters, NPCs, and world-building — no AI needed.',
+      'Use the Arcane Advisor (AI Assistant) during sessions for quick rules lookups, improvised NPC names, or encounter scaling advice.',
+      'Export your campaign as a .json file to share with other DMs, or archive completed campaigns for future reference.',
+      'Keyboard shortcut during sessions: press R to quick-roll a d20, Escape to dismiss popups.',
     ],
   },
 ];
@@ -134,6 +169,8 @@ export function shouldShowTutorial() {
 
 export default function DmTutorial({ onClose }) {
   const [step, setStep] = useState(0);
+  const tutorial = useTutorial();
+  const navigate = useNavigate();
 
   const handleDismissForever = () => {
     localStorage.setItem(STORAGE_KEY, 'true');
@@ -247,39 +284,74 @@ export default function DmTutorial({ onClose }) {
               </button>
             )}
 
-            <button
-              onClick={() => {
-                if (isLast) onClose();
-                else setStep(s => s + 1);
-              }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 4,
-                padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                background: `${current.color}18`, border: `1px solid ${current.color}40`,
-                color: current.color, cursor: 'pointer',
-                fontFamily: 'var(--font-heading)', letterSpacing: '0.04em',
-              }}
-            >
-              {isLast ? 'Get Started' : 'Next'} {!isLast && <ChevronRight size={12} />}
-            </button>
+            {!isLast ? (
+              <button
+                onClick={() => setStep(s => s + 1)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                  background: `${current.color}18`, border: `1px solid ${current.color}40`,
+                  color: current.color, cursor: 'pointer',
+                  fontFamily: 'var(--font-heading)', letterSpacing: '0.04em',
+                }}
+              >
+                Next <ChevronRight size={12} />
+              </button>
+            ) : (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button
+                  onClick={() => {
+                    if (tutorial) tutorial.startTutorial();
+                    handleDismissForever();
+                    import('../../utils/loadTutorialCampaign').then(({ loadTutorialCampaign }) => {
+                      loadTutorialCampaign().then(charId => navigate(`/dm/lobby/${charId}`));
+                    });
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    background: 'linear-gradient(135deg, rgba(74,222,128,0.15), rgba(34,197,94,0.1))',
+                    border: '1px solid rgba(74,222,128,0.35)',
+                    color: '#4ade80', cursor: 'pointer', fontFamily: 'var(--font-heading)',
+                    boxShadow: '0 0 12px rgba(74,222,128,0.1)',
+                  }}
+                >
+                  <Gamepad2 size={14} /> Try Interactive Tutorial
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.setItem('codex-dm-guidance-mode', 'guided');
+                    window.dispatchEvent(new CustomEvent('codex-guidance-mode-changed', { detail: 'guided' }));
+                    handleDismissForever();
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.35)',
+                    color: '#c9a84c', cursor: 'pointer', fontFamily: 'var(--font-heading)',
+                  }}
+                >
+                  <HandHelping size={14} /> Start Guided
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.setItem('codex-dm-guidance-mode', 'free');
+                    window.dispatchEvent(new CustomEvent('codex-guidance-mode-changed', { detail: 'free' }));
+                    handleDismissForever();
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    background: 'rgba(155,89,182,0.12)', border: '1px solid rgba(155,89,182,0.3)',
+                    color: '#c084fc', cursor: 'pointer', fontFamily: 'var(--font-heading)',
+                  }}
+                >
+                  <Rocket size={14} /> I Know What I'm Doing
+                </button>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Don't show again — on last step */}
-        {isLast && (
-          <div style={{ textAlign: 'center', marginTop: 12 }}>
-            <button
-              onClick={handleDismissForever}
-              style={{
-                padding: '6px 12px', borderRadius: 6, fontSize: 10,
-                background: 'transparent', border: '1px solid rgba(255,255,255,0.06)',
-                color: 'rgba(255,255,255,0.2)', cursor: 'pointer',
-              }}
-            >
-              Don't show this tutorial again
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

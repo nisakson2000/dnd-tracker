@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useSession } from '../contexts/SessionContext';
+import { useGuidance } from '../contexts/GuidanceContext';
+import ContextualTip from '../components/dm-campaign/ContextualTip';
 import toast from 'react-hot-toast';
 
 function StatCard({ icon: Icon, label, value, color, sub }) {
@@ -365,6 +367,7 @@ function BuilderWorkflowCard({ step, icon: Icon, title, desc, color, count }) {
 
 export default function CampaignHub({ characterId, character, onNavigate }) {
   const { campaignStatus, dispatch } = useSession();
+  const guidance = useGuidance();
   const isDraft = campaignStatus === 'draft';
   const [stats, setStats] = useState({ npcs: 0, quests: 0, sessions: 0, lore: 0, encounters: 0 });
   const [loading, setLoading] = useState(true);
@@ -603,6 +606,24 @@ export default function CampaignHub({ characterId, character, onNavigate }) {
           Overview of your campaign — {character?.name || 'Untitled Campaign'}
         </p>
       </div>
+
+      {/* Guidance Tips */}
+      {guidance?.guidanceMode === 'guided' && (() => {
+        const tips = guidance.getActiveTips?.() || [];
+        return tips.length > 0 ? (
+          <div style={{ marginBottom: 16 }}>
+            {tips.slice(0, 2).map(tip => (
+              <ContextualTip
+                key={tip.id}
+                tipId={tip.id}
+                text={tip.text}
+                onDismiss={guidance.dismissTip}
+                onHideAll={() => guidance.setGuidanceMode('free')}
+              />
+            ))}
+          </div>
+        ) : null;
+      })()}
 
       {/* Stats grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginBottom: 28 }}>

@@ -7,6 +7,72 @@ import {
 import { invoke } from '@tauri-apps/api/core';
 import toast from 'react-hot-toast';
 
+/* ── Auto-Generate Event Suggestions ── */
+
+const EVENT_TEMPLATES = {
+  quest_complete: [
+    { title: 'Shift in Local Power', type: 'political', severity: 'moderate', desc: 'The completion of this quest has shifted the balance of power in the region. Local leaders react.' },
+    { title: 'Celebration in the Streets', type: 'social', severity: 'minor', desc: 'Word of the party\'s success has spread. The common folk celebrate.' },
+    { title: 'New Alliances Form', type: 'political', severity: 'minor', desc: 'Inspired by recent events, rival factions consider new alliances.' },
+    { title: 'Economic Boom', type: 'economic', severity: 'moderate', desc: 'Trade routes reopen and merchants return after the threat was eliminated.' },
+  ],
+  battle_won: [
+    { title: 'Military Retaliation Brewing', type: 'military', severity: 'major', desc: 'Allies of the defeated force are regrouping and planning revenge.' },
+    { title: 'War Spoils Redistributed', type: 'economic', severity: 'moderate', desc: 'The spoils of battle affect the local economy as weapons and goods flood the market.' },
+    { title: 'Veterans Seek New Purpose', type: 'social', severity: 'minor', desc: 'Soldiers from the battle look for new employment or causes to fight for.' },
+    { title: 'The Fallen Are Mourned', type: 'religious', severity: 'minor', desc: 'Temples hold services for those lost in battle. The mood is somber.' },
+  ],
+  faction_rep_change: [
+    { title: 'Faction Tensions Rise', type: 'political', severity: 'moderate', desc: 'The change in reputation has not gone unnoticed. Political tensions are building.' },
+    { title: 'Diplomatic Envoy Sent', type: 'political', severity: 'minor', desc: 'A faction sends envoys to address the changing relationship with the party.' },
+    { title: 'Trade Embargo Threatened', type: 'economic', severity: 'major', desc: 'The faction considers economic retaliation based on recent actions.' },
+    { title: 'Secret Alliance Proposed', type: 'political', severity: 'moderate', desc: 'A faction reaches out through back channels to propose a covert alliance.' },
+  ],
+  generic: [
+    { title: 'Merchant Caravan Attacked', type: 'economic', severity: 'moderate', desc: 'Bandits have attacked a major trade caravan. Supply lines are disrupted.' },
+    { title: 'Natural Disaster Strikes', type: 'natural', severity: 'major', desc: 'An earthquake, flood, or storm devastates a nearby settlement.' },
+    { title: 'Wild Magic Surge', type: 'magical', severity: 'moderate', desc: 'A sudden surge of wild magic transforms the landscape in unexpected ways.' },
+    { title: 'Political Assassination', type: 'political', severity: 'major', desc: 'A prominent leader has been assassinated. Suspicion falls on multiple factions.' },
+    { title: 'Religious Festival', type: 'religious', severity: 'trivial', desc: 'A holy day approaches, drawing pilgrims and merchants from afar.' },
+    { title: 'Plague Outbreak', type: 'social', severity: 'major', desc: 'A mysterious illness spreads through the populace. Healers are overwhelmed.' },
+    { title: 'Border Skirmish', type: 'military', severity: 'moderate', desc: 'Soldiers clash along disputed borders. War may be on the horizon.' },
+    { title: 'Ancient Ruins Discovered', type: 'magical', severity: 'minor', desc: 'Explorers have uncovered ruins of an ancient civilization nearby.' },
+  ],
+};
+
+/**
+ * Generate event suggestions based on recent session actions.
+ * @param {'quest_complete'|'battle_won'|'faction_rep_change'|'generic'} actionType
+ * @param {Object} [details] - Optional context
+ * @returns {Object} A suggested event { title, type, severity, description }
+ */
+export function generateEventSuggestion(actionType = 'generic', details = {}) {
+  const templates = EVENT_TEMPLATES[actionType] || EVENT_TEMPLATES.generic;
+  const template = templates[Math.floor(Math.random() * templates.length)];
+
+  let title = template.title;
+  let description = template.desc;
+
+  // Personalize with details
+  if (details.questName) {
+    description = `After "${details.questName}" was completed: ${description}`;
+  }
+  if (details.enemyName) {
+    description = `Following the defeat of ${details.enemyName}: ${description}`;
+  }
+  if (details.factionName) {
+    title = `${details.factionName}: ${title}`;
+    description = `Regarding ${details.factionName}: ${description}`;
+  }
+
+  return {
+    title,
+    event_type: template.type,
+    severity: template.severity,
+    description,
+  };
+}
+
 /* ── Constants ── */
 
 const EVENT_TYPES = [
@@ -518,6 +584,8 @@ export default function WorldEventsManager({ campaignId }) {
   const [filterType, setFilterType] = useState('all');
   const [filterSeverity, setFilterSeverity] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [suggestion, setSuggestion] = useState(null);
+  const [autoGenType, setAutoGenType] = useState('generic');
 
   const fetchEvents = useCallback(async () => {
     if (!campaignId) return;
@@ -640,6 +708,23 @@ export default function WorldEventsManager({ campaignId }) {
             <Filter size={11} /> Filters
           </button>
           <button
+            onClick={() => {
+              const s = generateEventSuggestion(autoGenType);
+              setSuggestion(s);
+            }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '4px',
+              padding: '5px 10px', borderRadius: '6px',
+              background: 'rgba(245,158,11,0.1)',
+              border: '1px solid rgba(245,158,11,0.3)',
+              color: '#f59e0b', fontSize: '11px', fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'var(--font-ui)',
+              transition: 'all 0.15s',
+            }}
+          >
+            <Sparkles size={11} /> Auto-Generate
+          </button>
+          <button
             onClick={() => setShowCreate(!showCreate)}
             style={{
               display: 'flex', alignItems: 'center', gap: '4px',
@@ -690,6 +775,160 @@ export default function WorldEventsManager({ campaignId }) {
                   <option key={s.key} value={s.key}>{s.label}</option>
                 ))}
               </select>
+            </div>
+          </div>
+        )}
+
+        {/* Auto-Generate Suggestion */}
+        {suggestion && (
+          <div style={{
+            background: 'rgba(245,158,11,0.04)',
+            border: '1px solid rgba(245,158,11,0.15)',
+            borderRadius: '10px', padding: '14px',
+          }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginBottom: '10px',
+            }}>
+              <span style={{
+                fontSize: '12px', fontWeight: 700, color: '#f59e0b',
+                fontFamily: 'var(--font-ui)',
+                display: 'flex', alignItems: 'center', gap: '6px',
+              }}>
+                <Sparkles size={13} /> Suggested Event
+              </span>
+              <button
+                onClick={() => setSuggestion(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-mute)', padding: '2px' }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* Action type selector */}
+            <div style={{ marginBottom: '10px' }}>
+              <div style={labelStyle}>Based on</div>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                {[
+                  { key: 'quest_complete', label: 'Quest Completed' },
+                  { key: 'battle_won', label: 'Battle Won' },
+                  { key: 'faction_rep_change', label: 'Faction Change' },
+                  { key: 'generic', label: 'Random' },
+                ].map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={() => {
+                      setAutoGenType(opt.key);
+                      setSuggestion(generateEventSuggestion(opt.key));
+                    }}
+                    style={{
+                      padding: '3px 8px', borderRadius: '5px',
+                      background: autoGenType === opt.key ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${autoGenType === opt.key ? 'rgba(245,158,11,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                      color: autoGenType === opt.key ? '#f59e0b' : 'var(--text-mute)',
+                      fontSize: '10px', fontWeight: 600,
+                      cursor: 'pointer', fontFamily: 'var(--font-ui)',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Suggestion preview */}
+            <div style={{
+              padding: '10px 12px', borderRadius: '8px',
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              marginBottom: '10px',
+            }}>
+              <div style={{
+                fontSize: '13px', fontWeight: 700, color: 'var(--text)',
+                fontFamily: 'var(--font-ui)', marginBottom: '4px',
+              }}>
+                {suggestion.title}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                <TypeBadge type={suggestion.event_type} />
+                <SeverityBadge severity={suggestion.severity} />
+              </div>
+              <p style={{
+                fontSize: '12px', lineHeight: 1.5, color: 'var(--text-dim)',
+                fontFamily: 'var(--font-ui)', margin: 0,
+              }}>
+                {suggestion.description}
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button
+                onClick={() => {
+                  const s = generateEventSuggestion(autoGenType);
+                  setSuggestion(s);
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '4px',
+                  padding: '5px 12px', borderRadius: '6px',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'var(--text-dim)', fontSize: '11px', fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'var(--font-ui)',
+                }}
+              >
+                <Sparkles size={11} /> Re-roll
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await invoke('create_world_event', {
+                      title: suggestion.title,
+                      description: suggestion.description,
+                      eventType: suggestion.event_type,
+                      severity: suggestion.severity,
+                      triggerConditionsJson: null,
+                      effectsJson: null,
+                      calendarDay: null,
+                      calendarMonth: null,
+                    });
+                    toast.success('Event created from suggestion');
+                    setSuggestion(null);
+                    fetchEvents();
+                  } catch (err) {
+                    toast.error('Failed to create event');
+                    console.error('[WorldEventsManager] auto-create:', err);
+                  }
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '4px',
+                  padding: '5px 14px', borderRadius: '6px',
+                  background: 'rgba(74,222,128,0.1)',
+                  border: '1px solid rgba(74,222,128,0.25)',
+                  color: '#4ade80', fontSize: '11px', fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'var(--font-ui)',
+                }}
+              >
+                <Check size={12} /> Accept & Create
+              </button>
+              <button
+                onClick={() => {
+                  // Send to create form for editing
+                  setShowCreate(true);
+                  setSuggestion(null);
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '4px',
+                  padding: '5px 12px', borderRadius: '6px',
+                  background: 'rgba(192,132,252,0.08)',
+                  border: '1px solid rgba(192,132,252,0.2)',
+                  color: '#c084fc', fontSize: '11px', fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'var(--font-ui)',
+                }}
+              >
+                <Plus size={11} /> Edit First
+              </button>
             </div>
           </div>
         )}

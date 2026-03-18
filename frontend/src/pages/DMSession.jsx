@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import {
   Square, Clock, Users, Swords, MapPin, ChevronRight,
   SkipForward, ScrollText, Dice5, Shield, Star, Eye, Zap, ChevronDown, ChevronUp, X, Check, Moon, Sun,
-  Play, StopCircle, Skull, Heart, Send, MessageCircle, Download, Sparkles, Loader2, Plus, Minus, Search,
+  Play, Pause, StopCircle, Skull, Heart, Send, MessageCircle, Download, Sparkles, Loader2, Plus, Minus, Search,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
@@ -19,7 +19,12 @@ import QuestRunner from '../components/dm-session/QuestRunner';
 import QuickReferencePanel from '../components/dm-session/QuickReferencePanel';
 import { useCampaignSyncSafe } from '../contexts/CampaignSyncContext';
 import { rulesetMatch, rulesetLabel } from '../utils/rulesetUtils';
-import { History, AlertCircle, BookMarked, Megaphone, BookOpen } from 'lucide-react';
+import { History, AlertCircle, BookMarked, Megaphone, BookOpen, Lightbulb } from 'lucide-react';
+import { useGuidance } from '../contexts/GuidanceContext';
+import { useSessionGuidance } from '../hooks/useSessionGuidance';
+import { useTutorial, isTutorialFakePlayer } from '../contexts/TutorialContext';
+import useFakePlayer from '../hooks/useFakePlayer';
+import TutorialCoach from '../components/tutorial/TutorialCoach';
 
 function formatTimer(seconds) {
   const h = Math.floor(seconds / 3600);
@@ -33,10 +38,10 @@ export default function DMSession() {
   const { id: campaignId } = useParams();
   const navigate = useNavigate();
   const {
-    campaignName, sessionId, sessionActive,
+    campaignName, sessionId, sessionActive, paused,
     connectedPlayers, currentScene, initiative,
     round, currentTurn, actionLog, pendingActions, chatMessages, dispatch,
-    broadcastEvent,
+    broadcastEvent, pauseSession, resumeSession,
   } = useSession();
 
   const syncCtx = useCampaignSyncSafe();
@@ -103,6 +108,31 @@ export default function DMSession() {
   const [quests, setQuests] = useState([]);
   const [questNpcs, setQuestNpcs] = useState([]);
   const [campaignRuleset, setCampaignRuleset] = useState(null);
+  // Guidance companion
+  const guidance = useGuidance();
+  const { suggestions, dismissSuggestion } = useSessionGuidance({
+    encounterActive,
+    currentScene,
+    elapsedSeconds,
+    actionLog,
+    sessionActive,
+  });
+  const [companionDismissed, setCompanionDismissed] = useState(false);
+
+  // Tutorial system
+  const tutorial = useTutorial();
+  const { fakePlayer, responses: fakeResponses, simulateResponse } = useFakePlayer();
+  const isTutorialActive = tutorial?.tutorialActive && tutorial?.tutorialPhase === 'session';
+
+  // Log fake player responses into action log
+  useEffect(() => {
+    if (!isTutorialActive || fakeResponses.length === 0) return;
+    const latest = fakeResponses[fakeResponses.length - 1];
+    if (latest?.message) {
+      dispatch({ type: 'LOG_ACTION', payload: latest.message });
+    }
+  }, [fakeResponses, isTutorialActive, dispatch]);
+
   // Debounce refs
   const startSessionDebounce = useRef(false);
   const endSessionDebounce = useRef(false);
@@ -289,6 +319,11 @@ export default function DMSession() {
     dispatch({ type: 'ADD_CHAT_MESSAGE', payload: { sender: 'DM', message: msg, timestamp: ts } });
     dispatch({ type: 'LOG_ACTION', payload: `DM: ${msg}` });
     await broadcastEvent({ type: 'ChatMessage', sender: 'DM', message: msg, timestamp: ts });
+    if (tutorial?.tutorialActive) {
+      tutorial.markCompleted('broadcastSent');
+      simulateResponse('acknowledge');
+      setTimeout(() => tutorial.advanceStep(), 800);
+    }
   };
 
   const handleSendQuickCheck = () => {
@@ -311,6 +346,11 @@ export default function DMSession() {
     sendPrompt('roll_check', promptData);
     dispatch({ type: 'LOG_ACTION', payload: `Sent ${promptData.label} to players` });
     toast.success(`Quick Check sent: ${promptData.label}`);
+    if (tutorial?.tutorialActive) {
+      tutorial.markCompleted('checkRequested');
+      simulateResponse('rollCheck', { ability: promptData.ability, skill: promptData.skill, dc: promptData.dc });
+      setTimeout(() => tutorial.advanceStep(), 800);
+    }
   };
 
   // Action request handlers (DM approves/denies player requests)
@@ -443,19 +483,24 @@ export default function DMSession() {
     const poll = async () => {
       try {
         const players = await invoke('ws_get_connected');
-        dispatch({ type: 'SET_PLAYERS', payload: players.map(p => ({
+        const mapped = players.map(p => ({
           id: p.uuid || p.player_uuid,
           name: p.display_name || p.name || 'Player',
           connected: p.status === 'approved' || p.status === 'connected',
           playerStatus: p.status || 'disconnected',
           ...p,
-        }))});
+        }));
+        // Inject fake tutorial player if tutorial is active
+        if (tutorial?.tutorialActive && fakePlayer && !mapped.some(p => isTutorialFakePlayer(p.id))) {
+          mapped.push(fakePlayer);
+        }
+        dispatch({ type: 'SET_PLAYERS', payload: mapped });
       } catch { /* server not running yet */ }
     };
     poll();
     const interval = setInterval(poll, 3000);
     return () => clearInterval(interval);
-  }, [dispatch]);
+  }, [dispatch, tutorial?.tutorialActive, fakePlayer]);
 
   // Listen for ALL incoming game events from players
   const connectedPlayersRef = useRef(connectedPlayers);
@@ -573,13 +618,18 @@ export default function DMSession() {
     return () => { if (unlisten) unlisten(); };
   }, [dispatch]);
 
-  // Session timer
+  // Session timer (freezes when paused)
   useEffect(() => {
+    if (paused) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+      return;
+    }
     timerRef.current = setInterval(() => {
       setElapsedSeconds(s => s + 1);
     }, 1000);
     return () => clearInterval(timerRef.current);
-  }, []);
+  }, [paused]);
 
   // Restore timer from localStorage on mount (crash recovery)
   useEffect(() => {
@@ -722,6 +772,10 @@ export default function DMSession() {
       });
       toast.success(`Awarded ${xpAmount} XP to ${xpSelectedPlayers.length} player(s)`);
       dispatch({ type: 'LOG_ACTION', payload: `Awarded ${xpAmount} XP: ${xpReason || 'Encounter'}` });
+      if (tutorial?.tutorialActive) {
+        tutorial.markCompleted('xpAwarded');
+        setTimeout(() => tutorial.advanceStep(), 800);
+      }
       // Broadcast to players
       invoke('ws_broadcast_event', {
         eventJson: JSON.stringify({
@@ -832,22 +886,42 @@ export default function DMSession() {
 
         <div style={{ flex: 1 }} />
 
-        {/* Session timer */}
+        {/* Session timer + pause/resume */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: '6px',
           padding: '4px 12px', borderRadius: '6px',
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: paused ? 'rgba(251,191,36,0.08)' : 'rgba(255,255,255,0.04)',
+          border: `1px solid ${paused ? 'rgba(251,191,36,0.25)' : 'rgba(255,255,255,0.08)'}`,
         }}>
-          <Clock size={13} style={{ color: '#fbbf24' }} />
+          <Clock size={13} style={{ color: '#fbbf24', opacity: paused ? 0.5 : 1 }} />
           <span style={{
             fontSize: '14px', fontWeight: 700,
-            color: '#fbbf24',
+            color: paused ? 'rgba(251,191,36,0.6)' : '#fbbf24',
             fontFamily: 'var(--font-mono, monospace)',
             minWidth: '60px', textAlign: 'center',
           }}>
             {formatTimer(elapsedSeconds)}
           </span>
+          {paused && (
+            <span style={{ fontSize: '9px', fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Paused
+            </span>
+          )}
+          <button
+            onClick={paused ? resumeSession : pauseSession}
+            title={paused ? 'Resume session' : 'Pause session'}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: '24px', height: '24px', borderRadius: '6px',
+              background: paused ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.06)',
+              border: `1px solid ${paused ? 'rgba(74,222,128,0.25)' : 'rgba(255,255,255,0.1)'}`,
+              color: paused ? '#4ade80' : 'var(--text-mute)',
+              cursor: 'pointer', transition: 'all 0.15s',
+              padding: 0,
+            }}
+          >
+            {paused ? <Play size={12} /> : <Pause size={12} />}
+          </button>
         </div>
 
         {/* Round counter */}
@@ -891,6 +965,35 @@ export default function DMSession() {
           <Square size={12} /> {ending ? 'Ending...' : 'End Session'}
         </button>
       </motion.div>
+
+      {/* ── Companion Strip (Guided Mode) ── */}
+      {guidance?.guidanceMode === 'guided' && !companionDismissed && suggestions.length > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '6px 16px',
+          background: 'rgba(201,168,76,0.04)',
+          borderBottom: '1px solid rgba(201,168,76,0.1)',
+        }}>
+          <Lightbulb size={13} style={{ color: '#c9a84c', flexShrink: 0 }} />
+          <div style={{ flex: 1, display: 'flex', gap: 12 }}>
+            {suggestions.slice(0, 2).map(s => (
+              <span key={s.id} style={{ fontSize: 11, color: 'var(--text-dim)', fontFamily: 'var(--font-ui)' }}>
+                {s.text}
+                <button
+                  onClick={() => dismissSuggestion(s.id)}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-mute)', cursor: 'pointer', fontSize: 9, marginLeft: 6 }}
+                >dismiss</button>
+              </span>
+            ))}
+          </div>
+          <button
+            onClick={() => setCompanionDismissed(true)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-mute)', padding: 2, display: 'flex' }}
+          >
+            <X size={12} />
+          </button>
+        </div>
+      )}
 
       {/* ── Main Grid ── */}
       <div style={{
@@ -1048,7 +1151,7 @@ export default function DMSession() {
               ) : (
                 <div style={{ color: 'var(--text-mute)', fontSize: '13px' }}>
                   <p style={{ margin: '0 0 12px' }}>No scene selected. Choose a scene:</p>
-                  <div style={{ display: 'grid', gap: '6px' }}>
+                  <div data-tutorial="scene-list" style={{ display: 'grid', gap: '6px' }}>
                     {scenes.map(s => (
                       <button
                         key={s.id}
@@ -1094,6 +1197,7 @@ export default function DMSession() {
               </span>
               {!encounterActive ? (
                 <button
+                  data-tutorial="encounter-start"
                   onClick={handleStartEncounter}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '4px',
@@ -1108,6 +1212,7 @@ export default function DMSession() {
                 </button>
               ) : (
                 <button
+                  data-tutorial="encounter-end"
                   onClick={handleEndEncounter}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '4px',
@@ -1465,7 +1570,7 @@ export default function DMSession() {
         {/* RIGHT: Players, Handouts & Action Log */}
         <div style={{ display: 'grid', gridTemplateRows: 'auto auto 1fr', gap: '12px' }}>
           {/* Connected Players */}
-          <div style={panelStyle}>
+          <div data-tutorial="player-panel" style={panelStyle}>
             <div style={panelHeaderStyle}>
               <Users size={12} /> Players ({connectedPlayers.filter(p => p.connected).length}/{connectedPlayers.length})
             </div>
@@ -1942,6 +2047,7 @@ export default function DMSession() {
         <span>{connectedPlayers.length} player{connectedPlayers.length !== 1 ? 's' : ''} connected</span>
         <span style={{ opacity: 0.3 }}>|</span>
         <button
+          data-tutorial="xp-button"
           onClick={() => setShowXpModal(true)}
           style={{
             display: 'flex', alignItems: 'center', gap: '4px',
@@ -2004,7 +2110,7 @@ export default function DMSession() {
         </button>
         <span style={{ opacity: 0.3 }}>|</span>
         {/* Quick Checks */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div data-tutorial="quick-checks" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <select value={quickCheckAbility} onChange={e => { setQuickCheckAbility(e.target.value); setQuickCheckSkill(''); }} style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text)', fontSize: '10px', fontFamily: 'var(--font-ui)', outline: 'none' }}>
             <option value="">Ability...</option>
             {['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'].map(a => <option key={a} value={a.toLowerCase()}>{a.slice(0,3)}</option>)}
@@ -2041,7 +2147,7 @@ export default function DMSession() {
         </button>
         <span style={{ opacity: 0.3 }}>|</span>
         {/* Chat input */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1, maxWidth: '300px' }}>
+        <div data-tutorial="chat-input" style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1, maxWidth: '300px' }}>
           <MessageCircle size={10} style={{ color: '#a78bfa', flexShrink: 0 }} />
           <input
             type="text"
@@ -2069,6 +2175,9 @@ export default function DMSession() {
           </button>
         </div>
       </div>
+
+      {/* Tutorial Coach overlay */}
+      {isTutorialActive && <TutorialCoach />}
     </div>
   );
 }

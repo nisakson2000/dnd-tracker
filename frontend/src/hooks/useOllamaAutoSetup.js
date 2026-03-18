@@ -153,6 +153,20 @@ export function useOllamaAutoSetup() {
     }
   }
 
+  // Pre-warm model into memory after setup completes
+  useEffect(() => {
+    if (stage !== 'ready') return;
+    const channel = new Channel();
+    channel.onmessage = () => {}; // discard warmup response
+    invoke('ollama_chat', {
+      model: 'phi3.5',
+      messages: [{ role: 'user', content: 'hi' }],
+      onChunk: channel,
+      maxTokens: 1,
+      temperature: 0.0,
+    }).catch(() => {}); // ignore warmup errors
+  }, [stage]);
+
   // Run on mount
   useEffect(() => { runSetup(); }, [runSetup]);
 

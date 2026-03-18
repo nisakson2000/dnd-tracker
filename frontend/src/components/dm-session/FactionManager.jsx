@@ -3,8 +3,9 @@ import { invoke } from '@tauri-apps/api/core';
 import {
   Users, Shield, Swords, Crown, Plus, Trash2, Edit3,
   ChevronDown, ChevronRight, Eye, EyeOff, Loader2,
-  X, Save, Target, Handshake, MapPin,
+  X, Save, Target, Handshake, MapPin, Clock, TrendingDown,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 /* ── Constants ── */
 
@@ -663,6 +664,8 @@ function FactionCard({ faction, factions, onRefresh }) {
         rank: rank.label.toLowerCase(),
         notes: rep.notes || null,
       });
+      // Mark this faction as interacted with this session (for drift tracking)
+      markFactionInteracted(faction.id);
       await fetchDetails();
     } catch (err) {
       console.error('[FactionManager] adjust reputation:', err);
@@ -860,10 +863,32 @@ function FactionCard({ faction, factions, onRefresh }) {
 
 /* ── Main Component ── */
 
+/**
+ * Get the session number from localStorage (tracks which factions were interacted with).
+ */
+function getSessionNumber() {
+  return parseInt(localStorage.getItem('codex_session_number') || '1', 10);
+}
+
+function getInteractedFactions() {
+  try {
+    return JSON.parse(localStorage.getItem('codex_interacted_factions') || '{}');
+  } catch { return {}; }
+}
+
+function markFactionInteracted(factionId) {
+  const data = getInteractedFactions();
+  data[factionId] = getSessionNumber();
+  localStorage.setItem('codex_interacted_factions', JSON.stringify(data));
+}
+
 export default function FactionManager({ campaignId } = {}) {
   const [factions, setFactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showDrift, setShowDrift] = useState(false);
+  const [driftResults, setDriftResults] = useState([]);
+  const [drifting, setDrifting] = useState(false);
 
   const fetchFactions = useCallback(async () => {
     setLoading(true);
@@ -881,6 +906,97 @@ export default function FactionManager({ campaignId } = {}) {
     fetchFactions();
   }, [fetchFactions]);
 
+  /**
+   * Session Drift: unused allied factions drift -5 toward neutral,
+   * hostile factions drift -3 toward more hostile (min -100).
+   */
+  const handleSessionDrift = async () => {
+    setDrifting(true);
+    const sessionNum = getSessionNumber();
+    const interacted = getInteractedFactions();
+    const results = [];
+
+    try {
+      for (const faction of factions) {
+        if (faction.status === 'destroyed' || faction.status === 'inactive') continue;
+
+        // Check if faction was interacted with this session
+        const lastInteracted = interacted[faction.id] || 0;
+        if (lastInteracted >= sessionNum) continue; // interacted this session, skip
+
+        // Get reputations for this faction
+        let reps = [];
+        try {
+          reps = await invoke('get_faction_reputations', { factionId: faction.id });
+        } catch { continue; }
+
+        if (!reps || reps.length === 0) continue;
+
+        for (const rep of reps) {
+          const oldScore = rep.score || 0;
+          let newScore = oldScore;
+          let reason = '';
+
+          if (oldScore > 10) {
+            // Allied/friendly — drift toward neutral
+            newScore = Math.max(0, oldScore - 5);
+            reason = 'unused ally drift';
+          } else if (oldScore < -10) {
+            // Hostile — drift toward more hostile
+            newScore = Math.max(-100, oldScore - 3);
+            reason = 'unused hostility drift';
+          } else {
+            continue; // Near neutral, no drift
+          }
+
+          if (newScore !== oldScore) {
+            const rank = getRepRank(newScore);
+            try {
+              await invoke('set_faction_reputation', {
+                factionId: faction.id,
+                characterId: rep.character_id || null,
+                characterName: rep.character_name,
+                score: newScore,
+                rank: rank.label.toLowerCase(),
+                notes: rep.notes || null,
+              });
+              results.push({
+                factionName: faction.name,
+                characterName: rep.character_name,
+                oldScore,
+                newScore,
+                reason,
+              });
+            } catch (err) {
+              console.error('[FactionManager] drift error:', err);
+            }
+          }
+        }
+      }
+
+      // Bump session number
+      localStorage.setItem('codex_session_number', String(sessionNum + 1));
+      // Clear interacted factions for new session
+      localStorage.setItem('codex_interacted_factions', '{}');
+
+      setDriftResults(results);
+      setShowDrift(true);
+
+      if (results.length === 0) {
+        toast('No reputation drift this session — all factions are neutral or were interacted with.', { icon: 'ℹ️' });
+      } else {
+        toast.success(`${results.length} reputation(s) drifted`);
+      }
+
+      fetchFactions();
+    } catch (err) {
+      console.error('[FactionManager] session drift:', err);
+      toast.error('Failed to apply session drift');
+    } finally {
+      setDrifting(false);
+    }
+  };
+
   return (
     <div className="card p-4 space-y-3">
       {/* Header */}
@@ -890,13 +1006,69 @@ export default function FactionManager({ campaignId } = {}) {
           <span className="text-sm font-medium">Factions</span>
           <span className="text-[10px] text-amber-200/30">({factions.length})</span>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="text-xs px-2.5 py-1 rounded border border-purple-500/30 text-purple-300 hover:bg-purple-500/10 transition-all cursor-pointer flex items-center gap-1"
-        >
-          <Plus size={12} /> Add Faction
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={handleSessionDrift}
+            disabled={drifting || factions.length === 0}
+            className="text-xs px-2.5 py-1 rounded border border-amber-500/30 text-amber-300 hover:bg-amber-500/10 transition-all cursor-pointer flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Apply end-of-session reputation drift"
+          >
+            {drifting ? <Loader2 size={12} className="animate-spin" /> : <Clock size={12} />}
+            Session Drift
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="text-xs px-2.5 py-1 rounded border border-purple-500/30 text-purple-300 hover:bg-purple-500/10 transition-all cursor-pointer flex items-center gap-1"
+          >
+            <Plus size={12} /> Add Faction
+          </button>
+        </div>
       </div>
+
+      {/* Drift Results */}
+      {showDrift && driftResults.length > 0 && (
+        <div className="bg-amber-500/[0.05] border border-amber-500/20 rounded-lg p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-amber-300">
+              <TrendingDown size={13} />
+              Session Drift Results
+            </div>
+            <button
+              onClick={() => setShowDrift(false)}
+              className="text-amber-200/30 hover:text-amber-200/60 cursor-pointer"
+            >
+              <X size={12} />
+            </button>
+          </div>
+          <div className="space-y-1">
+            {driftResults.map((r, i) => {
+              const oldRank = getRepRank(r.oldScore);
+              const newRank = getRepRank(r.newScore);
+              return (
+                <div key={i} className="flex items-center justify-between text-xs bg-black/15 rounded-lg px-2.5 py-1.5 border border-white/5">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Shield size={10} className="text-purple-400/50 shrink-0" />
+                    <span className="text-amber-100/80 truncate">{r.factionName}</span>
+                    <span className="text-[10px] text-amber-200/30">({r.characterName})</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[10px]" style={{ color: oldRank.color }}>
+                      {r.oldScore > 0 ? '+' : ''}{r.oldScore}
+                    </span>
+                    <span className="text-[10px] text-amber-200/30">→</span>
+                    <span className="text-[10px]" style={{ color: newRank.color }}>
+                      {r.newScore > 0 ? '+' : ''}{r.newScore}
+                    </span>
+                    <span className="text-[9px] px-1 py-0 rounded text-amber-200/30" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                      {r.reason}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Create Form */}
       {showForm && (

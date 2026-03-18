@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { Swords } from 'lucide-react';
 import { useCampaignSync } from '../../contexts/CampaignSyncContext';
 
@@ -10,7 +10,7 @@ const CONDITION_COLORS = {
   stunned: '#facc15', unconscious: '#991b1b', concentrating: '#60a5fa',
 };
 
-export default function CombatStateBar() {
+export default memo(function CombatStateBar() {
   const {
     combatActive, initiativeOrder, currentTurn, round,
     monsterHpTiers, monsterConditions,
@@ -132,4 +132,4 @@ export default function CombatStateBar() {
       </div>
     </div>
   );
-}
+})

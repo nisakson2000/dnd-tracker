@@ -158,27 +158,27 @@ export default function DMCampaignList() {
             </div>
           </div>
           <button
-            onClick={() => setShowCreateWizard(true)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '10px 20px', borderRadius: '10px',
-              background: 'linear-gradient(135deg, rgba(155,89,182,0.2), rgba(142,68,173,0.15))',
-              border: '1px solid rgba(155,89,182,0.35)',
-              color: '#c084fc', fontSize: '14px', fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'var(--font-ui)',
-              transition: 'all 0.15s',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(155,89,182,0.3), rgba(142,68,173,0.25))';
-              e.currentTarget.style.borderColor = 'rgba(155,89,182,0.5)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(155,89,182,0.2), rgba(142,68,173,0.15))';
-              e.currentTarget.style.borderColor = 'rgba(155,89,182,0.35)';
-            }}
-          >
-            <Plus size={16} /> New Campaign
-          </button>
+              onClick={() => setShowCreateWizard(true)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '10px 20px', borderRadius: '10px',
+                background: 'linear-gradient(135deg, rgba(155,89,182,0.2), rgba(142,68,173,0.15))',
+                border: '1px solid rgba(155,89,182,0.35)',
+                color: '#c084fc', fontSize: '14px', fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'var(--font-ui)',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(155,89,182,0.3), rgba(142,68,173,0.25))';
+                e.currentTarget.style.borderColor = 'rgba(155,89,182,0.5)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(155,89,182,0.2), rgba(142,68,173,0.15))';
+                e.currentTarget.style.borderColor = 'rgba(155,89,182,0.35)';
+              }}
+            >
+              <Plus size={16} /> New Campaign
+            </button>
         </motion.div>
 
         {/* Sort / Filter bar */}

@@ -8,7 +8,7 @@ import HelpTooltip from '../components/HelpTooltip';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
 import { HELP } from '../data/helpText';
-import { calcMod } from '../utils/dndHelpers';
+import { calcMod, calcProfBonus, getSpellSlotsForClass } from '../utils/dndHelpers';
 import { rollDie } from '../utils/dice';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -197,6 +197,38 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
       }
     } catch { /* ignore */ }
   }, [spellsLoaded, characterId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-populate spell slots from class/level if none exist
+  useEffect(() => {
+    if (loading || !charData) return;
+    if (slots && slots.length > 0) return; // Already have slots
+    const className = charData?.overview?.primary_class || charData?.primary_class;
+    const level = charData?.overview?.level || charData?.level;
+    if (!className || !level) return;
+
+    // Determine caster type
+    const subclass = charData?.overview?.primary_subclass || charData?.primary_subclass || '';
+    const thirdCaster = THIRD_CASTER_SUBCLASSES[subclass];
+    let casterType = null;
+    if (thirdCaster) {
+      casterType = 'third';
+    } else {
+      const cls = CLASSES?.find(c => c.name === className);
+      if (cls?.spellcasting) {
+        casterType = className === 'Warlock' ? 'pact' : cls.spellcasting.type;
+      }
+    }
+    if (!casterType) return;
+
+    const computed = getSpellSlotsForClass(casterType, level);
+    if (computed.length > 0) {
+      const newSlots = computed.map(s => ({ slot_level: s.slot_level, max_slots: s.max_slots, used_slots: 0 }));
+      setSlots(newSlots);
+      updateSpellSlots(characterId, newSlots).then(() => {
+        toast.success(`Auto-filled spell slots for ${className} L${level}`);
+      }).catch(() => {});
+    }
+  }, [loading, charData, slots, characterId, CLASSES]);
 
   // Notify parent (CharacterView top bar) when spell slots change
   useEffect(() => {

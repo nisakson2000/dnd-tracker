@@ -1,0 +1,275 @@
+{
+  "name": "The Last Light of Eldara",
+  "summary": "An ancient lich has risen and a tide of undeath sweeps the land. Behind the failing wards of humanity's last bastion, time is running out to find the components for the only ritual that can end the darkness.",
+  "description": "Three months ago, the lich Varethis the Undying shattered his own phylactery in a mad ritual that fused his essence with the land itself, transforming the eastern provinces into the Blightlands — a necromantic wasteland where the dead rise within hours of dying and even the soil is toxic to the living. The kingdom of Eldara has been reduced to a single fortified city, Dawnhold, protected by ancient wards that are failing more each day. Supplies dwindle, refugees crowd the streets, and hope fades as the Blight creeps closer to the walls. An order of scholars called the Luminari have discovered a ritual — the Rite of Sundering — that could sever Varethis from the land and destroy him permanently, but it requires five sacred components scattered across the most dangerous regions of the Blightlands. The players must venture beyond the walls into a hellscape of risen dead, corrupted wildlife, and Varethis's dread lieutenants, rallying scattered survivors and recovering the ritual components before Dawnhold's wards collapse entirely. This is a campaign about hope in the face of overwhelming darkness, where every life saved and every mile reclaimed matters.",
+  "level": "5-8",
+  "ruleset": "5e 2014",
+  "author": "The Codex",
+  "tags": ["undead", "horror", "exploration", "dungeon crawl"],
+  "npcs": [
+    {
+      "name": "High Warden Lysara Dawnshield",
+      "role": "Quest Giver",
+      "race": "Human",
+      "npc_class": "Paladin",
+      "location": "Dawnhold - The Warden's Citadel",
+      "description": "A battle-scarred woman in her late thirties wearing battered but meticulously maintained plate armor etched with sun motifs. Her left arm ends at the elbow — she lost her hand fighting Varethis's forces at the Battle of Ashenmoor and refuses a prosthetic, calling the stump her 'reminder of what half-measures cost.' She leads Dawnhold's defense with iron determination and is respected by soldiers and civilians alike.",
+      "notes": "The military leader of Dawnhold and the party's primary quest giver. She assigns expeditions beyond the walls and controls access to the armory. She is pragmatic and will sacrifice individuals to save the city if forced, which creates tension with the more idealistic Luminari. She carries a sentient sunblade that whispers warnings about nearby undead.",
+      "status": "alive"
+    },
+    {
+      "name": "Archivist Maren Brightquill",
+      "role": "Ally",
+      "race": "Half-Elf",
+      "npc_class": "Wizard",
+      "location": "Dawnhold - The Luminari Archive",
+      "description": "A thin, exhausted scholar in her fifties with ink-stained fingers, silver-streaked hair pulled into a hasty bun, and spectacles repaired with wire so many times they barely hold together. She leads the Luminari and is the architect of the Rite of Sundering. She has not slept more than four hours a night in months and subsists largely on tea and desperate hope.",
+      "notes": "The brains behind the party's mission. She knows where each ritual component is located (approximately) and can provide lore about the Blightlands, Varethis, and the undead. She is the only person who can perform the final ritual. If she dies, the campaign enters a much harder alternate path. She has a scroll of Revivify hidden in her desk — 'for emergencies only.'",
+      "status": "alive"
+    },
+    {
+      "name": "Varethis the Undying",
+      "role": "Antagonist",
+      "race": "Undead (Lich)",
+      "npc_class": "Wizard",
+      "location": "The Blightlands - The Obsidian Throne (former capital)",
+      "description": "Once a brilliant archmage who sought to cure death after losing his family to plague, Varethis spent centuries as a conventional lich before his sanity finally shattered. He fused his essence with the land itself in a ritual that destroyed his phylactery but made him nearly unkillable by conventional means. He appears as a towering skeletal figure wreathed in black fog, with pinpoints of sickly green light where his eyes should be. He no longer speaks — he simply radiates despair.",
+      "notes": "Varethis cannot be fought directly until the Rite of Sundering severs his connection to the Blightlands. Before that, he is functionally immortal and reforms within minutes of being destroyed. He does not pursue the party personally but sees through the eyes of every undead in his domain. His dread lieutenants act as his hands and voice. There is a tragic core to his story that the Luminari archives hint at — he originally wanted to save people, not destroy them.",
+      "status": "alive"
+    },
+    {
+      "name": "Commander Theron Ashvale",
+      "role": "Ally",
+      "race": "Human",
+      "npc_class": "Fighter",
+      "location": "Dawnhold - The Outer Wall Garrison",
+      "description": "A grizzled veteran in his early fifties with a salt-and-pepper beard, a permanent limp from an old wound, and a graveyard humor that keeps his soldiers' morale from collapsing entirely. He commands the wall garrison and has personally killed more undead than anyone in Dawnhold. He greets every new day with the same words: 'Still here. Still fighting.'",
+      "notes": "Theron provides the party with tactical support for expeditions — scouts, safe routes, and supply caches hidden outside the walls. He lost his entire family to the Blight and has quietly accepted that he will die defending the wall. If the party gives him genuine hope that the Rite can work, his morale shift inspires the entire garrison, providing mechanical benefits for the final siege defense.",
+      "status": "alive"
+    },
+    {
+      "name": "Sister Aveline",
+      "role": "Support",
+      "race": "Aasimar",
+      "npc_class": "Cleric",
+      "location": "Dawnhold - The Suntemple Hospice",
+      "description": "A young aasimar woman with golden skin, white hair, and eyes that glow faintly with warm light. She runs the city's only remaining hospice, tending to the wounded, the sick, and the traumatized. Her celestial heritage makes her a symbol of hope for the refugees, though the burden of being everyone's beacon of light is visibly crushing her. Her hands tremble when she thinks no one is watching.",
+      "notes": "Sister Aveline can provide healing, restoration magic, and consecrated supplies for Blightlands expeditions. She also performs the daily ward-renewal prayers that keep Dawnhold's defenses active. She is secretly hearing a celestial voice urging her to sacrifice herself to strengthen the wards permanently — a choice she may make if the party takes too long to find the ritual components. The party can convince her not to if they offer genuine progress.",
+      "status": "alive"
+    },
+    {
+      "name": "Gravecaller Morath",
+      "role": "Antagonist",
+      "race": "Undead (Death Knight)",
+      "npc_class": "Paladin (Oathbreaker)",
+      "location": "The Blightlands - The Bone Fortress of Ashenmoor",
+      "description": "Once a noble paladin who fell defending the eastern provinces, Morath was raised by Varethis as a death knight — his most powerful lieutenant. He retains his tactical brilliance but has been twisted into a ruthless general who commands a legion of skeletal soldiers. His armor is blackened and cracked, weeping dark mist, and his voice echoes as if spoken from the bottom of a well.",
+      "notes": "Morath guards one of the ritual components in the ruins of Ashenmoor. He is a CR 7 encounter with legendary actions. There is a slim chance of reaching the paladin he once was — if the party recovers his holy symbol (hidden in Dawnhold's reliquary) and presents it during the fight, he is stunned for one round as memories flood back, and can be spoken to briefly. He cannot be fully redeemed but can choose to let the party pass.",
+      "status": "alive"
+    },
+    {
+      "name": "Renn 'Ratcatcher' Holloway",
+      "role": "Informant",
+      "race": "Halfling",
+      "npc_class": "Rogue",
+      "location": "Dawnhold - The Warrens (refugee district)",
+      "description": "A wiry halfling with a patchy beard, quick dark eyes, and a ratty cloak that smells faintly of sewer. Renn runs the black market in Dawnhold's refugee district, trading in smuggled supplies, information, and the occasional forged ration card. He is cheerful, amoral, and surprisingly well-connected — he has contacts among survivors hiding in the Blightlands who communicate via trained ravens.",
+      "notes": "Renn can provide information about safe routes through the Blightlands, the locations of survivor camps, and the movements of Varethis's undead patrols. His prices are steep but negotiable. He also runs a secret tunnel out of Dawnhold that bypasses the main gates — useful for covert expeditions. Despite his mercenary nature, he genuinely cares about the refugees in the Warrens and will help for free if children are at risk.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "The First Component: Sunfire Amber",
+      "giver": "Archivist Maren Brightquill",
+      "description": "The first component for the Rite of Sundering is a piece of Sunfire Amber — fossilized tree resin from the ancient Solwood forest, imbued with radiant energy over millennia. The Solwood was consumed by the Blight three months ago, but Maren believes a single amber deposit survives in a cave system beneath the forest's heart, protected by residual wards.",
+      "status": "active",
+      "notes": "Reward: The Sunfire Amber (ritual component) and a Potion of Radiance from Maren's personal stock. The cave system is infested with ghouls and a ghast pack leader. The amber deposit is guarded by a dying treant that has resisted the Blight through sheer willpower — it will surrender the amber if the party promises to use it to end the darkness.",
+      "objectives": [
+        { "text": "Get briefed by Archivist Maren on the Sunfire Amber's location", "completed": false },
+        { "text": "Travel through the blighted Solwood to reach the cave system", "completed": false },
+        { "text": "Navigate the caves and deal with the ghoul infestation", "completed": false },
+        { "text": "Recover the Sunfire Amber from the treant guardian", "completed": false },
+        { "text": "Return the component safely to Dawnhold", "completed": false }
+      ]
+    },
+    {
+      "title": "Rally the Survivors",
+      "giver": "High Warden Lysara Dawnshield",
+      "description": "Scattered bands of survivors are holding out in fortified positions across the Blightlands — a dwarven mining outpost, a monastery on a hilltop, and a river-fort manned by remnant soldiers. Lysara needs the party to make contact, deliver supplies, and convince them to either evacuate to Dawnhold or coordinate their defenses for the final push.",
+      "status": "active",
+      "notes": "Reward: 300 gp and access to the Warden's personal armory. Each survivor group has unique resources: the dwarves have mithral, the monks have anti-undead wards, and the soldiers have intelligence on Varethis's patrol routes. Successfully rallying all three groups provides critical support during the campaign's climactic siege defense.",
+      "objectives": [
+        { "text": "Reach the dwarven mining outpost at Irondeep and assess their situation", "completed": false },
+        { "text": "Make contact with the Sunlit Monastery survivors", "completed": false },
+        { "text": "Find the river-fort garrison and deliver Lysara's orders", "completed": false },
+        { "text": "Coordinate evacuation or defense plans with each group", "completed": false }
+      ]
+    },
+    {
+      "title": "The Bone Fortress",
+      "giver": "Archivist Maren Brightquill",
+      "description": "The third ritual component — a Soulchain Link from the original binding that imprisoned Varethis centuries ago — is held in the ruins of Ashenmoor, now a fortress of bone and dark magic controlled by Gravecaller Morath. The party must infiltrate or assault the fortress, recover the Soulchain Link, and survive an encounter with the death knight himself.",
+      "status": "active",
+      "notes": "Reward: The Soulchain Link (ritual component) and Morath's Reforged Shield if the party defeats him. This is the hardest combat encounter before the finale. The fortress is garrisoned by 50+ skeletons, a dozen zombies, and three wights serving as Morath's officers. Stealth approaches can bypass most of the garrison but Morath himself guards the component in the central keep.",
+      "objectives": [
+        { "text": "Scout the Bone Fortress and plan an approach", "completed": false },
+        { "text": "Infiltrate or assault the fortress outer defenses", "completed": false },
+        { "text": "Confront Gravecaller Morath in the central keep", "completed": false },
+        { "text": "Recover the Soulchain Link", "completed": false },
+        { "text": "Escape the fortress before reinforcements overwhelm the party", "completed": false }
+      ]
+    },
+    {
+      "title": "Hold the Line",
+      "giver": "Commander Theron Ashvale",
+      "description": "Varethis has sensed the party's progress and has accelerated his assault on Dawnhold's walls. A massive undead horde is approaching and will arrive within two days. The party must help Commander Theron prepare the defenses, coordinate the rallied survivors, and hold the wall long enough for Archivist Maren to complete the Rite of Sundering.",
+      "status": "active",
+      "notes": "Reward: This is the campaign climax. Success depends on how many components were gathered, how many survivor groups were rallied, and how well the defenses are prepared. The siege involves three waves of increasing difficulty, with the party choosing where to deploy on the wall each wave. If all five ritual components are gathered, Maren completes the Rite during the third wave, banishing Varethis permanently.",
+      "objectives": [
+        { "text": "Fortify Dawnhold's weak points using gathered resources", "completed": false },
+        { "text": "Deploy rallied survivor forces to defensive positions", "completed": false },
+        { "text": "Defend the wall against the first wave of undead", "completed": false },
+        { "text": "Protect Archivist Maren while she performs the Rite of Sundering", "completed": false },
+        { "text": "Survive until the Rite is complete", "completed": false }
+      ]
+    },
+    {
+      "title": "The Whispering Dead",
+      "giver": "Sister Aveline",
+      "description": "Refugees in the Warrens are reporting nightmares — the same nightmare, every night. A skeletal figure stands in a field of dead flowers and whispers the same phrase: 'I only wanted to save them.' Sister Aveline believes Varethis's fragmented humanity is reaching out through the Blight, and understanding his original motivation may reveal a weakness that can be exploited in the final ritual.",
+      "status": "active",
+      "notes": "Reward: Knowledge that strengthens the Rite of Sundering (reduces final DC by 2). Investigating the nightmares leads to the ruins of Varethis's family home in the Blightlands, where his original research journals survive. The journals reveal he was a healer who watched his wife and children die of plague, and his descent into lichdom began as a desperate attempt to resurrect them. This tragic context does not excuse his actions but provides the emotional key to unraveling his connection to the land.",
+      "objectives": [
+        { "text": "Interview the refugees experiencing the shared nightmare", "completed": false },
+        { "text": "Use dream magic or divination to enter and explore the nightmare", "completed": false },
+        { "text": "Travel to Varethis's ruined family home in the Blightlands", "completed": false },
+        { "text": "Recover Varethis's original research journals", "completed": false },
+        { "text": "Report findings to Archivist Maren to refine the Rite", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "The Kingdom of Eldara",
+      "category": "History",
+      "body": "Eldara was once a prosperous kingdom spanning fertile plains, ancient forests, and mineral-rich mountains. At its height, it boasted six major cities, a renowned arcane university, and trade relationships with a dozen neighboring realms. In the span of three months, Varethis's Blight reduced it to a single fortified city. The speed of the collapse shocked the world — neighboring kingdoms have sealed their borders rather than risk the Blight spreading, leaving Dawnhold truly alone.",
+      "related_to": "High Warden Lysara Dawnshield"
+    },
+    {
+      "title": "Dawnhold - The Last Bastion",
+      "category": "Location",
+      "body": "Originally a military fortress built during an ancient war, Dawnhold was expanded into a city over centuries. Its walls are inscribed with wards placed by clerics of the sun god centuries ago — wards that repel undead and purify necromantic energy within their radius. These wards were never designed to operate indefinitely, and they are degrading at an accelerating rate. Current estimates give the wards six to eight weeks before they fail entirely, though Sister Aveline's daily prayers have been slowing the decay.",
+      "related_to": "Sister Aveline"
+    },
+    {
+      "title": "The Blight",
+      "category": "History",
+      "body": "The Blight is not merely an army of undead — it is a fundamental corruption of the land itself. Within the Blightlands, the soil is toxic to plant life, water turns brackish and foul, and the ambient necromantic energy causes any creature that dies to reanimate within 1d4 hours. The Blight expands roughly one mile per week, consuming farmland, forests, and settlements. Prolonged exposure to Blight energy causes exhaustion in the living and can eventually kill without any physical injury.",
+      "related_to": "Varethis the Undying"
+    },
+    {
+      "title": "The Rite of Sundering",
+      "category": "Legend",
+      "body": "Discovered in fragments across three different Luminari archives, the Rite of Sundering is an ancient ritual designed to sever a lich's connection to the material plane. It was created during a previous undead crisis a thousand years ago but was never completed because the lich was defeated by conventional means before the components were gathered. The ritual requires five sacred components, a caster of considerable power, and must be performed at a location where the boundary between life and death is thinnest.",
+      "related_to": "Archivist Maren Brightquill"
+    },
+    {
+      "title": "The Luminari Order",
+      "category": "Faction",
+      "body": "The Luminari are an order of scholars, archivists, and war-mages dedicated to preserving knowledge and combating undeath. Once a minor academic society, the Blight has transformed them into Dawnhold's most critical institution. Their archive contains centuries of research on necromancy, undead weaknesses, and protective wards. Only twelve Luminari survive, led by Archivist Maren, and they work around the clock researching the Rite of Sundering and maintaining the city's magical defenses.",
+      "related_to": "Archivist Maren Brightquill"
+    },
+    {
+      "title": "The Fall of Ashenmoor",
+      "category": "History",
+      "body": "Ashenmoor was Eldara's second-largest city and the site of the kingdom's last major battle against the Blight. High Warden Lysara led a coalition of soldiers, mages, and paladins in a desperate defense that held for eleven days before the walls were overrun. The survivors retreated to Dawnhold in a harrowing march through Blight-corrupted territory, losing a third of their number. Ashenmoor is now a fortress of bone and dark magic, serving as Gravecaller Morath's stronghold.",
+      "related_to": "Gravecaller Morath"
+    },
+    {
+      "title": "Varethis - The Man Before the Monster",
+      "category": "History",
+      "body": "Before he became a lich, Varethis was Aldric Vareth, a healer and researcher at Eldara's arcane university. When a devastating plague killed his wife and three children, his grief drove him to obsessive research into reversing death. Over decades, his work grew darker until he crossed the line into lichdom, convincing himself that conquering death would prevent anyone from suffering as he had. Centuries of undeath eroded his sanity until the compassionate healer was buried beneath layers of madness and necromantic corruption.",
+      "related_to": "Varethis the Undying"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: The Last Light of Eldara",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe world is ending — or at least, this corner of it is.\n\nThree months ago, the eastern horizon turned black and stayed that way. The Blight rolled across Eldara like a tide of poison, killing everything it touched and raising the dead in its wake. Six cities fell in six weeks. The armies that marched to stop it came back as soldiers in the enemy's ranks.\n\nNow there is only Dawnhold. Fifty thousand souls crammed behind ancient walls that glow faintly gold at night — the last wards holding back the darkness. But the glow is dimmer every morning, and everyone knows what happens when it goes out.\n\nThe players arrive in Dawnhold as the situation reaches its most desperate point. They may be refugees, soldiers, adventurers who answered a call for aid, or survivors who fought their way through the Blightlands to reach safety.\n\n### Key NPCs to Introduce Early\n- **High Warden Lysara Dawnshield** — addresses new arrivals at the gate, assessing their combat capability\n- **Sister Aveline** — tends to the wounded in the refugee intake area, her golden skin a beacon of warmth\n- **Renn 'Ratcatcher' Holloway** — sidles up to the party in the Warrens, offering 'supplies at reasonable prices'\n\n### Starting Hooks\n1. The party arrives just as a section of the wall wards flickers and a pack of ghouls breaches the perimeter — they must help defend the breach\n2. High Warden Lysara personally recruits the party after witnessing their capabilities during the breach\n3. Archivist Maren sends an urgent summons: she has finally deciphered the complete Rite of Sundering and needs capable agents to retrieve the components",
+    "tags": "undead,lich,survival,siege,ritual,dark fantasy",
+    "npcs_mentioned": "High Warden Lysara Dawnshield,Archivist Maren Brightquill,Sister Aveline,Renn Holloway,Commander Theron Ashvale"
+  },
+  "items": [
+    {
+      "name": "Dawnhold Ward Stone",
+      "item_type": "misc",
+      "weight": 1.0,
+      "value_gp": 500.0,
+      "quantity": 1,
+      "description": "A smooth, palm-sized stone carved with the same sun-ward runes that protect Dawnhold's walls. It emits a soft golden glow in a 10-foot radius that counts as sunlight for the purpose of undead vulnerabilities. Undead that enter the light must make a DC 13 Wisdom save or be frightened for 1 round. The stone's charge lasts 8 hours before requiring a long rest in direct sunlight to recharge.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Blight-Walker's Mask",
+      "item_type": "misc",
+      "weight": 0.5,
+      "value_gp": 350.0,
+      "quantity": 1,
+      "description": "A leather face mask lined with herbs and enchanted silver filigree, designed by the Luminari for expeditions into the Blightlands. While wearing this mask, you are immune to the Blight's airborne exhaustion effect and have advantage on saving throws against disease and poison caused by necromantic corruption. The herbs must be replaced after 72 hours of use in the Blightlands.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Aveline's Blessed Mace",
+      "item_type": "weapon",
+      "weight": 4.0,
+      "value_gp": 800.0,
+      "quantity": 1,
+      "description": "A steel mace with a head shaped like a radiant sun, blessed by Sister Aveline herself. The weapon deals an extra 1d6 radiant damage against undead creatures. Once per long rest, the wielder can invoke the mace's blessing to cast Turn Undead as a 3rd-level cleric. The mace hums with a warm resonance when undead are within 60 feet, growing louder as they approach.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Potion of Radiance",
+      "item_type": "consumable",
+      "weight": 0.5,
+      "value_gp": 200.0,
+      "quantity": 3,
+      "description": "A glass vial containing liquid that glows like captured sunlight, warm to the touch even in freezing conditions. When consumed, the drinker's body emits bright light in a 20-foot radius and dim light for an additional 20 feet for 1 hour. During this time, the drinker's melee attacks deal an extra 1d4 radiant damage and they are immune to the frightened condition caused by undead. Tastes like honey and morning dew.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Morath's Reforged Shield",
+      "item_type": "armor",
+      "weight": 6.0,
+      "value_gp": 1200.0,
+      "quantity": 1,
+      "description": "The former shield of Gravecaller Morath, cleansed of its dark corruption by the Luminari and reforged with radiant runes. This +1 shield grants the wielder resistance to necrotic damage while equipped. Once per long rest, the wielder can use a reaction to project a 15-foot cone of radiant energy that deals 3d8 radiant damage to undead creatures (DC 14 Dexterity save for half). The shield bears the faded crest of a paladin order that no longer exists.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "armor",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    }
+  ]
+}

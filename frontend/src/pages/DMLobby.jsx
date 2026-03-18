@@ -15,6 +15,12 @@ import { useAppMode } from '../contexts/ModeContext';
 import { rulesetMatch, rulesetLabel } from '../utils/rulesetUtils';
 import ConfirmDialog from '../components/ConfirmDialog';
 import CampaignOverview from '../components/dm-campaign/CampaignOverview';
+import GuidanceModeToggle from '../components/dm-campaign/GuidanceModeToggle';
+import ContextualTip from '../components/dm-campaign/ContextualTip';
+import { useGuidance } from '../contexts/GuidanceContext';
+import { useTutorial } from '../contexts/TutorialContext';
+import useFakePlayer from '../hooks/useFakePlayer';
+import TutorialCoach from '../components/tutorial/TutorialCoach';
 import SessionRecap from '../components/dm-session/SessionRecap';
 import HandoutsManager from '../components/dm-session/HandoutsManager';
 import QuestGenerator from '../components/dm-session/QuestGenerator';
@@ -32,7 +38,9 @@ import TravelCalculator from '../components/dm-session/TravelCalculator';
 import WorldEventsManager from '../components/dm-session/WorldEventsManager';
 import WorldTimeline from '../components/dm-session/WorldTimeline';
 import DisasterSystem from '../components/dm-session/DisasterSystem';
+import WorldAtAGlance from '../components/dm-session/WorldAtAGlance';
 import AiModules from '../components/dm-session/AiModules';
+import ReadinessChecklist from '../components/dm-campaign/ReadinessChecklist';
 
 const GENERATOR_TABS = [
   { key: 'dungeon', label: 'Dungeon', icon: DoorOpen },
@@ -45,13 +53,14 @@ const GENERATOR_TABS = [
 ];
 
 const SIMULATION_TABS = [
+  { key: 'overview', label: 'Overview', icon: Globe },
   { key: 'factions', label: 'Factions', icon: Shield },
   { key: 'weather', label: 'Weather', icon: CloudSun },
   { key: 'economy', label: 'Economy', icon: Coins },
   { key: 'travel', label: 'Travel', icon: Route },
   { key: 'events', label: 'Events', icon: AlertTriangle },
   { key: 'timeline', label: 'Timeline', icon: Calendar },
-  { key: 'disaster', label: 'Disasters', icon: Globe },
+  { key: 'disaster', label: 'Disasters', icon: Sparkles },
 ];
 
 export default function DMLobby() {
@@ -62,6 +71,16 @@ export default function DMLobby() {
 
   // Ensure DM mode is active when this page loads
   useEffect(() => { if (mode !== 'dm') setMode('dm'); }, [mode, setMode]);
+
+  // Guidance system
+  const guidance = useGuidance();
+  const { guidanceMode, setGuidanceMode, dismissTip, currentStage } = guidance || {};
+  const guidanceTips = guidance?.getActiveTips?.() || [];
+
+  // Tutorial system
+  const tutorial = useTutorial();
+  const { fakePlayer } = useFakePlayer();
+  const isTutorialActive = tutorial?.tutorialActive && tutorial?.tutorialPhase === 'lobby';
 
   const [campaign, setCampaign] = useState(null);
   const [scenes, setScenes] = useState([]);
@@ -112,6 +131,11 @@ export default function DMLobby() {
 
   // AI Modules (Phase 5)
   const [aiOpen, setAiOpen] = useState(false);
+
+  // Readiness counts
+  const [npcCount, setNpcCount] = useState(0);
+  const [questCount, setQuestCount] = useState(0);
+  const [encounterCount, setEncounterCount] = useState(0);
 
   const loadCampaignSettings = useCallback(async () => {
     try {
@@ -171,6 +195,28 @@ export default function DMLobby() {
     }
   }, []);
 
+  const loadReadinessCounts = useCallback(async () => {
+    try {
+      const [npcs, quests] = await Promise.all([
+        invoke('list_campaign_npcs').catch(() => []),
+        invoke('list_campaign_quests').catch(() => []),
+      ]);
+      setNpcCount(npcs.length);
+      setQuestCount(quests.length);
+      // Encounters don't have a dedicated list command yet — count from scenes
+      let encCount = 0;
+      for (const scene of (scenes || [])) {
+        try {
+          const enc = await invoke('get_encounter', { sceneId: scene.id });
+          if (enc) encCount++;
+        } catch { /* no encounter for this scene */ }
+      }
+      setEncounterCount(encCount);
+    } catch (e) {
+      console.error('Failed to load readiness counts:', e);
+    }
+  }, [scenes]);
+
   useEffect(() => {
     (async () => {
       await loadCampaign();
@@ -180,6 +226,11 @@ export default function DMLobby() {
       setLoading(false);
     })();
   }, [loadCampaign, loadScenes, loadCampaignSettings, loadLastSessionId]);
+
+  // Load readiness counts once scenes are available
+  useEffect(() => {
+    if (!loading) loadReadinessCounts();
+  }, [loading, loadReadinessCounts]);
 
   // Poll connected players every 3 seconds
   useEffect(() => {
@@ -341,6 +392,7 @@ export default function DMLobby() {
         toast.success('Session started! (WS server unavailable)');
       }
 
+      if (tutorial?.tutorialActive) tutorial.markCompleted('sessionStarted');
       navigate(`/dm/session/${campaignId}`);
     } catch (e) {
       toast.error('Failed to start session');
@@ -376,6 +428,11 @@ export default function DMLobby() {
           location: sceneLocation.trim(),
         });
         toast.success('Scene created');
+        if (tutorial?.tutorialActive) {
+          tutorial.markCompleted('sceneCreated');
+          // Auto-advance after brief delay so the DM sees the completion
+          setTimeout(() => tutorial.advanceStep(), 800);
+        }
       }
       resetSceneForm();
       loadScenes();
@@ -491,25 +548,41 @@ export default function DMLobby() {
               }}>
                 {campaign?.ruleset === 'dnd5e-2024' ? '2024 PHB' : campaign?.ruleset === 'dnd5e-2014' ? '2014 PHB' : campaign?.ruleset}
               </span>
+              {guidanceMode && <GuidanceModeToggle mode={guidanceMode} onChange={setGuidanceMode} />}
             </div>
           </div>
 
-          {/* Pre-session Checklist */}
-          <div style={{ padding: '12px 16px', borderRadius: '8px', background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.1)', marginBottom: '12px' }}>
-            <div style={{ fontSize: '10px', fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>Pre-session Checklist</div>
-            <div style={{ display: 'grid', gap: '4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: scenes.length > 0 ? '#4ade80' : '#fbbf24' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: scenes.length > 0 ? '#4ade80' : '#fbbf24' }} />
-                {scenes.length > 0 ? `${scenes.length} scene(s) created` : 'No scenes created (recommended)'}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: connectedPlayers.length > 0 ? '#4ade80' : '#fbbf24' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: connectedPlayers.length > 0 ? '#4ade80' : '#fbbf24' }} />
-                {connectedPlayers.length > 0 ? `${connectedPlayers.length} player(s) connected` : 'No players connected (recommended)'}
-              </div>
+          {/* Guidance Tips */}
+          {guidanceMode === 'guided' && guidanceTips.length > 0 && (
+            <div style={{ marginBottom: '12px' }}>
+              {guidanceTips.slice(0, 2).map(tip => (
+                <ContextualTip
+                  key={tip.id}
+                  tipId={tip.id}
+                  text={tip.text}
+                  onDismiss={dismissTip}
+                  onHideAll={() => setGuidanceMode('free')}
+                />
+              ))}
             </div>
+          )}
+
+          {/* Readiness Checklist */}
+          <div style={{ marginBottom: '12px', minWidth: '260px' }}>
+            <ReadinessChecklist
+              campaign={campaign}
+              scenes={scenes}
+              connectedPlayers={connectedPlayers}
+              npcCount={npcCount}
+              questCount={questCount}
+              encounterCount={encounterCount}
+              guidanceMode={guidanceMode || 'free'}
+              onNavigate={(section) => navigate(`/character/${campaignId}?section=${section}`)}
+            />
           </div>
 
           <button
+            data-tutorial="start-session-btn"
             onClick={handleStartSession}
             disabled={starting}
             style={{
@@ -544,12 +617,15 @@ export default function DMLobby() {
         </motion.div>
 
         {/* Campaign Overview Dashboard */}
-        <CampaignOverview
-          campaign={campaign}
-          scenes={scenes}
-          connectedPlayers={connectedPlayers}
-          onRefresh={loadScenes}
-        />
+        <div data-tutorial="campaign-overview">
+          <CampaignOverview
+            campaign={campaign}
+            scenes={scenes}
+            connectedPlayers={connectedPlayers}
+            onRefresh={loadScenes}
+            onNavigate={(section) => navigate(`/character/${campaignId}?section=${section}`)}
+          />
+        </div>
 
         {/* Two-column layout */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
@@ -566,6 +642,7 @@ export default function DMLobby() {
                 Scenes
               </h2>
               <button
+                data-tutorial="scene-form"
                 onClick={() => { resetSceneForm(); setShowSceneForm(true); }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
@@ -1181,6 +1258,7 @@ export default function DMLobby() {
                     })}
                   </div>
                   <div style={{ padding: '12px' }}>
+                    {activeSimTab === 'overview' && <WorldAtAGlance />}
                     {activeSimTab === 'factions' && <FactionManager />}
                     {activeSimTab === 'weather' && <WeatherPanel />}
                     {activeSimTab === 'economy' && <EconomyPanel />}
@@ -1393,6 +1471,29 @@ export default function DMLobby() {
           onCancel={() => setDeleteSceneTarget(null)}
         />
       )}
+
+      {/* Tutorial: fake player indicator */}
+      {isTutorialActive && fakePlayer && (
+        <div style={{
+          position: 'fixed', bottom: 16, right: 16, zIndex: 100,
+          padding: '10px 16px', borderRadius: 10,
+          background: 'linear-gradient(135deg, rgba(74,222,128,0.1), rgba(34,197,94,0.06))',
+          border: '1px solid rgba(74,222,128,0.25)',
+          display: 'flex', alignItems: 'center', gap: 8,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+        }}>
+          <div style={{
+            width: 8, height: 8, borderRadius: '50%', background: '#4ade80',
+            boxShadow: '0 0 6px rgba(74,222,128,0.5)',
+          }} />
+          <span style={{ fontSize: 11, color: '#4ade80', fontFamily: 'var(--font-ui)', fontWeight: 600 }}>
+            {fakePlayer.name} (Tutorial Player) connected
+          </span>
+        </div>
+      )}
+
+      {/* Tutorial Coach overlay */}
+      {isTutorialActive && <TutorialCoach />}
     </div>
   );
 }

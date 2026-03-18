@@ -125,3 +125,69 @@ export function validateExpression(expr) {
   const pattern = /^[+-]?(\d*d\d+(k[hl]\d+)?|\d+)([+-](\d*d\d+(k[hl]\d+)?|\d+))*$/;
   return pattern.test(cleaned);
 }
+
+/* ── Persistent Dice Roll History ── */
+
+const MAX_HISTORY = 100;
+
+function historyKey(characterId) {
+  return `codex-dice-history-${characterId}`;
+}
+
+/**
+ * Record a dice roll to persistent history.
+ * @param {string} characterId
+ * @param {string} expression - e.g. "2d6+3"
+ * @param {number|object} result - the roll result (total or full result object)
+ * @param {string} context - 'attack' | 'save' | 'check' | 'damage' | 'other'
+ */
+export function recordRoll(characterId, expression, result, context = 'other') {
+  if (!characterId) return;
+  try {
+    const key = historyKey(characterId);
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    const entry = {
+      expression,
+      result: typeof result === 'object' ? result : { total: result },
+      total: typeof result === 'object' ? (result.total ?? result) : result,
+      context,
+      timestamp: Date.now(),
+      characterId,
+    };
+    const updated = [...existing, entry].slice(-MAX_HISTORY);
+    localStorage.setItem(key, JSON.stringify(updated));
+  } catch (err) {
+    console.warn('[dice] Failed to record roll:', err);
+  }
+}
+
+/**
+ * Get roll history for a character.
+ * @param {string} characterId
+ * @param {number} [limit] - max entries to return (most recent first)
+ * @returns {Array} roll entries, newest first
+ */
+export function getRollHistory(characterId, limit) {
+  if (!characterId) return [];
+  try {
+    const key = historyKey(characterId);
+    const entries = JSON.parse(localStorage.getItem(key) || '[]');
+    const sorted = entries.slice().reverse();
+    return limit ? sorted.slice(0, limit) : sorted;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Clear roll history for a character.
+ * @param {string} characterId
+ */
+export function clearRollHistory(characterId) {
+  if (!characterId) return;
+  try {
+    localStorage.removeItem(historyKey(characterId));
+  } catch {
+    // ignore
+  }
+}

@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { Sparkles, Send, Trash2, X, Check, Loader2, AlertCircle, Zap } from 'lucide-react';
+import { Sparkles, Send, Trash2, X, Check, Loader2, AlertCircle, Zap, MessageSquare, Plus, Clock, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { streamChat, checkOllamaStatus, searchWikiContext } from '../api/assistant';
+import { streamChat, checkOllamaStatus, searchWikiContext, getAvailableModels, getSelectedModel, setSelectedModel } from '../api/assistant';
 import { buildSystemPrompt, buildMessages } from '../data/assistantContext';
 
 const SETTINGS_KEY = 'codex-assistant-settings';
-const HISTORY_KEY = 'codex-assistant-history';
+const CONVERSATIONS_KEY = 'codex-ai-conversations';
+const MAX_CONVERSATIONS = 50;
 
 function loadSettings() {
   try {
@@ -22,17 +23,46 @@ function saveSettings(s) {
   } catch { /* ignore storage errors */ }
 }
 
-function loadHistory(characterId) {
+// ─── Conversation persistence (localStorage) ────────────────────────────────
+
+function generateConvoId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function loadAllConversations() {
   try {
-    const raw = sessionStorage.getItem(`${HISTORY_KEY}-${characterId}`);
+    const raw = localStorage.getItem(CONVERSATIONS_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch { return []; }
 }
 
-function saveHistory(characterId, history) {
+function saveAllConversations(convos) {
   try {
-    sessionStorage.setItem(`${HISTORY_KEY}-${characterId}`, JSON.stringify(history.slice(-20)));
+    // Keep only the most recent MAX_CONVERSATIONS
+    const trimmed = convos.slice(0, MAX_CONVERSATIONS);
+    localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(trimmed));
   } catch { /* ignore storage errors */ }
+}
+
+function titleFromMessage(msg) {
+  if (!msg) return 'New conversation';
+  return msg.length > 50 ? msg.slice(0, 50) + '...' : msg;
+}
+
+function formatTimestamp(iso) {
+  try {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffMs = now - d;
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHrs = Math.floor(diffMins / 60);
+    if (diffHrs < 24) return `${diffHrs}h ago`;
+    const diffDays = Math.floor(diffHrs / 24);
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return d.toLocaleDateString();
+  } catch { return ''; }
 }
 
 const EXAMPLE_PROMPTS = [
@@ -142,14 +172,33 @@ function SetupPanel({ settings, onUpdate, onEnable }) {
 export default function AiAssistant({ characterId, character }) {
   const [settings, setSettings] = useState(() => loadSettings());
   const [enabled, setEnabled] = useState(settings.enabled);
-  const [messages, setMessages] = useState(() => loadHistory(characterId));
+  const [conversations, setConversations] = useState(() => loadAllConversations());
+  const [activeConvoId, setActiveConvoId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [charData, setCharData] = useState(null);
   const [pendingAction, setPendingAction] = useState(null);
   const [applyingAction, setApplyingAction] = useState(false);
+  const [availableModels, setAvailableModels] = useState([]);
+  const [selectedModel, setSelectedModelState] = useState(() => getSelectedModel());
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Fetch available models on mount
+  useEffect(() => {
+    if (!enabled) return;
+    getAvailableModels().then(models => {
+      if (models.length) setAvailableModels(models);
+    });
+  }, [enabled]);
+
+  const handleModelChange = (e) => {
+    const model = e.target.value;
+    setSelectedModel(model);
+    setSelectedModelState(model);
+  };
 
   useEffect(() => {
     if (!characterId || !enabled) return;
@@ -158,9 +207,17 @@ export default function AiAssistant({ characterId, character }) {
       .catch(err => console.error('Failed to load character context:', err));
   }, [characterId, enabled]);
 
+  // Persist active conversation to localStorage whenever messages change
   useEffect(() => {
-    if (characterId && messages.length > 0) saveHistory(characterId, messages);
-  }, [characterId, messages]);
+    if (!activeConvoId || messages.length === 0) return;
+    setConversations(prev => {
+      const updated = prev.map(c =>
+        c.id === activeConvoId ? { ...c, messages: messages.slice(-20) } : c
+      );
+      saveAllConversations(updated);
+      return updated;
+    });
+  }, [activeConvoId, messages]);
 
   const messagesContainerRef = useRef(null);
   useEffect(() => {
@@ -172,11 +229,58 @@ export default function AiAssistant({ characterId, character }) {
 
   const updateSettings = (next) => { setSettings(next); saveSettings(next); };
 
+  // Start a new conversation (or switch to existing)
+  const startNewConversation = useCallback(() => {
+    setActiveConvoId(null);
+    setMessages([]);
+    setPendingAction(null);
+    setShowHistory(false);
+  }, []);
+
+  const loadConversation = useCallback((convo) => {
+    setActiveConvoId(convo.id);
+    setMessages(convo.messages || []);
+    setPendingAction(null);
+    setShowHistory(false);
+  }, []);
+
+  const deleteConversation = useCallback((convoId, e) => {
+    e.stopPropagation();
+    setConversations(prev => {
+      const updated = prev.filter(c => c.id !== convoId);
+      saveAllConversations(updated);
+      return updated;
+    });
+    if (activeConvoId === convoId) {
+      setActiveConvoId(null);
+      setMessages([]);
+    }
+  }, [activeConvoId]);
+
   const handleSend = useCallback(async (text) => {
     const msg = (text || input).trim();
     if (!msg || streaming) return;
     setInput('');
     setPendingAction(null);
+
+    // If no active conversation, create one
+    let convoId = activeConvoId;
+    if (!convoId) {
+      convoId = generateConvoId();
+      const newConvo = {
+        id: convoId,
+        title: titleFromMessage(msg),
+        messages: [],
+        createdAt: new Date().toISOString(),
+        characterId,
+      };
+      setActiveConvoId(convoId);
+      setConversations(prev => {
+        const updated = [newConvo, ...prev].slice(0, MAX_CONVERSATIONS);
+        saveAllConversations(updated);
+        return updated;
+      });
+    }
 
     const newMessages = [...messages, { role: 'user', content: msg }];
     setMessages(newMessages);
@@ -213,7 +317,7 @@ export default function AiAssistant({ characterId, character }) {
     } finally {
       setStreaming(false);
     }
-  }, [input, messages, streaming, charData]);
+  }, [input, messages, streaming, charData, activeConvoId, characterId]);
 
   const handleApplyAction = async () => {
     if (!pendingAction || applyingAction) return;
@@ -277,7 +381,7 @@ export default function AiAssistant({ characterId, character }) {
   const clearConversation = () => {
     setMessages([]);
     setPendingAction(null);
-    sessionStorage.removeItem(`${HISTORY_KEY}-${characterId}`);
+    setActiveConvoId(null);
   };
 
   if (!enabled) {
@@ -302,6 +406,24 @@ export default function AiAssistant({ characterId, character }) {
           </div>
         </div>
         <div className="aa-header-actions">
+          {availableModels.length > 1 && (
+            <select
+              value={selectedModel}
+              onChange={handleModelChange}
+              className="aa-model-select"
+              title="AI Model"
+            >
+              {availableModels.map(m => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          )}
+          <button onClick={startNewConversation} className="aa-header-btn" title="New conversation">
+            <Plus size={13} />
+          </button>
+          <button onClick={() => setShowHistory(h => !h)} className={`aa-header-btn ${showHistory ? 'aa-btn-active' : ''}`} title="Past conversations">
+            <MessageSquare size={13} />
+          </button>
           <button onClick={clearConversation} className="aa-header-btn" title="Clear chat">
             <Trash2 size={13} />
           </button>
@@ -313,6 +435,45 @@ export default function AiAssistant({ characterId, character }) {
           </button>
         </div>
       </div>
+
+      {/* Past Conversations Panel */}
+      {showHistory && (
+        <div className="aa-history-panel">
+          <div className="aa-history-header">
+            <span className="aa-history-title">Past Conversations</span>
+            <button onClick={() => setShowHistory(false)} className="aa-header-btn"><ChevronLeft size={13} /></button>
+          </div>
+          <div className="aa-history-list">
+            {conversations.length === 0 ? (
+              <p className="aa-history-empty">No past conversations yet.</p>
+            ) : (
+              conversations
+                .filter(c => !characterId || c.characterId === characterId)
+                .map(convo => (
+                  <button
+                    key={convo.id}
+                    onClick={() => loadConversation(convo)}
+                    className={`aa-history-item ${convo.id === activeConvoId ? 'aa-history-active' : ''}`}
+                  >
+                    <div className="aa-history-item-title">{convo.title}</div>
+                    <div className="aa-history-item-meta">
+                      <Clock size={10} />
+                      <span>{formatTimestamp(convo.createdAt)}</span>
+                      <span className="aa-history-msg-count">{(convo.messages || []).length} msgs</span>
+                    </div>
+                    <button
+                      onClick={(e) => deleteConversation(convo.id, e)}
+                      className="aa-history-delete"
+                      title="Delete conversation"
+                    >
+                      <Trash2 size={10} />
+                    </button>
+                  </button>
+                ))
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       <div className="aa-messages" ref={messagesContainerRef}>
@@ -406,6 +567,17 @@ export default function AiAssistant({ characterId, character }) {
         .aa-header-btn { width: 28px; height: 28px; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text-mute); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
         .aa-header-btn:hover { background: rgba(255,255,255,0.06); color: var(--text-sub); }
 
+        .aa-model-select {
+          padding: 4px 8px; border-radius: 6px; font-size: 11px;
+          background: rgba(0,0,0,0.3); border: 1px solid rgba(139,92,246,0.15);
+          color: var(--text-sub); font-family: var(--font-ui);
+          outline: none; cursor: pointer; max-width: 140px;
+          transition: border-color 0.15s;
+        }
+        .aa-model-select:hover { border-color: rgba(139,92,246,0.3); color: var(--text); }
+        .aa-model-select:focus { border-color: rgba(139,92,246,0.4); }
+        .aa-model-select option { background: #1a1a2e; color: var(--text); }
+
         .aa-messages { flex: 1; overflow-y: auto; padding: 16px 0; display: flex; flex-direction: column; gap: 6px; }
 
         .aa-empty { text-align: center; padding: 48px 20px 24px; }
@@ -476,6 +648,24 @@ export default function AiAssistant({ characterId, character }) {
         .aa-btn-enable { width: 100%; padding: 12px 0; border-radius: 10px; font-size: 13px; font-family: var(--font-display); font-weight: 600; cursor: not-allowed; background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text-mute); display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
         .aa-btn-enable.ready { cursor: pointer; background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(201,168,76,0.2)); border-color: rgba(139,92,246,0.35); color: var(--text); }
         .aa-btn-enable.ready:hover { border-color: rgba(139,92,246,0.5); }
+
+        .aa-btn-active { background: rgba(139,92,246,0.15) !important; border-color: rgba(139,92,246,0.3) !important; color: rgba(139,92,246,0.8) !important; }
+
+        /* History panel */
+        .aa-history-panel { border-bottom: 1px solid var(--border); padding: 8px 0; max-height: 260px; display: flex; flex-direction: column; flex-shrink: 0; }
+        .aa-history-header { display: flex; align-items: center; justify-content: space-between; padding: 4px 4px 8px; }
+        .aa-history-title { font-family: var(--font-display); font-size: 12px; font-weight: 600; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; }
+        .aa-history-list { overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+        .aa-history-empty { font-size: 12px; color: var(--text-mute); text-align: center; padding: 16px 0; }
+        .aa-history-item { position: relative; display: block; width: 100%; text-align: left; padding: 8px 30px 8px 10px; border-radius: 8px; background: transparent; border: 1px solid transparent; color: var(--text-sub); cursor: pointer; font-family: var(--font-ui); transition: all 0.15s; }
+        .aa-history-item:hover { background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.1); }
+        .aa-history-active { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.15); }
+        .aa-history-item-title { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+        .aa-history-item-meta { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-mute); }
+        .aa-history-msg-count { margin-left: 6px; opacity: 0.7; }
+        .aa-history-delete { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 4px; background: transparent; border: none; color: var(--text-mute); cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: all 0.15s; }
+        .aa-history-item:hover .aa-history-delete { opacity: 1; }
+        .aa-history-delete:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
       `}</style>
     </div>
   );

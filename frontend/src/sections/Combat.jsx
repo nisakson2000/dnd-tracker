@@ -15,6 +15,7 @@ import { CONDITION_EFFECTS, computeConditionEffects } from '../data/conditionEff
 import { calculateEffectiveDamage, applyDamageToHp, calculateHealingResult, resolveDeathSave, checkConcentration } from '../utils/damageEngine';
 import { insertCombatLog } from '../api/combatLog';
 import { rollDie } from '../utils/dice';
+import { WEAPONS, autoAttackBonus, autoDamageString, modStr as helperModStr, calcProfBonus } from '../utils/dndHelpers';
 
 const CONDITION_ICONS = {
   'Blinded': '\u{1F441}', 'Charmed': '\u{1F495}', 'Deafened': '\u{1F507}',
@@ -48,6 +49,12 @@ const COMBAT_SESSION_DEFAULTS = {
   concentratingSpell: null, // { name: string } or null
   deathSaves: {}, // { [combatantId]: { successes: 0, failures: 0, stable: false, dead: false } }
   lairAction: { enabled: false, description: '' },
+  turnTimerEnabled: false,
+  turnTimerDuration: 60, // 30, 60, or 90 seconds
+  turnTimerRemaining: 0,
+  turnTimerRunning: false,
+  hpUndoStack: {}, // { [combatantId]: { previousHp, previousTempHp } }
+  critOverrides: {}, // { [attackId]: boolean }
 };
 
 function useCombatSession(characterId) {
@@ -147,6 +154,24 @@ function useCombatSession(characterId) {
   const setLairAction = useCallback((updater) => {
     setSessionRaw(prev => ({ ...prev, lairAction: typeof updater === 'function' ? updater(prev.lairAction || COMBAT_SESSION_DEFAULTS.lairAction) : updater }));
   }, []);
+  const setTurnTimerEnabled = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, turnTimerEnabled: typeof updater === 'function' ? updater(prev.turnTimerEnabled) : updater }));
+  }, []);
+  const setTurnTimerDuration = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, turnTimerDuration: typeof updater === 'function' ? updater(prev.turnTimerDuration) : updater }));
+  }, []);
+  const setTurnTimerRemaining = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, turnTimerRemaining: typeof updater === 'function' ? updater(prev.turnTimerRemaining) : updater }));
+  }, []);
+  const setTurnTimerRunning = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, turnTimerRunning: typeof updater === 'function' ? updater(prev.turnTimerRunning) : updater }));
+  }, []);
+  const setHpUndoStack = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, hpUndoStack: typeof updater === 'function' ? updater(prev.hpUndoStack || {}) : updater }));
+  }, []);
+  const setCritOverrides = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, critOverrides: typeof updater === 'function' ? updater(prev.critOverrides || {}) : updater }));
+  }, []);
 
   return {
     combatants: session.combatants, setCombatants,
@@ -160,6 +185,12 @@ function useCombatSession(characterId) {
     concentratingSpell: session.concentratingSpell, setConcentratingSpell,
     deathSaves: session.deathSaves || {}, setDeathSaves,
     lairAction: session.lairAction || COMBAT_SESSION_DEFAULTS.lairAction, setLairAction,
+    turnTimerEnabled: session.turnTimerEnabled || false, setTurnTimerEnabled,
+    turnTimerDuration: session.turnTimerDuration || 60, setTurnTimerDuration,
+    turnTimerRemaining: session.turnTimerRemaining || 0, setTurnTimerRemaining,
+    turnTimerRunning: session.turnTimerRunning || false, setTurnTimerRunning,
+    hpUndoStack: session.hpUndoStack || {}, setHpUndoStack,
+    critOverrides: session.critOverrides || {}, setCritOverrides,
   };
 }
 
@@ -343,6 +374,12 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     concentratingSpell, setConcentratingSpell,
     deathSaves, setDeathSaves,
     lairAction, setLairAction,
+    turnTimerEnabled, setTurnTimerEnabled,
+    turnTimerDuration, setTurnTimerDuration,
+    turnTimerRemaining, setTurnTimerRemaining,
+    turnTimerRunning, setTurnTimerRunning,
+    hpUndoStack, setHpUndoStack,
+    critOverrides, setCritOverrides,
   } = useCombatSession(characterId);
 
   const [combatLogOpen, setCombatLogOpen] = useState(false);
@@ -354,7 +391,33 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   const [newCombatantName, setNewCombatantName] = useState('');
   const [newCombatantInit, setNewCombatantInit] = useState('');
   const [newCombatantHP, setNewCombatantHP] = useState('');
+  const [newCombatantTempHP, setNewCombatantTempHP] = useState('');
   const [newCombatantIsEnemy, setNewCombatantIsEnemy] = useState(false);
+
+  // --- Turn Timer interval ---
+  const turnTimerRef = useRef(null);
+  const nextTurnRef = useRef(null);
+  useEffect(() => {
+    if (turnTimerEnabled && turnTimerRunning && turnTimerRemaining > 0) {
+      turnTimerRef.current = setInterval(() => {
+        setTurnTimerRemaining(prev => {
+          if (prev <= 1) {
+            setTurnTimerRunning(false);
+            toast('Turn timer expired! Auto-advancing...', {
+              icon: '\u23F0', duration: 3000,
+              style: { background: '#1a0a0a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)' },
+            });
+            // Auto-advance turn via ref to avoid stale closure
+            setTimeout(() => { if (nextTurnRef.current) nextTurnRef.current(); }, 100);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(turnTimerRef.current);
+    }
+    return () => { if (turnTimerRef.current) clearInterval(turnTimerRef.current); };
+  }, [turnTimerEnabled, turnTimerRunning, turnTimerRemaining > 0]);
 
   const resetActionEconomy = useCallback(() => {
     setActionEcon({ action: false, bonusAction: false, reaction: false });
@@ -446,6 +509,13 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   // --- Next/Previous Turn ---
   const nextTurn = () => {
     if (combatants.length === 0) return;
+    // Reset turn timer
+    if (turnTimerEnabled) {
+      setTurnTimerRemaining(turnTimerDuration);
+      setTurnTimerRunning(true);
+    }
+    // Reset all combatant reactions on turn advance
+    setCombatants(prev => prev.map(c => ({ ...c, reactionUsed: false })));
     setCurrentTurn(prev => {
       const next = prev + 1;
       const isNewRound = next >= combatants.length;
@@ -490,9 +560,16 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       return resolvedNext;
     });
   };
+  // Keep ref updated for timer auto-advance
+  nextTurnRef.current = nextTurn;
 
   const prevTurn = () => {
     if (combatants.length === 0) return;
+    // Reset turn timer
+    if (turnTimerEnabled) {
+      setTurnTimerRemaining(turnTimerDuration);
+      setTurnTimerRunning(true);
+    }
     setCurrentTurn(prev => {
       if (prev <= 0) {
         setRoundCounter(r => Math.max(1, r - 1));
@@ -507,17 +584,21 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     if (!name) { toast.error('Combatant name is required'); return; }
     const init = parseInt(newCombatantInit) || 0;
     const hp = parseInt(newCombatantHP) || 0;
+    const tempHp = parseInt(newCombatantTempHP) || 0;
     setCombatants(prev => [...prev, {
       id: Date.now(),
       name,
       initiative: init,
       maxHp: hp,
       currentHp: hp,
+      tempHp: tempHp,
       isEnemy: newCombatantIsEnemy,
+      reactionUsed: false,
     }].sort((a, b) => b.initiative - a.initiative));
     setNewCombatantName('');
     setNewCombatantInit('');
     setNewCombatantHP('');
+    setNewCombatantTempHP('');
     setNewCombatantIsEnemy(false);
   };
 
@@ -540,6 +621,9 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     setRoundCounter(1);
     setCurrentTurn(0);
     setCombatStats({ totalDamageDealt: 0, totalDamageTaken: 0, totalHealing: 0, attackCount: 0 });
+    setHpUndoStack({});
+    setTurnTimerRunning(false);
+    setTurnTimerRemaining(0);
   };
 
   // --- Apply Damage/Healing to Combatant ---
@@ -547,6 +631,12 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     if (!amount || amount <= 0) return;
     const target = combatants.find(c => c.id === combatantId);
     if (!target) return;
+
+    // Store undo state before any HP change
+    setHpUndoStack(prev => ({
+      ...prev,
+      [combatantId]: { previousHp: target.currentHp ?? target.maxHp ?? 0, previousTempHp: target.tempHp || 0 },
+    }));
 
     if (mode === 'damage') {
       // --- Use damageEngine for resistance/vulnerability/immunity ---
@@ -878,12 +968,16 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     const isNat20 = d20 === 20;
     const isNat1 = d20 === 1;
 
+    // Manual crit override check
+    const isCritOverride = critOverrides[atk.id] || false;
+    const isCrit = isNat20 || isCritOverride;
+
     let dmgResult = null;
     const dmg = parseDamage(atk.damage_dice);
     if (dmg) {
-      const rolls = Array.from({ length: isNat20 ? dmg.count * 2 : dmg.count }, () => rollDie(dmg.sides));
+      const rolls = Array.from({ length: isCrit ? dmg.count * 2 : dmg.count }, () => rollDie(dmg.sides));
       const dmgTotal = rolls.reduce((s, r) => s + r, 0) + dmg.mod + magicBonus;
-      dmgResult = { rolls, total: dmgTotal, crit: isNat20, extraDamage: weaponExtraDamage || '' };
+      dmgResult = { rolls, total: dmgTotal, crit: isCrit, extraDamage: weaponExtraDamage || '' };
     }
 
     const ts = Date.now();
@@ -902,9 +996,14 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       }));
     }
 
+    // Log manual crit override
+    if (isCritOverride && !isNat20) {
+      logEvent('attack', `CRITICAL HIT (manual override) on ${atk.name || 'Attack'}!`);
+    }
+
     // Crit animation
-    if (isNat20 || isNat1) {
-      setCritAnimations(prev => ({ ...prev, [atk.id]: isNat20 ? 'nat20' : 'nat1' }));
+    if (isCrit || isNat1) {
+      setCritAnimations(prev => ({ ...prev, [atk.id]: isCrit ? 'nat20' : 'nat1' }));
       setTimeout(() => {
         setCritAnimations(prev => { const next = { ...prev }; delete next[atk.id]; return next; });
       }, 1200);
@@ -1271,6 +1370,19 @@ export default function Combat({ characterId, character, onConditionsChange }) {
             )}
           </div>
           <div className="flex items-center gap-2">
+            {/* Turn Timer Display */}
+            {turnTimerEnabled && combatants.length > 0 && (
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold transition-all ${
+                turnTimerRemaining <= 10 && turnTimerRemaining > 0
+                  ? 'bg-red-900/40 border-red-500/50 text-red-300 animate-pulse'
+                  : turnTimerRemaining <= 0
+                  ? 'bg-red-900/20 border-red-500/20 text-red-400/60'
+                  : 'bg-gold/10 border-gold/30 text-gold'
+              }`}>
+                <Timer size={12} />
+                <span>{turnTimerRemaining}s</span>
+              </div>
+            )}
             {combatants.length > 0 && (
               <>
                 <button
@@ -1295,6 +1407,43 @@ export default function Combat({ characterId, character, onConditionsChange }) {
           </div>
         </div>
         <p className="text-xs text-amber-200/30 mb-3">Track turn order with HP. Click a combatant's HP to apply damage or healing.</p>
+        {/* Turn Timer Settings */}
+        <div className="flex items-center gap-2 mb-3">
+          <Timer size={12} className="text-amber-200/40" />
+          <span className="text-xs text-amber-200/40">Turn Timer:</span>
+          {[30, 60, 90].map(seconds => (
+            <button
+              key={seconds}
+              onClick={() => {
+                setTurnTimerEnabled(true);
+                setTurnTimerDuration(seconds);
+                setTurnTimerRemaining(seconds);
+                setTurnTimerRunning(false);
+              }}
+              className={`text-[10px] px-2 py-0.5 rounded border transition-all ${
+                turnTimerEnabled && turnTimerDuration === seconds
+                  ? 'bg-gold/15 text-gold border-gold/40 font-medium'
+                  : 'bg-white/5 text-amber-200/40 border-amber-200/10 hover:text-amber-200/60'
+              }`}
+            >
+              {seconds}s
+            </button>
+          ))}
+          <button
+            onClick={() => {
+              setTurnTimerEnabled(false);
+              setTurnTimerRunning(false);
+              setTurnTimerRemaining(0);
+            }}
+            className={`text-[10px] px-2 py-0.5 rounded border transition-all ${
+              !turnTimerEnabled
+                ? 'bg-gold/15 text-gold border-gold/40 font-medium'
+                : 'bg-white/5 text-amber-200/40 border-amber-200/10 hover:text-amber-200/60'
+            }`}
+          >
+            Off
+          </button>
+        </div>
         <div className="flex gap-2 mb-3">
           <input
             className="input flex-1"
@@ -1336,6 +1485,15 @@ export default function Combat({ characterId, character, onConditionsChange }) {
             value={newCombatantHP}
             onChange={e => setNewCombatantHP(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && addCombatant()}
+          />
+          <input
+            type="number"
+            className="input w-20"
+            placeholder="Temp HP"
+            value={newCombatantTempHP}
+            onChange={e => setNewCombatantTempHP(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addCombatant()}
+            title="Temporary Hit Points"
           />
           <button
             onClick={() => setNewCombatantIsEnemy(prev => !prev)}
@@ -1392,15 +1550,62 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                         }`}>
                           {c.currentHp ?? c.maxHp}/{c.maxHp}
                         </span>
-                        {/* Mini HP bar */}
-                        <div className="w-12 h-1.5 bg-[#0a0a10] rounded-full overflow-hidden">
+                        {/* Temp HP badge */}
+                        {(c.tempHp || 0) > 0 && (
+                          <span className="text-yellow-300 bg-yellow-900/60 px-1.5 py-0.5 rounded text-[10px] font-bold border border-yellow-500/40">
+                            +{c.tempHp} TEMP
+                          </span>
+                        )}
+                        {/* Mini HP bar with temp HP segment */}
+                        <div className="w-16 h-1.5 bg-[#0a0a10] rounded-full overflow-hidden flex">
                           <div
-                            className={`h-full rounded-full transition-all ${
+                            className={`h-full transition-all ${
                               hpPct > 50 ? 'bg-emerald-500' : hpPct > 25 ? 'bg-yellow-500' : 'bg-red-500'
                             }`}
                             style={{ width: `${hpPct}%` }}
                           />
+                          {(c.tempHp || 0) > 0 && c.maxHp > 0 && (
+                            <div
+                              className="h-full bg-yellow-400/80 transition-all"
+                              style={{ width: `${Math.min(100 - hpPct, (c.tempHp / c.maxHp) * 100)}%` }}
+                            />
+                          )}
                         </div>
+                      </button>
+                    )}
+                    {/* Reaction toggle */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCombatants(prev => prev.map(cb => cb.id === c.id ? { ...cb, reactionUsed: !cb.reactionUsed } : cb));
+                      }}
+                      className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
+                        c.reactionUsed
+                          ? 'bg-red-900/30 border border-red-500/30 text-red-400/60'
+                          : 'bg-amber-900/20 border border-amber-500/30 text-amber-400'
+                      }`}
+                      title={c.reactionUsed ? `${c.name}: Reaction used` : `${c.name}: Reaction available`}
+                    >
+                      {c.reactionUsed ? <ShieldOff size={11} /> : <Shield size={11} />}
+                    </button>
+                    {/* Undo last HP change */}
+                    {hpUndoStack[c.id] && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const undo = hpUndoStack[c.id];
+                          setCombatants(prev => prev.map(cb => cb.id === c.id ? { ...cb, currentHp: undo.previousHp, tempHp: undo.previousTempHp } : cb));
+                          setHpUndoStack(prev => { const next = { ...prev }; delete next[c.id]; return next; });
+                          logEvent('healing', `Undo: ${c.name} HP restored to ${undo.previousHp}`);
+                          toast(`Undid HP change for ${c.name}`, {
+                            icon: '\u21A9', duration: 2000,
+                            style: { background: '#0a0a1a', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.3)' },
+                          });
+                        }}
+                        className="w-6 h-6 rounded flex items-center justify-center bg-gold/10 border border-gold/30 hover:bg-gold/20 transition-all text-gold"
+                        title="Undo last HP change"
+                      >
+                        <RotateCcw size={10} />
                       </button>
                     )}
                     <button onClick={() => removeCombatant(c.id)} className="text-red-400/50 hover:text-red-400 transition-colors">
@@ -1770,6 +1975,15 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                         >
                           DIS
                         </button>
+                        <button
+                          onClick={() => setCritOverrides(prev => ({ ...prev, [atk.id]: !prev[atk.id] }))}
+                          className={`text-[10px] px-2 py-0.5 rounded border transition-all font-bold ${
+                            critOverrides[atk.id] ? 'bg-gold/20 text-gold border-gold/50 shadow-[0_0_8px_rgba(201,168,76,0.3)]' : 'bg-white/5 text-amber-200/35 border-amber-200/10 hover:text-amber-200/60'
+                          }`}
+                          title="Toggle manual critical hit (doubles dice count)"
+                        >
+                          CRIT
+                        </button>
                         <input
                           type="number"
                           value={sitBonus}
@@ -1934,7 +2148,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         characterId={characterId}
       />
 
-      {showAdd && <AttackForm onSubmit={handleAddAttack} onCancel={() => setShowAdd(false)} ammoItems={ammoItems} />}
+      {showAdd && <AttackForm onSubmit={handleAddAttack} onCancel={() => setShowAdd(false)} ammoItems={ammoItems} character={character} />}
 
       <ConfirmDialog
         show={!!confirmDelete}
@@ -2241,13 +2455,45 @@ function TurnActionTracker({ actionEcon, setActionEcon, setReactionUsed, resetAc
   );
 }
 
-function AttackForm({ onSubmit, onCancel, ammoItems = [] }) {
+function AttackForm({ onSubmit, onCancel, ammoItems = [], character }) {
   const [form, setForm] = useState({
     name: '', attack_bonus: '+0', damage_dice: '1d6', damage_type: '', attack_range: '', notes: '', ammo_item_id: null,
   });
   const [nameError, setNameError] = useState(false);
+  const [autoFilled, setAutoFilled] = useState(false);
+
+  // Build ability scores map from character for auto-fill
+  const abilityScores = useMemo(() => {
+    if (!character?.ability_scores) return { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 };
+    const map = { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 };
+    for (const a of character.ability_scores) {
+      if (a.ability && a.score) map[a.ability] = a.score;
+    }
+    return map;
+  }, [character?.ability_scores]);
+
+  const profBonus = calcProfBonus(character?.level || character?.overview?.level || 1);
+
   const update = (f, v) => {
-    if (f === 'name') setNameError(false);
+    if (f === 'name') {
+      setNameError(false);
+      // Auto-fill from weapon table when name matches
+      const weaponData = WEAPONS[v] || WEAPONS[v.trim()];
+      if (weaponData && !autoFilled) {
+        const bonus = autoAttackBonus(v, abilityScores, profBonus);
+        const dmg = autoDamageString(v, abilityScores);
+        setForm(prev => ({
+          ...prev,
+          name: v,
+          attack_bonus: helperModStr(bonus),
+          damage_dice: dmg || prev.damage_dice,
+          damage_type: weaponData.type.charAt(0).toUpperCase() + weaponData.type.slice(1),
+        }));
+        setAutoFilled(true);
+        return;
+      }
+      if (autoFilled && !weaponData) setAutoFilled(false);
+    }
     setForm(prev => ({ ...prev, [f]: v }));
   };
   const handleSubmit = () => {
@@ -2270,8 +2516,12 @@ function AttackForm({ onSubmit, onCancel, ammoItems = [] }) {
         <h3 className="font-display text-lg text-amber-100 mb-4">Add Attack</h3>
         <div className="space-y-3" onKeyDown={onKeyDown}>
           <div>
-            <input className={`input w-full ${nameError ? 'border-red-500' : ''}`} placeholder="Weapon name" value={form.name} onChange={e => update('name', e.target.value)} autoFocus />
+            <input className={`input w-full ${nameError ? 'border-red-500' : ''}`} placeholder="Weapon name (e.g. Longsword)" value={form.name} onChange={e => update('name', e.target.value)} autoFocus list="weapon-suggestions" />
+            <datalist id="weapon-suggestions">
+              {Object.keys(WEAPONS).map(w => <option key={w} value={w} />)}
+            </datalist>
             {nameError && <p className="text-red-400 text-xs mt-1">Name required</p>}
+            {autoFilled && <p className="text-green-400/60 text-xs mt-1">Auto-filled from weapon data</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <input className="input w-full" placeholder="Attack bonus" value={form.attack_bonus} onChange={e => update('attack_bonus', e.target.value)} />

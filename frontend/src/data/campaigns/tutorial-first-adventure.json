@@ -1,0 +1,83 @@
+{
+  "name": "Your First Adventure: The Missing Merchant",
+  "summary": "A guided tutorial campaign designed to teach new DMs the basics of running a session in The Codex. Walk through scenes, NPCs, quests, and combat in ~15 minutes.",
+  "description": "A merchant named Aldric Thorn has gone missing on the road between Millhaven and Thornwood. The village elder asks you to investigate. Along the way, you'll learn how to manage scenes, run encounters, communicate with players, and track quests — all using the real tools in The Codex. This campaign is intentionally small and simple so you can focus on learning the interface rather than managing complexity.",
+  "level": "1-2",
+  "ruleset": "5e 2014",
+  "author": "The Codex",
+  "tags": ["tutorial", "starter"],
+  "npcs": [
+    {
+      "name": "Elder Rowan Ashwick",
+      "role": "Quest Giver",
+      "race": "Human",
+      "npc_class": "Commoner",
+      "location": "Millhaven Village",
+      "description": "A kind but worried village elder with a long grey beard and spectacles. He asks the party to find Aldric Thorn, a merchant who hasn't returned from his trip to Thornwood.",
+      "notes": "Tutorial NPC — gives the main quest. Knows the trade road well and can describe the bandit camp location.",
+      "status": "alive"
+    },
+    {
+      "name": "Voss Ironclaw",
+      "role": "Antagonist",
+      "race": "Half-Orc",
+      "npc_class": "Bandit Captain",
+      "location": "Bandit Hideout — Thornwood Ruins",
+      "description": "A scarred half-orc bandit leader who has been robbing travelers on the Millhaven road. He's holding Aldric Thorn for ransom. Despite his menacing appearance, he's not particularly brave — he'll surrender if outmatched.",
+      "notes": "Tutorial villain — used for the combat encounter. CR 1/2, HP 12, AC 13. Can be defeated or intimidated into surrendering.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "The Missing Merchant",
+      "giver": "Elder Rowan Ashwick",
+      "description": "Aldric Thorn, a beloved merchant, left for Thornwood three days ago and hasn't returned. Elder Ashwick fears the worst. Find Aldric and bring him home safely.",
+      "status": "active",
+      "notes": "Tutorial quest — 4 objectives that walk through the key DM actions.",
+      "objectives": [
+        { "text": "Speak with Elder Ashwick in Millhaven to learn about the missing merchant", "completed": false },
+        { "text": "Travel to the Thornwood Ruins and find the bandit hideout", "completed": false },
+        { "text": "Defeat or negotiate with Voss Ironclaw to free Aldric", "completed": false },
+        { "text": "Return Aldric safely to Millhaven", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "Millhaven Village",
+      "category": "Location",
+      "body": "A small farming village of about 100 people, known for its weekly market and friendly atmosphere. The village sits at a crossroads between the forest of Thornwood and the main trade highway. Most villagers are farmers or craftspeople who have lived here for generations.",
+      "related_to": "Elder Rowan Ashwick"
+    },
+    {
+      "title": "Thornwood Ruins",
+      "category": "Location",
+      "body": "The crumbling remains of an old watchtower deep in the Thornwood forest, now used as a hideout by Voss Ironclaw and his small band of bandits. The ruins provide shelter and a defensible position overlooking the trade road. Only 3-4 bandits operate here — it's a small-time operation.",
+      "related_to": "Voss Ironclaw"
+    }
+  ],
+  "journal": {
+    "title": "Tutorial Campaign: The Missing Merchant",
+    "session_number": 0,
+    "body": "## Tutorial Introduction\n\nWelcome to your first adventure! This campaign is designed to help you learn the DM tools in The Codex.\n\nThe story is simple: a merchant has gone missing, and the village elder needs help finding him. Along the way, you'll practice:\n- Setting scenes and changing locations\n- Broadcasting narrative text to players\n- Running skill checks\n- Managing combat encounters\n- Awarding XP\n\n**Tip:** Follow the tutorial coach prompts — they'll guide you through each step!",
+    "tags": "tutorial,introduction",
+    "npcs_mentioned": "Elder Rowan Ashwick,Voss Ironclaw"
+  },
+  "items": [
+    {
+      "name": "Thorn's Lucky Coin",
+      "item_type": "misc",
+      "weight": 0.1,
+      "value_gp": 5.0,
+      "quantity": 1,
+      "description": "A worn copper coin with a four-leaf clover stamped on one side. Aldric Thorn carried it everywhere for good luck — it didn't help much this time. A nice memento for the hero who rescued him.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "common"
+    }
+  ]
+}

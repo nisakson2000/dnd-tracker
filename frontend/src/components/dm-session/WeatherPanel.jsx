@@ -54,6 +54,143 @@ function getWeatherIcon(precipitation, wind) {
   return <Cloud size={28} className="text-gray-300" />;
 }
 
+// ── Weather categories for travel/combat modifiers ──
+const WEATHER_TRAVEL_MODIFIERS = {
+  'Rain': 1.0,
+  'Heavy Rain': 1.5,
+  'Thunderstorm': 1.5,
+  'Snow': 1.5,
+  'Heavy Snow': 1.5,
+  'Blizzard': 2.0,
+  'Hail': 1.5,
+  'Fog': 1.0,
+  'Mist': 1.0,
+  'Light Drizzle': 1.0,
+};
+
+const WIND_TRAVEL_MODIFIERS = {
+  'Gale': 1.5,
+  'Hurricane': 2.0,
+};
+
+// ── Combat-relevant effects structured for programmatic use ──
+const COMBAT_EFFECTS = {
+  'Heavy Rain': [
+    { type: 'disadvantage', target: 'Perception checks (sight & hearing)', icon: 'eye' },
+    { type: 'disadvantage', target: 'Ranged attacks beyond normal range', icon: 'crosshair' },
+    { type: 'effect', target: 'Extinguishes open flames', icon: 'flame' },
+  ],
+  'Thunderstorm': [
+    { type: 'disadvantage', target: 'Perception checks', icon: 'eye' },
+    { type: 'disadvantage', target: 'Ranged attacks beyond normal range', icon: 'crosshair' },
+  ],
+  'Blizzard': [
+    { type: 'obscured', target: 'Heavily obscured — all areas', icon: 'eye-off' },
+    { type: 'movement', target: 'Movement cost doubled', icon: 'footprints' },
+    { type: 'save', target: 'CON save vs exhaustion each hour', icon: 'heart' },
+  ],
+  'Heavy Snow': [
+    { type: 'obscured', target: 'Lightly obscured', icon: 'eye' },
+    { type: 'terrain', target: 'Difficult terrain', icon: 'mountain' },
+  ],
+  'Fog': [
+    { type: 'obscured', target: 'Heavily obscured beyond 30 ft', icon: 'eye-off' },
+  ],
+  'Mist': [
+    { type: 'obscured', target: 'Lightly obscured beyond 60 ft', icon: 'eye' },
+  ],
+  'Gale': [
+    { type: 'disadvantage', target: 'Ranged weapon attacks', icon: 'crosshair' },
+    { type: 'disadvantage', target: 'Hearing-based Perception checks', icon: 'ear' },
+    { type: 'save', target: 'Flying creatures: DEX save or knocked prone', icon: 'wind' },
+  ],
+  'Hurricane': [
+    { type: 'impossible', target: 'Ranged weapons cannot be used', icon: 'crosshair' },
+    { type: 'impossible', target: 'Flying is impossible', icon: 'wind' },
+    { type: 'save', target: 'STR save to move against wind', icon: 'shield' },
+  ],
+  'Strong': [  // Strong wind
+    { type: 'disadvantage', target: 'Ranged attacks', icon: 'crosshair' },
+    { type: 'disadvantage', target: 'Hearing-based Perception checks', icon: 'ear' },
+  ],
+  'Hail': [
+    { type: 'damage', target: '1d4 bludgeoning per round if unsheltered', icon: 'zap' },
+    { type: 'disadvantage', target: 'Perception checks', icon: 'eye' },
+  ],
+  // Extreme cold (below 0°F)
+  '_extreme_cold': [
+    { type: 'save', target: 'CON save (DC 10) each hour or gain 1 exhaustion', icon: 'thermometer' },
+  ],
+};
+
+/**
+ * Get structured weather effects for programmatic use (combat modifiers, etc.)
+ * Exported for use by other components.
+ *
+ * @param {Object} weatherState
+ * @param {string} weatherState.precipitation
+ * @param {string} weatherState.wind
+ * @param {string} weatherState.specialEffects
+ * @param {number} [weatherState.temperature]
+ * @returns {{ mechanical: Array, combat: Array, travelMultiplier: number, summary: string }}
+ */
+export function getWeatherEffects(weatherState = {}) {
+  const { precipitation = 'None', wind = 'Calm', specialEffects = 'None', temperature } = weatherState;
+
+  const mechanical = [];
+  const combat = [];
+  let travelMultiplier = 1.0;
+
+  // Precipitation effects
+  if (precipitation && precipitation !== 'None') {
+    if (MECHANICAL_EFFECTS[precipitation]) {
+      mechanical.push({ source: precipitation, text: MECHANICAL_EFFECTS[precipitation] });
+    }
+    if (COMBAT_EFFECTS[precipitation]) {
+      combat.push(...COMBAT_EFFECTS[precipitation].map(e => ({ ...e, source: precipitation })));
+    }
+    if (WEATHER_TRAVEL_MODIFIERS[precipitation]) {
+      travelMultiplier = Math.max(travelMultiplier, WEATHER_TRAVEL_MODIFIERS[precipitation]);
+    }
+  }
+
+  // Wind effects
+  if (wind && wind !== 'Calm' && wind !== 'Light Breeze' && wind !== 'Moderate') {
+    if (MECHANICAL_EFFECTS[wind]) {
+      mechanical.push({ source: wind, text: MECHANICAL_EFFECTS[wind] });
+    }
+    if (COMBAT_EFFECTS[wind]) {
+      combat.push(...COMBAT_EFFECTS[wind].map(e => ({ ...e, source: wind })));
+    }
+    if (WIND_TRAVEL_MODIFIERS[wind]) {
+      travelMultiplier = Math.max(travelMultiplier, WIND_TRAVEL_MODIFIERS[wind]);
+    }
+  }
+
+  // Special effects
+  if (specialEffects && specialEffects !== 'None' && MECHANICAL_EFFECTS[specialEffects]) {
+    mechanical.push({ source: specialEffects, text: MECHANICAL_EFFECTS[specialEffects] });
+    if (COMBAT_EFFECTS[specialEffects]) {
+      combat.push(...COMBAT_EFFECTS[specialEffects].map(e => ({ ...e, source: specialEffects })));
+    }
+  }
+
+  // Extreme cold
+  if (temperature != null && temperature <= 0) {
+    mechanical.push({ source: 'Extreme Cold', text: 'CON save (DC 10) each hour or gain 1 level of exhaustion.' });
+    combat.push(...COMBAT_EFFECTS['_extreme_cold'].map(e => ({ ...e, source: 'Extreme Cold' })));
+  }
+
+  // Build summary
+  const parts = [];
+  if (precipitation !== 'None') parts.push(precipitation);
+  if (wind !== 'Calm') parts.push(`${wind} wind`);
+  if (specialEffects !== 'None') parts.push(specialEffects);
+  const summary = parts.length > 0 ? parts.join(', ') : 'Clear skies';
+
+  return { mechanical, combat, travelMultiplier, summary };
+}
+
 function getActiveMechanicalEffects(precipitation, wind, specialEffects) {
   const effects = [];
   if (precipitation && MECHANICAL_EFFECTS[precipitation]) {
@@ -242,6 +379,9 @@ export default function WeatherPanel() {
         {/* Mechanical Effects */}
         {currentEffects.length > 0 && (
           <div className="mt-3 space-y-1.5">
+            <div className="text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1" style={{ color: '#c084fc' }}>
+              <AlertTriangle size={10} /> Active Effects
+            </div>
             {currentEffects.map((effect, i) => (
               <div
                 key={i}
@@ -255,6 +395,47 @@ export default function WeatherPanel() {
                 </div>
               </div>
             ))}
+            {/* Combat Modifiers Summary */}
+            {(() => {
+              const wx = getWeatherEffects({ precipitation, wind, specialEffects, temperature: parseInt(temperature) });
+              if (wx.combat.length === 0) return null;
+              return (
+                <div
+                  className="rounded-lg p-2"
+                  style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}
+                >
+                  <div className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#f87171' }}>
+                    Combat Modifiers
+                  </div>
+                  <div className="space-y-1">
+                    {wx.combat.map((mod, j) => (
+                      <div key={j} className="flex items-center gap-1.5 text-[11px]">
+                        <span className="px-1 py-0 rounded text-[9px] font-bold uppercase" style={{
+                          background: mod.type === 'disadvantage' ? 'rgba(251,146,60,0.2)' :
+                            mod.type === 'impossible' ? 'rgba(239,68,68,0.2)' :
+                            mod.type === 'save' ? 'rgba(96,165,250,0.2)' :
+                            mod.type === 'damage' ? 'rgba(239,68,68,0.2)' :
+                            'rgba(255,255,255,0.1)',
+                          color: mod.type === 'disadvantage' ? '#fb923c' :
+                            mod.type === 'impossible' ? '#ef4444' :
+                            mod.type === 'save' ? '#60a5fa' :
+                            mod.type === 'damage' ? '#ef4444' :
+                            'var(--text-dim)',
+                        }}>
+                          {mod.type}
+                        </span>
+                        <span style={{ color: 'var(--text-dim)' }}>{mod.target}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {wx.travelMultiplier > 1 && (
+                    <div className="mt-1.5 pt-1.5 border-t text-[10px] flex items-center gap-1" style={{ borderColor: 'rgba(239,68,68,0.1)', color: '#fb923c' }}>
+                      Travel time: {wx.travelMultiplier === 2 ? 'Doubled' : '+50%'}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>

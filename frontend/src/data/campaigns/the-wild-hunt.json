@@ -1,0 +1,255 @@
+{
+  "name": "The Wild Hunt",
+  "summary": "An archfey has declared a Wild Hunt in the mortal woods — anyone caught beneath the canopy when the horns sound becomes prey. Survive three nights, rally the forest's defenders, and end the Hunt.",
+  "description": "The Thornwood has always been old and strange, but the locals know its rules: don't stray from the paths, leave offerings at the standing stones, and never stay past sundown. When your party makes camp on the forest's edge, those rules shatter. At midnight, a sound tears through the darkness — a hunting horn, impossibly loud, resonating in your bones. The Wild Hunt has been declared by Archfey Lord Erevan the Thorn-Crowned, and every living soul in the Thornwood is now quarry. The forest itself transforms: paths rearrange, the canopy blocks all starlight, and fey hounds begin to prowl. The party has three nights to survive, and each night the Hunt escalates — faster hounds, cleverer huntsmen, and the forest itself turning hostile. Escape is not an option; the forest's borders have sealed. Victory requires finding allies among the woodland creatures who resist the archfey — pixie scouts, a centaur war-chief, and an ancient treant who remembers when Lord Erevan was mortal. Together, they must uncover the archfey's weakness, breach his hunting lodge between the planes, and either strike a bargain that satisfies his pride or defeat him in his own domain. The campaign is a tense survival horror experience wrapped in a fairy tale, where every deal has a price and every shadow has teeth.",
+  "level": "3-5",
+  "ruleset": "5e 2014",
+  "author": "The Codex",
+  "tags": ["fey", "exploration", "starter", "horror"],
+  "npcs": [
+    {
+      "name": "Lord Erevan the Thorn-Crowned",
+      "role": "Antagonist",
+      "race": "Archfey (Eladrin)",
+      "npc_class": "Ranger",
+      "location": "The Thornwood - The Verdant Lodge (demiplane)",
+      "description": "An impossibly tall and beautiful eladrin lord with antlers of living thorns growing from his brow, eyes like liquid amber, and a cruel, delighted smile. He wears armor of woven vines and bark and carries a longbow that never misses fleeing prey. He is ancient, capricious, and utterly without mercy during the Hunt — but he is bound by fey rules and his own declarations.",
+      "notes": "Lord Erevan is CR 12 and should NOT be fought directly at this level. He can be defeated through three methods: (1) discovering his True Name from the treant Oldroot and speaking it to bind him, (2) stealing his Thorn Crown in the Verdant Lodge which is the source of his power over the forest, or (3) offering him a bargain that appeals to his vanity — such as a story or performance he has never witnessed (DC 20 Performance). He declared the Hunt out of boredom; he has not held one in three centuries and missed the thrill.",
+      "status": "alive"
+    },
+    {
+      "name": "Thistle",
+      "role": "Ally",
+      "race": "Pixie",
+      "npc_class": "Rogue",
+      "location": "The Thornwood - The Mushroom Ring",
+      "description": "A six-inch-tall pixie with dragonfly wings, wild green hair, and an attitude far larger than her body. She leads a small band of pixie scouts who have been resisting Lord Erevan's Hunt by sabotaging his hound-masters and leading quarry to safety. She speaks in rapid bursts, is fiercely protective of her friends, and has a weakness for honey cakes.",
+      "notes": "Thistle is the party's first potential ally, encountered on Night 1. She can cast Invisibility, Confusion, and Polymorph once each per day. She knows the Thornwood's secret paths and can guide the party to the centaur camp and Oldroot's grove. She will not risk her scouts in a direct assault but will provide reconnaissance and diversions. She is terrified of Lord Erevan but hates him more than she fears him.",
+      "status": "alive"
+    },
+    {
+      "name": "War-Chief Kaelara Swifthoof",
+      "role": "Ally",
+      "race": "Centaur",
+      "npc_class": "Fighter",
+      "location": "The Thornwood - The Stone Circle (centaur camp)",
+      "description": "A powerfully built centaur woman with a chestnut coat, braided black hair hung with bone charms, and scars from a dozen battles. She leads the last free centaur warband in the Thornwood — twelve warriors who have evaded the Hunt by constant movement and brutal discipline. She is gruff, pragmatic, and deeply distrustful of outsiders.",
+      "notes": "Kaelara will not ally with the party unless they prove their worth by completing the quest 'Broken Chains' (freeing captured centaurs from Lord Erevan's huntsmen). Once allied, she provides the centaur warband as allies for the final confrontation and teaches the party the Thornwood's centaur trails (advantage on Survival checks in the forest). She knows the location of Oldroot's grove but warns that the treant is 'strange, even for a tree.'",
+      "status": "alive"
+    },
+    {
+      "name": "Oldroot",
+      "role": "Informant",
+      "race": "Treant",
+      "npc_class": "Druid",
+      "location": "The Thornwood - The Heartgrove",
+      "description": "An ancient treant so old that an entire ecosystem lives in his branches — birds, squirrels, moss, mushrooms, and a family of owls. He moves with glacial slowness and speaks in a voice like creaking timber. He is the oldest living creature in the Thornwood and remembers when Lord Erevan was an mortal eladrin prince, before he claimed the Thorn Crown and ascended to archfey status.",
+      "notes": "Oldroot knows Lord Erevan's True Name — 'Erevan Nithoel Duskwander' — which was his mortal name and carries power over him. He will share it only if the party passes his test: answering three riddles about the nature of the forest (DC 13 Intelligence or Wisdom checks, with advantage if the party has shown respect for nature). He also knows the location of the Verdant Lodge's entrance and the weakness of the Thorn Crown.",
+      "status": "alive"
+    },
+    {
+      "name": "Grimjaw",
+      "role": "Antagonist",
+      "race": "Fey Hound (Yeth Hound Alpha)",
+      "npc_class": "Fighter",
+      "location": "The Thornwood - Roaming",
+      "description": "The alpha of Lord Erevan's hunting pack, a massive yeth hound the size of a horse with fur like shadow and eyes that burn with green foxfire. Unlike the other hounds, Grimjaw is intelligent and can speak in a gravelly whisper. He takes pleasure in the fear of his prey and toys with quarry before the kill.",
+      "notes": "Grimjaw is a CR 4 yeth hound with enhanced stats (extra HP, multiattack). He appears at the end of each night as a recurring threat, growing more aggressive. He can be killed, but Lord Erevan will resurrect him by the next nightfall. The only way to permanently stop him is to break his collar — a silver band inscribed with fey runes — which severs Lord Erevan's control. A freed Grimjaw is confused and aggressive but can be calmed with Animal Handling (DC 16) and may become a reluctant ally.",
+      "status": "alive"
+    },
+    {
+      "name": "Willowmere",
+      "role": "Support",
+      "race": "Dryad",
+      "npc_class": "Druid",
+      "location": "The Thornwood - The Whispering Pool",
+      "description": "A melancholy dryad bound to an ancient willow tree beside a moonlit pool. Her bark-skin is pale silver and her hair hangs like willow fronds. She was once Lord Erevan's beloved before he became consumed by the power of the Thorn Crown. She grieves the person he was and refuses to participate in the Hunt, maintaining a pocket of safety around her pool.",
+      "notes": "Willowmere's pool is a safe haven where the Hunt cannot reach (Lord Erevan's one concession to her). The party can rest here without fear. She can cast Healing Word, Goodberry, and Greater Restoration once per day. She knows that the Thorn Crown is slowly consuming Erevan's original personality and that removing it might restore the person she loved — or destroy him entirely. This knowledge provides the emotional stakes for the final choice.",
+      "status": "alive"
+    },
+    {
+      "name": "Fennick Twocoats",
+      "role": "Neutral",
+      "race": "Halfling",
+      "npc_class": "Bard",
+      "location": "The Thornwood - Wandering",
+      "description": "A halfling traveling bard who was caught in the forest when the Hunt began, wearing two oversized coats stuffed with provisions and stolen trinkets. He is perpetually terrified but somehow keeps surviving through a combination of luck, cowardice, and an encyclopedic knowledge of fairy tales. He speaks entirely in nervous whispers and jumps at every sound.",
+      "notes": "Fennick provides comic relief and useful lore. His knowledge of fairy tales gives the party hints about fey weaknesses (cold iron, true names, broken promises). He carries a lute that he refuses to play because 'sound attracts things.' If convinced to play during the final confrontation, his music grants the party Bardic Inspiration (d6) — he is actually quite talented when not paralyzed by fear. He also has a pouch of cold iron nails he stole from a blacksmith, which are invaluable against fey creatures.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "Survive the First Night",
+      "giver": "Thistle",
+      "description": "The Hunt has begun and the forest is alive with danger. Find shelter, avoid the fey hounds, and make contact with Thistle's pixie scouts before dawn. The first night is about survival and establishing the rules of the Hunt — movement, stealth, and the consequences of being caught.",
+      "status": "active",
+      "notes": "Reward: Alliance with Thistle's pixie scouts, knowledge of the Thornwood's secret paths, and a Pixie Lantern (see items). The first night features 2-3 encounters: a yeth hound patrol, a section of forest that rearranges itself (DC 12 Survival to navigate), and a trap set by fey huntsmen. Thistle appears to rescue the party from one encounter, establishing her as an ally.",
+      "objectives": [
+        { "text": "Find defensible shelter in the Thornwood", "completed": false },
+        { "text": "Evade or defeat the first yeth hound patrol", "completed": false },
+        { "text": "Navigate the shifting forest paths", "completed": false },
+        { "text": "Make contact with Thistle and the pixie scouts", "completed": false },
+        { "text": "Survive until dawn", "completed": false }
+      ]
+    },
+    {
+      "title": "Broken Chains",
+      "giver": "War-Chief Kaelara Swifthoof",
+      "description": "Lord Erevan's huntsmen have captured four centaur warriors and are holding them in hanging cages at a place called the Gallows Clearing, to be used as 'sport' for the next night's Hunt. Kaelara demands the party free them as proof of their commitment before she will pledge her warband.",
+      "status": "active",
+      "notes": "Reward: Alliance with Kaelara's centaur warband (12 centaur warriors), access to centaur trails (advantage on Survival in the Thornwood), and a Centaur War Horn (see items). The Gallows Clearing is guarded by 4 fey huntsmen (use Scout stat block with fey creature type) and 2 yeth hounds. Stealth approach is viable (DC 14 group Stealth check).",
+      "objectives": [
+        { "text": "Locate the Gallows Clearing using Thistle's directions", "completed": false },
+        { "text": "Scout the clearing and count the guards", "completed": false },
+        { "text": "Free the four captured centaur warriors", "completed": false },
+        { "text": "Escort the freed centaurs back to Kaelara's camp", "completed": false }
+      ]
+    },
+    {
+      "title": "The Riddles of Oldroot",
+      "giver": "Oldroot",
+      "description": "Seek out the ancient treant Oldroot in the Heartgrove and earn his trust by answering three riddles about the nature of the forest and the fey. Success reveals Lord Erevan's True Name and the secret of the Thorn Crown — the key to ending the Hunt without bloodshed, or the weapon needed for a final confrontation.",
+      "status": "active",
+      "notes": "Reward: Lord Erevan's True Name ('Erevan Nithoel Duskwander'), the location of the Verdant Lodge entrance, and the knowledge that the Thorn Crown can be removed but it may kill Erevan. The riddles are: (1) 'What grows without rain, stands without roots, and falls without wind?' (A shadow — or similar, DC 13 Intelligence), (2) 'I am given freely but cannot be kept; broken without being held; and stronger when tested.' (A promise — DC 13 Wisdom), (3) 'What do the hunter and the hunted share?' (Fear — DC 13 Intelligence or Wisdom). Players can use Nature, Arcana, or Insight to gain hints.",
+      "objectives": [
+        { "text": "Travel to the Heartgrove at the center of the Thornwood", "completed": false },
+        { "text": "Approach Oldroot with respect and ask for his wisdom", "completed": false },
+        { "text": "Answer Oldroot's three riddles", "completed": false },
+        { "text": "Learn Lord Erevan's True Name and the secret of the Thorn Crown", "completed": false }
+      ]
+    },
+    {
+      "title": "End the Hunt",
+      "giver": "Willowmere",
+      "description": "On the third night, breach the Verdant Lodge — Lord Erevan's hunting lodge that exists between the Material Plane and the Feywild. Confront the archfey and end the Wild Hunt by speaking his True Name, stealing the Thorn Crown, or offering a bargain he cannot refuse. The fate of the Thornwood hangs on the party's choice.",
+      "status": "active",
+      "notes": "Reward: The Wild Hunt ends, the forest borders unseal, and the party receives a Fey Boon (each character gains one minor fey gift: darkvision 60ft, speak with animals at will, or +5 ft movement speed in forests). Multiple endings: (1) Speak the True Name to bind Erevan and force him to end the Hunt (he becomes a bitter enemy), (2) Remove the Thorn Crown to free the mortal Erevan (he is grateful but powerless, the forest loses its fey guardian), (3) Defeat Erevan in combat in his weakened state after using the True Name (the forest goes wild without a master), (4) Offer a bargain — the party provides a worthy story/performance and agrees to return for one Hunt every century (Erevan is satisfied and becomes a strange ally).",
+      "objectives": [
+        { "text": "Locate the entrance to the Verdant Lodge", "completed": false },
+        { "text": "Rally allies: pixies, centaurs, and any other woodland creatures", "completed": false },
+        { "text": "Breach the Verdant Lodge's defenses", "completed": false },
+        { "text": "Confront Lord Erevan the Thorn-Crowned", "completed": false },
+        { "text": "Choose how to end the Wild Hunt", "completed": false },
+        { "text": "Escape the Thornwood before dawn", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "The Thornwood",
+      "category": "Location",
+      "body": "An ancient forest that has stood since before human civilization reached this region. The Thornwood is a liminal place where the Material Plane and the Feywild overlap, resulting in trees that grow impossibly tall, seasons that change between clearings, and wildlife that is subtly wrong — deer with too many eyes, birds that sing in harmonies, foxes that leave no tracks. Local villages know to respect the forest's boundaries and leave offerings at the standing stones that mark its edge.",
+      "related_to": "Lord Erevan the Thorn-Crowned"
+    },
+    {
+      "title": "The Wild Hunt — Fey Tradition",
+      "category": "Legend",
+      "body": "The Wild Hunt is an ancient fey tradition dating back to the first age of the Feywild. When an archfey declares a Hunt, the forest seals itself and all living creatures within become quarry. The Hunt lasts three nights, with each night growing more dangerous. Fey law dictates that any quarry who survives all three nights earns the right to challenge the huntmaster. The last Wild Hunt in the Thornwood was three centuries ago, and no mortal survived it.",
+      "related_to": "Lord Erevan the Thorn-Crowned"
+    },
+    {
+      "title": "The Thorn Crown",
+      "category": "Legend",
+      "body": "A crown of living thorns that grows from the brow of whoever wears it, fusing with their flesh and granting dominion over a wild place. The Thorn Crown was not made — it grew, like a seed, in the heart of the Thornwood during an age before mortals. Erevan Nithoel Duskwander, then a mortal eladrin prince, found it and placed it on his brow, ascending to archfey status. But the crown has a will of its own, slowly replacing the wearer's personality with the primal hunger of the forest itself.",
+      "related_to": "Willowmere"
+    },
+    {
+      "title": "The Verdant Lodge",
+      "category": "Location",
+      "body": "Lord Erevan's hunting lodge exists in a demiplane folded between the Material Plane and the Feywild. It appears as a vast woodland manor built from living trees, with halls of woven branches, floors of soft moss, and trophy walls hung with the preserved forms of every quarry the archfey has ever claimed. The lodge can only be entered through a hidden arch in the Heartgrove, visible only when moonlight strikes it at exactly midnight.",
+      "related_to": "Lord Erevan the Thorn-Crowned"
+    },
+    {
+      "title": "The Centaurs of the Stone Circle",
+      "category": "Faction",
+      "body": "The centaurs have inhabited the Thornwood for over a thousand years, predating Lord Erevan's ascension. They worship the forest itself as a living entity and maintain stone circles as sacred gathering places. When Erevan claimed the forest, an uneasy truce was struck: the centaurs would respect his authority, and he would leave them in peace. The Wild Hunt violates that truce, and War-Chief Kaelara considers it an act of war.",
+      "related_to": "War-Chief Kaelara Swifthoof"
+    },
+    {
+      "title": "Fey Rules and Bargains",
+      "category": "Religion",
+      "body": "The fey are bound by rules that mortals often find incomprehensible. A fey creature cannot break a promise once spoken aloud. Gifts must be reciprocated. Names have power — knowing a fey's true name grants leverage over them. Cold iron burns fey flesh. And most importantly, a bargain struck with a fey is magically binding; neither party can violate its terms without suffering a terrible curse. These rules are both the party's greatest danger and their greatest weapon against Lord Erevan.",
+      "related_to": "Fennick Twocoats"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: The Wild Hunt",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe Thornwood didn't feel dangerous when you made camp at its edge. The trees were old and tall, yes, and the locals at the last village warned you not to stray from the path, but the clearing you found was sheltered from the wind and the firewood was dry. A good place to rest for the night.\n\nYou were wrong.\n\nAt midnight, the sound hits you — not heard so much as *felt*, a hunting horn that resonates in your ribcage and turns your blood to ice. The fire gutters and dies. The stars vanish behind a canopy that wasn't there before. And in the sudden, absolute darkness, you hear them: the baying of hounds, dozens of them, coming from every direction.\n\nA voice rolls through the forest like thunder wrapped in silk:\n\n*'The Wild Hunt is declared. All who stand beneath my trees are quarry. You have until dawn. Run.'*\n\nThe trees groan and shift. The path you came in on is gone. Somewhere in the darkness, something massive crashes through the underbrush, and a howl splits the night that is answered by a dozen more.\n\nYou have three nights. Survive.\n\n### Key NPCs to Introduce\n- **Thistle** — pixie scout leader, first ally (encountered during Night 1)\n- **Fennick Twocoats** — terrified halfling bard, found hiding in a hollow log\n- **Grimjaw** — the alpha yeth hound, recurring Night 1 threat\n\n### Starting Hooks\n- The hunting horn and sealed forest are the inciting event — no investigation needed, just survival\n- Thistle's pixies will find the party if they survive the first hour, offering guidance\n- Fennick can be heard whimpering inside a hollow oak near the party's camp\n- The rules of the Hunt (three nights, escalating danger, right to challenge) can be learned from Thistle or Fennick",
+    "tags": "fey,exploration,survival,horror,wild hunt,feywild",
+    "npcs_mentioned": "Thistle,Fennick Twocoats,Grimjaw,Lord Erevan the Thorn-Crowned"
+  },
+  "items": [
+    {
+      "name": "Moonbow of the Thornwood",
+      "item_type": "weapon",
+      "weight": 2.0,
+      "value_gp": 1800.0,
+      "quantity": 1,
+      "description": "A shortbow carved from pale moonwood that glows with soft silver light in darkness. Arrows fired from this bow leave trails of faint starlight. The bow deals an additional 1d4 radiant damage against fey creatures, and once per long rest the wielder can fire a Moonlight Arrow that illuminates a 30-foot radius for 1 minute and forces fey creatures in the area to make a DC 13 Constitution save or be revealed if invisible. Found in the Verdant Lodge trophy hall.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Pixie Lantern",
+      "item_type": "misc",
+      "weight": 0.5,
+      "value_gp": 150.0,
+      "quantity": 1,
+      "description": "A tiny lantern made from a hollowed acorn cap and a shard of crystal, gifted by Thistle. It emits a soft green glow in a 20-foot radius that only the holder and their allies can see — it is invisible to fey creatures and beasts controlled by fey. The lantern also vibrates gently when fey creatures are within 60 feet, serving as an early warning system.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Centaur War Horn",
+      "item_type": "misc",
+      "weight": 2.0,
+      "value_gp": 300.0,
+      "quantity": 1,
+      "description": "A curved horn carved from the antler of a great elk, etched with centaur war-runes. When blown, it produces a deep, resonant note that can be heard for one mile. Allied centaurs within range will move toward the sound at full speed. The horn can also be used once per day to cast Compelled Duel (DC 13) on a single creature that hears it. Given by War-Chief Kaelara after completing 'Broken Chains.'",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Cold Iron Nails",
+      "item_type": "misc",
+      "weight": 1.0,
+      "value_gp": 25.0,
+      "quantity": 12,
+      "description": "A leather pouch containing twelve hand-forged iron nails, cold to the touch regardless of temperature. Fennick Twocoats stole these from a blacksmith before entering the forest, calling it 'insurance.' Cold iron deals an extra 1d4 damage to fey creatures when used as improvised weapons (thrown, 20/60 ft range) or when pressed against a fey creature's skin. They can also be driven into the ground to create a 5-foot square that fey cannot willingly enter for 8 hours.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "common"
+    },
+    {
+      "name": "Cloak of Rustling Leaves",
+      "item_type": "armor",
+      "weight": 1.0,
+      "value_gp": 500.0,
+      "quantity": 1,
+      "description": "A cloak woven from enchanted autumn leaves that never decay, shifting between gold, red, and brown with the wearer's movement. While wearing this cloak in a forest environment, the wearer has advantage on Stealth checks and can use a bonus action to become invisible until the end of their next turn (recharges at dawn). The cloak whispers faintly in Sylvan when danger is near.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "neck",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    }
+  ]
+}

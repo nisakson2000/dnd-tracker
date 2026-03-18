@@ -1,0 +1,260 @@
+{
+  "name": "Whispers of the Deep",
+  "summary": "A coastal village's poisoned seas and strange lights beneath the waves lead to an ancient aboleth awakening in a sunken temple, enslaving merfolk and corrupting the ocean itself.",
+  "description": "The fishing village of Brinewall has survived storms, pirates, and lean winters, but nothing like this. Three weeks ago, the fish began dying. Then the catches turned poisonous — anyone who ate the seafood fell into feverish hallucinations, murmuring in a language no one recognized. Strange bioluminescent lights pulse beneath the waves at night, and two fishing boats have vanished without a trace. The truth lies in the Drowned Sanctum, a sunken temple half a mile offshore and two hundred feet below the surface, where an aboleth named Nethulaxis has been slumbering for millennia. Awakened by a recent earthquake, the creature has begun rebuilding its empire — enslaving a colony of merfolk, corrupting the surrounding waters with its psychic mucus, and sending tendrils of influence toward the surface. A sea elf exile named Thalassa knows the temple's location but cannot face the aboleth alone. The party must find a way to breathe underwater, navigate the flooded ruins, free the enslaved merfolk, and destroy or banish Nethulaxis before the corruption reaches the mainland's water table and poisons thousands. The campaign blends coastal investigation, underwater exploration, and eldritch horror with a ticking clock.",
+  "level": "3-5",
+  "ruleset": "5e 2014",
+  "author": "The Codex",
+  "tags": ["coastal", "mystery", "exploration", "horror"],
+  "npcs": [
+    {
+      "name": "Elder Maren Saltwick",
+      "role": "Quest Giver",
+      "race": "Human",
+      "npc_class": "Commoner",
+      "location": "Brinewall - Elder's Lodge",
+      "description": "The village elder of Brinewall, a stout woman in her sixties with sun-darkened skin and hands like knotted rope. She has led the village through every hardship for thirty years but is visibly shaken by the poisoned catches. She offers the party everything the village can spare — which isn't much — to investigate the source of the blight.",
+      "notes": "Maren has a secret: her grandson Pip went diving near the lights three days ago and hasn't returned. She is desperate to find him but doesn't want to endanger the party by making it personal. Pip is alive but enslaved in the Drowned Sanctum. Finding him earns Maren's eternal loyalty and the village's devotion.",
+      "status": "alive"
+    },
+    {
+      "name": "Thalassa",
+      "role": "Ally",
+      "race": "Sea Elf",
+      "npc_class": "Ranger",
+      "location": "Brinewall - The Tidal Caves (outside village)",
+      "description": "A sea elf exile living in the caves north of Brinewall, Thalassa is lean and sharp-featured with blue-green skin and silver hair matted with salt. She was banished from her underwater city for defying the elders and now survives by trading pearls for supplies. She recognized the aboleth's corruption immediately because she lost her home city to one decades ago.",
+      "notes": "Thalassa is the party's primary underwater guide. She can provide Potions of Water Breathing (she has 4) and knows the layout of the Drowned Sanctum from old sea elf charts. She is brave but traumatized — if the aboleth speaks to her telepathically, she must make a DC 13 Wisdom save or be paralyzed with fear for one round. She is the key to brokering peace with the enslaved merfolk if they can be freed.",
+      "status": "alive"
+    },
+    {
+      "name": "Nethulaxis",
+      "role": "Antagonist",
+      "race": "Aboleth",
+      "npc_class": "Wizard",
+      "location": "The Drowned Sanctum - Inner Chamber",
+      "description": "An ancient aboleth who remembers the world before the gods shaped it. Nethulaxis is vast — sixty feet long — and radiates an aura of wrongness that makes reality feel thin. It communicates through telepathy, its voice a chorus of every mind it has ever consumed. It does not see itself as evil; it is simply reclaiming what was always its domain.",
+      "notes": "Nethulaxis is a CR 10 aboleth with lair actions and should be a deadly encounter for this level range. The key to victory is destroying the three Dominion Stones in the sanctum that amplify its power (reducing its effective CR to 7). It can be bargained with — it will release Brinewall if the party delivers a specific artifact from the surface — but its bargains always involve enslavement. If reduced to half HP, it will attempt to flee deeper into the ocean.",
+      "status": "alive"
+    },
+    {
+      "name": "Pip Saltwick",
+      "role": "Support",
+      "race": "Human",
+      "npc_class": "Commoner",
+      "location": "The Drowned Sanctum - Slave Pens",
+      "description": "Elder Maren's fourteen-year-old grandson, a scrappy kid with sun-bleached hair and an outsized sense of bravery. He dove down to investigate the lights and was captured by enslaved merfolk. He is kept in an air pocket in the slave pens, terrified but alive. He has been resisting the aboleth's telepathic influence through sheer stubbornness.",
+      "notes": "Rescuing Pip is an optional but emotionally significant objective. He has overheard the enslaved merfolk whispering about the Dominion Stones and can tell the party their locations if freed. He also found a Coral Key that opens a shortcut to the inner chamber. Returning him to Maren grants the party free lodging and supplies in Brinewall for life.",
+      "status": "alive"
+    },
+    {
+      "name": "Coral Prince Virenmor",
+      "role": "Neutral",
+      "race": "Merfolk",
+      "npc_class": "Fighter",
+      "location": "The Drowned Sanctum - Coral Halls",
+      "description": "The former leader of the merfolk colony that the aboleth has enslaved. Virenmor was a proud warrior-prince with iridescent scales and a crown of living coral. Now he serves Nethulaxis as a thrall, his eyes milky white and his movements puppet-like. Beneath the domination, his will still flickers — he occasionally leaves cryptic warnings carved into the temple walls.",
+      "notes": "Virenmor can be freed by destroying the Dominion Stone in the Coral Halls (his section of the sanctum). Once freed, he is disoriented but grateful and will rally the other merfolk to fight. He is a CR 3 merfolk warrior and an excellent ally in underwater combat. If the party earns his trust, he offers a permanent alliance between Brinewall and his colony.",
+      "status": "alive"
+    },
+    {
+      "name": "Doctor Henna Voss",
+      "role": "Informant",
+      "race": "Half-Elf",
+      "npc_class": "Cleric",
+      "location": "Brinewall - Voss Apothecary",
+      "description": "Brinewall's only healer, a half-elf woman with ink-stained fingers and an exhausted expression. She has been working around the clock treating the villagers who ate the poisoned fish. Her analysis of the toxin reveals it is not natural — it contains psychic residue that she has only read about in texts describing aboleth mucus.",
+      "notes": "Doctor Voss provides crucial exposition about the aboleth's nature and the poison's psychic component. She can brew an Antitoxin of Clarity (grants advantage on saves vs. the aboleth's enslave ability for 1 hour) if the party brings her samples of uncorrupted sea water from below the sanctum. She also has a Scroll of Lesser Restoration she will give the party.",
+      "status": "alive"
+    },
+    {
+      "name": "Old Barnaby",
+      "role": "Informant",
+      "race": "Human",
+      "npc_class": "Commoner",
+      "location": "Brinewall - The Rusty Anchor Tavern",
+      "description": "A retired fisherman in his eighties, half-blind and mostly deaf, who claims to have seen the lights beneath the sea once before — sixty years ago, during the 'Year of Black Tides.' He is the only living person who remembers that the temple exists, because everyone else who went to investigate it never came back.",
+      "notes": "Barnaby's story provides historical context and foreshadowing. He knows that the temple has a landward entrance through a sea cave that is only accessible at low tide (an alternate entry point that avoids deep water). He also remembers that the 'lights stopped' last time after a tremendous underwater earthquake — hinting that collapsing the temple might be a valid solution.",
+      "status": "alive"
+    }
+  ],
+  "quests": [
+    {
+      "title": "Poisoned Waters",
+      "giver": "Elder Maren Saltwick",
+      "description": "Investigate the source of the poisoned fish plaguing Brinewall. Interview villagers, examine the sick, and analyze the toxin with Doctor Voss to determine that an aboleth is corrupting the waters from a sunken temple offshore.",
+      "status": "active",
+      "notes": "Reward: 50 gp from the village fund, free lodging at the Elder's Lodge, and access to the village's small armory (basic weapons and a suit of studded leather). Completing the investigation unlocks the quest to find Thalassa.",
+      "objectives": [
+        { "text": "Speak with Elder Maren about the poisoned catches", "completed": false },
+        { "text": "Visit Doctor Voss and examine the poisoned villagers", "completed": false },
+        { "text": "Collect a sample of contaminated seawater from the docks", "completed": false },
+        { "text": "Listen to Old Barnaby's story about the Year of Black Tides", "completed": false },
+        { "text": "Identify the source as an aboleth in a sunken temple", "completed": false }
+      ]
+    },
+    {
+      "title": "The Exile's Knowledge",
+      "giver": "Thalassa",
+      "description": "Find the sea elf exile Thalassa in the tidal caves north of Brinewall. Earn her trust and convince her to guide the party to the Drowned Sanctum. She requires proof that the party is capable of surviving underwater and will test them with a dive to a nearby shipwreck.",
+      "status": "active",
+      "notes": "Reward: 4 Potions of Water Breathing, a detailed map of the Drowned Sanctum, and Thalassa as an underwater guide and ally. The shipwreck dive serves as a tutorial for underwater combat rules and contains a minor treasure (Cloak of the Manta Ray).",
+      "objectives": [
+        { "text": "Locate Thalassa's cave north of the village", "completed": false },
+        { "text": "Convince Thalassa to help (DC 12 Persuasion, or share information about the aboleth)", "completed": false },
+        { "text": "Complete the shipwreck dive trial", "completed": false },
+        { "text": "Return to Brinewall and prepare for the descent to the sanctum", "completed": false }
+      ]
+    },
+    {
+      "title": "Shatter the Dominion Stones",
+      "giver": "Thalassa",
+      "description": "The Drowned Sanctum contains three Dominion Stones — ancient focusing crystals that amplify Nethulaxis's psychic power. Destroying all three will weaken the aboleth significantly and free the enslaved merfolk. Each stone is guarded by enthralled creatures and temple traps.",
+      "status": "active",
+      "notes": "Reward: Each destroyed stone reduces Nethulaxis's effective CR by 1 (from 10 to 7 if all three are destroyed). Destroying the stone in the Coral Halls frees Prince Virenmor and his warriors. Each stone explodes when shattered (DC 12 Dex save, 2d6 psychic damage on a failure).",
+      "objectives": [
+        { "text": "Destroy the Dominion Stone in the Kelp Gardens (guarded by enthralled giant octopus)", "completed": false },
+        { "text": "Destroy the Dominion Stone in the Coral Halls (guarded by Prince Virenmor's thralls)", "completed": false },
+        { "text": "Destroy the Dominion Stone in the Bone Grotto (guarded by undead sailors)", "completed": false },
+        { "text": "Free Prince Virenmor and rally the merfolk", "completed": false }
+      ]
+    },
+    {
+      "title": "Into the Abyss",
+      "giver": "Elder Maren Saltwick",
+      "description": "Confront Nethulaxis in the inner chamber of the Drowned Sanctum. Defeat or banish the aboleth to end the corruption, rescue Pip Saltwick and any other surviving captives, and purify the waters around Brinewall.",
+      "status": "active",
+      "notes": "Reward: 500 gp in salvaged treasure from the sanctum, the Tidecaller's Trident, a permanent alliance with the merfolk colony, and the eternal gratitude of Brinewall. Multiple victory conditions: kill Nethulaxis, collapse the inner chamber to seal it, or use a banishment effect to send it to a demiplane.",
+      "objectives": [
+        { "text": "Enter the inner chamber of the Drowned Sanctum", "completed": false },
+        { "text": "Defeat or banish Nethulaxis", "completed": false },
+        { "text": "Rescue Pip Saltwick from the slave pens", "completed": false },
+        { "text": "Escape the sanctum before it floods or collapses", "completed": false },
+        { "text": "Return to Brinewall with proof of victory", "completed": false }
+      ]
+    }
+  ],
+  "lore": [
+    {
+      "title": "The Drowned Sanctum",
+      "category": "Location",
+      "body": "An ancient temple that predates recorded history, built by aboleth servants during an age when the aberrations ruled the oceans unchallenged. The sanctum was submerged during a cataclysmic earthquake thousands of years ago, trapping Nethulaxis in a dormant state. The temple's architecture is alien and unsettling — walls of fused bone and coral, corridors that spiral in non-Euclidean patterns, and carvings that seem to move when viewed from the corner of the eye.",
+      "related_to": "Nethulaxis"
+    },
+    {
+      "title": "The Year of Black Tides",
+      "category": "History",
+      "body": "Sixty years ago, Brinewall experienced a similar but briefer period of poisoned waters and strange lights. Old Barnaby was a young fisherman then and remembers that several villagers went mad, claiming they could hear a voice beneath the waves promising them eternal life. A group of adventurers investigated and never returned. The disturbance stopped after a natural earthquake — but it was merely Nethulaxis stirring in its sleep, not fully awakening.",
+      "related_to": "Old Barnaby"
+    },
+    {
+      "title": "Brinewall Village",
+      "category": "Location",
+      "body": "A small fishing village of about three hundred souls, nestled in a sheltered cove along a rocky coastline. Brinewall has no walls or fortifications — its only defense is its remoteness and the loyalty of its people. The village is built from driftwood and local stone, with a small harbor, a marketplace, a tavern called the Rusty Anchor, and a modest temple to a sea god. It is a tight-knit community where everyone knows everyone.",
+      "related_to": "Elder Maren Saltwick"
+    },
+    {
+      "title": "Aboleth Biology and Psychic Corruption",
+      "category": "Legend",
+      "body": "Aboleths are among the oldest creatures in existence, possessing racial memories that stretch back to before the gods themselves. Their mucus is a powerful psychic mutagen that can transform air-breathing creatures into water-breathing thralls over a period of days. The corruption spreads through water, tainting everything it touches. Doctor Voss's research suggests that Nethulaxis's mucus is unusually potent, affecting creatures even through diluted seawater — a sign of the creature's immense age and power.",
+      "related_to": "Doctor Henna Voss"
+    },
+    {
+      "title": "The Merfolk of the Coral Reef",
+      "category": "Faction",
+      "body": "A colony of roughly fifty merfolk who lived on the coral reef above the Drowned Sanctum for generations, unaware of what slept beneath them. When Nethulaxis awakened, it enslaved the colony within days, turning them into guardians and laborers rebuilding the temple. Prince Virenmor's resistance is the only spark of free will that remains. If freed, the merfolk would be powerful allies — skilled warriors who know every current and cave in the region.",
+      "related_to": "Coral Prince Virenmor"
+    },
+    {
+      "title": "The Dominion Stones",
+      "category": "Legend",
+      "body": "Three crystalline obelisks of deep violet, each eight feet tall, placed at cardinal points within the Drowned Sanctum. They were carved from psionically resonant crystal harvested from the Far Realm and serve as amplifiers for Nethulaxis's telepathic power. Without them, the aboleth's range of control shrinks from miles to mere hundreds of feet. Ancient sea elf texts describe them as 'the pillars of the tyrant's will' and note that they can be shattered by concentrated force or radiant energy.",
+      "related_to": "Nethulaxis"
+    },
+    {
+      "title": "Thalassa's Exile",
+      "category": "History",
+      "body": "Thalassa was once a ranger-scout for the sea elf city of Quelathis, far to the south. When she warned the elders that an aboleth was stirring near their territory, they dismissed her as a fearmonger and exiled her for causing panic. Six months later, Quelathis fell. Thalassa has carried the guilt of not doing more ever since, and the crisis in Brinewall feels like a second chance — one she refuses to waste, no matter the cost.",
+      "related_to": "Thalassa"
+    }
+  ],
+  "journal": {
+    "title": "Campaign Intro: Whispers of the Deep",
+    "session_number": 0,
+    "body": "## Campaign Introduction\n\nThe road to Brinewall ends where the land gives up its fight against the sea — crumbling cliffs, wind-bent pines, and a narrow path that switchbacks down to a cove where a village clings to the rocks like a barnacle. You smell it before you see it: the sharp stench of rotting fish, far stronger than any fishing village should produce.\n\nBrinewall is dying. Nets hang empty on their frames. Boats sit beached and idle. The few villagers you pass have hollow eyes and rags pressed over their noses. A hand-painted sign at the village entrance reads: *'WARNING — Do Not Eat The Fish.'*\n\nElder Maren Saltwick meets you at the Elder's Lodge, a driftwood building at the center of the village. She is direct: the fish are poisoned, the sea is glowing, boats are disappearing, and the nearest city is two weeks' travel away. You are the only help that has come. She presses a pouch of coins into your hands — every copper the village can spare — and asks you to find out what is happening to her sea.\n\nThat night, as you stand on the docks, you see them: pale blue-green lights pulsing beneath the waves, rhythmic as a heartbeat, stretching out toward the horizon. And just at the edge of hearing, beneath the crash of the surf, something that might be a voice. Whispering.\n\n### Key NPCs to Introduce\n- **Elder Maren Saltwick** — village leader, desperate for help\n- **Doctor Henna Voss** — the healer treating poisoned villagers, has critical information\n- **Old Barnaby** — the retired fisherman who remembers the last time this happened\n\n### Starting Hooks\n- The poisoned fish and empty harbor are immediately visible\n- Doctor Voss's analysis reveals psychic residue in the toxin — not natural\n- The lights beneath the waves pulse every night, growing brighter\n- Rumors of a 'sea witch' living in the caves north of town (Thalassa)",
+    "tags": "coastal,mystery,exploration,horror,aboleth,underwater",
+    "npcs_mentioned": "Elder Maren Saltwick,Doctor Henna Voss,Old Barnaby,Thalassa"
+  },
+  "items": [
+    {
+      "name": "Tidecaller's Trident",
+      "item_type": "weapon",
+      "weight": 4.0,
+      "value_gp": 2000.0,
+      "quantity": 1,
+      "description": "A trident carved from a single piece of deep-sea coral, its prongs wrapped in perpetually flowing water that never drips. When wielded underwater, the bearer can breathe water and gains a swimming speed equal to their walking speed. The trident deals an additional 1d4 cold damage on a hit, and once per day the wielder can cast Tidal Wave (DC 13). It hums faintly when aboleths are within 1 mile.",
+      "attunement": true,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "mainhand",
+      "stat_modifiers": "{}",
+      "rarity": "rare"
+    },
+    {
+      "name": "Potion of Water Breathing",
+      "item_type": "consumable",
+      "weight": 0.5,
+      "value_gp": 100.0,
+      "quantity": 4,
+      "description": "A murky blue-green potion that smells of sea salt and tastes of kelp. When consumed, the drinker can breathe underwater for 1 hour. The potion does not grant a swim speed, but it prevents drowning and allows normal speech underwater. Thalassa brewed these from deep-sea algae and crushed pearls.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Cloak of the Manta Ray",
+      "item_type": "armor",
+      "weight": 1.0,
+      "value_gp": 600.0,
+      "quantity": 1,
+      "description": "A dark, rubbery cloak that clings to the wearer's body and sprouts fin-like extensions when submerged. While wearing this cloak underwater, the wearer gains a swimming speed of 60 feet and can breathe underwater. Found in the shipwreck during Thalassa's dive trial, it still bears the monogram of a long-dead sea captain.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "neck",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Antitoxin of Clarity",
+      "item_type": "consumable",
+      "weight": 0.3,
+      "value_gp": 75.0,
+      "quantity": 3,
+      "description": "A crystalline vial of pearlescent liquid brewed by Doctor Voss from uncorrupted deep-sea water and rare herbs. When consumed, the drinker gains advantage on saving throws against the aboleth's Enslave ability and psychic damage for 1 hour. The liquid leaves a sharp, minty aftertaste and makes the drinker's eyes glow faintly silver.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Coral Key",
+      "item_type": "misc",
+      "weight": 0.2,
+      "value_gp": 0.0,
+      "quantity": 1,
+      "description": "A key grown from living coral, warm to the touch and faintly pulsing with bioluminescence. Pip Saltwick found it wedged in a crack in the slave pens. It opens a hidden passage that bypasses the Bone Grotto entirely, providing a direct route to Nethulaxis's inner chamber. The key crumbles to sand after a single use.",
+      "attunement": false,
+      "attuned": false,
+      "equipped": false,
+      "equipment_slot": "misc",
+      "stat_modifiers": "{}",
+      "rarity": "common"
+    }
+  ]
+}

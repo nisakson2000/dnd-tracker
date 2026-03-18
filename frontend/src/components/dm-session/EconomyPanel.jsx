@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import {
   Coins, Plus, Trash2, Save, Loader2, Eye, Calculator,
-  TrendingUp, TrendingDown, ShoppingBag, Landmark, X
+  TrendingUp, TrendingDown, ShoppingBag, Landmark, X, Shield
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { calculatePrice, getFactionPriceLabel } from '../../utils/merchantPricing';
 
 const PRESETS = {
   'Prosperous City': { prosperity: 80, taxRate: 12, priceModifier: 1.2, notes: 'Wealthy urban center with thriving commerce.' },
@@ -46,6 +47,19 @@ export default function EconomyPanel() {
   // Price calculator
   const [basePrice, setBasePrice] = useState('');
   const [showCalculator, setShowCalculator] = useState(false);
+  const [factionRep, setFactionRep] = useState(0);
+  const [factionName, setFactionName] = useState('');
+  const [factions, setFactions] = useState([]);
+
+  // Load factions for reputation-based pricing
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await invoke('list_factions');
+        setFactions(data || []);
+      } catch { /* factions not available */ }
+    })();
+  }, []);
 
   const handleLoad = async () => {
     setLoading(true);
@@ -113,8 +127,14 @@ export default function EconomyPanel() {
     setTradeGoods(prev => prev.filter((_, i) => i !== index));
   };
 
+  const factionLabel = getFactionPriceLabel(factionRep);
+  const fullCalc = basePrice ? calculatePrice({
+    basePrice: parseFloat(basePrice),
+    economyModifier: priceModifier,
+    factionReputation: factionRep,
+  }) : null;
   const calculatedPrice = basePrice ? (parseFloat(basePrice) * priceModifier).toFixed(2) : null;
-  const taxedPrice = calculatedPrice ? (parseFloat(calculatedPrice) * (1 + taxRate / 100)).toFixed(2) : null;
+  const taxedPrice = calculatedPrice ? (parseFloat(calculatedPrice) * factionLabel.modifier * (1 + taxRate / 100)).toFixed(2) : null;
 
   const modIcon = priceModifier > 1 ? <TrendingUp size={11} className="text-red-400" /> :
     priceModifier < 1 ? <TrendingDown size={11} className="text-green-400" /> : null;
@@ -337,6 +357,57 @@ export default function EconomyPanel() {
               color: 'var(--text)',
             }}
           />
+
+          {/* Faction Reputation for pricing */}
+          <div>
+            <div className="flex items-center gap-1 mb-1">
+              <Shield size={10} style={{ color: 'var(--text-mute)' }} />
+              <span className="text-[10px]" style={{ color: 'var(--text-mute)' }}>Faction Reputation</span>
+            </div>
+            {factions.length > 0 && (
+              <select
+                value={factionName}
+                onChange={(e) => {
+                  setFactionName(e.target.value);
+                  // Factions don't store party reputation directly on the object,
+                  // so the DM can set it manually below
+                }}
+                className="w-full text-xs rounded px-2 py-1.5 border focus:outline-none cursor-pointer mb-1"
+                style={{
+                  background: 'rgba(0,0,0,0.2)',
+                  borderColor: 'rgba(255,255,255,0.1)',
+                  color: 'var(--text)',
+                }}
+              >
+                <option value="">No faction selected</option>
+                {factions.map(f => (
+                  <option key={f.id} value={f.name}>{f.name}</option>
+                ))}
+              </select>
+            )}
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min={-100}
+                max={100}
+                value={factionRep}
+                onChange={(e) => setFactionRep(parseInt(e.target.value, 10))}
+                className="flex-1 accent-purple-500"
+                style={{ height: '4px' }}
+              />
+              <span className="text-xs w-8 text-right" style={{
+                color: factionLabel.type === 'discount' ? '#4ade80' : factionLabel.type === 'markup' ? '#f87171' : 'var(--text-dim)',
+              }}>
+                {factionRep > 0 ? '+' : ''}{factionRep}
+              </span>
+            </div>
+            <div className="text-[10px] mt-0.5" style={{
+              color: factionLabel.type === 'discount' ? '#4ade80' : factionLabel.type === 'markup' ? '#f87171' : 'var(--text-mute)',
+            }}>
+              {factionLabel.label} ({factionLabel.modifier}x)
+            </div>
+          </div>
+
           {calculatedPrice && (
             <div className="space-y-1 pt-1">
               <div className="flex items-center justify-between text-xs">
@@ -344,13 +415,36 @@ export default function EconomyPanel() {
                 <span style={{ color: 'var(--text-dim)' }}>{parseFloat(basePrice).toFixed(2)} gp</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span style={{ color: 'var(--text-mute)' }}>After modifier ({priceModifier}x):</span>
+                <span style={{ color: 'var(--text-mute)' }}>Economy modifier ({priceModifier}x):</span>
                 <span style={{ color: 'var(--text)' }}>{calculatedPrice} gp</span>
               </div>
+              {factionLabel.modifier !== 1.0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span style={{ color: 'var(--text-mute)' }}>
+                    Faction {factionLabel.type} ({factionLabel.modifier}x):
+                  </span>
+                  <span style={{ color: factionLabel.type === 'discount' ? '#4ade80' : '#f87171' }}>
+                    {(parseFloat(calculatedPrice) * factionLabel.modifier).toFixed(2)} gp
+                  </span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-xs pt-1 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                <span style={{ color: 'var(--text-mute)' }}>With tax ({taxRate}%):</span>
+                <span style={{ color: 'var(--text-mute)' }}>Final with tax ({taxRate}%):</span>
                 <span className="font-medium" style={{ color: '#c084fc' }}>{taxedPrice} gp</span>
               </div>
+              {fullCalc && (
+                <div className="mt-1.5 pt-1.5 border-t" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
+                  <div className="text-[10px] mb-1" style={{ color: 'var(--text-mute)' }}>Full breakdown (merchantPricing):</div>
+                  {fullCalc.breakdown.map((b, i) => (
+                    <div key={i} className="flex items-center justify-between text-[10px]">
+                      <span style={{ color: 'var(--text-mute)' }}>{b.source}</span>
+                      <span style={{ color: b.modifier < 1 ? '#4ade80' : b.modifier > 1 ? '#f87171' : 'var(--text-dim)' }}>
+                        {b.modifier}x
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

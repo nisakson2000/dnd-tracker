@@ -42,12 +42,35 @@ function trustPriceModifier(trustScore) {
 }
 
 // ── Faction reputation → price modifier ──
-function factionPriceModifier(reputationScore) {
-  if (reputationScore >= 50) return 0.90;
-  if (reputationScore >= 20) return 0.95;
-  if (reputationScore >= -19) return 1.00;
-  if (reputationScore >= -49) return 1.10;
-  return 1.25;
+// Granular scaling: allies get discounts, enemies pay more
+// +100 = 0.85x, +50 = 0.90x, 0 = 1.00x, -50 = 1.15x, -100 = 1.30x
+export function factionPriceModifier(reputationScore) {
+  if (reputationScore >= 90) return 0.85;   // Exalted — 15% off
+  if (reputationScore >= 50) return 0.90;   // Honored/Trusted — 10% off
+  if (reputationScore >= 20) return 0.95;   // Friendly — 5% off
+  if (reputationScore >= -9) return 1.00;   // Neutral — base price
+  if (reputationScore >= -29) return 1.05;  // Unfriendly — 5% markup
+  if (reputationScore >= -49) return 1.10;  // Hostile — 10% markup
+  if (reputationScore >= -79) return 1.20;  // Hated — 20% markup
+  return 1.30;                               // Despised — 30% markup
+}
+
+/**
+ * Get a human-readable label for the faction price effect.
+ * @param {number} reputationScore - Faction reputation (-100 to 100)
+ * @returns {{ modifier: number, label: string, type: 'discount'|'markup'|'neutral' }}
+ */
+export function getFactionPriceLabel(reputationScore) {
+  const mod = factionPriceModifier(reputationScore);
+  if (mod < 1) {
+    const pct = Math.round((1 - mod) * 100);
+    return { modifier: mod, label: `${pct}% faction discount`, type: 'discount' };
+  }
+  if (mod > 1) {
+    const pct = Math.round((mod - 1) * 100);
+    return { modifier: mod, label: `${pct}% faction markup`, type: 'markup' };
+  }
+  return { modifier: 1.0, label: 'No faction modifier', type: 'neutral' };
 }
 
 // ── Rarity → base price ranges ──
