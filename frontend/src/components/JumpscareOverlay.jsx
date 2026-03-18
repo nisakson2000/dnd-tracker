@@ -21,6 +21,7 @@ export default function JumpscareOverlay() {
     audio.loop = true;
     audio.volume = 1.0;
     audio.preload = 'auto';
+    audio.currentTime = 4;
     audioRef.current = audio;
 
     // Browsers block autoplay until user interacts — unlock audio on first click

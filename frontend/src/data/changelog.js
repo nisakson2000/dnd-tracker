@@ -3,6 +3,20 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.8.4',
+    date: '03/17/2026',
+    time: '',
+    title: 'Combat Completeness, Player Agency, AI Overhaul, Session Flow & Living World',
+    changes: [
+      'Combat — temp HP field, crit toggle, turn timer (30/60/90s), per-combatant reaction tracking, combat archive to SQLite, full monster stat blocks, undo last HP change',
+      'Player agency — spell casting with auto slot deduction, consumable self-service, persistent notes, character quick-view drawer',
+      'AI improvements — model picker, character context in prompts, conversation persistence, campaign context injection, smarter wiki search, AI session recap',
+      'Session flow — pause/resume with player overlay, post-session summary screen, persistent dice roll history, readiness checklist in lobby, transcript auto-save',
+      'Living world — faction reputation affects shop prices (8 tiers), weather affects combat & travel, auto-generated world events, World At A Glance dashboard, faction relationship drift',
+      'Release polish — global undo system (Ctrl+Z), expanded keyboard shortcuts, error boundary hardening with crash recovery & report, auto-update progress indicator',
+    ],
+  },
+  {
     version: 'V0.8.3',
     date: '03/16/2026',
     time: '',
