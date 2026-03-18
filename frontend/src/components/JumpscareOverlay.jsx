@@ -3,16 +3,19 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 /**
  * JumpscareOverlay — Easter egg that shows a popup image
  * at random intervals, playing Hava Nagila that continues where it left off.
+ * User must click 20 times to close it.
  *
  * Image: /jumpscare.jpg  (drop any image here to swap it)
  * Audio: /hava-nagila.mp3
  */
 export default function JumpscareOverlay() {
   const [visible, setVisible] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
   const audioRef = useRef(null);
   const audioReady = useRef(false);
   const timerRef = useRef(null);
-  const hideTimerRef = useRef(null);
+
+  const CLICKS_TO_CLOSE = 20;
 
   // Create audio element once, unlock on first user interaction
   useEffect(() => {
@@ -22,12 +25,14 @@ export default function JumpscareOverlay() {
     audio.volume = 1.0;
     audio.preload = 'auto';
     audio.currentTime = 4;
+    audio.addEventListener('ended', () => {
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    });
     audioRef.current = audio;
 
-    // Browsers block autoplay until user interacts — unlock audio on first click
     const unlock = () => {
       if (!audioReady.current && audioRef.current) {
-        // Play and immediately pause to unlock the audio context
         audioRef.current.play().then(() => {
           audioRef.current.pause();
           audioReady.current = true;
@@ -48,18 +53,23 @@ export default function JumpscareOverlay() {
 
   const trigger = useCallback(() => {
     setVisible(true);
-    // Play audio from where it left off
+    setClickCount(0);
     if (audioRef.current) {
       audioRef.current.play().catch(() => {});
     }
-    // Hide after 2 seconds
-    hideTimerRef.current = setTimeout(() => {
-      setVisible(false);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        // Don't reset currentTime — song continues next time
+  }, []);
+
+  const handleDismissClick = useCallback(() => {
+    setClickCount(prev => {
+      const next = prev + 1;
+      if (next >= CLICKS_TO_CLOSE) {
+        setVisible(false);
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
       }
-    }, 2000);
+      return next;
+    });
   }, []);
 
   // Random timer: fires every 3-15 minutes
@@ -72,10 +82,7 @@ export default function JumpscareOverlay() {
       }, delay);
     };
     scheduleNext();
-    return () => {
-      clearTimeout(timerRef.current);
-      clearTimeout(hideTimerRef.current);
-    };
+    return () => clearTimeout(timerRef.current);
   }, [trigger]);
 
   // Random button click trigger — 25% chance on any button click
@@ -93,8 +100,11 @@ export default function JumpscareOverlay() {
 
   if (!visible) return null;
 
+  const remaining = CLICKS_TO_CLOSE - clickCount;
+
   return (
     <div
+      onClick={(e) => { e.stopPropagation(); handleDismissClick(); }}
       style={{
         position: 'fixed',
         inset: 0,
@@ -104,7 +114,9 @@ export default function JumpscareOverlay() {
         justifyContent: 'center',
         background: 'rgba(0,0,0,0.9)',
         animation: 'jumpscare-flash 0.15s ease-out',
-        pointerEvents: 'none',
+        cursor: 'pointer',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
@@ -118,6 +130,7 @@ export default function JumpscareOverlay() {
             animation: 'jumpscare-shake 0.3s ease-in-out infinite',
             borderRadius: '12px',
             boxShadow: '0 0 100px rgba(255,0,0,0.5)',
+            pointerEvents: 'none',
           }}
         />
         <div style={{
@@ -129,8 +142,18 @@ export default function JumpscareOverlay() {
           letterSpacing: '4px',
           textTransform: 'uppercase',
           animation: 'jumpscare-shake 0.3s ease-in-out infinite',
+          pointerEvents: 'none',
         }}>
           YOU HAVE BEEN FENTANYAHU
+        </div>
+        <div style={{
+          fontSize: '20px',
+          fontWeight: 700,
+          color: '#fff',
+          fontFamily: 'Impact, Arial Black, sans-serif',
+          pointerEvents: 'none',
+        }}>
+          CLICK {remaining} MORE TIME{remaining !== 1 ? 'S' : ''} TO CLOSE
         </div>
       </div>
       <style>{`
