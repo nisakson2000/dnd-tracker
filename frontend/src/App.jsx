@@ -20,7 +20,6 @@ const WikiArticlePage = lazy(() => import('./pages/WikiArticlePage'));
 const CharacterSetup = lazy(() => import('./pages/CharacterSetup'));
 // BootupVideo removed — app launches directly to mode select
 import SessionMonitor from './components/SessionMonitor';
-import JumpscareOverlay from './components/JumpscareOverlay';
 
 // Lazy-loaded standalone pages
 const UpdatesPage = lazy(() => import('./pages/UpdatesPage'));
@@ -995,8 +994,6 @@ function AppContent() {
         gutter={8}
         visibleToasts={4}
       />
-
-      <JumpscareOverlay />
 
       {/* Dev sync gate — force pull if behind remote (dev builds only) */}
       {import.meta.env.DEV && !syncDone && <DevSyncGate onReady={handleSyncReady} />}
