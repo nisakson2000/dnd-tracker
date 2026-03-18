@@ -4,6 +4,54 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.8.4 — Combat Completeness, Player Agency, AI Overhaul, Session Flow & Living World
+**Released:** March 17, 2026
+
+### Combat Completeness (Phase 1)
+- **Temp HP Field** — separate temp HP input per combatant, absorbs damage first with blue bar overlay
+- **Crit Toggle** — manual critical hit override on attacks, doubles dice and logs "CRITICAL HIT"
+- **Turn Timer** — optional 30/60/90s countdown per turn with warning at 10s and optional auto-advance
+- **Per-Combatant Reaction Tracking** — reset at turn start, tracks Shield/Counterspell/Opportunity Attacks
+- **Combat Archive to SQLite** — full combat log persisted on encounter end via Rust command
+- **Monster Stat Blocks** — full stat block display: saves, skills, resistances, legendary actions, special abilities
+- **Undo Last HP Change** — single-level undo per combatant, restores previous HP value
+
+### Player Agency (Phase 2)
+- **Player Spell Casting** — cast spells with auto slot deduction, healing auto-applied, broadcast to DM
+- **Player Consumable Self-Service** — use potions/scrolls from inventory during turn with auto-apply
+- **Persistent Player Notes** — auto-save notepad per character with saved notes browser and delete
+- **Character Quick-View** — expandable drawer in session sidebar showing full stats, abilities, HP bar, conditions
+
+### AI Improvements (Phase 3)
+- **Model Picker** — query Ollama for available models, select and persist choice in settings
+- **Character Context in Prompts** — AI now knows your character's name, class, level, abilities, equipment
+- **Conversation Persistence** — AI chat history saved to localStorage (50 conversations), past conversations sidebar
+- **Campaign Context Injection** — DM session AI gets scene, quests, players, and recent actions
+- **Smarter Wiki Search** — always-search approach replaces keyword regex, AI decides relevance
+- **AI Session Recap** — narrative "Last time on..." recap generated from event feed and chat history
+
+### Session Flow (Phase 4)
+- **Session Pause/Resume** — DM can freeze session with full-screen player overlay, all timers stop
+- **Post-Session Summary** — duration, XP, monsters defeated, scenes visited, notable rolls, combat stats
+- **Persistent Dice Roll History** — last 100 rolls per character with context tags
+- **Readiness Checklist** — integrated into DM Lobby with NPC/quest/encounter counts
+- **Session Transcript Auto-Save** — full session log persisted on session end
+
+### Living World (Phase 5)
+- **Faction Reputation Affects Prices** — 8-tier pricing from 0.85x (Exalted) to 1.30x (Hated)
+- **Weather Affects Combat & Travel** — rain = Perception disadvantage, storms slow travel 1.5-2x
+- **Auto-Generated World Events** — quest completions, battles, faction changes auto-create timeline entries
+- **World At A Glance Dashboard** — compact card showing weather, factions, economy, and recent events
+- **Faction Relationship Drift** — unused allies drift neutral, hostile factions escalate per session
+
+### Release Polish (Phase 6)
+- **Global Undo System** — command pattern with 20-action stack, Ctrl+Z support
+- **Keyboard Shortcuts** — Ctrl+Z undo, Ctrl+D dice, Ctrl+L combat log, Ctrl+/ help, 1-9 targets, Space next turn
+- **Error Boundary Hardening** — crash recovery, persistent error log, "Report Issue" clipboard export
+- **Auto-Update Improvements** — download progress indicator, version upgrade tracking
+
+---
+
 ## V0.8.3 — Encounter Runner Overhaul, Player QoL & Campaign Wizard
 **Released:** March 16, 2026
 
