@@ -446,7 +446,7 @@ function FavoritesBar({ characterId }) {
               {showPicker && (
                 <div style={{
                   position: 'absolute', top: 'calc(100% + 6px)', left: 0,
-                  width: '280px', maxHeight: '320px',
+                  width: 'min(280px, 80vw)', maxHeight: '320px',
                   background: 'rgba(12,10,20,0.97)', backdropFilter: 'blur(20px)',
                   border: '1px solid rgba(201,168,76,0.25)', borderRadius: '10px',
                   boxShadow: '0 12px 40px rgba(0,0,0,0.6)', zIndex: 200,
@@ -671,7 +671,7 @@ function UnifiedRestModal({ characterId, restTab, setRestTab, onClose, reloadCha
   if (summary) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={e => e.target === e.currentTarget && onClose()}>
-        <div style={{ background: 'rgba(12,10,20,0.97)', backdropFilter: 'blur(24px)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 14, width: 440, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
+        <div style={{ background: 'rgba(12,10,20,0.97)', backdropFilter: 'blur(24px)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 14, width: '90vw', maxWidth: 440, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
           <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: summary.type === 'long' ? 'rgba(99,102,241,0.15)' : 'rgba(234,179,8,0.12)', border: '1px solid ' + (summary.type === 'long' ? 'rgba(99,102,241,0.3)' : 'rgba(234,179,8,0.25)'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -706,7 +706,7 @@ function UnifiedRestModal({ characterId, restTab, setRestTab, onClose, reloadCha
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: 'rgba(12,10,20,0.97)', backdropFilter: 'blur(24px)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 14, width: 500, maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(139,92,246,0.08)' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: 'rgba(12,10,20,0.97)', backdropFilter: 'blur(24px)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 14, width: '92vw', maxWidth: 500, maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(139,92,246,0.08)' }} onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div style={{ flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 0' }}>
@@ -1158,6 +1158,7 @@ export default function CharacterView() {
   const [combatMode, setCombatMode] = useState(false);
   const [showPlayerWelcome, setShowPlayerWelcome] = useState(false);
   const [campaignStats, setCampaignStats] = useState({ session_count: 0, total_hours: 0 });
+  const [diceHistory, setDiceHistory] = useState([]);
   // Item 1: HP Widget popover
   const [showHpWidget, setShowHpWidget] = useState(false);
   const [hpWidgetInput, setHpWidgetInput] = useState('');
@@ -1571,6 +1572,15 @@ export default function CharacterView() {
     return () => window.removeEventListener('keydown', handler);
   }, [showShortcutHelp, showRestModal, character, activeSection, isTyping, toggleShortcutHelp, handleNewEntry]);
 
+  const defaultSection = appMode === 'dm' ? 'campaign-hub' : 'overview';
+
+  // If activeSection was invalid (e.g. removed section from old localStorage), reset it
+  useEffect(() => {
+    if (!SECTIONS[activeSection]) {
+      setActiveSection(defaultSection);
+    }
+  }, [activeSection, defaultSection]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-amber-200/40">
@@ -1579,11 +1589,7 @@ export default function CharacterView() {
     );
   }
 
-  const ActiveComponent = SECTIONS[activeSection] || SECTIONS[appMode === 'dm' ? 'campaign-hub' : 'overview'];
-  // If activeSection was invalid (e.g. removed section from old localStorage), reset it
-  if (!SECTIONS[activeSection] && activeSection !== (appMode === 'dm' ? 'campaign-hub' : 'overview')) {
-    setActiveSection(appMode === 'dm' ? 'campaign-hub' : 'overview');
-  }
+  const ActiveComponent = SECTIONS[activeSection] || SECTIONS[defaultSection];
   const rulesetId = character?.ruleset || '5e-2014';
 
   return (
@@ -1600,7 +1606,7 @@ export default function CharacterView() {
           setActiveConditions(condNames || []);
         }}
       />
-      <div style={{ display: 'flex', minHeight: '100vh', paddingTop: 'var(--dev-banner-h, 0px)' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', paddingTop: 'var(--dev-banner-h, 0px)', '--class-accent': `var(--class-${(character?.primary_class || '').toLowerCase().replace(/\s+/g, '-')}, var(--accent-l))` }}>
         <Sidebar
           character={character}
           activeSection={activeSection}
@@ -1679,7 +1685,7 @@ export default function CharacterView() {
                   {showCharSwitcher && (
                     <div style={{
                       position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 200,
-                      width: '240px', maxHeight: '320px',
+                      width: 'min(240px, 80vw)', maxHeight: '320px',
                       background: 'rgba(12,10,20,0.97)', backdropFilter: 'blur(20px)',
                       border: '1px solid rgba(201,168,76,0.25)', borderRadius: '10px',
                       boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
@@ -1860,10 +1866,10 @@ export default function CharacterView() {
               {/* Item 2: Class Resource Counters */}
               <ClassResourceBar characterId={characterId} onUpdate={() => {}} />
               {/* Spell slot pips (Item 6: now clickable) */}
-              {spellSlots.filter(s => s.max_slots > 0).length > 0 && (
+              {(() => { const activeSlots = spellSlots.filter(s => s.max_slots > 0); return activeSlots.length > 0 && (
                 <>
                   <div style={{ width: '1px', height: '16px', background: 'var(--border)', margin: '0 4px', flexShrink: 0 }} />
-                  {spellSlots.filter(s => s.max_slots > 0).map(slot => {
+                  {activeSlots.map(slot => {
                     const remaining = slot.max_slots - slot.used_slots;
                     const allUsed = remaining <= 0;
                     return (
@@ -1915,13 +1921,13 @@ export default function CharacterView() {
                     );
                   })}
                 </>
-              )}
+              ); })()}
             </div>
 
             {/* Rest button */}
             <button
               onClick={() => setShowRestModal(true)}
-              title="Take a Rest (Ctrl+Shift+R)"
+              title="Take a Rest"
               style={{
                 background: 'rgba(139,92,246,0.08)',
                 border: '1px solid rgba(139,92,246,0.2)',
@@ -1943,36 +1949,8 @@ export default function CharacterView() {
             >
               <Moon size={12} />
               Rest
-              {shortcutHintsSeen && (
-                <span style={{ fontSize: '8px', opacity: 0.35, fontFamily: 'var(--font-mono, monospace)', marginLeft: '2px' }}>Ctrl+Shift+R</span>
-              )}
             </button>
 
-            {/* Combat Mode toggle */}
-            <button
-              onClick={() => setCombatMode(true)}
-              title="Enter Combat Mode"
-              style={{
-                background: combatMode ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.06)',
-                border: `1px solid ${combatMode ? 'rgba(239,68,68,0.35)' : 'rgba(239,68,68,0.15)'}`,
-                borderRadius: '7px',
-                padding: '4px 10px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                color: '#fca5a5',
-                fontSize: '11px',
-                fontFamily: 'var(--font-heading)',
-                letterSpacing: '0.03em',
-                transition: 'all 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.15)'; }}
-            >
-              <Sword size={12} />
-              Combat
-            </button>
               </>
             )}
 
@@ -2010,7 +1988,7 @@ export default function CharacterView() {
           </div>
 
           {/* Favorites Quick-Access Bar (player mode only) */}
-          {appMode !== 'dm' && <FavoritesBar characterId={characterId} character={character} />}
+          {appMode !== 'dm' && <FavoritesBar characterId={characterId} />}
 
           {/* Main content */}
           <main ref={contentRef} className="section-content" style={{ flex: 1, padding: 'calc(24px * var(--density, 1)) calc(28px * var(--density, 1))', overflowY: 'auto', maxHeight: 'calc(100vh - var(--top-h, 52px))', minWidth: 0 }}>
@@ -2037,7 +2015,7 @@ export default function CharacterView() {
                   <div className="skeleton-pulse" style={{ height: 100 }} />
                 </div>
               }>
-              <div key={activeSection} className="section-fade-enter">
+              <div key={activeSection} className="tab-content-enter">
                 <ActiveComponent
                   characterId={characterId}
                   character={character}
@@ -2071,6 +2049,9 @@ export default function CharacterView() {
           />
         )}
 
+
+
+
         {/* Arcane Advisor floating widget (context-aware per section) */}
         {activeSection !== 'ai-assistant' && (
           <ArcaneWidget
@@ -2078,8 +2059,6 @@ export default function CharacterView() {
             section={activeSection}
           />
         )}
-
-
 
         {/* Unified Rest Modal */}
         {showRestModal && (

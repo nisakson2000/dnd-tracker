@@ -4,6 +4,52 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.8.5 — Gameplay Settings, UI Polish, Companion Overhaul & Accuracy Pass
+**Released:** March 21, 2026
+
+### Gameplay Settings (Fully Wired)
+- **Session Style** — Solo Tracker / Party Connect mode toggling with proper feature visibility
+- **Sidebar Dice Toggle** — reactive toggle via settings event system
+- **Encumbrance Rules** — variant encumbrance reads STR-based thresholds, toggleable off
+- **Critical Hit Rules** — standard (double dice) or max+roll mode
+- **Rest Variant** — standard / gritty realism (8hr short, 7day long) / epic heroism (1min short, 1hr long) with timing labels on buttons
+- **Flanking** — shows advantage reminder in combat when enabled
+- **Allow Feats** — hides Browse Feats button when disabled
+- **Allow Multiclass** — hides multiclass section and tab in Overview when disabled
+- **Diagonal Movement** — standard (5ft) or alternating (5ft/10ft) with info display
+- **Death Save Rules** — standard or brutal (failures do NOT reset on stabilize)
+
+### Companion Overhaul
+- **25+ Preset Companions** — familiars, beasts, mounts, and summoned creatures with full stat blocks
+- **Searchable Dropdown** — filter presets by name in the add companion modal
+- **Numeric Input Arrows** — up/down buttons on all numeric fields
+- **Delete Confirmation** — ConfirmDialog before removing companions
+
+### Combat Improvements
+- **Rest Variant Labels** — short/long rest buttons show timing for gritty/epic modes
+- **Flanking Reminder** — info banner when flanking rule is active
+- **Diagonal Movement Display** — shows current diagonal rule in combat
+- **Brutal Death Saves** — failures persist when stabilized under brutal rule
+
+### Features & Equipment
+- **Feat Removal** — all users can now remove feats (not just DM)
+- **No Auto-Equip** — character creation no longer auto-equips all starting gear
+- **Equipment Bonus Audit** — verified stat modifiers apply to all roll types (ability checks, saves, attacks, spell DC)
+
+### UI Polish
+- **ModeSelect Redesign** — richer atmosphere with layered ambient glows, Lucide icons, icon badges per feature, glow-on-hover effects, smooth animations, vignette overlay
+- **AI Backstory Generator** — collapsible UI with optional prompt, per-field accept/reject, reroll all
+- **Bullet Point Fix** — combat action economy reference renders properly
+- **Floating Journal** — removed in Solo Tracker mode, only shows in Party Connect
+- **Center-Screen Dice** — dice roll results pop up center screen
+
+### Arcane Advisor & Encyclopedia
+- **Improved AI Accuracy** — system prompt updated to cite official 5e sources, distinguish RAW vs homebrew, admit uncertainty
+- **Wiki Navigation Fix** — back button properly routes to dashboard from encyclopedia listing
+- **2,000+ Articles** — SRD 5.1 encyclopedia with full-text search
+
+---
+
 ## V0.8.4 — Combat Completeness, Player Agency, AI Overhaul, Session Flow & Living World
 **Released:** March 17, 2026
 

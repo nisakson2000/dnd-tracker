@@ -424,6 +424,15 @@ fn main() {
             commands::campaign_npcs::discover_npc,
             commands::campaign_npcs::share_npc_info,
             commands::campaign_npcs::update_npc_disposition,
+            // NPC Relationships
+            commands::npc_relationships::create_npc_relationship,
+            commands::npc_relationships::list_npc_relationships,
+            commands::npc_relationships::get_npc_relationships,
+            commands::npc_relationships::update_npc_relationship,
+            commands::npc_relationships::delete_npc_relationship,
+            commands::npc_relationships::add_relationship_event,
+            commands::npc_relationships::list_relationship_events,
+            commands::npc_relationships::get_death_cascade,
             // Campaign Quests
             commands::campaign_quests::create_campaign_quest,
             commands::campaign_quests::list_campaign_quests,

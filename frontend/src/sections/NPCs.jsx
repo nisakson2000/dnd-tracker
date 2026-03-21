@@ -34,11 +34,14 @@ const NPC_TEMPLATES = [
 
 // ── Quick NPC Generator tables ──
 const RANDOM_NPC_NAMES = {
-  human: ['Aldric', 'Brenna', 'Cedric', 'Dahlia', 'Edmund', 'Fiona', 'Gareth', 'Helena', 'Ivar', 'Juliana', 'Kael', 'Lyra', 'Marcus', 'Nadia', 'Osric', 'Petra', 'Quinn', 'Rowena', 'Silas', 'Thea'],
-  elf: ['Aelindra', 'Caelum', 'Elowen', 'Faelan', 'Galathil', 'Ithilwen', 'Lirael', 'Maelis', 'Nimue', 'Thalion', 'Varis', 'Yavanna'],
-  dwarf: ['Balin', 'Dagny', 'Flint', 'Greta', 'Haldor', 'Ingrid', 'Korgrim', 'Marda', 'Nori', 'Thorin', 'Ulfgar', 'Willa'],
-  halfling: ['Bramble', 'Corrin', 'Daisy', 'Eldon', 'Fern', 'Garret', 'Hilda', 'Jillian', 'Lavinia', 'Milo', 'Pip', 'Rosie'],
-  tiefling: ['Amnon', 'Bryseis', 'Criella', 'Damakos', 'Euphemia', 'Kairon', 'Lerissa', 'Mordai', 'Nemeia', 'Orianna', 'Rieta', 'Zariel'],
+  human: ['Aldric', 'Brenna', 'Cedric', 'Dahlia', 'Edmund', 'Fiona', 'Gareth', 'Helena', 'Ivar', 'Juliana', 'Kael', 'Lyra', 'Marcus', 'Nadia', 'Osric', 'Petra', 'Quinn', 'Rowena', 'Silas', 'Thea', 'Dorian', 'Elara', 'Caius', 'Isolde', 'Rowan', 'Mirabel', 'Hadrian', 'Celine', 'Alaric', 'Vivienne', 'Conrad', 'Margot', 'Bastian', 'Lenore', 'Tobias', 'Astrid'],
+  elf: ['Aelindra', 'Caelum', 'Elowen', 'Faelan', 'Galathil', 'Ithilwen', 'Lirael', 'Maelis', 'Nimue', 'Thalion', 'Varis', 'Yavanna', 'Aerendyl', 'Ilphelkiir', 'Sariel', 'Riardon', 'Naivara', 'Therivel', 'Sehanine', 'Quelenna', 'Adran', 'Birel', 'Fenian', 'Hadarai', 'Aramil', 'Siannodel'],
+  dwarf: ['Balin', 'Dagny', 'Flint', 'Greta', 'Haldor', 'Ingrid', 'Korgrim', 'Marda', 'Nori', 'Thorin', 'Ulfgar', 'Willa', 'Bruenor', 'Dain', 'Harbek', 'Kathra', 'Riswynn', 'Torrun', 'Vistra', 'Amber', 'Diesa', 'Eldeth', 'Gurdis', 'Torbera', 'Dolgrin', 'Rurik'],
+  halfling: ['Bramble', 'Corrin', 'Daisy', 'Eldon', 'Fern', 'Garret', 'Hilda', 'Jillian', 'Lavinia', 'Milo', 'Pip', 'Rosie', 'Cade', 'Lidda', 'Merric', 'Seraphina', 'Wendle', 'Andry', 'Bree', 'Callie', 'Nedda', 'Paela', 'Osborn', 'Roscoe', 'Wellby', 'Finnan'],
+  tiefling: ['Amnon', 'Bryseis', 'Criella', 'Damakos', 'Euphemia', 'Kairon', 'Lerissa', 'Mordai', 'Nemeia', 'Orianna', 'Rieta', 'Zariel', 'Akmenos', 'Barakas', 'Melech', 'Therai', 'Makaria', 'Phelaia', 'Anakis', 'Kallista', 'Leucis', 'Morthos', 'Pelaios', 'Skamos'],
+  halforc: ['Dench', 'Feng', 'Gell', 'Henk', 'Holg', 'Imsh', 'Keth', 'Krusk', 'Ront', 'Shump', 'Thokk', 'Baggi', 'Emen', 'Engong', 'Myev', 'Neega', 'Ovak', 'Ownka', 'Shautha', 'Vola', 'Yevelda', 'Grukk', 'Mogar', 'Zarga'],
+  gnome: ['Alston', 'Brocc', 'Dimble', 'Eldon', 'Fonkin', 'Gerbo', 'Gimble', 'Glim', 'Jebeddo', 'Namfoodle', 'Orryn', 'Roondar', 'Warryn', 'Zook', 'Bimpnottin', 'Breena', 'Caramip', 'Donella', 'Ellywick', 'Lilli', 'Nissa', 'Oda', 'Roywyn', 'Shamil'],
+  dragonborn: ['Arjhan', 'Balasar', 'Bharash', 'Donaar', 'Ghesh', 'Heskan', 'Kriv', 'Medrash', 'Nadarr', 'Pandjed', 'Patrin', 'Rhogar', 'Shamash', 'Shedinn', 'Torinn', 'Akra', 'Biri', 'Daar', 'Farideh', 'Harann', 'Jheri', 'Kava', 'Mishann', 'Nala', 'Surina', 'Thava'],
 };
 const RANDOM_NPC_RACES = ['Human', 'Elf', 'Dwarf', 'Halfling', 'Tiefling', 'Half-Orc', 'Gnome', 'Dragonborn'];
 const RANDOM_NPC_OCCUPATIONS = ['Blacksmith', 'Innkeeper', 'Merchant', 'Guard', 'Scholar', 'Farmer', 'Sailor', 'Thief', 'Priest', 'Noble', 'Bard', 'Hunter', 'Healer', 'Alchemist', 'Scribe', 'Cook', 'Stable Hand', 'Messenger', 'Beggar', 'Retired Adventurer'];

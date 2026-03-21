@@ -94,6 +94,9 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const { PROFICIENCY_BONUS, SKILLS, RACES, CLASSES, CONDITIONS, EXHAUSTION_LEVELS, ancestryLabel } = useRuleset();
   const syncCtx = useCampaignSyncSafe();
   const dmSessionLocked = syncCtx?.dmSessionActive && !syncCtx?.isHost;
+  const allowMulticlass = (() => {
+    try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').allowMulticlass !== false; } catch { return true; }
+  })();
   const [overview, setOverview] = useState(null);
   const [abilities, setAbilities] = useState([]);
   const [saves, setSaves] = useState([]);
@@ -1447,7 +1450,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         <XPProgress xp={overview.experience_points} level={overview.level} onXPChange={v => updateField('experience_points', v)} locked={dmSessionLocked} />
 
         {/* Multiclass Section */}
-        {(() => {
+        {allowMulticlass && (() => {
           let mc = [];
           try { mc = JSON.parse(overview.multiclass_data || '[]'); } catch (err) { if (import.meta.env.DEV) console.warn('Failed to parse multiclass_data:', err); mc = []; }
           if (!Array.isArray(mc)) mc = [];
@@ -1564,7 +1567,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
 
       {/* Overview Tab Bar */}
       <div className="flex flex-wrap gap-1.5">
-        {[...OVERVIEW_TABS, ...(multiclassData.length > 0 ? [{ id: 'multiclass', label: 'Multiclass', icon: Sparkles }] : [])].map((tab) => {
+        {[...OVERVIEW_TABS, ...(allowMulticlass && multiclassData.length > 0 ? [{ id: 'multiclass', label: 'Multiclass', icon: Sparkles }] : [])].map((tab) => {
           const Icon = tab.icon;
           return (
             <button
@@ -1608,10 +1611,12 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
               {ABILITIES.map(ab => {
                 const score = abilityMap[ab] || 10;
                 const itemBonus = itemStatBonuses[ab] || 0;
-                const effectiveScore = score + itemBonus;
+                // Use the live local value for real-time modifier updates while editing
+                const liveScore = localAbilities[ab] != null ? (parseInt(localAbilities[ab]) || 10) : score;
+                const effectiveScore = liveScore + itemBonus;
                 const mod = calcMod(effectiveScore);
                 return (
-                  <div key={ab} className={`text-center p-4 rounded-lg bg-[#0a0a10] border ${itemBonus ? 'border-green-500/25' : 'border-gold/15'} hover:border-gold/30 transition-all group/ab cursor-pointer`} onClick={() => rollAbilityCheck(ab, mod)} title={`Click to roll ${ABILITY_NAMES[ab]} check${itemBonus ? ` (includes ${itemBonus > 0 ? '+' : ''}${itemBonus} from items)` : ''}`}>
+                  <div key={ab} className={`ab-card-hex stagger-item text-center p-4 rounded-lg bg-[#0a0a10] border ${itemBonus ? 'border-green-500/25' : 'border-gold/15'} hover:border-gold/30 transition-all group/ab cursor-pointer`} onClick={() => rollAbilityCheck(ab, mod)} title={`Click to roll ${ABILITY_NAMES[ab]} check${itemBonus ? ` (includes ${itemBonus > 0 ? '+' : ''}${itemBonus} from items)` : ''}`}>
                     <div className="text-[11px] text-amber-200/50 font-display tracking-widest mb-2">{ab}</div>
                     {/* Base score — big yellow number (editable) */}
                     <div className="relative">
@@ -1632,8 +1637,8 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                       <Pencil size={10} className="absolute top-0 -left-1 text-gold/0 group-hover/ab:text-gold/40 transition-all duration-200" />
                       <Dices size={12} className="absolute top-0 -right-1 text-gold/0 group-hover/ab:text-gold/70 transition-all duration-200 group-hover/ab:animate-pulse" />
                     </div>
-                    {/* Modifier below */}
-                    <div className={`text-lg font-semibold mt-1 ${mod >= 0 ? 'text-amber-200/70' : 'text-red-400/80'}`}>
+                    {/* Modifier below — color-coded */}
+                    <div className={`text-lg font-semibold mt-1 ${mod >= 3 ? 'ab-mod-high' : mod >= 0 ? 'ab-mod-positive' : 'ab-mod-negative'}`}>
                       {modStr(mod)}
                     </div>
                     {itemBonus ? (
@@ -1646,22 +1651,6 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                   </div>
                 );
               })}
-            </div>
-            {/* Ability Score Modifier Quick-Reference Row */}
-            <div className="mt-3 py-2 px-3 rounded-lg bg-[#0a0a10] border border-amber-200/8">
-              <div className="flex items-center justify-center gap-1 flex-wrap text-xs font-mono">
-                {ABILITIES.map((ab, i) => {
-                  const effectiveScore = (abilityMap[ab] || 10) + (itemStatBonuses[ab] || 0);
-                  const mod = calcMod(effectiveScore);
-                  return (
-                    <span key={ab} className="inline-flex items-center">
-                      <span className={`font-display tracking-wider ${itemStatBonuses[ab] ? 'text-green-400/60' : 'text-amber-200/40'}`}>{ab}</span>
-                      <span className={`ml-1 font-semibold ${mod >= 0 ? 'text-gold' : 'text-red-400'}`}>{modStr(mod)}</span>
-                      {i < ABILITIES.length - 1 && <span className="mx-2 text-amber-200/15">|</span>}
-                    </span>
-                  );
-                })}
-              </div>
             </div>
             </SectionToggle>
           </div>
@@ -2318,31 +2307,19 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 <RotateCcw size={10} /> Undo {lastHpAction.label}
               </button>
             )}
-            {/* HP bar with color states and temp HP segment */}
-            <div className="hp-bar-bg" style={{ marginTop: '10px' }} role="progressbar" aria-label={`HP: ${overview.current_hp} of ${overview.max_hp}`} aria-valuenow={overview.current_hp} aria-valuemin={0} aria-valuemax={overview.max_hp}>
+            {/* HP bar with color states, shimmer, and temp HP segment */}
+            <div className="hp-bar-full" style={{ marginTop: '10px' }} role="progressbar" aria-label={`HP: ${overview.current_hp} of ${overview.max_hp}`} aria-valuenow={overview.current_hp} aria-valuemin={0} aria-valuemax={overview.max_hp}>
               <div
-                className={`hp-bar-fill${hpPercent < 10 ? ' animate-pulse' : ''}`}
-                style={{
-                  width: `${Math.min(100, Math.max(0, hpPercent))}%`,
-                  background: hpPercent < 10
-                    ? 'linear-gradient(90deg, #7f1d1d, #ef4444)'
-                    : hpPercent < 25
-                    ? 'linear-gradient(90deg, #c2410c, #f97316)'
-                    : hpPercent <= 50
-                    ? 'linear-gradient(90deg, #a16207, #eab308)'
-                    : 'linear-gradient(90deg, #166534, #4ade80)',
-                }}
+                className={`hp-bar-full-fill ${hpPercent <= 0 ? 'hp-critical' : hpPercent < 25 ? 'hp-low' : hpPercent <= 50 ? 'hp-mid' : 'hp-high'}`}
+                style={{ width: `${Math.min(100, Math.max(0, hpPercent))}%` }}
               />
               {overview.temp_hp > 0 && overview.max_hp > 0 && (
                 <div
+                  className="hp-bar-temp-overlay"
                   style={{
-                    position: 'absolute',
-                    top: 0,
                     left: `${Math.min(100, Math.max(0, hpPercent))}%`,
+                    right: 'auto',
                     width: `${Math.min(100 - hpPercent, (overview.temp_hp / overview.max_hp) * 100)}%`,
-                    height: '100%',
-                    background: 'rgba(96,165,250,0.6)',
-                    borderRadius: '0 4px 4px 0',
                   }}
                 />
               )}
@@ -2388,11 +2365,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                     {[1,2,3].map(i => (
                       <button key={i}
                         onClick={() => updateField('death_save_successes', overview.death_save_successes === i ? i-1 : i)}
-                        className={`w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all ${
-                          i <= overview.death_save_successes
-                            ? 'bg-emerald-500 border-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.4)]'
-                            : 'border-emerald-400/30 hover:border-emerald-400/60 hover:bg-emerald-500/10'
-                        }`}
+                        className={`death-save-pip success ${i <= overview.death_save_successes ? 'active' : ''}`}
                         title={i <= overview.death_save_successes ? 'Click to remove success' : 'Click to mark success'}
                       >
                         {i <= overview.death_save_successes && <Check size={16} className="text-white" strokeWidth={3} />}
@@ -2406,11 +2379,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                     {[1,2,3].map(i => (
                       <button key={i}
                         onClick={() => updateField('death_save_failures', overview.death_save_failures === i ? i-1 : i)}
-                        className={`w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all ${
-                          i <= overview.death_save_failures
-                            ? 'bg-red-500 border-red-400 shadow-[0_0_12px_rgba(239,68,68,0.4)]'
-                            : 'border-red-400/30 hover:border-red-400/60 hover:bg-red-500/10'
-                        }`}
+                        className={`death-save-pip failure ${i <= overview.death_save_failures ? 'active' : ''}`}
                         title={i <= overview.death_save_failures ? 'Click to remove failure' : 'Click to mark failure'}
                       >
                         {i <= overview.death_save_failures && <span className="text-white text-lg font-bold">&times;</span>}
@@ -2958,7 +2927,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
       )}
 
       {/* ═══ MULTICLASS TAB ═══ */}
-      {overviewTab === 'multiclass' && multiclassData.length > 0 && (
+      {allowMulticlass && overviewTab === 'multiclass' && multiclassData.length > 0 && (
         <div className="card">
           <p className="text-xs text-amber-200/40 mb-3">Manage your multiclass levels and hit dice breakdown. Primary class details are in the identity card above.</p>
           {(() => {

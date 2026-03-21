@@ -1,0 +1,152 @@
+/**
+ * playerDowntimeActivityGuide.js
+ * Player Mode: Downtime activities — what to do between adventures
+ * Pure JS — no React dependencies.
+ */
+
+export const DOWNTIME_ACTIVITIES_XANATHARS = [
+  {
+    activity: 'Crafting (Magic Item)',
+    time: 'Varies by rarity (1-50 workweeks)',
+    cost: '50 gp (Common) to 100,000 gp (Legendary)',
+    requirement: 'Formula + exotic materials + tool proficiency',
+    rating: 'S',
+    note: 'Create permanent magic items. Requires quest for formula and materials.',
+  },
+  {
+    activity: 'Crafting (Mundane)',
+    time: '5 gp progress per day',
+    cost: 'Half item market price in materials',
+    requirement: 'Tool proficiency',
+    rating: 'B',
+    note: 'Slow but free. Best for ammunition, potions, simple items.',
+  },
+  {
+    activity: 'Brewing Healing Potions',
+    time: '1 day (basic) to 3 workweeks (superior)',
+    cost: '25-1,000 gp',
+    requirement: 'Herbalism Kit proficiency',
+    rating: 'S',
+    note: 'Most useful mundane craft. Always need more healing potions.',
+  },
+  {
+    activity: 'Scribing Spell Scrolls',
+    time: '1 day (cantrip) to 48 workweeks (L9)',
+    cost: '15 gp (cantrip) to 250,000 gp (L9)',
+    requirement: 'Arcana proficiency + spell prepared/known',
+    rating: 'A+',
+    note: 'Emergency spells on scrolls. Revivify scrolls = insurance.',
+  },
+  {
+    activity: 'Training (New Language/Tool)',
+    time: '10 workweeks (Xanathar\'s)',
+    cost: '25 gp per workweek',
+    requirement: 'Instructor',
+    rating: 'A',
+    note: 'Learn new languages or tool proficiencies. Useful long-term investment.',
+  },
+  {
+    activity: 'Gambling',
+    time: '1 workweek minimum',
+    cost: 'Wager (10-1,000 gp)',
+    requirement: 'Gaming set proficiency helps',
+    rating: 'B',
+    note: 'Risk/reward. Can make or lose money. Fun RP opportunity.',
+  },
+  {
+    activity: 'Pit Fighting',
+    time: '1 workweek',
+    cost: 'Free (potential injury)',
+    requirement: 'Athletics, Acrobatics, or Intimidation',
+    rating: 'B+',
+    note: '3 checks. Win = money. Lose = possible injury. Good for martial characters.',
+  },
+  {
+    activity: 'Crime',
+    time: '1 workweek',
+    cost: '25 gp (expenses)',
+    requirement: 'Thieves\' Tools proficiency',
+    rating: 'B+',
+    note: 'Heist! Stealth, Thieves\' Tools, Deception checks. Risk of jail.',
+  },
+  {
+    activity: 'Research',
+    time: '1 workweek minimum',
+    cost: '50 gp per workweek (minimum)',
+    requirement: 'Access to library/sage',
+    rating: 'A',
+    note: 'Learn lore, monster weaknesses, quest clues. Money = better results.',
+  },
+  {
+    activity: 'Carousing',
+    time: '1 workweek',
+    cost: '10-250 gp (based on lifestyle)',
+    requirement: 'None',
+    rating: 'A',
+    note: 'Make contacts. Roll on table for results. Great RP hooks.',
+  },
+  {
+    activity: 'Relaxation',
+    time: '1 workweek',
+    cost: 'Lifestyle expenses',
+    requirement: 'None',
+    rating: 'B',
+    note: 'End one effect (disease, curse, etc.) with time. Recover from adventures.',
+  },
+  {
+    activity: 'Religious Service',
+    time: '1 workweek',
+    cost: 'None',
+    requirement: 'Religion proficiency helps',
+    rating: 'A',
+    note: 'Earn favors from temple. Can request healing, divination, or allies later.',
+  },
+  {
+    activity: 'Work',
+    time: '1 workweek',
+    cost: 'None',
+    requirement: 'Tool proficiency or skill',
+    rating: 'C+',
+    note: 'Earn modest lifestyle. Not worth it for adventurers with gold.',
+  },
+  {
+    activity: 'Buying Magic Items',
+    time: '1 workweek per search',
+    cost: 'Varies (100-50,000+ gp)',
+    requirement: 'Gold + finding a seller',
+    rating: 'S',
+    note: 'Find and buy magic items. DM determines availability. Haggle with Persuasion.',
+  },
+  {
+    activity: 'Selling Magic Items',
+    time: '1 workweek minimum',
+    cost: '25 gp (expenses)',
+    requirement: 'Item to sell + finding a buyer',
+    rating: 'A',
+    note: 'Sell unwanted magic items. Get 50-100% of base price if lucky.',
+  },
+];
+
+export const DOWNTIME_PRIORITY = [
+  'Craft healing potions (Herbalism Kit). Always useful.',
+  'Scribe emergency scrolls (Revivify, Counterspell, Dispel Magic).',
+  'Buy magic items if available. +1 weapons/armor are huge upgrades.',
+  'Research upcoming quest targets. Monster weaknesses, location maps.',
+  'Train new tool/language proficiencies for upcoming challenges.',
+  'Carouse to make contacts. NPCs are resources.',
+  'Religious service for temple favors. Free healing/divination later.',
+  'Craft magic items if you have formulas and materials.',
+];
+
+export const DOWNTIME_TIPS = [
+  'Downtime is often overlooked. It\'s free character progression.',
+  'Healing potions are the best use of short downtime. 1 day per potion.',
+  'Revivify scroll = 200 gp + downtime. Worth every copper.',
+  'Research can reveal monster immunities, vulnerabilities, lair info.',
+  'Carousing makes contacts. Contacts lead to quests, information, allies.',
+  'Religious service is free and earns temple favors. Always worth doing.',
+  'Crime is risky but can be very profitable. Bring Expertise in Stealth.',
+  'Talk to your DM about downtime. Many DMs skip it but it adds depth.',
+  'Multiple party members can work on the same crafting project together.',
+  'If the DM offers a week of downtime, have a plan ready. Don\'t waste it.',
+];

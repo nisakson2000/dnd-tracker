@@ -3,6 +3,9 @@ import { Plus, Trash2, Pencil, ChevronDown, ChevronRight, ChevronUp, Sparkles, R
 import toast from 'react-hot-toast';
 import { getSpells, addSpell, updateSpell, deleteSpell, getSpellSlots, updateSpellSlots, resetSpellSlots } from '../api/spells';
 import { getOverview } from '../api/overview';
+import { getItems } from '../api/inventory';
+import { getConditions } from '../api/combat';
+import { computeConditionEffects } from '../data/conditionEffects';
 import { useRuleset } from '../contexts/RulesetContext';
 import HelpTooltip from '../components/HelpTooltip';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -92,17 +95,27 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
   const [spellRollResult, setSpellRollResult] = useState(null); // { d20, bonus, total, isNat20, isNat1, label }
   const spellRollTimerRef = useRef(null);
   const [spellAdvMode, setSpellAdvMode] = useState('normal'); // 'normal' | 'advantage' | 'disadvantage'
+  const [itemStatBonuses, setItemStatBonuses] = useState({});
+  const [condEffects, setCondEffects] = useState({});
 
   const rollSpellAttack = (bonus, label = 'Spell Attack') => {
+    // Apply condition advantage/disadvantage to spell attack rolls
+    let hasAdv = condEffects.attackAdvantage || spellAdvMode === 'advantage';
+    let hasDis = condEffects.attackDisadvantage || spellAdvMode === 'disadvantage';
+    let rollMode = 'normal';
+    if (hasAdv && hasDis) rollMode = 'normal';
+    else if (hasAdv) rollMode = 'advantage';
+    else if (hasDis) rollMode = 'disadvantage';
+
     const d20a = rollDie(20);
-    const d20b = spellAdvMode !== 'normal' ? rollDie(20) : d20a;
+    const d20b = rollMode !== 'normal' ? rollDie(20) : d20a;
     let d20;
-    if (spellAdvMode === 'advantage') d20 = Math.max(d20a, d20b);
-    else if (spellAdvMode === 'disadvantage') d20 = Math.min(d20a, d20b);
+    if (rollMode === 'advantage') d20 = Math.max(d20a, d20b);
+    else if (rollMode === 'disadvantage') d20 = Math.min(d20a, d20b);
     else d20 = d20a;
     const total = d20 + bonus;
     if (spellRollTimerRef.current) clearTimeout(spellRollTimerRef.current);
-    setSpellRollResult({ d20, d20a, d20b, rollMode: spellAdvMode, bonus, total, isNat20: d20 === 20, isNat1: d20 === 1, label });
+    setSpellRollResult({ d20, d20a, d20b, rollMode, bonus, total, isNat20: d20 === 20, isNat1: d20 === 1, label });
     spellRollTimerRef.current = setTimeout(() => setSpellRollResult(null), 4000);
   };
 
@@ -165,6 +178,31 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
       setSpells(spellData);
       setSlots(slotData);
       setCharData(overview);
+      // Load equipment stat bonuses for spell DC/attack
+      try {
+        const allItems = await getItems(characterId);
+        const bonuses = {};
+        for (const item of allItems.filter(i => i.equipped)) {
+          try {
+            const mods = typeof item.stat_modifiers === 'string'
+              ? JSON.parse(item.stat_modifiers || '{}')
+              : (item.stat_modifiers || {});
+            for (const [stat, value] of Object.entries(mods)) {
+              const key = stat.toUpperCase();
+              if (typeof value === 'number' && value !== 0) {
+                bonuses[key] = (bonuses[key] || 0) + value;
+              }
+            }
+          } catch { /* skip unparseable */ }
+        }
+        setItemStatBonuses(bonuses);
+      } catch { /* non-critical */ }
+      // Load active conditions for advantage/disadvantage
+      try {
+        const condData = await getConditions(characterId);
+        const active = (condData || []).filter(c => c.active);
+        setCondEffects(active.length > 0 ? computeConditionEffects(active) : {});
+      } catch { /* non-critical */ }
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -318,14 +356,17 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
 
       if (ability) {
         const abilScore = charData?.ability_scores?.find(a => a.ability === ability);
-        mod = calcMod(abilScore?.score || 10);
+        const baseScore = abilScore?.score || 10;
+        // Apply equipment stat bonuses to spellcasting ability
+        const itemBonus = itemStatBonuses[ability] || 0;
+        mod = calcMod(baseScore + itemBonus);
         const profBonus = PROFICIENCY_BONUS[charData.overview.level] || 2;
         dc = 8 + profBonus + mod;
         attack = profBonus + mod;
       }
     }
     return { spellAbility: ability, spellMod: mod, spellDC: dc, spellAttack: attack, isWarlock: warlock };
-  }, [charData, CLASSES, PROFICIENCY_BONUS]);
+  }, [charData, CLASSES, PROFICIENCY_BONUS, itemStatBonuses]);
 
   const handleAddSpell = async (spellData) => {
     try {
@@ -1237,9 +1278,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
                     <button
                       key={i}
                       onClick={() => handleSlotToggle(level, i)}
-                      className={`w-5 h-5 rounded-full border-2 transition-all ${
-                        i < usedSlots ? 'bg-purple-600/40 border-purple-400/40' : dotAvail
-                      }`}
+                      className={`spell-slot-pip ${i < usedSlots ? 'used' : 'available'}`}
                       title={`${remaining}/${maxSlots} ${levelNames[level]} slots remaining`}
                       aria-label={`${levelNames[level]} spell slot ${i + 1} of ${maxSlots}, ${i < usedSlots ? 'used' : 'available'}`}
                     />

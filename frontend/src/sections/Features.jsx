@@ -65,6 +65,12 @@ function classifyFeature(f) {
 export default function Features({ characterId, character }) {
   const { mode: appMode } = useAppMode();
   const isDM = appMode === 'dm';
+  const allowFeats = (() => {
+    try { const v = JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').allowFeats; return v !== false; } catch { return true; }
+  })();
+  const restVariant = (() => {
+    try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').restVariant || 'standard'; } catch { return 'standard'; }
+  })();
   const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -421,9 +427,11 @@ export default function Features({ characterId, character }) {
           </div>
         </h2>
         <div className="flex items-center gap-2">
-          <button onClick={() => setShowFeatBrowser(true)} className="btn-secondary text-xs flex items-center gap-1">
-            <Library size={12} /> Browse Feats
-          </button>
+          {allowFeats && (
+            <button onClick={() => setShowFeatBrowser(true)} className="btn-secondary text-xs flex items-center gap-1">
+              <Library size={12} /> Browse Feats
+            </button>
+          )}
           {isDM && (
             <button onClick={() => setShowAdd(true)} className="btn-primary text-xs flex items-center gap-1">
               <Plus size={12} /> Add Feature
@@ -442,6 +450,8 @@ export default function Features({ characterId, character }) {
           >
             <Coffee size={14} />
             Short Rest
+            {restVariant === 'gritty' && <span className="text-[10px] text-blue-400/50">(8 hr)</span>}
+            {restVariant === 'epic' && <span className="text-[10px] text-blue-400/50">(1 min)</span>}
             {shortRestCount > 0 && <span className="text-[10px] bg-blue-500/25 text-blue-200 px-1.5 py-0.5 rounded-full font-semibold">{shortRestCount}</span>}
           </button>
           <button
@@ -451,6 +461,8 @@ export default function Features({ characterId, character }) {
           >
             <Moon size={14} />
             Long Rest
+            {restVariant === 'gritty' && <span className="text-[10px] text-purple-400/50">(7 days)</span>}
+            {restVariant === 'epic' && <span className="text-[10px] text-purple-400/50">(1 hr)</span>}
             {longRestCount > 0 && <span className="text-[10px] bg-purple-500/25 text-purple-200 px-1.5 py-0.5 rounded-full font-semibold">{longRestCount}</span>}
           </button>
           <div className="h-5 w-px bg-amber-200/10" />
@@ -727,7 +739,7 @@ export default function Features({ characterId, character }) {
                       onRestoreAll={() => restoreAll(f)}
                       onRollRecharge={() => rollRecharge(f)}
                       onEdit={isDM ? () => setEditingFeature(f) : undefined}
-                      onDelete={isDM ? () => setConfirmDelete(f) : undefined}
+                      onDelete={(isDM || f.feature_type === 'feat') ? () => setConfirmDelete(f) : undefined}
                       allExpanded={allExpanded}
                       lastUsed={usageHistory[f.id]?.slice(-1)[0]?.ts}
                     />
@@ -762,7 +774,7 @@ export default function Features({ characterId, character }) {
       />
 
       {/* ── Feat Browser Modal ── */}
-      {showFeatBrowser && (
+      {allowFeats && showFeatBrowser && (
         <ModalPortal>
           <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(8px)' }}
             onClick={() => setShowFeatBrowser(false)}

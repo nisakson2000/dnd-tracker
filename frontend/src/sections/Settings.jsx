@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Settings2, Palette, Type, LayoutGrid, RotateCcw, Zap, Sliders, Bug, Lightbulb, Download, ChevronDown, ChevronRight } from 'lucide-react';
+import { Settings2, Palette, Type, LayoutGrid, RotateCcw, Zap, Sliders, Bug, Lightbulb, Download, ChevronDown, ChevronRight, Swords, BookOpen, Monitor } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -76,6 +76,17 @@ const DEFAULTS = {
   panelBlur: 16,
   panelOpacity: 3,
   brightness: 100,
+  sessionStyle: 'solo', // 'solo' (DM uses books) or 'connected' (DM uses The Codex)
+  sidebarDice: true,
+  encumbrance: 'variant',
+  criticalHitRule: 'standard', // 'standard' (double dice) or 'maxPlusRoll' (max damage die + roll)
+  deathSaveRule: 'standard',  // 'standard' or 'heroic' (nat 20 = 1 HP)
+  restVariant: 'standard',    // 'standard' or 'gritty' (short=8hr, long=7days)
+  allowFeats: true,
+  allowMulticlass: true,
+  pointBuy: false,            // false = standard array / rolled, true = point buy
+  flanking: true,             // flanking gives advantage on melee
+  diagonalMovement: 'standard', // 'standard' (5ft) or 'alternating' (5/10/5/10)
 };
 
 function loadV3Settings() {
@@ -88,6 +99,7 @@ function loadV3Settings() {
 function saveV3Settings(s) {
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    window.dispatchEvent(new CustomEvent('codex-settings-changed', { detail: s }));
   } catch {
     toast.error('Failed to save settings — localStorage may be full or disabled');
   }
@@ -345,6 +357,7 @@ export default function Settings() {
 
   const tabs = [
     { id: 'interface', label: 'Interface', icon: Palette },
+    { id: 'gameplay', label: 'Gameplay', icon: Swords },
     { id: 'ai', label: 'AI Assistant', icon: Zap },
   ];
 
@@ -365,7 +378,7 @@ export default function Settings() {
             key={id}
             onClick={() => setActiveTab(id)}
             style={{
-              flex: 1, padding: '10px 8px', fontSize: '11px', fontWeight: 500,
+              flex: 1, padding: '10px 12px', fontSize: '12px', fontWeight: 600,
               textAlign: 'center', cursor: 'pointer',
               color: activeTab === id ? 'var(--accent-l)' : 'var(--text-dim)',
               borderBottom: activeTab === id ? '2px solid var(--accent)' : '2px solid transparent',
@@ -435,6 +448,8 @@ export default function Settings() {
                 setCustomHex(e.target.value);
                 if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) update({ accent: e.target.value, preset: '' });
               }}
+              onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
+              onBlur={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
               maxLength={7}
               placeholder="#7c3aed"
               style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text)', outline: 'none' }}
@@ -577,6 +592,7 @@ export default function Settings() {
           {/* ── Advanced (collapsible) — glow, blur, panel darkness, brightness, border radius ── */}
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
+            aria-expanded={showAdvanced}
             style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '10px 0', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', fontWeight: 600, borderTop: '1px solid var(--border)', marginTop: 8 }}
           >
             {showAdvanced ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -641,6 +657,151 @@ export default function Settings() {
         </div>
       )}
 
+      {/* ── GAMEPLAY TAB ── */}
+      {activeTab === 'gameplay' && (
+        <div>
+          <div className="sp-sec">Session Style</div>
+          <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginBottom: '12px', lineHeight: 1.5 }}>
+            How is your DM running the game? This adjusts which features are shown.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+            {[
+              { id: 'solo', icon: BookOpen, label: 'Solo Tracker', desc: 'DM uses books or another app. You track your own character, rolls, and resources independently.' },
+              { id: 'connected', icon: Monitor, label: 'Party Connect', desc: 'DM uses The Codex. Enables live session sync, shared initiative, and DM broadcasts.' },
+            ].map(opt => (
+              <div
+                key={opt.id}
+                onClick={() => update({ sessionStyle: opt.id })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ sessionStyle: opt.id }); } }}
+                tabIndex={0}
+                role="button"
+                aria-pressed={settings.sessionStyle === opt.id}
+                style={{
+                  padding: '16px 14px',
+                  borderRadius: '10px',
+                  border: `2px solid ${settings.sessionStyle === opt.id ? 'var(--accent)' : 'var(--border)'}`,
+                  background: settings.sessionStyle === opt.id ? 'rgba(124,58,237,0.08)' : 'var(--bg-panel)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  textAlign: 'center',
+                }}
+              >
+                <opt.icon size={24} style={{ margin: '0 auto 8px', color: settings.sessionStyle === opt.id ? 'var(--accent-l)' : 'var(--text-dim)' }} />
+                <div style={{ fontSize: '13px', fontWeight: 600, color: settings.sessionStyle === opt.id ? 'var(--text)' : 'var(--text-dim)', fontFamily: 'var(--font-ui)', marginBottom: '4px' }}>
+                  {opt.label}
+                </div>
+                <div style={{ fontSize: '10px', color: 'var(--text-mute)', lineHeight: 1.4 }}>
+                  {opt.desc}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.15)', fontSize: '11px', color: 'rgba(201,168,76,0.7)', lineHeight: 1.5 }}>
+            {settings.sessionStyle === 'solo'
+              ? 'Solo Tracker mode focuses on personal character management — combat tracking, dice rolls, spell slots, and HP are all self-managed. Perfect when your DM runs the game from physical books.'
+              : 'Party Connect mode enables live session features — join your DM\'s session, see shared initiative, receive broadcasts, and sync party data in real-time.'}
+          </div>
+
+          <div className="sp-sec" style={{ marginTop: '20px' }}>Dice Roller</div>
+          <div className="tog-row">
+            <div><div className="tog-label">Sidebar dice buttons</div><div className="tog-desc">Quick d4–d100 roller in the sidebar</div></div>
+            <div className={`toggle ${settings.sidebarDice !== false ? 'on' : ''}`} onClick={() => update({ sidebarDice: settings.sidebarDice === false ? true : false })} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ sidebarDice: settings.sidebarDice === false ? true : false }); } }} tabIndex={0} role="switch" aria-checked={settings.sidebarDice !== false} />
+          </div>
+
+          <div className="sp-sec" style={{ marginTop: '20px' }}>Encumbrance Rules</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+            {[
+              { id: 'variant', label: 'Variant', desc: 'STR×5 encumbered, STR×10 heavily (default 5e optional rule)' },
+              { id: 'standard', label: 'Standard', desc: 'No penalty until you exceed STR×15 carry capacity' },
+            ].map(opt => (
+              <div
+                key={opt.id}
+                className={`dbtn ${(settings.encumbrance || 'variant') === opt.id ? 'on' : ''}`}
+                onClick={() => update({ encumbrance: opt.id })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ encumbrance: opt.id }); } }}
+                tabIndex={0}
+                role="button"
+                aria-pressed={(settings.encumbrance || 'variant') === opt.id}
+              >
+                {opt.label}
+                <div style={{ fontSize: '9px', color: 'var(--text-mute)', marginTop: '2px', lineHeight: 1.2 }}>{opt.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="sp-sec" style={{ marginTop: '20px' }}>Critical Hit Rule</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+            {[
+              { id: 'standard', label: 'Standard', desc: 'Double all damage dice on a critical hit' },
+              { id: 'maxPlusRoll', label: 'Max + Roll', desc: 'Max damage die + a normal roll (homebrew, less swingy)' },
+            ].map(opt => (
+              <div
+                key={opt.id}
+                className={`dbtn ${(settings.criticalHitRule || 'standard') === opt.id ? 'on' : ''}`}
+                onClick={() => update({ criticalHitRule: opt.id })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ criticalHitRule: opt.id }); } }}
+                tabIndex={0} role="button" aria-pressed={(settings.criticalHitRule || 'standard') === opt.id}
+              >
+                {opt.label}
+                <div style={{ fontSize: '9px', color: 'var(--text-mute)', marginTop: '2px', lineHeight: 1.2 }}>{opt.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="sp-sec" style={{ marginTop: '20px' }}>Rest Variant</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+            {[
+              { id: 'standard', label: 'Standard', desc: 'Short rest = 1 hour, Long rest = 8 hours' },
+              { id: 'gritty', label: 'Gritty Realism', desc: 'Short rest = 8 hours, Long rest = 7 days (DMG variant)' },
+            ].map(opt => (
+              <div
+                key={opt.id}
+                className={`dbtn ${(settings.restVariant || 'standard') === opt.id ? 'on' : ''}`}
+                onClick={() => update({ restVariant: opt.id })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ restVariant: opt.id }); } }}
+                tabIndex={0} role="button" aria-pressed={(settings.restVariant || 'standard') === opt.id}
+              >
+                {opt.label}
+                <div style={{ fontSize: '9px', color: 'var(--text-mute)', marginTop: '2px', lineHeight: 1.2 }}>{opt.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="sp-sec" style={{ marginTop: '20px' }}>Optional Rules</div>
+          <div className="tog-row">
+            <div><div className="tog-label">Flanking</div><div className="tog-desc">Melee attacks gain advantage when flanking a creature</div></div>
+            <div className={`toggle ${settings.flanking !== false ? 'on' : ''}`} onClick={() => update({ flanking: !settings.flanking })} tabIndex={0} role="switch" aria-checked={settings.flanking !== false} />
+          </div>
+          <div className="tog-row">
+            <div><div className="tog-label">Allow Feats</div><div className="tog-desc">Players can choose feats instead of ability score improvements</div></div>
+            <div className={`toggle ${settings.allowFeats !== false ? 'on' : ''}`} onClick={() => update({ allowFeats: settings.allowFeats === false ? true : false })} tabIndex={0} role="switch" aria-checked={settings.allowFeats !== false} />
+          </div>
+          <div className="tog-row">
+            <div><div className="tog-label">Allow Multiclassing</div><div className="tog-desc">Players can take levels in multiple classes</div></div>
+            <div className={`toggle ${settings.allowMulticlass !== false ? 'on' : ''}`} onClick={() => update({ allowMulticlass: settings.allowMulticlass === false ? true : false })} tabIndex={0} role="switch" aria-checked={settings.allowMulticlass !== false} />
+          </div>
+
+          <div className="sp-sec" style={{ marginTop: '20px' }}>Movement</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+            {[
+              { id: 'standard', label: 'Standard', desc: 'Diagonal movement costs 5 ft per square' },
+              { id: 'alternating', label: 'Alternating', desc: 'Diagonals alternate 5 ft / 10 ft (DMG variant)' },
+            ].map(opt => (
+              <div
+                key={opt.id}
+                className={`dbtn ${(settings.diagonalMovement || 'standard') === opt.id ? 'on' : ''}`}
+                onClick={() => update({ diagonalMovement: opt.id })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ diagonalMovement: opt.id }); } }}
+                tabIndex={0} role="button" aria-pressed={(settings.diagonalMovement || 'standard') === opt.id}
+              >
+                {opt.label}
+                <div style={{ fontSize: '9px', color: 'var(--text-mute)', marginTop: '2px', lineHeight: 1.2 }}>{opt.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── AI ASSISTANT TAB ── */}
       {activeTab === 'ai' && (
         <AiSettingsTab />
@@ -648,11 +809,11 @@ export default function Settings() {
 
       {/* ── Feedback & Export ── */}
       <div style={{ borderTop: '1px solid var(--border)', marginTop: 24, paddingTop: 16 }}>
-        <div style={{ fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-dim)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Quick Actions</div>
+        <div style={{ fontSize: 10, fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--text-mute)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Quick Actions</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <button
             onClick={() => navigateToSection('export')}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', cursor: 'pointer', transition: 'all 0.15s' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', cursor: 'pointer', transition: 'all 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--text)'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
           >
@@ -660,7 +821,7 @@ export default function Settings() {
           </button>
           <button
             onClick={() => navigateToSection('bugreport')}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', cursor: 'pointer', transition: 'all 0.15s' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', cursor: 'pointer', transition: 'all 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--text)'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
           >
@@ -668,7 +829,7 @@ export default function Settings() {
           </button>
           <button
             onClick={() => navigateToSection('featurerequest')}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', cursor: 'pointer', transition: 'all 0.15s' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', cursor: 'pointer', transition: 'all 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--text)'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
           >
@@ -676,7 +837,7 @@ export default function Settings() {
           </button>
           <button
             onClick={() => navigateToSection('party-connect')}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', cursor: 'pointer', transition: 'all 0.15s' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', cursor: 'pointer', transition: 'all 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--text)'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
           >
@@ -721,6 +882,8 @@ export default function Settings() {
               type="password"
               value={devPassphrase}
               onChange={e => setDevPassphrase(e.target.value)}
+              onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
+              onBlur={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
               onKeyDown={async e => {
                 if (e.key === 'Enter' && devPassphrase) {
                   try {

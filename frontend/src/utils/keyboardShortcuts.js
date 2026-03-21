@@ -30,6 +30,15 @@ export const SHORTCUTS = {
 // Combat-only shortcuts (no mod key, only active when combat tracker is focused)
 export const COMBAT_SHORTCUTS = {
   'next-turn':       { key: ' ', mod: false, label: 'Next Turn' },
+  'prev-turn':       { key: 'Backspace', mod: false, label: 'Previous Turn' },
+  'damage-mode':     { key: 'd', mod: false, label: 'Damage Current Target' },
+  'heal-mode':       { key: 'h', mod: false, label: 'Heal Current Target' },
+  'condition-toggle':{ key: 'c', mod: false, label: 'Toggle Condition Picker' },
+  'quick-roll':      { key: 'r', mod: false, label: 'Roll d20' },
+  'sort-initiative': { key: 's', mod: false, label: 'Sort by Initiative' },
+  'add-combatant':   { key: 'a', mod: false, label: 'Add Combatant' },
+  'toggle-log':      { key: 'l', mod: false, label: 'Toggle Combat Log' },
+  'end-combat':      { key: 'e', mod: false, label: 'End Combat' },
   'target-1':        { key: '1', mod: false, label: 'Target 1' },
   'target-2':        { key: '2', mod: false, label: 'Target 2' },
   'target-3':        { key: '3', mod: false, label: 'Target 3' },
@@ -89,7 +98,8 @@ export function getShortcutGroups() {
   const groups = {
     'Section Navigation': {},
     'Quick Actions': {},
-    'Combat (when focused)': {},
+    'Combat — DM Actions': {},
+    'Combat — Targeting': {},
   };
 
   for (const [action, def] of Object.entries(SHORTCUTS)) {
@@ -102,7 +112,11 @@ export function getShortcutGroups() {
   }
 
   for (const [action, def] of Object.entries(COMBAT_SHORTCUTS)) {
-    groups['Combat (when focused)'][action] = def;
+    if (action.startsWith('target-')) {
+      groups['Combat — Targeting'][action] = def;
+    } else {
+      groups['Combat — DM Actions'][action] = def;
+    }
   }
 
   return groups;

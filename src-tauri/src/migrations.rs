@@ -761,5 +761,40 @@ pub const CAMPAIGN_MIGRATIONS: &[Migration] = &[
         ",
     },
 
+    // ── Migration 10: NPC Relationship Web ──
+    Migration {
+        name: "npc_relationships",
+        sql: "
+            CREATE TABLE IF NOT EXISTS npc_relationships (
+                id TEXT PRIMARY KEY,
+                campaign_id TEXT NOT NULL REFERENCES campaigns(id),
+                npc_id_a TEXT NOT NULL,
+                npc_id_b TEXT NOT NULL,
+                relationship_type TEXT NOT NULL DEFAULT 'neutral',
+                label TEXT DEFAULT '',
+                description TEXT DEFAULT '',
+                strength INTEGER DEFAULT 50,
+                is_secret INTEGER DEFAULT 0,
+                dm_notes TEXT DEFAULT '',
+                created_at INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_npc_rel_campaign ON npc_relationships(campaign_id);
+            CREATE INDEX IF NOT EXISTS idx_npc_rel_a ON npc_relationships(npc_id_a);
+            CREATE INDEX IF NOT EXISTS idx_npc_rel_b ON npc_relationships(npc_id_b);
+
+            CREATE TABLE IF NOT EXISTS npc_relationship_events (
+                id TEXT PRIMARY KEY,
+                campaign_id TEXT NOT NULL REFERENCES campaigns(id),
+                relationship_id TEXT NOT NULL REFERENCES npc_relationships(id) ON DELETE CASCADE,
+                event_description TEXT NOT NULL,
+                impact INTEGER DEFAULT 0,
+                session_number INTEGER,
+                created_at INTEGER NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_npc_rel_events ON npc_relationship_events(relationship_id);
+        ",
+    },
+
     // ── Future migrations go here ──
 ];

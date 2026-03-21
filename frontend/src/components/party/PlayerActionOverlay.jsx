@@ -801,6 +801,8 @@ export default memo(function PlayerActionOverlay({ activeConditions = [], charac
 // ─── JOURNAL COMPONENTS ──────────────────────────────────────────────────
 function JournalButton({ characterId, showJournal, setShowJournal }) {
   if (!characterId) return null;
+  // Only show in Party Connect mode (DM pushes journal data)
+  try { const s = JSON.parse(localStorage.getItem('codex-v3-settings') || '{}'); if (s.sessionStyle !== 'connected') return null; } catch {}
   return (
     <button onClick={() => setShowJournal(!showJournal)} style={{
       position: 'fixed', bottom: 20, right: 80, zIndex: 9999,

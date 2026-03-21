@@ -3,6 +3,25 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.8.5',
+    date: '03/21/2026',
+    time: '',
+    title: 'Gameplay Settings, UI Polish, Companion Overhaul & Accuracy Pass',
+    changes: [
+      'Gameplay settings — session style, sidebar dice toggle, encumbrance rules, critical hit rules, rest variant (standard/gritty/epic), flanking, allow feats, allow multiclass, diagonal movement, death save rules — all fully wired',
+      'Companion overhaul — 25+ preset companions (familiars, beasts, mounts, summoned), searchable dropdown, up/down arrow numeric inputs, delete confirmation dialog',
+      'Combat — rest variant timing labels on rest buttons, flanking advantage reminder, diagonal movement info, brutal death save mode (failures persist on stabilize)',
+      'Features — feat removal for all users, feats hidden when "Allow Feats" setting is off, multiclass section hidden when "Allow Multiclass" is off',
+      'Equipment — removed auto-equip on character creation (both quick build and step-by-step), equipment bonuses verified across all roll types',
+      'UI redesign — ModeSelect start screen with richer atmosphere, icon badges, glow effects, smoother hover animations',
+      'AI Backstory Generator — collapsible UI with per-field accept, reroll all, optional prompt input',
+      'Arcane Advisor — improved accuracy prompt (cite sources, distinguish RAW vs homebrew, admit uncertainty)',
+      'Encyclopedia — fixed back navigation, improved wiki page routing',
+      'Solo Tracker mode properly hides Party Connect features, floating journal button removed in solo mode',
+      'Dice rolls pop up center screen, bullet point rendering fixed in combat reference',
+    ],
+  },
+  {
     version: 'V0.8.4',
     date: '03/17/2026',
     time: '',

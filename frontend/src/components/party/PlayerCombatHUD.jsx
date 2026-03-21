@@ -1,5 +1,5 @@
 import { memo, useState, useEffect, useCallback, useMemo } from 'react';
-import { Swords, Wand2, FlaskConical, Sparkles, Shield, Heart, X, ChevronRight, Zap, Target, Clock, Send, Skull, AlertTriangle, Hand, ArrowRight, User, ChevronDown, ChevronUp } from 'lucide-react';
+import { Swords, Wand2, FlaskConical, Sparkles, Shield, Heart, X, ChevronRight, Zap, Target, Clock, Send, Skull, AlertTriangle, Hand, ArrowRight, User, ChevronDown, ChevronUp, ClipboardList, Check, Footprints, BookOpen, Lightbulb } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useCampaignSync } from '../../contexts/CampaignSyncContext';
 import CombatStateBar from './CombatStateBar';
@@ -12,6 +12,14 @@ import { getAttacks, getConditions } from '../../api/combat';
 import { getSpells, getSpellSlots, updateSpellSlots } from '../../api/spells';
 import { getItems, updateItem, deleteItem } from '../../api/inventory';
 import { getFeatures, updateFeature } from '../../api/features';
+import { DEATH_SAVE_RULES, DEATH_SAVE_TRACKER_TEMPLATE } from '../../data/playerDeathSaves';
+import { POST_COMBAT_CHECKLIST, RESOURCE_RECOVERY_QUICK_REF, getTriagePriority } from '../../data/playerCombatRecovery';
+import { TURN_PHASES } from '../../data/playerTurnChecklist';
+import { getClassCombatPrompts, SNEAK_ATTACK, DIVINE_SMITE, RAGE } from '../../data/playerClassFeatures';
+import { calculateEffectiveSpeed, SPEED_MODIFIERS, resetMovementForTurn } from '../../data/playerMovementTracker';
+import { getConcentrationDC } from '../../data/playerConcentration';
+import { getAutoSuggestions } from '../../data/playerActionSuggestions';
+import { KNOWLEDGE_SKILLS, KNOWLEDGE_DC_TABLE, CREATURE_TYPE_TIPS, getKnowledgeSkill, getKnowledgeRevealed } from '../../data/playerCreatureKnowledge';
 import toast from 'react-hot-toast';
 
 const GOLD = '#c9a84c';
@@ -76,7 +84,7 @@ const SPELL_AUTO_EFFECTS = {
 };
 
 export default memo(function PlayerCombatHUD({ characterId }) {
-  const { sendEvent, sharedCombatLog, sendConcentrationUpdate, isMyTurn, monsterHpTiers, turnFlash, combatActive, initiativeOrder } = useCampaignSync();
+  const { sendEvent, sharedCombatLog, sendConcentrationUpdate, isMyTurn, monsterHpTiers, turnFlash, combatActive, initiativeOrder, round } = useCampaignSync();
   const { myClientId } = useParty();
 
   // Self-load character data
@@ -92,6 +100,8 @@ export default memo(function PlayerCombatHUD({ characterId }) {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [lastSpellResult, setLastSpellResult] = useState(null); // { spellName, effect, level }
+  const [showRecoveryPanel, setShowRecoveryPanel] = useState(false);
+  const [recoveryChecked, setRecoveryChecked] = useState({});
 
   useEffect(() => {
     if (!characterId) return;
@@ -196,8 +206,56 @@ export default memo(function PlayerCombatHUD({ characterId }) {
   const [damageRoll, setDamageRoll] = useState(null); // { total, breakdown }
   const [shoveChoice, setShoveChoice] = useState(null); // 'prone' | 'push' | null (for shove sub-menu)
   const [grappleResult, setGrappleResult] = useState(null); // { roll, bonus, total, type }
+  const [deathSaves, setDeathSaves] = useState({ ...DEATH_SAVE_TRACKER_TEMPLATE });
+  const [showTurnChecklist, setShowTurnChecklist] = useState(false);
+  const [checklistChecked, setChecklistChecked] = useState({});
+  const [movementUsed, setMovementUsed] = useState(0);
+  const [movementModifiers, setMovementModifiers] = useState([]);
+  const [showClassPrompts, setShowClassPrompts] = useState(true);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showCreatureKnowledge, setShowCreatureKnowledge] = useState(false);
+  const [knowledgeCreatureType, setKnowledgeCreatureType] = useState('');
+  const [knowledgeCheckResult, setKnowledgeCheckResult] = useState('');
 
   const playerName = character?.name || 'Player';
+
+  // Class combat prompts
+  const classCombatPrompts = useMemo(() => {
+    if (!character) return [];
+    const className = character.primary_class || character.class || '';
+    const level = character.level || 1;
+    return getClassCombatPrompts(className, level);
+  }, [character]);
+
+  // Movement tracking
+  const baseSpeed = useMemo(() => {
+    if (!character) return 30;
+    return character.speed || 30;
+  }, [character]);
+
+  const effectiveSpeed = useMemo(() => {
+    return calculateEffectiveSpeed(baseSpeed, movementModifiers);
+  }, [baseSpeed, movementModifiers]);
+
+  const remainingMovement = useMemo(() => {
+    return Math.max(0, effectiveSpeed - movementUsed);
+  }, [effectiveSpeed, movementUsed]);
+
+  // Combat suggestions — context-aware action tips
+  const combatSuggestions = useMemo(() => {
+    if (!combatActive || !character) return [];
+    const currentHp = character.current_hp ?? 0;
+    const maxHp = character.max_hp ?? 1;
+    const hpPercent = (currentHp / maxHp) * 100;
+    // Detect allies down from initiative order (non-monster entries at 0 HP aren't directly available, so we approximate)
+    const hasAllyDown = false; // No reliable cross-player HP data in player mode
+    const isSurrounded = false; // Would need positional data
+    const enemyHasCaster = false; // Would need monster type data
+    const isFirstTurn = round === 1 && isMyTurn;
+    // Approximate remaining spell slots
+    const slotsRemaining = spellSlots.reduce((sum, s) => sum + Math.max(0, (s.max_slots || 0) - (s.used_slots || 0)), 0);
+    return getAutoSuggestions(hpPercent, hasAllyDown, isSurrounded, enemyHasCaster, isFirstTurn, slotsRemaining);
+  }, [combatActive, character, round, isMyTurn, spellSlots]);
 
   // Reset action economy on turn start
   useEffect(() => {
@@ -208,6 +266,8 @@ export default memo(function PlayerCombatHUD({ characterId }) {
       setAttackRoll(null);
       setDamageRoll(null);
       setLastSpellResult(null);
+      setMovementUsed(0);
+      setMovementModifiers([]);
     }
   }, [isMyTurn]);
 
@@ -602,6 +662,73 @@ export default memo(function PlayerCombatHUD({ characterId }) {
     toast('Turn ended', { icon: '\u23ED\uFE0F', duration: 1500 });
   };
 
+  // ── Death Save Roll Handler ──
+  const handleDeathSaveRoll = useCallback(() => {
+    if (deathSaves.stable || deathSaves.dead) return;
+
+    const roll = rollDie(20);
+    const updated = { ...deathSaves };
+
+    if (roll === 20) {
+      // Nat 20: regain 1 HP, reset death saves
+      if (character) {
+        const newHp = 1;
+        setCharacter(prev => ({ ...prev, current_hp: newHp }));
+        updateOverview(characterId, { current_hp: newHp }).catch(() => {});
+      }
+      setDeathSaves({ ...DEATH_SAVE_TRACKER_TEMPLATE });
+      toast('NAT 20! Regained 1 HP!', {
+        icon: '\u2728', duration: 4000,
+        style: { background: '#1a1a10', color: '#fde68a', border: '1px solid rgba(201,168,76,0.4)', fontFamily: 'monospace' },
+      });
+      sendEvent('death_save_roll', { player_name: playerName, roll, result: 'nat20', successes: 0, failures: 0 });
+      return;
+    }
+
+    if (roll === 1) {
+      updated.failures = Math.min(3, updated.failures + 2);
+    } else if (roll >= DEATH_SAVE_RULES.dc) {
+      updated.successes = Math.min(3, updated.successes + 1);
+    } else {
+      updated.failures = Math.min(3, updated.failures + 1);
+    }
+
+    if (updated.successes >= 3) {
+      updated.stable = true;
+      toast('Stabilized!', {
+        icon: '\u{1F6E1}\uFE0F', duration: 4000,
+        style: { background: '#101a15', color: '#86efac', border: '1px solid rgba(74,222,128,0.3)', fontFamily: 'monospace' },
+      });
+    } else if (updated.failures >= 3) {
+      updated.dead = true;
+      toast('Character has died...', {
+        icon: '\u{1F480}', duration: 5000,
+        style: { background: '#1a1015', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)', fontFamily: 'monospace' },
+      });
+    } else {
+      const isSuccess = roll >= DEATH_SAVE_RULES.dc;
+      toast(`Death Save: ${roll} — ${isSuccess ? 'Success' : 'Failure'}${roll === 1 ? ' (2 failures!)' : ''}`, {
+        icon: isSuccess ? '\u2705' : '\u274C', duration: 3000,
+        style: { background: '#1a1015', color: isSuccess ? '#86efac' : '#fca5a5', border: `1px solid ${isSuccess ? 'rgba(74,222,128,0.3)' : 'rgba(239,68,68,0.3)'}`, fontFamily: 'monospace' },
+      });
+    }
+
+    setDeathSaves(updated);
+    sendEvent('death_save_roll', { player_name: playerName, roll, result: roll === 1 ? 'nat1' : roll >= DEATH_SAVE_RULES.dc ? 'success' : 'failure', successes: updated.successes, failures: updated.failures, stable: updated.stable, dead: updated.dead });
+  }, [deathSaves, character, characterId, playerName, sendEvent]);
+
+  // Reset death saves when HP goes above 0
+  useEffect(() => {
+    if (character && (character.current_hp ?? 0) > 0) {
+      setDeathSaves(prev => {
+        if (prev.successes > 0 || prev.failures > 0 || prev.stable || prev.dead) {
+          return { ...DEATH_SAVE_TRACKER_TEMPLATE };
+        }
+        return prev;
+      });
+    }
+  }, [character?.current_hp]);
+
   // ── Grapple & Shove ──
   // Athletics bonus = STR mod + proficiency (if proficient)
   const athleticsBonus = useMemo(() => {
@@ -764,12 +891,165 @@ export default memo(function PlayerCombatHUD({ characterId }) {
         </div>
       )}
 
+      {/* Class Combat Prompts */}
+      {classCombatPrompts.length > 0 && isMyTurn && (
+        <div style={{
+          padding: '6px 12px',
+          background: 'rgba(201,168,76,0.06)',
+          borderBottom: '1px solid rgba(201,168,76,0.15)',
+          display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center',
+        }}>
+          <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(201,168,76,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 4 }}>
+            Class:
+          </span>
+          {classCombatPrompts.map(p => (
+            <span key={p.type} style={{
+              fontSize: 9, padding: '2px 8px', borderRadius: 4,
+              background: p.type === 'sneak_attack' ? 'rgba(201,168,76,0.12)' : p.type === 'divine_smite' ? 'rgba(253,230,138,0.12)' : p.type === 'rage' ? 'rgba(239,68,68,0.12)' : 'rgba(249,115,22,0.12)',
+              border: `1px solid ${p.type === 'sneak_attack' ? 'rgba(201,168,76,0.25)' : p.type === 'divine_smite' ? 'rgba(253,230,138,0.25)' : p.type === 'rage' ? 'rgba(239,68,68,0.25)' : 'rgba(249,115,22,0.25)'}`,
+              color: p.type === 'sneak_attack' ? '#c9a84c' : p.type === 'divine_smite' ? '#fde68a' : p.type === 'rage' ? '#fca5a5' : '#f97316',
+              fontWeight: 600,
+            }}>
+              {p.label}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Combat Suggestions Panel — context-aware tips during active combat */}
+      {combatActive && combatSuggestions.length > 0 && (
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '0 12px' }}>
+          <button
+            onClick={() => setShowSuggestions(p => !p)}
+            title="Toggle combat suggestions"
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer', width: '100%',
+              display: 'flex', alignItems: 'center', gap: 6, padding: '7px 0',
+              color: '#fbbf24', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-heading)',
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+            }}
+          >
+            <Lightbulb size={13} />
+            Combat Suggestions
+            <span style={{ marginLeft: 4, fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 4, background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}>
+              {combatSuggestions.length}
+            </span>
+            <ChevronRight size={9} style={{ marginLeft: 'auto', transform: showSuggestions ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} />
+          </button>
+          {showSuggestions && (
+            <div style={{ paddingBottom: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {combatSuggestions.map((s, i) => {
+                const priorityColor = { critical: '#f87171', high: '#fb923c', medium: '#facc15' }[s.priority] || '#999';
+                return (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 8, padding: '5px 8px',
+                    borderRadius: 6, background: 'rgba(251,191,36,0.04)',
+                    border: '1px solid rgba(251,191,36,0.1)',
+                  }}>
+                    <span style={{
+                      fontSize: 7, fontWeight: 700, padding: '2px 5px', borderRadius: 3, flexShrink: 0, marginTop: 1,
+                      background: `${priorityColor}20`, color: priorityColor, textTransform: 'uppercase', letterSpacing: '0.05em',
+                    }}>
+                      {s.priority}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: '#e8d9b5' }}>{s.action}</div>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 1, lineHeight: 1.3 }}>{s.reason}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Death Save Tracker Panel — shown at 0 HP */}
+      {character && (character.current_hp ?? 1) <= 0 && (
+        <div style={{
+          padding: 12,
+          background: 'linear-gradient(135deg, rgba(127,29,29,0.25) 0%, rgba(80,20,20,0.15) 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <Skull size={16} style={{ color: '#fca5a5' }} />
+            <span style={{ fontSize: 13, fontWeight: 800, color: '#fca5a5', fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              Death Saves
+            </span>
+            {deathSaves.stable && (
+              <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.3)', color: '#86efac' }}>
+                STABLE
+              </span>
+            )}
+            {deathSaves.dead && (
+              <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#fca5a5' }}>
+                DEAD
+              </span>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
+            {/* Successes */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(74,222,128,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pass</span>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {[0, 1, 2].map(i => (
+                  <div key={`s${i}`} style={{
+                    width: 14, height: 14, borderRadius: '50%',
+                    background: i < deathSaves.successes ? '#4ade80' : 'rgba(74,222,128,0.12)',
+                    border: `2px solid ${i < deathSaves.successes ? '#22c55e' : 'rgba(74,222,128,0.25)'}`,
+                    transition: 'all 0.2s',
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Failures */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(239,68,68,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fail</span>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {[0, 1, 2].map(i => (
+                  <div key={`f${i}`} style={{
+                    width: 14, height: 14, borderRadius: '50%',
+                    background: i < deathSaves.failures ? '#ef4444' : 'rgba(239,68,68,0.12)',
+                    border: `2px solid ${i < deathSaves.failures ? '#dc2626' : 'rgba(239,68,68,0.25)'}`,
+                    transition: 'all 0.2s',
+                  }} />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Roll button */}
+          {!deathSaves.stable && !deathSaves.dead && (
+            <button
+              onClick={handleDeathSaveRoll}
+              title="Roll a death saving throw (d20, DC 10)"
+              style={{
+                width: '100%', padding: '8px 12px', borderRadius: 6,
+                background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)',
+                color: '#fca5a5', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                fontFamily: 'var(--font-heading)', letterSpacing: '0.05em',
+                transition: 'all 0.15s',
+              }}
+            >
+              Roll Death Save (d20, DC {DEATH_SAVE_RULES.dc})
+            </button>
+          )}
+
+          {/* Rules reminder */}
+          <div style={{ marginTop: 6, fontSize: 8, color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', textAlign: 'center' }}>
+            DC {DEATH_SAVE_RULES.dc} | Nat 20: regain 1 HP | Nat 1: 2 failures
+          </div>
+        </div>
+      )}
+
       {/* Action Economy Bar */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8,
-        padding: '10px 14px',
+        padding: 12,
         background: isMyTurn ? 'rgba(201,168,76,0.08)' : 'rgba(255,255,255,0.02)',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
         <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-heading)', marginRight: 4 }}>
           Actions:
@@ -782,6 +1062,7 @@ export default memo(function PlayerCombatHUD({ characterId }) {
           <button
             key={label}
             onClick={() => set(!used)}
+            title={`${label}: ${used ? 'Used (click to reset)' : 'Available (click to mark used)'}`}
             style={{
               padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 600,
               background: used ? 'rgba(255,255,255,0.03)' : `${color}15`,
@@ -797,19 +1078,160 @@ export default memo(function PlayerCombatHUD({ characterId }) {
           </button>
         ))}
 
+        {/* Movement Tracker */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 4,
+          marginLeft: 8, paddingLeft: 8,
+          borderLeft: '1px solid rgba(255,255,255,0.08)',
+        }}>
+          <Footprints size={11} style={{ color: remainingMovement > 0 ? '#4ade80' : 'rgba(255,255,255,0.2)' }} />
+          <span style={{
+            fontSize: 10, fontWeight: 600, fontFamily: 'var(--font-mono, monospace)',
+            color: remainingMovement > 0 ? '#4ade80' : 'rgba(255,255,255,0.3)',
+          }}>
+            {remainingMovement}/{effectiveSpeed}ft
+          </span>
+          {remainingMovement > 0 && (
+            <button
+              onClick={() => setMovementUsed(prev => Math.min(prev + 5, effectiveSpeed))}
+              style={{
+                padding: '2px 5px', borderRadius: 4, fontSize: 8, fontWeight: 600,
+                background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)',
+                color: '#4ade80', cursor: 'pointer',
+              }}
+              title="Move 5ft"
+            >
+              -5ft
+            </button>
+          )}
+        </div>
+
         <div style={{ flex: 1 }} />
 
         <button
           onClick={handleEndTurn}
+          title="End your turn"
           style={{
-            padding: '5px 14px', borderRadius: 7, fontSize: 11, fontWeight: 700,
+            padding: '8px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
             background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.35)',
             color: GOLD, cursor: 'pointer', fontFamily: 'var(--font-heading)',
             letterSpacing: '0.05em',
+            transition: 'all 0.15s',
           }}
         >
           End Turn
         </button>
+
+        {/* Turn Checklist Button */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => {
+              setShowTurnChecklist(!showTurnChecklist);
+              if (!showTurnChecklist) setChecklistChecked({});
+            }}
+            title="Toggle turn checklist"
+            style={{
+              padding: '8px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+              background: showTurnChecklist ? 'rgba(96,165,250,0.15)' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${showTurnChecklist ? 'rgba(96,165,250,0.35)' : 'rgba(255,255,255,0.1)'}`,
+              color: showTurnChecklist ? '#60a5fa' : 'var(--text-mute, rgba(255,255,255,0.4))',
+              cursor: 'pointer', fontFamily: 'var(--font-heading)',
+              display: 'flex', alignItems: 'center', gap: 4,
+              transition: 'all 0.15s',
+            }}
+          >
+            <ClipboardList size={11} /> Checklist
+          </button>
+
+          {/* Turn Checklist Dropdown */}
+          {showTurnChecklist && (
+            <div style={{
+              position: 'absolute', top: '110%', right: 0, zIndex: 50,
+              width: 280, maxHeight: 340, overflowY: 'auto',
+              background: 'rgba(10,8,16,0.97)', border: '1px solid rgba(96,165,250,0.25)',
+              borderRadius: 10, padding: 12,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+            }}>
+              {/* Start of Turn */}
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6, fontFamily: 'var(--font-heading)' }}>
+                  {TURN_PHASES[0].label}
+                </div>
+                <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', marginBottom: 6, fontStyle: 'italic' }}>
+                  {TURN_PHASES[0].description}
+                </div>
+                {TURN_PHASES[0].checks.map(check => (
+                  <label
+                    key={check.id}
+                    style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 8, padding: '4px 0', cursor: 'pointer',
+                    }}
+                  >
+                    <div
+                      onClick={() => setChecklistChecked(prev => ({ ...prev, [check.id]: !prev[check.id] }))}
+                      style={{
+                        width: 14, height: 14, borderRadius: 3, flexShrink: 0, marginTop: 1,
+                        background: checklistChecked[check.id] ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.05)',
+                        border: `1px solid ${checklistChecked[check.id] ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.15)'}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >
+                      {checklistChecked[check.id] && <Check size={10} style={{ color: '#4ade80' }} />}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: checklistChecked[check.id] ? 'rgba(255,255,255,0.3)' : '#e8d9b5', textDecoration: checklistChecked[check.id] ? 'line-through' : 'none' }}>
+                        {check.label}
+                      </div>
+                      <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.25)', marginTop: 1 }}>
+                        {check.detail}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginBottom: 10 }} />
+
+              {/* End of Turn */}
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#f472b6', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6, fontFamily: 'var(--font-heading)' }}>
+                  {TURN_PHASES[2].label}
+                </div>
+                <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', marginBottom: 6, fontStyle: 'italic' }}>
+                  {TURN_PHASES[2].description}
+                </div>
+                {TURN_PHASES[2].checks.map(check => (
+                  <label
+                    key={check.id}
+                    style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 8, padding: '4px 0', cursor: 'pointer',
+                    }}
+                  >
+                    <div
+                      onClick={() => setChecklistChecked(prev => ({ ...prev, [check.id]: !prev[check.id] }))}
+                      style={{
+                        width: 14, height: 14, borderRadius: 3, flexShrink: 0, marginTop: 1,
+                        background: checklistChecked[check.id] ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.05)',
+                        border: `1px solid ${checklistChecked[check.id] ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.15)'}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >
+                      {checklistChecked[check.id] && <Check size={10} style={{ color: '#4ade80' }} />}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: checklistChecked[check.id] ? 'rgba(255,255,255,0.3)' : '#e8d9b5', textDecoration: checklistChecked[check.id] ? 'line-through' : 'none' }}>
+                        {check.label}
+                      </div>
+                      <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.25)', marginTop: 1 }}>
+                        {check.detail}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tab bar */}
@@ -824,25 +1246,26 @@ export default memo(function PlayerCombatHUD({ characterId }) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              title={`Switch to ${tab.label} tab`}
               style={{
                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                padding: '8px 6px', fontSize: 10, fontWeight: 600,
-                background: 'transparent',
-                borderBottom: active ? `2px solid ${tab.color}` : '2px solid transparent',
-                color: active ? tab.color : 'rgba(255,255,255,0.3)',
+                padding: '9px 8px', fontSize: 11, fontWeight: 600,
+                background: active ? 'rgba(201,168,76,0.08)' : 'transparent',
+                borderBottom: active ? `2px solid ${GOLD}` : '2px solid transparent',
+                color: active ? GOLD : 'var(--text-mute, rgba(255,255,255,0.3))',
                 cursor: 'pointer', border: 'none',
                 fontFamily: 'var(--font-heading)', letterSpacing: '0.03em',
                 transition: 'all 0.15s',
               }}
             >
-              <Icon size={12} /> {tab.label}
+              <Icon size={13} /> {tab.label}
             </button>
           );
         })}
       </div>
 
       {/* Tab content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', minHeight: 120, maxHeight: 300 }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: 12, minHeight: 120, maxHeight: 300 }}>
 
         {/* ATTACK TAB */}
         {activeTab === 'attack' && (
@@ -856,14 +1279,16 @@ export default memo(function PlayerCombatHUD({ characterId }) {
                 key={weapon.id || i}
                 onClick={() => handleAttack(weapon)}
                 disabled={actionUsed}
+                title={`Attack with ${weapon.name}: +${weapon.attack_bonus || 0} to hit, ${weapon.damage_dice || 'no damage dice'}`}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '10px 12px', borderRadius: 8,
+                  padding: '8px 12px', borderRadius: 6,
                   background: actionUsed ? 'rgba(255,255,255,0.01)' : 'rgba(239,68,68,0.06)',
                   border: `1px solid ${actionUsed ? 'rgba(255,255,255,0.04)' : 'rgba(239,68,68,0.15)'}`,
                   cursor: actionUsed ? 'default' : 'pointer',
                   opacity: actionUsed ? 0.4 : 1,
                   textAlign: 'left', width: '100%',
+                  fontSize: 11, fontWeight: 600,
                   transition: 'all 0.15s',
                 }}
               >
@@ -884,9 +1309,9 @@ export default memo(function PlayerCombatHUD({ characterId }) {
             {/* Attack result display */}
             {attackRoll && (
               <div style={{
-                padding: '10px 12px', borderRadius: 8, marginTop: 4,
+                padding: '8px 12px', borderRadius: 6, marginTop: 4,
                 background: attackRoll.isCrit ? 'rgba(201,168,76,0.1)' : attackRoll.isFumble ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.03)',
-                border: `1px solid ${attackRoll.isCrit ? 'rgba(201,168,76,0.3)' : attackRoll.isFumble ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                border: `1px solid ${attackRoll.isCrit ? 'rgba(201,168,76,0.3)' : attackRoll.isFumble ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.06)'}`,
               }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: attackRoll.isCrit ? '#fde68a' : attackRoll.isFumble ? '#fca5a5' : '#e8d9b5', marginBottom: 4 }}>
                   {attackRoll.isCrit ? 'CRITICAL HIT!' : attackRoll.isFumble ? 'FUMBLE!' : `Attack: ${attackRoll.total}`}
@@ -903,7 +1328,7 @@ export default memo(function PlayerCombatHUD({ characterId }) {
             )}
 
             {/* ── Special Actions: Grapple & Shove ── */}
-            <div style={{ marginTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+            <div style={{ marginTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
               <div style={{ fontSize: 9, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(249,115,22,0.5)', marginBottom: 6, fontFamily: 'var(--font-heading)' }}>
                 Special Actions
               </div>
@@ -917,7 +1342,7 @@ export default memo(function PlayerCombatHUD({ characterId }) {
                   disabled={actionUsed || specialActionsDisabled}
                   style={{
                     flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    padding: '8px 10px', borderRadius: 7,
+                    padding: '8px 12px', borderRadius: 6,
                     background: (actionUsed || specialActionsDisabled) ? 'rgba(255,255,255,0.01)' : 'rgba(249,115,22,0.06)',
                     border: `1px solid ${(actionUsed || specialActionsDisabled) ? 'rgba(255,255,255,0.04)' : 'rgba(249,115,22,0.2)'}`,
                     cursor: (actionUsed || specialActionsDisabled) ? 'default' : 'pointer',
@@ -938,7 +1363,7 @@ export default memo(function PlayerCombatHUD({ characterId }) {
                     disabled={actionUsed || specialActionsDisabled}
                     style={{
                       width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                      padding: '8px 10px', borderRadius: 7,
+                      padding: '8px 12px', borderRadius: 6,
                       background: (actionUsed || specialActionsDisabled) ? 'rgba(255,255,255,0.01)' : 'rgba(217,119,6,0.06)',
                       border: `1px solid ${(actionUsed || specialActionsDisabled) ? 'rgba(255,255,255,0.04)' : 'rgba(217,119,6,0.2)'}`,
                       cursor: (actionUsed || specialActionsDisabled) ? 'default' : 'pointer',
@@ -962,20 +1387,24 @@ export default memo(function PlayerCombatHUD({ characterId }) {
                     }}>
                       <button
                         onClick={() => handleShove('prone')}
+                        title="Shove target prone"
                         style={{
-                          flex: 1, padding: '6px 4px', borderRadius: 5, fontSize: 9, fontWeight: 600,
+                          flex: 1, padding: '8px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
                           background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.25)',
                           color: '#d97706', cursor: 'pointer',
+                          transition: 'all 0.15s',
                         }}
                       >
                         Prone
                       </button>
                       <button
                         onClick={() => handleShove('push')}
+                        title="Shove target 5 feet away"
                         style={{
-                          flex: 1, padding: '6px 4px', borderRadius: 5, fontSize: 9, fontWeight: 600,
+                          flex: 1, padding: '8px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
                           background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.25)',
                           color: '#d97706', cursor: 'pointer',
+                          transition: 'all 0.15s',
                         }}
                       >
                         Push 5ft
@@ -988,7 +1417,7 @@ export default memo(function PlayerCombatHUD({ characterId }) {
               {/* Grapple/Shove result display */}
               {grappleResult && (
                 <div style={{
-                  padding: '8px 10px', borderRadius: 7, marginTop: 6,
+                  padding: '8px 12px', borderRadius: 6, marginTop: 6,
                   background: grappleResult.type === 'grapple' ? 'rgba(249,115,22,0.08)' : 'rgba(217,119,6,0.08)',
                   border: `1px solid ${grappleResult.type === 'grapple' ? 'rgba(249,115,22,0.2)' : 'rgba(217,119,6,0.2)'}`,
                 }}>
@@ -1022,11 +1451,13 @@ export default memo(function PlayerCombatHUD({ characterId }) {
                       <span style={{ fontSize: 9, color: remaining > 0 ? '#c4b5fd' : 'rgba(196,181,253,0.3)', fontWeight: 600 }}>
                         Lv{slot.slot_level}
                       </span>
-                      <span style={{ display: 'flex', gap: 2 }}>
+                      <span style={{ display: 'flex', gap: 3 }}>
                         {Array.from({ length: slot.max_slots }, (_, i) => (
                           <div key={i} style={{
-                            width: 6, height: 6, borderRadius: '50%',
+                            width: 8, height: 8, borderRadius: '50%',
                             background: i < remaining ? '#a78bfa' : 'rgba(167,139,250,0.15)',
+                            border: `1px solid ${i < remaining ? 'rgba(167,139,250,0.5)' : 'rgba(167,139,250,0.25)'}`,
+                            transition: 'all 0.2s',
                           }} />
                         ))}
                       </span>
@@ -1044,11 +1475,14 @@ export default memo(function PlayerCombatHUD({ characterId }) {
                   <button
                     key={spell.id || i}
                     onClick={() => handleCastSpell(spell, 0)}
+                    title={`Cast ${spell.name} (cantrip)${spell.concentration ? ' — Concentration' : ''}`}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-                      padding: '6px 10px', borderRadius: 6,
+                      padding: '8px 12px', borderRadius: 6,
                       background: 'rgba(139,92,246,0.04)', border: '1px solid rgba(139,92,246,0.1)',
                       cursor: 'pointer', textAlign: 'left',
+                      fontSize: 11, fontWeight: 600,
+                      transition: 'all 0.15s',
                     }}
                   >
                     <Wand2 size={11} style={{ color: '#c4b5fd', flexShrink: 0 }} />
@@ -1073,14 +1507,17 @@ export default memo(function PlayerCombatHUD({ characterId }) {
                       key={spell.id || i}
                       onClick={() => handleCastSpell(spell, parseInt(level))}
                       disabled={slotInfo.remaining <= 0}
+                      title={`Cast ${spell.name} (Level ${level})${spell.concentration ? ' — Concentration' : ''}${slotInfo.remaining <= 0 ? ' — No slots remaining' : ''}`}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-                        padding: '6px 10px', borderRadius: 6, marginBottom: 3,
+                        padding: '8px 12px', borderRadius: 6, marginBottom: 3,
                         background: slotInfo.remaining > 0 ? 'rgba(139,92,246,0.04)' : 'rgba(255,255,255,0.01)',
                         border: `1px solid ${slotInfo.remaining > 0 ? 'rgba(139,92,246,0.1)' : 'rgba(255,255,255,0.04)'}`,
                         cursor: slotInfo.remaining > 0 ? 'pointer' : 'default',
                         opacity: slotInfo.remaining > 0 ? 1 : 0.4,
                         textAlign: 'left',
+                        fontSize: 11, fontWeight: 600,
+                        transition: 'all 0.15s',
                       }}
                     >
                       <Wand2 size={11} style={{ color: '#c4b5fd', flexShrink: 0 }} />
@@ -1097,7 +1534,7 @@ export default memo(function PlayerCombatHUD({ characterId }) {
             {/* Last spell result display */}
             {lastSpellResult && (
               <div style={{
-                padding: '8px 10px', borderRadius: 7, marginTop: 6,
+                padding: '8px 12px', borderRadius: 6, marginTop: 6,
                 background: lastSpellResult.type === 'heal' ? 'rgba(74,222,128,0.08)' : 'rgba(139,92,246,0.08)',
                 border: `1px solid ${lastSpellResult.type === 'heal' ? 'rgba(74,222,128,0.2)' : 'rgba(139,92,246,0.2)'}`,
               }}>
@@ -1137,13 +1574,16 @@ export default memo(function PlayerCombatHUD({ characterId }) {
                 key={item.id || i}
                 onClick={() => handleUseItem(item)}
                 disabled={(item.quantity ?? 1) <= 0}
+                title={`Use ${item.name} (${item.quantity ?? 1} remaining)`}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-                  padding: '8px 10px', borderRadius: 6,
+                  padding: '8px 12px', borderRadius: 6,
                   background: 'rgba(74,222,128,0.04)', border: '1px solid rgba(74,222,128,0.12)',
                   cursor: (item.quantity ?? 1) > 0 ? 'pointer' : 'default',
                   opacity: (item.quantity ?? 1) > 0 ? 1 : 0.4,
                   textAlign: 'left',
+                  fontSize: 11, fontWeight: 600,
+                  transition: 'all 0.15s',
                 }}
               >
                 <FlaskConical size={12} style={{ color: '#86efac', flexShrink: 0 }} />
@@ -1179,7 +1619,7 @@ export default memo(function PlayerCombatHUD({ characterId }) {
                   return (
                     <div key={feat.id || i} style={{
                       display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '8px 10px', borderRadius: 6,
+                      padding: '8px 12px', borderRadius: 6,
                       background: 'rgba(253,230,138,0.03)', border: '1px solid rgba(253,230,138,0.1)',
                     }}>
                       <Zap size={12} style={{ color: '#fde68a', flexShrink: 0 }} />
@@ -1188,12 +1628,13 @@ export default memo(function PlayerCombatHUD({ characterId }) {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                           {/* Resource pips */}
                           {(feat.uses_total ?? 0) <= 10 ? (
-                            <span style={{ display: 'flex', gap: 2 }}>
+                            <span style={{ display: 'flex', gap: 3 }}>
                               {Array.from({ length: feat.uses_total ?? 0 }, (_, j) => (
                                 <div key={j} style={{
                                   width: 8, height: 8, borderRadius: '50%',
                                   background: j < (feat.uses_remaining ?? 0) ? rechargeColor : `${rechargeColor}25`,
                                   border: `1px solid ${rechargeColor}50`,
+                                  transition: 'all 0.2s',
                                 }} />
                               ))}
                             </span>
@@ -1210,12 +1651,14 @@ export default memo(function PlayerCombatHUD({ characterId }) {
                       <button
                         onClick={() => handleUseFeature(feat)}
                         disabled={(feat.uses_remaining ?? 0) <= 0}
+                        title={`Use ${feat.name} (${feat.uses_remaining ?? 0}/${feat.uses_total ?? 0} remaining)`}
                         style={{
-                          padding: '4px 10px', borderRadius: 5, fontSize: 9, fontWeight: 600,
+                          padding: '8px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
                           background: (feat.uses_remaining ?? 0) > 0 ? 'rgba(253,230,138,0.1)' : 'rgba(255,255,255,0.02)',
                           border: `1px solid ${(feat.uses_remaining ?? 0) > 0 ? 'rgba(253,230,138,0.25)' : 'rgba(255,255,255,0.06)'}`,
                           color: (feat.uses_remaining ?? 0) > 0 ? '#fde68a' : 'rgba(255,255,255,0.2)',
                           cursor: (feat.uses_remaining ?? 0) > 0 ? 'pointer' : 'default',
+                          transition: 'all 0.15s',
                         }}
                       >
                         Use
@@ -1233,7 +1676,7 @@ export default memo(function PlayerCombatHUD({ characterId }) {
                 {regularFeatures.map((feat, i) => (
                   <div key={feat.id || i} style={{
                     display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '6px 10px', borderRadius: 6,
+                    padding: '8px 12px', borderRadius: 6,
                     background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
                   }}>
                     <Sparkles size={11} style={{ color: 'rgba(253,230,138,0.5)', flexShrink: 0 }} />
@@ -1244,12 +1687,14 @@ export default memo(function PlayerCombatHUD({ characterId }) {
                     <button
                       onClick={() => handleUseFeature(feat)}
                       disabled={(feat.uses_remaining ?? 0) <= 0}
+                      title={`Use ${feat.name} (${feat.uses_remaining ?? 0}/${feat.uses_total ?? 0} remaining)`}
                       style={{
-                        padding: '3px 8px', borderRadius: 4, fontSize: 8, fontWeight: 600,
+                        padding: '8px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
                         background: (feat.uses_remaining ?? 0) > 0 ? 'rgba(253,230,138,0.08)' : 'rgba(255,255,255,0.02)',
                         border: `1px solid ${(feat.uses_remaining ?? 0) > 0 ? 'rgba(253,230,138,0.2)' : 'rgba(255,255,255,0.06)'}`,
                         color: (feat.uses_remaining ?? 0) > 0 ? '#fde68a' : 'rgba(255,255,255,0.15)',
                         cursor: (feat.uses_remaining ?? 0) > 0 ? 'pointer' : 'default',
+                        transition: 'all 0.15s',
                       }}
                     >
                       Use
@@ -1273,13 +1718,15 @@ export default memo(function PlayerCombatHUD({ characterId }) {
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <button
             onClick={() => setShowStats(!showStats)}
+            title="Toggle character stats"
             style={{
               width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '6px 14px', background: showStats ? 'rgba(96,165,250,0.06)' : 'none',
+              padding: '6px 12px', background: showStats ? 'rgba(96,165,250,0.06)' : 'none',
               border: 'none', cursor: 'pointer',
-              color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 600,
+              color: 'var(--text-mute, rgba(255,255,255,0.4))', fontSize: 9, fontWeight: 600,
               textTransform: 'uppercase', letterSpacing: '0.08em',
               fontFamily: 'var(--font-heading)',
+              transition: 'all 0.15s',
             }}
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1288,7 +1735,7 @@ export default memo(function PlayerCombatHUD({ characterId }) {
             {showStats ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
           </button>
           {showStats && (
-            <div style={{ padding: '8px 14px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
               {/* AC, Speed, HP row */}
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 <div style={{
@@ -1387,8 +1834,8 @@ export default memo(function PlayerCombatHUD({ characterId }) {
 
       {/* Enemies HP Tiers */}
       {Object.keys(monsterHpTiers).length > 0 && (
-        <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Enemies</div>
+        <div style={{ padding: 12, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 9, color: 'var(--text-mute, rgba(255,255,255,0.4))', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Enemies</div>
           {Object.values(monsterHpTiers).filter(m => m.tier !== 'dead').map(m => (
             <div key={m.monster_id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}>
               <Skull size={10} style={{ color: m.tier_color }} />
@@ -1399,18 +1846,158 @@ export default memo(function PlayerCombatHUD({ characterId }) {
         </div>
       )}
 
+      {/* Creature Knowledge Panel — only during combat */}
+      {combatActive && (
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '0 12px' }}>
+          <button
+            onClick={() => setShowCreatureKnowledge(p => !p)}
+            title="Toggle creature knowledge panel"
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer', width: '100%',
+              display: 'flex', alignItems: 'center', gap: 6, padding: '7px 0',
+              color: showCreatureKnowledge ? '#a78bfa' : 'var(--text-mute, rgba(255,255,255,0.3))',
+              fontSize: 9, fontWeight: 700, fontFamily: 'var(--font-heading)',
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+              transition: 'all 0.15s',
+            }}
+          >
+            <BookOpen size={13} />
+            Creature Knowledge
+            <ChevronRight size={9} style={{ marginLeft: 'auto', transform: showCreatureKnowledge ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} />
+          </button>
+          {showCreatureKnowledge && (
+            <div style={{ paddingBottom: 10 }}>
+              {/* Creature type selector */}
+              <div style={{ marginBottom: 8 }}>
+                <label style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 4 }}>
+                  Creature Type
+                </label>
+                <select
+                  value={knowledgeCreatureType}
+                  onChange={e => { setKnowledgeCreatureType(e.target.value); setKnowledgeCheckResult(''); }}
+                  style={{
+                    width: '100%', padding: '5px 8px', borderRadius: 6, fontSize: 11,
+                    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                    color: '#e8d9b5', fontFamily: 'var(--font-mono, monospace)',
+                    cursor: 'pointer', outline: 'none',
+                  }}
+                >
+                  <option value="" style={{ background: '#1a1015' }}>-- Select type --</option>
+                  {KNOWLEDGE_SKILLS.map(k => (
+                    <option key={k.creatureType} value={k.creatureType} style={{ background: '#1a1015' }}>
+                      {k.creatureType} ({k.skill})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Skill to roll indicator */}
+              {knowledgeCreatureType && (() => {
+                const skill = getKnowledgeSkill(knowledgeCreatureType);
+                const entry = KNOWLEDGE_SKILLS.find(k => k.creatureType === knowledgeCreatureType);
+                const tip = CREATURE_TYPE_TIPS[knowledgeCreatureType];
+                return (
+                  <div style={{
+                    padding: '6px 10px', borderRadius: 6, marginBottom: 8,
+                    background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)',
+                  }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#c4b5fd', marginBottom: 2 }}>
+                      Roll: {skill}
+                    </div>
+                    {entry && (
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: tip ? 4 : 0 }}>
+                        Examples: {entry.examples}
+                      </div>
+                    )}
+                    {tip && (
+                      <div style={{ fontSize: 9, color: '#fde68a', fontStyle: 'italic', lineHeight: 1.4 }}>
+                        {tip}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Check result input */}
+              {knowledgeCreatureType && (
+                <div style={{ marginBottom: 8 }}>
+                  <label style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 4 }}>
+                    Check Result
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="40"
+                    value={knowledgeCheckResult}
+                    onChange={e => setKnowledgeCheckResult(e.target.value)}
+                    placeholder="Enter roll total..."
+                    style={{
+                      width: '100%', padding: '5px 8px', borderRadius: 6, fontSize: 11,
+                      background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                      color: '#e8d9b5', fontFamily: 'var(--font-mono, monospace)',
+                      outline: 'none', boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Revealed knowledge tiers */}
+              {knowledgeCheckResult && (() => {
+                const result = parseInt(knowledgeCheckResult, 10);
+                if (isNaN(result)) return null;
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {KNOWLEDGE_DC_TABLE.map(tier => {
+                      const unlocked = result >= tier.dc;
+                      return (
+                        <div key={tier.dc} style={{
+                          padding: '5px 8px', borderRadius: 6,
+                          background: unlocked ? 'rgba(134,239,172,0.06)' : 'rgba(255,255,255,0.02)',
+                          border: `1px solid ${unlocked ? 'rgba(134,239,172,0.2)' : 'rgba(255,255,255,0.05)'}`,
+                          opacity: unlocked ? 1 : 0.4,
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                            <span style={{
+                              fontSize: 9, fontWeight: 800, color: unlocked ? '#86efac' : 'rgba(255,255,255,0.25)',
+                              minWidth: 30,
+                            }}>
+                              DC {tier.dc}
+                            </span>
+                            {unlocked && <Check size={10} style={{ color: '#86efac' }} />}
+                          </div>
+                          <div style={{ fontSize: 10, color: unlocked ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.2)', lineHeight: 1.4 }}>
+                            {tier.reveals}
+                          </div>
+                          {unlocked && (
+                            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', marginTop: 2, lineHeight: 1.4 }}>
+                              {tier.example}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Combat Log toggle */}
       <div style={{
         borderTop: '1px solid rgba(255,255,255,0.06)',
-        padding: '4px 14px',
+        padding: '4px 12px',
       }}>
         <button
           onClick={() => setShowLog(!showLog)}
+          title="Toggle combat log"
           style={{
             width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '4px 0', background: 'none', border: 'none',
-            color: 'rgba(255,255,255,0.3)', fontSize: 9, fontWeight: 600, cursor: 'pointer',
+            color: 'var(--text-mute, rgba(255,255,255,0.3))', fontSize: 9, fontWeight: 600, cursor: 'pointer',
             textTransform: 'uppercase', letterSpacing: '0.08em',
+            transition: 'all 0.15s',
           }}
         >
           <span>Combat Log ({(sharedCombatLog || []).length})</span>
@@ -1423,7 +2010,7 @@ export default memo(function PlayerCombatHUD({ characterId }) {
             ) : (sharedCombatLog || []).slice().reverse().map((entry, i) => (
               <div key={i} style={{
                 fontSize: 9, color: 'rgba(255,255,255,0.4)', padding: '2px 0',
-                borderBottom: '1px solid rgba(255,255,255,0.03)',
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
                 fontFamily: 'var(--font-mono, monospace)',
               }}>
                 {entry.text}
@@ -1432,6 +2019,68 @@ export default memo(function PlayerCombatHUD({ characterId }) {
           </div>
         )}
       </div>
+
+      {/* Post-Combat Recovery Panel */}
+      {!combatActive && (
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '0 12px' }}>
+          <button
+            onClick={() => setShowRecoveryPanel(p => !p)}
+            title="Toggle post-combat recovery checklist"
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer', width: '100%',
+              display: 'flex', alignItems: 'center', gap: 6, padding: '7px 0',
+              color: GOLD, fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-heading)',
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+              transition: 'all 0.15s',
+            }}
+          >
+            <ClipboardList size={13} />
+            Post-Combat Recovery
+            <ChevronRight size={9} style={{ marginLeft: 'auto', transform: showRecoveryPanel ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} />
+          </button>
+          {showRecoveryPanel && (
+            <div style={{ paddingBottom: 10 }}>
+              {/* Checklist — first 5 items */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 8 }}>
+                {POST_COMBAT_CHECKLIST.slice(0, 5).map(item => {
+                  const priorityColor = { critical: '#f87171', high: '#fb923c', medium: '#facc15', low: 'rgba(255,255,255,0.35)' }[item.priority] || '#999';
+                  return (
+                    <label key={item.step} style={{
+                      display: 'flex', alignItems: 'center', gap: 6, fontSize: 10,
+                      color: recoveryChecked[item.step] ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.7)',
+                      textDecoration: recoveryChecked[item.step] ? 'line-through' : 'none',
+                      cursor: 'pointer', padding: '2px 0',
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={!!recoveryChecked[item.step]}
+                        onChange={() => setRecoveryChecked(prev => ({ ...prev, [item.step]: !prev[item.step] }))}
+                        style={{ accentColor: priorityColor, width: 12, height: 12, cursor: 'pointer' }}
+                      />
+                      <span style={{ color: priorityColor, fontWeight: 700, minWidth: 6, fontSize: 9 }}>{'\u25CF'}</span>
+                      <span style={{ flex: 1 }}>{item.label}</span>
+                      <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.25)', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.description}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              {/* Short Rest Recovery Reference */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 6 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#60a5fa', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  Short Rest Recovery
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 14, listStyle: 'disc' }}>
+                  {RESOURCE_RECOVERY_QUICK_REF.shortRest.map((line, i) => (
+                    <li key={i} style={{ fontSize: 9, color: 'rgba(255,255,255,0.45)', padding: '1px 0', lineHeight: 1.4 }}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 })

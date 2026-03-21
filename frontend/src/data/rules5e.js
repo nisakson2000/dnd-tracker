@@ -178,6 +178,17 @@ export const RACES = [
     languages: ['Common', 'Draconic'], darkvision: 0,
   },
   {
+    name: 'Dragonborn (2024)', subrace: '', speed: 30, size: 'Medium',
+    abilityBonuses: {},
+    traits: [
+      { name: 'Draconic Ancestry', description: 'Choose a dragon type: Black (Acid), Blue (Lightning), Brass (Fire), Bronze (Lightning), Copper (Acid), Gold (Fire), Green (Poison), Red (Fire), Silver (Cold), White (Cold). This determines your Breath Weapon damage type and Damage Resistance.' },
+      { name: 'Breath Weapon', description: 'As an action, exhale destructive energy in a 15 ft cone or 30 ft line (based on ancestry). Damage: 1d10 at 1st level, 2d10 at 5th, 3d10 at 11th, 4d10 at 17th. DEX or CON save (DC = 8 + CON mod + proficiency bonus). You can use this a number of times equal to your proficiency bonus per long rest.' },
+      { name: 'Damage Resistance', description: 'You have resistance to the damage type associated with your Draconic Ancestry.' },
+      { name: 'Draconic Flight', description: 'Starting at 5th level, you can use a bonus action to sprout spectral wings. You gain a fly speed equal to your walking speed for 10 minutes. Once per long rest.' },
+    ],
+    languages: ['Common', 'Draconic'], darkvision: 60,
+  },
+  {
     name: 'Gnome', subrace: 'Forest', speed: 25, size: 'Small',
     abilityBonuses: { INT: 2, DEX: 1 },
     traits: [
@@ -244,6 +255,16 @@ export const RACES = [
       { name: 'Powerful Build', description: 'You count as one size larger when determining carrying capacity and the weight you can push, drag, or lift.' },
       { name: 'Mountain Born', description: 'You are acclimated to high altitude and naturally adapted to cold climates (no checks needed).' },
       { name: 'Natural Athlete', description: 'Proficiency in the Athletics skill.' },
+    ],
+    languages: ['Common', 'Giant'], darkvision: 0,
+  },
+  {
+    name: 'Goliath (2024)', subrace: '', speed: 35, size: 'Medium',
+    abilityBonuses: {},
+    traits: [
+      { name: 'Giant Ancestry', description: "Choose one of the following: Cloud's Jaunt (bonus action to teleport 30 ft to an unoccupied space you can see, prof bonus times per long rest), Fire's Burn (when you hit with an attack, deal an extra 1d10 fire damage, prof bonus times per long rest), Frost's Chill (when you hit with an attack, deal an extra 1d6 cold damage and reduce target's speed by 10 ft until start of your next turn, prof bonus times per long rest), Hill's Tumble (when you hit a Large or smaller creature, bonus action to knock it prone, prof bonus times per long rest), Stone's Endurance (when you take damage, use your reaction to roll 1d12 + CON modifier and reduce the damage by that total, prof bonus times per long rest), Storm's Thunder (when a creature you can see within 5 ft hits you, use your reaction to deal 1d8 thunder damage to it, prof bonus times per long rest)." },
+      { name: 'Large Form', description: 'Starting at 5th level, you can use a bonus action to become Large (along with anything you are wearing) for 10 minutes. While Large, you have advantage on STR checks and deal an extra 1d6 damage with weapons and unarmed strikes. Once per long rest.' },
+      { name: 'Powerful Build', description: 'You count as one size larger when determining carrying capacity and the weight you can push, drag, or lift.' },
     ],
     languages: ['Common', 'Giant'], darkvision: 0,
   },
@@ -398,6 +419,15 @@ export const RACES = [
     languages: ['Common', 'Orc'], darkvision: 60,
   },
   {
+    name: 'Orc (2024)', subrace: '', speed: 30, size: 'Medium',
+    abilityBonuses: {},
+    traits: [
+      { name: 'Adrenaline Rush', description: 'As a bonus action, you can take the Dash action and gain temporary hit points equal to your proficiency bonus. You can use this a number of times equal to your proficiency bonus per long rest.' },
+      { name: 'Relentless Endurance', description: 'When you are reduced to 0 hit points but not killed outright, you can drop to 1 hit point instead. Once per long rest.' },
+    ],
+    languages: ['Common', 'Orc'], darkvision: 120,
+  },
+  {
     name: 'Yuan-ti Pureblood', subrace: '', speed: 30, size: 'Medium',
     abilityBonuses: { CHA: 2, INT: 1 },
     traits: [
@@ -527,6 +557,59 @@ export const RACES = [
       { name: 'Rabbit Hop', description: 'As a bonus action, you can jump a number of feet equal to 5 times your proficiency bonus without provoking opportunity attacks. You can use this trait a number of times equal to your proficiency bonus, regaining all uses on a long rest.' },
     ],
     languages: ['Common', 'One extra'], darkvision: 0,
+  },
+  {
+    name: 'Aarakocra', subrace: '', speed: 25, size: 'Medium',
+    abilityBonuses: { DEX: 2, WIS: 1 },
+    traits: [
+      { name: 'Flight', description: 'You have a flying speed of 50 feet. To use this speed, you can\'t be wearing medium or heavy armor.' },
+      { name: 'Talons', description: 'Your talons are natural weapons, which you can use to make unarmed strikes. You deal 1d4 slashing damage with them instead of the normal bludgeoning damage.' },
+    ],
+    languages: ['Common', 'Aarakocra', 'Auran'], darkvision: 0,
+  },
+  {
+    name: 'Owlin', subrace: '', speed: 30, size: 'Medium',
+    abilityBonuses: {}, // +2 to one ability, +1 to another of choice
+    traits: [
+      { name: 'Ability Score Increase', description: '+2 to one ability score and +1 to a different ability score of your choice, or +1 to three different ability scores.' },
+      { name: 'Darkvision', description: '120 ft. darkvision.' },
+      { name: 'Flight', description: 'You have a flying speed equal to your walking speed. To use this speed, you can\'t be wearing medium or heavy armor.' },
+      { name: 'Silent Feathers', description: 'You have proficiency in the Stealth skill.' },
+    ],
+    languages: ['Common', 'One extra'], darkvision: 120,
+  },
+  // --- Ravnica / Theros ---
+  {
+    name: 'Loxodon', subrace: '', speed: 30, size: 'Medium',
+    abilityBonuses: { CON: 2, WIS: 1 },
+    traits: [
+      { name: 'Natural Armor', description: 'You have thick, leathery skin. When you aren\'t wearing armor, your AC is 12 + your Constitution modifier. You can use your natural armor to determine your AC if the armor you wear would leave you with a lower AC. A shield\'s benefits apply as normal.' },
+      { name: 'Trunk', description: 'You can grasp things with your trunk. It has a reach of 5 feet, and it can lift a number of pounds equal to 5 × your Strength score. You can use it to: lift, drop, hold, push, or pull an object or a creature; grapple someone; or make unarmed strikes. Your DM can grant it other simple tasks. It can\'t wield weapons or shields or do anything that requires manual precision.' },
+      { name: 'Keen Smell', description: 'Thanks to your sensitive trunk, you have advantage on Wisdom (Perception), Wisdom (Survival), and Intelligence (Investigation) checks that involve smell.' },
+      { name: 'Loxodon Serenity', description: 'You have advantage on saving throws against being charmed or frightened.' },
+    ],
+    languages: ['Common', 'Loxodon'], darkvision: 0,
+  },
+  {
+    name: 'Minotaur', subrace: '', speed: 30, size: 'Medium',
+    abilityBonuses: { STR: 2, CON: 1 },
+    traits: [
+      { name: 'Horns', description: 'Your horns are natural melee weapons, which you can use to make unarmed strikes. You deal 1d6 + your Strength modifier piercing damage with them.' },
+      { name: 'Goring Rush', description: 'Immediately after you use the Dash action on your turn and move at least 20 feet, you can make one melee attack with your horns as a bonus action.' },
+      { name: 'Hammering Horns', description: 'Immediately after you hit a creature with a melee attack as part of the Attack action on your turn, you can use a bonus action to attempt to push that target with your horns. The target must be no more than one size larger than you and within 5 feet. It must succeed on a Strength saving throw (DC 8 + your proficiency bonus + your Strength modifier) or be pushed up to 10 feet away from you.' },
+      { name: 'Labyrinthine Recall', description: 'You can perfectly recall any path you have traveled.' },
+    ],
+    languages: ['Common', 'Minotaur'], darkvision: 0,
+  },
+  {
+    name: 'Centaur', subrace: '', speed: 40, size: 'Medium',
+    abilityBonuses: { STR: 2, WIS: 1 },
+    traits: [
+      { name: 'Charge', description: 'If you move at least 30 feet straight toward a target and then hit it with a melee weapon attack on the same turn, you can immediately follow that attack with a bonus action, making one attack against the target with your hooves.' },
+      { name: 'Equine Build', description: 'You count as one size larger when determining your carrying capacity and the weight you can push or drag. In addition, any climb that requires hands and feet is especially difficult for you; when you make such a climb, each foot of movement costs you 4 extra feet instead of the normal 1 extra foot. Finally, a Medium or smaller creature can ride on your equine back if you allow it, but you are still not considered a mount.' },
+      { name: 'Hooves', description: 'Your hooves are natural melee weapons, which you can use to make unarmed strikes. You deal 1d4 + your Strength modifier bludgeoning damage with them.' },
+    ],
+    languages: ['Common', 'Sylvan'], darkvision: 0,
   },
 ];
 
@@ -865,6 +948,68 @@ export const CLASSES = [
       { name: 'Signature Spells', level: 20, description: 'Choose two 3rd-level wizard spells in your spellbook. You always have them prepared, they do not count against your number of prepared spells, and you can cast each of them once at 3rd level without expending a spell slot.' },
     ],
   },
+  {
+    name: 'Artificer', hitDie: 8, primaryAbility: 'INT', subclassLevel: 3,
+    savingThrows: ['CON', 'INT'],
+    armorProficiencies: ['Light armor', 'Medium armor', 'Shields'],
+    weaponProficiencies: ['Simple weapons'],
+    toolProficiencies: ["Thieves' Tools", "Tinker's Tools", 'One type of artisan\'s tools'],
+    skillChoices: { count: 2, from: ['Arcana', 'History', 'Investigation', 'Medicine', 'Nature', 'Perception', 'Sleight of Hand'] },
+    startingEquipment: [
+      { name: 'Scale Mail', item_type: 'armor', weight: 45, value_gp: 50, quantity: 1 },
+      { name: 'Light Crossbow', item_type: 'weapon', weight: 5, value_gp: 25, quantity: 1 },
+      { name: 'Bolt', item_type: 'ammunition', weight: 0.075, value_gp: 0.05, quantity: 20 },
+      { name: "Thieves' Tools", item_type: 'tool', weight: 1, value_gp: 25, quantity: 1 },
+      { name: "Dungeoneer's Pack", item_type: 'gear', weight: 61.5, value_gp: 12, quantity: 1 },
+    ],
+    startingGold: 10,
+    subclasses: ['Alchemist', 'Armorer', 'Artillerist', 'Battle Smith'],
+    spellcasting: { ability: 'INT', type: 'half' },
+    features: [
+      { name: 'Magical Tinkering', level: 1, description: 'You can invest a spark of magic into mundane objects, imbuing them with minor magical properties such as shedding light, emitting a sound or odor, displaying a static visual, or continuously generating a spoken message.' },
+      { name: 'Spellcasting', level: 1, description: 'You can cast artificer spells using INT as your spellcasting ability. You prepare a list of spells each day and can use tools you are proficient with as a spellcasting focus.' },
+      { name: 'Infuse Item', level: 2, description: 'You gain the ability to imbue mundane items with certain magical infusions, turning them into magic items. You learn a number of infusions and can have a limited number active at once.' },
+      { name: 'The Right Tool for the Job', level: 3, description: 'You can use artisan\'s tools to magically create one set of artisan\'s tools in an unoccupied space within 5 feet of you over the course of 1 hour.' },
+      { name: 'Tool Expertise', level: 6, description: 'Your proficiency bonus is doubled for any ability check you make that uses your proficiency with a tool.' },
+      { name: 'Flash of Genius', level: 7, description: 'When you or another creature you can see within 30 feet makes an ability check or a saving throw, you can use your reaction to add your INT modifier to the roll.' },
+      { name: 'Magic Item Adept', level: 10, description: 'You can attune to up to four magic items at once. Crafting common or uncommon magic items takes you a quarter of the normal time and costs you half as much gold.' },
+      { name: 'Spell-Storing Item', level: 11, description: 'You can store a spell in an object. The object can be used to cast the stored spell a number of times equal to twice your INT modifier. The spell must be 1st or 2nd level, have a casting time of 1 action, and be on the artificer spell list.' },
+      { name: 'Magic Item Savant', level: 14, description: 'You can attune to up to five magic items at once. You ignore all class, race, spell, and level requirements on attuning to or using a magic item.' },
+      { name: 'Magic Item Master', level: 18, description: 'You can attune to up to six magic items at once.' },
+      { name: 'Soul of Artifice', level: 20, description: 'You gain a +1 bonus to all saving throws per magic item you are currently attuned to. If you are reduced to 0 hit points but not killed outright, you can use your reaction to end one of your artificer infusions, dropping to 1 hit point instead.' },
+    ],
+  },
+  {
+    name: 'Blood Hunter', hitDie: 10, primaryAbility: 'STR', subclassLevel: 3,
+    savingThrows: ['DEX', 'INT'],
+    armorProficiencies: ['Light armor', 'Medium armor', 'Shields'],
+    weaponProficiencies: ['Simple weapons', 'Martial weapons'],
+    toolProficiencies: ["Alchemist's supplies"],
+    skillChoices: { count: 2, from: ['Athletics', 'Acrobatics', 'Arcana', 'History', 'Insight', 'Investigation', 'Religion', 'Survival'] },
+    startingEquipment: [
+      { name: 'Martial Weapon', item_type: 'weapon', weight: 3, value_gp: 15, quantity: 1 },
+      { name: 'Light Crossbow', item_type: 'weapon', weight: 5, value_gp: 25, quantity: 1 },
+      { name: 'Bolt', item_type: 'ammunition', weight: 0.075, value_gp: 0.05, quantity: 20 },
+      { name: 'Studded Leather', item_type: 'armor', weight: 13, value_gp: 45, quantity: 1 },
+      { name: "Explorer's Pack", item_type: 'gear', weight: 59, value_gp: 10, quantity: 1 },
+    ],
+    startingGold: 10,
+    subclasses: ['Order of the Ghostslayer', 'Order of the Lycan', 'Order of the Mutant', 'Order of the Profane Soul'],
+    spellcasting: null,
+    features: [
+      { name: "Hunter's Bane", level: 1, description: 'You have advantage on Survival checks to track fey, fiends, and undead, as well as on INT checks to recall information about them. You also gain the Blood Maledict feature, learning blood curses that you can invoke to hinder your foes.' },
+      { name: 'Blood Maledict', level: 1, description: 'You gain the ability to channel your blood curses. You can use a blood curse a number of times equal to your hemocraft modifier (INT). You can amplify a curse by taking damage, strengthening its effect.' },
+      { name: 'Crimson Rite', level: 2, description: 'As a bonus action, you imbue a weapon with a rite, taking damage equal to your character level. The weapon deals extra elemental damage (fire, cold, or lightning) equal to your hemocraft die on each hit.' },
+      { name: 'Blood Hunter Order', level: 3, description: 'You choose a Blood Hunter Order that grants you specialized features at 3rd, 7th, 11th, 15th, and 18th level.' },
+      { name: 'Extra Attack', level: 5, description: 'You can attack twice, instead of once, whenever you take the Attack action on your turn.' },
+      { name: 'Primal Rite', level: 7, description: 'You gain access to advanced crimson rite options: Rite of the Dead (necrotic), Rite of the Oracle (psychic), or Rite of the Roar (thunder).' },
+      { name: 'Grim Psychometry', level: 9, description: 'You can meditate on an object to gain psychic impressions of its history, learning emotional echoes left on the item by past events.' },
+      { name: 'Dark Augmentation', level: 11, description: 'Your speed increases by 5 feet, and whenever you make a STR, DEX, or CON saving throw, you gain a bonus equal to your hemocraft modifier (minimum of +1).' },
+      { name: 'Brand of Castigation', level: 13, description: 'Whenever you damage a branded creature with your Crimson Rite, your weapon deals one additional hemocraft die of rite damage. If the creature damages you, it takes psychic damage equal to your hemocraft modifier.' },
+      { name: 'Hardened Soul', level: 14, description: 'You have advantage on saving throws against being frightened and charmed.' },
+      { name: 'Sanguine Mastery', level: 20, description: 'When you are below half your maximum hit points, your crimson rite damage dice are maximized. Additionally, when you score a critical hit, you regain one expended use of Blood Maledict.' },
+    ],
+  },
 ];
 
 // Full caster spell slots (Bard, Cleric, Druid, Sorcerer, Wizard)
@@ -1041,4 +1186,32 @@ export const FEATS = [
   { name: 'Tough', description: 'Hit point maximum increases by an amount equal to twice your level when you gain this feat. Each time you gain a level thereafter, HP max increases by an additional 2.' },
   { name: 'War Caster', description: 'Advantage on CON saves to maintain concentration. Can perform somatic components with hands full of weapons or shield. Can cast a spell as an opportunity attack (single target, 1 action casting time). Requires spellcasting ability.' },
   { name: 'Weapon Master', description: '+1 STR or DEX. Gain proficiency with four weapons of your choice.' },
+];
+
+// ── Skill Check DC Reference (DMG p.238) ──
+export const SKILL_CHECK_DCS = [
+  { difficulty: 'Very Easy', dc: 5, description: 'Almost anyone can do this with minimal effort.' },
+  { difficulty: 'Easy', dc: 10, description: 'Requires a slight bit of skill or effort.' },
+  { difficulty: 'Medium', dc: 15, description: 'Requires a fair amount of skill or a bit of luck.' },
+  { difficulty: 'Hard', dc: 20, description: 'Highly skilled characters will struggle at times.' },
+  { difficulty: 'Very Hard', dc: 25, description: 'Even exceptional characters can fail.' },
+  { difficulty: 'Nearly Impossible', dc: 30, description: 'Requires extraordinary luck or supernatural ability.' },
+];
+
+// ── Combat Actions Reference (PHB p.192-193) ──
+export const COMBAT_ACTIONS = [
+  { name: 'Attack', type: 'action', description: 'Make one melee or ranged attack (more with Extra Attack).' },
+  { name: 'Cast a Spell', type: 'action', description: 'Cast a spell with a casting time of 1 action.' },
+  { name: 'Dash', type: 'action', description: 'Gain extra movement equal to your speed for the current turn.' },
+  { name: 'Disengage', type: 'action', description: 'Your movement does not provoke opportunity attacks for the rest of the turn.' },
+  { name: 'Dodge', type: 'action', description: 'Attacks against you have disadvantage. DEX saves have advantage. Lost if incapacitated or speed drops to 0.' },
+  { name: 'Help', type: 'action', description: 'Give an ally advantage on their next ability check or attack roll against a target within 5ft of you.' },
+  { name: 'Hide', type: 'action', description: 'Make a Stealth check to become hidden. Must be out of sight.' },
+  { name: 'Ready', type: 'action', description: 'Set a trigger and an action/movement. Use your reaction when triggered. Spells require concentration.' },
+  { name: 'Search', type: 'action', description: 'Make a Perception or Investigation check to notice something.' },
+  { name: 'Use an Object', type: 'action', description: 'Interact with a second object (potion, tool, etc.) when free interaction is used.' },
+  { name: 'Grapple', type: 'action', description: 'Athletics vs Athletics/Acrobatics contested check. Replaces one Attack. Target is Grappled.' },
+  { name: 'Shove', type: 'action', description: 'Athletics vs Athletics/Acrobatics contested check. Replaces one Attack. Target is Prone or pushed 5ft.' },
+  { name: 'Opportunity Attack', type: 'reaction', description: 'When a hostile creature leaves your reach, make one melee attack as a reaction.' },
+  { name: 'Two-Weapon Fighting', type: 'bonus', description: 'When you Attack with a light melee weapon, use bonus action to attack with a different light melee weapon. No ability modifier to damage.' },
 ];

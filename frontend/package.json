@@ -1,7 +1,7 @@
 {
   "name": "frontend-temp",
   "private": true,
-  "version": "0.8.4",
+  "version": "0.8.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -20,6 +20,7 @@
     "axios": "^1.13.6",
     "framer-motion": "^12.35.1",
     "lucide-react": "^0.577.0",
+    "pdfjs-dist": "^5.5.207",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.6.0",

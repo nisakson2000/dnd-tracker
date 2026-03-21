@@ -92,13 +92,26 @@ export function suggestCombatAction({
   const style = PERSONALITY_COMBAT_STYLES[personality] || PERSONALITY_COMBAT_STYLES.tactical;
   const hpPercent = combatant.hpMax ? combatant.hpCurrent / combatant.hpMax : 1;
 
-  // Check flee condition
-  if (hpPercent <= style.fleeThreshold && style.fleeThreshold > 0) {
+  // Check flee condition — Smart+ creatures also flee when fight is unwinnable (item 12)
+  const aliveAllies = allies.filter(a => (a.hpCurrent || 0) > 0);
+  const aliveEnemies = enemies.filter(e => (e.hpCurrent || 0) > 0);
+  const outnumberedBadly = aliveEnemies.length >= (aliveAllies.length + 1) * 2;
+  const smartRetreat = (tier.tactics === 'advanced' || tier.tactics === 'masterful') && outnumberedBadly && hpPercent < 0.5;
+
+  if ((hpPercent <= style.fleeThreshold && style.fleeThreshold > 0) || smartRetreat) {
+    const fleeActions = ['Surrender', 'Fighting retreat (Disengage + Dash)'];
+    if (tier.tactics === 'advanced' || tier.tactics === 'masterful') {
+      fleeActions.push('Call for reinforcements before retreating');
+      fleeActions.push('Leave a trap or obstacle to slow pursuit');
+      fleeActions.push('Bargain for their life — offer information');
+    }
     return {
-      action: 'flee',
+      action: smartRetreat ? 'tactical_retreat' : 'flee',
       target: null,
-      reasoning: `HP at ${Math.round(hpPercent * 100)}% — below ${style.label.toLowerCase()} flee threshold (${Math.round(style.fleeThreshold * 100)}%).`,
-      alternatives: ['Surrender', 'Call for reinforcements', 'Fighting retreat'],
+      reasoning: smartRetreat
+        ? `INT ${intScore} (${tier.label}) — fight is unwinnable (outnumbered ${aliveEnemies.length} to ${aliveAllies.length + 1}, ${Math.round(hpPercent * 100)}% HP). Smart creatures retreat to fight another day.`
+        : `HP at ${Math.round(hpPercent * 100)}% — below ${style.label.toLowerCase()} flee threshold (${Math.round(style.fleeThreshold * 100)}%).`,
+      alternatives: fleeActions,
       personality: style.label,
       intelligence: tier.label,
     };
@@ -229,35 +242,82 @@ function buildModerateAction(combatant, target, enemies, style) {
 }
 
 function buildAdvancedAction(combatant, target, enemies, allies, style, tier) {
-  // Check for concentration targets first
-  const concentrating = enemies.find(e => e.isConcentrating);
+  const alive = enemies.filter(e => (e.hpCurrent || 0) > 0);
+
+  // --- Genius: Counterspell / Ready action against casters ---
+  if (tier.tactics === 'masterful' && combatant.spells?.some(s => s.name?.toLowerCase() === 'counterspell')) {
+    const caster = alive.find(e => e.spellcaster);
+    if (caster) {
+      return `Ready Counterspell — wait for ${caster.name} to cast, then counter it`;
+    }
+  }
+
+  // --- Break concentration (priority for Smart+) ---
+  const concentrating = alive.find(e => e.isConcentrating);
   if (concentrating) {
     return `Attack ${concentrating.name} to break concentration on their spell`;
   }
 
-  // Check if any enemy has a condition we can exploit
-  const conditioned = enemies.find(e => e.conditions?.includes('prone') || e.conditions?.includes('restrained'));
+  // --- Exploit conditions (advantage attacks) ---
+  const conditioned = alive.find(e =>
+    e.conditions?.includes('prone') || e.conditions?.includes('restrained') ||
+    e.conditions?.includes('stunned') || e.conditions?.includes('paralyzed')
+  );
   if (conditioned) {
-    return `Attack ${conditioned.name} (${conditioned.conditions.join(', ')} — advantage on melee attacks)`;
+    const conds = conditioned.conditions.filter(c => ['prone', 'restrained', 'stunned', 'paralyzed'].includes(c));
+    return `Attack ${conditioned.name} (${conds.join(', ')} — advantage on attacks${conds.includes('paralyzed') ? ', auto-crit in melee!' : ''})`;
   }
 
-  // Use spells if available
-  if (combatant.spells?.length && tier.tactics === 'masterful') {
-    const grouped = enemies.filter(e => (e.hpCurrent || 0) > 0);
-    if (grouped.length >= 3) {
-      return `Cast area spell targeting cluster of ${grouped.length} enemies`;
+  // --- Target backline / formation breaking (Smart+, item 16) ---
+  if (tier.tactics === 'masterful' || tier.tactics === 'advanced') {
+    const backline = alive.filter(e => e.spellcaster || ['wizard', 'sorcerer', 'cleric', 'bard'].includes((e.class || '').toLowerCase()));
+    if (backline.length > 0 && !combatant.isRanged) {
+      return `Dash past frontline to attack ${backline[0].name} (break formation — target backline caster)`;
     }
+  }
+
+  // --- Adapt mid-fight: switch targets after repeated misses (item 15) ---
+  if (combatant.missCount >= 2 && alive.length > 1) {
+    const easiest = [...alive].sort((a, b) => (a.ac || 10) - (b.ac || 10))[0];
+    if (easiest.name !== target.name) {
+      return `Switch to ${easiest.name} (AC ${easiest.ac}) — previous target too hard to hit`;
+    }
+  }
+
+  // --- Multi-monster coordination: pack tactics (item 11) ---
+  if (allies.length >= 1 && combatant.creatureType?.toLowerCase() === 'wolf') {
+    return `Attack ${target.name} with Pack Tactics (advantage — ally adjacent)`;
+  }
+
+  // --- AoE when 3+ enemies grouped ---
+  if (combatant.spells?.length && tier.tactics === 'masterful') {
+    if (alive.length >= 3) {
+      return `Cast area spell targeting cluster of ${alive.length} enemies`;
+    }
+  }
+
+  // --- Call for reinforcements when losing (item 14) ---
+  const aliveAllies = allies.filter(a => (a.hpCurrent || 0) > 0);
+  if (aliveAllies.length <= 1 && alive.length >= 3 && combatant.canCallReinforcements) {
+    return `Call for reinforcements! (outnumbered ${alive.length} to ${aliveAllies.length + 1})`;
   }
 
   return `Attack ${target.name} (${target.reason})`;
 }
 
 function buildMovement(combatant, target, style, enemies) {
-  if (style.useCover) {
-    return `Move to half-cover, then attack ${target.name}`;
-  }
+  // Ranged: kite at max range
   if (combatant.isRanged) {
+    if (style.useCover) return `Move to cover at 30+ ft range, attack ${target.name}`;
     return `Maintain distance (30+ ft), attack ${target.name}`;
+  }
+  // Melee: close and engage
+  if (style.useCover) {
+    return `Move to half-cover near ${target.name}, then attack`;
+  }
+  // Hit-and-run: move in, attack, move out (with Disengage if available)
+  if (combatant.speed >= 40 && style.label === 'Cunning') {
+    return `Hit-and-run: move in, attack ${target.name}, then Disengage and move to safety`;
   }
   return `Move into melee range with ${target.name}`;
 }
@@ -295,6 +355,67 @@ function calculateMorale(combatant, allies, enemies) {
 }
 
 /**
+ * Suggest environmental actions based on location type (item 10).
+ * @param {string} environment — 'dungeon', 'tavern', 'forest', 'cave', 'ship', 'tower', 'bridge', etc.
+ * @param {string} tierKey — intelligence tier key
+ * @returns {string[]} possible environment interactions
+ */
+export function suggestEnvironmentActions(environment = 'generic', tierKey = 'average') {
+  if (tierKey === 'mindless' || tierKey === 'beast') return [];
+
+  const ENV_ACTIONS = {
+    dungeon: ['Kick over brazier (fire damage)', 'Collapse unstable ceiling section', 'Push enemy into pit trap', 'Slam and bar a door'],
+    tavern: ['Throw a chair/table', 'Smash a lantern (fire)', 'Shove enemy into the hearth', 'Flip table for cover'],
+    forest: ['Push enemy into thorns (1d4 piercing)', 'Knock down dead tree on target', 'Use thick trunk as cover', 'Start a fire to create smoke screen'],
+    cave: ['Collapse stalactites on enemies', 'Push enemy off ledge', 'Douse torches for darkness', 'Cave-in to block passage'],
+    ship: ['Cut rigging to drop sail on enemies', 'Push enemy overboard', 'Swing on rope to flank', 'Tip a cannon'],
+    tower: ['Push enemy down stairs', 'Drop heavy object from above', 'Block stairwell', 'Kick out supports'],
+    bridge: ['Push enemy off edge', 'Cut rope supports', 'Block passage on narrow bridge', 'Shake bridge to knock prone'],
+    generic: ['Use terrain for cover', 'Kick debris at enemy (improvised weapon)', 'Destroy light source', 'Block a doorway or chokepoint'],
+  };
+
+  return ENV_ACTIONS[environment] || ENV_ACTIONS.generic;
+}
+
+/**
+ * Suggest multi-monster coordination tactics (item 11).
+ * @param {Object} combatant
+ * @param {Object[]} allies — same-side combatants
+ * @param {Object} target
+ * @returns {string|null}
+ */
+export function suggestCoordination(combatant, allies = [], target) {
+  const aliveAllies = allies.filter(a => (a.hpCurrent || 0) > 0);
+  if (aliveAllies.length === 0) return null;
+
+  const type = (combatant.creatureType || '').toLowerCase();
+  const tactics = [];
+
+  // Pack tactics (wolves, etc.)
+  if (type === 'wolf' || type === 'dire wolf' || combatant.packTactics) {
+    tactics.push(`Pack Tactics: attack with advantage (ally adjacent to ${target?.name || 'target'})`);
+  }
+
+  // Flanking (if 2+ melee allies)
+  const meleeAllies = aliveAllies.filter(a => !a.isRanged);
+  if (meleeAllies.length >= 1) {
+    tactics.push(`Coordinate flanking with ${meleeAllies[0].name} for advantage`);
+  }
+
+  // Grapple + Attack combo
+  if (aliveAllies.length >= 1) {
+    tactics.push(`One ally grapples ${target?.name || 'target'}, others attack with advantage`);
+  }
+
+  // Surround to prevent escape
+  if (aliveAllies.length >= 2) {
+    tactics.push(`Surround ${target?.name || 'target'} to cut off Disengage escape`);
+  }
+
+  return tactics.length > 0 ? tactics[Math.floor(Math.random() * tactics.length)] : null;
+}
+
+/**
  * Get the personality combat styles for UI selection.
  */
 export function getCombatStyles() {
@@ -309,4 +430,221 @@ export function getCombatStyles() {
  */
 export function getIntelligenceInfo(intScore) {
   return getIntelligenceTier(intScore);
+}
+
+// ════════════════════════════════════════════════════════════════
+// COMBAT AI SPELL SELECTION — Intelligence-based spell usage
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * Suggest the best spell for a combatant to cast based on their intelligence tier,
+ * available spells/slots, and the current battlefield situation.
+ *
+ * @param {Object} options
+ * @param {Object} options.combatant — { name, intelligence, spells: [{name, level, school, tags, aoe, damage, healing, condition, concentration}], spellSlots: {1: 3, 2: 1, ...}, isConcentrating }
+ * @param {Array} options.enemies — alive enemies with { name, hpCurrent, hpMax, ac, conditions, isConcentrating }
+ * @param {Array} options.allies — alive allies with { name, hpCurrent, hpMax, conditions }
+ * @returns {Object|null} { spell, slotLevel, reasoning, targets } or null if no spell recommended
+ */
+export function suggestSpellAction({ combatant = {}, enemies = [], allies = [] }) {
+  const intScore = combatant.intelligence || 10;
+  const tier = getIntelligenceTier(intScore);
+  const spells = combatant.spells || [];
+  const slots = combatant.spellSlots || {};
+
+  if (!spells.length) return null;
+
+  // Get available spells (have a slot or cantrip)
+  const cantrips = spells.filter(s => s.level === 0);
+  const slotted = spells.filter(s => s.level > 0 && slots[s.level] > 0);
+  const available = [...cantrips, ...slotted];
+
+  if (!available.length) {
+    // Only cantrips left
+    if (cantrips.length) {
+      const best = pickBestCantrip(cantrips, enemies, tier);
+      return best ? { spell: best, slotLevel: 0, reasoning: 'No spell slots remaining — using cantrip.', targets: [enemies[0]?.name] } : null;
+    }
+    return null;
+  }
+
+  const aliveEnemies = enemies.filter(e => (e.hpCurrent || 0) > 0);
+  const woundedAllies = allies.filter(a => a.hpMax && (a.hpCurrent / a.hpMax) < 0.4);
+
+  // ── Tier-based spell selection ──
+
+  if (tier.key === 'mindless' || tier.key === 'beast') {
+    // Mindless/Beast: only innate abilities (cantrips or level 1 damage)
+    const dmgCantrip = cantrips.find(s => s.damage);
+    if (dmgCantrip) return { spell: dmgCantrip, slotLevel: 0, reasoning: 'Instinct — uses innate attack.', targets: [aliveEnemies[0]?.name] };
+    return null;
+  }
+
+  if (tier.key === 'low') {
+    // Low intelligence: simple damage spells, no tactics
+    const dmgSpell = slotted.find(s => s.tags?.includes('damage') && s.level <= 2) || cantrips.find(s => s.damage);
+    if (dmgSpell) {
+      return {
+        spell: dmgSpell,
+        slotLevel: dmgSpell.level,
+        reasoning: 'Low intelligence — picks first available damage spell.',
+        targets: [aliveEnemies[0]?.name],
+      };
+    }
+    return null;
+  }
+
+  if (tier.key === 'average') {
+    // Average: match spell to situation
+    // Heal ally if someone is badly hurt
+    if (woundedAllies.length > 0) {
+      const heal = slotted.find(s => s.tags?.includes('healing'));
+      if (heal) {
+        const target = woundedAllies.sort((a, b) => (a.hpCurrent / a.hpMax) - (b.hpCurrent / b.hpMax))[0];
+        return {
+          spell: heal,
+          slotLevel: heal.level,
+          reasoning: `${target.name} is at ${Math.round((target.hpCurrent / target.hpMax) * 100)}% HP — casting healing spell.`,
+          targets: [target.name],
+        };
+      }
+    }
+
+    // AoE if 3+ enemies grouped
+    if (aliveEnemies.length >= 3) {
+      const aoe = slotted.find(s => s.tags?.includes('aoe') && s.tags?.includes('damage'));
+      if (aoe) {
+        return {
+          spell: aoe,
+          slotLevel: aoe.level,
+          reasoning: `${aliveEnemies.length} enemies — area spell for maximum damage.`,
+          targets: aliveEnemies.map(e => e.name),
+        };
+      }
+    }
+
+    // Default to single-target damage
+    const dmg = slotted.find(s => s.tags?.includes('damage')) || cantrips.find(s => s.damage);
+    if (dmg) return { spell: dmg, slotLevel: dmg.level, reasoning: 'Standard damage spell.', targets: [aliveEnemies[0]?.name] };
+    return null;
+  }
+
+  // ── Smart / Genius tier ──
+  // Priority: Counterspell > Break concentration > Control > AoE > Heal ally > Buff > Single damage
+
+  // 1. If enemy just cast, suggest Counterspell (Genius only)
+  if (tier.key === 'genius') {
+    const counterspell = available.find(s => s.name === 'Counterspell');
+    if (counterspell && slots[3] > 0) {
+      // Suggest readying Counterspell
+      return {
+        spell: counterspell,
+        slotLevel: 3,
+        reasoning: 'Genius — ready Counterspell for when an enemy caster begins casting.',
+        targets: ['(reaction — enemy caster)'],
+      };
+    }
+  }
+
+  // 2. Break enemy concentration
+  const concentrating = aliveEnemies.filter(e => e.isConcentrating);
+  if (concentrating.length > 0) {
+    const dispel = available.find(s => s.name === 'Dispel Magic');
+    if (dispel && slots[3] > 0) {
+      return {
+        spell: dispel,
+        slotLevel: 3,
+        reasoning: `${concentrating[0].name} is concentrating — Dispel Magic to end their spell.`,
+        targets: [concentrating[0].name],
+      };
+    }
+    // Or just attack to force concentration check
+  }
+
+  // 3. Control spells for groups
+  if (aliveEnemies.length >= 3) {
+    const control = slotted.find(s => s.tags?.includes('control') && s.tags?.includes('aoe'));
+    if (control) {
+      return {
+        spell: control,
+        slotLevel: control.level,
+        reasoning: `${aliveEnemies.length} enemies — area control spell to neutralize the group.`,
+        targets: aliveEnemies.map(e => e.name),
+      };
+    }
+  }
+
+  // 4. AoE damage for groups
+  if (aliveEnemies.length >= 3) {
+    const aoe = slotted.find(s => s.tags?.includes('aoe') && s.tags?.includes('damage'));
+    if (aoe) {
+      return {
+        spell: aoe,
+        slotLevel: aoe.level,
+        reasoning: `${aliveEnemies.length} enemies grouped — maximize damage with area spell.`,
+        targets: aliveEnemies.map(e => e.name),
+      };
+    }
+  }
+
+  // 5. Heal badly wounded ally
+  if (woundedAllies.length > 0) {
+    const heal = slotted.find(s => s.tags?.includes('healing'));
+    if (heal) {
+      const target = woundedAllies.sort((a, b) => (a.hpCurrent / a.hpMax) - (b.hpCurrent / b.hpMax))[0];
+      return {
+        spell: heal,
+        slotLevel: heal.level,
+        reasoning: `${target.name} critically wounded (${Math.round((target.hpCurrent / target.hpMax) * 100)}% HP) — healing.`,
+        targets: [target.name],
+      };
+    }
+  }
+
+  // 6. Buff self/allies if not yet concentrating
+  if (!combatant.isConcentrating) {
+    const buff = slotted.find(s => s.tags?.includes('buff') && s.concentration);
+    if (buff) {
+      return {
+        spell: buff,
+        slotLevel: buff.level,
+        reasoning: 'No active concentration — cast buff spell for sustained advantage.',
+        targets: [combatant.name],
+      };
+    }
+  }
+
+  // 7. Single-target damage (highest level available for max damage)
+  const dmgSorted = slotted.filter(s => s.tags?.includes('damage')).sort((a, b) => b.level - a.level);
+  if (dmgSorted.length > 0) {
+    const target = aliveEnemies.sort((a, b) => (a.hpCurrent / a.hpMax) - (b.hpCurrent / b.hpMax))[0]; // lowest HP %
+    return {
+      spell: dmgSorted[0],
+      slotLevel: dmgSorted[0].level,
+      reasoning: `Single-target damage — ${target?.name || 'enemy'} at ${target ? Math.round((target.hpCurrent / target.hpMax) * 100) : '?'}% HP.`,
+      targets: [target?.name],
+    };
+  }
+
+  // 8. Fall back to cantrip
+  const best = pickBestCantrip(cantrips, aliveEnemies, tier);
+  if (best) return { spell: best, slotLevel: 0, reasoning: 'Conserving spell slots — using cantrip.', targets: [aliveEnemies[0]?.name] };
+
+  return null;
+}
+
+function pickBestCantrip(cantrips, enemies, tier) {
+  if (!cantrips.length) return null;
+  // Prefer damage cantrips
+  const dmg = cantrips.filter(s => s.damage);
+  if (dmg.length) {
+    // Pick highest damage cantrip
+    return dmg.sort((a, b) => {
+      const aDice = parseInt(a.damage) || 0;
+      const bDice = parseInt(b.damage) || 0;
+      return bDice - aDice;
+    })[0];
+  }
+  // Otherwise pick first utility cantrip
+  return cantrips[0];
 }

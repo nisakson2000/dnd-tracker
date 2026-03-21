@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { PawPrint, Plus, Trash2, Edit3, Heart, Shield, Zap, ChevronDown, ChevronUp, ToggleLeft, ToggleRight, X, Minus, Swords } from 'lucide-react';
+import { PawPrint, Plus, Trash2, Edit3, Heart, Shield, Zap, ChevronDown, ChevronUp, ToggleLeft, ToggleRight, X, Minus, Swords, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -63,15 +63,93 @@ function parseJson(str, fallback = []) {
   try { return JSON.parse(str || '[]'); } catch { return fallback; }
 }
 
+/* ── Preset companions (5e SRD) ── */
+const PRESET_COMPANIONS = [
+  // Familiars (Find Familiar spell)
+  { name: 'Bat', species: 'Bat', creature_type: 'familiar', ac: 12, hp_max: 1, hp_current: 1, speed: '5 ft., fly 30 ft.', str_score: 2, dex_score: 15, con_score: 8, int_score: 2, wis_score: 12, cha_score: 4, senses: 'Blindsight 60 ft., passive Perception 11', attacks_json: JSON.stringify([{ name: 'Bite', bonus: '+0', damage: '1 piercing', type: 'Piercing' }]), abilities_json: JSON.stringify([{ name: 'Echolocation', description: 'Can\'t use blindsight while deafened.' }, { name: 'Keen Hearing', description: 'Advantage on Perception checks that rely on hearing.' }]) },
+  { name: 'Cat', species: 'Cat', creature_type: 'familiar', ac: 12, hp_max: 2, hp_current: 2, speed: '40 ft., climb 30 ft.', str_score: 3, dex_score: 15, con_score: 10, int_score: 3, wis_score: 12, cha_score: 7, senses: 'Darkvision 30 ft., passive Perception 13', attacks_json: JSON.stringify([{ name: 'Claws', bonus: '+0', damage: '1 slashing', type: 'Slashing' }]), abilities_json: JSON.stringify([{ name: 'Keen Smell', description: 'Advantage on Perception checks that rely on smell.' }]) },
+  { name: 'Hawk', species: 'Hawk', creature_type: 'familiar', ac: 13, hp_max: 1, hp_current: 1, speed: '10 ft., fly 60 ft.', str_score: 5, dex_score: 16, con_score: 8, int_score: 2, wis_score: 14, cha_score: 6, senses: 'Passive Perception 14', attacks_json: JSON.stringify([{ name: 'Talons', bonus: '+5', damage: '1 slashing', type: 'Slashing' }]), abilities_json: JSON.stringify([{ name: 'Keen Sight', description: 'Advantage on Perception checks that rely on sight.' }]) },
+  { name: 'Owl', species: 'Owl', creature_type: 'familiar', ac: 11, hp_max: 1, hp_current: 1, speed: '5 ft., fly 60 ft.', str_score: 3, dex_score: 13, con_score: 8, int_score: 2, wis_score: 12, cha_score: 7, senses: 'Darkvision 120 ft., passive Perception 13', attacks_json: JSON.stringify([{ name: 'Talons', bonus: '+3', damage: '1 slashing', type: 'Slashing' }]), abilities_json: JSON.stringify([{ name: 'Flyby', description: 'Doesn\'t provoke opportunity attacks when flying out of an enemy\'s reach.' }, { name: 'Keen Hearing & Sight', description: 'Advantage on Perception checks that rely on hearing or sight.' }]) },
+  { name: 'Raven', species: 'Raven', creature_type: 'familiar', ac: 12, hp_max: 1, hp_current: 1, speed: '10 ft., fly 50 ft.', str_score: 2, dex_score: 14, con_score: 8, int_score: 2, wis_score: 12, cha_score: 6, senses: 'Passive Perception 13', attacks_json: JSON.stringify([{ name: 'Beak', bonus: '+4', damage: '1 piercing', type: 'Piercing' }]), abilities_json: JSON.stringify([{ name: 'Mimicry', description: 'Can mimic simple sounds. DC 10 Insight to determine it\'s an imitation.' }]) },
+  { name: 'Frog', species: 'Frog', creature_type: 'familiar', ac: 11, hp_max: 1, hp_current: 1, speed: '20 ft., swim 20 ft.', str_score: 1, dex_score: 13, con_score: 8, int_score: 1, wis_score: 8, cha_score: 3, senses: 'Darkvision 30 ft., passive Perception 9', attacks_json: '[]', abilities_json: JSON.stringify([{ name: 'Amphibious', description: 'Can breathe air and water.' }, { name: 'Standing Leap', description: 'Long jump 10 ft., high jump 5 ft.' }]) },
+  { name: 'Spider', species: 'Spider', creature_type: 'familiar', ac: 12, hp_max: 1, hp_current: 1, speed: '20 ft., climb 20 ft.', str_score: 2, dex_score: 14, con_score: 8, int_score: 1, wis_score: 10, cha_score: 2, senses: 'Darkvision 30 ft., passive Perception 10', attacks_json: JSON.stringify([{ name: 'Bite', bonus: '+4', damage: '1 piercing + DC 9 CON or 1d4 poison', type: 'Piercing' }]), abilities_json: JSON.stringify([{ name: 'Spider Climb', description: 'Can climb difficult surfaces including ceilings.' }, { name: 'Web Sense', description: 'Knows the exact location of any creature touching the same web.' }]) },
+  { name: 'Weasel', species: 'Weasel', creature_type: 'familiar', ac: 13, hp_max: 1, hp_current: 1, speed: '30 ft.', str_score: 3, dex_score: 16, con_score: 8, int_score: 2, wis_score: 12, cha_score: 3, senses: 'Passive Perception 13', attacks_json: JSON.stringify([{ name: 'Bite', bonus: '+5', damage: '1 piercing', type: 'Piercing' }]), abilities_json: JSON.stringify([{ name: 'Keen Hearing & Smell', description: 'Advantage on Perception checks that rely on hearing or smell.' }]) },
+  // Beast Companions
+  { name: 'Wolf', species: 'Wolf', creature_type: 'beast_companion', ac: 13, hp_max: 11, hp_current: 11, speed: '40 ft.', str_score: 12, dex_score: 15, con_score: 12, int_score: 3, wis_score: 12, cha_score: 6, senses: 'Passive Perception 13', attacks_json: JSON.stringify([{ name: 'Bite', bonus: '+4', damage: '2d4+2', type: 'Piercing' }]), abilities_json: JSON.stringify([{ name: 'Pack Tactics', description: 'Advantage on attack if ally is within 5 ft. of target.' }, { name: 'Keen Hearing & Smell', description: 'Advantage on Perception checks that rely on hearing or smell.' }]) },
+  { name: 'Panther', species: 'Panther', creature_type: 'beast_companion', ac: 12, hp_max: 13, hp_current: 13, speed: '50 ft., climb 40 ft.', str_score: 14, dex_score: 15, con_score: 10, int_score: 3, wis_score: 14, cha_score: 7, senses: 'Passive Perception 14', attacks_json: JSON.stringify([{ name: 'Bite', bonus: '+4', damage: '1d6+2', type: 'Piercing' }, { name: 'Claw', bonus: '+4', damage: '1d4+2', type: 'Slashing' }]), abilities_json: JSON.stringify([{ name: 'Keen Smell', description: 'Advantage on Perception checks that rely on smell.' }, { name: 'Pounce', description: 'If moves 20+ ft. and hits with claw, target must DC 12 STR save or be knocked prone. Can then bite as bonus action.' }]) },
+  { name: 'Giant Badger', species: 'Giant Badger', creature_type: 'beast_companion', ac: 10, hp_max: 13, hp_current: 13, speed: '30 ft., burrow 10 ft.', str_score: 13, dex_score: 10, con_score: 15, int_score: 2, wis_score: 12, cha_score: 5, senses: 'Darkvision 30 ft., passive Perception 11', attacks_json: JSON.stringify([{ name: 'Bite', bonus: '+3', damage: '1d6+1', type: 'Piercing' }, { name: 'Claws', bonus: '+3', damage: '2d4+1', type: 'Slashing' }]), abilities_json: JSON.stringify([{ name: 'Keen Smell', description: 'Advantage on Perception checks that rely on smell.' }]) },
+  { name: 'Blood Hawk', species: 'Blood Hawk', creature_type: 'beast_companion', ac: 12, hp_max: 7, hp_current: 7, speed: '10 ft., fly 60 ft.', str_score: 6, dex_score: 14, con_score: 10, int_score: 3, wis_score: 14, cha_score: 5, senses: 'Passive Perception 14', attacks_json: JSON.stringify([{ name: 'Beak', bonus: '+4', damage: '1d4+2', type: 'Piercing' }]), abilities_json: JSON.stringify([{ name: 'Keen Sight', description: 'Advantage on Perception checks that rely on sight.' }, { name: 'Pack Tactics', description: 'Advantage on attack if ally is within 5 ft. of target.' }]) },
+  { name: 'Boar', species: 'Boar', creature_type: 'beast_companion', ac: 11, hp_max: 11, hp_current: 11, speed: '40 ft.', str_score: 13, dex_score: 11, con_score: 12, int_score: 2, wis_score: 9, cha_score: 5, senses: 'Passive Perception 9', attacks_json: JSON.stringify([{ name: 'Tusk', bonus: '+3', damage: '1d6+1', type: 'Slashing' }]), abilities_json: JSON.stringify([{ name: 'Charge', description: 'If moves 20+ ft. and hits with tusk, +1d6 slashing and DC 11 STR save or knocked prone.' }, { name: 'Relentless', description: 'If reduced to 0 HP by damage that isn\'t 7+, drops to 1 HP instead. Once per rest.' }]) },
+  // Mounts
+  { name: 'Riding Horse', species: 'Horse', creature_type: 'mount', ac: 10, hp_max: 13, hp_current: 13, speed: '60 ft.', str_score: 16, dex_score: 10, con_score: 12, int_score: 2, wis_score: 11, cha_score: 7, senses: 'Passive Perception 10', attacks_json: JSON.stringify([{ name: 'Hooves', bonus: '+5', damage: '2d4+3', type: 'Bludgeoning' }]), abilities_json: '[]' },
+  { name: 'Warhorse', species: 'Horse', creature_type: 'mount', ac: 11, hp_max: 19, hp_current: 19, speed: '60 ft.', str_score: 18, dex_score: 12, con_score: 13, int_score: 2, wis_score: 12, cha_score: 7, senses: 'Passive Perception 11', attacks_json: JSON.stringify([{ name: 'Hooves', bonus: '+6', damage: '2d6+4', type: 'Bludgeoning' }]), abilities_json: JSON.stringify([{ name: 'Trampling Charge', description: 'If moves 20+ ft. and hits with hooves, DC 14 STR save or knocked prone. Can then bonus action hooves on prone target.' }]) },
+  { name: 'Mastiff', species: 'Mastiff', creature_type: 'mount', ac: 12, hp_max: 5, hp_current: 5, speed: '40 ft.', str_score: 13, dex_score: 14, con_score: 12, int_score: 3, wis_score: 12, cha_score: 7, senses: 'Passive Perception 13', attacks_json: JSON.stringify([{ name: 'Bite', bonus: '+3', damage: '1d6+1', type: 'Piercing' }]), abilities_json: JSON.stringify([{ name: 'Keen Hearing & Smell', description: 'Advantage on Perception checks that rely on hearing or smell.' }]) },
+  { name: 'Pony', species: 'Pony', creature_type: 'mount', ac: 10, hp_max: 11, hp_current: 11, speed: '40 ft.', str_score: 15, dex_score: 10, con_score: 13, int_score: 2, wis_score: 11, cha_score: 7, senses: 'Passive Perception 10', attacks_json: JSON.stringify([{ name: 'Hooves', bonus: '+4', damage: '2d4+2', type: 'Bludgeoning' }]), abilities_json: '[]' },
+  { name: 'Mule', species: 'Mule', creature_type: 'mount', ac: 10, hp_max: 11, hp_current: 11, speed: '40 ft.', str_score: 14, dex_score: 10, con_score: 13, int_score: 2, wis_score: 10, cha_score: 5, senses: 'Passive Perception 10', attacks_json: JSON.stringify([{ name: 'Hooves', bonus: '+2', damage: '1d4+2', type: 'Bludgeoning' }]), abilities_json: JSON.stringify([{ name: 'Beast of Burden', description: 'Considered Large for carrying capacity.' }, { name: 'Sure-Footed', description: 'Advantage on saves against being knocked prone.' }]) },
+  // More beast companions
+  { name: 'Giant Poisonous Snake', species: 'Giant Poisonous Snake', creature_type: 'beast_companion', ac: 14, hp_max: 11, hp_current: 11, speed: '30 ft., swim 30 ft.', str_score: 10, dex_score: 18, con_score: 13, int_score: 2, wis_score: 10, cha_score: 3, senses: 'Blindsight 10 ft., passive Perception 10', attacks_json: JSON.stringify([{ name: 'Bite', bonus: '+6', damage: '1d4+4 + 3d6 poison (DC 11 CON half)', type: 'Piercing' }]), abilities_json: '[]' },
+  { name: 'Giant Wolf Spider', species: 'Giant Wolf Spider', creature_type: 'beast_companion', ac: 13, hp_max: 11, hp_current: 11, speed: '40 ft., climb 40 ft.', str_score: 12, dex_score: 16, con_score: 13, int_score: 3, wis_score: 12, cha_score: 4, senses: 'Blindsight 10 ft., Darkvision 60 ft., passive Perception 13', attacks_json: JSON.stringify([{ name: 'Bite', bonus: '+3', damage: '1d6+1 + 2d6 poison (DC 11 CON half)', type: 'Piercing' }]), abilities_json: JSON.stringify([{ name: 'Spider Climb', description: 'Can climb difficult surfaces including ceilings.' }, { name: 'Web Sense', description: 'Knows exact location of any creature touching same web.' }]) },
+  { name: 'Ape', species: 'Ape', creature_type: 'beast_companion', ac: 12, hp_max: 19, hp_current: 19, speed: '30 ft., climb 30 ft.', str_score: 16, dex_score: 14, con_score: 14, int_score: 6, wis_score: 12, cha_score: 7, senses: 'Passive Perception 13', attacks_json: JSON.stringify([{ name: 'Fist', bonus: '+5', damage: '1d6+3', type: 'Bludgeoning' }, { name: 'Rock', bonus: '+5', damage: '1d6+3', type: 'Bludgeoning' }]), abilities_json: '[]' },
+  { name: 'Black Bear', species: 'Black Bear', creature_type: 'beast_companion', ac: 11, hp_max: 19, hp_current: 19, speed: '40 ft., climb 30 ft.', str_score: 15, dex_score: 10, con_score: 14, int_score: 2, wis_score: 12, cha_score: 7, senses: 'Passive Perception 13', attacks_json: JSON.stringify([{ name: 'Bite', bonus: '+4', damage: '1d6+2', type: 'Piercing' }, { name: 'Claws', bonus: '+4', damage: '2d4+2', type: 'Slashing' }]), abilities_json: JSON.stringify([{ name: 'Keen Smell', description: 'Advantage on Perception checks that rely on smell.' }]) },
+  { name: 'Giant Frog', species: 'Giant Frog', creature_type: 'beast_companion', ac: 11, hp_max: 18, hp_current: 18, speed: '30 ft., swim 30 ft.', str_score: 12, dex_score: 13, con_score: 11, int_score: 2, wis_score: 10, cha_score: 3, senses: 'Darkvision 30 ft., passive Perception 10', attacks_json: JSON.stringify([{ name: 'Bite', bonus: '+3', damage: '1d6+1', type: 'Piercing' }]), abilities_json: JSON.stringify([{ name: 'Amphibious', description: 'Can breathe air and water.' }, { name: 'Swallow', description: 'On hit vs Small or smaller, target is grappled and swallowed. Swallowed creature is blinded, restrained, takes 2d4 acid damage per turn.' }]) },
+  // Summoned creatures
+  { name: 'Quasit', species: 'Quasit', creature_type: 'summoned', ac: 13, hp_max: 7, hp_current: 7, speed: '40 ft.', str_score: 5, dex_score: 17, con_score: 10, int_score: 7, wis_score: 10, cha_score: 10, senses: 'Darkvision 120 ft., passive Perception 10', attacks_json: JSON.stringify([{ name: 'Claws', bonus: '+4', damage: '1d4+3 + 2d4 poison (DC 10 CON)', type: 'Piercing' }]), abilities_json: JSON.stringify([{ name: 'Shapechanger', description: 'Can polymorph into bat, centipede, or toad form.' }, { name: 'Magic Resistance', description: 'Advantage on saves against spells and magical effects.' }, { name: 'Invisibility', description: 'Turns invisible until it attacks or concentration ends.' }]) },
+  { name: 'Pseudodragon', species: 'Pseudodragon', creature_type: 'summoned', ac: 13, hp_max: 7, hp_current: 7, speed: '15 ft., fly 60 ft.', str_score: 6, dex_score: 15, con_score: 13, int_score: 10, wis_score: 12, cha_score: 10, senses: 'Blindsight 10 ft., Darkvision 60 ft., passive Perception 13', attacks_json: JSON.stringify([{ name: 'Bite', bonus: '+4', damage: '1d4+2', type: 'Piercing' }, { name: 'Sting', bonus: '+4', damage: '1d4+2 + DC 11 CON or poisoned 1 hr', type: 'Piercing' }]), abilities_json: JSON.stringify([{ name: 'Keen Senses', description: 'Advantage on Perception checks that rely on sight, hearing, or smell.' }, { name: 'Magic Resistance', description: 'Advantage on saves against spells and magical effects.' }, { name: 'Limited Telepathy', description: 'Communicate simple ideas and emotions to bonded creature within 100 ft.' }]) },
+  { name: 'Imp', species: 'Imp', creature_type: 'summoned', ac: 13, hp_max: 10, hp_current: 10, speed: '20 ft., fly 40 ft.', str_score: 6, dex_score: 17, con_score: 13, int_score: 11, wis_score: 12, cha_score: 14, senses: 'Darkvision 120 ft., passive Perception 11', attacks_json: JSON.stringify([{ name: 'Sting', bonus: '+5', damage: '1d4+3 + 3d6 poison (DC 11 CON half)', type: 'Piercing' }]), abilities_json: JSON.stringify([{ name: 'Shapechanger', description: 'Can polymorph into rat, raven, or spider form.' }, { name: 'Devil\'s Sight', description: 'Magical darkness doesn\'t impede vision.' }, { name: 'Magic Resistance', description: 'Advantage on saves against spells and magical effects.' }, { name: 'Invisibility', description: 'Turns invisible until it attacks or concentration ends.' }]) },
+];
+
+/* ── Numeric input with up/down arrows ── */
+function NumericInput({ value, onChange, style, min, max, step = 1 }) {
+  const adjust = (delta) => {
+    let next = (parseInt(value) || 0) + delta;
+    if (min != null) next = Math.max(min, next);
+    if (max != null) next = Math.min(max, next);
+    onChange(next);
+  };
+  const arrowStyle = {
+    background: 'none', border: 'none', color: 'rgba(201,168,76,0.5)',
+    cursor: 'pointer', padding: '0 2px', fontSize: 10, lineHeight: 1,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  };
+  return (
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+      <input
+        style={style}
+        type="number"
+        value={value}
+        onChange={e => onChange(parseInt(e.target.value) || 0)}
+      />
+      <div style={{ position: 'absolute', right: 4, top: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 0 }}>
+        <button type="button" onClick={() => adjust(step)} style={arrowStyle} tabIndex={-1}><ChevronUp size={12} /></button>
+        <button type="button" onClick={() => adjust(-step)} style={arrowStyle} tabIndex={-1}><ChevronDown size={12} /></button>
+      </div>
+    </div>
+  );
+}
+
 // ── Companion Form Modal ──
 function CompanionFormModal({ companion, onSave, onClose }) {
   const [form, setForm] = useState(() => ({ ...EMPTY_COMPANION, ...companion }));
   const [attacks, setAttacks] = useState(() => parseJson(companion?.attacks_json));
   const [abilities, setAbilities] = useState(() => parseJson(companion?.abilities_json));
+  const [presetSearch, setPresetSearch] = useState('');
+  const [showPresets, setShowPresets] = useState(!companion?.id); // show presets for new companions
 
   const isEdit = !!companion?.id;
 
   const updateField = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
+
+  const applyPreset = (preset) => {
+    setForm(prev => ({ ...prev, ...preset, id: prev.id, active: prev.active }));
+    setAttacks(parseJson(preset.attacks_json));
+    setAbilities(parseJson(preset.abilities_json));
+    setShowPresets(false);
+    setPresetSearch('');
+  };
+
+  const filteredPresets = presetSearch.trim()
+    ? PRESET_COMPANIONS.filter(p => p.name.toLowerCase().includes(presetSearch.toLowerCase()) || p.creature_type.toLowerCase().includes(presetSearch.toLowerCase()))
+    : PRESET_COMPANIONS;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -131,6 +209,72 @@ function CompanionFormModal({ companion, onSave, onClose }) {
           </div>
 
           <form onSubmit={handleSubmit}>
+            {/* Preset selector */}
+            {!isEdit && (
+              <div style={{ marginBottom: 16 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowPresets(v => !v)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '6px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                    background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)',
+                    color: '#a78bfa', cursor: 'pointer', fontFamily: 'var(--font-ui)', transition: 'all 0.15s',
+                  }}
+                >
+                  <PawPrint size={12} />
+                  {showPresets ? 'Hide Presets' : 'Choose from Presets'}
+                  {showPresets ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                </button>
+                <span style={{ fontSize: 10, color: 'var(--text-mute)', marginLeft: 10 }}>or fill in manually below</span>
+
+                {showPresets && (
+                  <div style={{ marginTop: 8, padding: 10, background: 'rgba(139,92,246,0.04)', border: '1px solid rgba(139,92,246,0.15)', borderRadius: 8 }}>
+                    <div style={{ position: 'relative', marginBottom: 8 }}>
+                      <Search size={12} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-mute)' }} />
+                      <input
+                        style={{ ...inputStyle, paddingLeft: 26, fontSize: 11 }}
+                        placeholder="Search presets..."
+                        value={presetSearch}
+                        onChange={e => setPresetSearch(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                    <div style={{ maxHeight: 200, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {filteredPresets.map(p => {
+                        const colors = CREATURE_TYPE_COLORS[p.creature_type] || CREATURE_TYPE_COLORS.familiar;
+                        return (
+                          <button
+                            key={p.name}
+                            type="button"
+                            onClick={() => applyPreset(p)}
+                            style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                              padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.06)',
+                              background: 'rgba(255,255,255,0.02)', cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.08)'; e.currentTarget.style.borderColor = 'rgba(201,168,76,0.2)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+                          >
+                            <div>
+                              <span style={{ fontSize: 12, color: 'var(--text)', fontWeight: 600 }}>{p.name}</span>
+                              <span style={{ fontSize: 10, color: 'var(--text-mute)', marginLeft: 6 }}>AC {p.ac} · {p.hp_max} HP · {p.speed}</span>
+                            </div>
+                            <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: colors.bg, color: colors.text, border: `1px solid ${colors.border}`, fontWeight: 600 }}>
+                              {CREATURE_TYPE_LABELS[p.creature_type]}
+                            </span>
+                          </button>
+                        );
+                      })}
+                      {filteredPresets.length === 0 && (
+                        <p style={{ fontSize: 11, color: 'var(--text-mute)', textAlign: 'center', padding: 8 }}>No presets match "{presetSearch}"</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Basic info row */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <div>
@@ -156,7 +300,7 @@ function CompanionFormModal({ companion, onSave, onClose }) {
               </div>
               <div>
                 <label style={labelStyle}>AC</label>
-                <input style={inputStyle} type="number" value={form.ac} onChange={e => updateField('ac', parseInt(e.target.value) || 0)} />
+                <NumericInput style={{ ...inputStyle, paddingRight: 22 }} value={form.ac} onChange={v => updateField('ac', v)} min={0} />
               </div>
               <div>
                 <label style={labelStyle}>Speed</label>
@@ -167,11 +311,11 @@ function CompanionFormModal({ companion, onSave, onClose }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <div>
                 <label style={labelStyle}>HP Current</label>
-                <input style={inputStyle} type="number" value={form.hp_current} onChange={e => updateField('hp_current', parseInt(e.target.value) || 0)} />
+                <NumericInput style={{ ...inputStyle, paddingRight: 22 }} value={form.hp_current} onChange={v => updateField('hp_current', v)} min={0} />
               </div>
               <div>
                 <label style={labelStyle}>HP Max</label>
-                <input style={inputStyle} type="number" value={form.hp_max} onChange={e => updateField('hp_max', parseInt(e.target.value) || 0)} />
+                <NumericInput style={{ ...inputStyle, paddingRight: 22 }} value={form.hp_max} onChange={v => updateField('hp_max', v)} min={1} />
               </div>
             </div>
 
@@ -182,11 +326,12 @@ function CompanionFormModal({ companion, onSave, onClose }) {
                 {ABILITY_NAMES.map((name, i) => (
                   <div key={name} style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(201,168,76,0.5)', marginBottom: 4, fontFamily: 'var(--font-ui)' }}>{name}</div>
-                    <input
-                      style={{ ...inputStyle, textAlign: 'center', padding: '6px 4px' }}
-                      type="number"
+                    <NumericInput
+                      style={{ ...inputStyle, textAlign: 'center', padding: '6px 18px 6px 4px' }}
                       value={form[ABILITY_KEYS[i]]}
-                      onChange={e => updateField(ABILITY_KEYS[i], parseInt(e.target.value) || 0)}
+                      onChange={v => updateField(ABILITY_KEYS[i], v)}
+                      min={1}
+                      max={30}
                     />
                   </div>
                 ))}
@@ -589,21 +734,23 @@ export default function Companions({ characterId }) {
           </div>
         </div>
 
-        <button
-          onClick={() => { setEditingCompanion(null); setShowForm(true); }}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '8px 16px', borderRadius: 8,
-            background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)',
-            color: '#c9a84c', cursor: 'pointer', fontSize: 13,
-            fontFamily: 'var(--font-ui)', fontWeight: 600,
-            transition: 'all 0.15s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.2)'; e.currentTarget.style.borderColor = 'rgba(201,168,76,0.5)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.12)'; e.currentTarget.style.borderColor = 'rgba(201,168,76,0.3)'; }}
-        >
-          <Plus size={16} /> Add Companion
-        </button>
+        {companions.length > 0 && (
+          <button
+            onClick={() => { setEditingCompanion(null); setShowForm(true); }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '8px 16px', borderRadius: 8,
+              background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)',
+              color: '#c9a84c', cursor: 'pointer', fontSize: 13,
+              fontFamily: 'var(--font-ui)', fontWeight: 600,
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.2)'; e.currentTarget.style.borderColor = 'rgba(201,168,76,0.5)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.12)'; e.currentTarget.style.borderColor = 'rgba(201,168,76,0.3)'; }}
+          >
+            <Plus size={16} /> Add Companion
+          </button>
+        )}
       </motion.div>
 
       {/* Loading state */}
@@ -705,16 +852,13 @@ export default function Companions({ characterId }) {
       </AnimatePresence>
 
       {/* Delete confirm */}
-      {deleteTarget && (
-        <ConfirmDialog
-          title="Delete Companion"
-          message={`Are you sure you want to remove ${deleteTarget.name}? This cannot be undone.`}
-          confirmLabel="Delete"
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteTarget(null)}
-          danger
-        />
-      )}
+      <ConfirmDialog
+        show={!!deleteTarget}
+        title="Delete Companion"
+        message={deleteTarget ? `Are you sure you want to remove ${deleteTarget.name}? This cannot be undone.` : ''}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

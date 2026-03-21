@@ -4,7 +4,8 @@ import MDEditor from '@uiw/react-md-editor';
 import {
   ImagePlus, Trash2, Copy, Ruler, Weight, Calendar,
   Target, Users, Swords, Star, ChevronDown, ChevronRight,
-  CheckSquare, Square, Plus, Shield, Milestone, X
+  CheckSquare, Square, Plus, Shield, Milestone, X,
+  Sparkles, RefreshCw, Check as CheckIcon, Loader2 as Spinner
 } from 'lucide-react';
 import { getBackstory, updateBackstory } from '../api/backstory';
 import { getNPCs } from '../api/npcs';
@@ -12,6 +13,7 @@ import { useAutosave } from '../hooks/useAutosave';
 import SaveIndicator from '../components/SaveIndicator';
 import HelpTooltip from '../components/HelpTooltip';
 import { HELP } from '../data/helpText';
+import { generateAI } from '../api/assistant';
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
@@ -82,7 +84,7 @@ const CARD_STYLES = {
   red:   { border: 'border-red-500/40',     bg: 'bg-red-500/[0.06]',     accent: 'text-red-400' },
 };
 
-export default function Backstory({ characterId, onPortraitChange }) {
+export default function Backstory({ characterId, character, onPortraitChange }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dragOver, setDragOver] = useState(false);
@@ -90,6 +92,74 @@ export default function Backstory({ characterId, onPortraitChange }) {
   const [expandedSections, setExpandedSections] = useState(new Set(['personality']));
   const [showAchieved, setShowAchieved] = useState(false);
   const fileInputRef = useRef(null);
+
+  // AI backstory generation state
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiPromptInput, setAiPromptInput] = useState('');
+  const [aiResults, setAiResults] = useState(null); // { personality_traits, ideals, bonds, flaws }
+  const [showAiGenerator, setShowAiGenerator] = useState(false);
+
+  const generatePersonality = async () => {
+    setAiGenerating(true);
+    setAiResults(null);
+    try {
+      const charName = character?.name || 'the character';
+      const charRace = character?.race || '';
+      const charClass = character?.primary_class || '';
+      const charBg = data?.background_feature_name || character?.background || '';
+      const backstory = data?.backstory_text?.slice(0, 500) || '';
+      const userHint = aiPromptInput.trim();
+
+      const system = `You are a D&D 5e character personality generator. Generate personality traits, ideals, bonds, and flaws for a character. Respond ONLY in this exact JSON format with no other text:
+{"personality_traits":"...","ideals":"...","bonds":"...","flaws":"..."}
+Each value should be 1-2 sentences. Make them specific, memorable, and roleplay-ready. Match the tone to the character's class and background.`;
+
+      const prompt = `Generate personality for: ${charName}, a ${charRace} ${charClass}${charBg ? ` with ${charBg} background` : ''}.${backstory ? `\nBackstory context: ${backstory}` : ''}${userHint ? `\nPlayer wants: ${userHint}` : ''}`;
+
+      const result = await generateAI(prompt, system, { temperature: 0.85, maxTokens: 512 });
+
+      // Parse JSON from response
+      const text = typeof result === 'string' ? result : result?.response || '';
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        setAiResults({
+          personality_traits: parsed.personality_traits || '',
+          ideals: parsed.ideals || '',
+          bonds: parsed.bonds || '',
+          flaws: parsed.flaws || '',
+        });
+      } else {
+        toast.error('AI response was not in expected format. Try again.');
+      }
+    } catch (err) {
+      const msg = err?.message || String(err);
+      if (msg.includes('ollama') || msg.includes('connect')) {
+        toast.error('Ollama is not running. Start Ollama to use AI generation.');
+      } else {
+        toast.error('AI generation failed: ' + msg);
+      }
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
+  const acceptAiResult = (key) => {
+    if (aiResults?.[key]) {
+      update(key, aiResults[key]);
+      toast.success(`${PERSONALITY_CARDS.find(c => c.key === key)?.label || key} applied!`);
+    }
+  };
+
+  const acceptAllAiResults = () => {
+    if (!aiResults) return;
+    for (const { key } of PERSONALITY_CARDS) {
+      if (aiResults[key]) update(key, aiResults[key]);
+    }
+    setAiResults(null);
+    setShowAiGenerator(false);
+    toast.success('All personality traits applied!');
+  };
 
   // Extra fields packed into goals_motivations
   const [extra, setExtra] = useState(null);
@@ -390,6 +460,85 @@ export default function Backstory({ characterId, onPortraitChange }) {
         {expandedSections.has('personality') && (
           <div className="mt-3">
             <p className="text-xs text-amber-200/30 mb-3">The D&D 5e standard personality fields from your background. These guide how you roleplay your character.</p>
+
+            {/* AI Generator */}
+            <div className="mb-4">
+              <button
+                onClick={() => setShowAiGenerator(v => !v)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-purple-500/30 bg-purple-500/[0.06] hover:bg-purple-500/[0.12] text-purple-300 text-xs font-medium transition-all"
+              >
+                <Sparkles size={13} />
+                Generate with AI
+                {showAiGenerator ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+              </button>
+
+              {showAiGenerator && (
+                <div className="mt-3 p-4 rounded-lg border border-purple-500/20 bg-purple-500/[0.04]">
+                  <label className="text-xs text-purple-300/70 mb-2 block">Describe the vibe you want (optional)</label>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      className="input flex-1 text-sm"
+                      placeholder='e.g. "brooding loner with a dark secret" or "cheerful optimist"'
+                      value={aiPromptInput}
+                      onChange={e => setAiPromptInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && !aiGenerating) generatePersonality(); }}
+                    />
+                    <button
+                      onClick={generatePersonality}
+                      disabled={aiGenerating}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold transition-colors"
+                    >
+                      {aiGenerating ? <Spinner size={13} className="animate-spin" /> : <Sparkles size={13} />}
+                      {aiGenerating ? 'Generating...' : 'Generate'}
+                    </button>
+                  </div>
+
+                  {aiResults && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-purple-300/60 font-medium">AI Suggestions</span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={generatePersonality}
+                            disabled={aiGenerating}
+                            className="flex items-center gap-1 text-[11px] text-purple-300/50 hover:text-purple-200 transition-colors"
+                          >
+                            <RefreshCw size={11} /> Reroll All
+                          </button>
+                          <button
+                            onClick={acceptAllAiResults}
+                            className="flex items-center gap-1 text-[11px] text-emerald-400/70 hover:text-emerald-300 transition-colors font-medium"
+                          >
+                            <CheckIcon size={11} /> Accept All
+                          </button>
+                        </div>
+                      </div>
+                      {PERSONALITY_CARDS.map(({ key, label, color }) => {
+                        const s = CARD_STYLES[color];
+                        return aiResults[key] ? (
+                          <div key={key} className={`flex items-start gap-3 p-3 rounded-lg border ${s.border} ${s.bg}`}>
+                            <div className="flex-1 min-w-0">
+                              <span className={`text-[11px] font-semibold ${s.accent} block mb-1`}>{label}</span>
+                              <p className="text-xs text-amber-100/70 leading-relaxed">{aiResults[key]}</p>
+                            </div>
+                            <div className="flex gap-1 shrink-0">
+                              <button
+                                onClick={() => acceptAiResult(key)}
+                                className="p-1.5 rounded bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 transition-colors"
+                                title="Accept"
+                              >
+                                <CheckIcon size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {PERSONALITY_CARDS.map(({ key, label, color, placeholder }) => {
                 const s = CARD_STYLES[color];

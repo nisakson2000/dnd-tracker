@@ -12,6 +12,7 @@ import ModalPortal from '../components/ModalPortal';
 import { useRuleset } from '../contexts/RulesetContext';
 import { HELP, ACTION_ECONOMY } from '../data/helpText';
 import { CONDITION_EFFECTS, computeConditionEffects } from '../data/conditionEffects';
+import { SKILL_CHECK_DCS, COMBAT_ACTIONS } from '../data/rules5e';
 import { calculateEffectiveDamage, applyDamageToHp, calculateHealingResult, resolveDeathSave, checkConcentration } from '../utils/damageEngine';
 import { insertCombatLog } from '../api/combatLog';
 import { rollDie } from '../utils/dice';
@@ -36,7 +37,9 @@ function parseDamage(expr) {
   return { count: parseInt(match[1]) || 1, sides: parseInt(match[2]), mod: parseInt(match[3]) || 0 };
 }
 
-// --- Custom hook: consolidates all combat sessionStorage state ---
+// --- Custom hook: consolidates all combat state in localStorage (survives tab close & crashes) ---
+const HP_UNDO_MAX = 10; // Max undo steps per combatant
+
 const COMBAT_SESSION_DEFAULTS = {
   combatants: [],
   roundCounter: 1,
@@ -53,65 +56,99 @@ const COMBAT_SESSION_DEFAULTS = {
   turnTimerDuration: 60, // 30, 60, or 90 seconds
   turnTimerRemaining: 0,
   turnTimerRunning: false,
-  hpUndoStack: {}, // { [combatantId]: { previousHp, previousTempHp } }
+  hpUndoStack: {}, // { [combatantId]: [ { previousHp, previousTempHp }, ... ] } — ring buffer, max HP_UNDO_MAX
   critOverrides: {}, // { [attackId]: boolean }
+  gwmEnabled: false, // Great Weapon Master / Sharpshooter: -5 to hit, +10 damage
+  legendaryResistances: { used: 0, max: 3 }, // Legendary Resistance tracking
+  minionMode: false, // Minion rules: any hit = instant death, HP 1/1
 };
 
 function useCombatSession(characterId) {
   const storageKey = `codex_combat_session_${characterId}`;
 
-  // Read all combat state from sessionStorage (with migration from old keys)
+  // Read combat state from localStorage (with migration from sessionStorage and legacy keys)
   const readSession = useCallback((charId) => {
     const key = `codex_combat_session_${charId}`;
+
+    // 1. Try localStorage first (new persistent storage)
     try {
-      const stored = sessionStorage.getItem(key);
-      if (stored) return { ...COMBAT_SESSION_DEFAULTS, ...JSON.parse(stored) };
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        const parsed = { ...COMBAT_SESSION_DEFAULTS, ...JSON.parse(stored) };
+        // Migrate old single-entry hpUndoStack to array format
+        for (const id of Object.keys(parsed.hpUndoStack || {})) {
+          if (parsed.hpUndoStack[id] && !Array.isArray(parsed.hpUndoStack[id])) {
+            parsed.hpUndoStack[id] = [parsed.hpUndoStack[id]];
+          }
+        }
+        return parsed;
+      }
     } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession read error:', err); }
 
-    // Migrate from legacy per-key storage
+    // 2. Migrate from sessionStorage (old storage — survives upgrade)
+    try {
+      const sessionStored = sessionStorage.getItem(key);
+      if (sessionStored) {
+        const parsed = { ...COMBAT_SESSION_DEFAULTS, ...JSON.parse(sessionStored) };
+        // Migrate hpUndoStack to array format
+        for (const id of Object.keys(parsed.hpUndoStack || {})) {
+          if (parsed.hpUndoStack[id] && !Array.isArray(parsed.hpUndoStack[id])) {
+            parsed.hpUndoStack[id] = [parsed.hpUndoStack[id]];
+          }
+        }
+        sessionStorage.removeItem(key); // Clean up old storage
+        return parsed;
+      }
+    } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession sessionStorage migrate:', err); }
+
+    // 3. Migrate from legacy per-key sessionStorage
     const migrated = { ...COMBAT_SESSION_DEFAULTS };
+    const legacyKeys = [];
     try {
       const init = sessionStorage.getItem(`codex_initiative_${charId}`);
-      if (init) migrated.combatants = JSON.parse(init);
+      if (init) { migrated.combatants = JSON.parse(init); legacyKeys.push(`codex_initiative_${charId}`); }
     } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate initiative:', err); }
     try {
       const r = sessionStorage.getItem(`codex_round_${charId}`);
-      if (r) migrated.roundCounter = parseInt(r) || 1;
+      if (r) { migrated.roundCounter = parseInt(r) || 1; legacyKeys.push(`codex_round_${charId}`); }
     } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate round:', err); }
     try {
       const t = sessionStorage.getItem(`codex_turn_${charId}`);
-      if (t) migrated.currentTurn = parseInt(t) || 0;
+      if (t) { migrated.currentTurn = parseInt(t) || 0; legacyKeys.push(`codex_turn_${charId}`); }
     } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate turn:', err); }
     try {
       const s = sessionStorage.getItem(`codex_combatstats_${charId}`);
-      if (s) migrated.combatStats = { ...COMBAT_SESSION_DEFAULTS.combatStats, ...JSON.parse(s) };
+      if (s) { migrated.combatStats = { ...COMBAT_SESSION_DEFAULTS.combatStats, ...JSON.parse(s) }; legacyKeys.push(`codex_combatstats_${charId}`); }
     } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate stats:', err); }
     try {
       const a = sessionStorage.getItem(`codex_actionecon_${charId}`);
-      if (a) migrated.actionEcon = { ...COMBAT_SESSION_DEFAULTS.actionEcon, ...JSON.parse(a) };
+      if (a) { migrated.actionEcon = { ...COMBAT_SESSION_DEFAULTS.actionEcon, ...JSON.parse(a) }; legacyKeys.push(`codex_actionecon_${charId}`); }
     } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate actionEcon:', err); }
     try {
       const f = sessionStorage.getItem(`codex_flanking_${charId}`);
-      if (f) migrated.flankingEnabled = f === 'true';
+      if (f) { migrated.flankingEnabled = f === 'true'; legacyKeys.push(`codex_flanking_${charId}`); }
     } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate flanking:', err); }
     try {
       const l = sessionStorage.getItem(`codex_legendary_${charId}`);
-      if (l) migrated.legendaryActions = { ...COMBAT_SESSION_DEFAULTS.legendaryActions, ...JSON.parse(l) };
+      if (l) { migrated.legendaryActions = { ...COMBAT_SESSION_DEFAULTS.legendaryActions, ...JSON.parse(l) }; legacyKeys.push(`codex_legendary_${charId}`); }
     } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate legendary:', err); }
     try {
       const log = sessionStorage.getItem(`codex_combatlog_${charId}`);
-      if (log) migrated.combatLog = JSON.parse(log);
+      if (log) { migrated.combatLog = JSON.parse(log); legacyKeys.push(`codex_combatlog_${charId}`); }
     } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession migrate combatLog:', err); }
+
+    // Clean up legacy sessionStorage keys after migration
+    legacyKeys.forEach(k => { try { sessionStorage.removeItem(k); } catch (_) {} });
 
     return migrated;
   }, []);
 
   const [session, setSessionRaw] = useState(() => readSession(characterId));
 
-  // Persist whenever session changes
+  // Persist to localStorage whenever session changes (survives tab close, refresh, and crashes)
   useEffect(() => {
     try {
-      sessionStorage.setItem(storageKey, JSON.stringify(session));
+      localStorage.setItem(storageKey, JSON.stringify(session));
     } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession persist error:', err); }
   }, [session, storageKey]);
 
@@ -172,6 +209,15 @@ function useCombatSession(characterId) {
   const setCritOverrides = useCallback((updater) => {
     setSessionRaw(prev => ({ ...prev, critOverrides: typeof updater === 'function' ? updater(prev.critOverrides || {}) : updater }));
   }, []);
+  const setGwmEnabled = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, gwmEnabled: typeof updater === 'function' ? updater(prev.gwmEnabled) : updater }));
+  }, []);
+  const setLegendaryResistances = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, legendaryResistances: typeof updater === 'function' ? updater(prev.legendaryResistances || { used: 0, max: 3 }) : updater }));
+  }, []);
+  const setMinionMode = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, minionMode: typeof updater === 'function' ? updater(prev.minionMode) : updater }));
+  }, []);
 
   return {
     combatants: session.combatants, setCombatants,
@@ -191,6 +237,9 @@ function useCombatSession(characterId) {
     turnTimerRunning: session.turnTimerRunning || false, setTurnTimerRunning,
     hpUndoStack: session.hpUndoStack || {}, setHpUndoStack,
     critOverrides: session.critOverrides || {}, setCritOverrides,
+    gwmEnabled: session.gwmEnabled || false, setGwmEnabled,
+    legendaryResistances: session.legendaryResistances || { used: 0, max: 3 }, setLegendaryResistances,
+    minionMode: session.minionMode || false, setMinionMode,
   };
 }
 
@@ -342,6 +391,21 @@ function CombatSuggestions({ character, combatants, conditions, deathSaves, conc
 
 export default function Combat({ characterId, character, onConditionsChange }) {
   const { CONDITIONS } = useRuleset();
+
+  // --- Read gameplay settings from localStorage ---
+  const restVariant = (() => {
+    try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').restVariant || 'standard'; } catch { return 'standard'; }
+  })();
+  const flankingSetting = (() => {
+    try { const v = JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').flanking; return v !== false; } catch { return true; }
+  })();
+  const diagonalMovement = (() => {
+    try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').diagonalMovement || 'standard'; } catch { return 'standard'; }
+  })();
+  const deathSaveRule = (() => {
+    try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').deathSaveRule || 'standard'; } catch { return 'standard'; }
+  })();
+
   const [attacks, setAttacks] = useState([]);
   const [conditions, setConditions] = useState([]);
   const [notes, setNotes] = useState({ actions: '', bonus_actions: '', reactions: '', legendary_actions: '' });
@@ -353,6 +417,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   const [weaponMagicBonus, setWeaponMagicBonus] = useState(0); // highest equipped weapon magic_bonus
   const [weaponExtraDamage, setWeaponExtraDamage] = useState(''); // e.g. "2d6 fire"
   const [ammoItems, setAmmoItems] = useState([]); // Item 7: ammunition items for linking
+  const [equipStatBonuses, setEquipStatBonuses] = useState({}); // stat bonuses from equipped items (belts, gloves, etc.)
   const rollTimeoutRefs = useRef({});
   const [attackAdvOverrides, setAttackAdvOverrides] = useState({}); // per-attack: 'advantage' | 'disadvantage' | null
   const [attackBonusInputs, setAttackBonusInputs] = useState({}); // per-attack situational bonus
@@ -380,6 +445,9 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     turnTimerRunning, setTurnTimerRunning,
     hpUndoStack, setHpUndoStack,
     critOverrides, setCritOverrides,
+    gwmEnabled, setGwmEnabled,
+    legendaryResistances, setLegendaryResistances,
+    minionMode, setMinionMode,
   } = useCombatSession(characterId);
 
   const [combatLogOpen, setCombatLogOpen] = useState(false);
@@ -393,17 +461,19 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   const [newCombatantHP, setNewCombatantHP] = useState('');
   const [newCombatantTempHP, setNewCombatantTempHP] = useState('');
   const [newCombatantIsEnemy, setNewCombatantIsEnemy] = useState(false);
+  const [newCombatantIsSwarm, setNewCombatantIsSwarm] = useState(false);
 
   // --- Turn Timer interval ---
   const turnTimerRef = useRef(null);
   const nextTurnRef = useRef(null);
   useEffect(() => {
-    if (turnTimerEnabled && turnTimerRunning && turnTimerRemaining > 0) {
+    if (turnTimerEnabled && turnTimerRunning && turnTimerRemaining > 0 && combatants.length > 0) {
       turnTimerRef.current = setInterval(() => {
         setTurnTimerRemaining(prev => {
           if (prev <= 1) {
             setTurnTimerRunning(false);
-            toast('Turn timer expired! Auto-advancing...', {
+            const currentName = combatants[currentTurn]?.name || 'Current combatant';
+            toast(`Time's up! ${currentName}'s turn is over`, {
               icon: '\u23F0', duration: 3000,
               style: { background: '#1a0a0a', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)' },
             });
@@ -417,7 +487,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       return () => clearInterval(turnTimerRef.current);
     }
     return () => { if (turnTimerRef.current) clearInterval(turnTimerRef.current); };
-  }, [turnTimerEnabled, turnTimerRunning, turnTimerRemaining > 0]);
+  }, [turnTimerEnabled, turnTimerRunning, turnTimerRemaining > 0, combatants.length > 0]);
 
   const resetActionEconomy = useCallback(() => {
     setActionEcon({ action: false, bonusAction: false, reaction: false });
@@ -429,6 +499,13 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   const [calcMode, setCalcMode] = useState('damage'); // 'damage' | 'healing'
   const [calcModifier, setCalcModifier] = useState('normal'); // 'normal' | 'resist' | 'vuln'
   const [calcDamageType, setCalcDamageType] = useState(''); // damage type for auto-modifier detection
+
+  // --- Mass Damage (AoE) state ---
+  const [massDamageMode, setMassDamageMode] = useState(false);
+  const [massDamageSelected, setMassDamageSelected] = useState(new Set()); // set of combatant ids
+  const [massDamageAmount, setMassDamageAmount] = useState('');
+  const [massDamageType, setMassDamageType] = useState('damage');
+  const massDamageInputRef = useRef(null);
 
   // Parse character damage modifiers for auto-detection
   const charDamageModifiers = useMemo(() => {
@@ -450,6 +527,8 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     const target = combatants.find(c => c.id === combatantId);
     const ds = deathSaves[combatantId];
     if (!target || !ds || ds.dead || ds.stable) return;
+    // Minions don't roll death saves — they just die
+    if (target.isMinion) return;
 
     const roll = rollDie(20);
     const result = resolveDeathSave(roll);
@@ -459,9 +538,17 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     logEvent('death', `${target.name} death save: ${result.description}`);
 
     if (result.type === 'nat20') {
-      // Heal to 1 HP, clear death saves
+      // Heal to 1 HP, clear death saves (brutal: keep failures)
       setCombatants(prev => prev.map(c => c.id === combatantId ? { ...c, currentHp: 1 } : c));
-      setDeathSaves(prev => { const next = { ...prev }; delete next[combatantId]; return next; });
+      if (deathSaveRule === 'heroic') {
+        // Brutal rule: failures persist even after stabilizing
+        setDeathSaves(prev => ({
+          ...prev,
+          [combatantId]: { successes: 0, failures: ds.failures, stable: false, dead: false },
+        }));
+      } else {
+        setDeathSaves(prev => { const next = { ...prev }; delete next[combatantId]; return next; });
+      }
       toast(`${target.name} rolls a Natural 20! Regains 1 HP!`, {
         icon: '\u2728', duration: 4000,
         style: { background: '#0a1a0a', color: '#86efac', border: '1px solid rgba(34,197,94,0.5)' },
@@ -539,7 +626,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         setLairAction(la => {
           if (la.enabled) {
             const desc = la.description ? ': ' + la.description.slice(0, 200) : '';
-            toast(`Lair Action! (Init 20)${desc}`, {
+            toast(`Lair Action! Initiative count 20 — lair actions trigger now.${desc}`, {
               icon: '\u{1F3F0}', duration: 5000,
               style: { background: '#1a0a2a', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.4)' },
             });
@@ -554,14 +641,32 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       resetActionEconomy();
 
       // Log next combatant's turn (use resolvedNext to avoid stale currentTurn)
-      const nextName = combatants[resolvedNext]?.name || '?';
+      const nextCombatant = combatants[resolvedNext];
+      const nextName = nextCombatant?.name || '?';
       logEvent('turn', `${nextName}'s turn`);
+
+      // Condition reminder when it's the PC's turn
+      if (character?.name && nextCombatant && nextName.toLowerCase() === character.name.toLowerCase()) {
+        const activeConditions = (conditions || []).filter(c => c.active);
+        if (activeConditions.length > 0) {
+          const condList = activeConditions.map(c => c.name).join(', ');
+          toast(`Active conditions: ${condList}`, {
+            icon: '\u26A0\uFE0F', duration: 4000,
+            style: { background: '#1a1a05', color: '#fde68a', border: '1px solid rgba(234,179,8,0.3)' },
+          });
+        }
+      }
 
       return resolvedNext;
     });
   };
   // Keep ref updated for timer auto-advance
   nextTurnRef.current = nextTurn;
+
+  // --- DM Combat Keyboard Shortcuts ---
+  const addCombatantInputRef = useRef(null);
+  const prevTurnRef = useRef(null);
+  const clearCombatantsRef = useRef(null);
 
   const prevTurn = () => {
     if (combatants.length === 0) return;
@@ -583,8 +688,8 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     const name = newCombatantName.trim();
     if (!name) { toast.error('Combatant name is required'); return; }
     const init = parseInt(newCombatantInit) || 0;
-    const hp = parseInt(newCombatantHP) || 0;
-    const tempHp = parseInt(newCombatantTempHP) || 0;
+    const hp = minionMode ? 1 : (parseInt(newCombatantHP) || 0);
+    const tempHp = minionMode ? 0 : (parseInt(newCombatantTempHP) || 0);
     setCombatants(prev => [...prev, {
       id: Date.now(),
       name,
@@ -593,6 +698,8 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       currentHp: hp,
       tempHp: tempHp,
       isEnemy: newCombatantIsEnemy,
+      isMinion: minionMode,
+      isSwarm: newCombatantIsSwarm,
       reactionUsed: false,
     }].sort((a, b) => b.initiative - a.initiative));
     setNewCombatantName('');
@@ -600,6 +707,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     setNewCombatantHP('');
     setNewCombatantTempHP('');
     setNewCombatantIsEnemy(false);
+    setNewCombatantIsSwarm(false);
   };
 
   const removeCombatant = (id) => {
@@ -617,6 +725,26 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   };
 
   const clearCombatants = () => {
+    // End-of-combat summary
+    if (combatants.length > 0 && (combatStats.totalDamageDealt > 0 || roundCounter > 1)) {
+      const dropped = combatants.filter(c => c.maxHp > 0 && (c.currentHp ?? c.maxHp) <= 0);
+      const enemies = combatants.filter(c => c.isEnemy);
+      const allies = combatants.filter(c => !c.isEnemy);
+      const summaryParts = [
+        `${roundCounter} round${roundCounter > 1 ? 's' : ''}`,
+        `${combatStats.totalDamageDealt} damage dealt`,
+      ];
+      if (combatStats.totalHealing > 0) summaryParts.push(`${combatStats.totalHealing} healing`);
+      if (dropped.length > 0) summaryParts.push(`${dropped.length} dropped to 0 HP`);
+      summaryParts.push(`${enemies.length} enemies, ${allies.length} allies`);
+
+      toast(summaryParts.join(' · '), {
+        icon: '\u2694\uFE0F', duration: 6000,
+        style: { background: '#0a0a1a', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.4)', maxWidth: '500px' },
+      });
+      logEvent('combat', `Combat ended: ${summaryParts.join(' · ')}`);
+    }
+
     setCombatants([]);
     setRoundCounter(1);
     setCurrentTurn(0);
@@ -626,17 +754,144 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     setTurnTimerRemaining(0);
   };
 
+  // Keep function refs current for keyboard handler
+  prevTurnRef.current = prevTurn;
+  clearCombatantsRef.current = clearCombatants;
+
+  // --- DM Combat Keyboard Shortcuts (wired after all functions defined) ---
+  useEffect(() => {
+    const handler = (e) => {
+      // Don't intercept if user is typing in an input/textarea/select
+      const tag = e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) return;
+      // Don't intercept if any modifier is held (those are global shortcuts)
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      // Allow 'a' even with no combatants (to focus add-combatant input)
+      if (combatants.length === 0 && e.key !== 'a') return;
+
+      const currentCombatant = combatants[currentTurn];
+
+      switch (e.key) {
+        case ' ':
+          e.preventDefault();
+          if (nextTurnRef.current) nextTurnRef.current();
+          break;
+        case 'Backspace':
+          e.preventDefault();
+          if (prevTurnRef.current) prevTurnRef.current();
+          break;
+        case 'd':
+          e.preventDefault();
+          if (currentCombatant) {
+            setCalcTarget(currentCombatant.id);
+            setCalcMode('damage');
+            setCalcAmount('');
+            setCalcModifier('normal');
+            setCalcDamageType('');
+          }
+          break;
+        case 'h':
+          e.preventDefault();
+          if (currentCombatant) {
+            setCalcTarget(currentCombatant.id);
+            setCalcMode('healing');
+            setCalcAmount('');
+            setCalcModifier('normal');
+            setCalcDamageType('');
+          }
+          break;
+        case 'c':
+          e.preventDefault();
+          {
+            const condEl = document.getElementById('conditions-panel');
+            if (condEl) condEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          break;
+        case 'r':
+          e.preventDefault();
+          {
+            const roll = rollDie(20);
+            toast(`Quick Roll: d20 = ${roll}`, {
+              icon: '\u{1F3B2}', duration: 3000,
+              style: { background: '#0a0a1a', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.4)' },
+            });
+            logEvent('roll', `Quick d20 = ${roll}`);
+          }
+          break;
+        case 's':
+          e.preventDefault();
+          setCombatants(prev => [...prev].sort((a, b) => b.initiative - a.initiative));
+          toast('Sorted by initiative', { icon: '\u{1F4CA}', duration: 2000,
+            style: { background: '#0a0a1a', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.4)' },
+          });
+          break;
+        case 'a':
+          e.preventDefault();
+          if (addCombatantInputRef.current) addCombatantInputRef.current.focus();
+          break;
+        case 'l':
+          e.preventDefault();
+          setCombatLogOpen(prev => !prev);
+          break;
+        case 'e':
+          e.preventDefault();
+          if (combatants.length > 0 && clearCombatantsRef.current) clearCombatantsRef.current();
+          break;
+        default: {
+          // Number keys 1-9 for targeting
+          const num = parseInt(e.key);
+          if (num >= 1 && num <= 9 && num <= combatants.length) {
+            e.preventDefault();
+            const target = combatants[num - 1];
+            setCalcTarget(prev => prev === target.id ? null : target.id);
+            setCalcAmount('');
+            setCalcMode('damage');
+            setCalcModifier('normal');
+            setCalcDamageType('');
+          }
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [combatants, currentTurn]);
+
   // --- Apply Damage/Healing to Combatant ---
   const applyDamageHealing = (combatantId, amount, mode, modifier, damageTypeArg) => {
     if (!amount || amount <= 0) return;
     const target = combatants.find(c => c.id === combatantId);
     if (!target) return;
 
-    // Store undo state before any HP change
-    setHpUndoStack(prev => ({
-      ...prev,
-      [combatantId]: { previousHp: target.currentHp ?? target.maxHp ?? 0, previousTempHp: target.tempHp || 0 },
-    }));
+    // Store undo state before any HP change (multi-step ring buffer, max HP_UNDO_MAX)
+    setHpUndoStack(prev => {
+      const stack = Array.isArray(prev[combatantId]) ? prev[combatantId] : [];
+      const entry = { previousHp: target.currentHp ?? target.maxHp ?? 0, previousTempHp: target.tempHp || 0 };
+      const updated = [...stack, entry].slice(-HP_UNDO_MAX);
+      return { ...prev, [combatantId]: updated };
+    });
+
+    if (mode === 'damage' && target.isMinion) {
+      // --- Minion rules: any hit = instant death ---
+      setCombatants(prev => prev.map(c => {
+        if (c.id !== combatantId) return c;
+        return { ...c, currentHp: 0, tempHp: 0 };
+      }));
+      setCombatStats(prev => ({
+        ...prev,
+        totalDamageDealt: prev.totalDamageDealt + (target.currentHp ?? target.maxHp ?? 0),
+        attackCount: prev.attackCount + 1,
+      }));
+      logEvent('damage', `${target.name} (MINION) takes a hit and is instantly killed!`);
+      toast(`${target.name} (minion) killed!`, {
+        icon: '\u{1F480}', duration: 2000,
+        style: { background: '#1a0505', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)' },
+      });
+      // Minions don't get death saves — mark as dead immediately
+      setDeathSaves(prev => ({ ...prev, [combatantId]: { successes: 0, failures: 3, stable: false, dead: true } }));
+      return;
+    }
 
     if (mode === 'damage') {
       // --- Use damageEngine for resistance/vulnerability/immunity ---
@@ -740,7 +995,28 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         }
       }
 
-      // --- Concentration check trigger ---
+      // --- Boss phase transition alert ---
+      if (target.maxHp > 0 && target.isEnemy && dmgResult.effective > 0) {
+        const oldPct = (currentHp / target.maxHp) * 100;
+        const newPct = (hpResult.newHp / target.maxHp) * 100;
+        const thresholds = [
+          { pct: 75, label: 'Bloodied', phase: 1 },
+          { pct: 50, label: 'Battered', phase: 2 },
+          { pct: 25, label: 'Critical', phase: 3 },
+        ];
+        for (const t of thresholds) {
+          if (oldPct > t.pct && newPct <= t.pct && newPct > 0) {
+            toast(`${target.name} enters ${t.label} phase! (${Math.round(newPct)}% HP)`, {
+              icon: '\u{1F525}', duration: 4000,
+              style: { background: '#1a0a00', color: '#fb923c', border: '1px solid rgba(251,146,60,0.4)' },
+            });
+            logEvent('combat', `${target.name} entered ${t.label} phase (${Math.round(newPct)}% HP)`);
+            break;
+          }
+        }
+      }
+
+      // --- Concentration check trigger (for player character) ---
       if (concentratingSpell && dmgResult.effective > 0 && character?.name &&
           target.name.toLowerCase() === character.name.toLowerCase()) {
         const dc = checkConcentration(dmgResult.effective);
@@ -749,6 +1025,16 @@ export default function Combat({ characterId, character, onConditionsChange }) {
           style: { background: '#1a0a2a', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.4)' },
         });
         logEvent('concentration', `Concentration check: DC ${dc} CON save for ${concentratingSpell.name}`);
+      }
+
+      // --- Concentration check trigger (for ANY combatant with concentratingSpell property) ---
+      if (dmgResult.effective > 0 && target.concentratingSpell) {
+        const dc = checkConcentration(dmgResult.effective);
+        toast(`${target.name}: Concentration check! DC ${dc} CON save to maintain ${target.concentratingSpell}`, {
+          icon: '\u{1F52E}', duration: 5000,
+          style: { background: '#1a0a2a', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.4)' },
+        });
+        logEvent('concentration', `${target.name}: DC ${dc} CON save for concentration on ${target.concentratingSpell}`);
       }
 
     } else {
@@ -790,17 +1076,45 @@ export default function Combat({ characterId, character, onConditionsChange }) {
           // Revert the HP change
           setCombatants(prev => prev.map(c => c.id === combatantId ? { ...c, currentHp: 0 } : c));
         } else {
-          setDeathSaves(prev => {
-            const next = { ...prev };
-            delete next[combatantId];
-            return next;
-          });
-          logEvent('death', `${target.name} is no longer dying (healed to ${healResult.newHp} HP)`);
+          if (deathSaveRule === 'heroic' && ds?.failures > 0) {
+            // Brutal rule: failures persist even after healing from 0 HP
+            setDeathSaves(prev => ({
+              ...prev,
+              [combatantId]: { successes: 0, failures: ds.failures, stable: false, dead: false },
+            }));
+            logEvent('death', `${target.name} is no longer dying (healed to ${healResult.newHp} HP) — ${ds.failures} death save failure(s) persist`);
+          } else {
+            setDeathSaves(prev => {
+              const next = { ...prev };
+              delete next[combatantId];
+              return next;
+            });
+            logEvent('death', `${target.name} is no longer dying (healed to ${healResult.newHp} HP)`);
+          }
         }
       }
     }
     setCalcAmount('');
     setCalcDamageType('');
+  };
+
+  // --- Mass Damage (AoE) ---
+  const applyMassDamage = () => {
+    const amt = parseInt(massDamageAmount) || 0;
+    if (amt <= 0 || massDamageSelected.size === 0) return;
+    let count = 0;
+    for (const id of massDamageSelected) {
+      applyDamageHealing(id, amt, massDamageType, 'normal', '');
+      count++;
+    }
+    toast(`Applied ${amt} ${massDamageType} to ${count} target${count > 1 ? 's' : ''}`, {
+      icon: massDamageType === 'healing' ? '\u2764\uFE0F' : '\u{1F4A5}', duration: 3000,
+      style: { background: massDamageType === 'healing' ? '#0a1a0a' : '#1a0a0a', color: massDamageType === 'healing' ? '#86efac' : '#fca5a5', border: `1px solid ${massDamageType === 'healing' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}` },
+    });
+    logEvent(massDamageType === 'healing' ? 'healing' : 'damage', `AoE: ${amt} ${massDamageType} to ${count} targets`);
+    setMassDamageMode(false);
+    setMassDamageSelected(new Set());
+    setMassDamageAmount('');
   };
 
   // Reaction used state (driven by action economy toggle in TurnActionTracker)
@@ -838,6 +1152,22 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         }
         setWeaponMagicBonus(bestMagic);
         setWeaponExtraDamage(extraDmg);
+        // Extract stat bonuses from ALL equipped items (belts, gloves, etc.)
+        const bonuses = {};
+        for (const item of items.filter(i => i.equipped)) {
+          try {
+            const mods = typeof item.stat_modifiers === 'string'
+              ? JSON.parse(item.stat_modifiers || '{}')
+              : (item.stat_modifiers || {});
+            for (const [stat, value] of Object.entries(mods)) {
+              const key = stat.toUpperCase();
+              if (typeof value === 'number' && value !== 0) {
+                bonuses[key] = (bonuses[key] || 0) + value;
+              }
+            }
+          } catch { /* skip */ }
+        }
+        setEquipStatBonuses(bonuses);
       } catch { /* non-critical */ }
     } catch (err) { toast.error('Failed to load combat data: ' + (err?.message || 'Unknown error')); }
     finally { setLoading(false); }
@@ -939,12 +1269,17 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   // --- Crit animation state ---
   const [critAnimations, setCritAnimations] = useState({});
 
-  // Inline attack roll (enhanced with flanking, magic bonus, combat log, crit animation, advantage/disadvantage, situational bonus)
+  // Inline attack roll (enhanced with flanking, magic bonus, equipment bonuses, combat log, crit animation, advantage/disadvantage, situational bonus)
   const rollAttack = (atk) => {
     const bonus = parseBonus(atk.attack_bonus);
     const magicBonus = weaponMagicBonus || 0;
     const flankBonus = flankingEnabled ? 2 : 0;
     const sitBonus = parseInt(attackBonusInputs[atk.id]) || 0;
+    // Equipment stat bonuses (e.g., Belt of Giant Strength adding +2 STR)
+    // These modify the underlying ability score, adding to attack bonus
+    const equipBonus = Object.values(equipStatBonuses).length > 0
+      ? Math.max(0, ...Object.entries(equipStatBonuses).filter(([k]) => k === 'STR' || k === 'DEX').map(([, v]) => v))
+      : 0;
 
     // Determine advantage/disadvantage from conditions + per-attack override
     const override = attackAdvOverrides[atk.id] || null;
@@ -964,7 +1299,9 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     else if (rollMode === 'disadvantage') d20 = Math.min(d20a, d20b);
     else d20 = d20a;
 
-    const total = d20 + bonus + magicBonus + flankBonus + sitBonus;
+    const gwmPenalty = gwmEnabled ? -5 : 0;
+    const gwmDamage = gwmEnabled ? 10 : 0;
+    const total = d20 + bonus + magicBonus + flankBonus + sitBonus + gwmPenalty + equipBonus;
     const isNat20 = d20 === 20;
     const isNat1 = d20 === 1;
 
@@ -975,16 +1312,34 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     let dmgResult = null;
     const dmg = parseDamage(atk.damage_dice);
     if (dmg) {
-      const rolls = Array.from({ length: isCrit ? dmg.count * 2 : dmg.count }, () => rollDie(dmg.sides));
-      const dmgTotal = rolls.reduce((s, r) => s + r, 0) + dmg.mod + magicBonus;
-      dmgResult = { rolls, total: dmgTotal, crit: isCrit, extraDamage: weaponExtraDamage || '' };
+      // Respect critical hit rule setting
+      let critRolls;
+      if (isCrit) {
+        const critRule = (() => { try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').criticalHitRule || 'standard'; } catch { return 'standard'; } })();
+        if (critRule === 'maxPlusRoll') {
+          // Max damage die + normal roll
+          const normalRolls = Array.from({ length: dmg.count }, () => rollDie(dmg.sides));
+          const maxDmg = dmg.count * dmg.sides;
+          critRolls = normalRolls;
+          const dmgTotal = normalRolls.reduce((s, r) => s + r, 0) + maxDmg + dmg.mod + magicBonus + gwmDamage;
+          dmgResult = { rolls: normalRolls, total: dmgTotal, crit: true, critRule, maxBonus: maxDmg, extraDamage: weaponExtraDamage || '' };
+        } else {
+          critRolls = Array.from({ length: dmg.count * 2 }, () => rollDie(dmg.sides));
+          const dmgTotal = critRolls.reduce((s, r) => s + r, 0) + dmg.mod + magicBonus + gwmDamage;
+          dmgResult = { rolls: critRolls, total: dmgTotal, crit: true, extraDamage: weaponExtraDamage || '' };
+        }
+      } else {
+        const rolls = Array.from({ length: dmg.count }, () => rollDie(dmg.sides));
+        const dmgTotal = rolls.reduce((s, r) => s + r, 0) + dmg.mod + magicBonus + gwmDamage;
+        dmgResult = { rolls, total: dmgTotal, crit: false, extraDamage: weaponExtraDamage || '' };
+      }
     }
 
     const ts = Date.now();
     const modeLabel = rollMode === 'advantage' ? 'ADV' : rollMode === 'disadvantage' ? 'DIS' : null;
     setRollResults(prev => ({
       ...prev,
-      [atk.id]: { d20, d20a, d20b, rollMode, bonus, magicBonus, flankBonus, sitBonus, total, isNat20, isNat1, damage: dmgResult, ts },
+      [atk.id]: { d20, d20a, d20b, rollMode, bonus, magicBonus, flankBonus, sitBonus, equipBonus, total, isNat20, isNat1, damage: dmgResult, ts },
     }));
 
     // Track combat stats
@@ -1030,7 +1385,9 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     const critStr = isNat20 ? ' [NAT 20]' : isNat1 ? ' [NAT 1]' : '';
     const modeStr = modeLabel ? ` [${modeLabel}: ${d20a}, ${d20b}]` : '';
     const sitStr = sitBonus ? ` + ${sitBonus} bonus` : '';
-    logEvent('attack', `${atk.name || 'Attack'}: rolled ${d20} + ${bonus}${magicBonus ? ` + ${magicBonus} magic` : ''}${flankBonus ? ` + ${flankBonus} flanking` : ''}${sitStr} = ${total}${modeStr}${critStr}${dmgStr}${ammoLabel}`);
+    const gwmStr = gwmEnabled ? ' [GWM/SS: -5/+10]' : '';
+    const equipStr = equipBonus ? ` + ${equipBonus} equip` : '';
+    logEvent('attack', `${atk.name || 'Attack'}: rolled ${d20} + ${bonus}${magicBonus ? ` + ${magicBonus} magic` : ''}${flankBonus ? ` + ${flankBonus} flanking` : ''}${equipStr}${sitStr}${gwmStr} = ${total}${modeStr}${critStr}${dmgStr}${ammoLabel}`);
 
     // Clear previous timeout for this attack if any
     if (rollTimeoutRefs.current[atk.id]) {
@@ -1267,8 +1624,15 @@ export default function Combat({ characterId, character, onConditionsChange }) {
           logEvent('death', `${character.name || 'PC'} death save: rolled ${roll} — ${result.description}`);
 
           if (result.type === 'nat20') {
-            // Clear death saves — character regains 1 HP
-            setDeathSaves(prev => { const next = { ...prev }; delete next[pcDeathKey]; return next; });
+            // Clear death saves — character regains 1 HP (brutal: keep failures)
+            if (deathSaveRule === 'heroic') {
+              setDeathSaves(prev => ({
+                ...prev,
+                [pcDeathKey]: { successes: 0, failures: pcDs.failures, stable: false, dead: false },
+              }));
+            } else {
+              setDeathSaves(prev => { const next = { ...prev }; delete next[pcDeathKey]; return next; });
+            }
             toast(`Natural 20! ${character.name || 'You'} regain 1 HP!`, {
               icon: '\u2728', duration: 4000,
               style: { background: '#0a1a0a', color: '#86efac', border: '1px solid rgba(34,197,94,0.5)' },
@@ -1343,6 +1707,11 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                 ))}
               </div>
             </div>
+            {deathSaveRule === 'heroic' && (
+              <div className="mt-2 text-[10px] text-red-400/60 flex items-center gap-1.5">
+                <AlertTriangle size={10} /> Brutal rule active: death save failures do not reset on stabilize
+              </div>
+            )}
           </div>
         );
       })()}
@@ -1371,18 +1740,28 @@ export default function Combat({ characterId, character, onConditionsChange }) {
           </div>
           <div className="flex items-center gap-2">
             {/* Turn Timer Display */}
-            {turnTimerEnabled && combatants.length > 0 && (
-              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold transition-all ${
-                turnTimerRemaining <= 10 && turnTimerRemaining > 0
-                  ? 'bg-red-900/40 border-red-500/50 text-red-300 animate-pulse'
-                  : turnTimerRemaining <= 0
-                  ? 'bg-red-900/20 border-red-500/20 text-red-400/60'
-                  : 'bg-gold/10 border-gold/30 text-gold'
-              }`}>
-                <Timer size={12} />
-                <span>{turnTimerRemaining}s</span>
-              </div>
-            )}
+            {turnTimerEnabled && combatants.length > 0 && (() => {
+              const pct = turnTimerDuration > 0 ? turnTimerRemaining / turnTimerDuration : 0;
+              const mins = Math.floor(turnTimerRemaining / 60);
+              const secs = turnTimerRemaining % 60;
+              const display = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+              let colorClass;
+              if (turnTimerRemaining <= 0) {
+                colorClass = 'bg-red-900/20 border-red-500/20 text-red-400/60';
+              } else if (pct < 0.25) {
+                colorClass = 'bg-red-900/40 border-red-500/50 text-red-300 animate-pulse';
+              } else if (pct < 0.5) {
+                colorClass = 'bg-yellow-900/40 border-yellow-500/50 text-yellow-300';
+              } else {
+                colorClass = 'bg-emerald-900/30 border-emerald-500/40 text-emerald-300';
+              }
+              return (
+                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-sm font-bold font-mono transition-all ${colorClass}`}>
+                  <Timer size={14} />
+                  <span>{display}</span>
+                </div>
+              );
+            })()}
             {combatants.length > 0 && (
               <>
                 <button
@@ -1399,6 +1778,17 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                 >
                   Next Turn <ChevronRight size={14} />
                 </button>
+                <button
+                  onClick={() => { setMassDamageMode(prev => !prev); setMassDamageSelected(new Set()); setMassDamageAmount(''); }}
+                  className={`text-xs px-2 py-1 rounded border transition-all ${
+                    massDamageMode
+                      ? 'bg-orange-900/40 text-orange-300 border-orange-500/30'
+                      : 'bg-white/5 text-amber-200/40 border-amber-200/10 hover:text-amber-200/60'
+                  }`}
+                  title="AoE / Mass Damage — apply damage or healing to multiple combatants at once"
+                >
+                  AoE
+                </button>
                 <button onClick={clearCombatants} className="text-xs text-red-400/70 hover:text-red-400 transition-colors ml-1">
                   Clear All
                 </button>
@@ -1406,7 +1796,104 @@ export default function Combat({ characterId, character, onConditionsChange }) {
             )}
           </div>
         </div>
-        <p className="text-xs text-amber-200/30 mb-3">Track turn order with HP. Click a combatant's HP to apply damage or healing.</p>
+        <p className="text-xs text-amber-200/30 mb-3">Track turn order with HP. Click a combatant's HP to apply damage or healing.
+          <span className="ml-2 text-amber-200/20" title="D=Damage H=Heal R=Roll S=Sort A=Add L=Log Space=Next Backspace=Prev 1-9=Target">
+            Shortcuts: D H R S A L Space 1-9
+          </span>
+        </p>
+        {/* Mass Damage (AoE) Panel */}
+        {massDamageMode && combatants.length > 0 && (
+          <div className="mb-3 p-3 bg-orange-950/20 border border-orange-500/20 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-display text-orange-300 flex items-center gap-1.5">
+                <Zap size={12} /> AoE / Mass {massDamageType === 'healing' ? 'Healing' : 'Damage'} — select targets
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setMassDamageSelected(new Set(combatants.map(c => c.id)))}
+                  className="text-[10px] text-amber-200/50 hover:text-amber-200/80 transition-colors"
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={() => setMassDamageSelected(new Set(combatants.filter(c => c.isEnemy).map(c => c.id)))}
+                  className="text-[10px] text-red-300/50 hover:text-red-300/80 transition-colors"
+                >
+                  Enemies Only
+                </button>
+                <button
+                  onClick={() => setMassDamageSelected(new Set())}
+                  className="text-[10px] text-amber-200/50 hover:text-amber-200/80 transition-colors"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {combatants.map(c => {
+                const selected = massDamageSelected.has(c.id);
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => setMassDamageSelected(prev => {
+                      const next = new Set(prev);
+                      if (next.has(c.id)) next.delete(c.id); else next.add(c.id);
+                      return next;
+                    })}
+                    className={`text-xs px-2 py-1 rounded border transition-all ${
+                      selected
+                        ? c.isEnemy ? 'bg-red-900/40 text-red-200 border-red-500/40' : 'bg-blue-900/40 text-blue-200 border-blue-500/40'
+                        : 'bg-white/5 text-amber-200/40 border-amber-200/10 hover:text-amber-200/60'
+                    }`}
+                  >
+                    {c.isEnemy ? '\u2620 ' : ''}{c.name}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setMassDamageType('damage')}
+                className={`text-xs px-2 py-1 rounded border transition-all ${
+                  massDamageType === 'damage' ? 'bg-red-900/40 text-red-300 border-red-500/30' : 'bg-white/5 text-amber-200/40 border-amber-200/10'
+                }`}
+              >
+                Damage
+              </button>
+              <button
+                onClick={() => setMassDamageType('healing')}
+                className={`text-xs px-2 py-1 rounded border transition-all ${
+                  massDamageType === 'healing' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/30' : 'bg-white/5 text-amber-200/40 border-amber-200/10'
+                }`}
+              >
+                Healing
+              </button>
+              <input
+                ref={massDamageInputRef}
+                type="number"
+                className="input w-24 text-sm"
+                placeholder="Amount"
+                value={massDamageAmount}
+                onChange={e => setMassDamageAmount(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') applyMassDamage(); if (e.key === 'Escape') { setMassDamageMode(false); setMassDamageSelected(new Set()); } }}
+                autoFocus
+              />
+              <button
+                onClick={applyMassDamage}
+                disabled={massDamageSelected.size === 0 || !massDamageAmount}
+                className={`btn-primary text-xs px-3 py-1.5 disabled:opacity-30 ${massDamageType === 'healing' ? '!bg-emerald-600/30 !border-emerald-500/40 !text-emerald-300' : '!bg-red-600/30 !border-red-500/40 !text-red-300'}`}
+              >
+                Apply to {massDamageSelected.size} target{massDamageSelected.size !== 1 ? 's' : ''}
+              </button>
+              {[10, 15, 20, 28].map(amt => (
+                <button key={amt} onClick={() => { setMassDamageAmount(String(amt)); }} className="text-[10px] px-1.5 py-0.5 rounded border bg-white/5 text-amber-200/30 border-amber-200/10 hover:text-amber-200/60 transition-all">
+                  {amt}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Turn Timer Settings */}
         <div className="flex items-center gap-2 mb-3">
           <Timer size={12} className="text-amber-200/40" />
@@ -1446,6 +1933,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         </div>
         <div className="flex gap-2 mb-3">
           <input
+            ref={addCombatantInputRef}
             className="input flex-1"
             placeholder="Name"
             value={newCombatantName}
@@ -1506,6 +1994,28 @@ export default function Combat({ characterId, character, onConditionsChange }) {
           >
             {newCombatantIsEnemy ? <Skull size={14} /> : <Shield size={14} />}
           </button>
+          <button
+            onClick={() => setMinionMode(prev => !prev)}
+            className={`px-2 py-1 rounded text-xs font-medium border transition-all ${
+              minionMode
+                ? 'bg-rose-900/40 text-rose-300 border-rose-500/30'
+                : 'bg-white/5 text-amber-200/30 border-amber-200/10'
+            }`}
+            title={minionMode ? 'Minion Mode ON — new combatants get 1 HP, any hit kills' : 'Minion Mode OFF (click to enable)'}
+          >
+            {minionMode ? 'MINION' : 'Min'}
+          </button>
+          <button
+            onClick={() => setNewCombatantIsSwarm(prev => !prev)}
+            className={`px-2 py-1 rounded text-xs font-medium border transition-all ${
+              newCombatantIsSwarm
+                ? 'bg-teal-900/40 text-teal-300 border-teal-500/30'
+                : 'bg-white/5 text-amber-200/30 border-amber-200/10'
+            }`}
+            title={newCombatantIsSwarm ? 'Swarm ON — damage scales with HP percentage' : 'Swarm OFF (click to mark as swarm)'}
+          >
+            {newCombatantIsSwarm ? 'SWARM' : 'Swm'}
+          </button>
           <button onClick={addCombatant} className="btn-primary text-xs flex items-center gap-1">
             <Plus size={12} /> Add
           </button>
@@ -1532,6 +2042,21 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                     <span className={`text-sm flex-1 ${isCurrentTurn ? 'text-amber-100 font-semibold' : 'text-amber-100'} ${isDead ? 'line-through' : ''}`}>
                       {c.isEnemy && <Skull size={12} className="inline text-red-400/60 mr-1" />}
                       {c.name}
+                      {c.isMinion && (
+                        <span className="ml-1.5 text-[9px] font-bold bg-rose-800/50 text-rose-300 px-1.5 py-0.5 rounded border border-rose-500/30 align-middle">
+                          MINION
+                        </span>
+                      )}
+                      {c.isSwarm && (
+                        <span className="ml-1.5 text-[9px] font-bold bg-teal-800/50 text-teal-300 px-1.5 py-0.5 rounded border border-teal-500/30 align-middle">
+                          SWARM
+                        </span>
+                      )}
+                      {c.isSwarm && c.maxHp > 0 && (c.currentHp ?? c.maxHp) <= Math.floor(c.maxHp / 2) && (c.currentHp ?? c.maxHp) > 0 && (
+                        <span className="ml-1.5 text-[9px] font-medium bg-orange-900/40 text-orange-300 px-1.5 py-0.5 rounded border border-orange-500/30 align-middle">
+                          Swarm reduced — half damage
+                        </span>
+                      )}
                     </span>
                     {/* HP display with click-to-edit */}
                     {c.maxHp > 0 && (
@@ -1573,6 +2098,33 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                         </div>
                       </button>
                     )}
+                    {/* Cover toggle */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const coverCycle = ['none', 'half', 'three-quarters', 'total'];
+                        const currentIdx = coverCycle.indexOf(c.cover || 'none');
+                        const nextCover = coverCycle[(currentIdx + 1) % coverCycle.length];
+                        setCombatants(prev => prev.map(cb => cb.id === c.id ? { ...cb, cover: nextCover } : cb));
+                        if (nextCover !== 'none') {
+                          const bonusMap = { half: '+2', 'three-quarters': '+5', total: 'Total' };
+                          toast(`${c.name}: ${nextCover === 'three-quarters' ? '3/4' : nextCover} cover (${bonusMap[nextCover]} AC)`, {
+                            icon: '\u{1F6E1}', duration: 1500,
+                            style: { background: '#0a0a1a', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.3)' },
+                          });
+                        }
+                      }}
+                      className={`w-6 h-6 rounded flex items-center justify-center transition-all text-[9px] font-bold ${
+                        !c.cover || c.cover === 'none'
+                          ? 'bg-white/5 border border-amber-200/10 text-amber-200/30'
+                          : c.cover === 'half' ? 'bg-blue-900/30 border border-blue-500/30 text-blue-300'
+                          : c.cover === 'three-quarters' ? 'bg-blue-900/50 border border-blue-500/50 text-blue-200'
+                          : 'bg-blue-800/60 border border-blue-400/60 text-blue-100'
+                      }`}
+                      title={`Cover: ${!c.cover || c.cover === 'none' ? 'None' : c.cover === 'half' ? 'Half (+2 AC/DEX)' : c.cover === 'three-quarters' ? '3/4 (+5 AC/DEX)' : 'Total (untargetable)'}. Click to cycle.`}
+                    >
+                      {!c.cover || c.cover === 'none' ? '\u00BD' : c.cover === 'half' ? '\u00BD' : c.cover === 'three-quarters' ? '\u00BE' : '\u2588'}
+                    </button>
                     {/* Reaction toggle */}
                     <button
                       onClick={(e) => {
@@ -1588,14 +2140,18 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                     >
                       {c.reactionUsed ? <ShieldOff size={11} /> : <Shield size={11} />}
                     </button>
-                    {/* Undo last HP change */}
-                    {hpUndoStack[c.id] && (
+                    {/* Undo last HP change (multi-step) */}
+                    {Array.isArray(hpUndoStack[c.id]) && hpUndoStack[c.id].length > 0 && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          const undo = hpUndoStack[c.id];
+                          const stack = [...hpUndoStack[c.id]];
+                          const undo = stack.pop();
                           setCombatants(prev => prev.map(cb => cb.id === c.id ? { ...cb, currentHp: undo.previousHp, tempHp: undo.previousTempHp } : cb));
-                          setHpUndoStack(prev => { const next = { ...prev }; delete next[c.id]; return next; });
+                          setHpUndoStack(prev => {
+                            if (stack.length === 0) { const next = { ...prev }; delete next[c.id]; return next; }
+                            return { ...prev, [c.id]: stack };
+                          });
                           logEvent('healing', `Undo: ${c.name} HP restored to ${undo.previousHp}`);
                           toast(`Undid HP change for ${c.name}`, {
                             icon: '\u21A9', duration: 2000,
@@ -1684,6 +2240,26 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                           })()}
                         </div>
                       )}
+                      {/* Quick damage preset buttons */}
+                      <div className="flex items-center gap-1 mb-1.5">
+                        <span className="text-[10px] text-amber-200/30 mr-1">Quick:</span>
+                        {[5, 10, 15, 20, 25, 50].map(amt => (
+                          <button
+                            key={amt}
+                            onClick={() => {
+                              applyDamageHealing(c.id, amt, calcMode, calcModifier, calcDamageType);
+                              setCalcTarget(null);
+                            }}
+                            className={`text-[10px] px-2 py-0.5 rounded border transition-all hover:scale-105 ${
+                              calcMode === 'healing'
+                                ? 'bg-emerald-900/30 text-emerald-300/80 border-emerald-500/20 hover:bg-emerald-900/50 hover:border-emerald-500/40'
+                                : 'bg-red-900/30 text-red-300/80 border-red-500/20 hover:bg-red-900/50 hover:border-red-500/40'
+                            }`}
+                          >
+                            {amt}
+                          </button>
+                        ))}
+                      </div>
                       <div className="flex items-center gap-2">
                         <input
                           type="number"
@@ -1696,6 +2272,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                               applyDamageHealing(c.id, parseInt(calcAmount) || 0, calcMode, calcModifier, calcDamageType);
                               setCalcTarget(null);
                             }
+                            if (e.key === 'Escape') setCalcTarget(null);
                           }}
                           autoFocus
                         />
@@ -1857,6 +2434,70 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         <p className="text-[10px] text-amber-200/30 mt-2">Auto-resets each round on Next Turn.</p>
       </div>
 
+      {/* Legendary Resistance Tracker */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-display text-amber-100">Legendary Resistances</h3>
+          <button
+            onClick={() => setLegendaryResistances(prev => ({ ...prev, used: 0 }))}
+            className="text-xs text-amber-200/50 hover:text-amber-200/80 transition-colors flex items-center gap-1"
+            title="Reset legendary resistances"
+          >
+            <RotateCcw size={11} /> Reset
+          </button>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {Array.from({ length: legendaryResistances.max }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  const newUsed = i < legendaryResistances.used ? i : i + 1;
+                  setLegendaryResistances(prev => ({ ...prev, used: newUsed }));
+                  if (newUsed > legendaryResistances.used) {
+                    const remaining = legendaryResistances.max - newUsed;
+                    toast(`Legendary Resistance used! ${remaining} remaining.`, {
+                      icon: '\u{1F6E1}', duration: 3000,
+                      style: { background: '#1a0a2a', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.4)' },
+                    });
+                    logEvent('legendary', `Legendary Resistance used (${remaining} remaining)`);
+                  }
+                }}
+                className={`w-8 h-8 rounded-full border-2 transition-all ${
+                  i < legendaryResistances.used
+                    ? 'bg-purple-900/40 border-purple-500/30 text-purple-400/40'
+                    : 'bg-purple-500/30 border-purple-400 text-purple-300 shadow-[0_0_6px_rgba(139,92,246,0.3)]'
+                }`}
+                title={i < legendaryResistances.used ? 'Used' : `Available — click to use`}
+              >
+                <Shield size={14} className="mx-auto" />
+              </button>
+            ))}
+          </div>
+          <span className="text-xs text-amber-200/40">
+            {legendaryResistances.max - legendaryResistances.used} / {legendaryResistances.max} remaining
+          </span>
+          {/* Max stepper */}
+          <div className="ml-auto flex items-center gap-1.5">
+            <span className="text-xs text-amber-200/30">Max:</span>
+            <button
+              onClick={() => setLegendaryResistances(prev => ({ ...prev, max: Math.max(1, prev.max - 1), used: Math.min(prev.used, Math.max(1, prev.max - 1)) }))}
+              className="w-6 h-6 rounded bg-white/5 border border-amber-200/10 hover:border-amber-200/20 text-amber-200/40 hover:text-amber-200/60 transition-all flex items-center justify-center text-xs"
+            >
+              -
+            </button>
+            <span className="text-amber-200/60 text-sm font-medium w-4 text-center">{legendaryResistances.max}</span>
+            <button
+              onClick={() => setLegendaryResistances(prev => ({ ...prev, max: Math.min(10, prev.max + 1) }))}
+              className="w-6 h-6 rounded bg-white/5 border border-amber-200/10 hover:border-amber-200/20 text-amber-200/40 hover:text-amber-200/60 transition-all flex items-center justify-center text-xs"
+            >
+              +
+            </button>
+          </div>
+        </div>
+        <p className="text-[10px] text-amber-200/30 mt-2">When the boss fails a saving throw, click to use a resistance to auto-succeed instead.</p>
+      </div>
+
       {/* Lair Actions */}
       <div className="card">
         <div className="flex items-center justify-between mb-2">
@@ -1890,18 +2531,72 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       <div className="card">
         <div className="flex items-center justify-between mb-1">
           <h3 className="font-display text-amber-100">Attacks & Weapons<HelpTooltip text="Roll d20 + attack bonus. If the total meets or exceeds the target's AC, you hit. Then roll damage dice + modifier." /></h3>
-          <button
-            onClick={() => setFlankingEnabled(prev => !prev)}
-            className={`px-2.5 py-1 rounded text-xs font-medium transition-all select-none ${
-              flankingEnabled
-                ? 'bg-gold/15 text-gold border border-gold/40'
-                : 'bg-white/5 text-amber-200/40 border border-amber-200/10 hover:text-amber-200/60 hover:border-amber-200/20'
-            }`}
-            title={flankingEnabled ? 'Flanking active: +2 to attack rolls' : 'Enable flanking bonus'}
-          >
-            Flanking: +2 {flankingEnabled ? 'ON' : 'OFF'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setGwmEnabled(prev => !prev)}
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-all select-none ${
+                gwmEnabled
+                  ? 'bg-red-900/30 text-red-300 border border-red-500/40'
+                  : 'bg-white/5 text-amber-200/40 border border-amber-200/10 hover:text-amber-200/60 hover:border-amber-200/20'
+              }`}
+              title={gwmEnabled ? 'GWM/Sharpshooter active: -5 to hit, +10 damage' : 'Enable Great Weapon Master / Sharpshooter (-5/+10)'}
+            >
+              GWM/SS {gwmEnabled ? 'ON' : 'OFF'}
+            </button>
+            <button
+              onClick={() => setFlankingEnabled(prev => !prev)}
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-all select-none ${
+                flankingEnabled
+                  ? 'bg-gold/15 text-gold border border-gold/40'
+                  : 'bg-white/5 text-amber-200/40 border border-amber-200/10 hover:text-amber-200/60 hover:border-amber-200/20'
+              }`}
+              title={flankingEnabled ? 'Flanking active: +2 to attack rolls' : 'Enable flanking bonus'}
+            >
+              Flanking: +2 {flankingEnabled ? 'ON' : 'OFF'}
+            </button>
+            <button
+              onClick={() => setLairAction(prev => ({ ...prev, enabled: !prev.enabled }))}
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-all select-none ${
+                lairAction.enabled
+                  ? 'bg-purple-900/40 text-purple-300 border border-purple-500/40'
+                  : 'bg-white/5 text-amber-200/40 border border-amber-200/10 hover:text-amber-200/60 hover:border-amber-200/20'
+              }`}
+              title={lairAction.enabled ? 'Lair actions enabled — reminder shown each round at init 20' : 'Enable lair action reminders each round'}
+            >
+              Lair {lairAction.enabled ? 'ON' : 'OFF'}
+            </button>
+          </div>
         </div>
+        {/* Gameplay settings info banners */}
+        {restVariant === 'gritty' && (
+          <div className="text-xs px-3 py-1.5 rounded-lg mb-2 border bg-amber-900/15 border-amber-500/20 text-amber-300 flex items-center gap-2">
+            <Timer size={12} className="flex-shrink-0" /> Gritty Realism: Short rest = 8 hours, Long rest = 7 days
+          </div>
+        )}
+        {restVariant === 'epic' && (
+          <div className="text-xs px-3 py-1.5 rounded-lg mb-2 border bg-cyan-900/15 border-cyan-500/20 text-cyan-300 flex items-center gap-2">
+            <Timer size={12} className="flex-shrink-0" /> Epic Heroism: Short rest = 1 minute, Long rest = 1 hour
+          </div>
+        )}
+        {flankingSetting && (
+          <div className="text-xs px-3 py-1.5 rounded-lg mb-2 border bg-gold/5 border-gold/15 text-gold/70 flex items-center gap-2">
+            <Lightbulb size={12} className="flex-shrink-0" /> Flanking: Melee attacks with an ally on opposite side gain advantage
+          </div>
+        )}
+        {diagonalMovement === 'alternating' ? (
+          <div className="text-xs px-3 py-1.5 rounded-lg mb-2 border bg-indigo-900/15 border-indigo-500/20 text-indigo-300 flex items-center gap-2">
+            <ArrowRight size={12} className="flex-shrink-0" /> Diagonal: alternating 5ft/10ft
+          </div>
+        ) : (
+          <div className="text-xs px-3 py-1.5 rounded-lg mb-2 border bg-stone-900/15 border-stone-500/15 text-stone-400 flex items-center gap-2">
+            <ArrowRight size={12} className="flex-shrink-0" /> Diagonal: 5ft
+          </div>
+        )}
+        {deathSaveRule === 'heroic' && (
+          <div className="text-xs px-3 py-1.5 rounded-lg mb-2 border bg-red-900/15 border-red-500/20 text-red-300 flex items-center gap-2">
+            <Skull size={12} className="flex-shrink-0" /> Brutal Death Saves: Failures do NOT reset when stabilized
+          </div>
+        )}
         {/* Condition effects banner */}
         {condEffects.netAttackMode !== 'normal' && (
           <div className={`text-xs px-3 py-1.5 rounded-lg mb-2 border ${
@@ -1942,7 +2637,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3">
                         <span className="text-amber-100 font-medium">{atk.name || 'Unnamed Attack'}</span>
-                        <span className="text-gold text-sm">{atk.attack_bonus ?? '+0'}{weaponMagicBonus > 0 && <span className="text-purple-400/70 text-xs ml-0.5">(+{weaponMagicBonus})</span>}{flankingEnabled && <span className="text-gold/60 text-xs ml-0.5">(+2)</span>}</span>
+                        <span className="text-gold text-sm">{atk.attack_bonus ?? '+0'}{weaponMagicBonus > 0 && <span className="text-purple-400/70 text-xs ml-0.5">(+{weaponMagicBonus})</span>}{flankingEnabled && <span className="text-gold/60 text-xs ml-0.5">(+2)</span>}{gwmEnabled && <span className="text-red-400/70 text-xs ml-0.5">(-5/+10)</span>}</span>
                         <span className="text-amber-200/60 text-sm">{atk.damage_dice ?? '\u2014'} {atk.damage_type && <span className="text-amber-200/40">{atk.damage_type}</span>}</span>
                         {atk.attack_range && <span className="text-amber-200/30 text-xs">{atk.attack_range}</span>}
                         {/* Item 7: Ammo count */}
@@ -2130,7 +2825,8 @@ export default function Combat({ characterId, character, onConditionsChange }) {
             <h4 className="text-xs text-gold font-semibold mb-1.5">{section.label}</h4>
             <ul className="space-y-1">
               {section.items.map((item, i) => (
-                <li key={i} className="text-xs text-amber-200/60 pl-3 relative before:content-['\u2022'] before:absolute before:left-0 before:text-gold/40">
+                <li key={i} className="text-xs text-amber-200/60 pl-3 relative">
+                  <span className="absolute left-0 text-gold/40">&bull;</span>
                   {item}
                 </li>
               ))}
@@ -2140,6 +2836,9 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       </div>
 
       {/* Combat Log */}
+      {/* Quick Reference Card */}
+      <QuickReference />
+
       <CombatLog
         combatLog={combatLog}
         combatLogOpen={combatLogOpen}
@@ -2803,6 +3502,102 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDur
               </div>
             )}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QuickReference() {
+  const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState('actions'); // 'actions' | 'dc' | 'cover'
+
+  return (
+    <div className="card">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center justify-between w-full"
+      >
+        <div className="flex items-center gap-2">
+          <ScrollText size={14} className="text-amber-200/50" />
+          <h3 className="font-display text-amber-100 text-sm">Quick Reference</h3>
+        </div>
+        {open ? <ChevronUp size={16} className="text-amber-200/40" /> : <ChevronDown size={16} className="text-amber-200/40" />}
+      </button>
+      {open && (
+        <div className="mt-3">
+          <div className="flex gap-1 mb-3">
+            {[
+              { id: 'actions', label: 'Actions' },
+              { id: 'dc', label: 'Skill DCs' },
+              { id: 'cover', label: 'Cover' },
+            ].map(t => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`text-[10px] px-2.5 py-1 rounded border transition-all ${
+                  tab === t.id
+                    ? 'bg-gold/15 text-gold border-gold/30 font-medium'
+                    : 'bg-white/5 text-amber-200/40 border-amber-200/10 hover:text-amber-200/60'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {tab === 'actions' && (
+            <div className="space-y-1">
+              {COMBAT_ACTIONS.map(a => (
+                <div key={a.name} className="flex items-start gap-2 text-xs">
+                  <span className={`font-medium shrink-0 w-28 ${
+                    a.type === 'action' ? 'text-amber-100' :
+                    a.type === 'bonus' ? 'text-emerald-300' : 'text-blue-300'
+                  }`}>
+                    {a.name}
+                  </span>
+                  <span className="text-amber-200/50">{a.description}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab === 'dc' && (
+            <div className="space-y-1">
+              {SKILL_CHECK_DCS.map(d => (
+                <div key={d.dc} className="flex items-center gap-3 text-xs">
+                  <span className="font-bold text-gold w-8 text-center">{d.dc}</span>
+                  <span className="font-medium text-amber-100 w-32">{d.difficulty}</span>
+                  <span className="text-amber-200/40">{d.description}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab === 'cover' && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-3 text-xs">
+                <span className="font-bold text-blue-300 w-20">Half</span>
+                <span className="text-amber-200/50">+2 AC, +2 DEX saves. Low wall, furniture, creatures.</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="font-bold text-blue-200 w-20">3/4</span>
+                <span className="text-amber-200/50">+5 AC, +5 DEX saves. Arrow slit, thick tree trunk.</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="font-bold text-blue-100 w-20">Total</span>
+                <span className="text-amber-200/50">Can't be targeted directly by attacks or spells.</span>
+              </div>
+              <div className="mt-2 pt-2 border-t border-amber-200/10 space-y-1">
+                <div className="text-[10px] text-amber-200/30 font-medium uppercase tracking-wider">Common Damage Types & Resistances</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {['Bludgeoning', 'Piercing', 'Slashing', 'Fire', 'Cold', 'Lightning', 'Thunder', 'Acid', 'Poison', 'Necrotic', 'Radiant', 'Force', 'Psychic'].map(t => (
+                    <span key={t} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-amber-200/10 text-amber-200/40">{t}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

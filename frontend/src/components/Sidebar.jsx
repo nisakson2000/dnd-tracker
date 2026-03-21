@@ -6,8 +6,9 @@ import {
   Library, Settings2, Heart, Bug, Crown, LayoutDashboard,
   Star, Search, X, Zap, Wifi, MapPin, Lightbulb, Grid3X3, Eye,
   Calendar, Hammer, Package, HelpCircle, Dices, PawPrint, ClipboardList, Skull,
-  ChevronDown, ChevronRight, Play,
+  ChevronDown, ChevronRight, Play, ChevronsDownUp, Pin,
 } from 'lucide-react';
+import { APP_VERSION } from '../version';
 import toast from 'react-hot-toast';
 import { useAppMode } from '../contexts/ModeContext';
 import { useSession } from '../contexts/SessionContext';
@@ -21,6 +22,10 @@ function isAssistantEnabled() {
     const raw = localStorage.getItem('codex-assistant-settings');
     return raw ? JSON.parse(raw).enabled === true : false;
   } catch { return false; }
+}
+
+function getSessionStyle() {
+  try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').sessionStyle || 'solo'; } catch { return 'solo'; }
 }
 
 const PLAYER_SECTION_GROUPS = [
@@ -50,6 +55,7 @@ const PLAYER_SECTION_GROUPS = [
       { id: 'random-tables', label: 'Random Encounters',   icon: Dices },
       { id: 'ai-modules', label: 'AI Modules',        icon: Sparkles },
       { id: 'ai-assistant', label: 'Arcane Advisor',   icon: Zap, conditional: () => isAssistantEnabled() },
+      { id: 'party-connect', label: 'Party Connect', icon: Wifi, session: 'connected' },
       { id: 'settings',   label: 'Settings',           icon: Settings2 },
     ],
   },
@@ -138,12 +144,36 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
   const [showHpPopup, setShowHpPopup] = useState(false);
   const [hpInput, setHpInput] = useState('');
   const hpInputRef = useRef(null);
+  const [showSidebarDice, setShowSidebarDice] = useState(() => {
+    try { const s = JSON.parse(localStorage.getItem('codex-v3-settings') || '{}'); return s.sidebarDice !== false; } catch { return true; }
+  });
+  const [currentSessionStyle, setCurrentSessionStyle] = useState(() => getSessionStyle());
 
-  // Re-render when AI settings change so the Arcane Advisor item appears/disappears
+  // Re-render when AI or gameplay settings change
   useEffect(() => {
     const handler = () => forceUpdate(n => n + 1);
+    const settingsHandler = (e) => {
+      forceUpdate(n => n + 1);
+      const detail = e.detail || {};
+      // Update sidebar dice
+      if (detail.sidebarDice !== undefined) {
+        setShowSidebarDice(detail.sidebarDice !== false);
+      } else {
+        try { const s = JSON.parse(localStorage.getItem('codex-v3-settings') || '{}'); setShowSidebarDice(s.sidebarDice !== false); } catch {}
+      }
+      // Update session style
+      if (detail.sessionStyle) {
+        setCurrentSessionStyle(detail.sessionStyle);
+      } else {
+        setCurrentSessionStyle(getSessionStyle());
+      }
+    };
     window.addEventListener('codex-ai-settings-changed', handler);
-    return () => window.removeEventListener('codex-ai-settings-changed', handler);
+    window.addEventListener('codex-settings-changed', settingsHandler);
+    return () => {
+      window.removeEventListener('codex-ai-settings-changed', handler);
+      window.removeEventListener('codex-settings-changed', settingsHandler);
+    };
   }, []);
 
   const isDM = appMode === 'dm';
@@ -163,7 +193,6 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
   const sectionGroups = isDM
     ? rawGroups
         .filter(g => {
-          // Hide entire groups based on campaign phase
           if (isDraft && g.phase === 'run') return false;
           if (!isDraft && g.phase === 'build') return false;
           return true;
@@ -172,13 +201,19 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
           ...g,
           items: g.items.filter(item => {
             if (item.campaignTypes && !item.campaignTypes.includes(campaignType)) return false;
-            // Hide items based on campaign phase
             if (isDraft && item.phase === 'run') return false;
             if (!isDraft && item.phase === 'build') return false;
             return true;
           }),
         })).filter(g => g.items.length > 0)
-    : rawGroups;
+    : rawGroups.map(g => ({
+        ...g,
+        items: g.items.filter(item => {
+          // Hide Party Connect items in solo mode
+          if (item.session && item.session !== currentSessionStyle) return false;
+          return true;
+        }),
+      })).filter(g => g.items.length > 0);
 
   const hp = character?.current_hp ?? 0;
   const maxHp = character?.max_hp ?? 0;
@@ -332,6 +367,10 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
                     {hp}/{maxHp}{tempHp > 0 ? <span style={{ color: '#60a5fa', fontSize: '9px' }}> +{tempHp}</span> : ''}
                   </span>
                 </div>
+                {/* Micro HP progress bar */}
+                <div style={{ height: '2px', borderRadius: '1px', background: 'rgba(255,255,255,0.06)', marginTop: '2px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${hpPct}%`, background: fillColor, borderRadius: '1px', transition: 'width 0.3s' }} />
+                </div>
 
                 {/* Quick HP popup */}
                 {showHpPopup && onHpChange && (
@@ -413,34 +452,12 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
               </div>
             )}
 
-            {/* Combat stats row — AC, Speed, Prof Bonus */}
-            {character && (
+            {/* Initiative bonus — only shown if non-zero (Prof, AC, Speed all in top bar) */}
+            {character && character.initiative_bonus !== undefined && character.initiative_bonus !== 0 && (
               <div style={{ display: 'flex', gap: '6px', marginTop: '10px', flexWrap: 'wrap' }}>
-                {character.armor_class > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 7px', borderRadius: '6px', background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.15)', transition: 'all 0.15s' }} title="Armor Class">
-                    <Shield size={9} style={{ color: '#60a5fa' }} />
-                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#60a5fa', fontFamily: 'var(--font-mono)' }}>{character.armor_class}</span>
-                  </div>
-                )}
-                {character.speed > 0 && (
-                  <div style={{ padding: '2px 7px', borderRadius: '6px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.15)', transition: 'all 0.15s' }} title="Speed">
-                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#4ade80', fontFamily: 'var(--font-mono)' }}>{character.speed}ft</span>
-                  </div>
-                )}
-                {(() => {
-                  const lvl = character.level || 1;
-                  const prof = lvl >= 17 ? 6 : lvl >= 13 ? 5 : lvl >= 9 ? 4 : lvl >= 5 ? 3 : 2;
-                  return (
-                    <div style={{ padding: '2px 7px', borderRadius: '6px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.15)', transition: 'all 0.15s' }} title="Proficiency Bonus">
-                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#c9a84c', fontFamily: 'var(--font-mono)' }}>+{prof}</span>
-                    </div>
-                  );
-                })()}
-                {character.initiative_bonus !== undefined && character.initiative_bonus !== 0 && (
-                  <div style={{ padding: '2px 7px', borderRadius: '6px', background: 'rgba(192,132,252,0.08)', border: '1px solid rgba(192,132,252,0.15)', transition: 'all 0.15s' }} title="Initiative Bonus">
-                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#c084fc', fontFamily: 'var(--font-mono)' }}>{character.initiative_bonus >= 0 ? '+' : ''}{character.initiative_bonus} Init</span>
-                  </div>
-                )}
+                <div style={{ padding: '2px 7px', borderRadius: '6px', background: 'rgba(192,132,252,0.08)', border: '1px solid rgba(192,132,252,0.15)', transition: 'all 0.15s' }} title="Initiative Bonus">
+                  <span style={{ fontSize: '10px', fontWeight: 700, color: '#c084fc', fontFamily: 'var(--font-mono)' }}>{character.initiative_bonus >= 0 ? '+' : ''}{character.initiative_bonus} Init</span>
+                </div>
               </div>
             )}
 
@@ -483,10 +500,10 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
               </div>
             )}
 
-            {/* Quick dice roller */}
-            {!isDM && character && (
+            {/* Quick dice roller — respects sidebarDice setting */}
+            {!isDM && character && showSidebarDice && (
               <div style={{ display: 'flex', gap: '3px', marginTop: '8px', flexWrap: 'wrap' }}>
-                {[4, 6, 8, 10, 12, 20].map(die => (
+                {[4, 6, 8, 10, 12, 20, 100].map(die => (
                   <button
                     key={die}
                     onClick={() => {
@@ -548,6 +565,31 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
 
       {/* Navigation groups */}
       <nav style={{ flex: 1, padding: '8px 0', overflowY: 'auto' }}>
+        {/* Collapse all button */}
+        {!searchQuery && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 10px 4px' }}>
+            <button
+              onClick={() => {
+                const allCollapsed = {};
+                sectionGroups.forEach(g => { allCollapsed[g.label] = true; });
+                setCollapsedGroups(allCollapsed);
+                localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify(allCollapsed));
+              }}
+              title="Collapse all groups"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '4px',
+                background: 'none', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px',
+                cursor: 'pointer', color: 'var(--text-mute)', padding: '2px 6px',
+                fontSize: '9px', fontFamily: 'var(--font-ui)', transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-mute)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+            >
+              <ChevronsDownUp size={10} />
+              Collapse all
+            </button>
+          </div>
+        )}
         {/* DM Guidance: Next Steps Widget */}
         {isDM && guidance?.guidanceMode === 'guided' && guidance?.nextActions?.length > 0 && (
           <NextStepsWidget actions={guidance.nextActions} onNavigate={onSelect} />
@@ -570,9 +612,9 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
                     style={{
                       width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
                       padding: 'calc(7px * var(--density, 1)) 14px', fontSize: 'calc(12px * var(--font-scale, 1))', cursor: 'pointer',
-                      background: active ? 'var(--accent-xl)' : 'transparent',
+                      background: active ? 'rgba(var(--accent-rgb, 139,92,246), 0.12)' : 'transparent',
                       border: 'none',
-                      borderLeft: active ? '2px solid var(--accent)' : '2px solid transparent',
+                      borderLeft: active ? '3px solid var(--accent)' : '3px solid transparent',
                       color: active ? 'white' : 'var(--text-dim)',
                       transition: 'all 0.15s', textAlign: 'left',
                       fontFamily: 'var(--font-ui)', fontWeight: active ? 500 : 400,
@@ -581,6 +623,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
                     onMouseLeave={e => { if (!active) { e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.background = 'transparent'; } }}
                   >
                     <Icon size={14} />
+                    <Pin size={9} style={{ color: '#c9a84c', flexShrink: 0, marginLeft: '-4px', marginRight: '-2px' }} />
                     {label}
                     {id === 'combat' && activeConditionCount > 0 && (
                       <span style={{ marginLeft: 'auto', width: '18px', height: '18px', borderRadius: '50%', background: '#dc2626', color: 'white', fontSize: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
@@ -639,9 +682,9 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
                     style={{
                       width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
                       padding: 'calc(7px * var(--density, 1)) 14px', fontSize: 'calc(12px * var(--font-scale, 1))', cursor: 'pointer',
-                      background: active ? 'var(--accent-xl)' : 'transparent',
+                      background: active ? 'rgba(var(--accent-rgb, 139,92,246), 0.12)' : 'transparent',
                       border: 'none',
-                      borderLeft: active ? '2px solid var(--accent)' : '2px solid transparent',
+                      borderLeft: active ? '3px solid var(--accent)' : '3px solid transparent',
                       color: active ? 'white' : 'var(--text-dim)',
                       transition: 'all 0.15s', textAlign: 'left',
                       fontFamily: 'var(--font-ui)', fontWeight: active ? 500 : 400,
@@ -650,9 +693,10 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
                     onMouseLeave={e => { if (!active) { e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.background = 'transparent'; } }}
                   >
                     <Icon size={14} />
+                    {isPinned && <Pin size={9} style={{ color: '#c9a84c', flexShrink: 0, marginLeft: '-4px', marginRight: '-2px' }} />}
                     {label}
                     {shortcutHint && (
-                      <span style={{ marginLeft: 'auto', opacity: 0.4, fontSize: '10px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+                      <span style={{ marginLeft: 'auto', opacity: 0.5, fontSize: '9px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '3px', padding: '1px 4px', letterSpacing: '0.02em' }}>
                         {shortcutHint}
                       </span>
                     )}
@@ -742,6 +786,13 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
           )}
         </div>
       </nav>
+
+      {/* Version badge */}
+      <div style={{ padding: '8px 14px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
+        <span style={{ fontSize: '9px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)', opacity: 0.5, letterSpacing: '0.05em' }}>
+          {APP_VERSION}
+        </span>
+      </div>
     </aside>
   );
 }

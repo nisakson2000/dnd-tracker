@@ -462,7 +462,7 @@ export const CLASS_FEATURES = {
       { name: 'Spell Mastery', description: 'Choose a 1st-level and a 2nd-level wizard spell. Cast them at their lowest level without expending a spell slot.' },
     ],
     20: [
-      { name: 'Signature Spells', description: 'Choose two 3rd-level wizard spells. Always have them prepared and cast each once at 3rd level without a spell slot per short/long rest.' },
+      { name: 'Signature Spells', description: 'Choose two 3rd-level wizard spells. Always have them prepared and cast each once at 3rd level without a spell slot. Regain expended uses on a short or long rest.' },
     ],
   },
 };

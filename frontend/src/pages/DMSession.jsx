@@ -17,9 +17,20 @@ import CharacterArcManager from '../components/dm-session/CharacterArcManager';
 import StoryPanel from '../components/dm-session/StoryPanel';
 import QuestRunner from '../components/dm-session/QuestRunner';
 import QuickReferencePanel from '../components/dm-session/QuickReferencePanel';
+import AtmospherePanel from '../components/dm-session/AtmospherePanel';
+import QuickEncounterPanel from '../components/dm-session/QuickEncounterPanel';
+import SecretRollPanel from '../components/dm-session/SecretRollPanel';
+import PacingTracker from '../components/dm-session/PacingTracker';
+import RumorBoard from '../components/dm-session/RumorBoard';
+import SpotlightTracker from '../components/dm-session/SpotlightTracker';
+import BountyBoard from '../components/dm-session/BountyBoard';
+import DMToolkit from '../components/dm-session/DMToolkit';
+import EncounterBuilderPanel from '../components/dm-session/EncounterBuilderPanel';
+import RestManager from '../components/dm-session/RestManager';
+import WorldSimPanel from '../components/dm-session/WorldSimPanel';
 import { useCampaignSyncSafe } from '../contexts/CampaignSyncContext';
 import { rulesetMatch, rulesetLabel } from '../utils/rulesetUtils';
-import { History, AlertCircle, BookMarked, Megaphone, BookOpen, Lightbulb } from 'lucide-react';
+import { History, AlertCircle, BookMarked, Megaphone, BookOpen, Lightbulb, Activity, EyeOff, CloudRain, MessageSquare, Globe, Hammer } from 'lucide-react';
 import { useGuidance } from '../contexts/GuidanceContext';
 import { useSessionGuidance } from '../hooks/useSessionGuidance';
 import { useTutorial, isTutorialFakePlayer } from '../contexts/TutorialContext';
@@ -105,6 +116,17 @@ export default function DMSession() {
   // Quest panel
   const [showQuestRunner, setShowQuestRunner] = useState(false);
   const [showQuickRef, setShowQuickRef] = useState(false);
+  const [showAtmosphere, setShowAtmosphere] = useState(false);
+  const [showQuickEncounter, setShowQuickEncounter] = useState(false);
+  const [showSecretRoll, setShowSecretRoll] = useState(false);
+  const [showPacing, setShowPacing] = useState(false);
+  const [showRumors, setShowRumors] = useState(false);
+  const [showSpotlight, setShowSpotlight] = useState(false);
+  const [showBounties, setShowBounties] = useState(false);
+  const [showDMToolkit, setShowDMToolkit] = useState(false);
+  const [showEncounterBuilder, setShowEncounterBuilder] = useState(false);
+  const [showRestManager, setShowRestManager] = useState(false);
+  const [showWorldSim, setShowWorldSim] = useState(false);
   const [quests, setQuests] = useState([]);
   const [questNpcs, setQuestNpcs] = useState([]);
   const [campaignRuleset, setCampaignRuleset] = useState(null);
@@ -645,6 +667,21 @@ export default function DMSession() {
       }
     } catch { /* ignore parse errors */ }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Break reminder every 2 hours (item 164)
+  const lastBreakReminder = useRef(0);
+  useEffect(() => {
+    const BREAK_INTERVAL = 7200; // 2 hours in seconds
+    const currentInterval = Math.floor(elapsedSeconds / BREAK_INTERVAL);
+    if (currentInterval > lastBreakReminder.current && elapsedSeconds > 0) {
+      lastBreakReminder.current = currentInterval;
+      const hours = Math.floor(elapsedSeconds / 3600);
+      toast(`${hours}h played — time for a break!`, {
+        icon: '\u2615', duration: 8000,
+        style: { background: '#0a1a1a', color: '#86efac', border: '1px solid rgba(34,197,94,0.3)', maxWidth: '400px' },
+      });
+    }
+  }, [elapsedSeconds]);
 
   // Persist timer to localStorage every 30s for crash recovery
   const elapsedRef = useRef(elapsedSeconds);
@@ -1783,6 +1820,133 @@ export default function DMSession() {
             <QuickReferencePanel onClose={() => setShowQuickRef(false)} />
           )}
 
+          {/* Atmosphere Generator (items 221-223) */}
+          {showAtmosphere && (
+            <AtmospherePanel
+              onBroadcast={async (text) => {
+                try {
+                  await broadcastEvent({ type: 'NarrativeText', text, campaign_id: campaignId, mood: 'atmospheric' });
+                  dispatch({ type: 'LOG_ACTION', payload: `Broadcast atmosphere: ${text.slice(0, 60)}...` });
+                  toast.success('Atmosphere broadcast to players');
+                } catch { toast.error('Broadcast failed'); }
+              }}
+              onClose={() => setShowAtmosphere(false)}
+            />
+          )}
+
+          {/* Quick Encounter Generator (items 269-270) */}
+          {showQuickEncounter && (
+            <QuickEncounterPanel
+              onBroadcast={async (text) => {
+                try {
+                  await broadcastEvent({ type: 'NarrativeText', text, campaign_id: campaignId, mood: 'mysterious' });
+                  dispatch({ type: 'LOG_ACTION', payload: `Broadcast encounter: ${text.slice(0, 60)}...` });
+                  toast.success('Encounter broadcast to players');
+                } catch { toast.error('Broadcast failed'); }
+              }}
+              onClose={() => setShowQuickEncounter(false)}
+            />
+          )}
+
+          {/* Secret Roll (item 166) */}
+          {showSecretRoll && (
+            <SecretRollPanel onClose={() => setShowSecretRoll(false)} />
+          )}
+
+          {/* Pacing Tracker (item 224) */}
+          {showPacing && (
+            <PacingTracker onClose={() => setShowPacing(false)} />
+          )}
+
+          {/* Rumor Board (item 192) */}
+          {showRumors && (
+            <RumorBoard
+              onBroadcast={async (text) => {
+                try {
+                  await broadcastEvent({ type: 'NarrativeText', text, campaign_id: campaignId, mood: 'mysterious' });
+                  dispatch({ type: 'LOG_ACTION', payload: `Shared rumor: ${text.slice(0, 60)}...` });
+                  toast.success('Rumor shared with players');
+                } catch { toast.error('Broadcast failed'); }
+              }}
+              onClose={() => setShowRumors(false)}
+            />
+          )}
+
+          {/* Spotlight Tracker (item 165) */}
+          {showSpotlight && (
+            <SpotlightTracker
+              players={connectedPlayers}
+              onClose={() => setShowSpotlight(false)}
+            />
+          )}
+
+          {/* DM Toolkit (items 158,176,187,228,230,235,241,248,350,351) */}
+          {showDMToolkit && (
+            <DMToolkit
+              onBroadcast={async (text) => {
+                try {
+                  await broadcastEvent({ type: 'NarrativeText', text, campaign_id: campaignId, mood: 'narrative' });
+                  dispatch({ type: 'LOG_ACTION', payload: `Broadcast: ${text.slice(0, 60)}...` });
+                  toast.success('Broadcast to players');
+                } catch { toast.error('Broadcast failed'); }
+              }}
+              onClose={() => setShowDMToolkit(false)}
+            />
+          )}
+
+          {/* Bounty Board (item 193) */}
+          {showBounties && (
+            <BountyBoard
+              onBroadcast={async (text) => {
+                try {
+                  await broadcastEvent({ type: 'NarrativeText', text, campaign_id: campaignId, mood: 'tense' });
+                  dispatch({ type: 'LOG_ACTION', payload: `Posted bounty: ${text.slice(0, 60)}...` });
+                  toast.success('Bounty posted to players');
+                } catch { toast.error('Broadcast failed'); }
+              }}
+              onClose={() => setShowBounties(false)}
+            />
+          )}
+
+          {/* Encounter Builder (items 1, 129-137) */}
+          {showEncounterBuilder && (
+            <EncounterBuilderPanel
+              onBroadcast={async (text) => {
+                try {
+                  await broadcastEvent({ type: 'NarrativeText', text, campaign_id: campaignId, mood: 'tense' });
+                  toast.success('Encounter broadcast');
+                } catch { toast.error('Broadcast failed'); }
+              }}
+              onClose={() => setShowEncounterBuilder(false)}
+            />
+          )}
+
+          {/* Rest Manager (items 108-115) */}
+          {showRestManager && (
+            <RestManager
+              onBroadcast={async (text) => {
+                try {
+                  await broadcastEvent({ type: 'NarrativeText', text, campaign_id: campaignId, mood: 'calm' });
+                  toast.success('Rest broadcast');
+                } catch { toast.error('Broadcast failed'); }
+              }}
+              onClose={() => setShowRestManager(false)}
+            />
+          )}
+
+          {/* World Simulation (items 196-204) */}
+          {showWorldSim && (
+            <WorldSimPanel
+              onBroadcast={async (text) => {
+                try {
+                  await broadcastEvent({ type: 'NarrativeText', text, campaign_id: campaignId, mood: 'narrative' });
+                  toast.success('World event broadcast');
+                } catch { toast.error('Broadcast failed'); }
+              }}
+              onClose={() => setShowWorldSim(false)}
+            />
+          )}
+
           {/* Prompt History */}
           {showPromptHistory && (
             <div style={panelStyle}>
@@ -2141,6 +2305,39 @@ export default function DMSession() {
         </button>
         <button onClick={() => setShowQuickRef(!showQuickRef)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showQuickRef ? 'rgba(201,168,76,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showQuickRef ? 'rgba(201,168,76,0.3)' : 'rgba(255,255,255,0.08)'}`, color: showQuickRef ? '#c9a84c' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
           <BookOpen size={10} /> Quick Ref
+        </button>
+        <button onClick={() => setShowAtmosphere(!showAtmosphere)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showAtmosphere ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showAtmosphere ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.08)'}`, color: showAtmosphere ? '#818cf8' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <CloudRain size={10} /> Atmosphere
+        </button>
+        <button onClick={() => setShowQuickEncounter(!showQuickEncounter)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showQuickEncounter ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showQuickEncounter ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`, color: showQuickEncounter ? '#4ade80' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <Dice5 size={10} /> Quick Enc
+        </button>
+        <button onClick={() => setShowSecretRoll(!showSecretRoll)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showSecretRoll ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showSecretRoll ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.08)'}`, color: showSecretRoll ? '#fca5a5' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <EyeOff size={10} /> Secret Roll
+        </button>
+        <button onClick={() => setShowPacing(!showPacing)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showPacing ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showPacing ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.08)'}`, color: showPacing ? '#fbbf24' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <Activity size={10} /> Pacing
+        </button>
+        <button onClick={() => setShowRumors(!showRumors)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showRumors ? 'rgba(155,89,182,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showRumors ? 'rgba(155,89,182,0.3)' : 'rgba(255,255,255,0.08)'}`, color: showRumors ? '#c084fc' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <MessageSquare size={10} /> Rumors
+        </button>
+        <button onClick={() => setShowSpotlight(!showSpotlight)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showSpotlight ? 'rgba(201,168,76,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showSpotlight ? 'rgba(201,168,76,0.3)' : 'rgba(255,255,255,0.08)'}`, color: showSpotlight ? '#c9a84c' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <Star size={10} /> Spotlight
+        </button>
+        <button onClick={() => setShowBounties(!showBounties)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showBounties ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showBounties ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.08)'}`, color: showBounties ? '#fca5a5' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <Swords size={10} /> Bounties
+        </button>
+        <button onClick={() => setShowDMToolkit(!showDMToolkit)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showDMToolkit ? 'rgba(192,132,252,0.2)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showDMToolkit ? 'rgba(192,132,252,0.4)' : 'rgba(255,255,255,0.08)'}`, color: showDMToolkit ? '#c084fc' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <Sparkles size={10} /> Toolkit
+        </button>
+        <button onClick={() => setShowEncounterBuilder(!showEncounterBuilder)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showEncounterBuilder ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showEncounterBuilder ? 'rgba(59,130,246,0.3)' : 'rgba(255,255,255,0.08)'}`, color: showEncounterBuilder ? '#60a5fa' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <Hammer size={10} /> Builder
+        </button>
+        <button onClick={() => setShowRestManager(!showRestManager)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showRestManager ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showRestManager ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.08)'}`, color: showRestManager ? '#a5b4fc' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <Moon size={10} /> Rest
+        </button>
+        <button onClick={() => setShowWorldSim(!showWorldSim)} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: showWorldSim ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showWorldSim ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.08)'}`, color: showWorldSim ? '#34d399' : 'var(--text-mute)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+          <Globe size={10} /> World
         </button>
         <button onClick={handleExportSession} disabled={exporting || !sessionId} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-mute)', fontSize: '10px', cursor: exporting ? 'wait' : 'pointer', fontFamily: 'var(--font-mono)', opacity: exporting ? 0.5 : 1 }}>
           <Download size={10} /> {exporting ? 'Exporting...' : 'Export'}

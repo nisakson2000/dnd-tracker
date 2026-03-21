@@ -6,7 +6,7 @@ import {
   Library, ChevronRight, ChevronLeft, Scroll, Check, X,
   Search, Users, Upload, ClipboardList, Flag, FileJson,
   Sparkles, Coins, BookOpen, AlertTriangle, Moon,
-  Clock, CheckCircle, XCircle, Zap, Save, Download, Dices, Copy, Gamepad2,
+  Clock, CheckCircle, XCircle, Zap, Save, Download, Copy, Gamepad2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
@@ -42,6 +42,7 @@ const CLASSES = [
   { id: 'Sorcerer',  color: '#e74c3c', bg: 'rgba(231,76,60,0.12)',   sym: '✦',  flavor: 'Born of magic' },
   { id: 'Warlock',   color: '#9b59b6', bg: 'rgba(155,89,182,0.12)',  sym: '👁', flavor: 'Patron\'s vessel' },
   { id: 'Wizard',    color: '#3498db', bg: 'rgba(52,152,219,0.12)',  sym: '📖', flavor: 'Arcane scholar' },
+  { id: 'Artificer', color: '#d4a017', bg: 'rgba(212,160,23,0.12)',  sym: '⚙',  flavor: 'Inventive genius' },
 ];
 
 const RUNE_CHARS = ['ᚠ','ᚢ','ᚦ','ᚨ','ᚱ','ᚲ','ᚷ','ᚹ','ᚺ','ᚾ','ᛁ','ᛃ','ᛇ','ᛈ','ᛉ','ᛊ','ᛏ','ᛒ','ᛖ','ᛗ','ᛚ','ᛜ','ᛞ','ᛟ'];
@@ -103,9 +104,9 @@ function HpBar({ current, max }) {
   const pct = Math.max(0, Math.min(100, (current / max) * 100));
   const col = pct > 60 ? '#27ae60' : pct > 30 ? '#f39c12' : '#e74c3c';
   return (
-    <div style={{ width: '100%', height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.05)', overflow: 'hidden', marginBottom: 12 }}>
+    <div style={{ width: '100%', height: 4, borderRadius: 3, background: 'rgba(255,255,255,0.05)', overflow: 'hidden', marginBottom: 12 }}>
       <motion.div
-        style={{ height: '100%', borderRadius: 99, background: col }}
+        style={{ height: '100%', borderRadius: 3, background: col, transition: 'width 0.5s ease' }}
         initial={{ width: 0 }}
         animate={{ width: `${pct}%` }}
         transition={{ duration: 1.1, delay: 0.4 }}
@@ -123,13 +124,19 @@ function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
+  if (mins === 1) return '1 min ago';
+  if (mins < 60) return `${mins} mins ago`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
+  if (hrs === 1) return '1 hour ago';
+  if (hrs < 24) return `${hrs} hours ago`;
   const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
-  return `${Math.floor(days / 30)}mo ago`;
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days} days ago`;
+  if (days < 14) return '1 week ago';
+  if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+  if (days < 60) return '1 month ago';
+  if (days < 365) return `${Math.floor(days / 30)} months ago`;
+  return `${Math.floor(days / 365)}y ago`;
 }
 
 // ─── Character card ──────────────────────────────────────────────────────────
@@ -147,7 +154,7 @@ function CharacterCard({ char, index, onEnter, onDelete, onDuplicate, onSessionP
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08, type: 'spring', damping: 22, stiffness: 200 }}
-      whileHover={{ y: -6, boxShadow: `0 14px 50px rgba(0,0,0,0.7), 0 0 0 1px ${clsColor}40` }}
+      whileHover={{ y: -4, boxShadow: `0 16px 56px rgba(0,0,0,0.7), 0 0 0 1px ${clsColor}40, 0 0 24px ${clsColor}15` }}
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
       onClick={() => onEnter(char.id)}
@@ -158,6 +165,7 @@ function CharacterCard({ char, index, onEnter, onDelete, onDuplicate, onSessionP
         boxShadow: '0 4px 36px rgba(0,0,0,0.5)',
         backdropFilter: 'blur(16px)',
         display: 'flex', flexDirection: 'column',
+        transition: 'border-color 0.3s ease',
       }}
     >
       {/* Banner */}
@@ -226,13 +234,15 @@ function CharacterCard({ char, index, onEnter, onDelete, onDuplicate, onSessionP
           initial={{ opacity: 0 }}
           animate={{ opacity: hovered ? 1 : 0 }}
           style={{
-            position: 'absolute', top: 8, left: 8, border: 'none', cursor: 'pointer',
+            position: 'absolute', top: 8, left: 8, border: '1px solid transparent', cursor: 'pointer',
             width: 28, height: 28, borderRadius: 8, fontSize: 12,
             background: 'rgba(0,0,0,0.45)', color: 'rgba(220,80,80,0.45)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'border-color 0.15s',
           }}
-          whileHover={{ color: '#e74c3c', background: 'rgba(139,34,50,0.45)' }}
+          whileHover={{ color: '#e74c3c', background: 'rgba(139,34,50,0.45)', borderColor: 'rgba(231,76,60,0.4)' }}
           onClick={e => { e.stopPropagation(); onDelete(char); }}
+          title="Delete character"
         >
           <Trash2 size={12} />
         </motion.button>
@@ -364,9 +374,9 @@ function CharacterCard({ char, index, onEnter, onDelete, onDuplicate, onSessionP
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
                 <span style={{ fontSize: 8, color: `${clsColor}55`, fontFamily: 'var(--font-heading)', letterSpacing: '0.06em' }}>XP</span>
               </div>
-              <div style={{ width: '100%', height: 2, borderRadius: 99, background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
+              <div style={{ width: '100%', height: 2, borderRadius: 3, background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
                 <motion.div
-                  style={{ height: '100%', borderRadius: 99, background: `${clsColor}55` }}
+                  style={{ height: '100%', borderRadius: 3, background: `${clsColor}55` }}
                   initial={{ width: 0 }}
                   animate={{ width: `${xpProgress}%` }}
                   transition={{ duration: 1.1, delay: 0.6 }}
@@ -680,26 +690,26 @@ function CampaignCard({ char, index, onEnter, onDelete, onExport }) {
         >
           <button
             style={{
-              border: 'none', cursor: 'pointer', width: 28, height: 28, borderRadius: 8,
+              border: '1px solid transparent', cursor: 'pointer', width: 28, height: 28, borderRadius: 8,
               background: 'rgba(0,0,0,0.45)', color: 'rgba(200,175,130,0.45)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
             }}
             title="Export campaign"
-            onMouseEnter={e => { e.currentTarget.style.color = '#c9a84c'; e.currentTarget.style.background = 'rgba(201,168,76,0.2)'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(200,175,130,0.45)'; e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#c9a84c'; e.currentTarget.style.background = 'rgba(201,168,76,0.2)'; e.currentTarget.style.borderColor = 'rgba(201,168,76,0.35)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(200,175,130,0.45)'; e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; e.currentTarget.style.borderColor = 'transparent'; }}
             onClick={e => { e.stopPropagation(); onExport?.(char); }}
           >
             <Download size={12} />
           </button>
           <button
             style={{
-              border: 'none', cursor: 'pointer', width: 28, height: 28, borderRadius: 8,
+              border: '1px solid transparent', cursor: 'pointer', width: 28, height: 28, borderRadius: 8,
               background: 'rgba(0,0,0,0.45)', color: 'rgba(220,80,80,0.45)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
             }}
             title="Delete campaign"
-            onMouseEnter={e => { e.currentTarget.style.color = '#e74c3c'; e.currentTarget.style.background = 'rgba(139,34,50,0.45)'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(220,80,80,0.45)'; e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#e74c3c'; e.currentTarget.style.background = 'rgba(139,34,50,0.45)'; e.currentTarget.style.borderColor = 'rgba(231,76,60,0.4)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(220,80,80,0.45)'; e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; e.currentTarget.style.borderColor = 'transparent'; }}
             onClick={e => { e.stopPropagation(); onDelete(char); }}
           >
             <Trash2 size={12} />
@@ -892,7 +902,7 @@ function CreateCampaignModal({ onClose, onCreate }) {
   };
 
   const overlayStyle = { position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(8px)' };
-  const cardStyle = { maxWidth: '100%', borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg,#0d0b18 0%,#110e1e 100%)', border: '1px solid rgba(155,89,182,0.22)', boxShadow: '0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(155,89,182,0.08)' };
+  const cardStyle = { maxWidth: '100%', borderRadius: 'var(--radius, 12px)', overflow: 'hidden', background: 'var(--bg, #04040b)', border: '1px solid rgba(155,89,182,0.22)', boxShadow: '0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(155,89,182,0.08)' };
 
   // ── Campaign picker (direct — no homebrew/premade choice) ──
 
@@ -948,7 +958,7 @@ function CreateCampaignModal({ onClose, onCreate }) {
       <motion.div style={overlayStyle} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={e => e.target === e.currentTarget && onClose()}>
         <motion.div initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
           transition={{ type: 'spring', damping: 24, stiffness: 300 }}
-          style={{ ...cardStyle, width: 580, maxHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column' }}>
+          style={{ ...cardStyle, width: '100%', maxWidth: 580, maxHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ height: 3, background: 'linear-gradient(90deg,transparent,#c9a84c,transparent)' }} />
           <div style={{ padding: '20px 24px 14px', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
@@ -1039,11 +1049,11 @@ function CreateCampaignModal({ onClose, onCreate }) {
                       value={communitySearch}
                       onChange={e => setCommunitySearch(e.target.value)}
                       style={{
-                        width: '100%', padding: '7px 12px', borderRadius: 8, marginBottom: 8,
+                        width: '100%', padding: '10px 14px', borderRadius: 8, marginBottom: 8,
                         border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.3)',
-                        color: 'var(--text)', fontSize: 11, fontFamily: 'var(--font-ui)', outline: 'none',
+                        color: 'var(--text)', fontSize: 13, fontFamily: 'var(--font-ui)', outline: 'none',
                       }}
-                      onFocus={e => e.target.style.borderColor = 'rgba(167,139,250,0.4)'}
+                      onFocus={e => e.target.style.borderColor = 'var(--accent, rgba(167,139,250,0.4))'}
                       onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
                     />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 280, overflowY: 'auto' }}>
@@ -1182,12 +1192,12 @@ function CreateCampaignModal({ onClose, onCreate }) {
                 placeholder="Your name…"
                 maxLength={40}
                 style={{
-                  flex: 1, padding: '7px 12px', borderRadius: 7,
+                  flex: 1, padding: '10px 14px', borderRadius: 8,
                   background: 'rgba(8,6,16,0.9)', border: '1px solid rgba(201,168,76,0.2)',
-                  color: '#f0e4c8', fontFamily: 'var(--font-heading)', fontSize: 12,
+                  color: '#f0e4c8', fontFamily: 'var(--font-heading)', fontSize: 13,
                   letterSpacing: '0.03em', outline: 'none',
                 }}
-                onFocus={e => e.target.style.borderColor = 'rgba(201,168,76,0.5)'}
+                onFocus={e => e.target.style.borderColor = 'var(--accent, rgba(201,168,76,0.5))'}
                 onBlur={e => e.target.style.borderColor = 'rgba(201,168,76,0.2)'}
               />
             </div>
@@ -1238,7 +1248,7 @@ function CreateHomebrewModal({ onClose, onCreate }) {
   };
 
   const overlayStyle = { position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(8px)' };
-  const cardStyle = { maxWidth: '100%', borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg,#0d0b18 0%,#110e1e 100%)', border: '1px solid rgba(74,222,128,0.22)', boxShadow: '0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(74,222,128,0.08)' };
+  const cardStyle = { maxWidth: '100%', borderRadius: 'var(--radius, 12px)', overflow: 'hidden', background: 'var(--bg, #04040b)', border: '1px solid rgba(74,222,128,0.22)', boxShadow: '0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(74,222,128,0.08)' };
 
   return (
     <motion.div
@@ -1249,7 +1259,7 @@ function CreateHomebrewModal({ onClose, onCreate }) {
       <motion.div
         initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
         transition={{ type: 'spring', damping: 24, stiffness: 300 }}
-        style={{ ...cardStyle, width: 420 }}
+        style={{ ...cardStyle, width: '100%', maxWidth: 420 }}
       >
         <div style={{ height: 3, background: 'linear-gradient(90deg,transparent,#4ade80,transparent)' }} />
         <div style={{ padding: '24px 24px 28px' }}>
@@ -1271,12 +1281,12 @@ function CreateHomebrewModal({ onClose, onCreate }) {
             placeholder="e.g. Curse of Strahd, Homebrew World…"
             maxLength={60}
             style={{
-              width: '100%', padding: '13px 18px', borderRadius: 10, marginBottom: 16,
+              width: '100%', padding: '10px 14px', borderRadius: 8, marginBottom: 16,
               background: 'rgba(8,6,16,0.9)', border: '1px solid rgba(74,222,128,0.28)',
-              color: '#f0e4c8', fontFamily: 'var(--font-heading)', fontSize: 16,
+              color: '#f0e4c8', fontFamily: 'var(--font-heading)', fontSize: 13,
               letterSpacing: '0.05em', textAlign: 'center', outline: 'none',
             }}
-            onFocus={e => e.target.style.borderColor = 'rgba(74,222,128,0.65)'}
+            onFocus={e => e.target.style.borderColor = 'var(--accent, rgba(74,222,128,0.65))'}
             onBlur={e => e.target.style.borderColor = 'rgba(74,222,128,0.28)'}
           />
 
@@ -1288,12 +1298,12 @@ function CreateHomebrewModal({ onClose, onCreate }) {
               placeholder="e.g. Matt, DM Sarah…"
               maxLength={40}
               style={{
-                width: '100%', padding: '11px 16px', borderRadius: 10,
+                width: '100%', padding: '10px 14px', borderRadius: 8,
                 background: 'rgba(8,6,16,0.9)', border: '1px solid rgba(201,168,76,0.25)',
-                color: '#f0e4c8', fontFamily: 'var(--font-heading)', fontSize: 14,
+                color: '#f0e4c8', fontFamily: 'var(--font-heading)', fontSize: 13,
                 letterSpacing: '0.03em', textAlign: 'center', outline: 'none',
               }}
-              onFocus={e => e.target.style.borderColor = 'rgba(201,168,76,0.55)'}
+              onFocus={e => e.target.style.borderColor = 'var(--accent, rgba(201,168,76,0.55))'}
               onBlur={e => e.target.style.borderColor = 'rgba(201,168,76,0.25)'}
             />
           </div>
@@ -1408,12 +1418,12 @@ function StepName({ name, setName, onNext, onClose }) {
         placeholder="Enter character name…"
         maxLength={60}
         style={{
-          width: '100%', padding: '13px 18px', borderRadius: 10,
+          width: '100%', padding: '10px 14px', borderRadius: 8,
           background: 'rgba(8,6,16,0.9)', border: '1px solid rgba(201,168,76,0.28)',
-          color: '#f0e4c8', fontFamily: 'var(--font-heading)', fontSize: 16,
+          color: '#f0e4c8', fontFamily: 'var(--font-heading)', fontSize: 13,
           letterSpacing: '0.05em', textAlign: 'center', outline: 'none',
         }}
-        onFocus={e => e.target.style.borderColor = 'rgba(201,168,76,0.65)'}
+        onFocus={e => e.target.style.borderColor = 'var(--accent, rgba(201,168,76,0.65))'}
         onBlur={e => e.target.style.borderColor = 'rgba(201,168,76,0.28)'}
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1601,7 +1611,7 @@ function StepClass({ name, cls, setCls, race, setRace, ruleset, onCreate, onBack
       </div>
 
       {/* Class grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6, maxHeight: 200, overflowY: 'auto', paddingRight: 2 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 6, maxHeight: 200, overflowY: 'auto', paddingRight: 2 }}>
         {availableClasses.map(c => {
           const selected = cls === c.id;
           return (
@@ -1709,7 +1719,7 @@ function CreateModal({ onClose, onCreate }) {
       <motion.div
         initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
         transition={{ type: 'spring', damping: 24, stiffness: 300 }}
-        style={{ width: 460, maxWidth: '100%', borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg,#0d0b18 0%,#110e1e 100%)', border: '1px solid rgba(201,168,76,0.22)', boxShadow: '0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(201,168,76,0.08)' }}
+        style={{ width: '100%', maxWidth: 460, borderRadius: 'var(--radius, 12px)', overflow: 'hidden', background: 'var(--bg, #04040b)', border: '1px solid rgba(201,168,76,0.22)', boxShadow: '0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(201,168,76,0.08)' }}
       >
         {/* Glow bar */}
         <div style={{ height: 3, background: 'linear-gradient(90deg,transparent,#c9a84c,transparent)' }} />
@@ -1728,7 +1738,7 @@ function CreateModal({ onClose, onCreate }) {
                     <div style={{ width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'var(--font-heading)', fontWeight: 700, border: `1px solid ${done || current ? '#c9a84c' : 'rgba(201,168,76,0.25)'}`, background: done || current ? '#c9a84c' : 'rgba(201,168,76,0.06)', color: done || current ? '#12101c' : 'rgba(201,168,76,0.3)', transition: 'all 0.3s' }}>
                       {done ? <Check size={10} /> : n}
                     </div>
-                    <span style={{ fontSize: 9, fontFamily: 'var(--font-heading)', color: 'rgba(200,175,130,0.35)', display: window.innerWidth > 450 ? 'inline' : 'none' }}>{label}</span>
+                    <span style={{ fontSize: 9, fontFamily: 'var(--font-heading)', color: 'rgba(200,175,130,0.35)' }} className="hide-narrow">{label}</span>
                     {i < STEP_LABELS.length - 1 && <div style={{ width: 14, height: 1, background: n < step ? 'rgba(201,168,76,0.4)' : 'rgba(201,168,76,0.1)', marginLeft: 2 }} />}
                   </div>
                 );
@@ -1797,14 +1807,19 @@ function EmptyState({ onOpen, onImport, onDDBImport, isDM, onCreateHomebrew, onI
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
       style={{ textAlign: 'center', padding: '64px 32px' }}
     >
-      <div style={{ fontSize: 70, opacity: 0.1, marginBottom: 20, lineHeight: 1, fontFamily: 'var(--font-heading)' }}>{isDM ? '📖' : '⚔'}</div>
-      <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: 22, color: 'rgba(200,175,130,0.5)', marginBottom: 10 }}>
-        {isDM ? 'No Campaigns Yet' : 'The Codex Awaits'}
+      <div style={{ fontSize: 70, opacity: 0.12, marginBottom: 20, lineHeight: 1, fontFamily: 'var(--font-heading)' }}>{isDM ? '📖' : '⚔'}</div>
+      <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: 24, color: 'rgba(200,175,130,0.6)', marginBottom: 8, letterSpacing: '0.03em' }}>
+        {isDM ? 'No Campaigns Yet' : 'Welcome, Adventurer'}
       </h3>
-      <p style={{ fontSize: 15, color: 'rgba(200,175,130,0.27)', maxWidth: 380, margin: '0 auto 32px', lineHeight: 1.75 }}>
+      <p style={{ fontSize: 13, color: 'rgba(200,175,130,0.35)', maxWidth: 420, margin: '0 auto 12px', lineHeight: 1.75 }}>
         {isDM
-          ? 'Select a premade adventure, create your own homebrew campaign, or import an existing one.'
-          : 'No adventurers have been recorded yet. Create your first character or import an existing one.'}
+          ? 'Your table awaits. Select a premade adventure, forge your own homebrew world, or import an existing campaign.'
+          : 'Your legend begins here. Create your first character to start tracking your journey through the realms.'}
+      </p>
+      <p style={{ fontSize: 11, color: 'rgba(200,175,130,0.2)', maxWidth: 380, margin: '0 auto 32px', lineHeight: 1.6, fontStyle: 'italic' }}>
+        {isDM
+          ? 'Every great story needs a beginning.'
+          : 'You can also import characters from JSON files or D&D Beyond.'}
       </p>
       {isDM ? (
         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -1843,10 +1858,11 @@ function EmptyState({ onOpen, onImport, onDDBImport, isDM, onCreateHomebrew, onI
         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
           <motion.button
             onClick={onOpen}
-            whileHover={{ y: -2, boxShadow: '0 8px 28px rgba(201,168,76,0.3)' }}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '12px 32px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 13, letterSpacing: '0.08em', fontWeight: 700, background: 'linear-gradient(135deg,#c9a84c,#f0d878)', color: '#12101c' }}
+            whileHover={{ y: -3, boxShadow: '0 12px 36px rgba(201,168,76,0.35), 0 0 20px rgba(201,168,76,0.15)' }}
+            whileTap={{ scale: 0.97 }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '14px 38px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: 14, letterSpacing: '0.08em', fontWeight: 700, background: 'linear-gradient(135deg,#c9a84c,#f0d878)', color: '#12101c', boxShadow: '0 4px 20px rgba(201,168,76,0.2)' }}
           >
-            <Scroll size={16} /> Create New Character
+            <Scroll size={17} /> Create Your First Character
           </motion.button>
           <input ref={fileInputRef} type="file" accept=".json" onChange={handleFileSelect} style={{ display: 'none' }} />
           <motion.button
@@ -2034,7 +2050,7 @@ function SessionPrepModal({ characterId, characterName, onClose, navigate }) {
       <motion.div
         initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
         transition={{ type: 'spring', damping: 24, stiffness: 300 }}
-        style={{ width: 520, maxWidth: '100%', maxHeight: '85vh', borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg,#0d0b18 0%,#110e1e 100%)', border: '1px solid rgba(39,174,96,0.22)', boxShadow: '0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(39,174,96,0.08)' }}
+        style={{ width: '100%', maxWidth: 520, maxHeight: '85vh', borderRadius: 'var(--radius, 12px)', overflow: 'hidden', background: 'var(--bg, #04040b)', border: '1px solid rgba(39,174,96,0.22)', boxShadow: '0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(39,174,96,0.08)' }}
       >
         <div style={{ height: 3, background: 'linear-gradient(90deg,transparent,#27ae60,transparent)' }} />
 
@@ -2208,6 +2224,11 @@ function PostSessionModal({ characterId, characterName, onClose }) {
     width: '100%', padding: '10px 14px', borderRadius: 8,
     background: 'rgba(8,6,16,0.9)', border: '1px solid rgba(201,168,76,0.2)',
     color: '#f0e4c8', fontFamily: 'var(--font-body)', fontSize: 13, outline: 'none',
+    transition: 'border-color 0.2s',
+  };
+  const inputFocusHandlers = {
+    onFocus: e => e.target.style.borderColor = 'var(--accent, rgba(201,168,76,0.5))',
+    onBlur: e => e.target.style.borderColor = 'rgba(201,168,76,0.2)',
   };
 
   return (
@@ -2219,7 +2240,7 @@ function PostSessionModal({ characterId, characterName, onClose }) {
       <motion.div
         initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
         transition={{ type: 'spring', damping: 24, stiffness: 300 }}
-        style={{ width: 520, maxWidth: '100%', maxHeight: '85vh', borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg,#0d0b18 0%,#110e1e 100%)', border: '1px solid rgba(201,168,76,0.22)', boxShadow: '0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(201,168,76,0.08)' }}
+        style={{ width: '100%', maxWidth: 520, maxHeight: '85vh', borderRadius: 'var(--radius, 12px)', overflow: 'hidden', background: 'var(--bg, #04040b)', border: '1px solid rgba(201,168,76,0.22)', boxShadow: '0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(201,168,76,0.08)' }}
       >
         <div style={{ height: 3, background: 'linear-gradient(90deg,transparent,#c9a84c,transparent)' }} />
 
@@ -2261,6 +2282,7 @@ function PostSessionModal({ characterId, characterName, onClose }) {
                   type="number" min="0" placeholder="XP gained this session"
                   value={xpGained} onChange={e => setXpGained(e.target.value)}
                   style={inputStyle}
+                  {...inputFocusHandlers}
                 />
                 {overview.experience_points != null && (
                   <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.3)', marginTop: 4 }}>
@@ -2279,6 +2301,7 @@ function PostSessionModal({ characterId, characterName, onClose }) {
                   type="number" placeholder="+50 or -25"
                   value={goldChange} onChange={e => setGoldChange(e.target.value)}
                   style={inputStyle}
+                  {...inputFocusHandlers}
                 />
                 <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.3)', marginTop: 4 }}>
                   Current: {currency.gp || 0} GP
@@ -2696,8 +2719,8 @@ export default function Dashboard() {
       return 0;
     });
 
-  const avgLevel = characters.length > 0
-    ? (characters.reduce((sum, c) => sum + (c.level || 0), 0) / characters.length).toFixed(1)
+  const avgLevel = filteredCharacters.length > 0
+    ? (filteredCharacters.reduce((sum, c) => sum + (c.level || 0), 0) / filteredCharacters.length).toFixed(1)
     : 0;
 
   const mostPlayedClass = (() => {
@@ -2717,9 +2740,9 @@ export default function Dashboard() {
 
       {/* ── Atmosphere ── */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '-15%', left: '50%', transform: 'translateX(-50%)', width: 900, height: 700, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(46,31,94,0.28) 0%, transparent 65%)', filter: 'blur(40px)' }} />
-        <div style={{ position: 'absolute', bottom: 0, left: '-5%', width: 600, height: 400, background: 'radial-gradient(ellipse, rgba(139,34,50,0.14) 0%, transparent 65%)', filter: 'blur(40px)' }} />
-        <div style={{ position: 'absolute', top: '35%', right: '-5%', width: 500, height: 450, background: 'radial-gradient(ellipse, rgba(26,58,92,0.15) 0%, transparent 65%)', filter: 'blur(40px)' }} />
+        <div style={{ position: 'absolute', top: '-15%', left: '50%', transform: 'translateX(-50%)', width: '70vw', maxWidth: 900, height: '55vw', maxHeight: 700, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(46,31,94,0.28) 0%, transparent 65%)', filter: 'blur(40px)' }} />
+        <div style={{ position: 'absolute', bottom: 0, left: '-5%', width: '45vw', maxWidth: 600, height: '30vw', maxHeight: 400, background: 'radial-gradient(ellipse, rgba(139,34,50,0.14) 0%, transparent 65%)', filter: 'blur(40px)' }} />
+        <div style={{ position: 'absolute', top: '35%', right: '-5%', width: '40vw', maxWidth: 500, height: '35vw', maxHeight: 450, background: 'radial-gradient(ellipse, rgba(26,58,92,0.15) 0%, transparent 65%)', filter: 'blur(40px)' }} />
         {/* Diagonal light ray */}
         <div style={{ position: 'absolute', top: '-15%', left: '33%', width: 2, height: '130%', background: 'linear-gradient(180deg,transparent,rgba(201,168,76,0.05) 35%,rgba(201,168,76,0.09) 55%,rgba(201,168,76,0.04) 75%,transparent)', transform: 'rotate(11deg)', transformOrigin: 'top center', filter: 'blur(3px)' }} />
         {/* Rune particles */}
@@ -2872,9 +2895,9 @@ export default function Dashboard() {
               color: 'rgba(200,175,130,0.35)', letterSpacing: '0.28em', textTransform: 'uppercase',
             }}>
               <span style={{ width: 5, height: 5, background: 'rgba(201,168,76,0.55)', transform: 'rotate(45deg)', flexShrink: 0 }} />
-              {characters.length} {isDM
-                ? (characters.length === 1 ? 'Campaign' : 'Campaigns')
-                : (characters.length === 1 ? 'Adventurer' : 'Adventurers')
+              {filteredCharacters.length} {isDM
+                ? (filteredCharacters.length === 1 ? 'Campaign' : 'Campaigns')
+                : (filteredCharacters.length === 1 ? 'Adventurer' : 'Adventurers')
               } in the Codex
               <span style={{ width: 5, height: 5, background: 'rgba(201,168,76,0.55)', transform: 'rotate(45deg)', flexShrink: 0 }} />
             </div>
@@ -2882,7 +2905,7 @@ export default function Dashboard() {
         )}
 
         {/* Quick Stats Bar */}
-        {!loading && characters.length > 0 && !isDM && (
+        {!loading && filteredCharacters.length > 0 && !isDM && (
           <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
@@ -2895,7 +2918,7 @@ export default function Dashboard() {
               fontFamily: 'var(--font-heading)', fontSize: 11, color: 'rgba(200,175,130,0.5)', letterSpacing: '0.04em',
             }}>
               <Users size={11} style={{ color: 'rgba(201,168,76,0.5)' }} />
-              {characters.length} {characters.length === 1 ? 'Character' : 'Characters'}
+              {filteredCharacters.length} {filteredCharacters.length === 1 ? 'Character' : 'Characters'}
             </div>
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -3040,7 +3063,7 @@ export default function Dashboard() {
             </>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
             {filteredCharacters.map((c, i) => isDM ? (
               <CampaignCard
                 key={c.id} char={c} index={i}

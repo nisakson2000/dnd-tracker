@@ -1317,7 +1317,7 @@ export default function CharacterSetup() {
             description: item.description || '',
             attunement: false,
             attuned: false,
-            equipped: item.equipped || false,
+            equipped: false,
             equipment_slot: '',
             stat_modifiers: null,
             rarity: null,
@@ -1514,9 +1514,7 @@ export default function CharacterSetup() {
 
       // 5. Add starting equipment from class
       if (classData?.startingEquipment) {
-        const autoEquipTypes = ['weapon', 'armor', 'shield'];
         for (const item of classData.startingEquipment) {
-          const shouldEquip = autoEquipTypes.includes(item.item_type?.toLowerCase());
           await invoke('add_item', {
             characterId,
             payload: {
@@ -1528,7 +1526,7 @@ export default function CharacterSetup() {
               description: '',
               attunement: false,
               attuned: false,
-              equipped: shouldEquip,
+              equipped: false,
               equipment_slot: '',
               stat_modifiers: null,
               rarity: null,

@@ -2,7 +2,7 @@
 // FEAT CATALOG — SRD / PHB Feats for D&D 5e
 // =============================================================================
 
-export const FEAT_CATEGORIES = ['General', 'Fighting Style', 'Epic Boon', 'Origin'];
+export const FEAT_CATEGORIES = ['General', 'Fighting Style', 'Epic Boon', 'Origin', 'Dragonmark', 'Giant'];
 
 export const FEAT_CATALOG = [
   // ===========================================================================
@@ -739,5 +739,305 @@ export const FEAT_CATALOG = [
     prerequisite: '',
     category: 'Origin',
     source: 'PHB',
+  },
+
+  // ===========================================================================
+  // EPIC BOON FEATS (2024 PHB — Level 19+)
+  // ===========================================================================
+  {
+    id: 'boon-of-combat-prowess-2024',
+    name: 'Boon of Combat Prowess (2024)',
+    description:
+      'Increase your Strength or Dexterity by 1 (max 30). When you miss with a melee weapon attack, you can choose to hit instead. You can use this benefit once per turn.',
+    prerequisite: 'Level 19+',
+    category: 'Epic Boon',
+    source: '2024 PHB',
+  },
+  {
+    id: 'boon-of-dimensional-travel-2024',
+    name: 'Boon of Dimensional Travel (2024)',
+    description:
+      'Increase your Intelligence, Wisdom, or Charisma by 1 (max 30). You can cast Misty Step without expending a spell slot a number of times equal to your proficiency bonus. You regain all expended uses when you finish a long rest.',
+    prerequisite: 'Level 19+',
+    category: 'Epic Boon',
+    source: '2024 PHB',
+  },
+  {
+    id: 'boon-of-energy-resistance-2024',
+    name: 'Boon of Energy Resistance (2024)',
+    description:
+      'Increase your Constitution by 1 (max 30). You gain resistance to two damage types of your choice.',
+    prerequisite: 'Level 19+',
+    category: 'Epic Boon',
+    source: '2024 PHB',
+  },
+  {
+    id: 'boon-of-fate-2024',
+    name: 'Boon of Fate (2024)',
+    description:
+      'Increase one ability score of your choice by 1 (max 30). When you or another creature you can see makes an attack roll, an ability check, or a saving throw, you can roll 2d4 and apply the number rolled as a bonus or penalty to the d20 roll. You can use this benefit a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.',
+    prerequisite: 'Level 19+',
+    category: 'Epic Boon',
+    source: '2024 PHB',
+  },
+  {
+    id: 'boon-of-fortitude-2024',
+    name: 'Boon of Fortitude (2024)',
+    description:
+      'Increase your Constitution by 1 (max 30). Your hit point maximum increases by 40.',
+    prerequisite: 'Level 19+',
+    category: 'Epic Boon',
+    source: '2024 PHB',
+  },
+  {
+    id: 'boon-of-irresistible-offense-2024',
+    name: 'Boon of Irresistible Offense (2024)',
+    description:
+      'Increase your Strength or Dexterity by 1 (max 30). Your attacks ignore damage resistance. When you deal damage to a creature that has damage immunity, the immunity instead functions as resistance against your attacks.',
+    prerequisite: 'Level 19+',
+    category: 'Epic Boon',
+    source: '2024 PHB',
+  },
+  {
+    id: 'boon-of-recovery-2024',
+    name: 'Boon of Recovery (2024)',
+    description:
+      'Increase your Constitution by 1 (max 30). As a bonus action, you can regain a number of hit points equal to half your hit point maximum. Once you use this benefit, you can\'t use it again until you finish a long rest. Additionally, when you would be reduced to 0 hit points, you can drop to 1 hit point instead. Once you use this benefit, you can\'t use it again until you finish a long rest.',
+    prerequisite: 'Level 19+',
+    category: 'Epic Boon',
+    source: '2024 PHB',
+  },
+  {
+    id: 'boon-of-skill-2024',
+    name: 'Boon of Skill (2024)',
+    description:
+      'Increase one ability score of your choice by 1 (max 30). You gain proficiency in all skills. You also gain expertise in one skill of your choice.',
+    prerequisite: 'Level 19+',
+    category: 'Epic Boon',
+    source: '2024 PHB',
+  },
+  {
+    id: 'boon-of-speed-2024',
+    name: 'Boon of Speed (2024)',
+    description:
+      'Increase your Dexterity by 1 (max 30). Your speed increases by 30 feet. Opportunity attacks against you have disadvantage, and when you move, you don\'t provoke opportunity attacks.',
+    prerequisite: 'Level 19+',
+    category: 'Epic Boon',
+    source: '2024 PHB',
+  },
+  {
+    id: 'boon-of-spell-recall-2024',
+    name: 'Boon of Spell Recall (2024)',
+    description:
+      'Increase your Intelligence, Wisdom, or Charisma by 1 (max 30). You can cast one spell you have prepared of level 1 through 4 without expending a spell slot. Once you use this benefit, you can\'t do so again until you finish a long rest.',
+    prerequisite: 'Level 19+',
+    category: 'Epic Boon',
+    source: '2024 PHB',
+  },
+  {
+    id: 'boon-of-the-night-spirit-2024',
+    name: 'Boon of the Night Spirit (2024)',
+    description:
+      'Increase your Intelligence, Wisdom, or Charisma by 1 (max 30). Merge with Shadows: While you are in dim light or darkness, you can use an action to become invisible. You remain invisible until you take an action, a bonus action, or a reaction.',
+    prerequisite: 'Level 19+',
+    category: 'Epic Boon',
+    source: '2024 PHB',
+  },
+  {
+    id: 'boon-of-truesight-2024',
+    name: 'Boon of Truesight (2024)',
+    description:
+      'Increase your Intelligence, Wisdom, or Charisma by 1 (max 30). You have truesight out to a range of 60 feet.',
+    prerequisite: 'Level 19+',
+    category: 'Epic Boon',
+    source: '2024 PHB',
+  },
+
+  // ===========================================================================
+  // DRAGONMARK FEATS (Eberron: Rising from the Last War)
+  // ===========================================================================
+  {
+    id: 'aberrant-dragonmark',
+    name: 'Aberrant Dragonmark',
+    description:
+      'Increase your Constitution by 1 (max 20). You learn one cantrip and one 1st-level spell from the sorcerer spell list. You can cast the 1st-level spell once at its lowest level without expending a spell slot, regaining the ability to do so after a long rest. Constitution is your spellcasting ability for these spells. When you cast the 1st-level spell, there is a risk of a dangerous flare: you must succeed on a Constitution saving throw or take 1d4 force damage per level of the spell.',
+    prerequisite: 'No existing dragonmark',
+    category: 'Dragonmark',
+    source: 'ERLW',
+  },
+  {
+    id: 'mark-of-detection',
+    name: 'Mark of Detection (Half-Elf)',
+    description:
+      'Increase your Wisdom by 1 (max 20). You gain an Intuition die (1d4) that you can add to Investigation and Insight checks. You can cast detect magic and see invisibility as dragonmark spells, each once without expending a spell slot, regaining the ability after a long rest.',
+    prerequisite: 'Half-Elf',
+    category: 'Dragonmark',
+    source: 'ERLW',
+  },
+  {
+    id: 'mark-of-finding',
+    name: 'Mark of Finding (Half-Orc/Human)',
+    description:
+      'Increase your Wisdom by 1 (max 20). You gain an Intuition die (1d4) that you can add to Survival and Perception checks. You can cast hunter\'s mark and locate object as dragonmark spells, each once without expending a spell slot, regaining the ability after a long rest.',
+    prerequisite: 'Half-Orc or Human',
+    category: 'Dragonmark',
+    source: 'ERLW',
+  },
+  {
+    id: 'mark-of-handling',
+    name: 'Mark of Handling (Human)',
+    description:
+      'Increase your Wisdom by 1 (max 20). You gain an Intuition die (1d4) that you can add to Animal Handling and Nature checks. You can cast animal friendship and beast sense as dragonmark spells, each once without expending a spell slot, regaining the ability after a long rest.',
+    prerequisite: 'Human',
+    category: 'Dragonmark',
+    source: 'ERLW',
+  },
+  {
+    id: 'mark-of-healing',
+    name: 'Mark of Healing (Halfling)',
+    description:
+      'Increase your Wisdom by 1 (max 20). You gain an Intuition die (1d4) that you can add to Medicine checks. You can cast cure wounds and lesser restoration as dragonmark spells, each once without expending a spell slot, regaining the ability after a long rest.',
+    prerequisite: 'Halfling',
+    category: 'Dragonmark',
+    source: 'ERLW',
+  },
+  {
+    id: 'mark-of-hospitality',
+    name: 'Mark of Hospitality (Halfling)',
+    description:
+      'Increase your Charisma by 1 (max 20). You gain an Intuition die (1d4) that you can add to Persuasion checks. You can cast purify food and drink and unseen servant as dragonmark spells, each once without expending a spell slot, regaining the ability after a long rest.',
+    prerequisite: 'Halfling',
+    category: 'Dragonmark',
+    source: 'ERLW',
+  },
+  {
+    id: 'mark-of-making',
+    name: 'Mark of Making (Human)',
+    description:
+      'Increase your Intelligence by 1 (max 20). You gain an Intuition die (1d4) that you can add to ability checks made with artisan\'s tools. You learn the mending cantrip and can cast magic weapon once without expending a spell slot, regaining the ability after a long rest.',
+    prerequisite: 'Human',
+    category: 'Dragonmark',
+    source: 'ERLW',
+  },
+  {
+    id: 'mark-of-passage',
+    name: 'Mark of Passage (Human)',
+    description:
+      'Increase your Dexterity by 1 (max 20). Your base walking speed increases by 5 feet. You gain an Intuition die (1d4) that you can add to Acrobatics checks. You can cast misty step once without expending a spell slot, regaining the ability after a long rest.',
+    prerequisite: 'Human',
+    category: 'Dragonmark',
+    source: 'ERLW',
+  },
+  {
+    id: 'mark-of-scribing',
+    name: 'Mark of Scribing (Gnome)',
+    description:
+      'Increase your Intelligence by 1 (max 20). You gain an Intuition die (1d4) that you can add to History and Investigation checks involving writing or written text. You can cast comprehend languages and magic mouth as dragonmark spells, each once without expending a spell slot, regaining the ability after a long rest.',
+    prerequisite: 'Gnome',
+    category: 'Dragonmark',
+    source: 'ERLW',
+  },
+  {
+    id: 'mark-of-sentinel',
+    name: 'Mark of Sentinel (Human)',
+    description:
+      'Increase your Wisdom by 1 (max 20). You gain an Intuition die (1d4) that you can add to Perception and Insight checks made to detect threats. You can cast shield and shield of faith as dragonmark spells, each once without expending a spell slot, regaining the ability after a long rest.',
+    prerequisite: 'Human',
+    category: 'Dragonmark',
+    source: 'ERLW',
+  },
+  {
+    id: 'mark-of-shadow',
+    name: 'Mark of Shadow (Elf)',
+    description:
+      'Increase your Charisma by 1 (max 20). You gain an Intuition die (1d4) that you can add to Stealth and Performance checks. You learn the minor illusion cantrip and can cast darkness once without expending a spell slot, regaining the ability after a long rest.',
+    prerequisite: 'Elf',
+    category: 'Dragonmark',
+    source: 'ERLW',
+  },
+  {
+    id: 'mark-of-storm',
+    name: 'Mark of Storm (Half-Elf)',
+    description:
+      'Increase your Charisma by 1 (max 20). You gain an Intuition die (1d4) that you can add to Acrobatics checks and checks made with navigator\'s tools. You gain resistance to lightning damage. You learn the gust cantrip and can cast gust of wind once without expending a spell slot, regaining the ability after a long rest.',
+    prerequisite: 'Half-Elf',
+    category: 'Dragonmark',
+    source: 'ERLW',
+  },
+  {
+    id: 'mark-of-warding',
+    name: 'Mark of Warding (Dwarf)',
+    description:
+      'Increase your Intelligence by 1 (max 20). You gain an Intuition die (1d4) that you can add to Investigation checks and checks made with thieves\' tools involving traps or wards. You can cast alarm and arcane lock as dragonmark spells, each once without expending a spell slot, regaining the ability after a long rest.',
+    prerequisite: 'Dwarf',
+    category: 'Dragonmark',
+    source: 'ERLW',
+  },
+
+  // ===========================================================================
+  // GIANT FEATS (Bigby Presents: Glory of the Giants)
+  // ===========================================================================
+  {
+    id: 'strike-of-the-giants',
+    name: 'Strike of the Giants',
+    description:
+      'Increase your Strength, Constitution, or Wisdom by 1 (max 20). Once per turn, when you hit a target with a melee weapon attack or a ranged weapon attack using a thrown weapon, you can add bonus damage and inflict a giant-themed effect. Choose one of the following strike types when you take this feat: Cloud Strike (1d4 thunder, target must succeed on a Wisdom save or be unable to see beyond 10 ft until your next turn start), Fire Strike (1d10 fire), Frost Strike (1d6 cold, target must succeed on a Constitution save or have speed reduced by 10 ft until your next turn start), Hill Strike (1d6 damage of the weapon\'s type, target must succeed on a Strength save or be knocked prone), Stone Strike (1d6 force, target must succeed on a Strength save or be pushed 10 ft), Storm Strike (1d6 lightning, target must succeed on a Constitution save or become unable to take reactions until your next turn start). You can use this benefit a number of times equal to your proficiency bonus, regaining all uses after a long rest.',
+    prerequisite: 'Martial weapon proficiency or Giant Foundling background',
+    category: 'Giant',
+    source: 'BGG',
+  },
+  {
+    id: 'ember-of-the-fire-giant',
+    name: 'Ember of the Fire Giant',
+    description:
+      'Increase your Strength, Constitution, or Wisdom by 1 (max 20). When you hit a target with an attack roll, you can deal an extra 1d10 fire damage to that target. You can also cause the target to ignite, taking an additional 1d6 fire damage at the start of each of its turns until it or another creature uses an action to put out the flames. You can use this benefit a number of times equal to your proficiency bonus, regaining all uses after a long rest.',
+    prerequisite: '4th level, Strike of the Giants feat',
+    category: 'Giant',
+    source: 'BGG',
+  },
+  {
+    id: 'fury-of-the-frost-giant',
+    name: 'Fury of the Frost Giant',
+    description:
+      'Increase your Strength, Constitution, or Wisdom by 1 (max 20). When you take damage from a creature within 30 feet of you, you can use your reaction to reduce the damage by 1d12 + your Constitution modifier and retaliate with a blast of cold, dealing cold damage equal to the amount the damage was reduced to the attacking creature. You can use this benefit a number of times equal to your proficiency bonus, regaining all uses after a long rest.',
+    prerequisite: '4th level, Strike of the Giants feat',
+    category: 'Giant',
+    source: 'BGG',
+  },
+  {
+    id: 'guile-of-the-cloud-giant',
+    name: 'Guile of the Cloud Giant',
+    description:
+      'Increase your Strength, Constitution, or Wisdom by 1 (max 20). When a creature you can see targets you with an attack roll, you can use your reaction to teleport up to 30 feet to an unoccupied space you can see. The attack then has disadvantage if you are no longer within range. You can use this benefit a number of times equal to your proficiency bonus, regaining all uses after a long rest.',
+    prerequisite: '4th level, Strike of the Giants feat',
+    category: 'Giant',
+    source: 'BGG',
+  },
+  {
+    id: 'keenness-of-the-stone-giant',
+    name: 'Keenness of the Stone Giant',
+    description:
+      'Increase your Strength, Constitution, or Wisdom by 1 (max 20). You gain darkvision out to 60 feet. If you already have darkvision, its range increases by 60 feet. As a bonus action, you can create a 15-foot cube of difficult terrain centered on a point on the ground within 60 feet of you. The terrain lasts for 1 minute. You can use the difficult terrain benefit a number of times equal to your proficiency bonus, regaining all uses after a long rest.',
+    prerequisite: '4th level, Strike of the Giants feat',
+    category: 'Giant',
+    source: 'BGG',
+  },
+  {
+    id: 'soul-of-the-storm-giant',
+    name: 'Soul of the Storm Giant',
+    description:
+      'Increase your Strength, Constitution, or Wisdom by 1 (max 20). When you are hit by an attack from a creature you can see within 60 feet, you can use your reaction to deal 1d8 lightning damage to every creature within 15 feet of you. You can use this benefit a number of times equal to your proficiency bonus, regaining all uses after a long rest.',
+    prerequisite: '4th level, Strike of the Giants feat',
+    category: 'Giant',
+    source: 'BGG',
+  },
+  {
+    id: 'vigor-of-the-hill-giant',
+    name: 'Vigor of the Hill Giant',
+    description:
+      'Increase your Strength, Constitution, or Wisdom by 1 (max 20). When you deal damage to a creature with an attack or spell, you gain temporary hit points equal to 1d8 + your Constitution modifier. You can use this benefit a number of times equal to your proficiency bonus, regaining all uses after a long rest.',
+    prerequisite: '4th level, Strike of the Giants feat',
+    category: 'Giant',
+    source: 'BGG',
   },
 ];

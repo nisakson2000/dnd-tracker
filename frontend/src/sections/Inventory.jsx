@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Minus, Trash2, Package, Coins, Search, ArrowRightLeft, FlaskConical, Shield, Swords, Sparkles, AlertTriangle, ChevronUp, ChevronDown, Zap, Pencil, Weight, Tag, Layers, Loader2, ShoppingCart } from 'lucide-react';
+import { Plus, Minus, Trash2, Package, Coins, Search, ArrowRightLeft, FlaskConical, Shield, Swords, Sparkles, AlertTriangle, ChevronUp, ChevronDown, ChevronRight, Zap, Pencil, Weight, Tag, Layers, Loader2, ShoppingCart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getItems, addItem, updateItem, deleteItem, getCurrency, updateCurrency } from '../api/inventory';
 import { getOverview, updateOverview } from '../api/overview';
@@ -44,6 +44,115 @@ const CONSUMABLE_EFFECTS = {
   'Potion of Speed': 'Haste for 1 minute (no save at end)',
   'Antitoxin': 'Advantage on saves vs poison for 1 hour',
 };
+
+// --- Equipment pack contents (5e SRD) ---
+const PACK_CONTENTS = {
+  "Explorer's Pack": { cost: '10 gp', totalWeight: 59, items: [
+    { name: 'Backpack', qty: 1, weight: 5 },
+    { name: 'Bedroll', qty: 1, weight: 7 },
+    { name: 'Mess Kit', qty: 1, weight: 1 },
+    { name: 'Tinderbox', qty: 1, weight: 1 },
+    { name: 'Torch', qty: 10, weight: 1 },
+    { name: 'Rations (1 day)', qty: 10, weight: 2 },
+    { name: 'Waterskin', qty: 1, weight: 5 },
+    { name: 'Hempen Rope (50 ft)', qty: 1, weight: 10 },
+  ]},
+  "Burglar's Pack": { cost: '16 gp', totalWeight: 46.5, items: [
+    { name: 'Backpack', qty: 1, weight: 5 },
+    { name: 'Ball Bearings (bag of 1,000)', qty: 1, weight: 2 },
+    { name: 'String (10 ft)', qty: 1, weight: 0 },
+    { name: 'Bell', qty: 1, weight: 0 },
+    { name: 'Candle', qty: 5, weight: 0 },
+    { name: 'Crowbar', qty: 1, weight: 5 },
+    { name: 'Hammer', qty: 1, weight: 3 },
+    { name: 'Piton', qty: 10, weight: 0.25 },
+    { name: 'Hooded Lantern', qty: 1, weight: 2 },
+    { name: 'Oil (flask)', qty: 2, weight: 1 },
+    { name: 'Rations (1 day)', qty: 5, weight: 2 },
+    { name: 'Tinderbox', qty: 1, weight: 1 },
+    { name: 'Waterskin', qty: 1, weight: 5 },
+    { name: 'Hempen Rope (50 ft)', qty: 1, weight: 10 },
+  ]},
+  "Dungeoneer's Pack": { cost: '12 gp', totalWeight: 61.5, items: [
+    { name: 'Backpack', qty: 1, weight: 5 },
+    { name: 'Crowbar', qty: 1, weight: 5 },
+    { name: 'Hammer', qty: 1, weight: 3 },
+    { name: 'Piton', qty: 10, weight: 0.25 },
+    { name: 'Torch', qty: 10, weight: 1 },
+    { name: 'Tinderbox', qty: 1, weight: 1 },
+    { name: 'Rations (1 day)', qty: 10, weight: 2 },
+    { name: 'Waterskin', qty: 1, weight: 5 },
+    { name: 'Hempen Rope (50 ft)', qty: 1, weight: 10 },
+  ]},
+  "Diplomat's Pack": { cost: '39 gp', totalWeight: 36, items: [
+    { name: 'Chest', qty: 1, weight: 25 },
+    { name: 'Case, Map or Scroll', qty: 2, weight: 1 },
+    { name: 'Fine Clothes', qty: 1, weight: 6 },
+    { name: 'Ink (1 oz bottle)', qty: 1, weight: 0 },
+    { name: 'Ink Pen', qty: 1, weight: 0 },
+    { name: 'Lamp', qty: 1, weight: 1 },
+    { name: 'Oil (flask)', qty: 2, weight: 1 },
+    { name: 'Paper (sheet)', qty: 5, weight: 0 },
+    { name: 'Perfume (vial)', qty: 1, weight: 0 },
+    { name: 'Sealing Wax', qty: 1, weight: 0 },
+    { name: 'Soap', qty: 1, weight: 0 },
+  ]},
+  "Entertainer's Pack": { cost: '40 gp', totalWeight: 38, items: [
+    { name: 'Backpack', qty: 1, weight: 5 },
+    { name: 'Bedroll', qty: 1, weight: 7 },
+    { name: 'Costume (set)', qty: 2, weight: 4 },
+    { name: 'Candle', qty: 5, weight: 0 },
+    { name: 'Rations (1 day)', qty: 5, weight: 2 },
+    { name: 'Waterskin', qty: 1, weight: 5 },
+    { name: 'Disguise Kit', qty: 1, weight: 3 },
+  ]},
+  "Priest's Pack": { cost: '19 gp', totalWeight: 24, items: [
+    { name: 'Backpack', qty: 1, weight: 5 },
+    { name: 'Blanket', qty: 1, weight: 3 },
+    { name: 'Candle', qty: 10, weight: 0 },
+    { name: 'Tinderbox', qty: 1, weight: 1 },
+    { name: 'Alms Box', qty: 1, weight: 0 },
+    { name: 'Block of Incense', qty: 2, weight: 0 },
+    { name: 'Censer', qty: 1, weight: 0 },
+    { name: 'Vestments', qty: 1, weight: 0 },
+    { name: 'Rations (1 day)', qty: 2, weight: 2 },
+    { name: 'Waterskin', qty: 1, weight: 5 },
+  ]},
+  "Scholar's Pack": { cost: '40 gp', totalWeight: 10, items: [
+    { name: 'Backpack', qty: 1, weight: 5 },
+    { name: 'Book of Lore', qty: 1, weight: 5 },
+    { name: 'Ink (1 oz bottle)', qty: 1, weight: 0 },
+    { name: 'Ink Pen', qty: 1, weight: 0 },
+    { name: 'Parchment (sheet)', qty: 10, weight: 0 },
+    { name: 'Little Bag of Sand', qty: 1, weight: 0 },
+    { name: 'Small Knife', qty: 1, weight: 0 },
+  ]},
+  "Monster Hunter's Pack": { cost: '33 gp', totalWeight: 48.5, items: [
+    { name: 'Chest', qty: 1, weight: 25 },
+    { name: 'Crowbar', qty: 1, weight: 5 },
+    { name: 'Hammer', qty: 1, weight: 3 },
+    { name: 'Wooden Stake', qty: 3, weight: 0.5 },
+    { name: 'Holy Symbol', qty: 1, weight: 0 },
+    { name: 'Holy Water (flask)', qty: 1, weight: 1 },
+    { name: 'Manacles', qty: 1, weight: 6 },
+    { name: 'Steel Mirror', qty: 1, weight: 0.5 },
+    { name: 'Oil (flask)', qty: 1, weight: 1 },
+    { name: 'Tinderbox', qty: 1, weight: 1 },
+    { name: 'Torch', qty: 3, weight: 1 },
+  ]},
+};
+
+// Helper to match item name to a known pack
+function getPackContents(itemName) {
+  if (!itemName) return null;
+  const lower = itemName.toLowerCase();
+  for (const [packName, data] of Object.entries(PACK_CONTENTS)) {
+    if (lower === packName.toLowerCase() || lower.includes(packName.toLowerCase())) {
+      return { packName, ...data };
+    }
+  }
+  return null;
+}
 
 // ---- Proficiency resolver ----
 function getCharacterProficiencies(characterClass, characterRace) {
@@ -173,6 +282,7 @@ export default function Inventory({ characterId, character }) {
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [sellMode, setSellMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState(new Set());
+  const [expandedPacks, setExpandedPacks] = useState({});
 
   const load = async () => {
     try {
@@ -293,8 +403,13 @@ export default function Inventory({ characterId, character }) {
   const attunedCount = items.filter(i => i.attuned).length;
   const totalWeight = items.reduce((sum, i) => sum + ((i.weight || 0) * (i.quantity || 1)), 0);
   const carryCapacity = strScore * 15;
-  const encumbered = totalWeight > strScore * 5;
-  const heavilyEncumbered = totalWeight > strScore * 10;
+
+  // Respect encumbrance rules setting
+  const encumbranceRule = (() => {
+    try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').encumbrance || 'variant'; } catch { return 'variant'; }
+  })();
+  const encumbered = encumbranceRule === 'variant' ? totalWeight > strScore * 5 : false;
+  const heavilyEncumbered = encumbranceRule === 'variant' ? totalWeight > strScore * 10 : false;
 
   const totalInventoryValue = useMemo(() => {
     return items.reduce((sum, i) => sum + ((i.value_gp || 0) * (i.quantity || 1)), 0);
@@ -458,16 +573,16 @@ export default function Inventory({ characterId, character }) {
     const cap = carryCapacity;
     if (cap <= 0) return;
     if (newTotalWeight > cap) {
-      toast(`Heavily Over Capacity! Carrying ${newTotalWeight.toFixed(1)}/${cap} lbs\nSpeed -20 ft, Disadvantage on checks, attacks, and STR/DEX/CON saves`, {
+      toast(`Over Capacity! Carrying ${newTotalWeight.toFixed(1)}/${cap} lbs`, {
         icon: '\u26A0\uFE0F', duration: 5000,
         style: { background: '#1a1520', color: '#f87171', border: '1px solid rgba(239,68,68,0.4)', whiteSpace: 'pre-line' }
       });
-    } else if (newTotalWeight > strScore * 10) {
+    } else if (encumbranceRule === 'variant' && newTotalWeight > strScore * 10) {
       toast(`Heavily Encumbered! Carrying ${newTotalWeight.toFixed(1)}/${cap} lbs\nSpeed -20 ft, Disadvantage on checks, attacks, and STR/DEX/CON saves`, {
         icon: '\u26A0\uFE0F', duration: 4000,
         style: { background: '#1a1520', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', whiteSpace: 'pre-line' }
       });
-    } else if (newTotalWeight > strScore * 5) {
+    } else if (encumbranceRule === 'variant' && newTotalWeight > strScore * 5) {
       toast(`Encumbered! Carrying ${newTotalWeight.toFixed(1)}/${cap} lbs\nSpeed -10 ft`, {
         icon: '\uD83C\uDFCB\uFE0F', duration: 3000,
         style: { background: '#1a1520', color: '#fbbf24', border: '1px solid rgba(234,179,8,0.3)', whiteSpace: 'pre-line' }
@@ -654,8 +769,8 @@ export default function Inventory({ characterId, character }) {
   // --- Shared item row renderer ---
   const renderItem = (item) => {
     const typeColor = { weapon: 'border-l-red-500/70', armor: 'border-l-blue-400/70', wondrous: 'border-l-purple-400/70', consumable: 'border-l-emerald-400/70', misc: 'border-l-amber-200/20' };
-    const rarityColor = { common: 'border-l-gray-400/60', uncommon: 'border-l-emerald-400/70', rare: 'border-l-blue-400/70', 'very rare': 'border-l-purple-400/70', legendary: 'border-l-orange-400/70' };
-    const leftBorder = item.rarity ? (rarityColor[item.rarity.toLowerCase()] || typeColor[item.item_type] || 'border-l-amber-200/20') : (typeColor[item.item_type] || 'border-l-amber-200/20');
+    const rarityClass = item.rarity ? `rarity-${item.rarity.toLowerCase().replace(/\s+/g, '-')}` : '';
+    const leftBorder = rarityClass || (typeColor[item.item_type] ? typeColor[item.item_type] : 'border-l-amber-200/20');
     const consumableEffect = item.item_type === 'consumable' ? CONSUMABLE_EFFECTS[item.name] : null;
     const itemTags = getItemTags(item);
     const equippedCounterpart = !item.equipped && (item.item_type === 'weapon' || item.item_type === 'armor')
@@ -664,7 +779,7 @@ export default function Inventory({ characterId, character }) {
     return (
       <div
         key={item.id}
-        className={`bg-[#0d0d12] rounded p-3 border border-l-[3px] ${leftBorder} flex items-start gap-3 ${item.attuned ? 'border-purple-500/30 shadow-[0_0_8px_rgba(168,85,247,0.15)]' : 'border-gold/10'} relative`}
+        className={`bg-[#0d0d12] rounded p-3 border ${rarityClass ? rarityClass : `border-l-[3px] ${leftBorder}`} flex items-start gap-3 ${item.attuned ? 'border-purple-500/30 shadow-[0_0_8px_rgba(168,85,247,0.15)]' : 'border-gold/10'} relative`}
         title={item.description || undefined}
         onMouseEnter={() => equippedCounterpart && setComparisonItem(item)}
         onMouseLeave={() => setComparisonItem(null)}
@@ -722,6 +837,44 @@ export default function Inventory({ characterId, character }) {
               <FlaskConical size={10} /> {consumableEffect}
             </p>
           )}
+          {/* Pack contents dropdown */}
+          {(() => {
+            const pack = getPackContents(item.name);
+            if (!pack) return null;
+            const isExpanded = expandedPacks[item.id];
+            return (
+              <div className="mt-1.5">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setExpandedPacks(prev => ({ ...prev, [item.id]: !prev[item.id] })); }}
+                  className="flex items-center gap-1 text-[11px] text-amber-300/60 hover:text-amber-200 transition-colors"
+                >
+                  <ChevronRight size={12} style={{ transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} />
+                  <Package size={11} />
+                  <span className="font-medium">Pack Contents</span>
+                  <span className="text-amber-200/30">({pack.items.length} items · {pack.totalWeight} lb)</span>
+                </button>
+                {isExpanded && (
+                  <div className="mt-1.5 ml-1 pl-3 border-l-2 border-amber-500/15 space-y-0.5">
+                    {pack.items.map((pi, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-[11px] py-0.5">
+                        <span className="text-amber-200/50">
+                          {pi.name}
+                          {pi.qty > 1 && <span className="text-amber-200/30 ml-1">×{pi.qty}</span>}
+                        </span>
+                        <span className="text-amber-200/25 font-mono tabular-nums">
+                          {(pi.weight * pi.qty) > 0 ? `${(pi.weight * pi.qty)} lb` : '—'}
+                        </span>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between text-[11px] pt-1 mt-1 border-t border-amber-200/8 font-medium">
+                      <span className="text-amber-300/50">Total</span>
+                      <span className="text-amber-300/50 font-mono">{pack.totalWeight} lb</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
           {(() => {
             try {
               const mods = typeof item.stat_modifiers === 'string'

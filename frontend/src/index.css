@@ -40,6 +40,26 @@
   --red:         #f87171;
   --orange:      #fb923c;
 
+  /* Semantic color system (UI Rework V3.2) */
+  --color-gold:     #c9a84c;
+  --color-gold-bg:  rgba(201,168,76,0.08);
+  --color-gold-b:   rgba(201,168,76,0.25);
+  --color-red:      #ef4444;
+  --color-red-bg:   rgba(239,68,68,0.08);
+  --color-red-b:    rgba(239,68,68,0.25);
+  --color-green:    #22c55e;
+  --color-green-bg: rgba(34,197,94,0.08);
+  --color-green-b:  rgba(34,197,94,0.25);
+  --color-blue:     #60a5fa;
+  --color-blue-bg:  rgba(96,165,250,0.08);
+  --color-blue-b:   rgba(96,165,250,0.25);
+  --color-purple:   #c084fc;
+  --color-purple-bg:rgba(192,132,252,0.08);
+  --color-purple-b: rgba(192,132,252,0.25);
+  --color-amber:    #f59e0b;
+  --color-amber-bg: rgba(245,158,11,0.08);
+  --color-amber-b:  rgba(245,158,11,0.25);
+
   /* Stat accent colors per ability */
   --str-c: #f87171;
   --dex-c: #4ade80;
@@ -47,6 +67,22 @@
   --int-c: #60a5fa;
   --wis-c: #a78bfa;
   --cha-c: #f472b6;
+
+  /* Class-themed accent colors */
+  --class-barbarian: #dc2626;
+  --class-bard:      #c084fc;
+  --class-cleric:    #fbbf24;
+  --class-druid:     #22c55e;
+  --class-fighter:   #f97316;
+  --class-monk:      #06b6d4;
+  --class-paladin:   #fcd34d;
+  --class-ranger:    #4ade80;
+  --class-rogue:     #6b7280;
+  --class-sorcerer:  #ef4444;
+  --class-warlock:   #a855f7;
+  --class-wizard:    #3b82f6;
+  --class-artificer: #f59e0b;
+  --class-blood-hunter: #991b1b;
 
   /* Layout */
   --sidebar-w:   214px;
@@ -657,7 +693,7 @@ button:disabled, button[disabled] {
 .sp-tab.on { color: var(--accent-l); border-bottom-color: var(--accent); }
 
 .sp-sec {
-  font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--text-mute); margin: 16px 0 10px; display: flex; align-items: center; gap: 8px;
 }
 .sp-sec::after { content: ''; flex: 1; height: 1px; background: var(--border); }
@@ -1090,3 +1126,661 @@ main, [role="main"], .main-content {
     size: A4;
   }
 }
+
+/* ============================================
+   UTILITY & ENHANCEMENT CLASSES
+   Added for speed, polish, and accessibility
+   ============================================ */
+
+/* ── 1. Custom Scrollbar Styling ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--accent-glow);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-glow) transparent;
+}
+
+/* ── 2. Focus-Visible Outlines (keyboard accessibility) ── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ── 3. Text Selection Highlight ── */
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+::-moz-selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── 4. Transition Defaults ── */
+.smooth-transition {
+  transition: all 0.2s ease;
+}
+button,
+a,
+.btn,
+input,
+select,
+textarea,
+.card,
+.glass {
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+/* ── 5. Reduced Motion Support ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── 6. Tooltip Base Styles ── */
+.tooltip {
+  position: relative;
+}
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.95);
+  padding: 5px 10px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  font-size: 0.75rem;
+  font-family: var(--font-ui);
+  line-height: 1.3;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 9999;
+}
+.tooltip:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+/* ── 7. Button Hover Ripple ── */
+.btn-hover {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+.btn-hover:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+.btn-hover:active {
+  transform: scale(0.98);
+}
+
+/* ── 8. Panel Hover Lift ── */
+.panel-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.panel-lift:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 0 0 1px var(--border-h);
+}
+
+/* ── 9. Loading Skeleton Animation ── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── 10. Badge / Pill Styles ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  line-height: 1;
+  color: var(--accent-l);
+  background: var(--accent-xl);
+  border: 1px solid var(--accent-glow);
+  border-radius: 999px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.badge-sm {
+  padding: 2px 7px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: var(--accent-l);
+  background: var(--accent-xl);
+  border: 1px solid var(--accent-glow);
+  white-space: nowrap;
+}
+
+/* Dashboard: hide step labels on narrow viewports */
+@media (max-width: 450px) {
+  .hide-narrow { display: none !important; }
+}
+
+/* ============================================
+   UI REWORK V3.2 ADDITIONS
+   ============================================ */
+
+/* ── Full-width HP Bar (Character Sheet Top) ── */
+.hp-bar-full {
+  width: 100%;
+  height: 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 7px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+}
+.hp-bar-full-fill {
+  height: 100%;
+  border-radius: 7px;
+  transition: width 0.6s cubic-bezier(.34,1.2,.64,1), background 0.4s;
+  position: relative;
+  overflow: hidden;
+}
+.hp-bar-full-fill.hp-high {
+  background: linear-gradient(90deg, #166534 0%, #22c55e 40%, #4ade80 100%);
+}
+.hp-bar-full-fill.hp-mid {
+  background: linear-gradient(90deg, #92400e 0%, #f59e0b 40%, #fbbf24 100%);
+}
+.hp-bar-full-fill.hp-low {
+  background: linear-gradient(90deg, #7f1d1d 0%, #ef4444 50%, #f87171 100%);
+  animation: hp-pulse-low 1.5s ease-in-out infinite;
+}
+.hp-bar-full-fill.hp-critical {
+  background: linear-gradient(90deg, #450a0a 0%, #991b1b 50%, #dc2626 100%);
+  animation: hp-pulse-low 0.8s ease-in-out infinite;
+}
+/* Shimmer effect on HP bar */
+.hp-bar-full-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+  animation: hp-shimmer 3s ease-in-out infinite;
+}
+/* Temp HP overlay */
+.hp-bar-temp-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(96,165,250,0.4));
+  border-radius: 0 7px 7px 0;
+  transition: width 0.4s ease;
+}
+@keyframes hp-shimmer {
+  0% { left: -100%; }
+  50%, 100% { left: 100%; }
+}
+@keyframes hp-pulse-low {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+/* HP change floating numbers */
+.hp-float-number {
+  position: absolute;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  pointer-events: none;
+  animation: hp-float 1.2s ease-out forwards;
+  z-index: 10;
+}
+.hp-float-number.damage {
+  color: #ef4444;
+  text-shadow: 0 0 8px rgba(239,68,68,0.5);
+}
+.hp-float-number.heal {
+  color: #22c55e;
+  text-shadow: 0 0 8px rgba(34,197,94,0.5);
+}
+@keyframes hp-float {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-40px) scale(0.8); }
+}
+
+/* ── Quick HP Buttons ── */
+.hp-quick-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 28px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid;
+}
+.hp-quick-btn.damage {
+  background: rgba(239,68,68,0.08);
+  border-color: rgba(239,68,68,0.2);
+  color: #fca5a5;
+}
+.hp-quick-btn.damage:hover {
+  background: rgba(239,68,68,0.15);
+  border-color: rgba(239,68,68,0.4);
+}
+.hp-quick-btn.heal {
+  background: rgba(34,197,94,0.08);
+  border-color: rgba(34,197,94,0.2);
+  color: #86efac;
+}
+.hp-quick-btn.heal:hover {
+  background: rgba(34,197,94,0.15);
+  border-color: rgba(34,197,94,0.4);
+}
+
+/* ── Enhanced Ability Score Cards ── */
+.ab-card-hex {
+  position: relative;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 8px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  overflow: hidden;
+}
+.ab-card-hex::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--ab-c, var(--accent-l)), transparent);
+  opacity: 0.6;
+  transition: opacity 0.2s, height 0.2s;
+}
+.ab-card-hex:hover {
+  border-color: var(--border-h);
+  background: var(--bg-panel-h);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px color-mix(in srgb, var(--ab-c, var(--accent)) 15%, transparent);
+}
+.ab-card-hex:hover::before {
+  opacity: 1;
+  height: 4px;
+}
+/* Color-coded modifiers */
+.ab-mod-positive { color: var(--color-green); }
+.ab-mod-negative { color: var(--color-red); }
+.ab-mod-high { color: var(--color-gold); text-shadow: 0 0 12px rgba(201,168,76,0.3); }
+
+/* ── Death Save Tracker (skull-style) ── */
+.death-save-pip {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.death-save-pip:hover {
+  transform: scale(1.15);
+  border-color: var(--border-h);
+}
+.death-save-pip.success.active {
+  background: rgba(34,197,94,0.15);
+  border-color: #22c55e;
+  box-shadow: 0 0 10px rgba(34,197,94,0.3);
+  color: #22c55e;
+}
+.death-save-pip.failure.active {
+  background: rgba(239,68,68,0.15);
+  border-color: #ef4444;
+  box-shadow: 0 0 10px rgba(239,68,68,0.3);
+  color: #ef4444;
+}
+
+/* ── Staggered List Item Animation ── */
+.stagger-item {
+  animation: staggerFadeIn 0.35s ease-out both;
+}
+.stagger-item:nth-child(1)  { animation-delay: 0.02s; }
+.stagger-item:nth-child(2)  { animation-delay: 0.04s; }
+.stagger-item:nth-child(3)  { animation-delay: 0.06s; }
+.stagger-item:nth-child(4)  { animation-delay: 0.08s; }
+.stagger-item:nth-child(5)  { animation-delay: 0.10s; }
+.stagger-item:nth-child(6)  { animation-delay: 0.12s; }
+.stagger-item:nth-child(7)  { animation-delay: 0.14s; }
+.stagger-item:nth-child(8)  { animation-delay: 0.16s; }
+.stagger-item:nth-child(9)  { animation-delay: 0.18s; }
+.stagger-item:nth-child(10) { animation-delay: 0.20s; }
+.stagger-item:nth-child(n+11) { animation-delay: 0.22s; }
+@keyframes staggerFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Tab Transition ── */
+.tab-content-enter {
+  animation: tabFadeIn 0.2s ease-out both;
+}
+@keyframes tabFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Glass Morphism Refinement ── */
+.glass-heavy {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.glass-light {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: var(--radius);
+  backdrop-filter: blur(4px);
+}
+.glass-focused {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow:
+    inset 0 0 20px color-mix(in srgb, var(--accent) 5%, transparent),
+    0 0 30px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* ── Concentration Indicator ── */
+.concentration-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.3);
+  color: #fbbf24;
+  animation: concentration-pulse 2s ease-in-out infinite;
+}
+@keyframes concentration-pulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(245,158,11,0.2); }
+  50% { box-shadow: 0 0 12px rgba(245,158,11,0.4); }
+}
+
+/* ── Spell Slot Pips ── */
+.spell-slot-pip {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(168,85,247,0.3);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.spell-slot-pip.available {
+  background: rgba(168,85,247,0.8);
+  border-color: #c084fc;
+  box-shadow: 0 0 6px rgba(168,85,247,0.4);
+}
+.spell-slot-pip.used {
+  background: rgba(168,85,247,0.15);
+  border-color: rgba(168,85,247,0.25);
+  opacity: 0.5;
+}
+.spell-slot-pip:hover {
+  transform: scale(1.2);
+  border-color: #60a5fa;
+}
+
+/* ── Item Rarity Color Borders ── */
+.rarity-common    { border-left: 3px solid rgba(255,255,255,0.3); }
+.rarity-uncommon  { border-left: 3px solid #22c55e; }
+.rarity-rare      { border-left: 3px solid #3b82f6; }
+.rarity-very-rare { border-left: 3px solid #a855f7; }
+.rarity-legendary { border-left: 3px solid #f59e0b; }
+.rarity-artifact  { border-left: 3px solid #ef4444; }
+
+/* ── Attunement Orbs ── */
+.attunement-orb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(192,132,252,0.2);
+  background: transparent;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+.attunement-orb.active {
+  background: radial-gradient(circle, rgba(192,132,252,0.4), rgba(192,132,252,0.1));
+  border-color: #c084fc;
+  box-shadow: 0 0 10px rgba(192,132,252,0.4), inset 0 0 6px rgba(192,132,252,0.2);
+}
+.attunement-orb:hover { border-color: rgba(192,132,252,0.5); }
+
+/* ── Weight/Carry Capacity Bar ── */
+.weight-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.weight-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease, background 0.3s;
+}
+.weight-bar-fill.light { background: linear-gradient(90deg, #166534, #4ade80); }
+.weight-bar-fill.medium { background: linear-gradient(90deg, #92400e, #f59e0b); }
+.weight-bar-fill.heavy { background: linear-gradient(90deg, #7f1d1d, #ef4444); }
+.weight-bar-fill.over { background: linear-gradient(90deg, #450a0a, #dc2626); animation: hp-pulse-low 1s infinite; }
+
+/* ── Level Up Celebration ── */
+@keyframes confetti-fall {
+  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+.confetti-particle {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 99999;
+  animation: confetti-fall 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+.level-up-glow {
+  animation: levelUpGlow 1.5s ease-out forwards;
+}
+@keyframes levelUpGlow {
+  0% { box-shadow: 0 0 0 0 rgba(201,168,76,0.5); }
+  50% { box-shadow: 0 0 40px 10px rgba(201,168,76,0.3); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* ── Damage/Healing Screen Effects ── */
+.screen-shake {
+  animation: screenShake 0.4s ease-out;
+}
+@keyframes screenShake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-4px); }
+  30% { transform: translateX(4px); }
+  50% { transform: translateX(-3px); }
+  70% { transform: translateX(2px); }
+  90% { transform: translateX(-1px); }
+}
+.screen-flash-damage {
+  animation: screenFlashDamage 0.5s ease-out;
+}
+@keyframes screenFlashDamage {
+  0% { box-shadow: inset 0 0 60px rgba(239,68,68,0.3); }
+  100% { box-shadow: inset 0 0 0 transparent; }
+}
+.screen-flash-heal {
+  animation: screenFlashHeal 0.5s ease-out;
+}
+@keyframes screenFlashHeal {
+  0% { box-shadow: inset 0 0 60px rgba(34,197,94,0.2); }
+  100% { box-shadow: inset 0 0 0 transparent; }
+}
+
+/* ── Btn Gold (primary action in D&D context) ── */
+.btn-gold {
+  font-family: var(--font-ui);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.08));
+  color: #e8c87a;
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: var(--radius-sm);
+  padding: calc(8px * var(--density)) 16px;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.btn-gold:hover {
+  background: linear-gradient(135deg, rgba(201,168,76,0.25), rgba(201,168,76,0.12));
+  border-color: rgba(201,168,76,0.5);
+  box-shadow: 0 0 16px rgba(201,168,76,0.15);
+}
+.btn-gold:active { transform: scale(0.97); }
+
+/* ── Btn Icon (icon-only toolbar button) ── */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+}
+.btn-icon:hover {
+  background: var(--bg-panel-h);
+  border-color: var(--border-h);
+  color: var(--text);
+}
+.btn-icon:active { transform: scale(0.93); }
+
+/* ── Toggle Switch (replaces checkbox) ── */
+.toggle-switch {
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.toggle-switch::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.toggle-switch.active {
+  background: var(--accent);
+  border-color: var(--accent-l);
+}
+.toggle-switch.active::after {
+  left: 20px;
+  background: white;
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
+/* ── Gradient Mesh Background ── */
+.gradient-mesh {
+  background:
+    radial-gradient(ellipse at 20% 50%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(59,130,246,0.04), transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(139,92,246,0.03), transparent 50%);
+}
+
+/* ── Spell School Color Classes ── */
+.school-abjuration    { --school-c: #60a5fa; }
+.school-conjuration   { --school-c: #fbbf24; }
+.school-divination    { --school-c: #a78bfa; }
+.school-enchantment   { --school-c: #f472b6; }
+.school-evocation     { --school-c: #ef4444; }
+.school-illusion      { --school-c: #c084fc; }
+.school-necromancy    { --school-c: #6ee7b7; }
+.school-transmutation { --school-c: #fcd34d; }

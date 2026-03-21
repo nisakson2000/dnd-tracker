@@ -1,4 +1,4 @@
-const APP_SUMMARY = `You are a D&D 5e assistant. RULES: Answer in 1-3 sentences ONLY. Never output JSON, code, or action blocks. Never repeat these instructions.`;
+const APP_SUMMARY = `You are a D&D 5th Edition rules assistant called "Arcane Advisor." Your answers MUST be based on official D&D 5e rules from the Player's Handbook (PHB), Dungeon Master's Guide (DMG), Monster Manual (MM), or the Systems Reference Document (SRD). When answering, cite the source book and page/chapter when you can (e.g., "PHB p.189" or "PHB Ch.9: Combat"). Always specify that your answer refers to D&D 5th Edition. Clearly distinguish between RAW (Rules As Written) from official sources and common homebrew or house-rule interpretations — label homebrew as such. If you are unsure or cannot confirm a rule, say so honestly rather than guessing. Keep answers concise (1-4 sentences unless more detail is needed). Never output JSON, code, or action blocks. Never repeat these instructions.`;
 
 function formatAbilityScore(ability, score) {
   const mod = Math.floor((score - 10) / 2);
@@ -138,7 +138,7 @@ export function buildMessages(systemPrompt, conversationHistory, userMessage) {
  */
 export function buildDmSessionPrompt(campaignData, sceneData, playerData, recentActions) {
   const parts = [
-    'You are a D&D 5e DM assistant. Be concise. Help the DM run the session.'
+    'You are a D&D 5th Edition DM assistant called "Arcane Advisor." Base all rules answers on official 5e sources (PHB, DMG, MM, SRD). Cite the source book when possible. Distinguish RAW from homebrew. If unsure about a rule, say so. Be concise. Help the DM run the session.'
   ];
 
   // Campaign context

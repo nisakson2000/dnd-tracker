@@ -1,11 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, FileJson, Check, X, AlertTriangle, ChevronRight } from 'lucide-react';
+import { Upload, FileJson, FileText, Check, X, AlertTriangle, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import { createCharacter } from '../api/characters';
 import { parseDDBCharacter, importDDBCharacter } from '../utils/ddbImport';
+import { parseDDBPdf, importDDBPdf } from '../utils/ddbPdfImport';
 
 // ─── Stat label colors ──────────────────────────────────────────────────────
 
@@ -23,6 +24,8 @@ export default function DDBImportModal({ show, onClose, onSuccess }) {
   const [parsed, setParsed] = useState(null);
   const [progress, setProgress] = useState({ step: 0, total: 4, label: '' });
   const [result, setResult] = useState(null);
+  const [fileType, setFileType] = useState(null); // 'json' | 'pdf'
+  const [pdfData, setPdfData] = useState(null); // raw ArrayBuffer for PDF
   const fileInputRef = useRef(null);
 
   const reset = useCallback(() => {
@@ -32,6 +35,8 @@ export default function DDBImportModal({ show, onClose, onSuccess }) {
     setParsed(null);
     setProgress({ step: 0, total: 4, label: '' });
     setResult(null);
+    setFileType(null);
+    setPdfData(null);
   }, []);
 
   const handleClose = () => {
@@ -44,9 +49,29 @@ export default function DDBImportModal({ show, onClose, onSuccess }) {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const text = await file.text();
-      setJsonText(text);
-      tryParse(text);
+      if (file.name.toLowerCase().endsWith('.pdf')) {
+        // PDF file
+        const buffer = await file.arrayBuffer();
+        setPdfData(buffer);
+        setFileType('pdf');
+        setParseError('');
+        setParsed(null);
+        // Parse PDF immediately
+        try {
+          const result = await parseDDBPdf(buffer);
+          setParsed(result);
+          setStep('preview');
+        } catch (pdfErr) {
+          setParseError(`PDF parsing failed: ${pdfErr.message}`);
+        }
+      } else {
+        // JSON file
+        const text = await file.text();
+        setJsonText(text);
+        setFileType('json');
+        setPdfData(null);
+        tryParse(text);
+      }
     } catch (err) {
       setParseError(`Failed to read file: ${err.message}`);
     }
@@ -60,6 +85,7 @@ export default function DDBImportModal({ show, onClose, onSuccess }) {
     try {
       const raw = JSON.parse(text);
       const result = parseDDBCharacter(raw);
+      setFileType('json');
       setParsed(result);
       setStep('preview');
     } catch (err) {
@@ -81,12 +107,30 @@ export default function DDBImportModal({ show, onClose, onSuccess }) {
     setStep('importing');
 
     try {
-      const { characterId, summary } = await importDDBCharacter(
-        JSON.parse(jsonText),
-        createCharacter,
-        (charId, payload) => invoke('import_character', { characterId: charId, payload }),
-        (s, t, label) => setProgress({ step: s, total: t, label }),
-      );
+      let characterId, summary;
+
+      if (fileType === 'pdf' && pdfData) {
+        // PDF import path
+        const result = await importDDBPdf(
+          pdfData,
+          createCharacter,
+          (charId, payload) => invoke('import_character', { characterId: charId, payload }),
+          (s, t, label) => setProgress({ step: s, total: t, label }),
+        );
+        characterId = result.characterId;
+        summary = result.summary;
+      } else {
+        // JSON import path
+        const result = await importDDBCharacter(
+          JSON.parse(jsonText),
+          createCharacter,
+          (charId, payload) => invoke('import_character', { characterId: charId, payload }),
+          (s, t, label) => setProgress({ step: s, total: t, label }),
+        );
+        characterId = result.characterId;
+        summary = result.summary;
+      }
+
       setResult({ characterId, summary });
       setStep('done');
       toast.success(`${summary.name} imported from D&D Beyond!`);
@@ -166,7 +210,7 @@ export default function DDBImportModal({ show, onClose, onSuccess }) {
                     D&D Beyond Import
                   </div>
                   <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.35)', marginTop: 2 }}>
-                    {step === 'input' && 'Upload or paste character JSON'}
+                    {step === 'input' && 'Upload JSON/PDF or paste character data'}
                     {step === 'preview' && 'Review before importing'}
                     {step === 'importing' && 'Importing character...'}
                     {step === 'done' && 'Import complete'}
@@ -244,16 +288,24 @@ export default function DDBImportModal({ show, onClose, onSuccess }) {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept=".json"
+                      accept=".json,.pdf"
                       onChange={handleFileSelect}
                       style={{ display: 'none' }}
                     />
                     <Upload size={28} style={{ color: 'rgba(96,165,250,0.4)', margin: '0 auto 10px' }} />
                     <div style={{ fontFamily: 'var(--font-heading)', fontSize: 13, color: 'rgba(96,165,250,0.6)', letterSpacing: '0.06em' }}>
-                      Click to upload JSON file
+                      Click to upload file
                     </div>
-                    <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.25)', marginTop: 4 }}>
-                      Export your character from D&D Beyond as JSON
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 6 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'rgba(200,175,130,0.35)' }}>
+                        <FileJson size={12} /> JSON
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'rgba(200,175,130,0.35)' }}>
+                        <FileText size={12} /> PDF
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 10, color: 'rgba(200,175,130,0.2)', marginTop: 4 }}>
+                      Export your character from D&D Beyond as JSON or PDF
                     </div>
                   </motion.div>
 
@@ -382,6 +434,21 @@ export default function DDBImportModal({ show, onClose, onSuccess }) {
                       ))}
                     </div>
                   </div>
+
+                  {/* PDF notice */}
+                  {fileType === 'pdf' && (
+                    <div style={{
+                      borderRadius: 10, padding: '12px 14px',
+                      background: 'rgba(245,158,11,0.06)',
+                      border: '1px solid rgba(245,158,11,0.15)',
+                      display: 'flex', alignItems: 'flex-start', gap: 10,
+                    }}>
+                      <AlertTriangle size={14} style={{ color: '#f59e0b', flexShrink: 0, marginTop: 1 }} />
+                      <div style={{ fontSize: 11, color: 'rgba(245,158,11,0.7)', lineHeight: 1.5 }}>
+                        PDF import extracts what it can from the character sheet. Some data (spell details, feature descriptions) may be incomplete. You can edit these after import. For best results, use JSON export.
+                      </div>
+                    </div>
+                  )}
 
                   {/* What will be imported */}
                   <div style={{

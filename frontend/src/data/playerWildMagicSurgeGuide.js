@@ -1,0 +1,75 @@
+/**
+ * playerWildMagicSurgeGuide.js
+ * Player Mode: Wild Magic Sorcerer — surge table, tips, and optimization
+ * Pure JS — no React dependencies.
+ */
+
+export const WILD_MAGIC_SURGE_RULES = {
+  trigger: 'After casting a sorcerer spell of 1st level or higher, DM can have you roll d20. On a 1, roll on the Wild Magic Surge table.',
+  tideOfChaos: 'Once/LR: gain advantage on one attack, check, or save. After using it, DM can trigger a surge to restore it (no d20 needed).',
+  note: 'Many DMs always trigger the d20 roll. Some always trigger surge after Tides. Discuss with your DM.',
+};
+
+export const WILD_MAGIC_SURGE_TABLE = [
+  { roll: '01-02', effect: 'Roll on this table every round for 1 minute. Each round, a new random effect.', rating: 'Chaotic' },
+  { roll: '03-04', effect: 'You can see invisible creatures for 1 minute.', rating: 'Good' },
+  { roll: '05-06', effect: 'A modron appears within 5ft for 1 minute. It does nothing.', rating: 'Neutral' },
+  { roll: '07-08', effect: 'You cast Fireball (L3) centered on yourself.', rating: 'TERRIBLE' },
+  { roll: '09-10', effect: 'You cast Magic Missile as a 5th-level spell.', rating: 'Good' },
+  { roll: '11-12', effect: 'Roll d10. Height changes by that many inches (50/50 taller/shorter).', rating: 'Funny' },
+  { roll: '13-14', effect: 'You cast Confusion centered on yourself.', rating: 'Bad' },
+  { roll: '15-16', effect: 'Regain lowest-level expended spell slot each round for 1 minute.', rating: 'AMAZING' },
+  { roll: '17-18', effect: 'You grow a long beard of feathers for 1 minute.', rating: 'Funny' },
+  { roll: '19-20', effect: 'You cast Grease centered on yourself.', rating: 'Bad' },
+  { roll: '21-22', effect: 'Each creature within 30ft takes 1d10 necrotic. You regain that HP.', rating: 'Good/Bad' },
+  { roll: '23-24', effect: 'Skin turns blue for 24 hours. Remove Curse ends it.', rating: 'Funny' },
+  { roll: '25-26', effect: 'Third eye on forehead. Advantage on Perception for 1 minute.', rating: 'Good' },
+  { roll: '27-28', effect: 'All your spells with casting time 1 action become BA for 1 minute.', rating: 'AMAZING' },
+  { roll: '29-30', effect: 'You teleport up to 60ft to an unoccupied space.', rating: 'Good' },
+  { roll: '31-32', effect: 'Transported to Astral Plane until end of next turn. Then return.', rating: 'Neutral' },
+  { roll: '33-34', effect: 'Maximize damage of next damaging spell within 1 minute.', rating: 'AMAZING' },
+  { roll: '35-36', effect: 'Roll d10. Age changes by that many years (50/50 older/younger).', rating: 'Varies' },
+  { roll: '37-38', effect: '1d6 flumphs appear for 1 minute. Frightened of you.', rating: 'Funny' },
+  { roll: '39-40', effect: 'Regain 2d10 HP.', rating: 'Good' },
+  { roll: '41-42', effect: 'You become a potted plant. Incapacitated. AC 0, HP 1. Revert at 0 HP.', rating: 'TERRIBLE' },
+  { roll: '43-44', effect: 'Teleport up to 20ft as BA for 1 minute.', rating: 'Good' },
+  { roll: '45-46', effect: 'You cast Levitate on yourself.', rating: 'Good' },
+  { roll: '47-48', effect: 'A unicorn appears within 5ft. Follows for 24hr. Controlled by DM.', rating: 'AMAZING' },
+  { roll: '49-50', effect: 'Can\'t speak. Pink bubbles float out of mouth.', rating: 'Bad (V spells fail)' },
+  { roll: '51-52', effect: 'Spectral shield. +2 AC. No Magic Missile damage. 1 minute.', rating: 'Good' },
+  { roll: '53-54', effect: 'Immune to alcohol for 5d6 days.', rating: 'Funny' },
+  { roll: '55-56', effect: 'Hair falls out. Grows back in 24 hours.', rating: 'Funny' },
+  { roll: '57-58', effect: 'Anything flammable you touch ignites for 1 minute.', rating: 'Chaotic' },
+  { roll: '59-60', effect: 'Regain lowest-level expended spell slot.', rating: 'Good' },
+  { roll: '61-62', effect: 'Shout when speaking for 1 minute.', rating: 'Funny' },
+  { roll: '63-64', effect: 'You cast Fog Cloud centered on yourself.', rating: 'Neutral/Bad' },
+  { roll: '65-66', effect: 'Up to 3 creatures within 30ft take 4d10 lightning. DEX save.', rating: 'Good' },
+  { roll: '67-68', effect: 'Frightened by nearest creature until end of next turn.', rating: 'Bad' },
+  { roll: '69-70', effect: 'All creatures within 30ft become invisible for 1 minute.', rating: 'Chaotic' },
+  { roll: '71-72', effect: 'Resistance to all damage for 1 minute.', rating: 'AMAZING' },
+  { roll: '73-74', effect: 'Random creature within 60ft poisoned for 1d4 hours.', rating: 'Random' },
+  { roll: '75-76', effect: 'You glow brightly (30ft) for 1 minute. Blind creatures that end turn in 5ft.', rating: 'Good' },
+  { roll: '77-78', effect: 'You cast Polymorph on yourself. Fail save = sheep.', rating: 'Bad' },
+  { roll: '79-80', effect: 'Illusory butterflies/flowers for 1 minute in 10ft.', rating: 'Funny' },
+  { roll: '81-82', effect: 'Take an additional action immediately.', rating: 'AMAZING' },
+  { roll: '83-84', effect: 'All creatures within 30ft take 1d10 necrotic. You regain that HP.', rating: 'Good' },
+  { roll: '85-86', effect: 'You cast Mirror Image.', rating: 'Good' },
+  { roll: '87-88', effect: 'You cast Fly on random creature within 60ft.', rating: 'Good/Random' },
+  { roll: '89-90', effect: 'You become invisible for 1 minute. End early by attacking/casting.', rating: 'Good' },
+  { roll: '91-92', effect: 'If you die within 1 minute, immediately come back to life (full HP).', rating: 'AMAZING' },
+  { roll: '93-94', effect: 'Size increases one category for 1 minute.', rating: 'Good' },
+  { roll: '95-96', effect: 'You and all within 30ft gain vulnerability to piercing for 1 minute.', rating: 'TERRIBLE' },
+  { roll: '97-98', effect: 'Surrounded by faint ethereal music for 1 minute.', rating: 'Funny' },
+  { roll: '99-00', effect: 'Regain all expended sorcery points.', rating: 'AMAZING' },
+];
+
+export const WILD_MAGIC_TIPS = [
+  'Tides of Chaos: use it aggressively. The free advantage is incredible.',
+  'DMs who restore Tides via surges give you more advantage + more surges. Win-win.',
+  'About 40% of surges are good, 25% are bad, 35% are neutral/funny.',
+  'The self-Fireball (07-08) is the nightmare. Position away from allies.',
+  'Several results are AMAZING: all spells as BA, maximize damage, resistance to all, free action, regain SP.',
+  'At L14, Controlled Chaos: roll twice, pick which result happens. Huge improvement.',
+  'Wild Magic Sorcerer is a chaotic and fun subclass. Embrace the randomness.',
+  'Coordinate with your DM about surge frequency. More surges = more chaos = more fun.',
+];

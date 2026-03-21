@@ -1,11 +1,15 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 import {
   Wifi, WifiOff, Shield, Heart, LogOut,
   Minus, Plus, Zap, Brain, AlertTriangle, Activity,
+  Eye, Skull, Swords, Crosshair, Footprints, Search,
 } from 'lucide-react';
 import {
   Package, Sparkles,
 } from 'lucide-react';
+import { getConditionRef } from '../../data/playerConditionRef';
+import { getDeathSaveStatus } from '../../data/playerDeathSaves';
+import { getHpStatus } from '../../data/playerHpTracker';
 
 const lowHpPulse = `
 @keyframes lowHpPulse {
@@ -37,7 +41,10 @@ export default memo(function PlayerSessionHeader({
   setShowSpellSlots,
   handleUseSpellSlot,
   latencyMs,
+  deathSaves,
+  concentrationSpell,
 }) {
+  const [hoveredCondition, setHoveredCondition] = useState(null);
   // Low HP warning (< 25%)
   const hpWarning = useMemo(() => {
     if (!charOverview?.max_hp || charOverview.max_hp <= 0) return null;
@@ -58,6 +65,16 @@ export default memo(function PlayerSessionHeader({
     if (totalRemaining === 0) return 'depleted';
     if (totalRemaining <= Math.ceil(totalMax * 0.25)) return 'low';
     return null;
+  }, [spellSlots]);
+
+  // Slot count summary (remaining/total)
+  const slotSummary = useMemo(() => {
+    if (!spellSlots || spellSlots.length === 0) return null;
+    const withMax = spellSlots.filter(s => s.max_slots > 0);
+    if (withMax.length === 0) return null;
+    const totalRemaining = withMax.reduce((sum, s) => sum + (s.max_slots - (s.used_slots || 0)), 0);
+    const totalMax = withMax.reduce((sum, s) => sum + s.max_slots, 0);
+    return `${totalRemaining}/${totalMax}`;
   }, [spellSlots]);
 
   return (
@@ -160,23 +177,70 @@ export default memo(function PlayerSessionHeader({
               {charOverview.level ? ` Lv${charOverview.level}` : ''}
             </span>
           )}
-          {/* Active conditions */}
+          {/* Concentration indicator */}
+          {concentrationSpell && (
+            <span style={{
+              fontSize: '9px', fontWeight: 600, padding: '1px 6px', borderRadius: '4px',
+              background: 'rgba(96,165,250,0.12)', color: '#60a5fa',
+              border: '1px solid rgba(96,165,250,0.25)',
+              display: 'flex', alignItems: 'center', gap: 3,
+            }}>
+              <Crosshair size={8} /> Conc: {concentrationSpell}
+            </span>
+          )}
+          {/* Active conditions with tooltips */}
           {conditions.length > 0 && (
-            <div style={{ display: 'flex', gap: '4px' }}>
-              {conditions.map((c, i) => (
-                <span key={i} style={{
-                  fontSize: '9px', fontWeight: 600, padding: '1px 6px', borderRadius: '4px',
-                  background: 'rgba(251,191,36,0.12)', color: '#fbbf24',
-                  border: '1px solid rgba(251,191,36,0.25)',
-                }}>
-                  {c.name || c.condition}{c.rounds_remaining != null ? ` (${c.rounds_remaining}r)` : ''}
-                </span>
-              ))}
+            <div style={{ display: 'flex', gap: '4px', position: 'relative', alignItems: 'center' }}>
+              <span style={{
+                fontSize: '9px', fontWeight: 700, color: '#fbbf24',
+                background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)',
+                borderRadius: '8px', padding: '0 5px', minWidth: '16px', textAlign: 'center',
+                fontFamily: 'var(--font-mono, monospace)', lineHeight: '16px',
+              }}>
+                {conditions.length}
+              </span>
+              {conditions.map((c, i) => {
+                const condName = c.name || c.condition;
+                const ref = getConditionRef ? getConditionRef(condName) : null;
+                return (
+                  <span key={i}
+                    onMouseEnter={() => setHoveredCondition(condName)}
+                    onMouseLeave={() => setHoveredCondition(null)}
+                    style={{
+                      fontSize: '9px', fontWeight: 600, padding: '1px 6px', borderRadius: '4px',
+                      background: ref ? `${ref.color}18` : 'rgba(251,191,36,0.12)',
+                      color: ref ? ref.color : '#fbbf24',
+                      border: `1px solid ${ref ? `${ref.color}40` : 'rgba(251,191,36,0.25)'}`,
+                      cursor: 'help', position: 'relative',
+                    }}>
+                    {ref?.icon && <span style={{ marginRight: 2 }}>{ref.icon}</span>}
+                    {condName}{c.rounds_remaining != null ? ` (${c.rounds_remaining}r)` : ''}
+                    {hoveredCondition === condName && ref && (
+                      <div style={{
+                        position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
+                        marginTop: 4, padding: '8px 10px', borderRadius: 8, zIndex: 100,
+                        background: 'rgba(15,15,20,0.97)', border: '1px solid rgba(255,255,255,0.12)',
+                        minWidth: 220, maxWidth: 300, whiteSpace: 'normal',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                      }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: ref.color, marginBottom: 4 }}>{ref.name}</div>
+                        <div style={{ fontSize: 10, color: 'var(--text-dim)', lineHeight: 1.4 }}>{ref.playerSummary}</div>
+                        {ref.mechanicalEffects && (
+                          <ul style={{ margin: '4px 0 0', paddingLeft: 14, fontSize: 9, color: 'var(--text-mute)', lineHeight: 1.5 }}>
+                            {ref.mechanicalEffects.slice(0, 4).map((e, j) => <li key={j}>{e}</li>)}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </span>
+                );
+              })}
             </div>
           )}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto' }}>
             {/* HP with controls */}
             {charOverview.current_hp != null && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 {hpEditMode ? (
                   <>
@@ -192,6 +256,9 @@ export default memo(function PlayerSessionHeader({
                       style={{ background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: '4px', padding: '1px 6px', cursor: 'pointer', color: '#4ade80', fontSize: '11px', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
                       <Plus size={10} />
                     </button>
+                    <span style={{ fontSize: '8px', color: 'var(--text-mute)', fontFamily: 'var(--font-mono)', opacity: 0.6, marginLeft: 2 }}>
+                      Enter to apply
+                    </span>
                     <button onClick={() => setHpEditMode(false)}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-mute)', fontSize: '10px', padding: '0 2px' }}>✕</button>
                   </>
@@ -201,7 +268,7 @@ export default memo(function PlayerSessionHeader({
                       display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: '1px solid transparent',
                       borderRadius: '4px', padding: '1px 4px', cursor: 'pointer', transition: 'all 0.15s',
                       fontSize: '12px', fontWeight: 600,
-                      color: charOverview.current_hp <= 0 ? '#ef4444' : charOverview.current_hp <= Math.floor((charOverview.max_hp || 1) / 4) ? '#fbbf24' : '#4ade80',
+                      color: getHpStatus(charOverview.current_hp, charOverview.max_hp || 1).color,
                       fontFamily: 'var(--font-mono, monospace)',
                     }}
                     onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'}
@@ -209,15 +276,50 @@ export default memo(function PlayerSessionHeader({
                   >
                     <Heart size={12} />
                     {charOverview.current_hp}/{charOverview.max_hp || '?'}
+                    {(() => {
+                      const hpStatus = getHpStatus(charOverview.current_hp, charOverview.max_hp || 1);
+                      const pct = charOverview.max_hp > 0 ? Math.round((charOverview.current_hp / charOverview.max_hp) * 100) : 0;
+                      return (
+                        <span style={{ fontSize: '9px', color: hpStatus.color, opacity: 0.7 }}>
+                          ({pct}%)
+                        </span>
+                      );
+                    })()}
                     {charOverview.temp_hp > 0 && (
-                      <span style={{ color: '#60a5fa', fontSize: '10px' }}>+{charOverview.temp_hp}</span>
+                      <span style={{
+                        color: '#60a5fa', fontSize: '10px', display: 'inline-flex', alignItems: 'center', gap: 2,
+                        textShadow: '0 0 6px rgba(96,165,250,0.5)',
+                        background: 'rgba(96,165,250,0.1)', padding: '0 4px', borderRadius: 3,
+                        border: '1px solid rgba(96,165,250,0.25)',
+                      }}>
+                        <Shield size={8} style={{ color: '#60a5fa' }} />+{charOverview.temp_hp}
+                      </span>
                     )}
                   </button>
                 )}
               </div>
+              {/* HP Bar Visual */}
+              {charOverview.max_hp > 0 && (() => {
+                const hpPct = Math.max(0, Math.min(100, (charOverview.current_hp / charOverview.max_hp) * 100));
+                const barColor = hpPct > 50 ? 'linear-gradient(90deg, #22c55e, #4ade80)' : hpPct > 25 ? 'linear-gradient(90deg, #eab308, #fbbf24)' : 'linear-gradient(90deg, #dc2626, #ef4444)';
+                return (
+                  <div style={{
+                    width: '100%', height: 4, borderRadius: 2,
+                    background: 'rgba(255,255,255,0.06)',
+                    overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      width: `${hpPct}%`, height: '100%', borderRadius: 2,
+                      background: barColor,
+                      transition: 'width 0.3s ease, background 0.3s ease',
+                    }} />
+                  </div>
+                );
+              })()}
+              </div>
             )}
             {charOverview.armor_class != null && (
-              <span style={{
+              <span title="Armor Class" style={{
                 display: 'flex', alignItems: 'center', gap: '4px',
                 fontSize: '12px', fontWeight: 600, color: '#a78bfa',
                 fontFamily: 'var(--font-mono, monospace)',
@@ -227,12 +329,95 @@ export default memo(function PlayerSessionHeader({
               </span>
             )}
             {charOverview.speed != null && (
-              <span style={{
-                display: 'flex', alignItems: 'center', gap: '4px',
+              <span title="Movement Speed" style={{
+                display: 'flex', alignItems: 'center', gap: '3px',
                 fontSize: '11px', color: 'var(--text-mute)',
                 fontFamily: 'var(--font-mono, monospace)',
               }}>
-                {charOverview.speed} ft
+                <Footprints size={11} />
+                {charOverview.speed} ft/rd
+              </span>
+            )}
+            {/* Proficiency Bonus */}
+            {charOverview && (() => {
+              const lvl = charOverview.level || 1;
+              const prof = lvl >= 17 ? 6 : lvl >= 13 ? 5 : lvl >= 9 ? 4 : lvl >= 5 ? 3 : 2;
+              return (
+                <span title="Proficiency Bonus" style={{
+                  display: 'flex', alignItems: 'center', gap: '3px',
+                  fontSize: '11px', fontWeight: 600, color: '#c9a84c',
+                  fontFamily: 'var(--font-mono, monospace)',
+                }}>
+                  +{prof}
+                </span>
+              );
+            })()}
+            {/* Passive Perception & Investigation */}
+            {charAbilities && (() => {
+              const wisEntry = charAbilities.find(a => (a.ability || '').toUpperCase().startsWith('WIS'));
+              const wisMod = wisEntry ? Math.floor(((wisEntry.score || 10) - 10) / 2) : 0;
+              const intEntry = charAbilities.find(a => (a.ability || '').toUpperCase().startsWith('INT'));
+              const intMod = intEntry ? Math.floor(((intEntry.score || 10) - 10) / 2) : 0;
+              const profBonus = charOverview.proficiency_bonus || 2;
+              const isProfPerception = charOverview.perception_proficient || charOverview.skills?.includes?.('Perception');
+              const passivePerception = 10 + wisMod + (isProfPerception ? profBonus : 0);
+              const isProfInvestigation = charOverview.investigation_proficient || charOverview.skills?.includes?.('Investigation');
+              const passiveInvestigation = 10 + intMod + (isProfInvestigation ? profBonus : 0);
+              return (
+                <>
+                  <span title="Passive Perception" style={{
+                    display: 'flex', alignItems: 'center', gap: '3px',
+                    fontSize: '10px', color: '#f59e0b', fontWeight: 600,
+                    fontFamily: 'var(--font-mono, monospace)',
+                  }}>
+                    <Eye size={10} /> {passivePerception}
+                  </span>
+                  <span title="Passive Investigation" style={{
+                    display: 'flex', alignItems: 'center', gap: '3px',
+                    fontSize: '10px', color: '#38bdf8', fontWeight: 600,
+                    fontFamily: 'var(--font-mono, monospace)',
+                  }}>
+                    <Search size={10} /> {passiveInvestigation}
+                  </span>
+                </>
+              );
+            })()}
+            {/* Death Save Pips */}
+            {charOverview.current_hp <= 0 && deathSaves && (
+              <div title="Death Saves" style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '1px 6px', borderRadius: 4,
+                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+              }}>
+                <Skull size={10} style={{ color: '#ef4444' }} />
+                <div style={{ display: 'flex', gap: 2 }}>
+                  {[0, 1, 2].map(i => (
+                    <div key={`s${i}`} style={{
+                      width: 7, height: 7, borderRadius: '50%',
+                      background: i < (deathSaves.successes || 0) ? '#4ade80' : 'rgba(255,255,255,0.1)',
+                      border: '1px solid rgba(74,222,128,0.3)',
+                    }} />
+                  ))}
+                </div>
+                <div style={{ width: 1, height: 10, background: 'rgba(255,255,255,0.1)' }} />
+                <div style={{ display: 'flex', gap: 2 }}>
+                  {[0, 1, 2].map(i => (
+                    <div key={`f${i}`} style={{
+                      width: 7, height: 7, borderRadius: '50%',
+                      background: i < (deathSaves.failures || 0) ? '#ef4444' : 'rgba(255,255,255,0.1)',
+                      border: '1px solid rgba(239,68,68,0.3)',
+                    }} />
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* HP Percentage */}
+            {charOverview.current_hp != null && charOverview.max_hp > 0 && (
+              <span style={{
+                fontSize: '9px', color: 'var(--text-mute)',
+                fontFamily: 'var(--font-mono)',
+              }}>
+                {Math.round((charOverview.current_hp / charOverview.max_hp) * 100)}%
               </span>
             )}
             {/* Quick toggles */}
@@ -245,18 +430,28 @@ export default memo(function PlayerSessionHeader({
               <Package size={11} />
             </button>
             {spellSlots.some(s => s.max_slots > 0) && (
-              <div style={{ position: 'relative', display: 'inline-flex' }}>
-                <button onClick={() => setShowSpellSlots(!showSpellSlots)} title="Spell Slots"
-                  style={{ background: showSpellSlots ? 'rgba(155,89,182,0.15)' : 'none', border: `1px solid ${showSpellSlots ? 'rgba(155,89,182,0.3)' : 'transparent'}`, borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', color: showSpellSlots ? '#c084fc' : 'var(--text-mute)', fontSize: '10px', fontFamily: 'var(--font-mono)', transition: 'all 0.15s' }}>
-                  <Sparkles size={11} />
-                </button>
-                {slotWarning && (
-                  <div style={{
-                    position: 'absolute', top: -3, right: -3,
-                    width: 8, height: 8, borderRadius: '50%',
-                    background: slotWarning === 'depleted' ? '#ef4444' : '#fbbf24',
-                    border: '1px solid rgba(0,0,0,0.3)',
-                  }} title={slotWarning === 'depleted' ? 'All spell slots used!' : 'Low on spell slots'} />
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                <div style={{ position: 'relative', display: 'inline-flex' }}>
+                  <button onClick={() => setShowSpellSlots(!showSpellSlots)} title="Spell Slots"
+                    style={{ background: showSpellSlots ? 'rgba(155,89,182,0.15)' : 'none', border: `1px solid ${showSpellSlots ? 'rgba(155,89,182,0.3)' : 'transparent'}`, borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', color: showSpellSlots ? '#c084fc' : 'var(--text-mute)', fontSize: '10px', fontFamily: 'var(--font-mono)', transition: 'all 0.15s' }}>
+                    <Sparkles size={11} />
+                  </button>
+                  {slotWarning && (
+                    <div style={{
+                      position: 'absolute', top: -3, right: -3,
+                      width: 8, height: 8, borderRadius: '50%',
+                      background: slotWarning === 'depleted' ? '#ef4444' : '#fbbf24',
+                      border: '1px solid rgba(0,0,0,0.3)',
+                    }} title={slotWarning === 'depleted' ? 'All spell slots used!' : 'Low on spell slots'} />
+                  )}
+                </div>
+                {slotSummary && (
+                  <span style={{
+                    fontSize: '9px', fontWeight: 600, color: 'var(--text-mute)',
+                    fontFamily: 'var(--font-mono, monospace)',
+                  }}>
+                    {slotSummary}
+                  </span>
                 )}
               </div>
             )}
