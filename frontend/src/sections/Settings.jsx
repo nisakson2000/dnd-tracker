@@ -109,7 +109,10 @@ function loadV3Settings() {
 function saveV3Settings(s) {
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
-    window.dispatchEvent(new CustomEvent('codex-settings-changed', { detail: s }));
+    // Defer event dispatch to avoid setState-during-render in listeners (e.g., Sidebar)
+    queueMicrotask(() => {
+      window.dispatchEvent(new CustomEvent('codex-settings-changed', { detail: s }));
+    });
   } catch {
     toast.error('Failed to save settings — localStorage may be full or disabled');
   }
@@ -178,7 +181,10 @@ function loadAiSettings() {
 function saveAiSettings(s) {
   try {
     localStorage.setItem(AI_SETTINGS_KEY, JSON.stringify(s));
-    window.dispatchEvent(new CustomEvent('codex-ai-settings-changed', { detail: s }));
+    // Defer event dispatch to avoid setState-during-render in listeners (e.g., Sidebar)
+    queueMicrotask(() => {
+      window.dispatchEvent(new CustomEvent('codex-ai-settings-changed', { detail: s }));
+    });
   } catch { /* ignore */ }
 }
 
