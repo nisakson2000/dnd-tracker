@@ -285,7 +285,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
     : sectionGroups;
 
   return (
-    <aside role="navigation" aria-label={isDM ? 'DM sections' : 'Character sections'} style={{ width: 'var(--sidebar-w, 240px)', minHeight: '100vh', background: 'rgba(4,4,11,0.6)', backdropFilter: 'blur(var(--panel-blur, 16px))', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
+    <aside role="navigation" aria-label={isDM ? 'DM sections' : 'Character sections'} style={{ width: 'var(--sidebar-w, 240px)', height: '100%', background: 'rgba(4,4,11,0.6)', backdropFilter: 'blur(var(--panel-blur, 16px))', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
       {/* Back button */}
       <button
         onClick={onBack}

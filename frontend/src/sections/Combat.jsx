@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Plus, Trash2, Swords, Dice5, Timer, X, Search, Minus, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ScrollText, ArrowRight, Filter, Heart, Shield, ShieldOff, Skull, Activity, Zap, AlertTriangle, Cross, Lightbulb } from 'lucide-react';
+import { Plus, Trash2, Swords, Dice5, Timer, X, Search, Minus, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ScrollText, ArrowRight, Filter, Heart, Shield, ShieldOff, Skull, Activity, Zap, AlertTriangle, Cross, Lightbulb, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAttacks, addAttack, deleteAttack, getConditions, updateConditions, getCombatNotes, updateCombatNotes } from '../api/combat';
+import { addJournalEntry } from '../api/journal';
 import { getItems } from '../api/inventory';
 import { useAutosave } from '../hooks/useAutosave';
 import SaveIndicator from '../components/SaveIndicator';
@@ -11,7 +12,8 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
 import { useRuleset } from '../contexts/RulesetContext';
 import { HELP, ACTION_ECONOMY } from '../data/helpText';
-import { CONDITION_EFFECTS, computeConditionEffects } from '../data/conditionEffects';
+import { CONDITIONS, CONDITION_EFFECTS, computeConditionEffects } from '../data/conditionEffects';
+import { checkImpliedConditions } from '../data/conditionInteractions';
 import { SKILL_CHECK_DCS, COMBAT_ACTIONS } from '../data/rules5e';
 import { calculateEffectiveDamage, applyDamageToHp, calculateHealingResult, resolveDeathSave, checkConcentration } from '../utils/damageEngine';
 import { insertCombatLog } from '../api/combatLog';
@@ -40,13 +42,17 @@ function parseDamage(expr) {
 // --- Custom hook: consolidates all combat state in localStorage (survives tab close & crashes) ---
 const HP_UNDO_MAX = 10; // Max undo steps per combatant
 
+function readGameplaySetting(key, fallback) {
+  try { const v = JSON.parse(localStorage.getItem('codex-v3-settings') || '{}')[key]; return v !== undefined ? v : fallback; } catch { return fallback; }
+}
+
 const COMBAT_SESSION_DEFAULTS = {
   combatants: [],
   roundCounter: 1,
   currentTurn: 0,
   combatStats: { totalDamageDealt: 0, totalDamageTaken: 0, totalHealing: 0, attackCount: 0 },
   actionEcon: { action: false, bonusAction: false, reaction: false },
-  flankingEnabled: false,
+  flankingEnabled: readGameplaySetting('flanking', true),
   legendaryActions: { used: 0, max: 3 },
   combatLog: [],
   concentratingSpell: null, // { name: string } or null
@@ -59,6 +65,8 @@ const COMBAT_SESSION_DEFAULTS = {
   hpUndoStack: {}, // { [combatantId]: [ { previousHp, previousTempHp }, ... ] } — ring buffer, max HP_UNDO_MAX
   critOverrides: {}, // { [attackId]: boolean }
   gwmEnabled: false, // Great Weapon Master / Sharpshooter: -5 to hit, +10 damage
+  sneakAttackEnabled: false, // Rogue Sneak Attack toggle
+  smiteSlotLevel: 0, // Paladin Divine Smite: 0 = off, 1-5 = spell slot level
   legendaryResistances: { used: 0, max: 3 }, // Legendary Resistance tracking
   minionMode: false, // Minion rules: any hit = instant death, HP 1/1
 };
@@ -212,6 +220,12 @@ function useCombatSession(characterId) {
   const setGwmEnabled = useCallback((updater) => {
     setSessionRaw(prev => ({ ...prev, gwmEnabled: typeof updater === 'function' ? updater(prev.gwmEnabled) : updater }));
   }, []);
+  const setSneakAttackEnabled = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, sneakAttackEnabled: typeof updater === 'function' ? updater(prev.sneakAttackEnabled) : updater }));
+  }, []);
+  const setSmiteSlotLevel = useCallback((updater) => {
+    setSessionRaw(prev => ({ ...prev, smiteSlotLevel: typeof updater === 'function' ? updater(prev.smiteSlotLevel) : updater }));
+  }, []);
   const setLegendaryResistances = useCallback((updater) => {
     setSessionRaw(prev => ({ ...prev, legendaryResistances: typeof updater === 'function' ? updater(prev.legendaryResistances || { used: 0, max: 3 }) : updater }));
   }, []);
@@ -238,6 +252,8 @@ function useCombatSession(characterId) {
     hpUndoStack: session.hpUndoStack || {}, setHpUndoStack,
     critOverrides: session.critOverrides || {}, setCritOverrides,
     gwmEnabled: session.gwmEnabled || false, setGwmEnabled,
+    sneakAttackEnabled: session.sneakAttackEnabled || false, setSneakAttackEnabled,
+    smiteSlotLevel: session.smiteSlotLevel || 0, setSmiteSlotLevel,
     legendaryResistances: session.legendaryResistances || { used: 0, max: 3 }, setLegendaryResistances,
     minionMode: session.minionMode || false, setMinionMode,
   };
@@ -393,18 +409,15 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   const { CONDITIONS } = useRuleset();
 
   // --- Read gameplay settings from localStorage ---
-  const restVariant = (() => {
-    try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').restVariant || 'standard'; } catch { return 'standard'; }
-  })();
-  const flankingSetting = (() => {
-    try { const v = JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').flanking; return v !== false; } catch { return true; }
-  })();
-  const diagonalMovement = (() => {
-    try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').diagonalMovement || 'standard'; } catch { return 'standard'; }
-  })();
-  const deathSaveRule = (() => {
-    try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').deathSaveRule || 'standard'; } catch { return 'standard'; }
-  })();
+  const restVariant = readGameplaySetting('restVariant', 'standard');
+  const flankingSetting = readGameplaySetting('flanking', true);
+  const diagonalMovement = readGameplaySetting('diagonalMovement', 'standard');
+  const deathSaveRule = readGameplaySetting('deathSaveRule', 'standard');
+  const criticalHitRule = readGameplaySetting('criticalHitRule', 'standard');
+  const npcStatVisibility = readGameplaySetting('npcStatVisibility', 'hidden');
+  const deathSaveVisibility = readGameplaySetting('deathSaveVisibility', 'hidden');
+  const monsterHpSetting = readGameplaySetting('monsterHp', 'average');
+  const initiativeStyle = readGameplaySetting('initiativeStyle', 'individual');
 
   const [attacks, setAttacks] = useState([]);
   const [conditions, setConditions] = useState([]);
@@ -446,11 +459,22 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     hpUndoStack, setHpUndoStack,
     critOverrides, setCritOverrides,
     gwmEnabled, setGwmEnabled,
+    sneakAttackEnabled, setSneakAttackEnabled,
+    smiteSlotLevel, setSmiteSlotLevel,
     legendaryResistances, setLegendaryResistances,
     minionMode, setMinionMode,
   } = useCombatSession(characterId);
 
   const [combatLogOpen, setCombatLogOpen] = useState(false);
+
+  // Fighting Style (persisted per character in localStorage)
+  const [fightingStyle, setFightingStyleRaw] = useState(() => {
+    try { return localStorage.getItem(`codex_fightingStyle_${characterId}`) || 'none'; } catch { return 'none'; }
+  });
+  const setFightingStyle = useCallback((val) => {
+    setFightingStyleRaw(val);
+    try { localStorage.setItem(`codex_fightingStyle_${characterId}`, val); } catch {}
+  }, [characterId]);
 
   const logEvent = useCallback((type, message) => {
     addCombatLogEntry(type, message, setCombatLog);
@@ -701,7 +725,13 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       isMinion: minionMode,
       isSwarm: newCombatantIsSwarm,
       reactionUsed: false,
-    }].sort((a, b) => b.initiative - a.initiative));
+    }].sort((a, b) => {
+      // Side initiative: group allies first, then enemies, within each group sort by initiative
+      if (initiativeStyle === 'side') {
+        if (a.isEnemy !== b.isEnemy) return a.isEnemy ? 1 : -1;
+      }
+      return b.initiative - a.initiative;
+    }));
     setNewCombatantName('');
     setNewCombatantInit('');
     setNewCombatantHP('');
@@ -1020,11 +1050,24 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       if (concentratingSpell && dmgResult.effective > 0 && character?.name &&
           target.name.toLowerCase() === character.name.toLowerCase()) {
         const dc = checkConcentration(dmgResult.effective);
-        toast(`Concentration check! DC ${dc} CON save to maintain ${concentratingSpell.name}`, {
-          icon: '\u{1F52E}', duration: 5000,
-          style: { background: '#1a0a2a', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.4)' },
-        });
-        logEvent('concentration', `Concentration check: DC ${dc} CON save for ${concentratingSpell.name}`);
+        // Check condition modifiers on CON saves
+        const conAutoFail = condEffects.autoFailSaves.has('CON');
+        const conDis = condEffects.saveDisadvantage.has('CON') || condEffects.saveDisadvantageAll;
+        const condNote = conAutoFail ? ' [AUTO-FAIL: condition effect]' : conDis ? ' [with DISADVANTAGE from conditions]' : '';
+        if (conAutoFail) {
+          toast(`Concentration LOST! Auto-fail CON saves due to conditions — ${concentratingSpell.name} ends`, {
+            icon: '\u{1F4A5}', duration: 5000,
+            style: { background: '#1a0505', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)' },
+          });
+          logEvent('concentration', `Concentration auto-failed (condition): ${concentratingSpell.name} dropped`);
+          setConcentratingSpell(null);
+        } else {
+          toast(`Concentration check! DC ${dc} CON save to maintain ${concentratingSpell.name}${condNote}`, {
+            icon: '\u{1F52E}', duration: 5000,
+            style: { background: '#1a0a2a', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.4)' },
+          });
+          logEvent('concentration', `Concentration check: DC ${dc} CON save for ${concentratingSpell.name}${condNote}`);
+        }
       }
 
       // --- Concentration check trigger (for ANY combatant with concentratingSpell property) ---
@@ -1206,7 +1249,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
 
   const toggleCondition = async (condName) => {
     const previous = [...conditions];
-    const updated = conditions.map(c => {
+    let updated = conditions.map(c => {
       if (c.name !== condName) return c;
       const newActive = !c.active;
       return {
@@ -1216,14 +1259,51 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         rounds_remaining: newActive ? c.rounds_remaining : 0,
       };
     });
+
+    // Auto-apply implied conditions (e.g. Unconscious → Incapacitated + Prone)
+    const toggledCond = updated.find(c => c.name === condName);
+    if (toggledCond?.active) {
+      const activeNames = updated.filter(c => c.active).map(c => c.name);
+      const implied = checkImpliedConditions(activeNames);
+      if (implied.length > 0) {
+        updated = updated.map(c => {
+          const imp = implied.find(i => i.condition === c.name);
+          if (imp && !c.active) return { ...c, active: true };
+          return c;
+        });
+        const impliedNames = implied.map(i => i.condition).join(', ');
+        toast(`Auto-applied: ${impliedNames}`, {
+          icon: '\u26A0\uFE0F', duration: 3000,
+          style: { background: '#1a1520', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' },
+        });
+      }
+    } else if (toggledCond && !toggledCond.active) {
+      // When removing a condition, also remove conditions that were only implied by it
+      // (but only if no OTHER active condition also implies them)
+      const activeAfterRemove = updated.filter(c => c.active).map(c => c.name);
+      const stillImplied = new Set();
+      for (const name of activeAfterRemove) {
+        const imp = checkImpliedConditions([name]);
+        imp.forEach(i => stillImplied.add(i.condition));
+      }
+      // Check what the removed condition implied
+      const wasImplying = checkImpliedConditions([condName]);
+      for (const imp of wasImplying) {
+        if (!stillImplied.has(imp.condition)) {
+          updated = updated.map(c =>
+            c.name === imp.condition ? { ...c, active: false, duration_rounds: 0, rounds_remaining: 0 } : c
+          );
+        }
+      }
+    }
+
     setConditions(updated);
     const activeUpdated = updated.filter(c => c.active);
     onConditionsChange?.(activeUpdated.length, activeUpdated.map(c => c.name));
 
     // Log condition toggle
-    const cond = updated.find(c => c.name === condName);
-    if (cond) {
-      logEvent('condition', `${condName} ${cond.active ? 'applied' : 'removed'}`);
+    if (toggledCond) {
+      logEvent('condition', `${condName} ${toggledCond.active ? 'applied' : 'removed'}`);
     }
 
     try { await updateConditions(characterId, updated); }
@@ -1301,37 +1381,65 @@ export default function Combat({ characterId, character, onConditionsChange }) {
 
     const gwmPenalty = gwmEnabled ? -5 : 0;
     const gwmDamage = gwmEnabled ? 10 : 0;
-    const total = d20 + bonus + magicBonus + flankBonus + sitBonus + gwmPenalty + equipBonus;
+    // Fighting Style: Archery adds +2 to ranged attack rolls
+    const archeryBonus = (fightingStyle === 'archery' && (atk.is_ranged || atk.attack_range)) ? 2 : 0;
+    // Fighting Style: Dueling adds +2 to damage with one-handed melee weapons
+    const duelingDamage = (fightingStyle === 'dueling' && !atk.is_ranged && !atk.attack_range) ? 2 : 0;
+    const total = d20 + bonus + magicBonus + flankBonus + sitBonus + gwmPenalty + equipBonus + archeryBonus;
     const isNat20 = d20 === 20;
     const isNat1 = d20 === 1;
 
-    // Manual crit override check
+    // Manual crit override check + auto-crit from conditions (Paralyzed/Unconscious within 5ft)
     const isCritOverride = critOverrides[atk.id] || false;
-    const isCrit = isNat20 || isCritOverride;
+    const isConditionAutoCrit = condEffects.autoCritMelee && !atk.is_ranged;
+    const isCrit = isNat20 || isCritOverride || isConditionAutoCrit;
 
     let dmgResult = null;
+    let sneakDamageInfo = null; // { diceCount, rolls, total }
+    let smiteDamageInfo = null; // { diceCount, rolls, total, slotLevel }
     const dmg = parseDamage(atk.damage_dice);
     if (dmg) {
       // Respect critical hit rule setting
       let critRolls;
       if (isCrit) {
-        const critRule = (() => { try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').criticalHitRule || 'standard'; } catch { return 'standard'; } })();
-        if (critRule === 'maxPlusRoll') {
+        if (criticalHitRule === 'maxPlusRoll') {
           // Max damage die + normal roll
           const normalRolls = Array.from({ length: dmg.count }, () => rollDie(dmg.sides));
           const maxDmg = dmg.count * dmg.sides;
           critRolls = normalRolls;
-          const dmgTotal = normalRolls.reduce((s, r) => s + r, 0) + maxDmg + dmg.mod + magicBonus + gwmDamage;
-          dmgResult = { rolls: normalRolls, total: dmgTotal, crit: true, critRule, maxBonus: maxDmg, extraDamage: weaponExtraDamage || '' };
+          const dmgTotal = normalRolls.reduce((s, r) => s + r, 0) + maxDmg + dmg.mod + magicBonus + gwmDamage + duelingDamage;
+          dmgResult = { rolls: normalRolls, total: dmgTotal, crit: true, critRule: criticalHitRule, maxBonus: maxDmg, extraDamage: weaponExtraDamage || '' };
         } else {
           critRolls = Array.from({ length: dmg.count * 2 }, () => rollDie(dmg.sides));
-          const dmgTotal = critRolls.reduce((s, r) => s + r, 0) + dmg.mod + magicBonus + gwmDamage;
+          const dmgTotal = critRolls.reduce((s, r) => s + r, 0) + dmg.mod + magicBonus + gwmDamage + duelingDamage;
           dmgResult = { rolls: critRolls, total: dmgTotal, crit: true, extraDamage: weaponExtraDamage || '' };
         }
       } else {
         const rolls = Array.from({ length: dmg.count }, () => rollDie(dmg.sides));
-        const dmgTotal = rolls.reduce((s, r) => s + r, 0) + dmg.mod + magicBonus + gwmDamage;
+        const dmgTotal = rolls.reduce((s, r) => s + r, 0) + dmg.mod + magicBonus + gwmDamage + duelingDamage;
         dmgResult = { rolls, total: dmgTotal, crit: false, extraDamage: weaponExtraDamage || '' };
+      }
+
+      // Sneak Attack (Rogues): add extra d6s if enabled and attack hits (not nat 1)
+      if (sneakAttackEnabled && !isNat1 && dmgResult) {
+        const sneakDiceCount = Math.ceil((character?.level || 1) / 2);
+        const sneakRolls = Array.from({ length: sneakDiceCount }, () => rollDie(6));
+        const sneakTotal = sneakRolls.reduce((s, r) => s + r, 0);
+        sneakDamageInfo = { diceCount: sneakDiceCount, rolls: sneakRolls, total: sneakTotal };
+        dmgResult.total += sneakTotal;
+        dmgResult.sneakDamage = sneakTotal;
+      }
+
+      // Divine Smite (Paladins): add extra d8s if slot level > 0 and attack hits (not nat 1)
+      if (smiteSlotLevel > 0 && !isNat1 && dmgResult) {
+        const smiteDiceCount = 1 + smiteSlotLevel; // 1st level = 2d8, 2nd = 3d8, etc.
+        const smiteRolls = Array.from({ length: smiteDiceCount }, () => rollDie(8));
+        const smiteTotal = smiteRolls.reduce((s, r) => s + r, 0);
+        smiteDamageInfo = { diceCount: smiteDiceCount, rolls: smiteRolls, total: smiteTotal, slotLevel: smiteSlotLevel };
+        dmgResult.total += smiteTotal;
+        dmgResult.smiteDamage = smiteTotal;
+        // Auto-reset smite after use (one-shot per attack)
+        setSmiteSlotLevel(0);
       }
     }
 
@@ -1351,9 +1459,12 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       }));
     }
 
-    // Log manual crit override
-    if (isCritOverride && !isNat20) {
+    // Log manual crit override or condition auto-crit
+    if (isCritOverride && !isNat20 && !isConditionAutoCrit) {
       logEvent('attack', `CRITICAL HIT (manual override) on ${atk.name || 'Attack'}!`);
+    }
+    if (isConditionAutoCrit && !isNat20) {
+      logEvent('attack', `CRITICAL HIT (target Paralyzed/Unconscious, melee within 5ft) on ${atk.name || 'Attack'}!`);
     }
 
     // Crit animation
@@ -1381,13 +1492,17 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     // Combat log
     const ammoLabel = atk.ammo_item_id ? (() => { const a = ammoItems.find(i => i.id === atk.ammo_item_id); return a ? ` [${a.name}: ${Math.max(0, (a.quantity || 0) - 1)} left]` : ''; })() : '';
     const extraStr = dmgResult?.extraDamage ? ` + ${dmgResult.extraDamage}` : '';
-    const dmgStr = dmgResult ? ` for ${dmgResult.total} damage${extraStr}${dmgResult.crit ? ' (CRIT!)' : ''}` : '';
+    const sneakStr = sneakDamageInfo ? ` [Sneak Attack: +${sneakDamageInfo.diceCount}d6 = ${sneakDamageInfo.total}]` : '';
+    const smiteStr = smiteDamageInfo ? ` [Divine Smite Lv${smiteDamageInfo.slotLevel}: +${smiteDamageInfo.diceCount}d8 = ${smiteDamageInfo.total} radiant]` : '';
+    const archeryStr = archeryBonus ? ' [Archery: +2]' : '';
+    const duelingStr = duelingDamage ? ' [Dueling: +2]' : '';
+    const dmgStr = dmgResult ? ` for ${dmgResult.total} damage${extraStr}${dmgResult.crit ? ' (CRIT!)' : ''}${sneakStr}${smiteStr}` : '';
     const critStr = isNat20 ? ' [NAT 20]' : isNat1 ? ' [NAT 1]' : '';
     const modeStr = modeLabel ? ` [${modeLabel}: ${d20a}, ${d20b}]` : '';
     const sitStr = sitBonus ? ` + ${sitBonus} bonus` : '';
     const gwmStr = gwmEnabled ? ' [GWM/SS: -5/+10]' : '';
     const equipStr = equipBonus ? ` + ${equipBonus} equip` : '';
-    logEvent('attack', `${atk.name || 'Attack'}: rolled ${d20} + ${bonus}${magicBonus ? ` + ${magicBonus} magic` : ''}${flankBonus ? ` + ${flankBonus} flanking` : ''}${equipStr}${sitStr}${gwmStr} = ${total}${modeStr}${critStr}${dmgStr}${ammoLabel}`);
+    logEvent('attack', `${atk.name || 'Attack'}: rolled ${d20} + ${bonus}${magicBonus ? ` + ${magicBonus} magic` : ''}${flankBonus ? ` + ${flankBonus} flanking` : ''}${equipStr}${sitStr}${gwmStr}${archeryStr}${duelingStr} = ${total}${modeStr}${critStr}${dmgStr}${ammoLabel}`);
 
     // Clear previous timeout for this attack if any
     if (rollTimeoutRefs.current[atk.id]) {
@@ -1454,6 +1569,21 @@ export default function Combat({ characterId, character, onConditionsChange }) {
           20% { box-shadow: 0 0 40px rgba(239,68,68,0.7), inset 0 0 25px rgba(239,68,68,0.25); }
           100% { box-shadow: 0 0 0px rgba(239,68,68,0), inset 0 0 0px rgba(239,68,68,0); }
         }
+        @keyframes conditionPop {
+          0% { transform: scale(1); }
+          40% { transform: scale(1.15); }
+          100% { transform: scale(1); }
+        }
+        @keyframes rollResultPop {
+          0% { transform: scale(0.8); opacity: 0.5; }
+          50% { transform: scale(1.2); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .attack-roll-btn { transition: all 0.2s ease; }
+        .attack-roll-btn:hover { box-shadow: 0 0 12px rgba(201,168,76,0.4); }
+        .condition-badge { transition: transform 0.15s ease; }
+        .condition-badge:active { animation: conditionPop 0.25s ease; }
+        .roll-result-total { animation: rollResultPop 0.3s ease-out; }
       `}</style>
 
       <div className="flex items-center justify-between">
@@ -1553,7 +1683,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
           <div className="relative h-6 bg-[#0a0a10] rounded-lg border border-gold/10 overflow-hidden">
             {/* Normal HP bar */}
             <div
-              className="absolute inset-y-0 left-0 rounded-lg transition-all duration-300"
+              className="absolute inset-y-0 left-0 rounded-lg transition-all duration-500"
               style={{
                 width: `${character.max_hp > 0 ? Math.min(100, Math.max(0, (character.current_hp / character.max_hp) * 100)) : 0}%`,
                 background: character.max_hp > 0 && character.current_hp / character.max_hp > 0.5
@@ -1974,6 +2104,28 @@ export default function Combat({ characterId, character, onConditionsChange }) {
             onChange={e => setNewCombatantHP(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && addCombatant()}
           />
+          {monsterHpSetting === 'rolled' && (
+            <button
+              onClick={() => {
+                const expr = prompt('Enter hit dice (e.g. 4d10+12):');
+                if (!expr) return;
+                const m = expr.match(/^(\d+)d(\d+)([+-]\d+)?$/i);
+                if (!m) { toast.error('Invalid format. Use NdN+N (e.g. 4d10+12)'); return; }
+                const count = parseInt(m[1]), sides = parseInt(m[2]), mod = parseInt(m[3]) || 0;
+                const rolls = Array.from({ length: count }, () => rollDie(sides));
+                const total = Math.max(1, rolls.reduce((s, r) => s + r, 0) + mod);
+                setNewCombatantHP(String(total));
+                toast(`Rolled ${expr}: [${rolls.join(', ')}]${mod ? (mod > 0 ? ` +${mod}` : ` ${mod}`) : ''} = ${total} HP`, {
+                  icon: '\u{1F3B2}', duration: 4000,
+                  style: { background: '#0a0a1a', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.4)' },
+                });
+              }}
+              className="px-2 py-1.5 rounded-lg bg-red-900/20 border border-red-500/20 hover:bg-red-900/40 hover:border-red-500/40 transition-all flex items-center gap-1 text-xs text-red-300 font-medium whitespace-nowrap"
+              title="Roll hit dice for monster HP (e.g. 4d10+12)"
+            >
+              <Dice5 size={12} /> Roll HP
+            </button>
+          )}
           <input
             type="number"
             className="input w-20"
@@ -2070,11 +2222,20 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                         <Heart size={11} className={`${
                           hpPct > 50 ? 'text-emerald-400' : hpPct > 25 ? 'text-yellow-400' : 'text-red-400'
                         }`} />
-                        <span className={`font-medium ${
-                          hpPct > 50 ? 'text-emerald-300' : hpPct > 25 ? 'text-yellow-300' : 'text-red-300'
-                        }`}>
-                          {c.currentHp ?? c.maxHp}/{c.maxHp}
-                        </span>
+                        {/* Show exact HP or descriptive tier based on visibility setting */}
+                        {c.isEnemy && npcStatVisibility === 'hidden' ? (
+                          <span className={`font-medium italic ${
+                            hpPct > 75 ? 'text-emerald-300' : hpPct > 50 ? 'text-emerald-300/70' : hpPct > 25 ? 'text-yellow-300' : hpPct > 0 ? 'text-red-300' : 'text-red-400'
+                          }`}>
+                            {hpPct > 75 ? 'Healthy' : hpPct > 50 ? 'Scratched' : hpPct > 25 ? 'Bloodied' : hpPct > 0 ? 'Near Death' : 'Down'}
+                          </span>
+                        ) : (
+                          <span className={`font-medium ${
+                            hpPct > 50 ? 'text-emerald-300' : hpPct > 25 ? 'text-yellow-300' : 'text-red-300'
+                          }`}>
+                            {c.currentHp ?? c.maxHp}/{c.maxHp}
+                          </span>
+                        )}
                         {/* Temp HP badge */}
                         {(c.tempHp || 0) > 0 && (
                           <span className="text-yellow-300 bg-yellow-900/60 px-1.5 py-0.5 rounded text-[10px] font-bold border border-yellow-500/40">
@@ -2084,7 +2245,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                         {/* Mini HP bar with temp HP segment */}
                         <div className="w-16 h-1.5 bg-[#0a0a10] rounded-full overflow-hidden flex">
                           <div
-                            className={`h-full transition-all ${
+                            className={`h-full transition-all duration-500 ${
                               hpPct > 50 ? 'bg-emerald-500' : hpPct > 25 ? 'bg-yellow-500' : 'bg-red-500'
                             }`}
                             style={{ width: `${hpPct}%` }}
@@ -2293,8 +2454,8 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                       </div>
                     </div>
                   )}
-                  {/* Death Save Tracker */}
-                  {deathSaves[c.id] && !deathSaves[c.id].dead && (
+                  {/* Death Save Tracker — hidden for enemies when deathSaveVisibility is 'hidden' */}
+                  {deathSaves[c.id] && !deathSaves[c.id].dead && !(c.isEnemy && deathSaveVisibility === 'hidden') && (
                     <div className="ml-11 mt-1 mb-2 p-3 bg-[#1a0808] border border-red-500/20 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-display text-red-300 flex items-center gap-1.5">
@@ -2567,6 +2728,80 @@ export default function Combat({ characterId, character, onConditionsChange }) {
             </button>
           </div>
         </div>
+        {/* Class-specific combat toggles */}
+        {(character?.primary_class?.toLowerCase().includes('rogue') ||
+          character?.primary_class?.toLowerCase().includes('paladin') ||
+          character?.primary_class?.toLowerCase().includes('fighter') ||
+          character?.primary_class?.toLowerCase().includes('ranger')) && (
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            {/* Sneak Attack toggle (Rogues) */}
+            {character?.primary_class?.toLowerCase().includes('rogue') && (
+              <button
+                onClick={() => setSneakAttackEnabled(prev => !prev)}
+                className={`px-2.5 py-1 rounded text-xs font-medium transition-all select-none ${
+                  sneakAttackEnabled
+                    ? 'bg-emerald-900/30 text-emerald-300 border border-emerald-500/40'
+                    : 'bg-white/5 text-amber-200/40 border border-amber-200/10 hover:text-amber-200/60 hover:border-amber-200/20'
+                }`}
+                title={sneakAttackEnabled
+                  ? `Sneak Attack active: +${Math.ceil((character?.level || 1) / 2)}d6 damage on hit`
+                  : `Enable Sneak Attack (+${Math.ceil((character?.level || 1) / 2)}d6)`}
+              >
+                Sneak Atk {sneakAttackEnabled ? 'ON' : 'OFF'} (+{Math.ceil((character?.level || 1) / 2)}d6)
+              </button>
+            )}
+            {/* Divine Smite selector (Paladins) */}
+            {character?.primary_class?.toLowerCase().includes('paladin') && (
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-amber-200/40 mr-0.5">Smite:</span>
+                {[0, 1, 2, 3, 4, 5].map(lvl => (
+                  <button
+                    key={lvl}
+                    onClick={() => setSmiteSlotLevel(lvl)}
+                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all select-none ${
+                      smiteSlotLevel === lvl
+                        ? lvl === 0
+                          ? 'bg-white/10 text-amber-200/60 border border-amber-200/20'
+                          : 'bg-yellow-900/40 text-yellow-300 border border-yellow-500/50 shadow-[0_0_6px_rgba(234,179,8,0.2)]'
+                        : 'bg-white/5 text-amber-200/30 border border-amber-200/10 hover:text-amber-200/50 hover:border-amber-200/20'
+                    }`}
+                    title={lvl === 0 ? 'Divine Smite off' : `Divine Smite Lv${lvl}: ${1 + lvl}d8 radiant damage (one-shot, resets after attack)`}
+                  >
+                    {lvl === 0 ? 'Off' : `${lvl}${lvl === 1 ? 'st' : lvl === 2 ? 'nd' : lvl === 3 ? 'rd' : 'th'}`}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Fighting Style selector (Fighter, Paladin, Ranger) */}
+            {(character?.primary_class?.toLowerCase().includes('fighter') ||
+              character?.primary_class?.toLowerCase().includes('paladin') ||
+              character?.primary_class?.toLowerCase().includes('ranger')) && (
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-amber-200/40 mr-0.5">Style:</span>
+                {[
+                  { value: 'none', label: 'None' },
+                  { value: 'archery', label: 'Archery' },
+                  { value: 'dueling', label: 'Dueling' },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setFightingStyle(opt.value)}
+                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all select-none ${
+                      fightingStyle === opt.value
+                        ? opt.value === 'none'
+                          ? 'bg-white/10 text-amber-200/60 border border-amber-200/20'
+                          : 'bg-blue-900/30 text-blue-300 border border-blue-500/40'
+                        : 'bg-white/5 text-amber-200/30 border border-amber-200/10 hover:text-amber-200/50 hover:border-amber-200/20'
+                    }`}
+                    title={opt.value === 'none' ? 'No fighting style' : opt.value === 'archery' ? 'Archery: +2 to ranged attack rolls' : 'Dueling: +2 damage with one-handed melee weapons'}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {/* Gameplay settings info banners */}
         {restVariant === 'gritty' && (
           <div className="text-xs px-3 py-1.5 rounded-lg mb-2 border bg-amber-900/15 border-amber-500/20 text-amber-300 flex items-center gap-2">
@@ -2627,7 +2862,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                     {/* Roll button */}
                     <button
                       onClick={() => rollAttack(atk)}
-                      className="w-10 h-10 rounded-lg bg-gold/10 border border-gold/30 hover:bg-gold/20 hover:border-gold/50 transition-all flex items-center justify-center flex-shrink-0 group"
+                      className="attack-roll-btn w-10 h-10 rounded-lg bg-gold/10 border border-gold/30 hover:bg-gold/20 hover:border-gold/50 transition-all flex items-center justify-center flex-shrink-0 group"
                       title="Roll to attack"
                       aria-label={`Roll attack for ${atk.name || 'attack'}`}
                     >
@@ -2720,7 +2955,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                           </span>
                         )}
                         <span className="text-amber-200/40">+ {result.bonus}{result.magicBonus ? ` + ${result.magicBonus}` : ''}{result.flankBonus ? ` + ${result.flankBonus}` : ''}{result.sitBonus ? ` + ${result.sitBonus}` : ''} =</span>
-                        <span className={`font-bold ${result.isNat20 ? 'text-gold' : result.isNat1 ? 'text-red-400' : 'text-amber-100'}`}>
+                        <span className={`roll-result-total font-bold ${result.isNat20 ? 'text-gold' : result.isNat1 ? 'text-red-400' : 'text-amber-100'}`} key={`${atk.id}-${result.ts}`}>
                           {result.total}
                         </span>
                         {result.isNat20 && <span className="text-gold text-xs font-bold">NAT 20!</span>}
@@ -2743,7 +2978,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                               aria-label={`Re-roll damage for ${atk.name || 'attack'}`}
                             >
                               <span className="text-xs text-amber-200/30">[{result.damage.rolls.join(',')}]</span>
-                              <span className={`font-bold ${dmgColor}`}>
+                              <span className={`roll-result-total font-bold ${dmgColor}`} key={`dmg-${atk.id}-${result.ts}`}>
                                 {displayTotal}
                               </span>
                               {result.damage.crit && !mod && <span className="text-gold text-xs">CRIT!</span>}
@@ -2786,6 +3021,39 @@ export default function Combat({ characterId, character, onConditionsChange }) {
           </div>
         )}
       </div>
+
+      {/* Inline Recent Events — last 5 combat log entries */}
+      {combatLog.length > 0 && (
+        <div className="card">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Activity size={14} className="text-amber-200/50" />
+              <h3 className="font-display text-amber-100 text-sm">Recent Events</h3>
+            </div>
+            <button
+              onClick={() => setCombatLogOpen(true)}
+              className="text-[10px] text-amber-200/40 hover:text-amber-200/70 transition-colors"
+            >
+              View Full Log ({combatLog.length})
+            </button>
+          </div>
+          <div className="space-y-1">
+            {combatLog.slice(0, 5).map((entry, i) => (
+              <div key={i} className="flex items-start gap-2 text-xs">
+                <span className={`uppercase font-semibold tracking-wider text-[10px] w-16 shrink-0 mt-0.5 ${
+                  entry.type === 'attack' ? 'text-red-400/70' :
+                  entry.type === 'condition' ? 'text-purple-400/70' :
+                  entry.type === 'healing' ? 'text-emerald-400/70' :
+                  entry.type === 'concentration' ? 'text-violet-400/70' :
+                  entry.type === 'death' ? 'text-red-500/80' :
+                  'text-amber-200/40'
+                }`}>{entry.type}</span>
+                <span className="text-amber-200/50 leading-relaxed">{entry.message}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Conditions with Duration Timers */}
       <ConditionsPanel
@@ -3337,7 +3605,7 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDur
               <button
                 onClick={() => handleConditionClick(cond.name)}
                 onContextMenu={(e) => handleContextMenu(e, cond.name)}
-                className={`px-3 py-1.5 rounded text-xs font-medium transition-all select-none ${
+                className={`condition-badge px-3 py-1.5 rounded text-xs font-medium transition-all select-none ${
                   cond.active
                     ? 'bg-red-900/60 text-red-200 border-2 border-red-500/60 shadow-[0_0_12px_rgba(239,68,68,0.35),_0_0_24px_rgba(239,68,68,0.15)] ring-1 ring-red-500/20'
                     : 'bg-[#0d0d12] text-amber-200/40 border border-amber-200/10 hover:text-amber-200/70 hover:border-amber-200/20'
@@ -3375,8 +3643,8 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDur
                       &times;
                     </button>
                   </div>
-                  {conditionDescriptions[cond.name] && (
-                    <p className="leading-relaxed mb-2">{conditionDescriptions[cond.name]}</p>
+                  {conditionDescriptions[cond.name]?.description && (
+                    <p className="leading-relaxed mb-2">{conditionDescriptions[cond.name].description}</p>
                   )}
                   {effect && (
                     <div className="pt-2 border-t border-red-500/20">
@@ -3423,19 +3691,27 @@ function ConditionsPanel({ conditions, conditionDescriptions, onToggle, onSetDur
         <div className="mt-3 pt-3 border-t border-red-500/15 space-y-2">
           <div className="flex flex-wrap gap-1.5">
             <span className="text-xs text-red-400/60 font-semibold mr-1">Active:</span>
-            {conditions.filter(c => c.active).map(c => (
-              <RuleTooltip key={c.name} term={c.name}>
-                <button
-                  onClick={() => onToggle(c.name)}
-                  className="text-xs text-red-200 bg-red-900/40 px-2 py-0.5 rounded border border-red-500/20 hover:bg-red-800/50 hover:border-red-400/40 transition-all cursor-pointer group flex items-center gap-1"
-                  title={`Click to remove ${c.name}`}
-                >
-                  {CONDITION_ICONS[c.name] || ''} {c.name}
-                  {c.rounds_remaining > 0 && <span className="ml-1 text-red-300/70">({c.rounds_remaining}r)</span>}
-                  <X size={10} className="text-red-400/0 group-hover:text-red-400/80 transition-colors" />
-                </button>
-              </RuleTooltip>
-            ))}
+            {conditions.filter(c => c.active).map(c => {
+              const eff = CONDITION_EFFECTS[c.name];
+              return (
+                <RuleTooltip key={c.name} term={c.name}>
+                  <div className="flex flex-col items-start">
+                    <button
+                      onClick={() => onToggle(c.name)}
+                      className="text-xs text-red-200 bg-red-900/40 px-2 py-0.5 rounded border border-red-500/20 hover:bg-red-800/50 hover:border-red-400/40 transition-all cursor-pointer group flex items-center gap-1"
+                      title={`Click to remove ${c.name}`}
+                    >
+                      {CONDITION_ICONS[c.name] || ''} {c.name}
+                      {c.rounds_remaining > 0 && <span className="ml-1 text-red-300/70">({c.rounds_remaining}r)</span>}
+                      <X size={10} className="text-red-400/0 group-hover:text-red-400/80 transition-colors" />
+                    </button>
+                    {eff?.shortTag && (
+                      <span className="text-[9px] text-red-400/50 mt-0.5 ml-0.5 leading-tight">{eff.shortTag}</span>
+                    )}
+                  </div>
+                </RuleTooltip>
+              );
+            })}
           </div>
 
           {/* Mechanical effects banner */}
@@ -3626,6 +3902,41 @@ function CombatLog({ combatLog, combatLogOpen, setCombatLogOpen, setCombatLog, c
 
   const filteredLog = logFilter === 'all' ? combatLog : combatLog.filter(e => e.type === logFilter);
 
+  const handleExportToJournal = async () => {
+    if (!characterId || combatLog.length === 0) return;
+    try {
+      let currentRound = 0;
+      const lines = [];
+      const chronological = [...combatLog].reverse();
+      for (const entry of chronological) {
+        if (entry.type === 'round') {
+          const roundMatch = entry.message.match(/(\d+)/);
+          if (roundMatch) currentRound = parseInt(roundMatch[1], 10);
+          lines.push(`\n--- Round ${currentRound} ---`);
+        } else {
+          const prefix = currentRound > 0 ? `Round ${currentRound}:` : '';
+          lines.push(`${prefix} [${entry.type}] ${entry.message}`);
+        }
+      }
+      const body = lines.join('\n').trim();
+      const dateStr = new Date().toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+      await addJournalEntry(characterId, {
+        title: `Combat Log \u2014 ${dateStr}`,
+        body,
+        tags: 'combat-log',
+        session_number: 0,
+        real_date: new Date().toISOString().split('T')[0],
+        ingame_date: '',
+        npcs_mentioned: '',
+        pinned: 0,
+      });
+      toast('Combat log exported to journal', { icon: '\u{1F4D6}', duration: 2500 });
+    } catch (err) {
+      console.error('Failed to export combat log:', err);
+      toast.error('Failed to export combat log');
+    }
+  };
+
   // Latest entry preview when collapsed
   const latestEntry = combatLog.length > 0 ? combatLog[0] : null;
 
@@ -3679,14 +3990,23 @@ function CombatLog({ combatLog, combatLogOpen, setCombatLogOpen, setCombatLog, c
                     </button>
                   ))}
                 </div>
-                <button
-                  onClick={() => {
-                    setCombatLog([]);
-                  }}
-                  className="text-xs text-red-400/70 hover:text-red-400 transition-colors"
-                >
-                  Clear Log
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleExportToJournal}
+                    className="flex items-center gap-1 text-xs text-amber-200/50 hover:text-gold transition-colors"
+                  >
+                    <BookOpen size={12} />
+                    Export to Journal
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCombatLog([]);
+                    }}
+                    className="text-xs text-red-400/70 hover:text-red-400 transition-colors"
+                  >
+                    Clear Log
+                  </button>
+                </div>
               </div>
               <div className="max-h-64 overflow-y-auto space-y-1">
                 {filteredLog.length === 0 ? (

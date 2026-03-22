@@ -73,5 +73,25 @@ export function getLevelUpGains(className, level, rulesetId) {
     gains.features = classFeats[level];
   }
 
+  // Class resource auto-scaling (Ki/Focus Points, Sorcery Points, etc.)
+  // When a feature has scales_with_level, its uses_total should equal the class level.
+  // At levels beyond when the feature was first gained, emit resourceUpdates so the
+  // existing feature's uses_total gets updated.
+  gains.resourceUpdates = [];
+  if (classFeats) {
+    for (const [lvlStr, feats] of Object.entries(classFeats)) {
+      const featureLvl = parseInt(lvlStr, 10);
+      if (featureLvl >= level) continue; // only look at features gained before this level
+      for (const feat of feats) {
+        if (feat.scales_with_level && level > featureLvl) {
+          gains.resourceUpdates.push({
+            name: feat.name,
+            uses_total: level,
+          });
+        }
+      }
+    }
+  }
+
   return gains;
 }

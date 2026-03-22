@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Plus, Trash2, ScrollText, RotateCcw, RefreshCw, Search, ChevronDown, ChevronUp, Pin, PinOff, Zap, ChevronsDown, ChevronsUp, Coffee, Moon, Clock, ArrowRight, Star, Eye, Shield, Lock, Filter, Pencil, Dices, BookOpen, Loader2, Library } from 'lucide-react';
+import { Plus, Minus, Trash2, ScrollText, RotateCcw, RefreshCw, Search, ChevronDown, ChevronUp, Pin, PinOff, Zap, ChevronsDown, ChevronsUp, Coffee, Moon, Clock, ArrowRight, Star, Eye, Shield, Lock, Filter, Pencil, Dices, BookOpen, Loader2, Library } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MDEditor from '@uiw/react-md-editor';
 import { getFeatures, addFeature, updateFeature, deleteFeature } from '../api/features';
@@ -37,6 +37,23 @@ function levelBadgeColors(level) {
   if (level <= 12) return 'bg-blue-500/20 text-blue-300 border-blue-400/30';
   if (level <= 16) return 'bg-purple-500/20 text-purple-300 border-purple-400/30';
   return 'bg-amber-500/20 text-amber-200 border-amber-400/30';
+}
+
+/* Source badge color based on feature_type */
+function sourceBadgeStyle(featureType) {
+  switch (featureType) {
+    case 'class':
+    case 'subclass':
+      return 'bg-blue-500/15 text-blue-300 border-blue-400/25';
+    case 'racial':
+      return 'bg-emerald-500/15 text-emerald-300 border-emerald-400/25';
+    case 'feat':
+      return 'bg-purple-500/15 text-purple-300 border-purple-400/25';
+    case 'background':
+      return 'bg-rose-500/15 text-rose-300 border-rose-400/25';
+    default:
+      return 'bg-amber-200/8 text-amber-200/50 border-amber-200/15';
+  }
 }
 
 /* Pin helpers */
@@ -1078,7 +1095,11 @@ function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharg
             )}
           </div>
           <div className="text-xs text-amber-200/40 mt-1 flex items-center gap-2">
-            {f.source && <span>{f.source}</span>}
+            {f.source && (
+              <span className={`inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded border ${sourceBadgeStyle(f.feature_type)}`}>
+                {f.source}
+              </span>
+            )}
             <span className={`inline-flex items-center capitalize text-[10px] font-medium px-1.5 py-0.5 rounded border ${
               f.feature_type === 'class' ? 'bg-blue-500/15 text-blue-300 border-blue-400/20' :
               f.feature_type === 'racial' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-400/20' :
@@ -1125,6 +1146,96 @@ function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharg
       {/* Uses/Charges Tracker */}
       {hasCharges && (
         <div className="mt-3 pt-3 border-t border-gold/10">
+          {/* Inline +/- uses row */}
+          <div className="flex items-center gap-3 mb-2">
+            <button
+              onClick={onUseCharge}
+              disabled={remaining <= 0}
+              className={`w-7 h-7 rounded-md border text-sm font-bold flex items-center justify-center transition-all active:scale-90 ${
+                remaining > 0
+                  ? 'bg-red-500/15 hover:bg-red-500/25 border-red-400/30 text-red-400 hover:text-red-300'
+                  : 'bg-amber-200/5 border-amber-200/10 text-amber-200/15 cursor-not-allowed'
+              }`}
+              title="Spend one use"
+            >
+              <Minus size={14} />
+            </button>
+            <span className={`text-sm font-semibold tabular-nums min-w-[4ch] text-center ${
+              remaining === 0
+                ? 'text-red-400'
+                : remaining <= Math.ceil(total * 0.25)
+                  ? 'text-amber-400'
+                  : 'text-gold'
+            }`}>
+              {remaining}/{total}
+            </span>
+            <button
+              onClick={onRestoreCharge}
+              disabled={remaining >= total}
+              className={`w-7 h-7 rounded-md border text-sm font-bold flex items-center justify-center transition-all active:scale-90 ${
+                remaining < total
+                  ? 'bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-400/30 text-emerald-400 hover:text-emerald-300'
+                  : 'bg-amber-200/5 border-amber-200/10 text-amber-200/15 cursor-not-allowed'
+              }`}
+              title="Restore one use"
+            >
+              <Plus size={14} />
+            </button>
+            <span className="text-[10px] text-amber-200/30">uses</span>
+
+            {/* Mini progress bar */}
+            <div className="flex-1 max-w-32 h-2 bg-amber-200/8 rounded-full overflow-hidden" title={`${remaining} / ${total} uses remaining`}>
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  remaining === 0
+                    ? 'bg-red-500/60'
+                    : remaining <= Math.ceil(total * 0.25)
+                      ? 'bg-amber-500/70'
+                      : 'bg-gold/70'
+                }`}
+                style={{ width: `${total > 0 ? (remaining / total) * 100 : 0}%` }}
+              />
+            </div>
+
+            {/* Quick action buttons */}
+            {remaining === 0 && (f.recharge === 'recharge_5_6' || f.recharge === 'recharge_6') ? (
+              <button
+                onClick={onRollRecharge}
+                className="px-2.5 py-1 rounded-md bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/30 text-emerald-300 text-[10px] font-semibold transition-all flex items-center gap-1 active:scale-95"
+                title={`Roll d6 to recharge (need ${f.recharge === 'recharge_6' ? '6' : '5-6'})`}
+              >
+                <Dices size={10} /> Roll
+              </button>
+            ) : remaining === 0 ? (
+              <button
+                onClick={onRestoreAll}
+                className="px-2.5 py-1 rounded-md bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 text-amber-400 text-[10px] font-semibold transition-all flex items-center gap-1 active:scale-95"
+                title="Restore all uses"
+              >
+                <RotateCcw size={10} /> Restore
+              </button>
+            ) : null}
+            {remaining < total && remaining > 0 && (f.recharge === 'recharge_5_6' || f.recharge === 'recharge_6') && (
+              <button
+                onClick={onRollRecharge}
+                className="text-[10px] text-emerald-400/60 hover:text-emerald-300 transition-colors flex items-center gap-1"
+                title={`Roll d6 to recharge (need ${f.recharge === 'recharge_6' ? '6' : '5-6'})`}
+              >
+                <Dices size={10} /> Roll
+              </button>
+            )}
+            {remaining < total && remaining > 0 && (
+              <button
+                onClick={onRestoreAll}
+                className="text-[10px] text-gold/50 hover:text-gold transition-colors flex items-center gap-1"
+                title="Restore all uses"
+              >
+                <RotateCcw size={10} /> Reset
+              </button>
+            )}
+          </div>
+
+          {/* Charge pips / bar display */}
           <div className="flex items-center gap-3">
             {/* Quick USE button */}
             {remaining > 0 && (
@@ -1134,23 +1245,6 @@ function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharg
                 title="Spend one use"
               >
                 <Zap size={12} /> USE
-              </button>
-            )}
-            {remaining === 0 && (f.recharge === 'recharge_5_6' || f.recharge === 'recharge_6') ? (
-              <button
-                onClick={onRollRecharge}
-                className="px-3 py-1.5 rounded-md bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/30 text-emerald-300 text-xs font-semibold transition-all flex items-center gap-1.5 active:scale-95"
-                title={`Roll d6 to recharge (need ${f.recharge === 'recharge_6' ? '6' : '5-6'})`}
-              >
-                <Dices size={12} /> ROLL RECHARGE
-              </button>
-            ) : remaining === 0 && (
-              <button
-                onClick={onRestoreAll}
-                className="px-3 py-1.5 rounded-md bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 text-amber-400 text-xs font-semibold transition-all flex items-center gap-1.5 active:scale-95"
-                title="Restore all uses"
-              >
-                <RotateCcw size={12} /> RESTORE
               </button>
             )}
 
@@ -1173,26 +1267,6 @@ function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharg
                   />
                 ))}
               </div>
-            )}
-
-            <span className="text-xs text-amber-200/40">{remaining} / {total}</span>
-            {remaining < total && remaining > 0 && (f.recharge === 'recharge_5_6' || f.recharge === 'recharge_6') && (
-              <button
-                onClick={onRollRecharge}
-                className="text-xs text-emerald-400/60 hover:text-emerald-300 transition-colors flex items-center gap-1"
-                title={`Roll d6 to recharge (need ${f.recharge === 'recharge_6' ? '6' : '5-6'})`}
-              >
-                <Dices size={10} /> Roll
-              </button>
-            )}
-            {remaining < total && remaining > 0 && (
-              <button
-                onClick={onRestoreAll}
-                className="text-xs text-gold/50 hover:text-gold transition-colors flex items-center gap-1"
-                title="Restore all uses"
-              >
-                <RotateCcw size={10} /> Reset
-              </button>
             )}
           </div>
         </div>

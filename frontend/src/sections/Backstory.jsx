@@ -5,7 +5,8 @@ import {
   ImagePlus, Trash2, Copy, Ruler, Weight, Calendar,
   Target, Users, Swords, Star, ChevronDown, ChevronRight,
   CheckSquare, Square, Plus, Shield, Milestone, X,
-  Sparkles, RefreshCw, Check as CheckIcon, Loader2 as Spinner
+  Sparkles, RefreshCw, Check as CheckIcon, Loader2 as Spinner,
+  Dice5, User, Compass, Link2, AlertTriangle
 } from 'lucide-react';
 import { getBackstory, updateBackstory } from '../api/backstory';
 import { getNPCs } from '../api/npcs';
@@ -17,6 +18,94 @@ import { generateAI } from '../api/assistant';
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+
+/* ── Standard 5e Background Presets ── */
+const BACKGROUND_PRESETS = [
+  { name: 'Acolyte', featureName: 'Shelter of the Faithful', featureDesc: 'As an acolyte, you command the respect of those who share your faith, and you can perform the religious ceremonies of your deity. You and your adventuring companions can expect to receive free healing and care at a temple, shrine, or other established presence of your faith.' },
+  { name: 'Charlatan', featureName: 'False Identity', featureDesc: 'You have created a second identity that includes documentation, established acquaintances, and disguises that allow you to assume that persona. Additionally, you can forge documents including official papers and personal letters, as long as you have seen an example of the kind of document or the handwriting you are trying to copy.' },
+  { name: 'Criminal', featureName: 'Criminal Contact', featureDesc: 'You have a reliable and trustworthy contact who acts as your liaison to a network of other criminals. You know how to get messages to and from your contact, even over great distances.' },
+  { name: 'Entertainer', featureName: 'By Popular Demand', featureDesc: 'You can always find a place to perform, usually in an inn or tavern but possibly with a circus, at a theater, or even in a noble\'s court. At such a place, you receive free lodging and food of a modest or comfortable standard, as long as you perform each night.' },
+  { name: 'Folk Hero', featureName: 'Rustic Hospitality', featureDesc: 'Since you come from the ranks of the common folk, you fit in among them with ease. You can find a place to hide, rest, or recuperate among other commoners, unless you have shown yourself to be a danger to them.' },
+  { name: 'Guild Artisan', featureName: 'Guild Membership', featureDesc: 'As an established and respected member of a guild, you can rely on certain benefits that membership provides. Your fellow guild members will provide you with lodging and food if necessary, and pay for your funeral if needed.' },
+  { name: 'Hermit', featureName: 'Discovery', featureDesc: 'The quiet seclusion of your extended hermitage gave you access to a unique and powerful discovery. The exact nature of this revelation depends on the nature of your seclusion. It might be a great truth, a hidden site, a long-forgotten fact, or unearthed some relic of the past.' },
+  { name: 'Noble', featureName: 'Position of Privilege', featureDesc: 'Thanks to your noble birth, people are inclined to think the best of you. You are welcome in high society, and people assume you have the right to be wherever you are. The common folk make every effort to accommodate you and avoid your displeasure.' },
+  { name: 'Outlander', featureName: 'Wanderer', featureDesc: 'You have an excellent memory for maps and geography, and you can always recall the general layout of terrain, settlements, and other features around you. In addition, you can find food and fresh water for yourself and up to five other people each day, provided that the land offers such resources.' },
+  { name: 'Sage', featureName: 'Researcher', featureDesc: 'When you attempt to learn or recall a piece of lore, if you do not know that information, you often know where and from whom you can obtain it. Usually, this information comes from a library, scriptorium, university, or a sage or other learned person or creature.' },
+  { name: 'Sailor', featureName: 'Ship\'s Passage', featureDesc: 'When you need to, you can secure free passage on a sailing ship for yourself and your adventuring companions. You might sail on the ship you served on, or another ship you have good relations with. Because you\'re calling in a favor, you can\'t be certain of a schedule or route that will meet your every need.' },
+  { name: 'Soldier', featureName: 'Military Rank', featureDesc: 'You have a military rank from your career as a soldier. Soldiers loyal to your former military organization still recognize your authority and influence. You can invoke your rank to exert influence over other soldiers and requisition simple equipment or horses for temporary use.' },
+  { name: 'Urchin', featureName: 'City Secrets', featureDesc: 'You know the secret patterns and flow to cities and can find passages through the urban sprawl that others would miss. When you are not in combat, you (and companions you lead) can travel between any two locations in the city twice as fast as your speed would normally allow.' },
+];
+
+/* ── Random Personality Tables (offline fallback) ── */
+const RANDOM_TRAITS = [
+  'I always have a plan for what to do when things go wrong.',
+  'I am incredibly slow to trust. Those who seem the fairest often have the most to hide.',
+  'I idolize a particular hero of my faith and constantly refer to that person\'s deeds.',
+  'I can find common ground between the fiercest enemies, empathizing with them.',
+  'I see omens in every event and action. The gods try to speak to us, we just need to listen.',
+  'Nothing can shake my optimistic attitude.',
+  'I quote (or misquote) sacred texts and proverbs in almost every situation.',
+  'I am tolerant of other faiths and respect the worship of other gods.',
+  'I\'ve enjoyed fine food, drink, and high society. Rough living grates on me.',
+  'I misuse long words in an attempt to sound smarter.',
+  'I get bored easily. When am I going to get on with my destiny?',
+  'I judge people by their actions, not their words.',
+  'If someone is in trouble, I\'m always ready to lend help.',
+  'When I set my mind to something, I follow through no matter what gets in my way.',
+  'I have a strong sense of fair play and always try to find the most equitable solution to arguments.',
+];
+
+const RANDOM_IDEALS = [
+  'Greater Good. My gifts are meant to be shared with all, not used for my own benefit. (Good)',
+  'Tradition. The ancient traditions of worship and sacrifice must be preserved and upheld. (Lawful)',
+  'Power. I hope to one day rise to the top of my faith\'s religious hierarchy. (Lawful)',
+  'Faith. I trust that my deity will guide my actions. I have faith that if I work hard, things will go well. (Lawful)',
+  'Change. We must help bring about the changes the gods are constantly working in the world. (Chaotic)',
+  'Aspiration. I seek to prove myself worthy of my god\'s favor by matching my actions against teachings. (Any)',
+  'Independence. I am a free spirit — no one tells me what to do. (Chaotic)',
+  'Fairness. No one should get preferential treatment before the law, and no one is above the law. (Lawful)',
+  'Freedom. Chains are meant to be broken, as are those who would forge them. (Chaotic)',
+  'Might. If I become strong, I can take what I want — what I deserve. (Evil)',
+  'Sincerity. There\'s no good in pretending to be something I\'m not. (Neutral)',
+  'Destiny. Nothing and no one can steer me away from my higher calling. (Any)',
+  'Honor. If I dishonor myself, I dishonor my whole family. (Lawful)',
+  'Knowledge. The path to power and self-improvement is through knowledge. (Neutral)',
+];
+
+const RANDOM_BONDS = [
+  'I would die to recover an ancient relic of my faith that was lost long ago.',
+  'I will someday get revenge on the corrupt temple hierarchy who branded me a heretic.',
+  'I owe my life to the priest who took me in when my parents died.',
+  'Everything I do is for the common people.',
+  'I will do anything to protect the temple where I served.',
+  'I seek to preserve a sacred text that my enemies consider heretical and seek to destroy.',
+  'I have a family, but I have no idea where they are. One day, I hope to see them again.',
+  'An injury to the unspoiled wilderness of my home is an injury to me.',
+  'I am the last of my tribe, and it is up to me to ensure their names enter legend.',
+  'My town or city is my home, and I\'ll fight to defend it.',
+  'Someone saved my life on the battlefield. To this day, I will never leave a friend behind.',
+  'I fight for those who cannot fight for themselves.',
+  'I protect those who cannot protect themselves.',
+  'My mentor gave me a journal full of lore and secrets — I must decipher its meaning.',
+];
+
+const RANDOM_FLAWS = [
+  'I judge others harshly, and myself even more severely.',
+  'I put too much trust in those who wield power within my faith.',
+  'My piety sometimes leads me to blindly trust those that profess faith in my god.',
+  'I am inflexible in my thinking.',
+  'I am suspicious of strangers and expect the worst of them.',
+  'Once I pick a goal, I become obsessed with it to the detriment of everything else.',
+  'I have trouble keeping my true feelings hidden. My sharp tongue lands me in trouble.',
+  'I\'d rather eat my armor than admit when I\'m wrong.',
+  'I am too enamored of ale, wine, and other intoxicants.',
+  'I remember every insult I\'ve received and nurse a silent resentment toward anyone who\'s ever wronged me.',
+  'Violence is my answer to almost any challenge.',
+  'I\'m convinced of the significance of my destiny, and blind to my shortcomings and the risk of failure.',
+  'I have a weakness for the vices of the city, especially hard drink.',
+  'I secretly believe that everyone is beneath me.',
+  'I\'m never satisfied with what I have — I always want more.',
+];
 
 function readFileAsDataURL(file) {
   return new Promise((resolve, reject) => {
@@ -71,10 +160,10 @@ function unpackGoalsData(goalsStr) {
 
 /* ── Personality card theme colors ── */
 const PERSONALITY_CARDS = [
-  { key: 'personality_traits', label: 'Personality Traits', color: 'blue', placeholder: 'Two traits that describe your character\'s demeanor...' },
-  { key: 'ideals', label: 'Ideals', color: 'gold', placeholder: 'What principle does your character believe in above all? (include alignment tag, e.g. "Good" or "Lawful")' },
-  { key: 'bonds', label: 'Bonds', color: 'green', placeholder: 'A person, place, or thing your character cares deeply about...' },
-  { key: 'flaws', label: 'Flaws', color: 'red', placeholder: 'A weakness or vice that can be used against your character...' },
+  { key: 'personality_traits', label: 'Personality Traits', color: 'blue', icon: User, placeholder: 'Two traits that describe your character\'s demeanor...' },
+  { key: 'ideals', label: 'Ideals', color: 'gold', icon: Compass, placeholder: 'What principle does your character believe in above all? (include alignment tag, e.g. "Good" or "Lawful")' },
+  { key: 'bonds', label: 'Bonds', color: 'green', icon: Link2, placeholder: 'A person, place, or thing your character cares deeply about...' },
+  { key: 'flaws', label: 'Flaws', color: 'red', icon: AlertTriangle, placeholder: 'A weakness or vice that can be used against your character...' },
 ];
 
 const CARD_STYLES = {
@@ -118,11 +207,33 @@ Each value should be 1-2 sentences. Make them specific, memorable, and roleplay-
 
       const result = await generateAI(prompt, system, { temperature: 0.85, maxTokens: 512 });
 
-      // Parse JSON from response
+      // Parse JSON from response — LLMs sometimes return malformed JSON
       const text = typeof result === 'string' ? result : result?.response || '';
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
+        let raw = jsonMatch[0];
+        // Fix common LLM JSON issues: trailing commas before }
+        raw = raw.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+        let parsed;
+        try {
+          parsed = JSON.parse(raw);
+        } catch {
+          // Fallback: try to extract fields with regex if JSON is broken
+          const extract = (key) => {
+            const m = raw.match(new RegExp(`"${key}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`));
+            return m ? m[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : '';
+          };
+          parsed = {
+            personality_traits: extract('personality_traits'),
+            ideals: extract('ideals'),
+            bonds: extract('bonds'),
+            flaws: extract('flaws'),
+          };
+          if (!parsed.personality_traits && !parsed.ideals && !parsed.bonds && !parsed.flaws) {
+            toast.error('AI response was not in expected format. Try again.');
+            return;
+          }
+        }
         setAiResults({
           personality_traits: parsed.personality_traits || '',
           ideals: parsed.ideals || '',
@@ -326,7 +437,12 @@ Each value should be 1-2 sentences. Make them specific, memorable, and roleplay-
     ...(extra?.long_term_goals || []).map((g, i) => ({ ...g, _i: i, _type: 'long' })).filter(g => g.completed),
   ], [extra]);
 
-  if (loading || !data || !extra) return <div className="text-amber-200/40">Loading backstory...</div>;
+  if (loading || !data || !extra) return (
+    <div className="flex items-center justify-center gap-2 py-12 text-amber-200/40">
+      <Spinner size={18} className="animate-spin" />
+      <span>Loading backstory...</span>
+    </div>
+  );
 
   // Content indicators for collapsed sections
   const sectionHints = {
@@ -540,11 +656,37 @@ Each value should be 1-2 sentences. Make them specific, memorable, and roleplay-
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {PERSONALITY_CARDS.map(({ key, label, color, placeholder }) => {
+              {PERSONALITY_CARDS.map(({ key, label, color, icon: CardIcon, placeholder }) => {
                 const s = CARD_STYLES[color];
+                const randomTable = key === 'personality_traits' ? RANDOM_TRAITS : key === 'ideals' ? RANDOM_IDEALS : key === 'bonds' ? RANDOM_BONDS : RANDOM_FLAWS;
+                const isEmpty = !(data[key] || '').trim();
                 return (
                   <div key={key} className={`rounded-lg border-2 ${s.border} ${s.bg} p-4 transition-colors`}>
-                    <label className={`text-sm font-semibold ${s.accent} mb-2 block`}>{label}</label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className={`text-sm font-semibold ${s.accent} flex items-center gap-1.5`}>
+                        <CardIcon size={14} />
+                        {label}
+                      </label>
+                      <button
+                        onClick={() => {
+                          const hasExisting = (data[key] || '').trim();
+                          if (hasExisting && !window.confirm(`Replace your current ${label.toLowerCase()} with a random one?`)) return;
+                          const pick = randomTable[Math.floor(Math.random() * randomTable.length)];
+                          update(key, pick);
+                          toast.success(`Random ${label.toLowerCase()} applied!`);
+                        }}
+                        className="flex items-center gap-1 text-[11px] text-amber-200/35 hover:text-amber-200/70 transition-colors px-1.5 py-0.5 rounded hover:bg-white/5"
+                        title={`Random ${label.toLowerCase()} (no AI needed)`}
+                      >
+                        <Dice5 size={12} /> Random
+                      </button>
+                    </div>
+                    {isEmpty && (
+                      <div className="flex flex-col items-center py-2 mb-1">
+                        <CardIcon size={22} className={`${s.accent} opacity-25 mb-1`} />
+                        <span className="text-[11px] text-amber-200/20">No {label.toLowerCase()} added yet</span>
+                      </div>
+                    )}
                     <textarea
                       className="w-full h-24 resize-none bg-transparent border border-amber-200/10 rounded-md px-3 py-2 text-sm text-amber-100 placeholder-amber-200/20 focus:outline-none focus:border-amber-200/30 transition-colors"
                       placeholder={placeholder}
@@ -605,6 +747,32 @@ Each value should be 1-2 sentences. Make them specific, memorable, and roleplay-
         {expandedSections.has('background') && (
           <div className="mt-3">
             <p className="text-xs text-amber-200/30 mb-3">The mechanical benefit from your character's background (e.g. "Shelter of the Faithful", "Criminal Contact").</p>
+
+            {/* Background Preset Dropdown */}
+            <div className="mb-4">
+              <label className="label">Quick-fill from Standard Background</label>
+              <select
+                className="input w-full cursor-pointer"
+                value=""
+                onChange={e => {
+                  const preset = BACKGROUND_PRESETS.find(b => b.name === e.target.value);
+                  if (!preset) return;
+                  const hasExisting = (extra.background_feature_name || '').trim() || (extra.background_feature_desc || '').trim();
+                  if (hasExisting) {
+                    if (!window.confirm(`This will replace your current background feature fields with "${preset.name} — ${preset.featureName}". Continue?`)) return;
+                  }
+                  updateExtra('background_feature_name', preset.featureName);
+                  updateExtra('background_feature_desc', preset.featureDesc);
+                  toast.success(`Applied ${preset.name} background feature`);
+                }}
+              >
+                <option value="">-- Select a background to auto-fill --</option>
+                {BACKGROUND_PRESETS.map(bg => (
+                  <option key={bg.name} value={bg.name}>{bg.name} — {bg.featureName}</option>
+                ))}
+              </select>
+            </div>
+
             <div className="space-y-3">
               <div>
                 <label className="label">Feature Name</label>
@@ -915,14 +1083,18 @@ Each value should be 1-2 sentences. Make them specific, memorable, and roleplay-
 function GoalRow({ goal, type, index, onToggle, onUpdate, onRemove }) {
   return (
     <div className={`group flex items-start gap-2 p-2.5 rounded-lg border transition-colors ${
-      goal.completed ? 'border-emerald-500/15 bg-emerald-950/5' : 'border-amber-200/8 bg-amber-200/[0.02] hover:border-amber-200/15'
+      goal.completed
+        ? 'border-emerald-500/15 bg-emerald-950/5 border-l-2 border-l-emerald-500/40'
+        : type === 'long'
+          ? 'border-amber-200/8 bg-amber-200/[0.02] hover:border-amber-200/15 border-l-2 border-l-gold/40'
+          : 'border-amber-200/8 bg-amber-200/[0.02] hover:border-amber-200/15 border-l-2 border-l-amber-400/40'
     }`}>
       <button onClick={() => onToggle(type, index, 'completed', !goal.completed)} className="mt-0.5 shrink-0">
         {goal.completed ? <CheckSquare size={15} className="text-emerald-400" /> : <Square size={15} className="text-amber-200/30 hover:text-amber-200/50" />}
       </button>
       <div className="flex-1 min-w-0 space-y-1">
         <input
-          className={`input w-full text-sm ${goal.completed ? 'line-through text-amber-200/30' : ''}`}
+          className={`input w-full font-medium ${goal.completed ? 'text-sm line-through text-amber-200/30' : 'text-[15px]'}`}
           value={goal.title || goal.text || ''}
           onChange={e => onUpdate(type, index, 'title', e.target.value)}
           placeholder="Goal title..."

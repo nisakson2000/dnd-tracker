@@ -206,6 +206,21 @@ function getCharacterProficiencies(characterClass, characterRace) {
 }
 
 
+// --- Item Rarity Colors (D&D 5e) ---
+const RARITY_COLORS = {
+  common:    '#9ca3af',
+  uncommon:  '#22c55e',
+  rare:      '#3b82f6',
+  'very rare': '#a855f7',
+  legendary: '#f97316',
+  artifact:  '#dc2626',
+};
+
+function getRarityColor(rarity) {
+  if (!rarity || rarity.trim() === '') return null;
+  return RARITY_COLORS[rarity.toLowerCase().trim()] || null;
+}
+
 // --- Item Tag System ---
 const TAG_STYLES = {
   magical:    { bg: 'bg-purple-900/30', text: 'text-purple-300', border: 'border-purple-500/30' },
@@ -224,6 +239,14 @@ function getItemTags(item) {
   if (item.equipped) tags.push('equipped');
   if (item.attuned || item.attunement_status) tags.push('attuned');
   return tags;
+}
+
+// --- Ammunition matcher ---
+const AMMO_NAMES = ['arrow', 'bolt', 'bullet', 'dart', 'sling bullet', 'blowgun needle'];
+function isAmmunition(item) {
+  if ((item.item_type || '').toLowerCase() === 'ammunition') return true;
+  const name = (item.name || '').toLowerCase();
+  return AMMO_NAMES.some(a => name.includes(a));
 }
 
 // --- Equipment Comparison Helper ---
@@ -503,7 +526,9 @@ export default function Inventory({ characterId, character }) {
       return (item.name || '').toLowerCase().includes(q) || (item.item_type || '').toLowerCase().includes(q) || (item.description || '').toLowerCase().includes(q);
     });
     // Tag filter
-    if (activeTagFilter) {
+    if (activeTagFilter === 'ammunition') {
+      filtered = filtered.filter(item => isAmmunition(item));
+    } else if (activeTagFilter) {
       filtered = filtered.filter(item => getItemTags(item).includes(activeTagFilter));
     }
     return [...filtered].sort((a, b) => {
@@ -533,7 +558,7 @@ export default function Inventory({ characterId, character }) {
       groups[key].push(item);
     }
     // Sort group keys: for rarity use a defined order, otherwise alphabetical
-    const rarityOrder = ['common', 'uncommon', 'rare', 'very rare', 'legendary'];
+    const rarityOrder = ['common', 'uncommon', 'rare', 'very rare', 'legendary', 'artifact'];
     const equippedOrder = ['Equipped', 'Unequipped'];
     let sortedKeys;
     if (groupBy === 'rarity') {
@@ -620,6 +645,13 @@ export default function Inventory({ characterId, character }) {
     if (field === 'attuned' && !item.attuned && attunedCount >= 3) {
       toast.error('Maximum 3 attuned items (D&D 5e limit)');
       return;
+    }
+    // Armor proficiency warning when equipping
+    if (field === 'equipped' && !item.equipped && item.item_type === 'armor') {
+      const profs = getCharacterProficiencies(character?.primary_class, character?.race);
+      if (!profs.proficientArmor.includes(item.name)) {
+        toast(`You lack proficiency with ${item.name}. Disadvantage on STR/DEX checks, can't cast spells.`, { icon: '⚠️', duration: 5000 });
+      }
     }
     try {
       await updateItem(characterId, item.id, { ...item, [field]: !item[field] });
@@ -769,8 +801,8 @@ export default function Inventory({ characterId, character }) {
   // --- Shared item row renderer ---
   const renderItem = (item) => {
     const typeColor = { weapon: 'border-l-red-500/70', armor: 'border-l-blue-400/70', wondrous: 'border-l-purple-400/70', consumable: 'border-l-emerald-400/70', misc: 'border-l-amber-200/20' };
-    const rarityClass = item.rarity ? `rarity-${item.rarity.toLowerCase().replace(/\s+/g, '-')}` : '';
-    const leftBorder = rarityClass || (typeColor[item.item_type] ? typeColor[item.item_type] : 'border-l-amber-200/20');
+    const rarityColor = getRarityColor(item.rarity);
+    const leftBorder = typeColor[item.item_type] ? typeColor[item.item_type] : 'border-l-amber-200/20';
     const consumableEffect = item.item_type === 'consumable' ? CONSUMABLE_EFFECTS[item.name] : null;
     const itemTags = getItemTags(item);
     const equippedCounterpart = !item.equipped && (item.item_type === 'weapon' || item.item_type === 'armor')
@@ -779,7 +811,8 @@ export default function Inventory({ characterId, character }) {
     return (
       <div
         key={item.id}
-        className={`bg-[#0d0d12] rounded p-3 border ${rarityClass ? rarityClass : `border-l-[3px] ${leftBorder}`} flex items-start gap-3 ${item.attuned ? 'border-purple-500/30 shadow-[0_0_8px_rgba(168,85,247,0.15)]' : 'border-gold/10'} relative`}
+        className={`bg-[#0d0d12] rounded p-3 border border-l-[3px] ${rarityColor ? '' : leftBorder} flex items-start gap-3 ${item.attuned ? 'border-purple-500/30 shadow-[0_0_8px_rgba(168,85,247,0.15)]' : 'border-gold/10'} relative`}
+        style={rarityColor ? { borderLeftColor: rarityColor } : undefined}
         title={item.description || undefined}
         onMouseEnter={() => equippedCounterpart && setComparisonItem(item)}
         onMouseLeave={() => setComparisonItem(null)}
@@ -805,7 +838,7 @@ export default function Inventory({ characterId, character }) {
               </span>
             )}
             <span className="text-xs text-amber-200/30 capitalize">{item.item_type}</span>
-            {item.rarity && <span className="text-xs text-amber-200/30 capitalize">{item.rarity}</span>}
+            {item.rarity && <span className="text-xs capitalize" style={rarityColor ? { color: rarityColor } : { color: 'rgba(217,199,155,0.3)' }}>{item.rarity}</span>}
             {item.equipped && <span className="text-xs bg-emerald-800/40 text-emerald-300 px-1.5 py-0.5 rounded">Equipped</span>}
             {item.attuned && <span className="text-xs bg-purple-800/40 text-purple-300 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Sparkles size={10} />Attuned</span>}
             {itemTags.filter(t => t !== 'equipped' && t !== 'attuned').map(tag => {
@@ -1221,6 +1254,24 @@ export default function Inventory({ characterId, character }) {
                 </button>
               );
             })}
+            {/* Ammunition filter */}
+            {(() => {
+              const ammoCount = items.filter(i => isAmmunition(i)).length;
+              if (ammoCount === 0) return null;
+              const isActive = activeTagFilter === 'ammunition';
+              return (
+                <button
+                  onClick={() => setActiveTagFilter(isActive ? null : 'ammunition')}
+                  className={`text-xs px-2 py-0.5 rounded-full border transition-all ${
+                    isActive
+                      ? 'bg-orange-900/30 text-orange-300 border-orange-500/30 ring-1 ring-current/20'
+                      : 'bg-amber-200/5 text-amber-200/40 border-amber-200/10 hover:border-amber-200/20'
+                  }`}
+                >
+                  Ammo <span className="opacity-60">({ammoCount})</span>
+                </button>
+              );
+            })()}
             {activeTagFilter && (
               <button onClick={() => setActiveTagFilter(null)} className="text-xs text-amber-200/30 hover:text-amber-200/60 ml-1 underline">
                 Clear

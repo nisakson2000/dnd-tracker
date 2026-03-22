@@ -363,8 +363,8 @@ function CharacterCard({ char, index, onEnter, onDelete, onDuplicate, onSessionP
 
         {char.max_hp > 0 && <HpBar current={char.current_hp} max={char.max_hp} />}
 
-        {/* XP progress bar */}
-        {char.experience_points > 0 && char.level >= 1 && char.level < 20 && (() => {
+        {/* XP progress bar — only shown when using XP leveling */}
+        {(() => { try { return (JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').levelingStyle || 'milestone') === 'xp'; } catch { return false; } })() && char.experience_points > 0 && char.level >= 1 && char.level < 20 && (() => {
           const currentXP = XP_LEVELS[char.level - 1] || 0;
           const nextXP = XP_LEVELS[char.level] || XP_LEVELS[19];
           const xpRange = nextXP - currentXP;
@@ -2700,12 +2700,8 @@ export default function Dashboard() {
   // ── Derived stats for quick stats bar ──
   const filteredCharacters = characters
     .filter(c => {
-      // In DM mode, show only campaigns; in player mode, hide campaigns
-      if (isDM) {
-        if (!c.campaign_type && !c.status) return false;
-      } else {
-        if (c.campaign_type) return false;
-      }
+      // In player mode, hide campaign-type entries (DM campaigns)
+      if (!isDM && c.campaign_type) return false;
       if (!charSearch.trim()) return true;
       const q = charSearch.trim().toLowerCase();
       return (c.name || '').toLowerCase().includes(q)

@@ -658,7 +658,7 @@ const CLASS_FEATURES = {
       { name: 'Unarmored Defense', description: 'AC = 10 + DEX mod + WIS mod when not wearing armor or wielding a shield.' },
     ],
     2: [
-      { name: 'Monk\'s Focus', description: 'Gain Focus Points equal to Monk level. Spend to fuel: Flurry of Blows (two bonus action unarmed strikes), Patient Defense (Dodge as bonus action + Disengage), Step of the Wind (Dash or Disengage as bonus action + jump distance doubled).' },
+      { name: 'Monk\'s Focus', description: 'Gain Focus Points equal to Monk level. Spend to fuel: Flurry of Blows (two bonus action unarmed strikes), Patient Defense (Dodge as bonus action + Disengage), Step of the Wind (Dash or Disengage as bonus action + jump distance doubled).', uses_total: 2, recharge: 'short_rest', scales_with_level: true },
       { name: 'Unarmored Movement', description: '+10 ft speed while not wearing armor or wielding a shield. Increases at 6th (+15), 10th (+20), 14th (+25), 18th (+30).' },
       { name: 'Uncanny Metabolism', description: 'When you roll Initiative, regain all Focus Points. Also regain one Hit Die. Once per Long Rest.' },
     ],
@@ -843,7 +843,7 @@ const CLASS_FEATURES = {
       { name: 'Innate Sorcery', description: 'As a bonus action, tap into your magic for 1 minute: advantage on Sorcerer spell attack rolls, +1 to Sorcerer spell save DC. Prof bonus uses per Long Rest.' },
     ],
     2: [
-      { name: 'Font of Magic', description: 'Gain Sorcery Points = Sorcerer level. Convert between Sorcery Points and spell slots. Spend points to fuel Metamagic.' },
+      { name: 'Font of Magic', description: 'Gain Sorcery Points = Sorcerer level. Convert between Sorcery Points and spell slots. Spend points to fuel Metamagic.', uses_total: 2, recharge: 'long_rest', scales_with_level: true },
       { name: 'Metamagic', description: 'Choose two Metamagic options: Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, or Twinned.' },
     ],
     3: [

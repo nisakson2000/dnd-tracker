@@ -755,8 +755,9 @@ export default function Companions({ characterId }) {
 
       {/* Loading state */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-mute)', fontFamily: 'var(--font-ui)' }}>
-          Loading companions...
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 0', gap: '12px', color: 'var(--text-mute)', fontFamily: 'var(--font-ui)' }}>
+          <PawPrint size={28} style={{ animation: 'spin 1.2s linear infinite', opacity: 0.5 }} />
+          <span style={{ fontSize: '13px', letterSpacing: '0.03em' }}>Loading companions...</span>
         </div>
       )}
 

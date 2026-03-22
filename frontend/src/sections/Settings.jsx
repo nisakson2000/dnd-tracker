@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { Settings2, Palette, Type, LayoutGrid, RotateCcw, Zap, Sliders, Bug, Lightbulb, Download, ChevronDown, ChevronRight, Swords, BookOpen, Monitor } from 'lucide-react';
+import { useState, useCallback, useRef } from 'react';
+import { Settings2, Palette, Type, LayoutGrid, RotateCcw, Zap, Sliders, Bug, Lightbulb, Download, Upload, ChevronDown, ChevronRight, Swords, BookOpen, Monitor, Eye, Accessibility } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -87,6 +87,16 @@ const DEFAULTS = {
   pointBuy: false,            // false = standard array / rolled, true = point buy
   flanking: true,             // flanking gives advantage on melee
   diagonalMovement: 'standard', // 'standard' (5ft) or 'alternating' (5/10/5/10)
+  // Accessibility
+  highContrast: false,
+  dyslexiaFont: false,
+  // DM-specific rules
+  levelingStyle: 'milestone',   // 'milestone' or 'xp'
+  monsterHp: 'average',         // 'average' (fixed) or 'rolled' (roll hit dice)
+  initiativeStyle: 'individual', // 'individual' or 'side' (group initiative)
+  inspirationType: 'standard',  // 'standard' (DM grants) or 'heroic' (players can self-award)
+  deathSaveVisibility: 'hidden', // 'hidden' (DM sees, player doesn't know exact) or 'open'
+  npcStatVisibility: 'hidden',  // 'hidden' (DM only) or 'open' (players see HP/AC)
 };
 
 function loadV3Settings() {
@@ -138,6 +148,18 @@ function applyV3Settings(s) {
   // Brightness
   const brightness = s.brightness != null ? s.brightness : 100;
   root.style.filter = brightness !== 100 ? `brightness(${brightness / 100})` : '';
+  // Accessibility — high contrast
+  if (s.highContrast) {
+    root.classList.add('high-contrast');
+  } else {
+    root.classList.remove('high-contrast');
+  }
+  // Accessibility — dyslexia-friendly font
+  if (s.dyslexiaFont) {
+    root.classList.add('dyslexia-font');
+  } else {
+    root.classList.remove('dyslexia-font');
+  }
 }
 
 // Apply on load
@@ -330,6 +352,7 @@ export default function Settings() {
   const [showDevInput, setShowDevInput] = useState(false);
   const [devPassphrase, setDevPassphrase] = useState('');
   const [devUnlocked, setDevUnlocked] = useState(() => { try { return localStorage.getItem('codex-dev-unlocked') === 'true'; } catch { return false; } });
+  const settingsFileRef = useRef(null);
 
   const update = useCallback((updates) => {
     setSettings(prev => {
@@ -479,6 +502,33 @@ export default function Settings() {
           </div>
 
           <PreferencesSection />
+
+          {/* Accessibility */}
+          <div className="sp-sec" style={{ marginTop: '8px' }}>Accessibility</div>
+          <div className="tog-row">
+            <div>
+              <div className="tog-label">High contrast</div>
+              <div className="tog-desc">Increase border opacity and text contrast for better readability</div>
+            </div>
+            <div
+              className={`toggle ${settings.highContrast ? 'on' : ''}`}
+              onClick={() => update({ highContrast: !settings.highContrast })}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ highContrast: !settings.highContrast }); } }}
+              tabIndex={0} role="switch" aria-checked={settings.highContrast}
+            />
+          </div>
+          <div className="tog-row">
+            <div>
+              <div className="tog-label">Dyslexia-friendly font</div>
+              <div className="tog-desc">Switch to OpenDyslexic for improved readability</div>
+            </div>
+            <div
+              className={`toggle ${settings.dyslexiaFont ? 'on' : ''}`}
+              onClick={() => update({ dyslexiaFont: !settings.dyslexiaFont })}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ dyslexiaFont: !settings.dyslexiaFont }); } }}
+              tabIndex={0} role="switch" aria-checked={settings.dyslexiaFont}
+            />
+          </div>
 
           {/* Font Size (moved from Typography) */}
           <div className="sp-sec">Font Size</div>
@@ -654,6 +704,88 @@ export default function Settings() {
           )}
 
           <button className="reset-btn" onClick={() => setShowResetConfirm(true)} style={{ marginTop: 16 }}>↺ Reset all to defaults</button>
+
+          {/* Backup — settings import/export */}
+          <div className="sp-sec" style={{ marginTop: '20px' }}>Backup</div>
+          <p style={{ fontSize: '11px', color: 'var(--text-mute)', marginBottom: '10px', lineHeight: 1.5 }}>
+            Export your interface, gameplay, and accessibility settings to a file — or import a previously saved settings backup.
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              onClick={() => {
+                try {
+                  const raw = localStorage.getItem(SETTINGS_KEY);
+                  const data = raw ? JSON.parse(raw) : { ...DEFAULTS };
+                  const jsonString = JSON.stringify(data, null, 2);
+                  const fileName = 'codex_settings_backup.json';
+                  if (window.showSaveFilePicker) {
+                    window.showSaveFilePicker({
+                      suggestedName: fileName,
+                      types: [{ description: 'JSON Settings Backup', accept: { 'application/json': ['.json'] } }],
+                    }).then(async handle => {
+                      const writable = await handle.createWritable();
+                      await writable.write(jsonString);
+                      await writable.close();
+                      toast.success('Settings exported!');
+                    }).catch(err => {
+                      if (err.name !== 'AbortError') toast.error('Export failed: ' + err.message);
+                    });
+                  } else {
+                    const blob = new Blob([jsonString], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    toast.success('Settings exported to Downloads folder');
+                  }
+                } catch (err) {
+                  toast.error('Export failed: ' + err.message);
+                }
+              }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', cursor: 'pointer', transition: 'all 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--text)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
+            >
+              <Download size={14} /> Export Settings
+            </button>
+            <button
+              onClick={() => settingsFileRef.current?.click()}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-ui)', cursor: 'pointer', transition: 'all 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--text)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
+            >
+              <Upload size={14} /> Import Settings
+            </button>
+            <input
+              ref={settingsFileRef}
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                try {
+                  const text = await file.text();
+                  let parsed;
+                  try { parsed = JSON.parse(text); } catch { throw new Error('File is not valid JSON'); }
+                  if (!parsed || typeof parsed !== 'object') throw new Error('Invalid settings file');
+                  const merged = { ...DEFAULTS, ...parsed };
+                  setSettings(merged);
+                  setCustomHex(merged.accent);
+                  saveV3Settings(merged);
+                  applyV3Settings(merged);
+                  toast.success('Settings imported and applied!');
+                } catch (err) {
+                  toast.error('Import failed: ' + err.message);
+                }
+                if (settingsFileRef.current) settingsFileRef.current.value = '';
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -798,6 +930,73 @@ export default function Settings() {
                 <div style={{ fontSize: '9px', color: 'var(--text-mute)', marginTop: '2px', lineHeight: 1.2 }}>{opt.desc}</div>
               </div>
             ))}
+          </div>
+
+          <div className="sp-sec" style={{ marginTop: '20px' }}>Leveling</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+            {[
+              { id: 'milestone', label: 'Milestone', desc: 'DM awards levels at story milestones' },
+              { id: 'xp', label: 'Experience Points', desc: 'Players track XP and level up at thresholds' },
+            ].map(opt => (
+              <div
+                key={opt.id}
+                className={`dbtn ${(settings.levelingStyle || 'milestone') === opt.id ? 'on' : ''}`}
+                onClick={() => update({ levelingStyle: opt.id })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ levelingStyle: opt.id }); } }}
+                tabIndex={0} role="button" aria-pressed={(settings.levelingStyle || 'milestone') === opt.id}
+              >
+                {opt.label}
+                <div style={{ fontSize: '9px', color: 'var(--text-mute)', marginTop: '2px', lineHeight: 1.2 }}>{opt.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="sp-sec" style={{ marginTop: '20px' }}>Monster Hit Points</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+            {[
+              { id: 'average', label: 'Average', desc: 'Use the fixed average HP listed in the stat block' },
+              { id: 'rolled', label: 'Rolled', desc: 'Roll hit dice for each monster (more variance)' },
+            ].map(opt => (
+              <div
+                key={opt.id}
+                className={`dbtn ${(settings.monsterHp || 'average') === opt.id ? 'on' : ''}`}
+                onClick={() => update({ monsterHp: opt.id })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ monsterHp: opt.id }); } }}
+                tabIndex={0} role="button" aria-pressed={(settings.monsterHp || 'average') === opt.id}
+              >
+                {opt.label}
+                <div style={{ fontSize: '9px', color: 'var(--text-mute)', marginTop: '2px', lineHeight: 1.2 }}>{opt.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="sp-sec" style={{ marginTop: '20px' }}>Initiative</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+            {[
+              { id: 'individual', label: 'Individual', desc: 'Each creature rolls initiative separately' },
+              { id: 'side', label: 'Side Initiative', desc: 'One roll per side — all PCs go, then all enemies (DMG variant)' },
+            ].map(opt => (
+              <div
+                key={opt.id}
+                className={`dbtn ${(settings.initiativeStyle || 'individual') === opt.id ? 'on' : ''}`}
+                onClick={() => update({ initiativeStyle: opt.id })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ initiativeStyle: opt.id }); } }}
+                tabIndex={0} role="button" aria-pressed={(settings.initiativeStyle || 'individual') === opt.id}
+              >
+                {opt.label}
+                <div style={{ fontSize: '9px', color: 'var(--text-mute)', marginTop: '2px', lineHeight: 1.2 }}>{opt.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="sp-sec" style={{ marginTop: '20px' }}>Table Visibility</div>
+          <div className="tog-row">
+            <div><div className="tog-label">Open Death Saves</div><div className="tog-desc">Everyone can see death save results (off = DM only)</div></div>
+            <div className={`toggle ${settings.deathSaveVisibility === 'open' ? 'on' : ''}`} onClick={() => update({ deathSaveVisibility: settings.deathSaveVisibility === 'open' ? 'hidden' : 'open' })} tabIndex={0} role="switch" aria-checked={settings.deathSaveVisibility === 'open'} />
+          </div>
+          <div className="tog-row">
+            <div><div className="tog-label">Show Monster Stats</div><div className="tog-desc">Players can see enemy HP and AC (off = DM only)</div></div>
+            <div className={`toggle ${settings.npcStatVisibility === 'open' ? 'on' : ''}`} onClick={() => update({ npcStatVisibility: settings.npcStatVisibility === 'open' ? 'hidden' : 'open' })} tabIndex={0} role="switch" aria-checked={settings.npcStatVisibility === 'open'} />
           </div>
         </div>
       )}

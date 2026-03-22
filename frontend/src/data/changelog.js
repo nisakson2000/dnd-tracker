@@ -3,6 +3,29 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.8.6',
+    date: '03/21/2026',
+    time: '',
+    title: 'Player Mode 100: Conditions, Combat, Level-Up, Spellbook, Inventory & Full Polish',
+    changes: [
+      'Conditions — auto-apply implied conditions (Unconscious adds Incapacitated + Prone), auto-crit melee on Paralyzed/Unconscious, inline effect tags on badges, concentration saves respect condition modifiers',
+      'Combat — Sneak Attack toggle for Rogues (auto-scales with level), Divine Smite slot selector for Paladins, Fighting Style bonuses (Archery +2 hit, Dueling +2 damage), inline recent events log, export combat log to journal',
+      'Level-up — ASI picker (+2 to one or +1 to two abilities, max 20), feat selection from full catalog, spell selection reminder for casters, auto-scale Ki/Sorcery Points',
+      'Spellbook — Wizard ritual casting for unprepared spells, GP material cost display, spell school colored borders, slot depletion color feedback (amber/red), stagger animations',
+      'Inventory — armor proficiency warning on equip, ammo quick-filter, item rarity color-coding (Common through Artifact)',
+      'Overview — inspiration toggle with gold glow, attunement display (X/3 orbs), skill modifier breakdown tooltips, stealth disadvantage badge for heavy armor',
+      'Features — inline uses tracking (+/- buttons with progress bar), source badge colors (class/racial/feat/background/custom)',
+      'Character creation — 13 standard 5e background presets with auto-fill, character portrait upload with drag-and-drop',
+      'Backstory — background preset dropdown with overwrite confirmation, random personality/ideal/bond/flaw generator, empty state icons, goal card accent borders',
+      'Export/Import — post-import review checklist, PDF character sheet export',
+      'Rest — auto-clear conditions on long rest (except Petrified), companion HP restore, rest summary toast',
+      'Journal — NPC @-mention autocomplete, quest linking via tag chips, timeline connector with dots',
+      'Settings — export/import settings backup, high contrast mode, dyslexia-friendly font (OpenDyslexic)',
+      'Navigation — back button to Dashboard, section search in sidebar',
+      'Polish — condition badge click animation, attack button hover glow, dice roll pop animation, HP bar color transitions, spell list stagger animation, loading spinners, companion loading animation',
+    ],
+  },
+  {
     version: 'V0.8.5',
     date: '03/21/2026',
     time: '',

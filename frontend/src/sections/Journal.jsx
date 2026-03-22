@@ -62,7 +62,12 @@ function getMoodFromTags(tags) {
 
 function getDisplayTags(tags) {
   if (!tags) return [];
-  return tags.split(',').map(t => t.trim()).filter(t => t && !t.startsWith('mood:') && !t.startsWith('xp:') && !t.startsWith('gold:'));
+  return tags.split(',').map(t => t.trim()).filter(t => t && !t.startsWith('mood:') && !t.startsWith('xp:') && !t.startsWith('gold:') && !t.startsWith('quest:'));
+}
+
+function getQuestTags(tags) {
+  if (!tags) return [];
+  return tags.split(',').map(t => t.trim()).filter(t => t.startsWith('quest:')).map(t => t.replace('quest:', ''));
 }
 
 function setMoodInTags(tags, moodValue) {
@@ -1501,8 +1506,11 @@ export default function Journal({ characterId }) {
               <p className="text-xs text-amber-200/20">After each session, jot down key events, plot hooks, and things you want to remember</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {sorted.map(entry => {
+            <div className="relative pl-6">
+              {/* Timeline connecting line */}
+              <div className="absolute left-[7px] top-4 bottom-4 w-[2px] bg-amber-200/8 rounded-full" />
+              <div className="space-y-4">
+              {sorted.map((entry, entryIdx) => {
                 const mood = getMoodFromTags(entry.tags);
                 const displayTags = getDisplayTags(entry.tags);
                 const npcsRaw = parseNpcs(entry.npcs_mentioned);
@@ -1510,7 +1518,16 @@ export default function Journal({ characterId }) {
                 const gold = getGoldFromTags(entry.tags);
                 const { npcsFound, questsFound } = getBodyReferences(entry.body);
                 return (
-                  <div key={entry.id} className={`card ${entry.pinned === 1 ? 'border-gold/20' : ''}`}>
+                  <div key={entry.id} className="relative">
+                    {/* Timeline dot */}
+                    <div className={`absolute -left-6 top-5 w-[10px] h-[10px] rounded-full border-2 z-10 ${
+                      entry.pinned === 1
+                        ? 'bg-gold border-gold/60'
+                        : entryIdx === 0
+                          ? 'bg-amber-400 border-amber-300/60'
+                          : 'bg-amber-200/20 border-amber-200/15'
+                    }`} />
+                  <div className={`card ${entry.pinned === 1 ? 'border-gold/20' : ''}`}>
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <div className="flex items-center gap-2">
@@ -1563,6 +1580,24 @@ export default function Journal({ characterId }) {
                         ))}
                       </div>
                     )}
+                    {/* Linked quest badges */}
+                    {(() => {
+                      const questTags = getQuestTags(entry.tags);
+                      return questTags.length > 0 ? (
+                        <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                          <Map size={11} style={{ color: 'rgba(52,211,153,0.4)', flexShrink: 0 }} />
+                          {questTags.map((qt, i) => (
+                            <span key={`q-${qt}-${i}`} style={{
+                              fontSize: '11px', padding: '2px 7px', borderRadius: '5px',
+                              background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)',
+                              color: '#6ee7b7', fontFamily: 'var(--font-ui)',
+                            }}>
+                              {qt}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null;
+                    })()}
                     {npcsRaw.length > 0 && (
                       <div className="flex items-center gap-1.5 mb-2 flex-wrap">
                         <Users size={12} className="text-amber-200/30 shrink-0" />
@@ -1607,8 +1642,10 @@ export default function Journal({ characterId }) {
                       </div>
                     )}
                   </div>
+                  </div>
                 );
               })}
+              </div>
             </div>
           )}
         </>
@@ -1621,6 +1658,8 @@ export default function Journal({ characterId }) {
           nextSessionNumber={entries.length > 0 ? Math.max(...entries.map(e => e.session_number || 0)) + 1 : 1}
           onSubmit={editing ? (data) => handleUpdate(editing.id, data) : handleAdd}
           onCancel={() => { setShowAdd(false); setEditing(null); setDuplicateTemplate(null); }}
+          npcList={npcs}
+          questList={quests}
         />
       )}
 
@@ -1664,7 +1703,7 @@ export default function Journal({ characterId }) {
   );
 }
 
-function JournalForm({ entry, isNew, nextSessionNumber = 1, onSubmit, onCancel }) {
+function JournalForm({ entry, isNew, nextSessionNumber = 1, onSubmit, onCancel, npcList = [], questList = [] }) {
   const existingMood = entry ? getMoodFromTags(entry.tags) : null;
   const [form, setForm] = useState(() => {
     const base = entry || {
@@ -1689,6 +1728,9 @@ function JournalForm({ entry, isNew, nextSessionNumber = 1, onSubmit, onCancel }
     const displayTags = getDisplayTags(rest.tags).join(', ');
     let finalTags = setMoodInTags(displayTags, _mood);
     finalTags = setXpGoldInTags(finalTags, _xp, _gold);
+    // Preserve quest link tags
+    const questTagsList = getQuestTags(rest.tags);
+    questTagsList.forEach(qt => { finalTags = finalTags ? finalTags + `, quest:${qt}` : `quest:${qt}`; });
     onSubmit({ ...rest, tags: finalTags });
   };
 
@@ -1712,6 +1754,87 @@ function JournalForm({ entry, isNew, nextSessionNumber = 1, onSubmit, onCancel }
     update('body', SESSION_TEMPLATE);
     toast.success('Session template applied');
   };
+
+  // ── NPC @-mention autocomplete ──
+  const npcNames = useMemo(() => (npcList || []).map(n => n.name).filter(Boolean), [npcList]);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionActive, setMentionActive] = useState(false);
+  const [mentionIdx, setMentionIdx] = useState(0);
+  const editorWrapRef = useRef(null);
+
+  const mentionMatches = useMemo(() => {
+    if (!mentionActive || !mentionQuery) return [];
+    const q = mentionQuery.toLowerCase();
+    return npcNames.filter(n => n.toLowerCase().includes(q)).slice(0, 8);
+  }, [mentionActive, mentionQuery, npcNames]);
+
+  // Watch for @ trigger in MDEditor body changes
+  const handleBodyChange = useCallback((v) => {
+    const val = v || '';
+    update('body', val);
+
+    // Detect @mention trigger: look for last @ in text
+    const atIdx = val.lastIndexOf('@');
+    if (atIdx >= 0) {
+      const afterAt = val.slice(atIdx + 1);
+      // Only trigger if @ is at start, after a space/newline, and no space in the query yet
+      const charBefore = atIdx > 0 ? val[atIdx - 1] : ' ';
+      if ((charBefore === ' ' || charBefore === '\n' || atIdx === 0) && !afterAt.includes(' ') && !afterAt.includes('\n')) {
+        setMentionQuery(afterAt);
+        setMentionActive(true);
+        setMentionIdx(0);
+        return;
+      }
+    }
+    setMentionActive(false);
+    setMentionQuery('');
+  }, []);
+
+  const insertMention = useCallback((npcName) => {
+    const body = form.body || '';
+    const atIdx = body.lastIndexOf('@');
+    if (atIdx < 0) return;
+    const newBody = body.slice(0, atIdx) + '**' + npcName + '**' + body.slice(atIdx + 1 + mentionQuery.length);
+    update('body', newBody);
+    // Also auto-add to NPCs mentioned
+    const currentNpcs = parseNpcs(form.npcs_mentioned);
+    if (!currentNpcs.some(n => n.toLowerCase() === npcName.toLowerCase())) {
+      update('npcs_mentioned', currentNpcs.length > 0 ? form.npcs_mentioned + ', ' + npcName : npcName);
+    }
+    setMentionActive(false);
+    setMentionQuery('');
+  }, [form.body, form.npcs_mentioned, mentionQuery]);
+
+  // Keyboard nav for mention dropdown
+  useEffect(() => {
+    if (!mentionActive || mentionMatches.length === 0) return;
+    const handler = (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setMentionIdx(i => (i + 1) % mentionMatches.length); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setMentionIdx(i => (i - 1 + mentionMatches.length) % mentionMatches.length); }
+      else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); insertMention(mentionMatches[mentionIdx]); }
+      else if (e.key === 'Escape') { setMentionActive(false); }
+    };
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
+  }, [mentionActive, mentionMatches, mentionIdx, insertMention]);
+
+  // ── Quest linking ──
+  const linkedQuestTitles = useMemo(() => {
+    return getQuestTags(form.tags);
+  }, [form.tags]);
+
+  const toggleQuestLink = useCallback((questTitle) => {
+    // Parse ALL raw tags (including quest: prefixed ones)
+    const rawTags = form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+    const questTag = `quest:${questTitle}`;
+    let next;
+    if (rawTags.includes(questTag)) {
+      next = rawTags.filter(t => t !== questTag);
+    } else {
+      next = [...rawTags, questTag];
+    }
+    update('tags', next.join(', '));
+  }, [form.tags]);
 
   const displayTagsStr = getDisplayTags(form.tags).join(', ');
 
@@ -1752,9 +1875,87 @@ function JournalForm({ entry, isNew, nextSessionNumber = 1, onSubmit, onCancel }
                 </button>
               ))}
             </div>
-          <div data-color-mode="dark">
-            <MDEditor value={form.body} onChange={v => update('body', v || '')} height={150} preview="edit" />
+          <div data-color-mode="dark" style={{ position: 'relative' }} ref={editorWrapRef}>
+            <MDEditor value={form.body} onChange={handleBodyChange} height={150} preview="edit" />
+            {/* NPC @-mention autocomplete dropdown */}
+            {mentionActive && mentionMatches.length > 0 && (
+              <div style={{
+                position: 'absolute', bottom: '100%', left: 0, marginBottom: 4,
+                width: 'min(260px, 90%)', maxHeight: '200px', overflowY: 'auto',
+                background: 'rgba(12,10,20,0.97)', backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(96,165,250,0.3)', borderRadius: '8px',
+                boxShadow: '0 8px 30px rgba(0,0,0,0.5)', zIndex: 300,
+                padding: '4px',
+              }}>
+                <div style={{ padding: '4px 8px 2px', fontSize: '9px', color: 'rgba(96,165,250,0.5)', fontFamily: 'var(--font-ui)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <Users size={8} style={{ display: 'inline', marginRight: 4 }} />
+                  NPCs — type to filter
+                </div>
+                {mentionMatches.map((name, i) => {
+                  const npc = npcList.find(n => n.name === name);
+                  return (
+                    <button
+                      key={name}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); insertMention(name); }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
+                        padding: '6px 8px', borderRadius: '6px', cursor: 'pointer',
+                        background: i === mentionIdx ? 'rgba(96,165,250,0.15)' : 'transparent',
+                        border: i === mentionIdx ? '1px solid rgba(96,165,250,0.25)' : '1px solid transparent',
+                        color: '#93c5fd', fontSize: '12px', fontFamily: 'var(--font-ui)', textAlign: 'left',
+                        transition: 'background 0.1s',
+                      }}
+                      onMouseEnter={() => setMentionIdx(i)}
+                    >
+                      <Users size={11} style={{ color: 'rgba(96,165,250,0.5)', flexShrink: 0 }} />
+                      <span style={{ flex: 1 }}>{name}</span>
+                      {npc?.role && <span style={{ fontSize: '10px', color: 'rgba(96,165,250,0.4)' }}>{npc.role}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {npcNames.length > 0 && (
+              <div style={{ fontSize: '10px', color: 'rgba(96,165,250,0.3)', fontFamily: 'var(--font-ui)', marginTop: '2px' }}>
+                Type <span style={{ color: 'rgba(96,165,250,0.5)', fontWeight: 600 }}>@</span> to mention an NPC
+              </div>
+            )}
           </div>
+
+          {/* Quest linking */}
+          {questList.length > 0 && (
+            <div>
+              <label className="label flex items-center gap-1"><Map size={10} /> Link Quests</label>
+              <div className="flex gap-1.5 flex-wrap">
+                {questList.map(q => {
+                  const isLinked = linkedQuestTitles.includes(q.title);
+                  const statusColor = q.status?.toLowerCase() === 'completed' ? 'rgba(74,222,128,0.5)' :
+                    q.status?.toLowerCase() === 'failed' ? 'rgba(239,68,68,0.5)' : 'rgba(52,211,153,0.5)';
+                  return (
+                    <button
+                      key={q.id || q.title}
+                      type="button"
+                      onClick={() => toggleQuestLink(q.title)}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '4px',
+                        padding: '3px 8px', borderRadius: '6px', fontSize: '11px',
+                        fontFamily: 'var(--font-ui)', cursor: 'pointer',
+                        background: isLinked ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.03)',
+                        border: isLinked ? '1px solid rgba(52,211,153,0.3)' : '1px solid rgba(255,255,255,0.08)',
+                        color: isLinked ? '#6ee7b7' : 'rgba(232,213,181,0.4)',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <Map size={10} style={{ color: statusColor, flexShrink: 0 }} />
+                      <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.title}</span>
+                      {q.status && <span style={{ fontSize: '9px', opacity: 0.5 }}>({q.status})</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="label flex items-center gap-1"><Tag size={10} /> Tags</label>
             <div className="flex gap-1 mb-2 flex-wrap">
@@ -1771,14 +1972,16 @@ function JournalForm({ entry, isNew, nextSessionNumber = 1, onSubmit, onCancel }
                       } else {
                         next = [...current, qt.value];
                       }
-                      // Preserve mood/xp/gold meta-tags
+                      // Preserve mood/xp/gold/quest meta-tags
                       const moodPart = getMoodFromTags(form.tags);
+                      const questTagsList = getQuestTags(form.tags);
                       let rebuilt = next.join(', ');
                       if (moodPart) rebuilt = rebuilt ? rebuilt + `, mood:${moodPart.value}` : `mood:${moodPart.value}`;
                       const xpVal = getXpFromTags(form.tags);
                       const goldVal = getGoldFromTags(form.tags);
                       if (xpVal) rebuilt = rebuilt ? rebuilt + `, xp:${xpVal}` : `xp:${xpVal}`;
                       if (goldVal) rebuilt = rebuilt ? rebuilt + `, gold:${goldVal}` : `gold:${goldVal}`;
+                      questTagsList.forEach(qt2 => { rebuilt = rebuilt ? rebuilt + `, quest:${qt2}` : `quest:${qt2}`; });
                       update('tags', rebuilt);
                     }}
                     className={`text-xs px-2 py-0.5 rounded border flex items-center gap-1 ${isActive ? qt.color + ' border' : 'bg-amber-200/5 text-amber-200/40 border-amber-200/10'}`}>

@@ -197,7 +197,7 @@ export const CLASS_FEATURES = {
       { name: 'Martial Arts', description: 'Use DEX for unarmed/monk weapon attacks. Unarmed strike deals 1d4. Bonus action unarmed strike after attacking.' },
     ],
     2: [
-      { name: 'Ki', description: 'Gain ki points equal to your monk level. Spend to fuel Flurry of Blows, Patient Defense, and Step of the Wind.' },
+      { name: 'Ki', description: 'Gain ki points equal to your monk level. Spend to fuel Flurry of Blows, Patient Defense, and Step of the Wind.', uses_total: 2, recharge: 'short_rest', scales_with_level: true },
       { name: 'Unarmored Movement', description: '+10 ft speed while not wearing armor or wielding a shield.' },
     ],
     3: [
@@ -390,7 +390,7 @@ export const CLASS_FEATURES = {
       { name: 'Sorcerous Origin', description: 'Choose your subclass origin, gaining origin features.' },
     ],
     2: [
-      { name: 'Font of Magic', description: 'Gain sorcery points equal to your sorcerer level. Flexible Casting: spend 1 SP to create a 1st-level slot (2 SP for 2nd, 3 SP for 3rd, 5 SP for 4th, 7 SP for 5th). Or convert a spell slot to SP equal to its level.' },
+      { name: 'Font of Magic', description: 'Gain sorcery points equal to your sorcerer level. Flexible Casting: spend 1 SP to create a 1st-level slot (2 SP for 2nd, 3 SP for 3rd, 5 SP for 4th, 7 SP for 5th). Or convert a spell slot to SP equal to its level.', uses_total: 2, recharge: 'long_rest', scales_with_level: true },
     ],
     3: [
       { name: 'Metamagic', description: 'Choose two Metamagic options to modify your spells (e.g., Twinned Spell, Quickened Spell).' },

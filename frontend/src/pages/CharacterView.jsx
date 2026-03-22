@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, lazy, Suspense } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Heart, Clock, Shield, Zap, Star, Footprints, X, Moon, Coffee, Sunrise, Dices, Flame, Check, Keyboard, Wand2, Sword, FlaskConical, Sparkles, ChevronUp, ChevronDown, Pin, Plus, Hammer, ChevronRight, Eye, Minus } from 'lucide-react';
+import { Heart, Clock, Shield, Zap, Star, Footprints, X, Moon, Coffee, Sunrise, Dices, Flame, Check, Keyboard, Wand2, Sword, FlaskConical, Sparkles, ChevronUp, ChevronDown, Pin, Plus, Hammer, ChevronRight, Eye, Minus, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOverview, updateOverview } from '../api/overview';
-import { getConditions, getAttacks } from '../api/combat';
+import { getConditions, updateConditions, getAttacks } from '../api/combat';
 import { getBackstory } from '../api/backstory';
 import { getSpells, getSpellSlots, resetSpellSlots } from '../api/spells';
 import { getFeatures, updateFeature } from '../api/features';
@@ -24,6 +24,7 @@ const PlayerActionOverlay = lazy(() => import('../components/party/PlayerActionO
 import SharedCombatBar from '../components/party/SharedCombatBar';
 import DmToolbar from '../components/party/DmToolbar';
 import Sidebar from '../components/Sidebar';
+import useDragScroll from '../hooks/useDragScroll';
 import KeyboardShortcutsHelp from '../components/KeyboardShortcutsHelp';
 import LevelUpOverlay from '../components/LevelUpOverlay';
 import ArcaneWidget from '../components/ArcaneWidget';
@@ -661,6 +662,41 @@ function UnifiedRestModal({ characterId, restTab, setRestTab, onClose, reloadCha
       if (overview.exhaustion_level > 0) {
         lines.push('Exhaustion reduced by 1: Level ' + overview.exhaustion_level + ' \u2192 ' + (overview.exhaustion_level - 1));
       }
+      // Auto-clear conditions on long rest (concentration, death saves reset, timed conditions expire)
+      try {
+        const conds = await getConditions(characterId);
+        if (conds && conds.length > 0) {
+          const conditionsToKeep = ['Petrified']; // Petrified doesn't clear on long rest
+          const cleared = [];
+          const updatedConds = conds.map(c => {
+            if (c.active && !conditionsToKeep.includes(c.name)) {
+              cleared.push(c.name);
+              return { ...c, active: false, duration_rounds: 0, rounds_remaining: 0 };
+            }
+            return c;
+          });
+          if (cleared.length > 0) {
+            await updateConditions(characterId, updatedConds);
+            lines.push('Conditions cleared: ' + cleared.join(', '));
+          }
+        }
+      } catch (e) { console.warn('[CharacterView] long rest condition clear:', e); }
+      // Restore companion HP to full on long rest
+      try {
+        const companions = await invoke('get_companions', { characterId });
+        if (companions && companions.length > 0) {
+          const activeCompanions = companions.filter(c => c.active === 1);
+          const injured = activeCompanions.filter(c => c.hp_current < c.hp_max);
+          if (injured.length > 0) {
+            await Promise.all(injured.map(c =>
+              invoke('update_companion', { characterId, companionId: c.id, payload: { ...c, hp_current: c.hp_max } })
+                .catch(e => console.warn('[CharacterView] companion rest heal:', e))
+            ));
+            const names = injured.map(c => c.name).join(', ');
+            lines.push('Companion(s) HP restored to full: ' + names);
+          }
+        }
+      } catch (e) { console.warn('[CharacterView] long rest companion heal:', e); }
       if (lines.length === 0) lines.push('Rested for 8 hours. Everything was already at full capacity.');
       setSummary({ type: 'long', lines });
       reloadCharacter();
@@ -1262,6 +1298,7 @@ export default function CharacterView() {
 
   // Scroll content area to top on section change
   const contentRef = useRef(null);
+  useDragScroll(contentRef);
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1606,7 +1643,7 @@ export default function CharacterView() {
           setActiveConditions(condNames || []);
         }}
       />
-      <div style={{ display: 'flex', minHeight: '100vh', paddingTop: 'var(--dev-banner-h, 0px)', '--class-accent': `var(--class-${(character?.primary_class || '').toLowerCase().replace(/\s+/g, '-')}, var(--accent-l))` }}>
+      <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', paddingTop: 'var(--dev-banner-h, 0px)', '--class-accent': `var(--class-${(character?.primary_class || '').toLowerCase().replace(/\s+/g, '-')}, var(--accent-l))` }}>
         <Sidebar
           character={character}
           activeSection={activeSection}
@@ -1628,7 +1665,16 @@ export default function CharacterView() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
           {/* Breadcrumb */}
-          <div className="text-xs text-amber-200/30 px-[18px] pt-1.5 pb-0" style={{ background: 'rgba(4,4,11,0.85)', flexShrink: 0 }}>
+          <div className="text-xs text-amber-200/30 px-[18px] pt-1.5 pb-0" style={{ background: 'rgba(4,4,11,0.85)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              onClick={() => navigate('/')}
+              title="Back to Dashboard"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(232,213,181,0.3)', display: 'flex', alignItems: 'center', padding: '2px', borderRadius: '4px', transition: 'color 0.15s, background 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'rgba(232,213,181,0.7)'; e.currentTarget.style.background = 'rgba(232,213,181,0.06)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'rgba(232,213,181,0.3)'; e.currentTarget.style.background = 'none'; }}
+            >
+              <ArrowLeft size={13} />
+            </button>
             <span className="hover:text-amber-200/50 cursor-pointer transition-colors" onClick={() => navigate('/')}>The Codex</span>
             <span className="mx-1.5">/</span>
             <span className="hover:text-amber-200/50 cursor-pointer transition-colors" onClick={() => setActiveSection('overview')}>{character?.name || 'Character'}</span>
@@ -1991,7 +2037,7 @@ export default function CharacterView() {
           {appMode !== 'dm' && <FavoritesBar characterId={characterId} />}
 
           {/* Main content */}
-          <main ref={contentRef} className="section-content" style={{ flex: 1, padding: 'calc(24px * var(--density, 1)) calc(28px * var(--density, 1))', overflowY: 'auto', maxHeight: 'calc(100vh - var(--top-h, 52px))', minWidth: 0 }}>
+          <main ref={contentRef} className="section-content" style={{ flex: 1, padding: 'calc(24px * var(--density, 1)) calc(28px * var(--density, 1))', overflowY: 'auto', minHeight: 0, minWidth: 0 }}>
             {appMode === 'dm' && campaignStatus === 'draft' && activeSection !== 'campaign-hub' && activeSection !== 'dm-guide' && (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, padding: '8px 14px',

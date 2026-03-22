@@ -4,6 +4,98 @@ Complete version history from initial release to current. The in-app Updates tab
 
 ---
 
+## V0.8.6 — Player Mode 100: Conditions, Combat, Level-Up, Spellbook, Inventory & Full Polish
+**Released:** March 21, 2026
+
+### Conditions Enforcement
+- **Auto-apply implied conditions** — Unconscious auto-adds Incapacitated + Prone; Paralyzed auto-adds Incapacitated; removing parent removes children
+- **Auto-crit melee** — Melee attacks against Paralyzed/Unconscious targets automatically crit
+- **Inline effect tags** — Active condition badges show mechanical shortTags (e.g., "DIS on attacks")
+- **Concentration save modifiers** — Concentration checks respect condition-based auto-fail and disadvantage
+
+### Combat Improvements
+- **Sneak Attack** — Rogue toggle auto-rolls scaling d6s (Math.ceil(level/2))
+- **Divine Smite** — Paladin slot selector (1st-5th), rolls (1+slotLevel) d8s, auto-resets after use
+- **Fighting Styles** — Archery +2 to hit, Dueling +2 damage, persisted per character
+- **Inline recent events** — Last 5 combat log entries visible without opening the full log
+- **Export to Journal** — Send combat log to journal as a session entry
+
+### Level-Up Overhaul
+- **ASI Picker** — Choose +2 to one ability or +1 to two abilities at ASI levels (4, 8, 12, 16, 19 + Fighter/Rogue extras), max 20 enforcement
+- **Feat Selection** — "Take a Feat Instead" option with searchable full feat catalog
+- **Spell selection reminder** — Casters prompted when gaining new spell slots
+- **Resource auto-scale** — Ki Points, Sorcery Points auto-update on level-up
+
+### Spellbook Enhancements
+- **Wizard ritual casting** — Unprepared ritual spells visible with "Cast as Ritual" button
+- **GP material cost** — Prominent display for spells with expensive material components
+- **School colored borders** — 3px left border colored by spell school (8 schools)
+- **Slot depletion feedback** — Pips shift amber (1 remaining) and red (depleted) with smooth transitions
+- **Stagger animations** — Spell cards fade in with 50ms stagger delay
+
+### Inventory Upgrades
+- **Armor proficiency warning** — Toast when equipping non-proficient armor
+- **Ammo quick-filter** — Ammunition filter tag for quick access to arrows/bolts
+- **Rarity color-coding** — Item cards show rarity via colored left border (Common through Artifact)
+
+### Overview & Character Sheet
+- **Inspiration toggle** — Gold star button with glow effect
+- **Attunement display** — "Attuned: X/3" with purple orb indicators
+- **Skill modifier tooltips** — Breakdown showing ability mod + proficiency + expertise + items = total
+- **Stealth disadvantage** — "DIS" badge when wearing heavy or qualifying medium armor
+
+### Features & Traits
+- **Uses tracking** — Inline +/- buttons with X/Y counter and mini progress bar
+- **Source badge colors** — Blue (class), green (racial), purple (feat), rose (background), gray (custom)
+
+### Character Creation
+- **13 background presets** — Standard 5e backgrounds (Acolyte, Criminal, Folk Hero, etc.) with auto-populated features
+- **Portrait upload** — Drag-and-drop image upload in Identity step
+
+### Backstory
+- **Background preset dropdown** — 13 backgrounds with auto-fill and overwrite confirmation
+- **Random personality generator** — Local tables for traits, ideals, bonds, and flaws (no AI needed)
+- **Empty state icons** — Personality (User), Ideals (Compass), Bonds (Link), Flaws (AlertTriangle)
+- **Goal card styling** — Accent left borders colored by goal type
+
+### Export/Import
+- **Post-import review checklist** — Shows what was imported and what needs manual review
+- **PDF character sheet export** — Styled HTML-to-PDF via print dialog
+
+### Rest Mechanics
+- **Auto-clear conditions on long rest** — Removes all conditions except Petrified
+- **Companion HP restore** — Companions healed to max on long rest
+- **Rest summary** — Toast summarizing everything that recovered
+
+### Journal
+- **NPC @-mention autocomplete** — Type @ to get suggestions from backstory NPC list
+- **Quest linking** — Tag journal entries with quest references via toggle chips
+- **Timeline connector** — Vertical connecting line with colored dots between entries
+
+### Settings
+- **Export/Import settings** — Backup and restore all settings via JSON
+- **High contrast mode** — Enhanced borders and text brightness
+- **Dyslexia-friendly font** — OpenDyslexic toggle
+
+### Navigation & UX
+- **Back button** — Arrow in breadcrumb bar returns to Dashboard
+- **Section search** — Quick-jump search in sidebar
+
+### Visual Polish
+- Condition badge scale animation on click
+- Attack button hover glow effect
+- Dice roll result pop/bounce animation
+- HP bar smooth color transitions (green → yellow → red)
+- Spell list stagger fade-in animation
+- Loading spinners for Companions and Backstory
+- Companion animated paw print loader
+- Item rarity colored borders and labels
+- Spell school colored left borders
+- Goal card accent borders by type
+- Journal timeline with connecting line and dots
+
+---
+
 ## V0.8.5 — Gameplay Settings, UI Polish, Companion Overhaul & Accuracy Pass
 **Released:** March 21, 2026
 

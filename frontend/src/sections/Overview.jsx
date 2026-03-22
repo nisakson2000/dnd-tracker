@@ -106,6 +106,8 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const [itemStatBonuses, setItemStatBonuses] = useState({});
   const [itemSaveBonus, setItemSaveBonus] = useState(0);
   const [itemMagicBonuses, setItemMagicBonuses] = useState([]); // [{name, magic_bonus, item_type}]
+  const [attunedCount, setAttunedCount] = useState(0);
+  const [stealthDisadvantage, setStealthDisadvantage] = useState(false);
   const [showSubclassModal, setShowSubclassModal] = useState(false);
   const [showLevelConfirm, setShowLevelConfirm] = useState(null);
   const [overviewTab, setOverviewTab] = useState(() => {
@@ -197,7 +199,12 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         }
         setItemStatBonuses(bonuses);
         setItemSaveBonus(totalSaveBonus);
+        // Detect stealth disadvantage from equipped armor (heavy armor + Scale Mail + Half Plate)
+        const STEALTH_DISADV_ARMOR = ['Ring Mail', 'Chain Mail', 'Splint Armor', 'Plate Armor', 'Scale Mail', 'Half Plate', 'Padded Armor'];
+        setStealthDisadvantage(equipped.some(i => STEALTH_DISADV_ARMOR.includes(i.name)));
         setItemMagicBonuses(magicItems);
+        // Count attuned items for attunement display
+        setAttunedCount(allItems.filter(i => i.attuned).length);
       } catch (err) { if (import.meta.env.DEV) console.warn('Failed to load item stat bonuses:', err); }
     } catch (err) {
       toast.error(`Failed to load: ${err.message}`);
@@ -1776,8 +1783,18 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 const sk = skills.find(s => s.name === skillName);
                 const score = abilityMap[ability] || 10;
                 const skillItemBonus = itemStatBonuses[ability] || 0;
-                const mod = calcMod(score + skillItemBonus) + (sk?.expertise ? profBonus * 2 : sk?.proficient ? profBonus : 0);
+                const abilityMod = calcMod(score + skillItemBonus);
+                const profComponent = sk?.expertise ? profBonus * 2 : sk?.proficient ? profBonus : 0;
+                const mod = abilityMod + profComponent;
                 const state = sk?.expertise ? 'expertise' : sk?.proficient ? 'proficient' : 'none';
+                // Build modifier breakdown tooltip
+                const breakdownParts = [`${ability} ${modStr(calcMod(score))}`];
+                if (skillItemBonus !== 0) breakdownParts.push(`${modStr(skillItemBonus)} item bonus`);
+                if (sk?.expertise) breakdownParts.push(`+${profBonus * 2} expertise`);
+                else if (sk?.proficient) breakdownParts.push(`+${profBonus} proficiency`);
+                const breakdownTooltip = `${breakdownParts.join(', ')} = ${modStr(mod)}`;
+                const isStealth = skillName === 'Stealth';
+                const showStealthDis = isStealth && stealthDisadvantage;
                 return (
                   <div key={skillName} className="flex items-center gap-2 py-[5px] px-1.5 rounded group hover:bg-white/[0.025] transition-colors select-none">
                     {/* Proficiency circle */}
@@ -1799,15 +1816,18 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                       }`}
                       style={flashedSkills[skillName] ? { animation: 'value-flash 1.2s ease-out', borderRadius: '4px' } : undefined}
                       onClick={(e) => { e.stopPropagation(); rollSkillCheck(skillName, ability, mod); }}
-                      title={`Click to roll ${skillName} check`}
+                      title={breakdownTooltip}
                     >{modStr(mod)}</span>
                     <span
                       className={`text-[13px] flex-1 transition-colors cursor-pointer ${
                         state === 'expertise' ? 'text-purple-100 hover:text-purple-50' : state === 'proficient' ? 'text-amber-100 hover:text-amber-50' : 'text-amber-200/60 hover:text-amber-200/80'
                       }`}
                       onClick={(e) => { e.stopPropagation(); rollSkillCheck(skillName, ability, mod); }}
-                      title={`Click to roll ${skillName} check`}
+                      title={breakdownTooltip}
                     >{skillName}</span>
+                    {showStealthDis && (
+                      <span className="text-[9px] font-bold text-red-400 bg-red-900/30 px-1.5 py-0.5 rounded border border-red-500/20 flex-shrink-0" title="Disadvantage from equipped armor">DIS</span>
+                    )}
                     <span className="text-[10px] font-display tracking-wider text-amber-200/[0.18] w-[26px] text-right">{ability}</span>
                     <button
                       onClick={(e) => { e.stopPropagation(); rollSkillCheck(skillName, ability, mod); }}
@@ -2009,6 +2029,46 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 <div className="text-[10px] text-amber-200/30 mt-0.5">{spellAttackBonus.ability}</div>
               </div>
             )}
+          </div>
+
+          {/* Inspiration & Attunement quick bar */}
+          <div className="flex items-center gap-4 px-3 py-2 rounded-lg border border-amber-200/10 bg-amber-200/[0.02]">
+            {/* Inspiration toggle */}
+            <button
+              onClick={() => updateField('inspiration', !overview.inspiration)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border transition-all ${
+                overview.inspiration
+                  ? 'bg-gold/15 border-gold/40 text-gold shadow-[0_0_8px_rgba(201,168,76,0.2)]'
+                  : 'border-amber-200/15 text-amber-200/25 hover:border-amber-200/30 hover:text-amber-200/40'
+              }`}
+              title={overview.inspiration ? 'Inspired! Click to spend' : 'Click to toggle inspiration'}
+            >
+              <Star size={14} fill={overview.inspiration ? 'currentColor' : 'none'} />
+              <span className="text-xs font-display tracking-wide">Inspiration</span>
+            </button>
+
+            <div className="w-px h-5 bg-amber-200/10" />
+
+            {/* Attunement display */}
+            <div className="flex items-center gap-2" title={`${attunedCount} of 3 attunement slots used`}>
+              <Sparkles size={14} className={attunedCount > 0 ? 'text-purple-400' : 'text-purple-400/30'} />
+              <span className="text-xs text-amber-200/50 font-display tracking-wide">Attuned</span>
+              <div className="flex gap-1">
+                {[0, 1, 2].map(i => (
+                  <div
+                    key={i}
+                    className={`w-2.5 h-2.5 rounded-full border transition-all ${
+                      i < attunedCount
+                        ? 'bg-purple-400/60 border-purple-400/80 shadow-[0_0_6px_rgba(192,132,252,0.3)]'
+                        : 'border-amber-200/15 bg-transparent'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className={`text-xs font-mono ${attunedCount >= 3 ? 'text-purple-400' : 'text-amber-200/40'}`}>
+                {attunedCount}/3
+              </span>
+            </div>
           </div>
 
           {/* Concentration Tracker */}

@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Check, Dice5, RefreshCw, Info, Zap, Star } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check, Dice5, RefreshCw, Info, Zap, Star, User, BookOpen, Sparkles, Plus, Trash2, GripVertical, Loader2, ImagePlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import { getRuleset } from '../data/rulesets';
@@ -10,6 +10,7 @@ import { APP_VERSION } from '../version';
 import { modStr } from '../utils/dndHelpers';
 import { ABILITIES } from '../utils/dndHelpers';
 import { PREMADE_CHARACTERS } from '../data/premadeCharacters';
+import { generateAI, checkOllamaStatus } from '../api/assistant';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const ABILITY_NAMES = { STR: 'Strength', DEX: 'Dexterity', CON: 'Constitution', INT: 'Intelligence', WIS: 'Wisdom', CHA: 'Charisma' };
@@ -231,6 +232,39 @@ const QUICK_START_PRESETS = [
   },
 ];
 
+// ─── Backstory Constants ────────────────────────────────────────────────────
+
+const RELATIONSHIP_TYPES = ['Family', 'Friend', 'Mentor', 'Rival', 'Enemy', 'Lover', 'Employer', 'Ally', 'Contact', 'Other'];
+const NPC_STATUSES = ['Alive', 'Dead', 'Missing', 'Unknown', 'Estranged'];
+const MOTIVATION_PRESETS = ['Revenge', 'Redemption', 'Knowledge', 'Power', 'Wealth', 'Protection', 'Freedom', 'Justice', 'Glory', 'Love', 'Duty', 'Survival', 'Discovery'];
+
+/* ── Standard 5e Background Presets (for 2014 edition catalog) ── */
+const BACKGROUND_PRESETS_5E = [
+  { name: 'Acolyte', featureName: 'Shelter of the Faithful', featureDesc: 'You command the respect of those who share your faith, and you can perform religious ceremonies. You and your companions can expect free healing and care at temples of your faith.' },
+  { name: 'Charlatan', featureName: 'False Identity', featureDesc: 'You have created a second identity with documentation, acquaintances, and disguises. You can also forge documents if you have seen an example.' },
+  { name: 'Criminal', featureName: 'Criminal Contact', featureDesc: 'You have a reliable contact who acts as your liaison to a network of other criminals. You know how to get messages to and from your contact over great distances.' },
+  { name: 'Entertainer', featureName: 'By Popular Demand', featureDesc: 'You can always find a place to perform. You receive free lodging and food of modest or comfortable standard, as long as you perform each night.' },
+  { name: 'Folk Hero', featureName: 'Rustic Hospitality', featureDesc: 'You fit in among common folk with ease. You can find a place to hide, rest, or recuperate among commoners, unless you have shown yourself to be a danger.' },
+  { name: 'Guild Artisan', featureName: 'Guild Membership', featureDesc: 'As an established guild member, you can rely on benefits of membership. Fellow guild members will provide lodging and food if necessary.' },
+  { name: 'Hermit', featureName: 'Discovery', featureDesc: 'Your extended hermitage gave you access to a unique and powerful discovery — a great truth, a hidden site, a long-forgotten fact, or an unearthed relic.' },
+  { name: 'Noble', featureName: 'Position of Privilege', featureDesc: 'People are inclined to think the best of you. You are welcome in high society, and common folk make every effort to accommodate you.' },
+  { name: 'Outlander', featureName: 'Wanderer', featureDesc: 'You have an excellent memory for maps and geography. You can find food and fresh water for yourself and up to five others each day in the wild.' },
+  { name: 'Sage', featureName: 'Researcher', featureDesc: 'When you attempt to learn or recall lore, if you don\'t know the information, you often know where and from whom you can obtain it.' },
+  { name: 'Sailor', featureName: 'Ship\'s Passage', featureDesc: 'You can secure free passage on a sailing ship for yourself and your companions, though you can\'t guarantee a schedule or route.' },
+  { name: 'Soldier', featureName: 'Military Rank', featureDesc: 'Soldiers loyal to your former organization still recognize your authority. You can invoke your rank to influence other soldiers and requisition simple equipment.' },
+  { name: 'Urchin', featureName: 'City Secrets', featureDesc: 'You know secret patterns and flow of cities. When not in combat, you and companions you lead can travel between two city locations twice as fast.' },
+];
+
+const GUIDED_PROMPTS = [
+  { key: 'origin', label: 'Where were you born and raised?', placeholder: 'A small fishing village on the Sword Coast...' },
+  { key: 'family', label: 'Who raised you? What was your family like?', placeholder: 'My mother was a blacksmith, my father a traveling merchant...' },
+  { key: 'defining', label: 'What was the defining moment that set you on this path?', placeholder: 'The night the raiders came and burned everything...' },
+  { key: 'person', label: 'Who is the most important person in your life?', placeholder: 'My older sister, who taught me everything I know...' },
+  { key: 'fear', label: 'What is your greatest fear?', placeholder: 'That I\'ll become the very thing I swore to destroy...' },
+  { key: 'desire', label: 'What do you want more than anything?', placeholder: 'To find the lost heirloom my family was sworn to protect...' },
+  { key: 'secret', label: 'What secret do you carry?', placeholder: 'I once made a deal with a fiend in a moment of desperation...' },
+];
+
 const MAX_REROLLS = 3; // Common house rule: 3 rerolls for 4d6 method
 
 function mod(score) {
@@ -350,6 +384,758 @@ function ClassRaceInfoBanner({ overview }) {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── Step: Name & Identity ──────────────────────────────────────────────────
+
+const PORTRAIT_MAX_SIZE = 2 * 1024 * 1024; // 2MB
+const PORTRAIT_ACCEPTED = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+
+function StepNameIdentity({ identity, setIdentity, characterName }) {
+  const update = (field, value) => setIdentity(prev => ({ ...prev, [field]: value }));
+  const portraitInputRef = useRef(null);
+  const [portraitDragOver, setPortraitDragOver] = useState(false);
+
+  const handlePortraitFile = (file) => {
+    if (!file) return;
+    if (!PORTRAIT_ACCEPTED.includes(file.type)) {
+      toast.error('Only PNG, JPEG, WebP, and GIF images are supported.');
+      return;
+    }
+    if (file.size > PORTRAIT_MAX_SIZE) {
+      toast.error('Image must be under 2 MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => update('portrait', reader.result);
+    reader.onerror = () => toast.error('Failed to read image file.');
+    reader.readAsDataURL(file);
+  };
+
+  const handlePortraitDrop = (e) => {
+    e.preventDefault();
+    setPortraitDragOver(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) handlePortraitFile(file);
+  };
+
+  return (
+    <div style={{ maxWidth: 560 }}>
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <div style={{ fontSize: 28, marginBottom: 8 }}><User size={28} style={{ color: accent }} /></div>
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 22, color: '#efe0c0', marginBottom: 4 }}>
+          Name & Identity
+        </h2>
+        <p style={{ fontSize: 13, color: 'rgba(200,175,130,0.4)' }}>
+          Who is your character? Start with the basics.
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* Character Name (read-only, set during character creation) */}
+        <div style={{ ...cardStyle, padding: '12px 16px' }}>
+          <label style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', marginBottom: 6, display: 'block' }}>Character Name</label>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18, color: '#efe0c0', fontWeight: 700 }}>
+            {characterName || 'Unknown'}
+          </div>
+        </div>
+
+        {/* Character Portrait */}
+        <div style={{ ...cardStyle, padding: '12px 16px' }}>
+          <label style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', marginBottom: 8, display: 'block' }}>Character Portrait</label>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            {identity.portrait && (
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <img
+                  src={identity.portrait}
+                  alt="Portrait"
+                  style={{ width: 80, height: 80, borderRadius: 8, objectFit: 'cover', border: '2px solid rgba(201,168,76,0.3)' }}
+                />
+                <button
+                  onClick={() => update('portrait', null)}
+                  style={{
+                    position: 'absolute', top: -6, right: -6, width: 20, height: 20,
+                    borderRadius: '50%', border: '1px solid rgba(248,113,113,0.5)',
+                    background: 'rgba(127,29,29,0.8)', color: '#fca5a5',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', fontSize: 10, padding: 0,
+                  }}
+                  title="Remove portrait"
+                >
+                  <Trash2 size={10} />
+                </button>
+              </div>
+            )}
+            <div
+              onClick={() => portraitInputRef.current?.click()}
+              onDrop={handlePortraitDrop}
+              onDragOver={e => { e.preventDefault(); setPortraitDragOver(true); }}
+              onDragLeave={() => setPortraitDragOver(false)}
+              style={{
+                flex: 1, minHeight: 80, borderRadius: 8,
+                border: `2px dashed ${portraitDragOver ? accent : 'rgba(201,168,76,0.15)'}`,
+                background: portraitDragOver ? 'rgba(201,168,76,0.06)' : 'rgba(255,255,255,0.02)',
+                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
+                transition: 'all 0.15s',
+              }}
+            >
+              <ImagePlus size={22} style={{ color: 'rgba(200,175,130,0.25)' }} />
+              <span style={{ fontSize: 11, color: 'rgba(200,175,130,0.35)' }}>
+                {identity.portrait ? 'Click or drag to replace' : 'Click or drag an image'}
+              </span>
+              <span style={{ fontSize: 9, color: 'rgba(200,175,130,0.2)' }}>PNG, JPEG, WebP, GIF — max 2 MB</span>
+            </div>
+            <input
+              ref={portraitInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              style={{ display: 'none' }}
+              onChange={e => { handlePortraitFile(e.target.files?.[0]); e.target.value = ''; }}
+            />
+          </div>
+        </div>
+
+        {/* Aliases & Titles */}
+        <div style={{ ...cardStyle, padding: '12px 16px' }}>
+          <label style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', marginBottom: 6, display: 'block' }}>Aliases & Titles</label>
+          <input
+            type="text"
+            value={identity.aliases || ''}
+            onChange={e => update('aliases', e.target.value)}
+            placeholder='e.g. "The Shadow", "Lord Ashwick", "Patches"'
+            style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,168,76,0.12)', borderRadius: 8, padding: '8px 12px', color: '#efe0c0', fontFamily: 'var(--font-ui)', fontSize: 13, outline: 'none' }}
+          />
+        </div>
+
+        {/* Two-column: Age & Gender */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ ...cardStyle, padding: '12px 16px' }}>
+            <label style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', marginBottom: 6, display: 'block' }}>Age</label>
+            <input
+              type="text"
+              value={identity.age || ''}
+              onChange={e => update('age', e.target.value)}
+              placeholder="e.g. 28, 150, Ancient"
+              style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,168,76,0.12)', borderRadius: 8, padding: '8px 12px', color: '#efe0c0', fontFamily: 'var(--font-ui)', fontSize: 13, outline: 'none' }}
+            />
+          </div>
+          <div style={{ ...cardStyle, padding: '12px 16px' }}>
+            <label style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', marginBottom: 6, display: 'block' }}>Gender & Pronouns</label>
+            <input
+              type="text"
+              value={identity.gender || ''}
+              onChange={e => update('gender', e.target.value)}
+              placeholder="e.g. Male (he/him)"
+              style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,168,76,0.12)', borderRadius: 8, padding: '8px 12px', color: '#efe0c0', fontFamily: 'var(--font-ui)', fontSize: 13, outline: 'none' }}
+            />
+          </div>
+        </div>
+
+        {/* Appearance row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+          {[
+            { key: 'height', label: 'Height', placeholder: "5'10\"" },
+            { key: 'weight', label: 'Weight', placeholder: '170 lbs' },
+            { key: 'eyes', label: 'Eyes', placeholder: 'Green' },
+          ].map(f => (
+            <div key={f.key} style={{ ...cardStyle, padding: '12px 16px' }}>
+              <label style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', marginBottom: 6, display: 'block' }}>{f.label}</label>
+              <input
+                type="text"
+                value={identity[f.key] || ''}
+                onChange={e => update(f.key, e.target.value)}
+                placeholder={f.placeholder}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,168,76,0.12)', borderRadius: 8, padding: '8px 12px', color: '#efe0c0', fontFamily: 'var(--font-ui)', fontSize: 13, outline: 'none' }}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {[
+            { key: 'hair', label: 'Hair', placeholder: 'Long, dark brown' },
+            { key: 'skin', label: 'Skin', placeholder: 'Tanned, weathered' },
+          ].map(f => (
+            <div key={f.key} style={{ ...cardStyle, padding: '12px 16px' }}>
+              <label style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', marginBottom: 6, display: 'block' }}>{f.label}</label>
+              <input
+                type="text"
+                value={identity[f.key] || ''}
+                onChange={e => update(f.key, e.target.value)}
+                placeholder={f.placeholder}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,168,76,0.12)', borderRadius: 8, padding: '8px 12px', color: '#efe0c0', fontFamily: 'var(--font-ui)', fontSize: 13, outline: 'none' }}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Physical Description */}
+        <div style={{ ...cardStyle, padding: '12px 16px' }}>
+          <label style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', marginBottom: 6, display: 'block' }}>Physical Description</label>
+          <textarea
+            value={identity.physicalDescription || ''}
+            onChange={e => update('physicalDescription', e.target.value)}
+            placeholder="Distinguishing marks, scars, tattoos, build, posture, clothing style..."
+            rows={3}
+            style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,168,76,0.12)', borderRadius: 8, padding: '8px 12px', color: '#efe0c0', fontFamily: 'var(--font-ui)', fontSize: 13, outline: 'none', resize: 'vertical', lineHeight: 1.6 }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Step: Backstory & Lore ─────────────────────────────────────────────────
+
+function StepBackstoryLore({ backstoryData, setBackstoryData, overview }) {
+  const [mode, setMode] = useState(backstoryData.mode || 'free');
+  const [aiStatus, setAiStatus] = useState(null); // null = unchecked, 'checking', 'available', 'unavailable'
+  const [analyzing, setAnalyzing] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState(null);
+  const analysisAbortRef = useRef(false);
+
+  const update = (field, value) => setBackstoryData(prev => ({ ...prev, [field]: value }));
+
+  // Check Ollama status on mount
+  useEffect(() => {
+    setAiStatus('checking');
+    checkOllamaStatus().then(status => {
+      setAiStatus(status.available && status.modelInstalled ? 'available' : 'unavailable');
+    }).catch(() => setAiStatus('unavailable'));
+  }, []);
+
+  // Guided mode helpers
+  const guidedResponses = backstoryData.guidedResponses || {};
+  const updateGuided = (key, value) => {
+    const next = { ...guidedResponses, [key]: value };
+    update('guidedResponses', next);
+    // Combine guided responses into backstory text
+    const combined = GUIDED_PROMPTS
+      .filter(p => next[p.key]?.trim())
+      .map(p => next[p.key].trim())
+      .join('\n\n');
+    update('text', combined);
+  };
+
+  const backstoryText = backstoryData.text || '';
+  const wordCount = backstoryText.trim() ? backstoryText.trim().split(/\s+/).length : 0;
+  const complexityLabel = wordCount < 100 ? 'Brief' : wordCount < 300 ? 'Standard' : wordCount < 600 ? 'Detailed' : 'Epic';
+
+  // NPC list management
+  const npcs = backstoryData.npcs || [];
+  const addNpcEntry = () => {
+    update('npcs', [...npcs, { id: Date.now(), name: '', relationship: 'Friend', status: 'Alive', description: '' }]);
+  };
+  const updateNpc = (id, field, value) => {
+    update('npcs', npcs.map(n => n.id === id ? { ...n, [field]: value } : n));
+  };
+  const removeNpc = (id) => {
+    update('npcs', npcs.filter(n => n.id !== id));
+  };
+
+  // Life events management
+  const lifeEvents = backstoryData.lifeEvents || [];
+  const addLifeEvent = () => {
+    update('lifeEvents', [...lifeEvents, { id: Date.now(), age: '', title: '', description: '' }]);
+  };
+  const updateLifeEvent = (id, field, value) => {
+    update('lifeEvents', lifeEvents.map(e => e.id === id ? { ...e, [field]: value } : e));
+  };
+  const removeLifeEvent = (id) => {
+    update('lifeEvents', lifeEvents.filter(e => e.id !== id));
+  };
+
+  // AI Analysis
+  const runAnalysis = async () => {
+    if (wordCount < 50) {
+      toast('Write at least 50 words before analyzing.', { icon: '✏️' });
+      return;
+    }
+    setAnalyzing(true);
+    analysisAbortRef.current = false;
+
+    try {
+      const systemPrompt = `You are a D&D character backstory analyzer. Given a character's backstory and basic info, extract structured data. Return ONLY valid JSON with this exact shape:
+{
+  "npcs": [{"name": "string", "relationship": "Family|Friend|Mentor|Rival|Enemy|Lover|Employer|Ally|Contact|Other", "status": "Alive|Dead|Missing|Unknown|Estranged", "description": "1 sentence"}],
+  "plot_hooks": [{"title": "string", "description": "1-2 sentences", "type": "personal|mystery|combat|social|exploration"}],
+  "motivations": {"short_term": "string", "long_term": "string", "driving": "string"},
+  "personality": {"traits": ["string"], "ideals": ["string"], "bonds": ["string"], "flaws": ["string"]},
+  "themes": ["string"],
+  "locations": [{"name": "string", "significance": "1 sentence"}]
+}
+Do NOT include any text outside the JSON object. Extract only what is explicitly or strongly implied in the backstory.`;
+
+      const userPrompt = `Character: ${overview?.name || 'Unknown'}, ${overview?.race || 'Unknown'} ${overview?.primary_class || 'Unknown'}, Level 1
+Background: ${overview?.background || 'Unknown'}
+
+Backstory:
+${backstoryText}
+
+Analyze this backstory and extract NPCs, plot hooks, motivations, personality traits, themes, and locations. Return ONLY JSON.`;
+
+      const result = await generateAI(userPrompt, systemPrompt, {
+        maxTokens: 1500,
+        temperature: 0.3,
+      });
+
+      if (analysisAbortRef.current) return;
+
+      // Parse JSON from response
+      const responseText = typeof result === 'string' ? result : result?.response || '';
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        toast.error('AI returned an unexpected format. Try again.');
+        return;
+      }
+
+      let raw = jsonMatch[0];
+      raw = raw.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        toast.error('AI returned malformed JSON. Try again.');
+        return;
+      }
+      setAiSuggestions(parsed);
+      toast.success('Backstory analyzed! Review the suggestions below.');
+    } catch (err) {
+      if (!analysisAbortRef.current) {
+        toast.error(`Analysis failed: ${err.message || 'Check Ollama connection'}`);
+      }
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  // Accept AI suggestions
+  const acceptNpcs = () => {
+    if (!aiSuggestions?.npcs?.length) return;
+    const newNpcs = aiSuggestions.npcs.map((n, i) => ({
+      id: Date.now() + i,
+      name: n.name,
+      relationship: n.relationship || 'Other',
+      status: n.status || 'Alive',
+      description: n.description || '',
+      aiSuggested: true,
+    }));
+    const existing = backstoryData.npcs || [];
+    update('npcs', [...existing, ...newNpcs]);
+    setAiSuggestions(prev => ({ ...prev, npcs: [] }));
+    toast.success(`Added ${newNpcs.length} NPCs`);
+  };
+
+  const acceptMotivations = () => {
+    if (!aiSuggestions?.motivations) return;
+    update('motivations', aiSuggestions.motivations);
+    setAiSuggestions(prev => ({ ...prev, motivations: null }));
+    toast.success('Motivations applied');
+  };
+
+  const acceptPersonality = () => {
+    if (!aiSuggestions?.personality) return;
+    update('personality', aiSuggestions.personality);
+    setAiSuggestions(prev => ({ ...prev, personality: null }));
+    toast.success('Personality traits applied');
+  };
+
+  const inputStyle = { width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,168,76,0.12)', borderRadius: 8, padding: '8px 12px', color: '#efe0c0', fontFamily: 'var(--font-ui)', fontSize: 13, outline: 'none' };
+  const labelStyle = { fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', marginBottom: 6, display: 'block' };
+
+  return (
+    <div style={{ maxWidth: 560 }}>
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <div style={{ fontSize: 28, marginBottom: 8 }}><BookOpen size={28} style={{ color: accent }} /></div>
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 22, color: '#efe0c0', marginBottom: 4 }}>
+          Backstory & Lore
+        </h2>
+        <p style={{ fontSize: 13, color: 'rgba(200,175,130,0.4)' }}>
+          Tell your character's story. This step is optional — you can always add it later.
+        </p>
+      </div>
+
+      {/* Mode Toggle */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 20, justifyContent: 'center' }}>
+        {[{ id: 'free', label: 'Free Write' }, { id: 'guided', label: 'Guided' }].map(m => (
+          <button
+            key={m.id}
+            onClick={() => setMode(m.id)}
+            style={{
+              padding: '6px 18px', borderRadius: 99, border: 'none', cursor: 'pointer',
+              background: mode === m.id ? `${accent}25` : 'rgba(255,255,255,0.04)',
+              color: mode === m.id ? accent : 'rgba(200,175,130,0.4)',
+              fontFamily: 'var(--font-heading)', fontSize: 11, letterSpacing: '0.06em',
+              transition: 'all 0.15s',
+            }}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Free Write Mode */}
+      {mode === 'free' && (
+        <div style={{ ...cardStyle, padding: '16px' }}>
+          <textarea
+            value={backstoryText}
+            onChange={e => update('text', e.target.value)}
+            placeholder="Tell your character's story... Where did they come from? What shaped them? What drives them forward?"
+            rows={10}
+            style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7, minHeight: 200, fontSize: 13 }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+            <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(200,175,130,0.3)' }}>
+              {wordCount} words — {complexityLabel}
+            </span>
+            <div style={{ width: 100, height: 3, borderRadius: 2, background: 'rgba(201,168,76,0.1)', overflow: 'hidden' }}>
+              <div style={{ width: `${Math.min(100, (wordCount / 600) * 100)}%`, height: '100%', borderRadius: 2, background: accent, transition: 'width 0.3s' }} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Guided Mode */}
+      {mode === 'guided' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {GUIDED_PROMPTS.map(p => (
+            <div key={p.key} style={{ ...cardStyle, padding: '14px 16px' }}>
+              <label style={{ ...labelStyle, fontSize: 11, letterSpacing: '0.03em', textTransform: 'none', color: 'rgba(200,175,130,0.55)', marginBottom: 8 }}>
+                {p.label}
+              </label>
+              <textarea
+                value={guidedResponses[p.key] || ''}
+                onChange={e => updateGuided(p.key, e.target.value)}
+                placeholder={p.placeholder}
+                rows={2}
+                style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Personality Traits */}
+      <div style={{ marginTop: 20 }}>
+        <div style={{ ...labelStyle, marginBottom: 10, fontSize: 10 }}>Personality</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {[
+            { key: 'traits', label: 'Personality Traits', placeholder: 'I always have a plan for what to do when things go wrong...', color: '#60a5fa' },
+            { key: 'ideals', label: 'Ideals', placeholder: 'Freedom. Everyone should be free to pursue their own livelihood...', color: accent },
+            { key: 'bonds', label: 'Bonds', placeholder: 'I owe everything to my mentor, who saved me from the streets...', color: '#4ade80' },
+            { key: 'flaws', label: 'Flaws', placeholder: 'I have trouble trusting anyone who isn\'t in my inner circle...', color: '#f87171' },
+          ].map(t => (
+            <div key={t.key} style={{ ...cardStyle, padding: '12px 14px', borderColor: `${t.color}20` }}>
+              <label style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.15em', textTransform: 'uppercase', color: t.color, marginBottom: 6, display: 'block', opacity: 0.7 }}>{t.label}</label>
+              <textarea
+                value={(backstoryData.personality || {})[t.key]?.join?.('\n') || (backstoryData.personality || {})[t.key] || ''}
+                onChange={e => {
+                  const personality = { ...(backstoryData.personality || {}) };
+                  personality[t.key] = e.target.value;
+                  update('personality', personality);
+                }}
+                placeholder={t.placeholder}
+                rows={2}
+                style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5, fontSize: 12, borderColor: `${t.color}15` }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Motivations */}
+      <div style={{ marginTop: 20 }}>
+        <div style={{ ...labelStyle, marginBottom: 10, fontSize: 10 }}>Motivations & Goals</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ ...cardStyle, padding: '12px 14px' }}>
+              <label style={{ ...labelStyle }}>Short-term Goal</label>
+              <input
+                type="text"
+                value={(backstoryData.motivations || {}).short_term || ''}
+                onChange={e => update('motivations', { ...(backstoryData.motivations || {}), short_term: e.target.value })}
+                placeholder="Find the missing merchant"
+                style={inputStyle}
+              />
+            </div>
+            <div style={{ ...cardStyle, padding: '12px 14px' }}>
+              <label style={{ ...labelStyle }}>Long-term Goal</label>
+              <input
+                type="text"
+                value={(backstoryData.motivations || {}).long_term || ''}
+                onChange={e => update('motivations', { ...(backstoryData.motivations || {}), long_term: e.target.value })}
+                placeholder="Restore my family's honor"
+                style={inputStyle}
+              />
+            </div>
+          </div>
+          <div style={{ ...cardStyle, padding: '12px 14px' }}>
+            <label style={{ ...labelStyle }}>Driving Motivation</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+              {MOTIVATION_PRESETS.map(m => {
+                const sel = (backstoryData.motivations || {}).driving === m;
+                return (
+                  <button
+                    key={m}
+                    onClick={() => update('motivations', { ...(backstoryData.motivations || {}), driving: m })}
+                    style={{
+                      padding: '3px 10px', borderRadius: 99, border: 'none', cursor: 'pointer',
+                      background: sel ? `${accent}25` : 'rgba(255,255,255,0.04)',
+                      color: sel ? accent : 'rgba(200,175,130,0.35)',
+                      fontFamily: 'var(--font-heading)', fontSize: 10, transition: 'all 0.15s',
+                    }}
+                  >
+                    {m}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* NPC Relationships */}
+      <div style={{ marginTop: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <span style={{ ...labelStyle, marginBottom: 0, fontSize: 10 }}>NPC Relationships</span>
+          <button onClick={addNpcEntry} style={{ display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: 'rgba(255,255,255,0.04)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', color: accent, fontFamily: 'var(--font-heading)', fontSize: 10 }}>
+            <Plus size={12} /> Add NPC
+          </button>
+        </div>
+        {npcs.length === 0 && (
+          <div style={{ ...cardStyle, padding: '16px', textAlign: 'center', color: 'rgba(200,175,130,0.25)', fontSize: 12 }}>
+            No NPCs yet — add allies, enemies, mentors, or family members.
+          </div>
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {npcs.map(npc => (
+            <div key={npc.id} style={{ ...cardStyle, padding: '12px 14px' }}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <input
+                  type="text"
+                  value={npc.name}
+                  onChange={e => updateNpc(npc.id, 'name', e.target.value)}
+                  placeholder="NPC Name"
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <select
+                  value={npc.relationship}
+                  onChange={e => updateNpc(npc.id, 'relationship', e.target.value)}
+                  style={{ ...inputStyle, width: 'auto', minWidth: 100, cursor: 'pointer' }}
+                >
+                  {RELATIONSHIP_TYPES.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+                <select
+                  value={npc.status}
+                  onChange={e => updateNpc(npc.id, 'status', e.target.value)}
+                  style={{ ...inputStyle, width: 'auto', minWidth: 90, cursor: 'pointer' }}
+                >
+                  {NPC_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <button onClick={() => removeNpc(npc.id)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'rgba(248,113,113,0.5)', padding: 4, flexShrink: 0 }}>
+                  <Trash2 size={14} />
+                </button>
+              </div>
+              <input
+                type="text"
+                value={npc.description}
+                onChange={e => updateNpc(npc.id, 'description', e.target.value)}
+                placeholder="Brief description of this NPC and their connection to you..."
+                style={{ ...inputStyle, fontSize: 12 }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Key Life Events */}
+      <div style={{ marginTop: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <span style={{ ...labelStyle, marginBottom: 0, fontSize: 10 }}>Key Life Events</span>
+          <button onClick={addLifeEvent} style={{ display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: 'rgba(255,255,255,0.04)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', color: accent, fontFamily: 'var(--font-heading)', fontSize: 10 }}>
+            <Plus size={12} /> Add Event
+          </button>
+        </div>
+        {lifeEvents.length === 0 && (
+          <div style={{ ...cardStyle, padding: '16px', textAlign: 'center', color: 'rgba(200,175,130,0.25)', fontSize: 12 }}>
+            No life events yet — add pivotal moments from your character's past.
+          </div>
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {lifeEvents.map(evt => (
+            <div key={evt.id} style={{ ...cardStyle, padding: '12px 14px' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <input
+                  type="text"
+                  value={evt.age}
+                  onChange={e => updateLifeEvent(evt.id, 'age', e.target.value)}
+                  placeholder="Age"
+                  style={{ ...inputStyle, width: 60, textAlign: 'center', flexShrink: 0 }}
+                />
+                <input
+                  type="text"
+                  value={evt.title}
+                  onChange={e => updateLifeEvent(evt.id, 'title', e.target.value)}
+                  placeholder="Event title (e.g. 'First Battle')"
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <button onClick={() => removeLifeEvent(evt.id)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'rgba(248,113,113,0.5)', padding: 4, flexShrink: 0 }}>
+                  <Trash2 size={14} />
+                </button>
+              </div>
+              <input
+                type="text"
+                value={evt.description}
+                onChange={e => updateLifeEvent(evt.id, 'description', e.target.value)}
+                placeholder="What happened?"
+                style={{ ...inputStyle, fontSize: 12, marginTop: 6 }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* AI Analysis Section */}
+      <div style={{ marginTop: 24, borderTop: '1px solid rgba(201,168,76,0.1)', paddingTop: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <Sparkles size={16} style={{ color: accent }} />
+          <span style={{ fontFamily: 'var(--font-heading)', fontSize: 13, color: '#efe0c0', letterSpacing: '0.04em' }}>AI Backstory Analysis</span>
+          <div style={{
+            width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+            background: aiStatus === 'available' ? '#4ade80' : aiStatus === 'checking' ? accent : '#ef4444',
+            boxShadow: aiStatus === 'available' ? '0 0 6px rgba(74,222,128,0.5)' : 'none',
+          }} />
+          <span style={{ fontSize: 10, color: 'rgba(200,175,130,0.3)' }}>
+            {aiStatus === 'available' ? 'Ollama Connected' : aiStatus === 'checking' ? 'Checking...' : 'Ollama Offline'}
+          </span>
+        </div>
+
+        <button
+          onClick={runAnalysis}
+          disabled={analyzing || aiStatus !== 'available' || wordCount < 50}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            padding: '12px 20px', borderRadius: 10, border: 'none', cursor: analyzing || aiStatus !== 'available' || wordCount < 50 ? 'not-allowed' : 'pointer',
+            background: analyzing ? 'rgba(201,168,76,0.08)' : aiStatus === 'available' && wordCount >= 50 ? 'linear-gradient(135deg, rgba(201,168,76,0.12), rgba(240,216,120,0.06))' : 'rgba(255,255,255,0.03)',
+            color: aiStatus === 'available' && wordCount >= 50 ? accent : 'rgba(200,175,130,0.25)',
+            fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.06em',
+            transition: 'all 0.2s',
+          }}
+        >
+          {analyzing ? (
+            <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Analyzing your backstory...</>
+          ) : (
+            <><Sparkles size={14} /> Analyze My Backstory</>
+          )}
+        </button>
+        {wordCount < 50 && aiStatus === 'available' && (
+          <p style={{ fontSize: 10, color: 'rgba(200,175,130,0.25)', textAlign: 'center', marginTop: 6 }}>
+            Write at least 50 words to enable AI analysis ({wordCount}/50)
+          </p>
+        )}
+
+        {/* AI Suggestions Panel */}
+        <AnimatePresence>
+          {aiSuggestions && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}
+            >
+              {/* NPC Suggestions */}
+              {aiSuggestions.npcs?.length > 0 && (
+                <div style={{ ...cardStyle, padding: '14px 16px', borderColor: 'rgba(74,222,128,0.2)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <span style={{ fontSize: 10, fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#4ade80' }}>Detected NPCs ({aiSuggestions.npcs.length})</span>
+                    <button onClick={acceptNpcs} style={{ display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: 'rgba(74,222,128,0.1)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', color: '#4ade80', fontFamily: 'var(--font-heading)', fontSize: 10 }}>
+                      <Check size={12} /> Accept All
+                    </button>
+                  </div>
+                  {aiSuggestions.npcs.map((npc, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 0', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                      <span style={{ fontSize: 12, color: '#efe0c0', fontWeight: 600, flex: 1 }}>{npc.name}</span>
+                      <span style={{ fontSize: 10, color: 'rgba(200,175,130,0.4)' }}>{npc.relationship}</span>
+                      <span style={{ fontSize: 10, color: 'rgba(200,175,130,0.3)' }}>{npc.status}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Motivation Suggestions */}
+              {aiSuggestions.motivations && (
+                <div style={{ ...cardStyle, padding: '14px 16px', borderColor: 'rgba(201,168,76,0.2)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <span style={{ fontSize: 10, fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', textTransform: 'uppercase', color: accent }}>Detected Motivations</span>
+                    <button onClick={acceptMotivations} style={{ display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: `${accent}15`, borderRadius: 6, padding: '4px 10px', cursor: 'pointer', color: accent, fontFamily: 'var(--font-heading)', fontSize: 10 }}>
+                      <Check size={12} /> Accept
+                    </button>
+                  </div>
+                  {aiSuggestions.motivations.short_term && <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.5)', marginBottom: 4 }}><strong>Short-term:</strong> {aiSuggestions.motivations.short_term}</div>}
+                  {aiSuggestions.motivations.long_term && <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.5)', marginBottom: 4 }}><strong>Long-term:</strong> {aiSuggestions.motivations.long_term}</div>}
+                  {aiSuggestions.motivations.driving && <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.5)' }}><strong>Driving:</strong> {aiSuggestions.motivations.driving}</div>}
+                </div>
+              )}
+
+              {/* Personality Suggestions */}
+              {aiSuggestions.personality && (
+                <div style={{ ...cardStyle, padding: '14px 16px', borderColor: 'rgba(96,165,250,0.2)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <span style={{ fontSize: 10, fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#60a5fa' }}>Suggested Personality</span>
+                    <button onClick={acceptPersonality} style={{ display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: 'rgba(96,165,250,0.1)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', color: '#60a5fa', fontFamily: 'var(--font-heading)', fontSize: 10 }}>
+                      <Check size={12} /> Accept
+                    </button>
+                  </div>
+                  {['traits', 'ideals', 'bonds', 'flaws'].map(key => {
+                    const items = aiSuggestions.personality[key];
+                    if (!items?.length) return null;
+                    return (
+                      <div key={key} style={{ marginBottom: 6 }}>
+                        <span style={{ fontSize: 10, color: 'rgba(200,175,130,0.35)', textTransform: 'capitalize' }}>{key}: </span>
+                        <span style={{ fontSize: 11, color: 'rgba(200,175,130,0.55)' }}>{Array.isArray(items) ? items.join(', ') : items}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Plot Hooks */}
+              {aiSuggestions.plot_hooks?.length > 0 && (
+                <div style={{ ...cardStyle, padding: '14px 16px', borderColor: 'rgba(168,85,247,0.2)' }}>
+                  <span style={{ fontSize: 10, fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(168,85,247,0.7)', display: 'block', marginBottom: 10 }}>Story Seeds</span>
+                  {aiSuggestions.plot_hooks.map((hook, i) => (
+                    <div key={i} style={{ padding: '6px 0', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                      <div style={{ fontSize: 12, color: '#efe0c0', fontWeight: 600 }}>{hook.title}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(200,175,130,0.4)', marginTop: 2 }}>{hook.description}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Themes */}
+              {aiSuggestions.themes?.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {aiSuggestions.themes.map((theme, i) => (
+                    <span key={i} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 99, background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: 'rgba(168,85,247,0.6)' }}>
+                      {theme}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Dismiss */}
+              <button
+                onClick={() => setAiSuggestions(null)}
+                style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'rgba(200,175,130,0.25)', fontFamily: 'var(--font-heading)', fontSize: 10, textAlign: 'center', padding: 8 }}
+              >
+                Dismiss Suggestions
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
@@ -1092,9 +1878,11 @@ function StepReview({ overview, scores, classData, raceData, backgroundData, sel
   );
 }
 
-// ─── Background Step (2024 only) ────────────────────────────────────────────
+// ─── Background Step (enhanced with feature catalog) ────────────────────────
 
-function StepBackground({ backgrounds, selected, setSelected }) {
+function StepBackground({ backgrounds, selected, setSelected, is2024 }) {
+  const selectedPresetInfo = BACKGROUND_PRESETS_5E.find(b => b.name === selected);
+
   return (
     <div style={{ maxWidth: 560 }}>
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
@@ -1103,34 +1891,87 @@ function StepBackground({ backgrounds, selected, setSelected }) {
           Background
         </h2>
         <p style={{ fontSize: 13, color: 'rgba(200,175,130,0.4)' }}>
-          Your background grants ability bonuses, skill proficiencies, and a feat.
+          {is2024
+            ? 'Your background grants ability bonuses, skill proficiencies, and a feat.'
+            : 'Your background defines where you came from and grants a unique feature.'}
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
-        {backgrounds.map(bg => {
-          const sel = selected === bg.name;
-          const bonuses = Object.entries(bg.abilityBonuses || {}).map(([a, v]) => `${a} +${v}`).join(', ');
-          return (
-            <button
-              key={bg.name}
-              onClick={() => setSelected(bg.name)}
-              style={{
-                ...cardStyle, padding: '14px 12px', cursor: 'pointer', textAlign: 'left',
-                background: sel ? 'rgba(201,168,76,0.08)' : 'rgba(11,9,20,0.9)',
-                borderColor: sel ? `${accent}45` : 'rgba(201,168,76,0.1)',
-                outline: sel ? `1px solid ${accent}35` : 'none',
-                transition: 'all 0.15s',
-              }}
-            >
-              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 13, color: sel ? accent : 'rgba(200,175,130,0.6)', marginBottom: 4, letterSpacing: '0.03em' }}>{bg.name}</div>
-              {bonuses && <div style={{ fontSize: 10, color: '#4ade80', fontFamily: 'var(--font-mono)', marginBottom: 3 }}>{bonuses}</div>}
-              {bg.skillProficiencies?.length > 0 && <div style={{ fontSize: 10, color: 'rgba(200,175,130,0.35)' }}>{bg.skillProficiencies.join(', ')}</div>}
-              {bg.feat && <div style={{ fontSize: 10, color: 'rgba(155,89,182,0.6)', marginTop: 3 }}>{bg.feat}</div>}
-            </button>
-          );
-        })}
-      </div>
+      {/* 2024 edition: use ruleset backgrounds */}
+      {is2024 && backgrounds.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
+          {backgrounds.map(bg => {
+            const sel = selected === bg.name;
+            const bonuses = Object.entries(bg.abilityBonuses || {}).map(([a, v]) => `${a} +${v}`).join(', ');
+            return (
+              <button
+                key={bg.name}
+                onClick={() => setSelected(bg.name)}
+                style={{
+                  ...cardStyle, padding: '14px 12px', cursor: 'pointer', textAlign: 'left',
+                  background: sel ? 'rgba(201,168,76,0.08)' : 'rgba(11,9,20,0.9)',
+                  borderColor: sel ? `${accent}45` : 'rgba(201,168,76,0.1)',
+                  outline: sel ? `1px solid ${accent}35` : 'none',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 13, color: sel ? accent : 'rgba(200,175,130,0.6)', marginBottom: 4, letterSpacing: '0.03em' }}>{bg.name}</div>
+                {bonuses && <div style={{ fontSize: 10, color: '#4ade80', fontFamily: 'var(--font-mono)', marginBottom: 3 }}>{bonuses}</div>}
+                {bg.skillProficiencies?.length > 0 && <div style={{ fontSize: 10, color: 'rgba(200,175,130,0.35)' }}>{bg.skillProficiencies.join(', ')}</div>}
+                {bg.feat && <div style={{ fontSize: 10, color: 'rgba(155,89,182,0.6)', marginTop: 3 }}>{bg.feat}</div>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* 2014 edition (or no ruleset backgrounds): show standard 5e catalog */}
+      {(!is2024 || backgrounds.length === 0) && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
+          {BACKGROUND_PRESETS_5E.map(bg => {
+            const sel = selected === bg.name;
+            return (
+              <button
+                key={bg.name}
+                onClick={() => setSelected(bg.name)}
+                style={{
+                  ...cardStyle, padding: '14px 12px', cursor: 'pointer', textAlign: 'left',
+                  background: sel ? 'rgba(201,168,76,0.08)' : 'rgba(11,9,20,0.9)',
+                  borderColor: sel ? `${accent}45` : 'rgba(201,168,76,0.1)',
+                  outline: sel ? `1px solid ${accent}35` : 'none',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 13, color: sel ? accent : 'rgba(200,175,130,0.6)', marginBottom: 4, letterSpacing: '0.03em' }}>{bg.name}</div>
+                <div style={{ fontSize: 10, color: 'rgba(200,175,130,0.4)', marginBottom: 2 }}>{bg.featureName}</div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Feature info panel for selected background */}
+      {selected && selectedPresetInfo && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          style={{
+            ...cardStyle, marginTop: 16, padding: '16px 18px',
+            background: 'rgba(201,168,76,0.04)', borderColor: 'rgba(201,168,76,0.18)',
+          }}
+        >
+          <div style={{ fontSize: 10, fontFamily: 'var(--font-heading)', letterSpacing: '0.15em', textTransform: 'uppercase', color: accent, marginBottom: 6 }}>
+            {selectedPresetInfo.name} — Background Feature
+          </div>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 14, color: '#efe0c0', marginBottom: 6 }}>
+            {selectedPresetInfo.featureName}
+          </div>
+          <div style={{ fontSize: 12, color: 'rgba(200,175,130,0.55)', lineHeight: 1.7 }}>
+            {selectedPresetInfo.featureDesc}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }
@@ -1188,6 +2029,18 @@ export default function CharacterSetup() {
   const [_quickStartApplied, setQuickStartApplied] = useState(false);
   const [showQuickBuild, setShowQuickBuild] = useState(false);
   const [quickBuildBusy, setQuickBuildBusy] = useState(false);
+
+  // Phase 1: New identity & backstory state
+  const [identity, setIdentity] = useState({
+    aliases: '', age: '', gender: '', height: '', weight: '',
+    eyes: '', hair: '', skin: '', physicalDescription: '',
+  });
+  const [backstoryData, setBackstoryData] = useState({
+    text: '', mode: 'free', guidedResponses: {},
+    personality: { traits: '', ideals: '', bonds: '', flaws: '' },
+    motivations: { short_term: '', long_term: '', driving: '' },
+    npcs: [], lifeEvents: [],
+  });
 
   // Load character overview
   useEffect(() => {
@@ -1393,24 +2246,29 @@ export default function CharacterSetup() {
   // Does this class pick a subclass at level 1? (Cleric, Sorcerer, Warlock)
   const needsSubclassAtOne = classData?.subclassLevel === 1 && classData?.subclasses?.length > 0;
 
-  // Steps depend on edition
+  // Steps depend on edition — Name & Identity and Backstory added in V0.9.0
   const steps = is2024
     ? [
         { id: 'quickstart', label: 'Quick Start' },
+        { id: 'identity', label: 'Identity' },
         { id: 'background', label: 'Background' },
         { id: 'abilities', label: 'Abilities' },
         { id: 'autoapply', label: 'Defaults' },
         { id: 'skills', label: 'Skills' },
         ...(needsSubclassAtOne ? [{ id: 'subclass', label: 'Subclass' }] : []),
+        { id: 'backstory', label: 'Backstory' },
         { id: 'summary', label: 'Summary' },
         { id: 'review', label: 'Review' },
       ]
     : [
         { id: 'quickstart', label: 'Quick Start' },
+        { id: 'identity', label: 'Identity' },
+        { id: 'background', label: 'Background' },
         { id: 'abilities', label: 'Abilities' },
         { id: 'autoapply', label: 'Defaults' },
         { id: 'skills', label: 'Skills' },
         ...(needsSubclassAtOne ? [{ id: 'subclass', label: 'Subclass' }] : []),
+        { id: 'backstory', label: 'Backstory' },
         { id: 'summary', label: 'Summary' },
         { id: 'review', label: 'Review' },
       ];
@@ -1422,11 +2280,13 @@ export default function CharacterSetup() {
   const stepLabel = currentStep ? `Step ${step} of ${steps.length}: ${currentStep.label}` : '';
 
   const canNext = () => {
-    if (currentStep.id === 'quickstart') return true; // Can always proceed from quickstart
+    if (currentStep.id === 'quickstart') return true;
+    if (currentStep.id === 'identity') return true; // All identity fields are optional
     if (currentStep.id === 'abilities') return scores && Object.keys(scores).length === 6;
     if (currentStep.id === 'skills') return selectedSkills.length === (classData?.skillChoices?.count || 2);
     if (currentStep.id === 'subclass') return !!selectedSubclass;
     if (currentStep.id === 'background') return !!selectedBackground;
+    if (currentStep.id === 'backstory') return true; // Backstory is optional
     return true;
   };
 
@@ -1578,6 +2438,100 @@ export default function CharacterSetup() {
             uses_total: 0,
             uses_remaining: 0,
             recharge: 'none',
+          },
+        }).catch(() => {});
+      }
+
+      // 9. Save backstory & identity data (V0.9.0)
+      const backstoryText = backstoryData.text || '';
+      const personalityObj = backstoryData.personality || {};
+      const motivationsObj = backstoryData.motivations || {};
+      const npcsList = backstoryData.npcs || [];
+      const lifeEventsList = backstoryData.lifeEvents || [];
+
+      // Pack identity + backstory into goals_motivations JSON (matches Backstory.jsx's packGoalsData format)
+      const goalsPayload = JSON.stringify({
+        _v: 2,
+        short_term_goals: motivationsObj.short_term ? [{ title: motivationsObj.short_term, description: '', completed: false }] : [],
+        long_term_goals: motivationsObj.long_term ? [{ title: motivationsObj.long_term, description: '', completed: false }] : [],
+        goals_text: motivationsObj.driving || '',
+        character_arc: [],
+        backstory_allies: npcsList.filter(n => !['Enemy', 'Rival'].includes(n.relationship)).map(n => ({
+          name: n.name, notes: n.relationship, description: n.description,
+        })),
+        backstory_enemies: npcsList.filter(n => ['Enemy', 'Rival'].includes(n.relationship)).map(n => ({
+          name: n.name, notes: n.relationship, description: n.description,
+        })),
+      });
+
+      // Build personality traits string
+      const personalityTraits = [personalityObj.traits, personalityObj.ideals, personalityObj.bonds, personalityObj.flaws]
+        .filter(Boolean)
+        .map(v => Array.isArray(v) ? v.join(', ') : v)
+        .join('\n');
+
+      // Build life events into backstory text
+      let fullBackstory = backstoryText;
+      if (lifeEventsList.length > 0) {
+        const eventsText = lifeEventsList
+          .filter(e => e.title || e.description)
+          .map(e => `${e.age ? `[Age ${e.age}] ` : ''}${e.title}${e.description ? ': ' + e.description : ''}`)
+          .join('\n');
+        if (eventsText) {
+          fullBackstory += '\n\n--- Key Life Events ---\n' + eventsText;
+        }
+      }
+
+      // Build background feature data from selected background preset
+      const bgPresetInfo = BACKGROUND_PRESETS_5E.find(b => b.name === (selectedBackground || overview?.background));
+      const backgroundFeatureName = bgPresetInfo?.featureName || '';
+      const backgroundFeatureDesc = bgPresetInfo?.featureDesc || '';
+
+      // If user selected a 5e background, pack the feature into goals data
+      if (backgroundFeatureName) {
+        const goalsObj = JSON.parse(goalsPayload);
+        goalsObj.background_feature_name = backgroundFeatureName;
+        goalsObj.background_feature_desc = backgroundFeatureDesc;
+        // Re-stringify with feature data
+        await invoke('update_backstory', {
+          characterId,
+          payload: {
+            backstory_text: fullBackstory,
+            personality_traits: personalityTraits,
+            ideals: personalityObj.ideals || '',
+            bonds: personalityObj.bonds || '',
+            flaws: personalityObj.flaws || '',
+            allies_organizations: '',
+            appearance_notes: identity.physicalDescription || '',
+            age: identity.age || '',
+            height: identity.height || '',
+            weight: identity.weight || '',
+            eyes: identity.eyes || '',
+            hair: identity.hair || '',
+            skin: identity.skin || '',
+            goals_motivations: JSON.stringify(goalsObj),
+            portrait_data: identity.portrait || '',
+          },
+        }).catch(() => {});
+      } else {
+        await invoke('update_backstory', {
+          characterId,
+          payload: {
+            backstory_text: fullBackstory,
+            personality_traits: personalityTraits,
+            ideals: personalityObj.ideals || '',
+            bonds: personalityObj.bonds || '',
+            flaws: personalityObj.flaws || '',
+            allies_organizations: '',
+            appearance_notes: identity.physicalDescription || '',
+            age: identity.age || '',
+            height: identity.height || '',
+            weight: identity.weight || '',
+            eyes: identity.eyes || '',
+            hair: identity.hair || '',
+            skin: identity.skin || '',
+            goals_motivations: goalsPayload,
+            portrait_data: identity.portrait || '',
           },
         }).catch(() => {});
       }
@@ -1853,8 +2807,14 @@ export default function CharacterSetup() {
                 onSkip={skipQuickStart}
               />
             )}
+            {currentStep.id === 'identity' && (
+              <StepNameIdentity identity={identity} setIdentity={setIdentity} characterName={overview?.name} />
+            )}
+            {currentStep.id === 'backstory' && (
+              <StepBackstoryLore backstoryData={backstoryData} setBackstoryData={setBackstoryData} overview={overview} />
+            )}
             {currentStep.id === 'background' && (
-              <StepBackground backgrounds={backgrounds} selected={selectedBackground} setSelected={setSelectedBackground} />
+              <StepBackground backgrounds={backgrounds} selected={selectedBackground} setSelected={setSelectedBackground} is2024={is2024} />
             )}
             {currentStep.id === 'abilities' && (
               <StepAbilities scores={scores} setScores={setScores} raceData={raceData} />

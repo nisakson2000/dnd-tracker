@@ -917,6 +917,9 @@ div[style*="z-index: 9999"] {
 .animate-scale-in { animation: scaleIn 0.3s ease-out forwards; }
 .animate-shimmer { background: linear-gradient(90deg, transparent 30%, var(--accent-xl) 50%, transparent 70%); background-size: 200% 100%; animation: shimmer 2s infinite; }
 
+@keyframes fadeSlideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fadeSlideIn { animation: fadeSlideIn 0.2s ease-out both; }
+
 /* ── Prevent horizontal overflow globally ── */
 main, [role="main"], .main-content {
   overflow-x: hidden;
@@ -1784,3 +1787,124 @@ textarea,
 .school-illusion      { --school-c: #c084fc; }
 .school-necromancy    { --school-c: #6ee7b7; }
 .school-transmutation { --school-c: #fcd34d; }
+
+/* ── Accessibility: High Contrast ── */
+.high-contrast {
+  --border:      rgba(255,255,255,0.22);
+  --border-h:    rgba(255,255,255,0.36);
+  --text:        rgba(255,255,255,1);
+  --text-dim:    rgba(255,255,255,0.70);
+  --text-mute:   rgba(255,255,255,0.40);
+  --bg-panel:    rgba(255,255,255,0.06);
+  --bg-panel-h:  rgba(255,255,255,0.10);
+}
+
+/* ── Accessibility: Dyslexia-Friendly Font ── */
+.dyslexia-font {
+  --font-display: 'OpenDyslexic', 'Comic Sans MS', cursive, sans-serif !important;
+  --font-ui:      'OpenDyslexic', 'Comic Sans MS', cursive, sans-serif !important;
+  --font-text:    'OpenDyslexic', 'Comic Sans MS', cursive, sans-serif !important;
+}
+.dyslexia-font * {
+  font-family: 'OpenDyslexic', 'Comic Sans MS', cursive, sans-serif !important;
+}
+
+/* ============================================
+   GLOBAL POLISH — Animations & Utility Classes
+   ============================================ */
+
+/* ── Polish: Animations ── */
+@keyframes pop-in {
+  0% { transform: scale(0.8); opacity: 0; }
+  70% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+  50% { box-shadow: 0 0 8px 2px rgba(139, 92, 246, 0.3); }
+}
+
+/* Condition badge click animation */
+.condition-badge-animate {
+  transition: transform 0.15s ease;
+}
+.condition-badge-animate:active {
+  transform: scale(1.15);
+}
+
+/* Attack button hover glow */
+.attack-btn-glow {
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.attack-btn-glow:hover {
+  box-shadow: 0 0 12px 2px rgba(139, 92, 246, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Dice result pop */
+.dice-result-pop {
+  animation: pop-in 0.3s ease-out;
+}
+
+/* Spell list stagger item */
+.spell-list-item {
+  animation: fade-in-up 0.25s ease-out both;
+}
+
+/* Empty state card standardization */
+.empty-state-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  opacity: 0.6;
+  text-align: center;
+  gap: 0.5rem;
+}
+.empty-state-card svg {
+  opacity: 0.5;
+  margin-bottom: 0.25rem;
+}
+
+/* Timeline connector for journal */
+.timeline-entry {
+  position: relative;
+  padding-left: 1.5rem;
+}
+.timeline-entry::before {
+  content: '';
+  position: absolute;
+  left: 0.45rem;
+  top: 1.5rem;
+  bottom: -0.5rem;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.timeline-entry:last-child::before {
+  display: none;
+}
+.timeline-entry::after {
+  content: '';
+  position: absolute;
+  left: 0.2rem;
+  top: 0.6rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(139, 92, 246, 0.6);
+  border: 2px solid rgba(139, 92, 246, 0.3);
+}
+
+/* Rarity text colors (complementary to rarity border classes) */
+.rarity-text-uncommon  { color: #22c55e; }
+.rarity-text-rare      { color: #3b82f6; }
+.rarity-text-very-rare { color: #a855f7; }
+.rarity-text-legendary { color: #f97316; }
+.rarity-text-artifact  { color: #dc2626; }
