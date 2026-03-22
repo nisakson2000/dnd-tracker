@@ -1599,9 +1599,9 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
         <div className="space-y-6">
           {/* Dice roll hint banner */}
           {!diceHintDismissed && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gold/[0.06] border border-gold/15 text-xs text-gold/70">
-              <Dices size={14} className="flex-shrink-0 text-gold/50" />
-              <span className="flex-1">Click any modifier, saving throw, or skill to roll a d20 check!</span>
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-gold/[0.08] border border-gold/20 text-sm text-gold/80">
+              <Dices size={16} className="flex-shrink-0 text-gold/60 animate-pulse" />
+              <span className="flex-1 font-semibold">Click any modifier, saving throw, or skill to roll a d20 check!</span>
               <button
                 onClick={() => { localStorage.setItem('codex-dice-hint-dismissed', '1'); setDiceHintDismissed(true); }}
                 className="text-gold/30 hover:text-gold/60 transition-colors p-0.5"
@@ -2490,6 +2490,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                     }
                   }}
                   className="btn-primary text-sm px-6 py-2 flex items-center gap-2 bg-red-600/80 hover:bg-red-500 border-red-400/30"
+                  title="Roll d20: 10+ = success, 9 or less = failure. Nat 20 = regain 1 HP. Nat 1 = 2 failures."
                   disabled={overview.death_save_successes >= 3 || overview.death_save_failures >= 3}
                 >
                   🎲 Roll Death Save

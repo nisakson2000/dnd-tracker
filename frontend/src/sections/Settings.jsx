@@ -171,8 +171,8 @@ const AI_SETTINGS_KEY = 'codex-assistant-settings';
 function loadAiSettings() {
   try {
     const raw = localStorage.getItem(AI_SETTINGS_KEY);
-    return raw ? JSON.parse(raw) : { enabled: false, model: 'phi3.5' };
-  } catch { return { enabled: false, model: 'phi3.5' }; }
+    return raw ? JSON.parse(raw) : { enabled: false, model: 'llama3.2' };
+  } catch { return { enabled: false, model: 'llama3.2' }; }
 }
 
 function saveAiSettings(s) {
@@ -272,7 +272,7 @@ function AiSettingsTab() {
 
     setPulling(true);
     setPullProgress('Starting download...');
-    toast('Downloading phi3.5 model — this may take a few minutes', { duration: 4000 });
+    toast('Downloading llama3.2 model — this may take a few minutes', { duration: 4000 });
     try {
       await pullModel((progress) => {
         if (progress.status === 'pulling manifest') {
@@ -299,7 +299,7 @@ function AiSettingsTab() {
       <div className="tog-row">
         <div>
           <div className="tog-label">Enable AI Assistant</div>
-          <div className="tog-desc">Local AI powered by Ollama (phi3.5). Answers use the built-in D&D wiki.</div>
+          <div className="tog-desc">Local AI powered by Ollama (llama3.2). Answers use the built-in D&D wiki for accuracy.</div>
         </div>
         <div
           className={`toggle ${aiSettings.enabled ? 'on' : ''}`}
@@ -336,7 +336,7 @@ function AiSettingsTab() {
           <li>For DM AI Modules, open a campaign and expand the "AI Modules" panel</li>
         </ol>
         <p style={{ fontSize: 11, color: 'var(--text-mute)', marginTop: 8, fontStyle: 'italic' }}>
-          Runs entirely on your machine. The Arcane Advisor uses phi3.5 for chat; DM AI Modules use llama3.2 for content generation.
+          Runs entirely on your machine — free, private, no internet needed. The Arcane Advisor uses llama3.2 for chat; DM AI Modules use llama3.1:8b for richer content generation.
         </p>
       </div>
     </div>

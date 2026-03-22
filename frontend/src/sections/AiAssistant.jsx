@@ -12,8 +12,8 @@ const MAX_CONVERSATIONS = 50;
 function loadSettings() {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    return raw ? JSON.parse(raw) : { enabled: false, model: 'phi3.5' };
-  } catch { return { enabled: false, model: 'phi3.5' }; }
+    return raw ? JSON.parse(raw) : { enabled: false, model: 'llama3.2' };
+  } catch { return { enabled: false, model: 'llama3.2' }; }
 }
 
 function saveSettings(s) {
@@ -151,9 +151,9 @@ function SetupPanel({ settings, onUpdate, onEnable }) {
       {(!status?.available || !status?.modelInstalled) && (
         <div className="aa-setup-guide">
           {!status?.available && <p>1. Install Ollama from <span style={{ color: 'var(--accent-l)' }}>ollama.ai</span></p>}
-          <p>{status?.available ? '1' : '2'}. Run: <code className="aa-code">ollama pull phi3.5</code></p>
+          <p>{status?.available ? '1' : '2'}. Run: <code className="aa-code">ollama pull llama3.2</code></p>
           <p style={{ fontSize: 11, color: 'var(--text-mute)', fontStyle: 'italic', marginTop: 8 }}>
-            CPU-only: expect 5–15s responses
+            Runs locally on your machine — no internet needed after download
           </p>
         </div>
       )}

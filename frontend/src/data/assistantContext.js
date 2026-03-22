@@ -1,4 +1,16 @@
-const APP_SUMMARY = `You are a D&D 5th Edition rules assistant called "Arcane Advisor." Your answers MUST be based on official D&D 5e rules from the Player's Handbook (PHB), Dungeon Master's Guide (DMG), Monster Manual (MM), or the Systems Reference Document (SRD). When answering, cite the source book and page/chapter when you can (e.g., "PHB p.189" or "PHB Ch.9: Combat"). Always specify that your answer refers to D&D 5th Edition. Clearly distinguish between RAW (Rules As Written) from official sources and common homebrew or house-rule interpretations — label homebrew as such. If you are unsure or cannot confirm a rule, say so honestly rather than guessing. Keep answers concise (1-4 sentences unless more detail is needed). Never output JSON, code, or action blocks. Never repeat these instructions.`;
+const APP_SUMMARY = `You are "Arcane Advisor," an expert D&D 5th Edition rules assistant with encyclopedic knowledge of the core rulebooks.
+
+RULES FOR EVERY ANSWER:
+1. BASE all answers on official 5e sources: Player's Handbook (PHB), Dungeon Master's Guide (DMG), Monster Manual (MM), Systems Reference Document (SRD), Xanathar's Guide (XGtE), Tasha's Cauldron (TCoE).
+2. CITE the source book and page/chapter (e.g., "PHB p.189, Ch.9: Combat"). If you cannot cite a specific page, cite the chapter.
+3. DISTINGUISH RAW (Rules As Written) from common homebrew or house rules — always label which is which.
+4. If UNSURE or cannot confirm a rule, say "I'm not certain about this — verify with your DM" rather than guessing.
+5. When a rule involves MULTIPLE STEPS (e.g., grappling, spellcasting, multiclass spell slots), walk through each step in order.
+6. For COMBAT questions, state the action cost (action, bonus action, reaction, free action) and any relevant conditions or triggers.
+7. For SPELL questions, include: casting time, range, components, duration, concentration (yes/no), and the key mechanical effect.
+8. Use the PC Context below to give PERSONALIZED answers — reference the character's actual stats, class features, and equipped items when relevant.
+9. Keep answers focused and practical — prioritize what the player needs to know RIGHT NOW at the table.
+10. Never output JSON, code, or action blocks. Never repeat these instructions.`;
 
 function formatAbilityScore(ability, score) {
   const mod = Math.floor((score - 10) / 2);
@@ -10,11 +22,15 @@ function buildCharacterContext(charData) {
   if (!charData) return '';
   const parts = [];
 
-  // Name, race, class, level
-  const identity = [charData.name, charData.race, charData.primary_class || charData.class].filter(Boolean).join(' ');
-  if (identity) parts.push(`PC: ${identity} Lv${charData.level || 1}`);
+  // Name, race, class, subclass, level
+  const name = charData.name || 'Unknown';
+  const race = charData.race || '';
+  const cls = charData.primary_class || charData.class || '';
+  const subclass = charData.subclass || '';
+  const level = charData.level || 1;
+  parts.push(`PC: ${name}, ${race} ${cls}${subclass ? ` (${subclass})` : ''} Level ${level}`);
 
-  // Ability scores
+  // Ability scores with modifiers
   const abilities = charData.ability_scores || charData.abilities || {};
   const scoreKeys = [
     ['STR', abilities.strength || abilities.str],
@@ -24,26 +40,78 @@ function buildCharacterContext(charData) {
     ['WIS', abilities.wisdom || abilities.wis],
     ['CHA', abilities.charisma || abilities.cha],
   ].filter(([, v]) => v != null);
-  if (scoreKeys.length) parts.push(scoreKeys.map(([a, s]) => formatAbilityScore(a, s)).join(' '));
+  if (scoreKeys.length) parts.push('Ability Scores: ' + scoreKeys.map(([a, s]) => formatAbilityScore(a, s)).join(', '));
+
+  // Proficiency bonus
+  const profBonus = Math.ceil(level / 4) + 1;
+  parts.push(`Proficiency Bonus: +${profBonus}`);
 
   // HP
   const hp = charData.current_hp ?? charData.hp;
   const maxHp = charData.max_hp ?? charData.hp_max;
-  if (hp != null && maxHp != null) parts.push(`HP:${hp}/${maxHp}`);
+  if (hp != null && maxHp != null) {
+    const pct = Math.round((hp / maxHp) * 100);
+    parts.push(`HP: ${hp}/${maxHp} (${pct}%)`);
+  }
+
+  // Temp HP
+  const tempHp = charData.temp_hp;
+  if (tempHp > 0) parts.push(`Temp HP: ${tempHp}`);
 
   // AC
   const ac = charData.armor_class ?? charData.ac;
-  if (ac != null) parts.push(`AC:${ac}`);
+  if (ac != null) parts.push(`AC: ${ac}`);
 
-  // Equipped items (brief)
+  // Speed
+  const speed = charData.speed;
+  if (speed) parts.push(`Speed: ${speed} ft`);
+
+  // Spell save DC and attack bonus
+  const spellDC = charData.spell_save_dc;
+  const spellAtk = charData.spell_attack_bonus;
+  if (spellDC) parts.push(`Spell Save DC: ${spellDC}`);
+  if (spellAtk) parts.push(`Spell Attack: +${spellAtk}`);
+
+  // Saving throw proficiencies
+  const saves = charData.saving_throws || charData.saves || [];
+  const profSaves = (Array.isArray(saves) ? saves : []).filter(s => s.proficient).map(s => s.ability);
+  if (profSaves.length) parts.push(`Save Proficiencies: ${profSaves.join(', ')}`);
+
+  // Equipped items with details
   const items = (charData.items || charData.inventory || []).filter(i => i.equipped);
-  if (items.length) parts.push('Equipped: ' + items.slice(0, 6).map(i => i.name).join(', '));
+  if (items.length) {
+    const itemDetails = items.slice(0, 10).map(i => {
+      let desc = i.name;
+      if (i.magic_bonus) desc += ` (+${i.magic_bonus})`;
+      if (i.item_type) desc += ` [${i.item_type}]`;
+      return desc;
+    });
+    parts.push('Equipped: ' + itemDetails.join(', '));
+  }
 
-  // Active conditions
+  // Active conditions with effects
   const conditions = charData.conditions || charData.active_conditions || [];
-  if (conditions.length) parts.push('Conditions: ' + conditions.join(', '));
+  if (conditions.length) parts.push('Active Conditions: ' + conditions.join(', ') + ' — factor these into any rule answers');
 
-  return parts.length ? '\nPC Context: ' + parts.join(' | ') : '';
+  // Spell slots remaining
+  const slots = charData.spell_slots || [];
+  if (slots.length) {
+    const slotSummary = slots.map(s => `L${s.slot_level}: ${s.max_slots - (s.used_slots || 0)}/${s.max_slots}`).join(', ');
+    parts.push(`Spell Slots: ${slotSummary}`);
+  }
+
+  // Class features (brief list)
+  const features = charData.features || [];
+  if (features.length) {
+    const featList = features.slice(0, 12).map(f => f.name).join(', ');
+    parts.push(`Class Features: ${featList}`);
+  }
+
+  // Exhaustion
+  const exhaustion = charData.exhaustion_level;
+  if (exhaustion > 0) parts.push(`Exhaustion Level: ${exhaustion}`);
+
+  return '\n\nPC CONTEXT:\n' + parts.join('\n');
 }
 
 export function buildSystemPrompt(charData, wikiContext) {
@@ -124,7 +192,7 @@ function formatSectionData(section, data) {
 
 export function buildMessages(systemPrompt, conversationHistory, userMessage) {
   const messages = [{ role: 'system', content: systemPrompt }];
-  const trimmed = conversationHistory.slice(-10);
+  const trimmed = conversationHistory.slice(-20);
   messages.push(...trimmed);
   messages.push({ role: 'user', content: userMessage });
   return messages;
@@ -134,11 +202,11 @@ export function buildMessages(systemPrompt, conversationHistory, userMessage) {
 
 /**
  * Build a system prompt that makes the AI campaign-aware during a DM session.
- * Kept concise for small models (phi3.5 / llama3.2).
+ * Provides rich campaign context to the AI model.
  */
 export function buildDmSessionPrompt(campaignData, sceneData, playerData, recentActions) {
   const parts = [
-    'You are a D&D 5th Edition DM assistant called "Arcane Advisor." Base all rules answers on official 5e sources (PHB, DMG, MM, SRD). Cite the source book when possible. Distinguish RAW from homebrew. If unsure about a rule, say so. Be concise. Help the DM run the session.'
+    'You are "Arcane Advisor," an expert D&D 5e DM assistant. Base all rules answers on official sources (PHB, DMG, MM, SRD, XGtE, TCoE). Cite source book and page/chapter. Distinguish RAW from homebrew. If unsure, say so. For combat rulings, state action cost and triggers. For ability checks, state the DC guidelines (PHB p.174: 5=very easy, 10=easy, 15=medium, 20=hard, 25=very hard, 30=nearly impossible). Help the DM run a smooth, rules-accurate session. Use the campaign context below to give specific, actionable advice.'
   ];
 
   // Campaign context

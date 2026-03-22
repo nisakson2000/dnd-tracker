@@ -1,7 +1,7 @@
 import { invoke, Channel } from '@tauri-apps/api/core';
 
 const MODEL_STORAGE_KEY = 'codex-ai-model';
-const DEFAULT_MODEL = 'phi3.5';
+const DEFAULT_MODEL = 'llama3.2';
 
 export function getSelectedModel() {
   try {
@@ -76,14 +76,14 @@ export async function searchWikiContext(query) {
   const key = query.toLowerCase().trim();
   if (wikiCache.has(key)) return wikiCache.get(key);
   try {
-    const result = await invoke('wiki_search', { q: query, perPage: 3 });
+    const result = await invoke('wiki_search', { q: query, perPage: 5 });
     if (!result.items || result.items.length === 0) {
       wikiCache.set(key, '');
       return '';
     }
     const text = result.items
-      .map(item => `[${item.title}] ${item.summary}`)
-      .join('\n');
+      .map(item => `[${item.title}]${item.category ? ` (${item.category})` : ''}: ${item.summary}`)
+      .join('\n\n');
     wikiCache.set(key, text);
     if (wikiCache.size > WIKI_CACHE_MAX) wikiCache.delete(wikiCache.keys().next().value);
     return text;
@@ -110,7 +110,7 @@ export async function* streamChat(messages, options = {}) {
     messages,
     onChunk: channel,
     maxTokens: options.maxTokens || null,
-    temperature: options.temperature || null,
+    temperature: options.temperature ?? 0.3,
   }).catch(err => {
       error = err;
       finished = true;
@@ -132,10 +132,10 @@ export async function* streamChat(messages, options = {}) {
 // One-shot generation (non-streaming) for AI modules
 export async function generateAI(prompt, system, options = {}) {
   return invoke('ollama_generate', {
-    model: options.model || 'llama3.2',
+    model: options.model || 'llama3.1:8b',
     prompt,
     system: system || null,
-    maxTokens: options.maxTokens || 1024,
-    temperature: options.temperature || 0.7,
+    maxTokens: options.maxTokens || 2048,
+    temperature: options.temperature || 0.65,
   });
 }

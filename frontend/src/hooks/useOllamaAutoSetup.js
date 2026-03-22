@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { invoke, Channel } from '@tauri-apps/api/core';
 
 const SETUP_KEY = 'codex-ollama-setup-done';
-const MODELS = ['llama3.2', 'phi3.5'];
+const MODELS = ['llama3.2', 'llama3.1:8b'];
 
 /**
  * Auto-setup hook for Ollama on first launch.
@@ -159,7 +159,7 @@ export function useOllamaAutoSetup() {
     const channel = new Channel();
     channel.onmessage = () => {}; // discard warmup response
     invoke('ollama_chat', {
-      model: 'phi3.5',
+      model: 'llama3.2',
       messages: [{ role: 'user', content: 'hi' }],
       onChunk: channel,
       maxTokens: 1,

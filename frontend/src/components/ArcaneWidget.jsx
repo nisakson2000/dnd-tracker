@@ -15,8 +15,8 @@ const SETTINGS_KEY = 'codex-assistant-settings';
 function loadSettings() {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    return raw ? JSON.parse(raw) : { enabled: false, model: 'phi3.5' };
-  } catch { return { enabled: false, model: 'phi3.5' }; }
+    return raw ? JSON.parse(raw) : { enabled: false, model: 'llama3.2' };
+  } catch { return { enabled: false, model: 'llama3.2' }; }
 }
 
 // Section-specific quick prompts

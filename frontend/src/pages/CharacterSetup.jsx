@@ -522,12 +522,12 @@ function StepNameIdentity({ identity, setIdentity, characterName }) {
             />
           </div>
           <div style={{ ...cardStyle, padding: '12px 16px' }}>
-            <label style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', marginBottom: 6, display: 'block' }}>Gender & Pronouns</label>
+            <label style={{ fontSize: 9, fontFamily: 'var(--font-heading)', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(200,175,130,0.35)', marginBottom: 6, display: 'block' }}>Gender</label>
             <input
               type="text"
               value={identity.gender || ''}
               onChange={e => update('gender', e.target.value)}
-              placeholder="e.g. Male (he/him)"
+              placeholder="e.g. Male"
               style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,168,76,0.12)', borderRadius: 8, padding: '8px 12px', color: '#efe0c0', fontFamily: 'var(--font-ui)', fontSize: 13, outline: 'none' }}
             />
           </div>

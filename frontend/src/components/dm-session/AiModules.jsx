@@ -14,8 +14,8 @@ const ICON_MAP = {
   compass: Compass, 'file-text': FileText, library: Library,
 };
 
-const AI_MODEL = 'llama3.2';
-const CHAT_MODEL = 'phi3.5';
+const AI_MODEL = 'llama3.1:8b';
+const CHAT_MODEL = 'llama3.2';
 
 const SAVE_LABELS = {
   'scene': 'Save to Scene',
@@ -197,8 +197,8 @@ export default function AiModules({ mode = 'dm' }) {
         model: AI_MODEL,
         prompt,
         system,
-        maxTokens: 2048,
-        temperature: 0.7,
+        maxTokens: 3072,
+        temperature: 0.65,
         onChunk: channel,
       });
 

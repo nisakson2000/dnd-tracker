@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Plus, Trash2, Swords, Dice5, Timer, X, Search, Minus, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ScrollText, ArrowRight, Filter, Heart, Shield, ShieldOff, Skull, Activity, Zap, AlertTriangle, Cross, Lightbulb, BookOpen } from 'lucide-react';
+import { Plus, Trash2, Swords, Dice5, Timer, X, Search, Minus, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ScrollText, ArrowRight, Filter, Heart, Shield, ShieldOff, Skull, Activity, Zap, AlertTriangle, Cross, Lightbulb, BookOpen, UserPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAttacks, addAttack, deleteAttack, getConditions, updateConditions, getCombatNotes, updateCombatNotes } from '../api/combat';
 import { addJournalEntry } from '../api/journal';
@@ -425,6 +425,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
   const [rollResults, setRollResults] = useState({});
   const [dmgModifiers, setDmgModifiers] = useState({}); // 'resist' | 'vuln' | null per attack id
   const [weaponMagicBonus, setWeaponMagicBonus] = useState(0); // highest equipped weapon magic_bonus
@@ -740,6 +741,38 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     setNewCombatantIsSwarm(false);
   };
 
+  const addSelfAsCombatant = () => {
+    const name = character?.name || 'Me';
+    const hp = character?.current_hp || character?.max_hp || 0;
+    const maxHp = character?.max_hp || hp;
+    const dexScore = character?.dexterity || 10;
+    const dexMod = Math.floor((dexScore - 10) / 2);
+    const roll = rollDie(20);
+    const init = roll + dexMod;
+    const modStr = dexMod >= 0 ? `+${dexMod}` : `${dexMod}`;
+    setCombatants(prev => [...prev, {
+      id: Date.now(),
+      name,
+      initiative: init,
+      maxHp: maxHp,
+      currentHp: hp,
+      tempHp: 0,
+      isEnemy: false,
+      isMinion: false,
+      isSwarm: false,
+      reactionUsed: false,
+    }].sort((a, b) => {
+      if (initiativeStyle === 'side') {
+        if (a.isEnemy !== b.isEnemy) return a.isEnemy ? 1 : -1;
+      }
+      return b.initiative - a.initiative;
+    }));
+    toast(`Added ${name} — Initiative: ${roll} ${modStr} = ${init}`, {
+      icon: '\u{1F3B2}', duration: 3000,
+      style: { background: '#0a0a1a', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.4)' },
+    });
+  };
+
   const removeCombatant = (id) => {
     setCombatants(prev => {
       const idx = prev.findIndex(c => c.id === id);
@@ -865,7 +898,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
           break;
         case 'e':
           e.preventDefault();
-          if (combatants.length > 0 && clearCombatantsRef.current) clearCombatantsRef.current();
+          if (combatants.length > 0) setConfirmClearAll(true);
           break;
         default: {
           // Number keys 1-9 for targeting
@@ -1919,7 +1952,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
                 >
                   AoE
                 </button>
-                <button onClick={clearCombatants} className="text-xs text-red-400/70 hover:text-red-400 transition-colors ml-1">
+                <button onClick={() => setConfirmClearAll(true)} className="text-xs text-red-400/70 hover:text-red-400 transition-colors ml-1">
                   Clear All
                 </button>
               </>
@@ -2170,6 +2203,13 @@ export default function Combat({ characterId, character, onConditionsChange }) {
           </button>
           <button onClick={addCombatant} className="btn-primary text-xs flex items-center gap-1">
             <Plus size={12} /> Add
+          </button>
+          <button
+            onClick={addSelfAsCombatant}
+            className="px-2 py-1.5 rounded-lg bg-blue-900/20 border border-blue-500/20 hover:bg-blue-900/40 hover:border-blue-500/40 transition-all flex items-center gap-1 text-xs text-blue-300 font-medium whitespace-nowrap"
+            title={`Add ${character?.name || 'yourself'} as an ally with auto-rolled initiative`}
+          >
+            <UserPlus size={12} /> Add Me
           </button>
         </div>
         {combatants.length > 0 && (
@@ -2844,7 +2884,16 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         )}
         <p className="text-xs text-amber-200/30 mb-3">Click the dice icon to roll attack + damage instantly. Click damage to re-roll damage only.</p>
         {attacks.length === 0 ? (
-          <p className="text-sm text-amber-200/30">No attacks configured. Add your weapons and cantrips here so you can quickly reference them during combat.</p>
+          <div className="text-center py-6 px-4">
+            <Swords size={28} className="mx-auto text-amber-200/15 mb-3" />
+            <p className="text-sm text-amber-200/30 mb-3">No attacks configured. Add your weapons and cantrips here so you can quickly reference them during combat.</p>
+            <button
+              onClick={() => setShowAdd(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold/10 border border-gold/30 hover:bg-gold/20 hover:border-gold/50 transition-all text-sm text-gold font-medium"
+            >
+              <Plus size={14} /> Add Your First Attack
+            </button>
+          </div>
         ) : (
           <div className="space-y-2">
             {attacks.map(atk => {
@@ -3123,6 +3172,14 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         message={`Remove "${confirmDelete?.name}"? This cannot be undone.`}
         onConfirm={() => handleDeleteAttack(confirmDelete.id)}
         onCancel={() => setConfirmDelete(null)}
+      />
+
+      <ConfirmDialog
+        show={confirmClearAll}
+        title="Clear All Combatants?"
+        message={`Remove all ${combatants.length} combatant${combatants.length !== 1 ? 's' : ''} and reset the encounter? This cannot be undone.`}
+        onConfirm={() => { clearCombatants(); setConfirmClearAll(false); }}
+        onCancel={() => setConfirmClearAll(false)}
       />
     </div>
   );
