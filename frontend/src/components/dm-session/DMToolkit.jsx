@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import {
   User, Scroll, Moon, Scale, Shield, Puzzle, TreePine, Lightbulb,
   RefreshCw, Send, X, Dices,
@@ -395,7 +395,7 @@ const TAB_COMPONENTS = {
 
 /* ─── main component ──────────────────────────────────────────── */
 
-export default function DMToolkit({ onBroadcast, onClose }) {
+function DMToolkit({ onBroadcast, onClose }) {
   const [activeTab, setActiveTab] = useState('names');
   const [results, setResults]     = useState({});
 
@@ -497,3 +497,5 @@ export default function DMToolkit({ onBroadcast, onClose }) {
     </div>
   );
 }
+
+export default memo(DMToolkit);

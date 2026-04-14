@@ -4,7 +4,7 @@ import {
   Send, MessageCircle, Hand, Moon,
   BookOpen, Compass, User, Shield,
   Edit3, ChevronDown, ChevronUp, Activity, Zap, Footprints,
-  Clock, Trash2, Dice1, Target, Swords, Book, MapPin,
+  Clock, Trash2, Dice1, Target, Swords, MapPin,
 } from 'lucide-react';
 import CampaignOverview from '../CampaignOverview';
 import { SKILL_LIST } from '../../data/playerRollMacros';
@@ -15,9 +15,10 @@ import { PREP_TIPS, getSpellPrepInfo, calculatePreparedCount } from '../../data/
 import { HEALING_SPELLS_RANKED, HEALING_STRATEGY } from '../../data/playerHealingOptimizer';
 import { getClassCard, getCombatCard } from '../../data/playerShortcutReference';
 import { searchConditions } from '../../data/playerConditionRemoval';
+import { calcMod, ABILITIES } from '../../utils/dndHelpers';
 
 function AbilityScoreGrid({ abilities }) {
-  const ABILITY_ORDER = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+  const ABILITY_ORDER = ABILITIES;
   const abilityMap = {};
   (abilities || []).forEach(a => {
     const key = (a.ability || '').toUpperCase().slice(0, 3);
@@ -28,7 +29,7 @@ function AbilityScoreGrid({ abilities }) {
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
       {ABILITY_ORDER.map(ab => {
         const score = abilityMap[ab] || 10;
-        const mod = Math.floor((score - 10) / 2);
+        const mod = calcMod(score);
         const modStr = mod >= 0 ? `+${mod}` : `${mod}`;
         return (
           <div key={ab} style={{
@@ -109,8 +110,6 @@ export default memo(function PlayerSessionSidebar({
   const [showSavedNotes, setShowSavedNotes] = useState(false);
   const [showSkillChecks, setShowSkillChecks] = useState(false);
   const [showSavingThrows, setShowSavingThrows] = useState(false);
-  const [showLoreJournal, setShowLoreJournal] = useState(false);
-  const [loreEntries] = useState([]);
   const [showRestChecklist, setShowRestChecklist] = useState(false);
   const [restChecklistType, setRestChecklistType] = useState('short');
   const [restChecked, setRestChecked] = useState({});
@@ -199,7 +198,7 @@ export default memo(function PlayerSessionSidebar({
                   { label: 'Speed', value: characterData.speed ? `${characterData.speed} ft` : '—', icon: Footprints, color: '#a78bfa' },
                   { label: 'Initiative', value: (() => {
                     const dexEntry = (characterAbilities || []).find(a => (a.ability || '').toUpperCase().startsWith('DEX'));
-                    const mod = dexEntry ? Math.floor(((dexEntry.score || 10) - 10) / 2) : 0;
+                    const mod = dexEntry ? calcMod(dexEntry.score || 10) : 0;
                     return mod >= 0 ? `+${mod}` : `${mod}`;
                   })(), icon: Zap, color: '#fbbf24' },
                   { label: 'Prof.', value: characterData.proficiency_bonus ? `+${characterData.proficiency_bonus}` : '—', icon: Activity, color: '#4ade80' },
@@ -370,7 +369,7 @@ export default memo(function PlayerSessionSidebar({
                 const abilityEntry = (characterAbilities || []).find(a =>
                   (a.ability || '').toUpperCase().startsWith(skill.ability?.slice(0, 3))
                 );
-                const mod = abilityEntry ? Math.floor(((abilityEntry.score || 10) - 10) / 2) : 0;
+                const mod = abilityEntry ? calcMod(abilityEntry.score || 10) : 0;
                 const profBonus = characterData?.proficiency_bonus || 2;
                 const isProficient = characterData?.skills?.includes?.(skill.name);
                 const totalMod = mod + (isProficient ? profBonus : 0);
@@ -418,9 +417,9 @@ export default memo(function PlayerSessionSidebar({
           </button>
           {showSavingThrows && (
             <div style={{ padding: '8px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
-              {['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(ab => {
+              {ABILITIES.map(ab => {
                 const entry = (characterAbilities || []).find(a => (a.ability || '').toUpperCase().startsWith(ab));
-                const mod = entry ? Math.floor(((entry.score || 10) - 10) / 2) : 0;
+                const mod = entry ? calcMod(entry.score || 10) : 0;
                 const profBonus = characterData?.proficiency_bonus || 2;
                 const isProficient = characterData?.saving_throw_proficiencies?.includes?.(ab) ||
                   characterData?.save_proficiencies?.includes?.(ab);
@@ -470,7 +469,7 @@ export default memo(function PlayerSessionSidebar({
             const abilityMap = {};
             (characterAbilities || []).forEach(a => { abilityMap[(a.ability || '').toUpperCase().slice(0, 3)] = a.score || 10; });
             const modKey = info.formula.startsWith('INT') ? 'INT' : info.formula.startsWith('WIS') ? 'WIS' : info.formula.startsWith('CHA') ? 'CHA' : null;
-            const mod = modKey ? Math.floor(((abilityMap[modKey] || 10) - 10) / 2) : 0;
+            const mod = modKey ? calcMod(abilityMap[modKey] || 10) : 0;
             const count = calculatePreparedCount(characterData.class, characterData.level || 1, mod);
             return (
               <div style={{ padding: '8px 12px', fontSize: 10, color: 'var(--text-dim)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -805,61 +804,6 @@ export default memo(function PlayerSessionSidebar({
           </div>
         </div>
       )}
-
-      {/* Lore Journal */}
-      <div style={panelStyle}>
-        <button
-          onClick={() => setShowLoreJournal(!showLoreJournal)}
-          style={{
-            ...panelHeaderStyle,
-            width: '100%', background: 'none', border: 'none',
-            cursor: 'pointer', fontFamily: 'var(--font-mono, monospace)',
-            justifyContent: 'space-between',
-          }}
-        >
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Book size={12} /> Lore Journal
-          </span>
-          <span style={{ fontSize: '10px', color: 'var(--text-mute)' }}>
-            {showLoreJournal ? '\u25B2' : '\u25BC'}
-          </span>
-        </button>
-        {showLoreJournal && (
-          <div style={{ padding: '8px 12px', maxHeight: '180px', overflowY: 'auto' }}>
-            {loreEntries.length === 0 ? (
-              <div style={{
-                textAlign: 'center', padding: '12px',
-                color: 'var(--text-mute)', fontSize: 11, fontStyle: 'italic',
-              }}>
-                <Book size={24} style={{ opacity: 0.15, marginBottom: '6px' }} />
-                <p style={{ margin: 0 }}>No lore discovered yet</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {loreEntries.map(entry => (
-                  <div key={entry.id} style={{
-                    padding: '6px 8px', borderRadius: '6px',
-                    background: 'rgba(255,255,255,0.02)',
-                    border: '1px solid rgba(255,255,255,0.05)',
-                  }}>
-                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text)', marginBottom: '2px' }}>
-                      {entry.topic || entry.title || 'Untitled'}
-                    </div>
-                    <div style={{ fontSize: '10px', color: 'var(--text-dim)', lineHeight: 1.4 }}>
-                      {(entry.content || '').slice(0, 120)}{(entry.content || '').length > 120 ? '...' : ''}
-                    </div>
-                    {(entry.source || entry.origin) && (
-                      <div style={{ fontSize: '8px', color: 'var(--text-mute)', marginTop: '3px', fontStyle: 'italic' }}>
-                        Source: {entry.source || entry.origin}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
 
       {/* Player Actions */}
       <div style={panelStyle}>

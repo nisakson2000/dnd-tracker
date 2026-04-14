@@ -266,6 +266,29 @@ export const ARMOR_TABLE = {
   'Plate Armor':     { base: 18, type: 'heavy' },
 };
 
+/**
+ * Parse stat_modifiers from all equipped items and accumulate bonuses by stat key.
+ * Returns an object like { STR: 2, DEX: -1, ... } with uppercase keys.
+ * Handles stat_modifiers as JSON string or object; skips unparseable items.
+ */
+export function getEquippedStatBonuses(items) {
+  const bonuses = {};
+  (items || []).filter(i => i.equipped).forEach(item => {
+    try {
+      const mods = typeof item.stat_modifiers === 'string'
+        ? JSON.parse(item.stat_modifiers || '{}')
+        : (item.stat_modifiers || {});
+      for (const [stat, value] of Object.entries(mods)) {
+        const key = stat.toUpperCase();
+        if (typeof value === 'number' && value !== 0) {
+          bonuses[key] = (bonuses[key] || 0) + value;
+        }
+      }
+    } catch { /* skip unparseable */ }
+  });
+  return bonuses;
+}
+
 /** Calculate AC from armor + DEX mod + shield + magic bonuses. */
 export function calcAC(armorName, dexScore, hasShield = false, magicArmorBonus = 0, magicShieldBonus = 0) {
   const dexMod = calcMod(dexScore);

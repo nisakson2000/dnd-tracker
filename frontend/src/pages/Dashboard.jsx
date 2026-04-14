@@ -19,6 +19,7 @@ import { getOverview, updateOverview } from '../api/overview';
 import { getCurrency, updateCurrency } from '../api/inventory';
 import { longRest } from '../api/rest';
 import { RULESET_OPTIONS, getRuleset } from '../data/rulesets';
+import { SETTINGS_KEY } from '../sections/Settings';
 import ConfirmDialog from '../components/ConfirmDialog';
 import DDBImportModal from '../components/DDBImportModal';
 import { APP_VERSION } from '../version';
@@ -364,7 +365,7 @@ function CharacterCard({ char, index, onEnter, onDelete, onDuplicate, onSessionP
         {char.max_hp > 0 && <HpBar current={char.current_hp} max={char.max_hp} />}
 
         {/* XP progress bar — only shown when using XP leveling */}
-        {(() => { try { return (JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').levelingStyle || 'milestone') === 'xp'; } catch { return false; } })() && char.experience_points > 0 && char.level >= 1 && char.level < 20 && (() => {
+        {(() => { try { return (JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}').levelingStyle || 'milestone') === 'xp'; } catch { return false; } })() && char.experience_points > 0 && char.level >= 1 && char.level < 20 && (() => {
           const currentXP = XP_LEVELS[char.level - 1] || 0;
           const nextXP = XP_LEVELS[char.level] || XP_LEVELS[19];
           const xpRange = nextXP - currentXP;

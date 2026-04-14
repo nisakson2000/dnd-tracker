@@ -4,6 +4,7 @@
  * and maps it to The Codex import format.
  */
 import * as pdfjsLib from 'pdfjs-dist';
+import { calcProfBonus } from './dndHelpers';
 
 // Use the bundled worker (Vite handles this)
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -348,12 +349,13 @@ function extractSpeed(text) {
 
 /**
  * Extract proficiency bonus from PDF text or calculate from level.
+ * Fallback uses canonical calcProfBonus from utils/dndHelpers.js.
  */
 function getProficiencyBonus(text, level) {
   const bonus = findNumber(text, /(?:Proficiency\s*Bonus)\s*[:\s+]\s*\+?(\d+)/i);
   if (bonus) return bonus;
   // Calculate from level
-  return Math.ceil(level / 4) + 1;
+  return calcProfBonus(level);
 }
 
 /**

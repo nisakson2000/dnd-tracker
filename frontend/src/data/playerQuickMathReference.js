@@ -3,6 +3,7 @@
  * Player Mode: Quick math reference for common D&D calculations
  * Pure JS — no React dependencies.
  */
+import { calcProfBonus } from '../utils/dndHelpers';
 
 export const PROFICIENCY_BY_LEVEL = [
   { levels: '1-4', bonus: '+2' },
@@ -57,18 +58,19 @@ export function getAbilityMod(score) {
   return Math.floor((score - 10) / 2);
 }
 
-export function getProficiencyBonus(level) {
-  return Math.ceil(level / 4) + 1;
-}
+/**
+ * Canonical implementation: calcProfBonus in utils/dndHelpers.js
+ */
+export { calcProfBonus as getProficiencyBonus } from '../utils/dndHelpers';
 
 export function calculateAttackBonus(abilityScore, level, isProficient) {
   const mod = getAbilityMod(abilityScore);
-  const prof = isProficient ? getProficiencyBonus(level) : 0;
+  const prof = isProficient ? calcProfBonus(level) : 0;
   return mod + prof;
 }
 
 export function calculateSpellSaveDC(spellcastingScore, level) {
-  return 8 + getProficiencyBonus(level) + getAbilityMod(spellcastingScore);
+  return 8 + calcProfBonus(level) + getAbilityMod(spellcastingScore);
 }
 
 export function xpToNextLevel(currentLevel, currentXP) {

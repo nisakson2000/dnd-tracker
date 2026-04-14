@@ -7,13 +7,11 @@ import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import { getRuleset } from '../data/rulesets';
 import { APP_VERSION } from '../version';
-import { modStr } from '../utils/dndHelpers';
-import { ABILITIES } from '../utils/dndHelpers';
+import { modStr, calcMod, ABILITIES, ABILITY_ABBR_MAP } from '../utils/dndHelpers';
 import { PREMADE_CHARACTERS } from '../data/premadeCharacters';
 import { generateAI, checkOllamaStatus } from '../api/assistant';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
-const ABILITY_NAMES = { STR: 'Strength', DEX: 'Dexterity', CON: 'Constitution', INT: 'Intelligence', WIS: 'Wisdom', CHA: 'Charisma' };
 const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8];
 const POINT_BUY_COSTS = { 8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9 };
 const POINT_BUY_TOTAL = 27;
@@ -266,10 +264,6 @@ const GUIDED_PROMPTS = [
 ];
 
 const MAX_REROLLS = 3; // Common house rule: 3 rerolls for 4d6 method
-
-function mod(score) {
-  return Math.floor((score - 10) / 2);
-}
 
 function roll4d6DropLowest() {
   const dice = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
@@ -1245,9 +1239,9 @@ function StepQuickStart({ overview, onApplyPreset, onSkip }) {
 // ─── Review Summary Panel ────────────────────────────────────────────────────
 
 function StepReviewSummary({ overview, scores, classData, raceData, backgroundData, selectedSkills, selectedBackground }) {
-  const conMod = mod(scores?.CON || 10);
+  const conMod = calcMod(scores?.CON || 10);
   const hp = classData ? classData.hitDie + conMod : 10;
-  const ac = 10 + mod(scores?.DEX || 10);
+  const ac = 10 + calcMod(scores?.DEX || 10);
   const bgSkills = backgroundData?.skillProficiencies || [];
   const allSkills = [...new Set([...selectedSkills, ...bgSkills])];
   const ct = CLASS_TOOLTIPS[overview?.primary_class];
@@ -1266,7 +1260,7 @@ function StepReviewSummary({ overview, scores, classData, raceData, backgroundDa
       title: 'Ability Scores',
       items: ABILITIES.map(a => ({
         label: a,
-        value: `${scores?.[a] || 10} (${modStr(mod(scores?.[a] || 10))})`,
+        value: `${scores?.[a] || 10} (${modStr(calcMod(scores?.[a] || 10))})`,
       })),
     },
     {
@@ -1284,7 +1278,7 @@ function StepReviewSummary({ overview, scores, classData, raceData, backgroundDa
     }] : []),
     ...(classData?.savingThrows ? [{
       title: 'Saving Throws',
-      items: classData.savingThrows.map(s => ({ label: s, value: ABILITY_NAMES[s] || s })),
+      items: classData.savingThrows.map(s => ({ label: s, value: ABILITY_ABBR_MAP[s] || s })),
     }] : []),
   ];
 
@@ -1473,7 +1467,7 @@ function StepAbilities({ setScores, raceData }) {
               return (
                 <div key={a} style={{ ...cardStyle, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 38, fontFamily: 'var(--font-heading)', fontSize: 11, color: accent, letterSpacing: '0.1em' }}>{a}</div>
-                  <div style={{ flex: 1, fontSize: 11, color: 'rgba(200,175,130,0.3)' }}>{ABILITY_NAMES[a]}</div>
+                  <div style={{ flex: 1, fontSize: 11, color: 'rgba(200,175,130,0.3)' }}>{ABILITY_ABBR_MAP[a]}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <button
                       onClick={() => setPointBuyScores(p => ({ ...p, [a]: Math.max(8, p[a] - 1) }))}
@@ -1496,7 +1490,7 @@ function StepAbilities({ setScores, raceData }) {
                     <span style={{ fontSize: 11, color: '#4ade80', fontFamily: 'var(--font-mono)' }}>+{bonus}</span>
                   )}
                   <div style={{ width: 36, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, color: accent }}>{total}</div>
-                  <div style={{ width: 28, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(200,175,130,0.35)' }}>{modStr(mod(total))}</div>
+                  <div style={{ width: 28, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(200,175,130,0.35)' }}>{modStr(calcMod(total))}</div>
                 </div>
               );
             })}
@@ -1565,7 +1559,7 @@ function StepAbilities({ setScores, raceData }) {
               return (
                 <div key={a} style={{ ...cardStyle, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ width: 38, fontFamily: 'var(--font-heading)', fontSize: 11, color: accent, letterSpacing: '0.1em' }}>{a}</div>
-                  <div style={{ flex: 1, fontSize: 11, color: 'rgba(200,175,130,0.3)' }}>{ABILITY_NAMES[a]}</div>
+                  <div style={{ flex: 1, fontSize: 11, color: 'rgba(200,175,130,0.3)' }}>{ABILITY_ABBR_MAP[a]}</div>
                   {/* Score picker buttons */}
                   <div style={{ display: 'flex', gap: 4 }}>
                     {scorePool.map((val, idx) => {
@@ -1594,7 +1588,7 @@ function StepAbilities({ setScores, raceData }) {
                     {total ?? '—'}
                   </div>
                   <div style={{ width: 24, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(200,175,130,0.35)' }}>
-                    {total != null ? modStr(mod(total)) : ''}
+                    {total != null ? modStr(calcMod(total)) : ''}
                   </div>
                 </div>
               );
@@ -1613,7 +1607,7 @@ function StepAutoApply({ raceData, classData, backgroundData, scores }) {
 
   // HP
   if (classData) {
-    const conMod = mod(scores?.CON || 10);
+    const conMod = calcMod(scores?.CON || 10);
     const hp = classData.hitDie + conMod;
     items.push({ label: 'Hit Points', value: `${hp} (${classData.hitDie} + ${conMod} CON)`, category: 'Combat' });
     items.push({ label: 'Hit Dice', value: `1d${classData.hitDie}`, category: 'Combat' });
@@ -1623,7 +1617,7 @@ function StepAutoApply({ raceData, classData, backgroundData, scores }) {
   if (raceData?.speed) items.push({ label: 'Speed', value: `${raceData.speed} ft`, category: 'Combat' });
 
   // AC
-  items.push({ label: 'Armor Class', value: `${10 + mod(scores?.DEX || 10)} (10 + ${mod(scores?.DEX || 10)} DEX)`, category: 'Combat' });
+  items.push({ label: 'Armor Class', value: `${10 + calcMod(scores?.DEX || 10)} (10 + ${calcMod(scores?.DEX || 10)} DEX)`, category: 'Combat' });
 
   // Saving Throws
   if (classData?.savingThrows) items.push({ label: 'Saving Throws', value: classData.savingThrows.join(', '), category: 'Proficiencies' });
@@ -1744,7 +1738,7 @@ function StepSkills({ classData, backgroundData, selectedSkills, setSelectedSkil
           const isBg = bgSkills.includes(skill);
           const isSelected = selectedSkills.includes(skill) || isBg;
           const ability = SKILL_ABILITIES[skill] || '?';
-          const scoreMod = scores ? modStr(mod(scores[ability] || 10)) : '+0';
+          const scoreMod = scores ? modStr(calcMod(scores[ability] || 10)) : '+0';
           const _profBonus = isSelected ? '+2' : '+0';
           const disabled = !isSelected && selectedSkills.length >= maxPicks && !isBg;
 
@@ -1789,9 +1783,9 @@ function StepSkills({ classData, backgroundData, selectedSkills, setSelectedSkil
 // ─── Step 4: Review ─────────────────────────────────────────────────────────
 
 function StepReview({ overview, scores, classData, raceData, backgroundData, selectedSkills }) {
-  const conMod = mod(scores?.CON || 10);
+  const conMod = calcMod(scores?.CON || 10);
   const hp = classData ? classData.hitDie + conMod : 10;
-  const ac = 10 + mod(scores?.DEX || 10);
+  const ac = 10 + calcMod(scores?.DEX || 10);
   const bgSkills = backgroundData?.skillProficiencies || [];
   const allSkills = [...new Set([...selectedSkills, ...bgSkills])];
 
@@ -1846,7 +1840,7 @@ function StepReview({ overview, scores, classData, raceData, backgroundData, sel
           <div key={a} style={{ ...cardStyle, padding: '8px 4px', textAlign: 'center' }}>
             <div style={{ fontSize: 9, color: accent, fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', marginBottom: 4 }}>{a}</div>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, color: '#efe0c0' }}>{scores?.[a] || 10}</div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(200,175,130,0.4)' }}>{modStr(mod(scores?.[a] || 10))}</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(200,175,130,0.4)' }}>{modStr(calcMod(scores?.[a] || 10))}</div>
           </div>
         ))}
       </div>
@@ -2304,9 +2298,9 @@ export default function CharacterSetup() {
         }
       }
 
-      const conMod = mod(finalScores?.CON || 10);
+      const conMod = calcMod(finalScores?.CON || 10);
       const hp = classData ? classData.hitDie + conMod : 10;
-      const ac = 10 + mod(finalScores?.DEX || 10);
+      const ac = 10 + calcMod(finalScores?.DEX || 10);
       const bgSkills = backgroundData?.skillProficiencies || [];
       const allSkills = [...new Set([...selectedSkills, ...bgSkills])];
 

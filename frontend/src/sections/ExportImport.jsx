@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { exportCharacter } from '../api/export';
 import { invoke } from '@tauri-apps/api/core';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { calcMod, modStr } from '../utils/dndHelpers';
+import { calcMod, modStr, ABILITIES } from '../utils/dndHelpers';
 
 function generateTextSummary(data) {
   const o = data.overview;
@@ -22,7 +22,7 @@ function generateTextSummary(data) {
 
   // Ability Scores
   lines.push('── Ability Scores ──');
-  const abOrder = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+  const abOrder = ABILITIES;
   abOrder.forEach(ab => {
     const score = abs[ab] || 10;
     lines.push(`  ${ab}: ${score} (${modStr(calcMod(score))})`);
@@ -178,7 +178,7 @@ function generateTextSummary(data) {
 function generatePdfHtml(data) {
   const o = data.overview;
   const abs = data.ability_scores;
-  const abOrder = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+  const abOrder = ABILITIES;
 
   const abilityGrid = abOrder.map(ab => {
     const score = abs[ab] || 10;

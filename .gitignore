@@ -14,3 +14,9 @@ target/
 videoplayback.mp4
 .claude/
 SYNC_PROTOCOL.md
+
+# Dev-only files (keep local, don't push to repo)
+push-release.sh
+sync-version.sh
+VERSION_BUMP_CHECKLIST.md
+MASTERUPDATELIST.md

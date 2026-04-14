@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Users, Star, Plus, RotateCcw, X, Lightbulb } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -31,7 +31,7 @@ function formatTimestamp(ts) {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function SpotlightTracker({ players, onClose }) {
+function SpotlightTracker({ players, onClose }) {
   // spotlight[playerId] = { count, lastTimestamp, note }
   const [spotlight, setSpotlight] = useState(() => {
     const saved = loadState();
@@ -346,3 +346,5 @@ export default function SpotlightTracker({ players, onClose }) {
     </div>
   );
 }
+
+export default memo(SpotlightTracker);

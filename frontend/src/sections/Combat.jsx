@@ -18,7 +18,8 @@ import { SKILL_CHECK_DCS, COMBAT_ACTIONS } from '../data/rules5e';
 import { calculateEffectiveDamage, applyDamageToHp, calculateHealingResult, resolveDeathSave, checkConcentration } from '../utils/damageEngine';
 import { insertCombatLog } from '../api/combatLog';
 import { rollDie } from '../utils/dice';
-import { WEAPONS, autoAttackBonus, autoDamageString, modStr as helperModStr, calcProfBonus } from '../utils/dndHelpers';
+import { WEAPONS, autoAttackBonus, autoDamageString, modStr as helperModStr, calcProfBonus, getEquippedStatBonuses } from '../utils/dndHelpers';
+import { SETTINGS_KEY } from './Settings';
 
 const CONDITION_ICONS = {
   'Blinded': '\u{1F441}', 'Charmed': '\u{1F495}', 'Deafened': '\u{1F507}',
@@ -43,7 +44,7 @@ function parseDamage(expr) {
 const HP_UNDO_MAX = 10; // Max undo steps per combatant
 
 function readGameplaySetting(key, fallback) {
-  try { const v = JSON.parse(localStorage.getItem('codex-v3-settings') || '{}')[key]; return v !== undefined ? v : fallback; } catch { return fallback; }
+  try { const v = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')[key]; return v !== undefined ? v : fallback; } catch { return fallback; }
 }
 
 const COMBAT_SESSION_DEFAULTS = {
@@ -154,10 +155,16 @@ function useCombatSession(characterId) {
   const [session, setSessionRaw] = useState(() => readSession(characterId));
 
   // Persist to localStorage whenever session changes (survives tab close, refresh, and crashes)
+  // Debounced to avoid excessive writes (e.g. turn timer ticks every second)
+  const persistTimerRef = useRef(null);
   useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(session));
-    } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession persist error:', err); }
+    if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+    persistTimerRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(session));
+      } catch (err) { if (import.meta.env.DEV) console.warn('useCombatSession persist error:', err); }
+    }, 600);
+    return () => { if (persistTimerRef.current) clearTimeout(persistTimerRef.current); };
   }, [session, storageKey]);
 
   // Re-read when characterId changes
@@ -433,6 +440,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   const [ammoItems, setAmmoItems] = useState([]); // Item 7: ammunition items for linking
   const [equipStatBonuses, setEquipStatBonuses] = useState({}); // stat bonuses from equipped items (belts, gloves, etc.)
   const rollTimeoutRefs = useRef({});
+  const critTimeoutRefs = useRef({});
   const [attackAdvOverrides, setAttackAdvOverrides] = useState({}); // per-attack: 'advantage' | 'disadvantage' | null
   const [attackBonusInputs, setAttackBonusInputs] = useState({}); // per-attack situational bonus
 
@@ -512,7 +520,18 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       return () => clearInterval(turnTimerRef.current);
     }
     return () => { if (turnTimerRef.current) clearInterval(turnTimerRef.current); };
-  }, [turnTimerEnabled, turnTimerRunning, turnTimerRemaining > 0, combatants.length > 0]);
+  }, [turnTimerEnabled, turnTimerRunning, turnTimerRemaining, combatants.length]);
+
+  // Auto-initialize death saves when PC drops to 0 HP
+  useEffect(() => {
+    if (character && character.current_hp <= 0 && character.max_hp > 0) {
+      const pcDeathKey = `pc_${characterId}`;
+      setDeathSaves(prev => {
+        if (prev[pcDeathKey]) return prev;
+        return { ...prev, [pcDeathKey]: { successes: 0, failures: 0, stable: false, dead: false } };
+      });
+    }
+  }, [character?.current_hp, character?.max_hp, characterId, setDeathSaves]);
 
   const resetActionEconomy = useCallback(() => {
     setActionEcon({ action: false, bonusAction: false, reaction: false });
@@ -1196,10 +1215,11 @@ export default function Combat({ characterId, character, onConditionsChange }) {
   // Reaction used state (driven by action economy toggle in TurnActionTracker)
   const [reactionUsed, setReactionUsed] = useState(false);
 
-  // Clean up pending roll timeouts on unmount
+  // Clean up pending roll timeouts and crit animation timeouts on unmount
   useEffect(() => {
     return () => {
       Object.values(rollTimeoutRefs.current).forEach(clearTimeout);
+      Object.values(critTimeoutRefs.current).forEach(clearTimeout);
     };
   }, []);
 
@@ -1229,21 +1249,7 @@ export default function Combat({ characterId, character, onConditionsChange }) {
         setWeaponMagicBonus(bestMagic);
         setWeaponExtraDamage(extraDmg);
         // Extract stat bonuses from ALL equipped items (belts, gloves, etc.)
-        const bonuses = {};
-        for (const item of items.filter(i => i.equipped)) {
-          try {
-            const mods = typeof item.stat_modifiers === 'string'
-              ? JSON.parse(item.stat_modifiers || '{}')
-              : (item.stat_modifiers || {});
-            for (const [stat, value] of Object.entries(mods)) {
-              const key = stat.toUpperCase();
-              if (typeof value === 'number' && value !== 0) {
-                bonuses[key] = (bonuses[key] || 0) + value;
-              }
-            }
-          } catch { /* skip */ }
-        }
-        setEquipStatBonuses(bonuses);
+        setEquipStatBonuses(getEquippedStatBonuses(items));
       } catch { /* non-critical */ }
     } catch (err) { toast.error('Failed to load combat data: ' + (err?.message || 'Unknown error')); }
     finally { setLoading(false); }
@@ -1503,8 +1509,10 @@ export default function Combat({ characterId, character, onConditionsChange }) {
     // Crit animation
     if (isCrit || isNat1) {
       setCritAnimations(prev => ({ ...prev, [atk.id]: isCrit ? 'nat20' : 'nat1' }));
-      setTimeout(() => {
+      if (critTimeoutRefs.current[atk.id]) clearTimeout(critTimeoutRefs.current[atk.id]);
+      critTimeoutRefs.current[atk.id] = setTimeout(() => {
         setCritAnimations(prev => { const next = { ...prev }; delete next[atk.id]; return next; });
+        delete critTimeoutRefs.current[atk.id];
       }, 1200);
     }
 
@@ -1757,17 +1765,8 @@ export default function Combat({ characterId, character, onConditionsChange }) {
       {character && character.current_hp <= 0 && character.max_hp > 0 && (() => {
         const pcDeathKey = `pc_${characterId}`;
         const pcDs = deathSaves[pcDeathKey] || null;
-        // Auto-initialize death saves when PC drops to 0
-        if (!pcDs) {
-          // Use a timeout to avoid setState during render
-          setTimeout(() => {
-            setDeathSaves(prev => {
-              if (prev[pcDeathKey]) return prev;
-              return { ...prev, [pcDeathKey]: { successes: 0, failures: 0, stable: false, dead: false } };
-            });
-          }, 0);
-          return null;
-        }
+        // Death saves are auto-initialized by a useEffect when HP drops to 0
+        if (!pcDs) return null;
         if (pcDs.dead) {
           return (
             <div className="card bg-[#1a0505] border-red-500/30">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { MessageSquare, Plus, Trash2, Send, X, Shuffle, Eye } from 'lucide-react';
 
 const STORAGE_KEY = 'codex_rumor_board';
@@ -34,7 +34,7 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-export default function RumorBoard({ onBroadcast, onClose }) {
+function RumorBoard({ onBroadcast, onClose }) {
   const [rumors, setRumors] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -447,3 +447,5 @@ const styles = {
     flexShrink: 0,
   },
 };
+
+export default memo(RumorBoard);

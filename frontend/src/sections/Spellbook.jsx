@@ -11,7 +11,7 @@ import HelpTooltip from '../components/HelpTooltip';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
 import { HELP } from '../data/helpText';
-import { calcMod, calcProfBonus, getSpellSlotsForClass } from '../utils/dndHelpers';
+import { calcMod, calcProfBonus, getSpellSlotsForClass, getEquippedStatBonuses } from '../utils/dndHelpers';
 import { rollDie } from '../utils/dice';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -193,21 +193,7 @@ export default function Spellbook({ characterId, onSpellSlotsChange }) {
       // Load equipment stat bonuses for spell DC/attack
       try {
         const allItems = await getItems(characterId);
-        const bonuses = {};
-        for (const item of allItems.filter(i => i.equipped)) {
-          try {
-            const mods = typeof item.stat_modifiers === 'string'
-              ? JSON.parse(item.stat_modifiers || '{}')
-              : (item.stat_modifiers || {});
-            for (const [stat, value] of Object.entries(mods)) {
-              const key = stat.toUpperCase();
-              if (typeof value === 'number' && value !== 0) {
-                bonuses[key] = (bonuses[key] || 0) + value;
-              }
-            }
-          } catch { /* skip unparseable */ }
-        }
-        setItemStatBonuses(bonuses);
+        setItemStatBonuses(getEquippedStatBonuses(allItems));
       } catch { /* non-critical */ }
       // Load active conditions for advantage/disadvantage
       try {

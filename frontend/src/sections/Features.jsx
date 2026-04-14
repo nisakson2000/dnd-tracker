@@ -10,6 +10,7 @@ import { HELP } from '../data/helpText';
 import { CLASS_FEATURES } from '../data/classFeatures';
 import { FEAT_CATALOG, FEAT_CATEGORIES } from '../data/featCatalog';
 import { useAppMode } from '../contexts/ModeContext';
+import { SETTINGS_KEY } from './Settings';
 import { searchArticles } from '../api/wiki';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -83,10 +84,10 @@ export default function Features({ characterId, character }) {
   const { mode: appMode } = useAppMode();
   const isDM = appMode === 'dm';
   const allowFeats = (() => {
-    try { const v = JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').allowFeats; return v !== false; } catch { return true; }
+    try { const v = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}').allowFeats; return v !== false; } catch { return true; }
   })();
   const restVariant = (() => {
-    try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').restVariant || 'standard'; } catch { return 'standard'; }
+    try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}').restVariant || 'standard'; } catch { return 'standard'; }
   })();
   const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -120,13 +121,6 @@ export default function Features({ characterId, character }) {
   useEffect(() => {
     sessionStorage.setItem(historyKey, JSON.stringify(usageHistory));
   }, [usageHistory, historyKey]);
-
-  // Refresh time-ago display every 30s
-  const [, setTick] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => setTick(t => t + 1), 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   const load = async () => {
     try {
@@ -996,6 +990,24 @@ function WikiLookup({ featureName }) {
   );
 }
 
+/* --- Time Ago (self-contained timer to avoid re-rendering parent) --- */
+function TimeAgo({ timestamp }) {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 30000);
+    return () => clearInterval(interval);
+  }, []);
+  const diff = Date.now() - timestamp;
+  const label = diff < 60000 ? 'just now'
+    : diff < 3600000 ? `${Math.floor(diff / 60000)}m ago`
+    : `${Math.floor(diff / 3600000)}h ago`;
+  return (
+    <span className="text-[10px] text-amber-200/25 flex items-center gap-1" title={`Last used: ${label}`}>
+      <Clock size={8} /> Used {label}
+    </span>
+  );
+}
+
 /* --- Feature Card --- */
 function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharge, onRestoreCharge, onRestoreAll, onRollRecharge, onEdit, onDelete, allExpanded, lastUsed }) {
   const hasCharges = (f.uses_total ?? 0) > 0;
@@ -1011,19 +1023,6 @@ function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharg
     : f.activation === 'passive' ? <Eye size={10} />
     : null;
 
-  // Format last used time (avoid Date.now() during render)
-  const [nowTs, setNowTs] = useState(() => Date.now());
-  useEffect(() => {
-    if (!lastUsed) return;
-    const id = setInterval(() => setNowTs(Date.now()), 30000);
-    return () => clearInterval(id);
-  }, [lastUsed]);
-  const lastUsedStr = lastUsed ? (() => {
-    const diff = nowTs - lastUsed;
-    if (diff < 60000) return 'just now';
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    return `${Math.floor(diff / 3600000)}h ago`;
-  })() : null;
 
   const restoredGlow = isRestored ? 'ring-2 ring-green-400/40 transition-all duration-500' : '';
 
@@ -1088,11 +1087,7 @@ function FeatureCard({ feature: f, isPinned, isRestored, onTogglePin, onUseCharg
               </span>
             )}
             {/* Last used indicator */}
-            {lastUsedStr && (
-              <span className="text-[10px] text-amber-200/25 flex items-center gap-1" title={`Last used: ${lastUsedStr}`}>
-                <Clock size={8} /> Used {lastUsedStr}
-              </span>
-            )}
+            {lastUsed && <TimeAgo timestamp={lastUsed} />}
           </div>
           <div className="text-xs text-amber-200/40 mt-1 flex items-center gap-2">
             {f.source && (

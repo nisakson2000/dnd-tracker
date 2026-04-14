@@ -11,24 +11,9 @@ import ModalPortal from '../components/ModalPortal';
 import { HELP } from '../data/helpText';
 import { ITEM_CATALOG } from '../data/itemCatalog';
 import { useCampaignSyncSafe } from '../contexts/CampaignSyncContext';
-import { calcMod } from '../utils/dndHelpers';
-
-// --- Standard 5e Armor AC values ---
-const ARMOR_AC_TABLE = {
-  'Padded Armor': { base: 11, type: 'light' },
-  'Leather Armor': { base: 11, type: 'light' },
-  'Studded Leather': { base: 12, type: 'light' },
-  'Hide Armor': { base: 12, type: 'medium', maxDex: 2 },
-  'Chain Shirt': { base: 13, type: 'medium', maxDex: 2 },
-  'Scale Mail': { base: 14, type: 'medium', maxDex: 2 },
-  'Breastplate': { base: 14, type: 'medium', maxDex: 2 },
-  'Half Plate': { base: 15, type: 'medium', maxDex: 2 },
-  'Ring Mail': { base: 14, type: 'heavy' },
-  'Chain Mail': { base: 16, type: 'heavy' },
-  'Splint Armor': { base: 17, type: 'heavy' },
-  'Plate Armor': { base: 18, type: 'heavy' },
-  'Shield': { bonus: 2 },
-};
+import { calcMod, getEquippedStatBonuses } from '../utils/dndHelpers';
+import { ARMOR_AC_TABLE } from '../data/armorData';
+import { SETTINGS_KEY } from './Settings';
 
 // --- Currency exchange rates ---
 const CURRENCY_RATES = { cp: 0.01, sp: 0.1, ep: 0.5, gp: 1, pp: 10 };
@@ -429,7 +414,7 @@ export default function Inventory({ characterId, character }) {
 
   // Respect encumbrance rules setting
   const encumbranceRule = (() => {
-    try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').encumbrance || 'variant'; } catch { return 'variant'; }
+    try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}').encumbrance || 'variant'; } catch { return 'variant'; }
   })();
   const encumbered = encumbranceRule === 'variant' ? totalWeight > strScore * 5 : false;
   const heavilyEncumbered = encumbranceRule === 'variant' ? totalWeight > strScore * 10 : false;
@@ -479,24 +464,20 @@ export default function Inventory({ characterId, character }) {
 
   // --- Aggregate stat modifiers from all equipped items ---
   const equippedStatBonuses = useMemo(() => {
+    const raw = getEquippedStatBonuses(items);
+    // Convert uppercase keys to lowercase for display and track source items
     const bonuses = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
-    const sources = []; // track which items contribute
-    for (const item of items.filter(i => i.equipped)) {
-      try {
-        const mods = typeof item.stat_modifiers === 'string'
-          ? JSON.parse(item.stat_modifiers || '{}')
-          : (item.stat_modifiers || {});
-        let hasBonus = false;
-        for (const [stat, value] of Object.entries(mods)) {
-          const key = stat.toLowerCase();
-          if (key in bonuses && typeof value === 'number' && value !== 0) {
-            bonuses[key] += value;
-            hasBonus = true;
-          }
-        }
-        if (hasBonus) sources.push(item.name);
-      } catch { /* ignore bad JSON */ }
+    for (const [key, val] of Object.entries(raw)) {
+      const lower = key.toLowerCase();
+      if (lower in bonuses) bonuses[lower] += val;
     }
+    const sources = items.filter(i => i.equipped && (() => {
+      try {
+        const mods = typeof i.stat_modifiers === 'string'
+          ? JSON.parse(i.stat_modifiers || '{}') : (i.stat_modifiers || {});
+        return Object.values(mods).some(v => typeof v === 'number' && v !== 0);
+      } catch { return false; }
+    })()).map(i => i.name);
     return { bonuses, sources, hasAny: sources.length > 0 };
   }, [items]);
 

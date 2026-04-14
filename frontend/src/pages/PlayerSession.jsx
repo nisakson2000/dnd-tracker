@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 import { useSession } from '../contexts/SessionContext';
 import { useCampaignSyncSafe } from '../contexts/CampaignSyncContext';
-import { SKILL_ABILITY_MAP } from '../utils/dndHelpers';
+import { SKILL_ABILITY_MAP, calcMod, ABILITIES } from '../utils/dndHelpers';
 import { validateExpression } from '../data/playerRollExpressions';
 import { SESSION_STATS_TEMPLATE } from '../data/playerSessionLog';
 import PlayerEventFeed from '../components/party/PlayerEventFeed';
@@ -196,7 +196,7 @@ export default function PlayerSession() {
     }
   }, [isMyTurn]);
 
-  const handleSendChat = async () => {
+  const handleSendChat = useCallback(async () => {
     if (!chatInput.trim() || !connected) return;
     const msg = chatInput.trim();
     setChatInput('');
@@ -207,9 +207,9 @@ export default function PlayerSession() {
     } catch {
       toast.error('Failed to send message');
     }
-  };
+  }, [chatInput, connected, dispatch, sendToDm]);
 
-  const handleRequestAction = async () => {
+  const handleRequestAction = useCallback(async () => {
     if (!actionInput.trim() || !connected) return;
     const desc = actionInput.trim();
     setActionInput('');
@@ -223,9 +223,9 @@ export default function PlayerSession() {
     } catch {
       toast.error('Failed to send action request');
     }
-  };
+  }, [actionInput, connected, sendToDm, playerUuid]);
 
-  const handleUseItem = async () => {
+  const handleUseItem = useCallback(async () => {
     if (!useItemName.trim() || !connected) return;
     const item = useItemName.trim();
     setUseItemName('');
@@ -239,17 +239,21 @@ export default function PlayerSession() {
     } catch {
       toast.error('Failed to send item request');
     }
-  };
+  }, [useItemName, connected, sendToDm, playerUuid]);
 
-  const handleRequestRest = async () => {
+  const handleRequestRest = useCallback(async () => {
     if (!connected) return;
     const desc = restType === 'long' ? 'Long rest' : 'Short rest';
     toast(`Requesting ${desc.toLowerCase()}...`, { icon: restType === 'long' ? '\uD83C\uDF19' : '\u2600\uFE0F', duration: 3000 });
-    await sendToDm({
-      type: 'ActionRequest', action_type: 'rest_request', description: desc,
-      player_uuid: playerUuid || '',
-    });
-  };
+    try {
+      await sendToDm({
+        type: 'ActionRequest', action_type: 'rest_request', description: desc,
+        player_uuid: playerUuid || '',
+      });
+    } catch {
+      toast.error('Failed to send rest request');
+    }
+  }, [connected, restType, sendToDm, playerUuid]);
 
   const handleSkillCheckRoll = async () => {
     if (!skillCheckPrompt || skillCheckRolling) return;
@@ -258,7 +262,7 @@ export default function PlayerSession() {
     // Compute ability modifier from character sheet
     const abilityName = skillCheckPrompt.ability || SKILL_ABILITY_MAP[skillCheckPrompt.skill] || '';
     const abilityEntry = charAbilities.find(a => a.ability?.toLowerCase() === abilityName.toLowerCase());
-    const modifier = abilityEntry ? Math.floor(((abilityEntry.score || 10) - 10) / 2) : 0;
+    const modifier = abilityEntry ? calcMod(abilityEntry.score || 10) : 0;
     const total = roll + modifier;
     const success = skillCheckPrompt.dc ? total >= skillCheckPrompt.dc : null;
 
@@ -294,7 +298,7 @@ export default function PlayerSession() {
     }, 2000);
   };
 
-  const handleWhisperToDm = async () => {
+  const handleWhisperToDm = useCallback(async () => {
     if (!whisperText.trim() || !connected) return;
     const text = whisperText.trim();
     setWhisperText('');
@@ -303,9 +307,9 @@ export default function PlayerSession() {
     await sendToDm({
       type: 'ChatMessage', sender: 'Player (whisper)', message: text, private: true,
     });
-  };
+  }, [whisperText, connected, sendToDm]);
 
-  const handleSendSuggestion = async () => {
+  const handleSendSuggestion = useCallback(async () => {
     if (!suggestionInput.trim() || !connected) return;
     setSuggestionSending(true);
     const desc = suggestionInput.trim();
@@ -322,7 +326,7 @@ export default function PlayerSession() {
       toast.error('Failed to send suggestion');
     }
     setSuggestionSending(false);
-  };
+  }, [suggestionInput, connected, sendToDm, playerUuid, addFeedEvent]);
 
   const handleRollDice = useCallback((sides) => {
     const result = Math.floor(Math.random() * sides) + 1;
@@ -363,12 +367,11 @@ export default function PlayerSession() {
 
   // Compute ability modifiers for Quick Rolls
   const abilityModifiers = useMemo(() => {
-    const abilities = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
     const mods = {};
-    for (const ab of abilities) {
+    for (const ab of ABILITIES) {
       const entry = charAbilities.find(a => a.ability?.toUpperCase() === ab);
       const score = entry?.score ?? 10;
-      const baseMod = Math.floor((score - 10) / 2);
+      const baseMod = calcMod(score);
       const profBonus = entry?.proficiencyBonus ?? 0;
       const saveProficient = entry?.saveProficient ?? false;
       mods[ab] = {
@@ -410,7 +413,7 @@ export default function PlayerSession() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [skillCheckPrompt, diceResult]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [skillCheckPrompt, diceResult, handleRollDice]);
 
   const panelStyle = useMemo(() => ({
     background: 'rgba(255,255,255,0.02)',
@@ -720,7 +723,7 @@ export default function PlayerSession() {
                       display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px',
                       marginBottom: '10px',
                     }}>
-                      {['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(ab => {
+                      {ABILITIES.map(ab => {
                         const mod = abilityModifiers[ab]?.checkMod ?? 0;
                         return (
                           <button
@@ -762,7 +765,7 @@ export default function PlayerSession() {
                     <div style={{
                       display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px',
                     }}>
-                      {['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(ab => {
+                      {ABILITIES.map(ab => {
                         const mod = abilityModifiers[ab]?.saveMod ?? 0;
                         const isProf = abilityModifiers[ab]?.saveProficient ?? false;
                         return (
@@ -870,6 +873,17 @@ export default function PlayerSession() {
                       }
                       setDiceResult({ sides: 0, result: total, label: customRollExpr.trim(), timestamp: Date.now() });
                       setRollHistory(prev => [...prev.slice(-9), { sides: 0, result: total, label: customRollExpr.trim(), timestamp: Date.now() }]);
+                      if (broadcasting && connected) {
+                        invoke('ws_send_to_dm', {
+                          eventJson: JSON.stringify({
+                            type: 'RollBroadcast',
+                            expression: customRollExpr.trim(),
+                            total,
+                            label: `${customRollExpr.trim()} = ${total}`,
+                            player_uuid: playerUuid || '',
+                          }),
+                        }).catch(() => {});
+                      }
                       setCustomRollExpr('');
                     }
                   }}

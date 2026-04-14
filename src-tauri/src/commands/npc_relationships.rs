@@ -2,36 +2,8 @@ use rusqlite::params;
 use tauri::State;
 use uuid::Uuid;
 
-use crate::campaign_db;
+use crate::campaign_helpers::{with_campaign_conn, require_active_campaign};
 use crate::db::AppState;
-
-fn ensure_campaign_conn(state: &AppState) -> Result<(), String> {
-    let mut conn_guard = state.campaign_conn.lock().map_err(|_| {
-        "Campaign database is temporarily busy.".to_string()
-    })?;
-    if conn_guard.is_none() {
-        let conn = campaign_db::init_campaign_db(&state.data_dir)?;
-        *conn_guard = Some(conn);
-    }
-    Ok(())
-}
-
-fn with_campaign_conn<F, T>(state: &AppState, f: F) -> Result<T, String>
-where
-    F: FnOnce(&rusqlite::Connection) -> Result<T, String>,
-{
-    ensure_campaign_conn(state)?;
-    let conn_guard = state.campaign_conn.lock().map_err(|_| {
-        "Campaign database is temporarily busy.".to_string()
-    })?;
-    let conn = conn_guard.as_ref().ok_or("Campaign database not initialized.".to_string())?;
-    f(conn)
-}
-
-fn require_active_campaign(state: &AppState) -> Result<String, String> {
-    let active = state.active_campaign.lock().map_err(|_| "Failed to read active campaign.".to_string())?;
-    active.clone().ok_or("No active campaign selected.".to_string())
-}
 
 // ── Create a relationship between two NPCs ──
 #[tauri::command]
@@ -186,31 +158,54 @@ pub fn update_npc_relationship(
     let now = chrono::Utc::now().timestamp();
 
     with_campaign_conn(&state, |conn| {
-        if let Some(v) = &relationship_type {
-            conn.execute("UPDATE npc_relationships SET relationship_type = ?1, updated_at = ?2 WHERE id = ?3", params![v, now, relationship_id])
-                .map_err(|e| format!("Failed to update relationship_type: {}", e))?;
+        let mut set_clauses: Vec<String> = Vec::new();
+        let mut param_values: Vec<Box<dyn rusqlite::types::ToSql>> = Vec::new();
+
+        if let Some(v) = relationship_type {
+            set_clauses.push(format!("relationship_type = ?{}", set_clauses.len() + 1));
+            param_values.push(Box::new(v));
         }
-        if let Some(v) = &label {
-            conn.execute("UPDATE npc_relationships SET label = ?1, updated_at = ?2 WHERE id = ?3", params![v, now, relationship_id])
-                .map_err(|e| format!("Failed to update label: {}", e))?;
+        if let Some(v) = label {
+            set_clauses.push(format!("label = ?{}", set_clauses.len() + 1));
+            param_values.push(Box::new(v));
         }
-        if let Some(v) = &description {
-            conn.execute("UPDATE npc_relationships SET description = ?1, updated_at = ?2 WHERE id = ?3", params![v, now, relationship_id])
-                .map_err(|e| format!("Failed to update description: {}", e))?;
+        if let Some(v) = description {
+            set_clauses.push(format!("description = ?{}", set_clauses.len() + 1));
+            param_values.push(Box::new(v));
         }
         if let Some(v) = strength {
-            conn.execute("UPDATE npc_relationships SET strength = ?1, updated_at = ?2 WHERE id = ?3", params![v, now, relationship_id])
-                .map_err(|e| format!("Failed to update strength: {}", e))?;
+            set_clauses.push(format!("strength = ?{}", set_clauses.len() + 1));
+            param_values.push(Box::new(v));
         }
         if let Some(v) = is_secret {
-            let secret_int = if v { 1 } else { 0 };
-            conn.execute("UPDATE npc_relationships SET is_secret = ?1, updated_at = ?2 WHERE id = ?3", params![secret_int, now, relationship_id])
-                .map_err(|e| format!("Failed to update is_secret: {}", e))?;
+            let secret_int: i64 = if v { 1 } else { 0 };
+            set_clauses.push(format!("is_secret = ?{}", set_clauses.len() + 1));
+            param_values.push(Box::new(secret_int));
         }
-        if let Some(v) = &dm_notes {
-            conn.execute("UPDATE npc_relationships SET dm_notes = ?1, updated_at = ?2 WHERE id = ?3", params![v, now, relationship_id])
-                .map_err(|e| format!("Failed to update dm_notes: {}", e))?;
+        if let Some(v) = dm_notes {
+            set_clauses.push(format!("dm_notes = ?{}", set_clauses.len() + 1));
+            param_values.push(Box::new(v));
         }
+
+        if set_clauses.is_empty() {
+            return Ok(serde_json::json!({ "id": relationship_id, "updated_at": now }));
+        }
+
+        // Always set updated_at
+        set_clauses.push(format!("updated_at = ?{}", set_clauses.len() + 1));
+        param_values.push(Box::new(now));
+
+        let id_param_idx = set_clauses.len() + 1;
+        let sql = format!(
+            "UPDATE npc_relationships SET {} WHERE id = ?{}",
+            set_clauses.join(", "),
+            id_param_idx
+        );
+        param_values.push(Box::new(relationship_id.clone()));
+
+        let params_ref: Vec<&dyn rusqlite::types::ToSql> = param_values.iter().map(|p| p.as_ref()).collect();
+        conn.execute(&sql, params_ref.as_slice())
+            .map_err(|e| format!("Failed to update relationship: {}", e))?;
 
         Ok(serde_json::json!({ "id": relationship_id, "updated_at": now }))
     })
@@ -386,13 +381,13 @@ pub fn get_death_cascade(
             affected.push(row.map_err(|e| format!("Failed to read row: {}", e))?);
         }
 
-        // Check for quests involving this NPC
+        // Check for quests involving this NPC (text search by NPC name in title/description)
+        let npc_pattern = format!("%{}%", npc_name);
         let mut quest_stmt = conn.prepare(
-            "SELECT id, title, status FROM campaign_quests WHERE campaign_id = ?1 AND status != 'completed'"
+            "SELECT id, title, status FROM campaign_quests WHERE campaign_id = ?1 AND status != 'completed' AND (title LIKE ?2 OR description LIKE ?2)"
         ).map_err(|e| format!("Failed to prepare quest query: {}", e))?;
 
-        // Simple text search for NPC name in quest descriptions — not perfect but functional
-        let quest_rows = quest_stmt.query_map(params![campaign_id], |row| {
+        let quest_rows = quest_stmt.query_map(params![campaign_id, npc_pattern], |row| {
             Ok(serde_json::json!({
                 "quest_id": row.get::<_, String>(0)?,
                 "title": row.get::<_, String>(1)?,

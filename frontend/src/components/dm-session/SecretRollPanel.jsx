@@ -1,8 +1,15 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { Dice5, Eye, EyeOff, Trash2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const DICE_TYPES = [4, 6, 8, 10, 12, 20, 100];
+
+const TOAST_STYLE = {
+  background: 'rgba(30, 20, 40, 0.95)',
+  color: '#e2e8f0',
+  fontFamily: 'var(--font-ui)',
+  fontSize: '0.85rem',
+};
 
 const rollDice = (sides, count = 1, modifier = 0) => {
   const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * sides) + 1);
@@ -32,11 +39,10 @@ function formatRollLabel(result) {
   return label;
 }
 
-export default function SecretRollPanel({ onClose }) {
+function SecretRollPanel({ onClose }) {
   const [history, setHistory] = useState([]);
   const [customInput, setCustomInput] = useState('');
   const [flashId, setFlashId] = useState(null);
-  const historyRef = useRef(null);
   const maxHistory = 10;
 
   const addRoll = useCallback((result) => {
@@ -55,11 +61,8 @@ export default function SecretRollPanel({ onClose }) {
     toast('Rolled secretly', {
       icon: '🎲',
       style: {
-        background: 'rgba(30, 20, 40, 0.95)',
-        color: '#e2e8f0',
+        ...TOAST_STYLE,
         border: '1px solid rgba(192, 132, 252, 0.3)',
-        fontFamily: 'var(--font-ui)',
-        fontSize: '0.85rem',
       },
       duration: 1500,
     });
@@ -81,12 +84,7 @@ export default function SecretRollPanel({ onClose }) {
     const parsed = parseCustomRoll(customInput);
     if (!parsed) {
       toast.error('Invalid format. Use e.g. 2d6+3', {
-        style: {
-          background: 'rgba(30, 20, 40, 0.95)',
-          color: '#e2e8f0',
-          fontFamily: 'var(--font-ui)',
-          fontSize: '0.85rem',
-        },
+        style: TOAST_STYLE,
       });
       return;
     }
@@ -98,12 +96,7 @@ export default function SecretRollPanel({ onClose }) {
   const clearHistory = () => {
     setHistory([]);
     toast('History cleared', {
-      style: {
-        background: 'rgba(30, 20, 40, 0.95)',
-        color: '#e2e8f0',
-        fontFamily: 'var(--font-ui)',
-        fontSize: '0.85rem',
-      },
+      style: TOAST_STYLE,
       duration: 1200,
     });
   };
@@ -180,7 +173,7 @@ export default function SecretRollPanel({ onClose }) {
             </button>
           )}
         </div>
-        <div ref={historyRef} style={styles.historyList}>
+        <div style={styles.historyList}>
           {history.length === 0 ? (
             <div style={styles.emptyState}>No rolls yet</div>
           ) : (
@@ -438,3 +431,5 @@ const styles = {
     marginLeft: 'auto',
   },
 };
+
+export default memo(SecretRollPanel);

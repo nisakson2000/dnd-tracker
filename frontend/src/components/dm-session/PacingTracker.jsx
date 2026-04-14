@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { Activity, TrendingUp, TrendingDown, X, Zap } from 'lucide-react';
 
 const TENSION_LABELS = [
@@ -67,7 +67,7 @@ function saveState(tension, log) {
   } catch { /* ignore */ }
 }
 
-export default function PacingTracker({ onClose }) {
+function PacingTracker({ onClose }) {
   const [tension, setTension] = useState(5);
   const [log, setLog] = useState([]);
 
@@ -379,3 +379,5 @@ const styles = {
     marginLeft: 'auto',
   },
 };
+
+export default memo(PacingTracker);

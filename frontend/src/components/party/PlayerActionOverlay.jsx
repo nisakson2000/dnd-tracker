@@ -11,6 +11,7 @@ import { getOverview } from '../../api/overview';
 import PlayerCombatHUD from './PlayerCombatHUD';
 import ErrorBoundary from '../ErrorBoundary';
 import { loadJournal } from '../../utils/playerJournal';
+import { SETTINGS_KEY } from '../../sections/Settings';
 
 // Keyframes injected once
 const STYLE_ID = 'player-action-overlay-styles';
@@ -802,7 +803,7 @@ export default memo(function PlayerActionOverlay({ activeConditions = [], charac
 function JournalButton({ characterId, showJournal, setShowJournal }) {
   if (!characterId) return null;
   // Only show in Party Connect mode (DM pushes journal data)
-  try { const s = JSON.parse(localStorage.getItem('codex-v3-settings') || '{}'); if (s.sessionStyle !== 'connected') return null; } catch {}
+  try { const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); if (s.sessionStyle !== 'connected') return null; } catch {}
   return (
     <button onClick={() => setShowJournal(!showJournal)} style={{
       position: 'fixed', bottom: 20, right: 80, zIndex: 9999,

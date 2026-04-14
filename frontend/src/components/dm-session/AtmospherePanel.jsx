@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import {
   Eye, CloudRain, Sun, Wind, Thermometer, RefreshCw,
   Send, ChevronDown, ChevronUp, Sparkles,
@@ -61,7 +61,7 @@ const SENSE_ICONS = {
 
 /* ─── component ────────────────────────────────────────────────── */
 
-export default function AtmospherePanel({ onBroadcast, onClose }) {
+function AtmospherePanel({ onBroadcast, onClose }) {
   const [locationType, setLocationType] = useState('tavern');
   const [timeOfDay, setTimeOfDay]       = useState('evening');
   const [weather, setWeather]           = useState('clear');
@@ -74,10 +74,6 @@ export default function AtmospherePanel({ onBroadcast, onClose }) {
 
   const handleGenerate = () => {
     setResult(generateAtmosphere(locationType, timeOfDay, weather));
-  };
-
-  const handleReroll = () => {
-    handleGenerate();
   };
 
   const handleBroadcast = () => {
@@ -339,7 +335,7 @@ export default function AtmospherePanel({ onBroadcast, onClose }) {
           {/* ── action buttons ── */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button
-              onClick={handleReroll}
+              onClick={handleGenerate}
               style={btnBase}
               onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
@@ -386,3 +382,5 @@ export default function AtmospherePanel({ onBroadcast, onClose }) {
     </div>
   );
 }
+
+export default memo(AtmospherePanel);

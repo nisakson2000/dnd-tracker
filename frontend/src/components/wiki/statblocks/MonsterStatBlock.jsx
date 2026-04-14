@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { Shield, Heart, Footprints, Eye, MessageSquare, Skull } from 'lucide-react';
-
-const ABILITY_NAMES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+import { ABILITIES } from '../../../utils/dndHelpers';
 const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
 function calcModifier(score) {
@@ -19,7 +18,7 @@ function getAbilityScores(metadata) {
   }
   // Try abilities object with STR/DEX/etc. keys
   if (metadata.abilities && typeof metadata.abilities === 'object') {
-    return ABILITY_NAMES.map(k => metadata.abilities[k] ?? metadata.abilities[k.toLowerCase()] ?? '—');
+    return ABILITIES.map(k => metadata.abilities[k] ?? metadata.abilities[k.toLowerCase()] ?? '—');
   }
   return null;
 }
@@ -96,7 +95,7 @@ export default function MonsterStatBlock({ metadata }) {
           <>
             <hr className="border-red-700/40 my-3" />
             <div className="grid grid-cols-6 gap-1 text-center">
-              {ABILITY_NAMES.map((name, i) => {
+              {ABILITIES.map((name, i) => {
                 const score = abilities[i];
                 const mod = score !== '—' ? calcModifier(score) : '';
                 return (

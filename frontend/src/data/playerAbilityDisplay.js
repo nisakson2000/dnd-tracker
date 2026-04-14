@@ -67,12 +67,9 @@ export const PROFICIENCY_BY_LEVEL = [
 
 /**
  * Get proficiency bonus for a character level.
+ * Canonical implementation: calcProfBonus in utils/dndHelpers.js
  */
-export function getProficiencyBonus(level) {
-  if (level < 1) return 2;
-  if (level > 20) return 6;
-  return PROFICIENCY_BY_LEVEL[level];
-}
+export { calcProfBonus as getProficiencyBonus } from '../utils/dndHelpers';
 
 // ---------------------------------------------------------------------------
 // VISION TYPES

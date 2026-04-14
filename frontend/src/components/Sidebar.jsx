@@ -16,6 +16,7 @@ import { useGuidance } from '../contexts/GuidanceContext';
 import { useTutorial } from '../contexts/TutorialContext';
 import { getSectionShortcutLabel } from '../utils/keyboardShortcuts';
 import NextStepsWidget from './dm-campaign/NextStepsWidget';
+import { SETTINGS_KEY } from '../sections/Settings';
 
 function isAssistantEnabled() {
   try {
@@ -25,7 +26,7 @@ function isAssistantEnabled() {
 }
 
 function getSessionStyle() {
-  try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').sessionStyle || 'solo'; } catch { return 'solo'; }
+  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}').sessionStyle || 'solo'; } catch { return 'solo'; }
 }
 
 const PLAYER_SECTION_GROUPS = [
@@ -145,7 +146,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
   const [hpInput, setHpInput] = useState('');
   const hpInputRef = useRef(null);
   const [showSidebarDice, setShowSidebarDice] = useState(() => {
-    try { const s = JSON.parse(localStorage.getItem('codex-v3-settings') || '{}'); return s.sidebarDice !== false; } catch { return true; }
+    try { const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); return s.sidebarDice !== false; } catch { return true; }
   });
   const [currentSessionStyle, setCurrentSessionStyle] = useState(() => getSessionStyle());
 
@@ -159,7 +160,7 @@ export default function Sidebar({ character, activeSection, onSelect, onBack, ac
       if (detail.sidebarDice !== undefined) {
         setShowSidebarDice(detail.sidebarDice !== false);
       } else {
-        try { const s = JSON.parse(localStorage.getItem('codex-v3-settings') || '{}'); setShowSidebarDice(s.sidebarDice !== false); } catch {}
+        try { const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); setShowSidebarDice(s.sidebarDice !== false); } catch {}
       }
       // Update session style
       if (detail.sessionStyle) {

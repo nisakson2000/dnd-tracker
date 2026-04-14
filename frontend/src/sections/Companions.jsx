@@ -5,6 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPortal from '../components/ModalPortal';
+import { ABILITIES } from '../utils/dndHelpers';
 
 const CREATURE_TYPES = [
   { value: 'familiar', label: 'Familiar' },
@@ -24,7 +25,6 @@ const CREATURE_TYPE_COLORS = {
   sidekick: { bg: 'rgba(244,114,182,0.12)', text: '#f472b6', border: 'rgba(244,114,182,0.3)' },
 };
 
-const ABILITY_NAMES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
 const ABILITY_KEYS = ['str_score', 'dex_score', 'con_score', 'int_score', 'wis_score', 'cha_score'];
 
 const EMPTY_COMPANION = {
@@ -323,7 +323,7 @@ function CompanionFormModal({ companion, onSave, onClose }) {
             <div style={{ marginBottom: 16 }}>
               <label style={{ ...labelStyle, marginBottom: 8 }}>Ability Scores</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
-                {ABILITY_NAMES.map((name, i) => (
+                {ABILITIES.map((name, i) => (
                   <div key={name} style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(201,168,76,0.5)', marginBottom: 4, fontFamily: 'var(--font-ui)' }}>{name}</div>
                     <NumericInput
@@ -557,7 +557,7 @@ function CompanionCard({ companion, onEdit, onDelete, onToggleActive, onHpChange
             <div style={{ padding: '0 16px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
               {/* Ability scores */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8, margin: '14px 0' }}>
-                {ABILITY_NAMES.map((name, i) => {
+                {ABILITIES.map((name, i) => {
                   const score = companion[ABILITY_KEYS[i]];
                   return (
                     <div key={name} style={{ textAlign: 'center', padding: '8px 4px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8 }}>

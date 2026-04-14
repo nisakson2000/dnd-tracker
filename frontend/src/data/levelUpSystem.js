@@ -4,6 +4,7 @@
  * Covers roadmap items 79-93, 431-435 (Character Progression, Auto Level-Up).
  * XP thresholds, proficiency bonuses, class hit dice, ASI levels, feature milestones.
  */
+import { calcProfBonus } from '../utils/dndHelpers';
 
 // ── XP Thresholds by Level ──
 export const XP_THRESHOLDS = [
@@ -288,11 +289,9 @@ export function calculateLevelUpHP(className, conModifier, useAverage = true) {
 
 /**
  * Get proficiency bonus for a level.
+ * Canonical implementation: calcProfBonus in utils/dndHelpers.js
  */
-export function getProficiencyBonus(level) {
-  const entry = XP_THRESHOLDS.find(t => t.level === level);
-  return entry ? entry.proficiencyBonus : 2;
-}
+export { calcProfBonus as getProficiencyBonus } from '../utils/dndHelpers';
 
 /**
  * Check if a level is an ASI level for a class.
@@ -346,7 +345,7 @@ export function generateLevelUpSummary(className, newLevel, conModifier) {
   const hp = calculateLevelUpHP(className, conModifier);
   const features = getFeaturesAtLevel(className, newLevel);
   const isASI = isASILevel(className, newLevel);
-  const profBonus = getProficiencyBonus(newLevel);
+  const profBonus = calcProfBonus(newLevel);
   const subclass = SUBCLASS_LEVELS[className];
   const needsSubclass = subclass && subclass.level === newLevel;
 

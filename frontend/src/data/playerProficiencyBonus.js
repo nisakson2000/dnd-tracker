@@ -3,6 +3,7 @@
  * Player Mode: Proficiency bonus by level and where it applies
  * Pure JS — no React dependencies.
  */
+import { calcProfBonus } from '../utils/dndHelpers';
 
 export const PROFICIENCY_BY_LEVEL = [
   { level: 1, bonus: 2 },
@@ -35,16 +36,14 @@ export const EXPERTISE_RULES = {
   feat: 'Skill Expert feat: +1 ability score, one skill proficiency, one expertise.',
 };
 
-export function getProficiencyBonus(level) {
-  for (let i = PROFICIENCY_BY_LEVEL.length - 1; i >= 0; i--) {
-    if (level >= PROFICIENCY_BY_LEVEL[i].level) return PROFICIENCY_BY_LEVEL[i].bonus;
-  }
-  return 2;
-}
+/**
+ * Canonical implementation: calcProfBonus in utils/dndHelpers.js
+ */
+export { calcProfBonus as getProficiencyBonus } from '../utils/dndHelpers';
 
 export function getSkillModifier(abilityScore, level, isProficient, hasExpertise = false) {
   const abilityMod = Math.floor((abilityScore - 10) / 2);
-  const prof = getProficiencyBonus(level);
+  const prof = calcProfBonus(level);
   if (hasExpertise) return abilityMod + (prof * 2);
   if (isProficient) return abilityMod + prof;
   return abilityMod;
@@ -52,6 +51,6 @@ export function getSkillModifier(abilityScore, level, isProficient, hasExpertise
 
 export function getJackOfAllTrades(abilityScore, level) {
   const abilityMod = Math.floor((abilityScore - 10) / 2);
-  const halfProf = Math.floor(getProficiencyBonus(level) / 2);
+  const halfProf = Math.floor(calcProfBonus(level) / 2);
   return abilityMod + halfProf;
 }

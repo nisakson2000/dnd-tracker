@@ -1,6 +1,7 @@
 // playerQuickRef.js
 // Character Quick Reference Data — Player Mode Improvements #61–80
 // Pure JS, no React dependencies
+import { calcProfBonus } from '../utils/dndHelpers';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. PASSIVE SCORES
@@ -707,7 +708,7 @@ export function generateQuickRefCard(characterData) {
   const CHAmod = getMod(abilityScores.CHA || 10);
 
   // Proficiency bonus by level
-  const profBonus = Math.ceil(level / 4) + 1;
+  const profBonus = calcProfBonus(level);
 
   // Hit die
   const hitDie = getHitDie(characterClass);

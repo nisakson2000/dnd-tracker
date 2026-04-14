@@ -58,9 +58,10 @@ export function getSpellSaveDC(castingMod, profBonus) {
   return 8 + castingMod + profBonus;
 }
 
-export function getProficiencyBonus(level) {
-  return Math.ceil(level / 4) + 1;
-}
+/**
+ * Canonical implementation: calcProfBonus in utils/dndHelpers.js
+ */
+export { calcProfBonus as getProficiencyBonus } from '../utils/dndHelpers';
 
 export function calculateAC(armorBase, dexMod, maxDex = Infinity, shieldBonus = 0) {
   return armorBase + Math.min(dexMod, maxDex) + shieldBonus;

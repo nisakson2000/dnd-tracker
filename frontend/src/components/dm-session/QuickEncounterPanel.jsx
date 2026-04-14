@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import {
   Dice5, Map, RefreshCw, Send, ChevronDown, X,
   Swords, MessageCircle, Compass, AlertTriangle,
 } from 'lucide-react';
-import { generateRandomEncounter, getTerrainTypes } from '../../utils/randomEncounters';
+import { generateRandomEncounter } from '../../utils/randomEncounters';
 
 /* ─── Constants ─── */
 const TERRAINS = [
@@ -112,7 +112,7 @@ const btnBase = {
 };
 
 /* ─── Component ─── */
-export default function QuickEncounterPanel({ onBroadcast, onClose }) {
+function QuickEncounterPanel({ onBroadcast, onClose }) {
   const [collapsed, setCollapsed] = useState(false);
   const [terrain, setTerrain]     = useState('road');
   const [tension, setTension]     = useState('medium');
@@ -121,10 +121,6 @@ export default function QuickEncounterPanel({ onBroadcast, onClose }) {
   const rollEncounter = () => {
     const result = generateRandomEncounter(terrain, { tension });
     setEncounter(result);
-  };
-
-  const reroll = () => {
-    rollEncounter();
   };
 
   const broadcast = () => {
@@ -332,7 +328,7 @@ export default function QuickEncounterPanel({ onBroadcast, onClose }) {
               {/* Action buttons */}
               <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
                 <button
-                  onClick={reroll}
+                  onClick={rollEncounter}
                   style={{
                     ...btnBase,
                     flex: 1,
@@ -367,3 +363,5 @@ export default function QuickEncounterPanel({ onBroadcast, onClose }) {
     </div>
   );
 }
+
+export default memo(QuickEncounterPanel);

@@ -1,3 +1,5 @@
+import { calcProfBonus } from '../utils/dndHelpers';
+
 const APP_SUMMARY = `You are "Arcane Advisor," an expert D&D 5th Edition rules assistant with encyclopedic knowledge of the core rulebooks.
 
 RULES FOR EVERY ANSWER:
@@ -43,7 +45,7 @@ function buildCharacterContext(charData) {
   if (scoreKeys.length) parts.push('Ability Scores: ' + scoreKeys.map(([a, s]) => formatAbilityScore(a, s)).join(', '));
 
   // Proficiency bonus
-  const profBonus = Math.ceil(level / 4) + 1;
+  const profBonus = calcProfBonus(level);
   parts.push(`Proficiency Bonus: +${profBonus}`);
 
   // HP

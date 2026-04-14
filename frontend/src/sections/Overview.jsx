@@ -19,7 +19,10 @@ import SubclassSelectModal from '../components/SubclassSelectModal';
 import ModalPortal from '../components/ModalPortal';
 import { computeConditionEffects, CONDITION_EFFECTS } from '../data/conditionEffects';
 import { autoPopulateStats } from '../utils/autoPopulate';
-import { calcMod, calcProfBonus, ABILITIES, modStr } from '../utils/dndHelpers';
+import { calcMod, calcProfBonus, ABILITIES, ABILITY_ABBR_MAP, modStr, getEquippedStatBonuses } from '../utils/dndHelpers';
+import { ARMOR_AC_TABLE } from '../data/armorData';
+import { CLASS_HIT_DIE } from '../data/playerQuickRef';
+import { SETTINGS_KEY } from './Settings';
 
 const DAMAGE_TYPES = [
   'Acid', 'Bludgeoning', 'Cold', 'Fire', 'Force', 'Lightning', 'Necrotic',
@@ -27,35 +30,11 @@ const DAMAGE_TYPES = [
   'Nonmagical Bludgeoning', 'Nonmagical Piercing', 'Nonmagical Slashing',
 ];
 
-const ARMOR_AC_TABLE = {
-  'Padded Armor': { base: 11, type: 'light' },
-  'Leather Armor': { base: 11, type: 'light' },
-  'Studded Leather': { base: 12, type: 'light' },
-  'Hide Armor': { base: 12, type: 'medium', maxDex: 2 },
-  'Chain Shirt': { base: 13, type: 'medium', maxDex: 2 },
-  'Scale Mail': { base: 14, type: 'medium', maxDex: 2 },
-  'Breastplate': { base: 14, type: 'medium', maxDex: 2 },
-  'Half Plate': { base: 15, type: 'medium', maxDex: 2 },
-  'Ring Mail': { base: 14, type: 'heavy' },
-  'Chain Mail': { base: 16, type: 'heavy' },
-  'Splint Armor': { base: 17, type: 'heavy' },
-  'Plate Armor': { base: 18, type: 'heavy' },
-  'Shield': { bonus: 2 },
-};
-
 const OVERVIEW_TABS = [
   { id: 'stats', label: 'Stats', icon: Brain },
   { id: 'combat', label: 'Combat', icon: Swords },
   { id: 'character', label: 'Character', icon: Compass },
 ];
-const ABILITY_NAMES = { STR: 'Strength', DEX: 'Dexterity', CON: 'Constitution', INT: 'Intelligence', WIS: 'Wisdom', CHA: 'Charisma' };
-
-/** Standard hit die size per class */
-const CLASS_HIT_DIE = {
-  Barbarian: 12, Bard: 8, Cleric: 8, Druid: 8, Fighter: 10,
-  Monk: 8, Paladin: 10, Ranger: 10, Rogue: 8,
-  Sorcerer: 6, Warlock: 8, Wizard: 6,
-};
 
 /** Calculate auto HP: max hit die at level 1, then (avg + CON mod) per subsequent level */
 function calcAutoHP(className, level, conMod) {
@@ -95,7 +74,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   const syncCtx = useCampaignSyncSafe();
   const dmSessionLocked = syncCtx?.dmSessionActive && !syncCtx?.isHost;
   const allowMulticlass = (() => {
-    try { return JSON.parse(localStorage.getItem('codex-v3-settings') || '{}').allowMulticlass !== false; } catch { return true; }
+    try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}').allowMulticlass !== false; } catch { return true; }
   })();
   const [overview, setOverview] = useState(null);
   const [abilities, setAbilities] = useState([]);
@@ -173,21 +152,10 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
       // Load equipped item stat bonuses, save bonuses, and magic bonuses
       try {
         const allItems = await getItems(characterId);
-        const bonuses = {};
+        const bonuses = getEquippedStatBonuses(allItems);
         let totalSaveBonus = 0;
         const magicItems = [];
         for (const item of allItems.filter(i => i.equipped)) {
-          try {
-            const mods = typeof item.stat_modifiers === 'string'
-              ? JSON.parse(item.stat_modifiers || '{}')
-              : (item.stat_modifiers || {});
-            for (const [stat, value] of Object.entries(mods)) {
-              const key = stat.toUpperCase();
-              if (typeof value === 'number' && value !== 0) {
-                bonuses[key] = (bonuses[key] || 0) + value;
-              }
-            }
-          } catch (err) { if (import.meta.env.DEV) console.warn('Failed to parse item stat_modifiers:', err); }
           // Accumulate save bonus from items like Cloak of Protection
           if (item.save_bonus && typeof item.save_bonus === 'number' && item.save_bonus > 0) {
             totalSaveBonus += item.save_bonus;
@@ -606,20 +574,20 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
   };
 
   const rollAbilityCheck = (ability, mod) => {
-    rollDice(`${ABILITY_NAMES[ability]} Check`, mod, { disadvantage: condEffects.checkDisadvantage });
+    rollDice(`${ABILITY_ABBR_MAP[ability]} Check`, mod, { disadvantage: condEffects.checkDisadvantage });
   };
 
   const rollSavingThrow = (ability, mod, isAutoFail, hasDis) => {
     if (isAutoFail) {
       // Show auto-fail in the dice result popup AND toast
       if (diceResultTimerRef.current) clearTimeout(diceResultTimerRef.current);
-      setDiceResult({ label: `${ABILITY_NAMES[ability]} Save`, d20: 0, mod: 0, total: 0, nat20: false, nat1: false, mode: 'AUTO-FAIL (condition)', autoFail: true });
+      setDiceResult({ label: `${ABILITY_ABBR_MAP[ability]} Save`, d20: 0, mod: 0, total: 0, nat20: false, nat1: false, mode: 'AUTO-FAIL (condition)', autoFail: true });
       diceResultTimerRef.current = setTimeout(() => setDiceResult(null), 3000);
       return;
     }
     // Check for exhaustion 3+ save disadvantage on all saves
     const disFromAll = condEffects.saveDisadvantageAll;
-    rollDice(`${ABILITY_NAMES[ability]} Save`, mod, { disadvantage: hasDis || disFromAll });
+    rollDice(`${ABILITY_ABBR_MAP[ability]} Save`, mod, { disadvantage: hasDis || disFromAll });
   };
 
   const rollSkillCheck = (skillName, ability, mod, { advantage = false, disadvantage = false } = {}) => {
@@ -1623,14 +1591,14 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                 const effectiveScore = liveScore + itemBonus;
                 const mod = calcMod(effectiveScore);
                 return (
-                  <div key={ab} className={`ab-card-hex stagger-item text-center p-4 rounded-lg bg-[#0a0a10] border ${itemBonus ? 'border-green-500/25' : 'border-gold/15'} hover:border-gold/30 transition-all group/ab cursor-pointer`} onClick={() => rollAbilityCheck(ab, mod)} title={`Click to roll ${ABILITY_NAMES[ab]} check${itemBonus ? ` (includes ${itemBonus > 0 ? '+' : ''}${itemBonus} from items)` : ''}`}>
+                  <div key={ab} className={`ab-card-hex stagger-item text-center p-4 rounded-lg bg-[#0a0a10] border ${itemBonus ? 'border-green-500/25' : 'border-gold/15'} hover:border-gold/30 transition-all group/ab cursor-pointer`} onClick={() => rollAbilityCheck(ab, mod)} title={`Click to roll ${ABILITY_ABBR_MAP[ab]} check${itemBonus ? ` (includes ${itemBonus > 0 ? '+' : ''}${itemBonus} from items)` : ''}`}>
                     <div className="text-[11px] text-amber-200/50 font-display tracking-widest mb-2">{ab}</div>
                     {/* Base score — big yellow number (editable) */}
                     <div className="relative">
                       <input
                         type="number" min={1} max={30}
                         className="text-3xl font-bold text-gold text-center w-16 mx-auto hover:text-amber-300 transition-all rounded-md hover:ring-1 hover:ring-gold/25 focus:ring-1 focus:ring-gold/40"
-                        aria-label={`${ABILITY_NAMES[ab]} score`}
+                        aria-label={`${ABILITY_ABBR_MAP[ab]} score`}
                         style={{ border: 'none', background: 'transparent', outline: 'none', boxShadow: 'none' }}
                         value={localAbilities[ab] ?? score}
                         onClick={e => e.stopPropagation()}
@@ -1653,7 +1621,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                         +{itemBonus} from gear
                       </div>
                     ) : (
-                      <div className="text-[10px] text-amber-200/30 mt-1">{ABILITY_NAMES[ab]}</div>
+                      <div className="text-[10px] text-amber-200/30 mt-1">{ABILITY_ABBR_MAP[ab]}</div>
                     )}
                   </div>
                 );
@@ -1713,7 +1681,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                     tabIndex={0}
                     role="checkbox"
                     aria-checked={prof}
-                    aria-label={`${ABILITY_NAMES[ab]} saving throw proficiency`}
+                    aria-label={`${ABILITY_ABBR_MAP[ab]} saving throw proficiency`}
                     className={`flex items-center gap-3 py-1.5 px-2 rounded-md cursor-pointer group hover:bg-white/[0.03] transition-colors select-none ${isAutoFail ? 'bg-red-950/30 border border-red-500/20 rounded' : ''}`}
                   >
                     {/* Proficiency indicator */}
@@ -1722,11 +1690,11 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                       className={`text-sm font-semibold w-8 text-right transition-colors cursor-pointer hover:scale-110 ${isAutoFail ? 'text-red-400 line-through' : prof ? 'text-gold hover:text-amber-300' : 'text-amber-200/35 hover:text-amber-200/60'}`}
                       style={flashedSaves[ab] ? { animation: 'value-flash 1.2s ease-out', borderRadius: '4px' } : undefined}
                       onClick={(e) => { e.stopPropagation(); rollSavingThrow(ab, mod, isAutoFail, hasDis); }}
-                      title={`Click to roll ${ABILITY_NAMES[ab]} saving throw`}
+                      title={`Click to roll ${ABILITY_ABBR_MAP[ab]} saving throw`}
                     >
                       {isAutoFail ? 'FAIL' : modStr(mod)}
                     </span>
-                    <span className={`text-sm flex-1 transition-colors ${isAutoFail ? 'text-red-300' : prof ? 'text-amber-100' : 'text-amber-200/60'}`}>{ABILITY_NAMES[ab]}</span>
+                    <span className={`text-sm flex-1 transition-colors ${isAutoFail ? 'text-red-300' : prof ? 'text-amber-100' : 'text-amber-200/60'}`}>{ABILITY_ABBR_MAP[ab]}</span>
                     {isAutoFail && (
                       <span className="text-[10px] font-display tracking-wider text-red-400 bg-red-900/30 border border-red-500/20 px-1.5 py-0.5 rounded">AUTO-FAIL</span>
                     )}
@@ -1739,7 +1707,7 @@ export default function Overview({ characterId, character, onCharacterUpdate, on
                     <button
                       onClick={(e) => { e.stopPropagation(); rollSavingThrow(ab, mod, isAutoFail, hasDis); }}
                       className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gold/10 text-gold/50 hover:text-gold"
-                      title={`Roll ${ABILITY_NAMES[ab]} save`}
+                      title={`Roll ${ABILITY_ABBR_MAP[ab]} save`}
                     >
                       <Dices size={13} />
                     </button>

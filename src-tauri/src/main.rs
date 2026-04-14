@@ -4,6 +4,7 @@
 mod commands;
 mod db;
 mod campaign_db;
+pub mod campaign_helpers;
 mod migrations;
 mod party;
 mod dev_presence;
@@ -48,13 +49,23 @@ fn main() {
                     .header("content-type", mime)
                     .header("access-control-allow-origin", "*")
                     .body(content)
-                    .unwrap()
+                    .unwrap_or_else(|_| {
+                        tauri::http::Response::builder()
+                            .status(500)
+                            .body(Vec::new())
+                            .unwrap()
+                    })
             } else {
                 eprintln!("[codex://] 404: {}", file_path.display());
                 tauri::http::Response::builder()
                     .status(404)
                     .body(Vec::new())
-                    .unwrap()
+                    .unwrap_or_else(|_| {
+                        tauri::http::Response::builder()
+                            .status(500)
+                            .body(Vec::new())
+                            .unwrap()
+                    })
             }
         })
         .setup(|app| {
