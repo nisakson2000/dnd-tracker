@@ -1,8 +1,9 @@
-<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=2,12,20&height=160&section=header&text=The%20Codex&fontSize=52&fontColor=fff&animation=twinkling&fontAlignY=32&desc=D%26D%205e%20Companion%20App&descSize=18&descAlignY=54"/>
-
 <div align="center">
 
-![Version](https://img.shields.io/badge/Version-0.8.6-A855F7?style=for-the-badge)
+# The Codex
+### D&D 5e Companion App
+
+![Version](https://img.shields.io/badge/Version-0.8.7-A855F7?style=for-the-badge)
 ![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Tauri](https://img.shields.io/badge/Tauri_2-FFC131?style=for-the-badge&logo=tauri&logoColor=black)
 ![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
@@ -232,4 +233,4 @@ React Router v7         UDP LAN presence          Local filesystem
 
 </div>
 
-<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=2,12,20&height=100&section=footer"/>
+---
