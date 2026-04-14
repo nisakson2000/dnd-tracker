@@ -33,7 +33,7 @@ jobs:
           V_CARGO=$(grep '^version' src-tauri/Cargo.toml | head -1 | sed 's/.*= "//;s/".*//')
           V_JS=$(grep "APP_VERSION" frontend/src/version.js | sed "s/.*'V//;s/'.*//" )
           V_JSON=$(python3 -c "import json; print(json.load(open('version.json'))['version'])")
-          V_README=$(grep 'Current Version' README.md | sed 's/.*V//;s/\*.*//')
+          V_README=$(grep 'Version-' README.md | head -1 | sed 's/.*Version-//;s/-.*//')
 
           echo "  tauri.conf.json:   $V_TAURI"
           echo "  package.json:      $V_ROOT"
@@ -70,10 +70,7 @@ jobs:
             ERRORS="$ERRORS\n  MISSING: changelog.js has no entry for V${V_TAURI} — the in-app 'What's New' will show stale content"
           fi
 
-          # Check MASTERUPDATELIST.md has an entry for this version
-          if ! grep -q "V${V_TAURI}" MASTERUPDATELIST.md; then
-            ERRORS="$ERRORS\n  MISSING: MASTERUPDATELIST.md has no entry for V${V_TAURI}"
-          fi
+          # MASTERUPDATELIST.md is local-only (gitignored), skip check
 
           if [ -n "$ERRORS" ]; then
             echo ""
@@ -149,7 +146,47 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: 'The Codex v__VERSION__'
-          releaseBody: 'Auto-update release'
+          releaseBody: |
+            ## Download & Install
+
+            Pick the installer for your OS below.
+
+            ---
+
+            ### Windows
+
+            | File | Notes |
+            |---|---|
+            | **`The.Codex___VERSION___x64-setup.exe`** | Recommended — double-click to install |
+            | `The.Codex___VERSION___x64_en-US.msi` | Alternative installer (for IT/enterprise deployment) |
+
+            > After downloading, Windows may show a SmartScreen warning since the app isn't code-signed with a paid certificate. Click **More info** → **Run anyway**.
+
+            ---
+
+            ### Linux
+
+            | File | Notes |
+            |---|---|
+            | **`The.Codex___VERSION___amd64.AppImage`** | Recommended — works on any distro. `chmod +x` and run |
+            | `The.Codex___VERSION___amd64.deb` | For Debian/Ubuntu: `sudo dpkg -i The.Codex_*.deb` |
+            | `The.Codex-__VERSION__-1.x86_64.rpm` | For Fedora/RHEL: `sudo dnf install The.Codex_*.rpm` |
+
+            > **AppImage quick start:**
+            > ```bash
+            > chmod +x The.Codex___VERSION___amd64.AppImage
+            > ./The.Codex___VERSION___amd64.AppImage
+            > ```
+
+            ---
+
+            ### Signature Files
+
+            Files ending in `.sig` are used by the built-in auto-updater. You don't need to download these manually.
+
+            ---
+
+            See the [README](https://github.com/nisakson2000/dnd-tracker#readme) for the full feature list and changelog.
           releaseDraft: false
           prerelease: false
           updaterJsonKeepUniversal: true
@@ -203,7 +240,47 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: 'The Codex v__VERSION__'
-          releaseBody: 'Auto-update release'
+          releaseBody: |
+            ## Download & Install
+
+            Pick the installer for your OS below.
+
+            ---
+
+            ### Windows
+
+            | File | Notes |
+            |---|---|
+            | **`The.Codex___VERSION___x64-setup.exe`** | Recommended — double-click to install |
+            | `The.Codex___VERSION___x64_en-US.msi` | Alternative installer (for IT/enterprise deployment) |
+
+            > After downloading, Windows may show a SmartScreen warning since the app isn't code-signed with a paid certificate. Click **More info** → **Run anyway**.
+
+            ---
+
+            ### Linux
+
+            | File | Notes |
+            |---|---|
+            | **`The.Codex___VERSION___amd64.AppImage`** | Recommended — works on any distro. `chmod +x` and run |
+            | `The.Codex___VERSION___amd64.deb` | For Debian/Ubuntu: `sudo dpkg -i The.Codex_*.deb` |
+            | `The.Codex-__VERSION__-1.x86_64.rpm` | For Fedora/RHEL: `sudo dnf install The.Codex_*.rpm` |
+
+            > **AppImage quick start:**
+            > ```bash
+            > chmod +x The.Codex___VERSION___amd64.AppImage
+            > ./The.Codex___VERSION___amd64.AppImage
+            > ```
+
+            ---
+
+            ### Signature Files
+
+            Files ending in `.sig` are used by the built-in auto-updater. You don't need to download these manually.
+
+            ---
+
+            See the [README](https://github.com/nisakson2000/dnd-tracker#readme) for the full feature list and changelog.
           releaseDraft: false
           prerelease: false
           updaterJsonKeepUniversal: true

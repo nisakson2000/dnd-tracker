@@ -34,6 +34,7 @@ pub fn insert_combat_log(
     details_json: Option<String>,
     state: State<'_, AppState>,
 ) -> Result<String, String> {
+    tracing::debug!(session_id = %session_id, round = round, entry_type = %entry_type, actor = %actor_name, "insert_combat_log called");
     let campaign_id = require_active_campaign(&state)?;
     let id = Uuid::new_v4().to_string();
     let now = chrono::Utc::now().timestamp();
@@ -56,6 +57,7 @@ pub fn get_combat_log(
     limit: Option<i64>,
     state: State<'_, AppState>,
 ) -> Result<Vec<CombatLogEntry>, String> {
+    tracing::debug!(session_id = ?session_id, limit = ?limit, "get_combat_log called");
     let campaign_id = require_active_campaign(&state)?;
     let max = limit.unwrap_or(100);
 

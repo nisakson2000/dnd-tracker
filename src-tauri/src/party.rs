@@ -93,7 +93,7 @@ impl PartyServer {
 
         match result {
             Ok((_addr, server)) => {
-                eprintln!("[party] Server started on port {}", PARTY_PORT);
+                tracing::info!(port = PARTY_PORT, "Party server started");
                 tokio::spawn(server);
                 // Start zombie cleanup task
                 tokio::spawn(async move {
@@ -108,7 +108,7 @@ impl PartyServer {
                 Ok(PARTY_PORT)
             }
             Err(e) => {
-                eprintln!("[party] Failed to start server on port {}: {}", PARTY_PORT, e);
+                tracing::error!(port = PARTY_PORT, error = %e, "Failed to start party server");
                 *self.running.write().await = false;
                 *self.shutdown.lock().await = None;
                 Err(format!(
@@ -187,7 +187,7 @@ impl PartyServer {
     async fn create_room(self: &Arc<Self>) -> Result<String, String> {
         let mut rooms = self.rooms.write().await;
         if rooms.len() >= MAX_ROOMS {
-            eprintln!("[party] Room limit reached ({} rooms), rejecting create request", rooms.len());
+            tracing::warn!(count = rooms.len(), max = MAX_ROOMS, "Room limit reached, rejecting create request");
             return Err(format!("Server room limit reached (max {}). Try again later.", MAX_ROOMS));
         }
         for _ in 0..MAX_ROOM_ATTEMPTS {
@@ -570,7 +570,7 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
     let (tx, mut rx) = mpsc::channel::<Message>(CHANNEL_BUFFER_SIZE);
 
     state.add_client(client_id.clone(), tx).await;
-    eprintln!("[party] Client {} connected", client_id);
+    tracing::info!(client = %client_id, "Party client connected");
 
     // Forward channel messages to WebSocket
     let forward = tokio::spawn(async move {
@@ -588,14 +588,14 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
         let msg = match result {
             Ok(m) => m,
             Err(e) => {
-                eprintln!("[party] Client {} connection error: {}", client_id, e);
+                tracing::error!(client = %client_id, error = %e, "Party client connection error");
                 break;
             }
         };
         if msg.is_text() {
             if let Ok(text) = msg.to_str() {
                 if text.len() > MAX_MESSAGE_SIZE {
-                    eprintln!("[party] Client {} sent oversized message ({} bytes)", client_id, text.len());
+                    tracing::warn!(client = %client_id, size = text.len(), "Party client sent oversized message");
                     let clients = state.clients.read().await;
                     if let Some(client) = clients.get(&client_id) {
                         PartyServer::send_error(client, "Message too large");
@@ -616,7 +616,7 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
                         client.msg_count += 1;
                         if client.msg_count > RATE_LIMIT_MSGS && !client.rate_warned {
                             client.rate_warned = true;
-                            eprintln!("[party] Client {} exceeding rate limit ({} msgs/sec)", client_id, client.msg_count);
+                            tracing::warn!(client = %client_id, msg_count = client.msg_count, "Party client exceeding rate limit");
                             let _ = client.tx.try_send(Message::text(
                                 json!({
                                     "type": "warning",
@@ -631,7 +631,7 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
                 let parsed = match serde_json::from_str::<Value>(text) {
                     Ok(v) => v,
                     Err(e) => {
-                        eprintln!("[party] Client {} sent malformed JSON: {}", client_id, e);
+                        tracing::debug!(client = %client_id, error = %e, "Party client sent malformed JSON");
                         let clients = state.clients.read().await;
                         if let Some(client) = clients.get(&client_id) {
                             PartyServer::send_error(client, "Invalid message format");
@@ -712,7 +712,7 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
         }
     }
 
-    eprintln!("[party] Client {} disconnected", client_id);
+    tracing::info!(client = %client_id, "Party client disconnected");
     state.remove_client(&client_id).await;
     forward.abort();
 }
@@ -723,6 +723,7 @@ async fn handle_ws_connection(ws: WebSocket, state: Arc<PartyServer>) {
 pub async fn start_party_server(
     party: tauri::State<'_, Arc<PartyServer>>,
 ) -> Result<u16, String> {
+    tracing::debug!("start_party_server called");
     party.start().await
 }
 
@@ -730,6 +731,7 @@ pub async fn start_party_server(
 pub async fn stop_party_server(
     party: tauri::State<'_, Arc<PartyServer>>,
 ) -> Result<(), String> {
+    tracing::debug!("stop_party_server called");
     party.stop().await;
     Ok(())
 }
@@ -739,6 +741,7 @@ pub async fn stop_party_server(
 pub async fn create_party_room(
     party: tauri::State<'_, Arc<PartyServer>>,
 ) -> Result<String, String> {
+    tracing::debug!("create_party_room called");
     party.create_room().await
 }
 
@@ -787,6 +790,7 @@ pub async fn party_ipc_join(
     room: String,
     character: Value,
 ) -> Result<Value, String> {
+    tracing::debug!(room = %room, "party_ipc_join called");
     let client_id = uuid::Uuid::new_v4().to_string()[..8].to_string();
 
     // Create a channel for this virtual client
@@ -823,7 +827,7 @@ pub async fn party_ipc_join(
                 }
             }
         }
-        eprintln!("[party-ipc] Host client {} channel closed", cid);
+        tracing::info!(client = %cid, "Party IPC host client channel closed");
     });
 
     Ok(json!({ "client_id": client_id, "status": "connected", "welcome": welcome }))
@@ -842,7 +846,7 @@ pub async fn party_ipc_connect(
     use futures_util::{SinkExt as _, StreamExt as _};
 
     let url = format!("ws://{}:{}/party/ws", ip, PARTY_PORT);
-    eprintln!("[party-ipc] Connecting to remote server: {}", url);
+    tracing::info!(url = %url, "Party IPC connecting to remote server");
 
     let (ws_stream, _) = connect_async(&url)
         .await
@@ -877,7 +881,7 @@ pub async fn party_ipc_connect(
                             }
                         }
                         Some(Ok(tokio_tungstenite::tungstenite::Message::Close(_))) | None => {
-                            eprintln!("[party-ipc] Remote connection closed");
+                            tracing::info!("Party IPC remote connection closed");
                             let _ = app.emit("party-message", json!({"type":"connection_closed"}));
                             break;
                         }
@@ -889,7 +893,7 @@ pub async fn party_ipc_connect(
                     match msg {
                         Some(text) => {
                             if let Err(e) = write.send(tokio_tungstenite::tungstenite::Message::Text(text)).await {
-                                eprintln!("[party-ipc] Failed to send to remote: {}", e);
+                                tracing::error!(error = %e, "Party IPC failed to send to remote");
                                 break;
                             }
                         }
@@ -910,6 +914,7 @@ pub async fn party_ipc_send(
     ipc_client: tauri::State<'_, PartyIpcClient>,
     message: String,
 ) -> Result<(), String> {
+    tracing::debug!(msg_len = message.len(), "party_ipc_send called");
     let is_host = *ipc_client.is_host.lock().await;
 
     if is_host {
@@ -958,6 +963,7 @@ pub async fn party_ipc_disconnect(
     party: tauri::State<'_, Arc<PartyServer>>,
     ipc_client: tauri::State<'_, PartyIpcClient>,
 ) -> Result<(), String> {
+    tracing::debug!("party_ipc_disconnect called");
     let is_host = *ipc_client.is_host.lock().await;
 
     if is_host {

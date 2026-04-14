@@ -3,6 +3,32 @@
 // Bump this when releasing a new version.
 export const CHANGELOG = [
   {
+    version: 'V0.8.7',
+    date: '04/14/2026',
+    time: '',
+    title: 'Major Cleanup — Bug Fixes, Structured Logging, Performance & Deduplication',
+    changes: [
+      'Fixed custom roll button not broadcasting to DM — clicking Roll now sends to DM same as pressing Enter',
+      'Fixed Spellbook crash (Cannot access Q before initialization) — spell slot tables reordered to initialize before use in production builds',
+      'Fixed death cascade query returning all quests instead of NPC-related ones',
+      'Fixed keyboard shortcut R using stale closure on handleRollDice',
+      'Fixed combat turn timer useEffect with boolean expressions in dependency array',
+      'Fixed death save initialization converted from setTimeout hack to proper useEffect',
+      'Fixed HTTP response builder .unwrap() panic in Rust codex:// protocol handler',
+      'Added structured logging via tracing crate — daily-rotating codex.log with leveled output, IPC call logging, WebSocket event logging, and startup diagnostics',
+      'Added React.memo to 7 DM session panel components to prevent unnecessary re-renders',
+      'Features timer scoped to TimeAgo component — no longer re-renders entire component every 30 seconds',
+      'Combat session localStorage writes debounced to 600ms (was every second during turn timer)',
+      'Wrapped 6 PlayerSession handler functions in useCallback to fix defeated memo()',
+      'Deleted 6 unused utility files (~1,400 lines of dead code)',
+      'Extracted campaign_helpers.rs shared module from 24 Rust command files',
+      'Consolidated getProficiencyBonus from 7 duplicate definitions to 1',
+      'New app icon — dragon-wrapped d20 The Codex design',
+      'Removed deprecated Python/FastAPI backend and obsolete scripts',
+      'Rewrote README with polished layout',
+    ],
+  },
+  {
     version: 'V0.8.6',
     date: '03/21/2026',
     time: '',

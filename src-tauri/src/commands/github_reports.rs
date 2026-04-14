@@ -40,7 +40,7 @@ async fn create_github_issue(title: &str, body: &str, labels: &[&str]) -> Result
     if status.is_success() {
         let issue_url = resp_body["html_url"].as_str().unwrap_or("").to_string();
         let issue_number = resp_body["number"].as_u64().unwrap_or(0);
-        eprintln!("[reports] Created GitHub issue #{}: {}", issue_number, issue_url);
+        tracing::info!(issue = issue_number, url = %issue_url, "Created GitHub issue");
         Ok(serde_json::json!({
             "status": "submitted",
             "url": issue_url,
@@ -48,7 +48,7 @@ async fn create_github_issue(title: &str, body: &str, labels: &[&str]) -> Result
         }))
     } else {
         let msg = resp_body["message"].as_str().unwrap_or("Unknown error");
-        eprintln!("[reports] GitHub API error ({}): {}", status, msg);
+        tracing::error!(status = %status, message = msg, "GitHub API error");
         Err(format!("GitHub API error: {} — {}", status, msg))
     }
 }
@@ -131,7 +131,7 @@ pub async fn submit_bug_report(
     match create_github_issue(&title, &body, &["bug"]).await {
         Ok(result) => Ok(result),
         Err(e) => {
-            eprintln!("[reports] GitHub submission failed, queuing: {}", e);
+            tracing::warn!(error = %e, "GitHub submission failed, queuing locally");
             let _ = queue_report(&data_dir, "bug", &title, &body);
             Ok(serde_json::json!({
                 "status": "queued",
@@ -157,7 +157,7 @@ pub async fn submit_feature_request(
     match create_github_issue(&title, &body, &["enhancement"]).await {
         Ok(result) => Ok(result),
         Err(e) => {
-            eprintln!("[reports] GitHub submission failed, queuing: {}", e);
+            tracing::warn!(error = %e, "GitHub submission failed, queuing locally");
             let _ = queue_report(&data_dir, "feature", &title, &body);
             Ok(serde_json::json!({
                 "status": "queued",
@@ -198,7 +198,7 @@ pub async fn flush_pending_reports(
         match create_github_issue(title, body, labels).await {
             Ok(_) => { flushed_ids.push(*id); }
             Err(e) => {
-                eprintln!("[reports] Failed to flush report {}: {}", id, e);
+                tracing::error!(report_id = id, error = %e, "Failed to flush pending report");
                 break;
             }
         }

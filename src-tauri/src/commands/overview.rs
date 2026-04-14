@@ -91,6 +91,7 @@ pub fn get_overview(
     state: State<'_, AppState>,
     character_id: String,
 ) -> Result<FullOverviewResponse, String> {
+    tracing::debug!(character_id = %character_id, "get_overview called");
     state.with_char_conn(&character_id, |conn| {
         let overview = conn
             .query_row(
@@ -206,6 +207,7 @@ pub fn update_overview(
     character_id: String,
     payload: OverviewData,
 ) -> Result<serde_json::Value, String> {
+    tracing::debug!(character_id = %character_id, name = %payload.name, level = payload.level, "update_overview called");
     // Validate and clamp values
     let mut payload = payload;
     payload.level = payload.level.clamp(1, 20);
@@ -263,6 +265,7 @@ pub fn update_ability_scores(
     character_id: String,
     payload: Vec<AbilityScoreData>,
 ) -> Result<serde_json::Value, String> {
+    tracing::debug!(character_id = %character_id, count = payload.len(), "update_ability_scores called");
     state.with_char_conn(&character_id, |conn| {
         for item in &payload {
             let score = item.score.clamp(1, 30);
@@ -290,6 +293,7 @@ pub fn update_saving_throws(
     character_id: String,
     payload: Vec<SavingThrowData>,
 ) -> Result<serde_json::Value, String> {
+    tracing::debug!(character_id = %character_id, count = payload.len(), "update_saving_throws called");
     state.with_char_conn(&character_id, |conn| {
         for item in &payload {
             conn.execute(
@@ -308,6 +312,7 @@ pub fn update_skills(
     character_id: String,
     payload: Vec<SkillData>,
 ) -> Result<serde_json::Value, String> {
+    tracing::debug!(character_id = %character_id, count = payload.len(), "update_skills called");
     state.with_char_conn(&character_id, |conn| {
         for item in &payload {
             conn.execute(

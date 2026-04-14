@@ -198,31 +198,7 @@ export function autoDamageString(weaponName, abilityScores, magicBonus = 0) {
   return `${w.damage}${totalMod >= 0 ? '+' : ''}${totalMod}`;
 }
 
-/** Get spell slots for a caster type at a given level. Returns [{slot_level, max_slots}]. */
-export function getSpellSlotsForClass(casterType, level) {
-  // Import-free: use the hardcoded slot tables
-  if (!casterType || level < 1) return [];
-  const lvl = Math.min(20, Math.max(1, level));
-
-  if (casterType === 'pact') {
-    const pact = PACT_MAGIC_TABLE[lvl - 1];
-    if (!pact || pact.slots === 0) return [];
-    return [{ slot_level: pact.slotLevel, max_slots: pact.slots }];
-  }
-
-  const table = casterType === 'full' ? FULL_CASTER_SLOTS
-    : casterType === 'half' ? HALF_CASTER_SLOTS
-    : casterType === 'third' ? THIRD_CASTER_SLOTS
-    : null;
-
-  if (!table) return [];
-  const row = table[lvl - 1];
-  return row
-    .map((slots, i) => ({ slot_level: i + 1, max_slots: slots }))
-    .filter(s => s.max_slots > 0);
-}
-
-// Inline spell slot tables (mirrors rules5e.js but avoids circular imports)
+// Spell slot tables (must be defined before getSpellSlotsForClass)
 const FULL_CASTER_SLOTS = [
   [2,0,0,0,0,0,0,0,0],[3,0,0,0,0,0,0,0,0],[4,2,0,0,0,0,0,0,0],[4,3,0,0,0,0,0,0,0],
   [4,3,2,0,0,0,0,0,0],[4,3,3,0,0,0,0,0,0],[4,3,3,1,0,0,0,0,0],[4,3,3,2,0,0,0,0,0],
@@ -249,6 +225,29 @@ const PACT_MAGIC_TABLE = [
   {slots:3,slotLevel:5},{slots:3,slotLevel:5},{slots:3,slotLevel:5},{slots:3,slotLevel:5},
   {slots:4,slotLevel:5},{slots:4,slotLevel:5},{slots:4,slotLevel:5},{slots:4,slotLevel:5},
 ];
+
+/** Get spell slots for a caster type at a given level. Returns [{slot_level, max_slots}]. */
+export function getSpellSlotsForClass(casterType, level) {
+  if (!casterType || level < 1) return [];
+  const lvl = Math.min(20, Math.max(1, level));
+
+  if (casterType === 'pact') {
+    const pact = PACT_MAGIC_TABLE[lvl - 1];
+    if (!pact || pact.slots === 0) return [];
+    return [{ slot_level: pact.slotLevel, max_slots: pact.slots }];
+  }
+
+  const table = casterType === 'full' ? FULL_CASTER_SLOTS
+    : casterType === 'half' ? HALF_CASTER_SLOTS
+    : casterType === 'third' ? THIRD_CASTER_SLOTS
+    : null;
+
+  if (!table) return [];
+  const row = table[lvl - 1];
+  return row
+    .map((slots, i) => ({ slot_level: i + 1, max_slots: slots }))
+    .filter(s => s.max_slots > 0);
+}
 
 /** Armor AC calculation table. */
 export const ARMOR_TABLE = {

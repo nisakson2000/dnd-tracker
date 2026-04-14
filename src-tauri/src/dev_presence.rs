@@ -85,7 +85,7 @@ impl DevPresence {
         let local_ip = get_local_ip_sync().unwrap_or_else(|| "127.0.0.1".to_string());
         let instance_id = random_instance_id();
 
-        eprintln!("[dev-presence] Init: name={}, ip={}, instance={}", local_name, local_ip, instance_id);
+        tracing::info!(name = %local_name, ip = %local_ip, instance = %instance_id, "Dev presence initialized");
 
         Self {
             instance_id,
@@ -112,19 +112,19 @@ impl DevPresence {
         // Try primary port, then fallback
         let (socket, actual_port) = match UdpSocket::bind(format!("0.0.0.0:{}", BEACON_PORT)).await {
             Ok(s) => {
-                eprintln!("[dev-presence] Bound to port {}", BEACON_PORT);
+                tracing::info!(port = BEACON_PORT, "Dev presence bound to port");
                 (s, BEACON_PORT)
             }
             Err(e) => {
-                eprintln!("[dev-presence] Port {} in use, trying {}: {}", BEACON_PORT, BEACON_PORT + 1, e);
+                tracing::warn!(port = BEACON_PORT, fallback = BEACON_PORT + 1, error = %e, "Primary port in use, trying fallback");
                 let s = UdpSocket::bind(format!("0.0.0.0:{}", BEACON_PORT + 1))
                     .await
                     .map_err(|e2| {
                         let msg = format!("Failed to bind UDP on port {} or {}: {}", BEACON_PORT, BEACON_PORT + 1, e2);
-                        eprintln!("[dev-presence] {}", msg);
+                        tracing::error!("{}", msg);
                         msg
                     })?;
-                eprintln!("[dev-presence] Bound to fallback port {}", BEACON_PORT + 1);
+                tracing::info!(port = BEACON_PORT + 1, "Dev presence bound to fallback port");
                 (s, BEACON_PORT + 1)
             }
         };
@@ -136,7 +136,7 @@ impl DevPresence {
         *self.bound_port.lock().await = actual_port;
         *running = true;
 
-        eprintln!("[dev-presence] Started on port {} — {} ({})", actual_port, self.local_name, self.local_ip);
+        tracing::info!(port = actual_port, name = %self.local_name, ip = %self.local_ip, "Dev presence started");
 
         // Build broadcast addresses — limited broadcast + subnet broadcast
         let mut broadcast_addrs: Vec<SocketAddr> = vec![
@@ -150,7 +150,7 @@ impl DevPresence {
                     broadcast_addrs.push(addr);
                 }
             }
-            eprintln!("[dev-presence] Subnet broadcast: {}", subnet_broadcast);
+            tracing::debug!(address = %subnet_broadcast, "Subnet broadcast address");
         }
 
         // ── Heartbeat sender ────────────────────────────────────────────────
@@ -208,7 +208,7 @@ impl DevPresence {
                     heartbeat_count += 1;
                     *sent_counter.lock().await = heartbeat_count;
                     if heartbeat_count % 10 == 1 {
-                        eprintln!("[dev-presence] heartbeat #{} — {} peer(s)", heartbeat_count, known_peers.len());
+                        tracing::debug!(count = heartbeat_count, peers = known_peers.len(), "Dev presence heartbeat sent");
                     }
                 }
 
@@ -262,7 +262,7 @@ impl DevPresence {
                             match msg.msg_type.as_str() {
                                 "heartbeat" => {
                                     if recv_count <= 5 || recv_count % 20 == 0 {
-                                        eprintln!("[dev-presence] recv #{} heartbeat from {} ({}) v{} via {}", recv_count, msg.dev_name, peer_ip, peer_version, src_addr);
+                                        tracing::debug!(count = recv_count, peer = %msg.dev_name, ip = %peer_ip, version = %peer_version, via = %src_addr, "Dev presence heartbeat received");
                                     }
                                     let peer = DevPeer {
                                         name: msg.dev_name,
@@ -274,7 +274,7 @@ impl DevPresence {
                                     peers.write().await.insert(peer_ip, (peer, Instant::now()));
                                 }
                                 "update_pushed" => {
-                                    eprintln!("[dev-presence] recv update_pushed from {} — {:?}", msg.dev_name, msg.commit_message);
+                                    tracing::info!(peer = %msg.dev_name, commit = ?msg.commit_message, "Dev presence received update_pushed");
                                     let payload = serde_json::json!({
                                         "dev_name": msg.dev_name,
                                         "commit_message": msg.commit_message,
@@ -332,7 +332,7 @@ impl DevPresence {
                     }
                     Ok(Err(e)) => {
                         let err_msg = format!("recv error: {}", e);
-                        eprintln!("[dev-presence] {}", err_msg);
+                        tracing::warn!("{}", err_msg);
                         *last_error.write().await = Some(err_msg);
                     }
                     Err(_) => {} // timeout, just loop

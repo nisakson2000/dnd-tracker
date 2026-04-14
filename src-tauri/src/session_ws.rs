@@ -328,7 +328,7 @@ impl SessionServer {
         let pending = self.pending.clone();
         let last_pong = self.last_pong.clone();
 
-        eprintln!("[session_ws] Server started on port {}", port);
+        tracing::info!(port = port, "Session WS server started");
 
         // Subscribe for heartbeat shutdown before main spawn moves shutdown_tx
         let mut hb_shutdown = shutdown_tx.subscribe();
@@ -340,7 +340,7 @@ impl SessionServer {
                     accept_result = listener.accept() => {
                         match accept_result {
                             Ok((stream, peer_addr)) => {
-                                eprintln!("[session_ws] New connection from {}", peer_addr);
+                                tracing::info!(peer = %peer_addr, "New WS connection");
                                 let clients = clients.clone();
                                 let client_names = client_names.clone();
                                 let pending = pending.clone();
@@ -352,12 +352,12 @@ impl SessionServer {
                                 });
                             }
                             Err(e) => {
-                                eprintln!("[session_ws] Accept error: {}", e);
+                                tracing::error!(error = %e, "WS accept error");
                             }
                         }
                     }
                     _ = shutdown_rx.recv() => {
-                        eprintln!("[session_ws] Server shutting down");
+                        tracing::info!("Session WS server shutting down");
                         break;
                     }
                 }
@@ -397,7 +397,7 @@ impl SessionServer {
                                 let mut names = hb_names.lock().await;
                                 let mut pongs = hb_pongs.lock().await;
                                 for uuid in &dead_clients {
-                                    eprintln!("[session_ws] Heartbeat timeout: evicting dead client {}", uuid);
+                                    tracing::warn!(client = %uuid, "Heartbeat timeout — evicting dead client");
                                     clients.remove(uuid);
                                     names.remove(uuid);
                                     pongs.remove(uuid);
@@ -408,7 +408,7 @@ impl SessionServer {
                             let clients = hb_clients.lock().await;
                             for (uuid, tx) in clients.iter() {
                                 if tx.send(msg.clone()).is_err() {
-                                    eprintln!("[session_ws] Heartbeat: client {} unreachable", uuid);
+                                    tracing::warn!(client = %uuid, "Heartbeat ping failed — client unreachable");
                                 }
                             }
                         }
@@ -434,7 +434,7 @@ impl SessionServer {
         self.client_names.lock().await.clear();
         // Close all pending channels
         self.pending.lock().await.clear();
-        eprintln!("[session_ws] Server stopped");
+        tracing::info!("Session WS server stopped");
     }
 
     /// Broadcast an event to all approved clients.
@@ -442,7 +442,7 @@ impl SessionServer {
         let text = match serde_json::to_string(event) {
             Ok(t) => t,
             Err(e) => {
-                eprintln!("[session_ws] Failed to serialize broadcast: {}", e);
+                tracing::error!(error = %e, "Failed to serialize broadcast event");
                 return;
             }
         };
@@ -452,7 +452,7 @@ impl SessionServer {
         let msg = Message::Text(text);
         for (uuid, tx) in clients.iter() {
             if tx.send(msg.clone()).is_err() {
-                eprintln!("[session_ws] Failed to send to client {}", uuid);
+                tracing::warn!(client = %uuid, "Failed to send broadcast to client");
             }
         }
     }
@@ -464,7 +464,7 @@ impl SessionServer {
         let msg = Message::Text(json.to_string());
         for (uuid, tx) in clients.iter() {
             if tx.send(msg.clone()).is_err() {
-                eprintln!("[session_ws] Failed to send raw to client {}", uuid);
+                tracing::warn!(client = %uuid, "Failed to send raw broadcast to client");
             }
         }
     }
@@ -609,7 +609,7 @@ async fn handle_connection(
     let ws_stream = match tokio_tungstenite::accept_async(stream).await {
         Ok(ws) => ws,
         Err(e) => {
-            eprintln!("[session_ws] WebSocket handshake failed: {}", e);
+            tracing::error!(error = %e, "WebSocket handshake failed");
             return;
         }
     };
@@ -636,7 +636,7 @@ async fn handle_connection(
         Ok(Some(Ok(msg))) => {
             if let Ok(text) = msg.to_text() {
                 if text.len() > MAX_MESSAGE_SIZE {
-                    eprintln!("[session_ws] Oversized ClientHello, dropping connection");
+                    tracing::warn!(size = text.len(), "Oversized ClientHello, dropping connection");
                     forward_handle.abort();
                     return;
                 }
@@ -646,9 +646,10 @@ async fn handle_connection(
                         display_name,
                         character_summary,
                     }) => {
-                        eprintln!(
-                            "[session_ws] ClientHello from {} ({})",
-                            display_name, uuid
+                        tracing::info!(
+                            player = %display_name,
+                            uuid = %uuid,
+                            "ClientHello received"
                         );
                         player_uuid = uuid.clone();
 
@@ -656,9 +657,9 @@ async fn handle_connection(
                         {
                             let mut pend = pending.lock().await;
                             if let Some(old) = pend.remove(&uuid) {
-                                eprintln!(
-                                    "[session_ws] Duplicate UUID {}, closing old connection",
-                                    uuid
+                                tracing::info!(
+                                    uuid = %uuid,
+                                    "Duplicate UUID in pending, closing old connection"
                                 );
                                 let _ = old.sender.send(Message::Close(None));
                             }
@@ -675,9 +676,9 @@ async fn handle_connection(
                         {
                             let mut cl = clients.lock().await;
                             if let Some(old_sender) = cl.remove(&uuid) {
-                                eprintln!(
-                                    "[session_ws] Duplicate UUID {} in approved clients, closing old",
-                                    uuid
+                                tracing::info!(
+                                    uuid = %uuid,
+                                    "Duplicate UUID in approved clients, closing old"
                                 );
                                 let _ = old_sender.send(Message::Close(None));
                             }
@@ -694,19 +695,19 @@ async fn handle_connection(
                         );
                     }
                     _ => {
-                        eprintln!("[session_ws] First message was not ClientHello, dropping");
+                        tracing::warn!("First message was not ClientHello, dropping connection");
                         forward_handle.abort();
                         return;
                     }
                 }
             } else {
-                eprintln!("[session_ws] Non-text first message, dropping");
+                tracing::warn!("Non-text first message, dropping connection");
                 forward_handle.abort();
                 return;
             }
         }
         _ => {
-            eprintln!("[session_ws] Handshake timeout or error, dropping");
+            tracing::warn!("Handshake timeout or error, dropping connection");
             forward_handle.abort();
             return;
         }
@@ -724,7 +725,7 @@ async fn handle_connection(
                         }
                         if let Ok(text) = msg.to_text() {
                             if text.len() > MAX_MESSAGE_SIZE {
-                                eprintln!("[session_ws] Oversized message from {}, disconnecting", player_uuid);
+                                tracing::warn!(client = %player_uuid, size = text.len(), "Oversized message, disconnecting client");
                                 break;
                             }
                             match serde_json::from_str::<GameEvent>(text) {
@@ -748,9 +749,10 @@ async fn handle_connection(
                                     };
                                     if let Some(eu) = event_uuid {
                                         if eu != player_uuid {
-                                            eprintln!(
-                                                "[session_ws] UUID mismatch: connection={} event={}, dropping",
-                                                player_uuid, eu
+                                            tracing::warn!(
+                                                connection_uuid = %player_uuid,
+                                                event_uuid = %eu,
+                                                "UUID mismatch — anti-spoof dropping event"
                                             );
                                             continue;
                                         }
@@ -771,13 +773,13 @@ async fn handle_connection(
                                     drop(cl);
                                 }
                                 Err(e) => {
-                                    eprintln!("[session_ws] Bad message from {}: {}", player_uuid, e);
+                                    tracing::debug!(client = %player_uuid, error = %e, "Malformed message from client");
                                 }
                             }
                         }
                     }
                     Some(Err(e)) => {
-                        eprintln!("[session_ws] Connection error from {}: {}", player_uuid, e);
+                        tracing::error!(client = %player_uuid, error = %e, "Connection error");
                         break;
                     }
                     None => {
@@ -786,7 +788,7 @@ async fn handle_connection(
                 }
             }
             _ = shutdown_rx.recv() => {
-                eprintln!("[session_ws] Connection {} shutting down (server stop)", player_uuid);
+                tracing::info!(client = %player_uuid, "Connection shutting down (server stop)");
                 break;
             }
         }
@@ -815,7 +817,7 @@ async fn handle_connection(
         serde_json::json!({ "player_uuid": player_uuid }),
     );
 
-    eprintln!("[session_ws] Client {} disconnected", player_uuid);
+    tracing::info!(client = %player_uuid, "Client disconnected");
     forward_handle.abort();
 }
 
@@ -831,7 +833,7 @@ pub async fn connect_to_dm(
     app: AppHandle,
 ) -> Result<ClientConnection, String> {
     let url = format!("ws://{}:{}", ip, port);
-    eprintln!("[session_ws] Connecting to DM at {}", url);
+    tracing::info!(url = %url, "Connecting to DM session server");
 
     let _ = app.emit(
         "session-connection-status",
@@ -925,13 +927,13 @@ pub async fn connect_to_dm(
                                         );
                                     }
                                     Err(e) => {
-                                        eprintln!("[session_ws] Bad message from DM: {}", e);
+                                        tracing::debug!(error = %e, "Malformed message from DM");
                                     }
                                 }
                             }
                         }
                         Some(Err(e)) => {
-                            eprintln!("[session_ws] DM connection error: {}", e);
+                            tracing::error!(error = %e, "DM connection error");
                             let _ = app_clone.emit(
                                 "session-connection-status",
                                 serde_json::json!({ "status": "disconnected", "reason": format!("{}", e) }),

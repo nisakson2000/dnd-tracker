@@ -32,7 +32,7 @@ pub async fn ota_download_update(
     let dist_dir = ota_dist_dir(&data_dir);
 
     // 1. Check version manifest
-    eprintln!("[ota] Checking version manifest...");
+    tracing::info!("OTA: checking version manifest");
     let manifest: serde_json::Value = reqwest::get(VERSION_MANIFEST_URL)
         .await
         .map_err(|e| format!("Failed to fetch version manifest: {}", e))?
@@ -44,7 +44,7 @@ pub async fn ota_download_update(
         .as_str()
         .unwrap_or("0.0.0")
         .to_string();
-    eprintln!("[ota] Remote version: {}", remote_version);
+    tracing::info!(version = %remote_version, "OTA: remote version");
 
     // Check local version marker
     let version_file = data_dir.join("ota_version.txt");
@@ -52,7 +52,7 @@ pub async fn ota_download_update(
 
     // Also check the app's compiled version
     let app_version = env!("CARGO_PKG_VERSION");
-    eprintln!("[ota] App version: {}, OTA version: {}", app_version, local_ota_version.trim());
+    tracing::info!(app_version = app_version, ota_version = local_ota_version.trim(), "OTA: version comparison");
 
     // If OTA version matches remote, no update needed
     if local_ota_version.trim() == remote_version {
@@ -63,7 +63,7 @@ pub async fn ota_download_update(
     }
 
     // 2. Download dist.zip
-    eprintln!("[ota] Downloading dist.zip from GitHub...");
+    tracing::info!("OTA: downloading dist.zip from GitHub");
     let response = reqwest::get(DIST_ZIP_URL)
         .await
         .map_err(|e| format!("Failed to download dist.zip: {}", e))?;
@@ -80,7 +80,7 @@ pub async fn ota_download_update(
         .await
         .map_err(|e| format!("Failed to read dist.zip bytes: {}", e))?;
 
-    eprintln!("[ota] Downloaded {} bytes", zip_bytes.len());
+    tracing::info!(bytes = zip_bytes.len(), "OTA: dist.zip downloaded");
 
     // 3. Extract to dist_update/
     // Clear old update dir
@@ -131,11 +131,11 @@ pub async fn ota_download_update(
     fs::write(&version_file, &remote_version)
         .map_err(|e| format!("Failed to write version marker: {}", e))?;
 
-    eprintln!(
-        "[ota] Extracted {} files to {}, version {}",
-        extracted,
-        dist_dir.display(),
-        remote_version
+    tracing::info!(
+        files = extracted,
+        dir = %dist_dir.display(),
+        version = %remote_version,
+        "OTA: extraction complete"
     );
 
     Ok(serde_json::json!({

@@ -51,7 +51,7 @@ impl AppState {
         }
         // Limit cached connections to prevent memory exhaustion
         if conns.len() >= 100 {
-            eprintln!("[db] Connection cache full ({} entries), evicting oldest", conns.len());
+            tracing::debug!(entries = conns.len(), "DB connection cache full, evicting oldest");
             // Remove a random entry to make room (all are equally valid to evict)
             if let Some(key) = conns.keys().next().cloned() {
                 conns.remove(&key);

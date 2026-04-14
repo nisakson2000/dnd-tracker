@@ -37,7 +37,7 @@ macro_rules! dev_log {
     ($buffer:expr, $level:expr, $($arg:tt)*) => {
         {
             let msg = format!($($arg)*);
-            eprintln!("[{}] {}", $level, msg);
+            tracing::debug!(level = $level, "{}", msg);
             $buffer.push($level, &msg);
         }
     };

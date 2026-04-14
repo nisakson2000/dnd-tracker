@@ -30,7 +30,7 @@ impl Drop for GitLockGuard {
 fn repo_root() -> Result<PathBuf, String> {
     // Strategy 1: Ask git from the current working directory
     if let Ok(cwd) = std::env::current_dir() {
-        eprintln!("[dev-sync] cwd for repo_root: {:?}", cwd);
+        tracing::debug!(cwd = ?cwd, "Searching for repo root from cwd");
         if let Some(root) = try_git_toplevel(Some(&cwd)) {
             return Ok(root);
         }
@@ -39,7 +39,7 @@ fn repo_root() -> Result<PathBuf, String> {
     // Strategy 2: Ask git from the executable's directory (production builds)
     // In production, the exe is inside the repo at src-tauri/target/release/
     if let Ok(exe_path) = std::env::current_exe() {
-        eprintln!("[dev-sync] exe path: {:?}", exe_path);
+        tracing::debug!(exe = ?exe_path, "Searching for repo root from exe path");
         if let Some(exe_dir) = exe_path.parent() {
             if let Some(root) = try_git_toplevel(Some(exe_dir)) {
                 return Ok(root);
@@ -48,7 +48,7 @@ fn repo_root() -> Result<PathBuf, String> {
             let mut dir = Some(exe_dir.to_path_buf());
             while let Some(d) = dir {
                 if d.join(".git").exists() {
-                    eprintln!("[dev-sync] Found .git at {:?}", d);
+                    tracing::debug!(path = ?d, "Found .git directory");
                     return Ok(d);
                 }
                 dir = d.parent().map(|p| p.to_path_buf());
@@ -119,30 +119,30 @@ async fn run_git(root: &PathBuf, args: &[&str]) -> Result<(String, String, bool)
 #[tauri::command]
 pub async fn check_git_updates() -> Result<serde_json::Value, String> {
     let _lock = GitLockGuard::acquire().map_err(|e| {
-        eprintln!("[dev-sync] lock acquire failed: {}", e);
+        tracing::warn!(error = %e, "Git lock acquire failed");
         e
     })?;
     let root = repo_root().map_err(|e| {
-        eprintln!("[dev-sync] repo_root failed: {}", e);
+        tracing::error!(error = %e, "Failed to find repo root");
         e
     })?;
-    eprintln!("[dev-sync] repo root: {:?}", root);
+    tracing::debug!(root = ?root, "Git repo root");
 
     // Check that origin remote exists
     let (remote_url, _, ok) = run_git(&root, &["remote", "get-url", "origin"]).await?;
     if !ok {
-        eprintln!("[dev-sync] no origin remote configured");
+        tracing::warn!("No origin remote configured");
         return Err("No 'origin' remote configured".to_string());
     }
-    eprintln!("[dev-sync] origin url: {}", remote_url);
+    tracing::debug!(url = %remote_url, "Git origin URL");
 
     // Detect default branch (main or master)
     let branch = detect_branch(&root).await?;
-    eprintln!("[dev-sync] branch: {}", branch);
+    tracing::debug!(branch = %branch, "Detected branch");
 
     // git fetch origin
     let (fetch_out, stderr, ok) = run_git(&root, &["fetch", "origin", &branch]).await?;
-    eprintln!("[dev-sync] fetch ok={}, stdout='{}', stderr='{}'", ok, fetch_out, stderr);
+    tracing::debug!(ok = ok, stdout = %fetch_out, stderr = %stderr, "Git fetch result");
     if !ok {
         return Err(format!("git fetch failed: {}", stderr));
     }
@@ -154,18 +154,18 @@ pub async fn check_git_updates() -> Result<serde_json::Value, String> {
     if !ok {
         return Err(format!("Branch '{}' not found on origin", branch));
     }
-    eprintln!("[dev-sync] local_sha={} remote_sha={} match={}", short_sha(&local_sha), short_sha(&remote_sha), local_sha == remote_sha);
+    tracing::debug!(local = short_sha(&local_sha), remote = short_sha(&remote_sha), matched = local_sha == remote_sha, "SHA comparison");
 
     // Check if remote is actually ahead of local (not the other way around)
     let (_, _, local_is_ahead_or_equal) = run_git(
         &root,
         &["merge-base", "--is-ancestor", &remote_sha, &local_sha],
     ).await.unwrap_or_default();
-    eprintln!("[dev-sync] local_is_ahead_or_equal={}", local_is_ahead_or_equal);
+    tracing::debug!(local_ahead_or_equal = local_is_ahead_or_equal, "Ancestry check");
 
     // Only report an update if remote has commits we don't have
     let has_update = local_sha != remote_sha && !local_is_ahead_or_equal;
-    eprintln!("[dev-sync] => has_update={}", has_update);
+    tracing::info!(has_update = has_update, "Git update check result");
 
     // Check if we have local unpushed commits
     let (_, _, _local_is_behind_or_equal) = run_git(
@@ -265,7 +265,7 @@ pub async fn pull_git_updates() -> Result<serde_json::Value, String> {
     let frontend_dir = root.join("frontend");
     let mut rebuild_msg = String::new();
     if frontend_dir.is_dir() {
-        eprintln!("[dev-sync] Rebuilding frontend in {:?}", frontend_dir);
+        tracing::info!(dir = ?frontend_dir, "Rebuilding frontend");
         let rebuild = Command::new("npx")
             .args(["vite", "build"])
             .current_dir(&frontend_dir)
@@ -274,20 +274,20 @@ pub async fn pull_git_updates() -> Result<serde_json::Value, String> {
         match tokio::time::timeout(Duration::from_secs(60), rebuild).await {
             Ok(Ok(output)) => {
                 if output.status.success() {
-                    eprintln!("[dev-sync] Frontend rebuild succeeded");
+                    tracing::info!("Frontend rebuild succeeded");
                     rebuild_msg = "Frontend rebuilt successfully".to_string();
                 } else {
                     let err = String::from_utf8_lossy(&output.stderr).trim().to_string();
-                    eprintln!("[dev-sync] Frontend rebuild failed: {}", err);
+                    tracing::error!(error = %err, "Frontend rebuild failed");
                     rebuild_msg = format!("Frontend rebuild failed: {}", err);
                 }
             }
             Ok(Err(e)) => {
-                eprintln!("[dev-sync] Frontend rebuild error: {}", e);
+                tracing::error!(error = %e, "Frontend rebuild error");
                 rebuild_msg = format!("Frontend rebuild error: {}", e);
             }
             Err(_) => {
-                eprintln!("[dev-sync] Frontend rebuild timed out");
+                tracing::error!("Frontend rebuild timed out after 60s");
                 rebuild_msg = "Frontend rebuild timed out after 60s".to_string();
             }
         }

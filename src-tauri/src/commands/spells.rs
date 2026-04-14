@@ -34,6 +34,7 @@ pub fn get_spells(
     state: State<'_, AppState>,
     character_id: String,
 ) -> Result<Vec<SpellData>, String> {
+    tracing::debug!(character_id = %character_id, "get_spells called");
     state.with_char_conn(&character_id, |conn| {
         let mut stmt = conn
             .prepare(
@@ -76,6 +77,7 @@ pub fn add_spell(
     character_id: String,
     payload: SpellData,
 ) -> Result<SpellData, String> {
+    tracing::debug!(character_id = %character_id, spell = %payload.name, level = payload.level, "add_spell called");
     state.with_char_conn(&character_id, |conn| {
         conn.execute(
             "INSERT INTO spells (name, level, school, casting_time, spell_range, components,
@@ -105,6 +107,7 @@ pub fn update_spell(
     spell_id: i64,
     payload: SpellData,
 ) -> Result<SpellData, String> {
+    tracing::debug!(character_id = %character_id, spell_id = spell_id, spell = %payload.name, "update_spell called");
     state.with_char_conn(&character_id, |conn| {
         let updated = conn
             .execute(
@@ -137,6 +140,7 @@ pub fn delete_spell(
     character_id: String,
     spell_id: i64,
 ) -> Result<serde_json::Value, String> {
+    tracing::debug!(character_id = %character_id, spell_id = spell_id, "delete_spell called");
     state.with_char_conn(&character_id, |conn| {
         let deleted = conn
             .execute("DELETE FROM spells WHERE id=?1", [spell_id])
@@ -153,6 +157,7 @@ pub fn get_spell_slots(
     state: State<'_, AppState>,
     character_id: String,
 ) -> Result<Vec<SpellSlotData>, String> {
+    tracing::debug!(character_id = %character_id, "get_spell_slots called");
     state.with_char_conn(&character_id, |conn| {
         let mut stmt = conn
             .prepare("SELECT slot_level, max_slots, used_slots FROM spell_slots ORDER BY slot_level")
@@ -178,6 +183,7 @@ pub fn update_spell_slots(
     character_id: String,
     payload: Vec<SpellSlotData>,
 ) -> Result<serde_json::Value, String> {
+    tracing::debug!(character_id = %character_id, slots = payload.len(), "update_spell_slots called");
     state.with_char_conn(&character_id, |conn| {
         conn.execute("BEGIN", []).map_err(|e| format!("Failed to begin transaction: {}", e))?;
         let result = (|| -> Result<(), String> {
@@ -216,6 +222,7 @@ pub fn reset_spell_slots(
     state: State<'_, AppState>,
     character_id: String,
 ) -> Result<serde_json::Value, String> {
+    tracing::debug!(character_id = %character_id, "reset_spell_slots called");
     state.with_char_conn(&character_id, |conn| {
         conn.execute("UPDATE spell_slots SET used_slots=0", [])
             .map_err(|e| e.to_string())?;

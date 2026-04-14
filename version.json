@@ -1,1 +1,1 @@
-{"version":"0.8.6","notes":"V0.8.6 — Player Mode 100: Conditions, Combat, Level-Up, Spellbook, Inventory & Full Polish"}
+{"version": "0.8.7", "notes": "V0.8.7 \u2014 Major cleanup: 7 bug fixes, structured logging, dead code removal, performance optimization, deduplication"}

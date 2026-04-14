@@ -36,6 +36,7 @@ pub fn get_attacks(
     state: State<'_, AppState>,
     character_id: String,
 ) -> Result<Vec<AttackData>, String> {
+    tracing::debug!(character_id = %character_id, "get_attacks called");
     state.with_char_conn(&character_id, |conn| {
         let mut stmt = conn
             .prepare("SELECT id, name, attack_bonus, damage_dice, damage_type, attack_range, notes, ammo_item_id FROM attacks")
@@ -67,6 +68,7 @@ pub fn add_attack(
     character_id: String,
     payload: AttackData,
 ) -> Result<AttackData, String> {
+    tracing::debug!(character_id = %character_id, attack = %payload.name, "add_attack called");
     state.with_char_conn(&character_id, |conn| {
         conn.execute(
             "INSERT INTO attacks (name, attack_bonus, damage_dice, damage_type, attack_range, notes, ammo_item_id)
@@ -90,6 +92,7 @@ pub fn update_attack(
     attack_id: i64,
     payload: AttackData,
 ) -> Result<AttackData, String> {
+    tracing::debug!(character_id = %character_id, attack_id = attack_id, "update_attack called");
     state.with_char_conn(&character_id, |conn| {
         let updated = conn
             .execute(
@@ -114,6 +117,7 @@ pub fn delete_attack(
     character_id: String,
     attack_id: i64,
 ) -> Result<serde_json::Value, String> {
+    tracing::debug!(character_id = %character_id, attack_id = attack_id, "delete_attack called");
     state.with_char_conn(&character_id, |conn| {
         let deleted = conn
             .execute("DELETE FROM attacks WHERE id=?1", [attack_id])
@@ -131,6 +135,7 @@ pub fn use_attack(
     character_id: String,
     attack_id: i64,
 ) -> Result<serde_json::Value, String> {
+    tracing::debug!(character_id = %character_id, attack_id = attack_id, "use_attack called");
     state.with_char_conn(&character_id, |conn| {
         // Look up the attack's ammo_item_id
         let ammo_id: Option<i64> = conn

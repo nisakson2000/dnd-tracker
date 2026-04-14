@@ -33,7 +33,7 @@ pub fn run_migrations(conn: &Connection, migrations: &[Migration]) -> Result<(),
             continue;
         }
 
-        eprintln!("[migrations] Applying #{}: {}", version, migration.name);
+        tracing::info!(version = version, name = migration.name, "Applying migration");
 
         // Split SQL into individual statements and run each one.
         // ALTER TABLE "duplicate column" errors are skipped gracefully
@@ -56,7 +56,7 @@ pub fn run_migrations(conn: &Connection, migrations: &[Migration]) -> Result<(),
                     if err_msg.contains("duplicate column name")
                         || err_msg.contains("already exists")
                     {
-                        eprintln!("[migrations] Skipping (already exists): {}", stmt.chars().take(80).collect::<String>());
+                        tracing::debug!(stmt_preview = %stmt.chars().take(80).collect::<String>(), "Migration statement skipped (already exists)");
                         continue;
                     }
                     return Err(format!(
@@ -75,7 +75,7 @@ pub fn run_migrations(conn: &Connection, migrations: &[Migration]) -> Result<(),
             version, migration.name, e
         ))?;
 
-        eprintln!("[migrations] Applied #{}: {}", version, migration.name);
+        tracing::info!(version = version, name = migration.name, "Migration applied");
     }
 
     Ok(())

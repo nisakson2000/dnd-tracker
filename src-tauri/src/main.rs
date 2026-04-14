@@ -15,14 +15,44 @@ use std::fs;
 use std::sync::Arc;
 use tauri::Manager;
 use tokio::sync::Mutex;
+use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 fn main() {
+    // ── Initialize tracing early (before Tauri setup) ──────────────────
+    let app_data_dir = dirs::data_dir()
+        .unwrap_or_default()
+        .join("com.codex.dndtracker");
+
+    // Ensure log directory exists
+    let _ = std::fs::create_dir_all(&app_data_dir);
+
+    // File logger with daily rotation
+    let file_appender = tracing_appender::rolling::daily(&app_data_dir, "codex.log");
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
+    tracing_subscriber::registry()
+        .with(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("info")),
+        )
+        .with(
+            fmt::layer()
+                .with_writer(std::io::stderr)
+                .with_target(true),
+        )
+        .with(
+            fmt::layer()
+                .with_writer(non_blocking)
+                .with_target(true)
+                .with_ansi(false),
+        )
+        .init();
+
+    tracing::info!("The Codex starting — version {}", env!("CARGO_PKG_VERSION"));
+
     // Compute the OTA dist override path for the custom protocol.
     // This must match Tauri's app_data_dir: %APPDATA%/{identifier}/
-    let ota_dist_path = dirs::data_dir()
-        .unwrap_or_default()
-        .join("com.codex.dndtracker")
-        .join("dist_update");
+    let ota_dist_path = app_data_dir.join("dist_update");
 
     let ota_path_clone = ota_dist_path.clone();
 
@@ -56,7 +86,7 @@ fn main() {
                             .unwrap()
                     })
             } else {
-                eprintln!("[codex://] 404: {}", file_path.display());
+                tracing::warn!(path = %file_path.display(), "codex:// protocol 404");
                 tauri::http::Response::builder()
                     .status(404)
                     .body(Vec::new())
@@ -70,17 +100,17 @@ fn main() {
         })
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir().map_err(|e| {
-                eprintln!("[init] Failed to get app data dir: {}", e);
+                tracing::error!(error = %e, "Failed to get app data dir");
                 Box::new(e) as Box<dyn std::error::Error>
             })?;
             fs::create_dir_all(&app_data_dir).map_err(|e| {
-                eprintln!("[init] Failed to create app data dir: {}", e);
+                tracing::error!(error = %e, "Failed to create app data dir");
                 Box::new(e) as Box<dyn std::error::Error>
             })?;
 
             let chars_dir = app_data_dir.join("characters");
             fs::create_dir_all(&chars_dir).map_err(|e| {
-                eprintln!("[init] Failed to create characters dir: {}", e);
+                tracing::error!(error = %e, "Failed to create characters dir");
                 Box::new(e) as Box<dyn std::error::Error>
             })?;
 
@@ -91,32 +121,32 @@ fn main() {
                     let wiki_src = resource_dir.join("resources").join("wiki.db");
                     if wiki_src.exists() {
                         if let Err(e) = fs::copy(&wiki_src, &wiki_dest) {
-                            eprintln!("[init] Failed to copy wiki.db from resources: {}", e);
+                            tracing::error!(error = %e, "Failed to copy wiki.db from resources");
                         }
                     } else {
                         // Try alternate path (development)
                         let alt_src = resource_dir.join("wiki.db");
                         if alt_src.exists() {
                             if let Err(e) = fs::copy(&alt_src, &wiki_dest) {
-                                eprintln!("[init] Failed to copy wiki.db from alt path: {}", e);
+                                tracing::error!(error = %e, "Failed to copy wiki.db from alt path");
                             }
                         }
                     }
                 } else {
-                    eprintln!("[init] Could not resolve resource dir — wiki.db not copied");
+                    tracing::warn!("Could not resolve resource dir — wiki.db not copied");
                 }
             }
 
             // Open wiki connection
             let wiki_conn = if wiki_dest.exists() {
                 db::open_connection(&wiki_dest).map_err(|e| {
-                    eprintln!("[init] Failed to open wiki.db: {}", e);
+                    tracing::error!(error = %e, "Failed to open wiki.db");
                     Box::new(e) as Box<dyn std::error::Error>
                 })?
             } else {
                 // Create empty wiki.db as fallback
                 let conn = db::open_connection(&wiki_dest).map_err(|e| {
-                    eprintln!("[init] Failed to create wiki.db: {}", e);
+                    tracing::error!(error = %e, "Failed to create wiki.db");
                     Box::new(e) as Box<dyn std::error::Error>
                 })?;
                 conn.execute_batch(
@@ -148,7 +178,7 @@ fn main() {
                         content_rowid='id'
                     );"
                 ).map_err(|e| {
-                    eprintln!("[init] Failed to initialize wiki tables: {}", e);
+                    tracing::error!(error = %e, "Failed to initialize wiki tables");
                     Box::new(e) as Box<dyn std::error::Error>
                 })?;
                 conn
@@ -156,7 +186,7 @@ fn main() {
 
             // Pre-initialize campaign DB at startup so errors surface immediately
             if let Err(e) = campaign_db::init_campaign_db(&app_data_dir) {
-                eprintln!("[init] Campaign DB pre-init failed (will retry lazily): {}", e);
+                tracing::warn!(error = %e, "Campaign DB pre-init failed (will retry lazily)");
             }
 
             app.manage(AppState::new(app_data_dir.clone(), wiki_conn));
@@ -173,10 +203,17 @@ fn main() {
             // Updates are detected via version.json and shown as a banner instead.
             let ota_dir = app_data_dir.join("dist_update");
             if ota_dir.exists() {
-                eprintln!("[init] Clearing stale OTA dist_update to prevent black screen");
+                tracing::info!("Clearing stale OTA dist_update to prevent black screen");
                 let _ = fs::remove_dir_all(&ota_dir);
                 let _ = fs::remove_file(app_data_dir.join("ota_version.txt"));
             }
+
+            tracing::info!(
+                app_data_dir = %app_data_dir.display(),
+                chars_dir = %chars_dir.display(),
+                wiki_exists = wiki_dest.exists(),
+                "App initialized successfully"
+            );
 
             Ok(())
         })

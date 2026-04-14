@@ -16,6 +16,7 @@ pub async fn ws_start_server(
     state: State<'_, SessionServerState>,
     app: AppHandle,
 ) -> Result<String, String> {
+    tracing::debug!(port = ?port, "ws_start_server called");
     let mut guard = state.lock().await;
     if guard.is_some() {
         return Err("Session server is already running.".to_string());
@@ -32,6 +33,7 @@ pub async fn ws_start_server(
 pub async fn ws_stop_server(
     state: State<'_, SessionServerState>,
 ) -> Result<(), String> {
+    tracing::debug!("ws_stop_server called");
     let mut guard = state.lock().await;
     if let Some(ref mut server) = *guard {
         server.stop().await;
@@ -48,6 +50,7 @@ pub async fn ws_approve_player(
     state: State<'_, SessionServerState>,
     app: AppHandle,
 ) -> Result<(), String> {
+    tracing::info!(player_uuid = %player_uuid, has_snapshot = snapshot_json.is_some(), "ws_approve_player called");
     let guard = state.lock().await;
     let server = guard
         .as_ref()
@@ -79,6 +82,7 @@ pub async fn ws_reject_player(
     reason: String,
     state: State<'_, SessionServerState>,
 ) -> Result<(), String> {
+    tracing::info!(player_uuid = %player_uuid, reason = %reason, "ws_reject_player called");
     let guard = state.lock().await;
     let server = guard
         .as_ref()
@@ -94,6 +98,7 @@ pub async fn ws_broadcast_event(
     event_json: String,
     state: State<'_, SessionServerState>,
 ) -> Result<(), String> {
+    tracing::debug!(json_len = event_json.len(), "ws_broadcast_event called");
     let guard = state.lock().await;
     let server = guard
         .as_ref()
@@ -125,6 +130,7 @@ pub async fn ws_send_to_player(
     event_json: String,
     state: State<'_, SessionServerState>,
 ) -> Result<(), String> {
+    tracing::debug!(player_uuid = %player_uuid, json_len = event_json.len(), "ws_send_to_player called");
     let guard = state.lock().await;
     let server = guard
         .as_ref()
@@ -160,6 +166,7 @@ pub async fn ws_connect_to_dm(
     state: State<'_, SessionClientState>,
     app: AppHandle,
 ) -> Result<(), String> {
+    tracing::info!(ip = %ip, port = port, player = %display_name, uuid = %player_uuid, "ws_connect_to_dm called");
     let mut guard = state.lock().await;
     if guard.is_some() {
         return Err("Already connected to a DM session.".to_string());
@@ -187,6 +194,7 @@ pub async fn ws_connect_to_dm(
 pub async fn ws_disconnect_from_dm(
     state: State<'_, SessionClientState>,
 ) -> Result<(), String> {
+    tracing::info!("ws_disconnect_from_dm called");
     let mut guard = state.lock().await;
     if let Some(conn) = guard.take() {
         let _ = conn.shutdown_tx.send(());
@@ -200,6 +208,7 @@ pub async fn ws_send_to_dm(
     event_json: String,
     state: State<'_, SessionClientState>,
 ) -> Result<(), String> {
+    tracing::debug!(json_len = event_json.len(), "ws_send_to_dm called");
     let guard = state.lock().await;
     let conn = guard
         .as_ref()
